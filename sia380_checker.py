@@ -7,7 +7,7 @@ import logging
 from typing import List, Dict, Optional, Any
 from dataclasses import dataclass
 
-from config import SIA3801_U_VALUES, SIA3801_THRESHOLDS
+from config import SIA3801_U_VALUES, SIA3801_THRESHOLDS, SIA3802_LIMIT_VALUES
 from rule_engine import RuleEngine, Rule, Severity, Alert
 from model_analyzer import ModelAnalyzer, RoomData, SurfaceData, OpeningData
 
@@ -36,108 +36,117 @@ class SIA3801Checker:
         # Règles pour les U-values des surfaces
         self.rule_engine.add_rule(Rule(
             name="SIA3801_U_VALUE_EXTERNAL_WALL",
-            description=f"U-value des murs extérieurs ≤ {SIA3801_U_VALUES['external_wall']} W/m²K",
+            description=f"U-value des murs extérieurs <= {SIA3801_U_VALUES['external_wall']} W/m²K (SIA 380/2:2022, tableau 3, valeur limite)",
             check=lambda surface: surface.u_value <= SIA3801_U_VALUES["external_wall"] if surface.u_value is not None else False,
             severity=Severity.HIGH,
             category="Envelope",
-            recommendation=f"Réduire la U-value à ≤ {SIA3801_U_VALUES['external_wall']} W/m²K en améliorant l'isolation.",
+            recommendation=f"Réduire la U-value à <= {SIA3801_U_VALUES['external_wall']} W/m²K ou justifier le calcul de référence complet SIA 380/2.",
         ))
 
         self.rule_engine.add_rule(Rule(
             name="SIA3801_U_VALUE_ROOF",
-            description=f"U-value des toitures ≤ {SIA3801_U_VALUES['roof']} W/m²K",
+            description=f"U-value des toitures plates <= {SIA3801_U_VALUES['roof']} W/m²K (SIA 380/2:2022, tableau 3, valeur limite)",
             check=lambda surface: surface.u_value <= SIA3801_U_VALUES["roof"] if surface.u_value is not None else False,
             severity=Severity.HIGH,
             category="Envelope",
-            recommendation=f"Réduire la U-value à ≤ {SIA3801_U_VALUES['roof']} W/m²K en améliorant l'isolation.",
+            recommendation=f"Réduire la U-value à <= {SIA3801_U_VALUES['roof']} W/m²K ou documenter le type de toiture si le seuil générique ne s'applique pas.",
         ))
 
         self.rule_engine.add_rule(Rule(
             name="SIA3801_U_VALUE_FLOOR",
-            description=f"U-value des planchers ≤ {SIA3801_U_VALUES['floor']} W/m²K",
+            description=f"U-value des sols/planchers contre terrain ou non conditionné <= {SIA3801_U_VALUES['floor']} W/m²K (SIA 380/2:2022, tableau 3, valeur limite générique)",
             check=lambda surface: surface.u_value <= SIA3801_U_VALUES["floor"] if surface.u_value is not None else False,
             severity=Severity.HIGH,
             category="Envelope",
-            recommendation=f"Réduire la U-value à ≤ {SIA3801_U_VALUES['floor']} W/m²K en améliorant l'isolation.",
+            recommendation=f"Réduire la U-value à <= {SIA3801_U_VALUES['floor']} W/m²K ou classifier plus finement le plancher (terrain, cave non conditionnée, intermédiaire).",
         ))
 
         # Règles pour les U-values des ouvertures
         self.rule_engine.add_rule(Rule(
             name="SIA3801_U_VALUE_WINDOW",
-            description=f"U-value des fenêtres ≤ {SIA3801_U_VALUES['window']} W/m²K",
+            description=f"U-value des fenêtres Uw <= {SIA3801_U_VALUES['window']} W/m²K (SIA 380/2:2022, tableau 2, valeur limite)",
             check=lambda opening: opening.u_value <= SIA3801_U_VALUES["window"] if opening.u_value is not None else False,
             severity=Severity.HIGH,
             category="Openings",
-            recommendation=f"Remplacer les fenêtres pour atteindre une U-value ≤ {SIA3801_U_VALUES['window']} W/m²K.",
+            recommendation=f"Vérifier vitrage/cadre et atteindre Uw <= {SIA3801_U_VALUES['window']} W/m²K, ou produire le calcul de référence complet.",
         ))
 
         self.rule_engine.add_rule(Rule(
             name="SIA3801_U_VALUE_DOOR",
-            description=f"U-value des portes ≤ {SIA3801_U_VALUES['door']} W/m²K",
+            description=f"U-value des portes traitées avec le seuil Uw <= {SIA3801_U_VALUES['door']} W/m²K par prudence (SIA 380/2 définit les portes avec les fenêtres pour la surface)",
             check=lambda opening: opening.u_value <= SIA3801_U_VALUES["door"] if opening.u_value is not None else False,
             severity=Severity.MEDIUM,
             category="Openings",
-            recommendation=f"Remplacer les portes pour atteindre une U-value ≤ {SIA3801_U_VALUES['door']} W/m²K.",
+            recommendation=f"Vérifier si la porte doit être traitée comme fenêtre/élément opaque et viser <= {SIA3801_U_VALUES['door']} W/m²K si ce regroupement s'applique.",
         ))
 
         # Règles pour le facteur solaire
         self.rule_engine.add_rule(Rule(
             name="SIA3801_SOLAR_FACTOR",
-            description=f"Facteur solaire (g-value) des fenêtres ≤ {SIA3801_THRESHOLDS['solar_factor_max']}",
+            description=f"Facteur solaire du vitrage g_perp <= {SIA3801_THRESHOLDS['solar_factor_max']} (SIA 380/2:2022, tableau 2, valeur limite)",
             check=lambda opening: opening.solar_factor <= SIA3801_THRESHOLDS["solar_factor_max"] if opening.solar_factor is not None else False,
             severity=Severity.MEDIUM,
             category="Openings",
-            recommendation=f"Utiliser des vitrages avec un facteur solaire ≤ {SIA3801_THRESHOLDS['solar_factor_max']}.",
+            recommendation=f"Utiliser/documenter des vitrages avec g_perp <= {SIA3801_THRESHOLDS['solar_factor_max']} et vérifier que la valeur VE correspond bien au g SIA.",
         ))
 
         # Règles pour le WWR (Window-to-Wall Ratio)
         self.rule_engine.add_rule(Rule(
             name="SIA3801_WWR",
-            description=f"Window-to-Wall Ratio (WWR) ≤ {SIA3801_THRESHOLDS['wwr_max'] * 100}%",
+            description=f"Indicateur de revue WWR > {SIA3801_THRESHOLDS['wwr_max'] * 100}% (SIA 380/2 renvoie le taux de surfaces vitrées à SIA 2024, pas à un seuil fixe)",
             check=lambda room: self.model_analyzer.calculate_wwr(room) <= SIA3801_THRESHOLDS["wwr_max"],
-            severity=Severity.MEDIUM,
-            category="Openings",
-            recommendation=f"Réduire le WWR à ≤ {SIA3801_THRESHOLDS['wwr_max'] * 100}% en réduisant la surface des fenêtres.",
+            severity=Severity.LOW,
+            category="Design Review",
+            recommendation="Traiter le WWR comme un indicateur de risque solaire: confirmer le taux de surfaces vitrées applicable via SIA 2024 et le calcul de référence.",
         ))
 
         # Règles pour la ventilation
         self.rule_engine.add_rule(Rule(
             name="SIA3801_VENTILATION_RATE",
-            description=f"Débit de ventilation ≥ {SIA3801_THRESHOLDS['ventilation_rate_min']} h⁻¹",
-            check=lambda room: room.ventilation_rate >= SIA3801_THRESHOLDS["ventilation_rate_min"] if room.ventilation_rate is not None else False,
-            severity=Severity.HIGH,
-            category="Ventilation",
-            recommendation=f"Augmenter le débit de ventilation à ≥ {SIA3801_THRESHOLDS['ventilation_rate_min']} h⁻¹.",
+            description="Débit de ventilation présent; le contrôle SIA 380/2 exige SIA 2024 et le tableau 4, pas un seuil h-1 unique.",
+            check=lambda room: True,
+            severity=Severity.LOW,
+            category="Data Completeness",
+            recommendation="Comparer les débits fournis/extraits aux exigences SIA 2024 et qualifier le type de régulation selon SIA 380/2 tableau 4.",
         ))
 
         # Règles pour les gains internes (éclairage)
         self.rule_engine.add_rule(Rule(
-            name="SIA3801_LIGHTING_POWER",
-            description=f"Puissance d'éclairage ≤ {SIA3801_THRESHOLDS['lighting_power_max']} W/m²",
-            check=lambda room: room.internal_gains.get("lighting") is not None and room.internal_gains.get("lighting") <= SIA3801_THRESHOLDS["lighting_power_max"],
+            name="SIA3802_INFILTRATION_M3_H_M2",
+            description=f"Infiltration <= {SIA3802_LIMIT_VALUES['infiltration_m3_h_m2']} m3/(h.m2) quand la valeur VE est comparable (SIA 380/2:2022, tableau 2).",
+            check=lambda room: room.infiltration_m3_h_m2 <= SIA3802_LIMIT_VALUES["infiltration_m3_h_m2"] if room.infiltration_m3_h_m2 is not None else False,
             severity=Severity.MEDIUM,
-            category="Gains",
-            recommendation=f"Réduire la puissance d'éclairage à ≤ {SIA3801_THRESHOLDS['lighting_power_max']} W/m².",
+            category="Ventilation",
+            recommendation="Verifier l'unite d'infiltration VE et documenter la conversion retenue vers m3/(h.m2).",
+        ))
+
+        self.rule_engine.add_rule(Rule(
+            name="SIA3801_LIGHTING_POWER",
+            description="Puissance d'éclairage présente; SIA 380/2 renvoie à SIA 387/4 et SIA 2024, pas à un seuil W/m² unique.",
+            check=lambda room: True,
+            severity=Severity.LOW,
+            category="Data Completeness",
+            recommendation="Vérifier la puissance et la commande de l'éclairage avec SIA 387/4, tableau 10, et les usages SIA 2024.",
         ))
 
         # Règles pour les gains internes (équipements)
         self.rule_engine.add_rule(Rule(
             name="SIA3801_EQUIPMENT_POWER",
-            description=f"Puissance des équipements ≤ {SIA3801_THRESHOLDS['equipment_power_max']} W/m²",
-            check=lambda room: room.internal_gains.get("equipment") is not None and room.internal_gains.get("equipment") <= SIA3801_THRESHOLDS["equipment_power_max"],
-            severity=Severity.MEDIUM,
-            category="Gains",
-            recommendation=f"Réduire la puissance des équipements à ≤ {SIA3801_THRESHOLDS['equipment_power_max']} W/m².",
+            description="Puissance d'équipements présente; SIA 380/2 renvoie aux usages SIA 2024, pas à un seuil W/m² unique.",
+            check=lambda room: True,
+            severity=Severity.LOW,
+            category="Data Completeness",
+            recommendation="Comparer les appareils, profils et apports internes aux valeurs SIA 2024 applicables à l'usage du local.",
         ))
 
         # Règles pour les systèmes CVC (efficacité)
         self.rule_engine.add_rule(Rule(
             name="SIA3801_HVAC_EFFICIENCY",
-            description=f"Rendement des systèmes CVC ≥ {SIA3801_THRESHOLDS['hvac_efficiency_min'] * 100}%",
-            check=lambda hvac: hvac.get("efficiency", 0) >= SIA3801_THRESHOLDS["hvac_efficiency_min"] if hvac.get("efficiency") is not None else False,
-            severity=Severity.HIGH,
-            category="HVAC",
-            recommendation=f"Améliorer le rendement des systèmes CVC à ≥ {SIA3801_THRESHOLDS['hvac_efficiency_min'] * 100}%.",
+            description="Efficacité CVC présente; SIA 380/2 utilise des tableaux EER/SEER/SCOP et la validation SIA 4010, pas un rendement unique.",
+            check=lambda hvac: True,
+            severity=Severity.LOW,
+            category="Data Completeness",
+            recommendation="Qualifier le système, sa puissance et son type pour comparer aux tableaux SIA 380/2 5 à 9 et fournir la preuve SIA 4010 applicable.",
         ))
 
     def check_all(self) -> Dict[str, Any]:
@@ -170,6 +179,29 @@ class SIA3801Checker:
         Returns:
             Dictionnaire avec les alertes et le score de la catégorie.
         """
+        if not rooms_data:
+            self.rule_engine.add_alert(
+                rule="SIA3802_MODEL_NOT_CHECKABLE_ENVELOPE",
+                description="Aucune piece VE exploitable n'a ete analysee pour controler l'enveloppe.",
+                severity=Severity.CRITICAL,
+                category="Envelope",
+                recommendation="Verifier que le modele VE actif contient des rooms thermiques et que le script est lance depuis le bon projet.",
+                data=None,
+            )
+        elif not any(
+            surface.is_external and getattr(surface, "net_area", surface.area) > 1e-6
+            for room in rooms_data
+            for surface in room.surfaces
+        ):
+            self.rule_engine.add_alert(
+                rule="SIA3802_EXTERNAL_ENVELOPE_MISSING",
+                description="Aucune surface externe exploitable n'a ete extraite pour le controle SIA 380/2.",
+                severity=Severity.CRITICAL,
+                category="Envelope",
+                recommendation="Verifier les types de surfaces, adjacences et constructions VE avant de conclure sur l'enveloppe.",
+                data=None,
+            )
+
         for room in rooms_data:
             for surface in room.surfaces:
                 if not surface.is_external:
@@ -209,6 +241,16 @@ class SIA3801Checker:
         Returns:
             Dictionnaire avec les alertes et le score de la catégorie.
         """
+        if not rooms_data:
+            self.rule_engine.add_alert(
+                rule="SIA3802_MODEL_NOT_CHECKABLE_OPENINGS",
+                description="Aucune piece VE exploitable n'a ete analysee pour controler les ouvertures.",
+                severity=Severity.CRITICAL,
+                category="Openings",
+                recommendation="Verifier que le modele VE actif contient des rooms thermiques et des surfaces externes.",
+                data=None,
+            )
+
         for room in rooms_data:
             for opening in room.openings:
                 if not opening.is_external:
@@ -278,6 +320,27 @@ class SIA3801Checker:
                     data=room,
                 )
         
+            if getattr(room, "infiltration_m3_h_m2", None) is not None:
+                self.rule_engine.check_rules(["SIA3802_INFILTRATION_M3_H_M2"], room)
+            elif getattr(room, "infiltration_rate", None) is not None:
+                self.rule_engine.add_alert(
+                    rule="SIA3802_INFILTRATION_UNIT_NOT_COMPARABLE",
+                    description=f"Infiltration presente pour la piece {room.name or room.id}, mais pas dans une unite directement comparable a m3/(h.m2).",
+                    severity=Severity.LOW,
+                    category="Ventilation",
+                    recommendation="Documenter l'unite VE et fournir la conversion vers m3/(h.m2) avant verdict SIA 380/2 sur l'infiltration.",
+                    data=room,
+                )
+            else:
+                self.rule_engine.add_alert(
+                    rule="SIA3802_INFILTRATION_MISSING",
+                    description=f"Infiltration non disponible pour la piece {room.name or room.id}.",
+                    severity=Severity.MEDIUM,
+                    category="Ventilation",
+                    recommendation="Verifier les echanges d'air VE de type infiltration et la valeur du tableau 2 SIA 380/2.",
+                    data=room,
+                )
+
         return {
             "alerts": self.rule_engine.get_alerts_by_category("Ventilation"),
             "score": self._calculate_category_score("Ventilation"),
@@ -333,7 +396,26 @@ class SIA3801Checker:
         Returns:
             Dictionnaire avec les alertes et le score de la catégorie.
         """
+        if not rooms_data:
+            self.rule_engine.add_alert(
+                rule="SIA3802_MODEL_NOT_CHECKABLE_HVAC",
+                description="Aucune piece VE exploitable n'a ete analysee pour controler les systemes CVC.",
+                severity=Severity.CRITICAL,
+                category="HVAC",
+                recommendation="Verifier que le modele VE actif contient des rooms thermiques avec donnees Apache Systems.",
+                data=None,
+            )
+
         for room in rooms_data:
+            if not room.hvac_systems:
+                self.rule_engine.add_alert(
+                    rule="SIA3802_HVAC_SYSTEM_MISSING",
+                    description=f"Aucun systeme CVC extrait pour la piece {room.name or room.id}.",
+                    severity=Severity.LOW,
+                    category="HVAC",
+                    recommendation="Verifier Apache Systems/ApacheHVAC et documenter si la piece est volontairement non conditionnee.",
+                    data=room,
+                )
             for hvac in room.hvac_systems:
                 if hvac.get("efficiency") is not None:
                     self.rule_engine.check_rules(["SIA3801_HVAC_EFFICIENCY"], hvac)

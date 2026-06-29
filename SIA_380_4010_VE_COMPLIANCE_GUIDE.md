@@ -4,6 +4,11 @@ Version: 2026-06-29
 Projet: Swiss Compliance Checker pour IESVE  
 Public cible: developpeur IESVE, manager technique, auditeur modele, ingenieur energie  
 
+Note importante 2026-06-29: la matrice normative de reference est maintenant
+`SIA_3802_4010_PDF_TRACEABILITY.md`. Les sections ci-dessous qui decrivent les
+anciennes valeurs codees doivent etre lues comme un historique de projet, pas
+comme la source normative finale.
+
 ## 1. Objectif du document
 
 Ce document sert de base de travail pour comprendre ce qu'il faut controler dans un modele IESVE afin de produire un dossier de conformite defendable vis-a-vis de:
@@ -561,4 +566,3 @@ Il doit dire:
 Ce qui est conforme, ce qui ne l'est pas, ce qui n'est pas encore verifiable,
 quelle valeur le prouve, d'ou vient cette valeur, et quelle action permet de fermer le point.
 ```
-

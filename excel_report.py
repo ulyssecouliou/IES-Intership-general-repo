@@ -16,7 +16,17 @@ except ImportError:
     USE_XLSXWRITER = False
     logging.warning("xlsxwriter non disponible.")
 
-from config import OUTPUT_DIR, EXCEL_REPORT_NAME, EXCEL_FORMATS
+from config import (
+    OUTPUT_DIR,
+    EXCEL_REPORT_NAME,
+    EXCEL_FORMATS,
+    SIA_COMPLIANCE_REQUIREMENT_MATRIX,
+    SIA4010_REQUIRED_EVIDENCE,
+    SIA4010_SYSTEM_REQUIREMENT_SOURCES,
+    SIA4010_TEST_CLASS_COVERAGE,
+    SIA4010_TEST_READINESS_REQUIREMENTS,
+    SIA4010_VALIDATION_CLASSES,
+)
 from health_score import ScoreResult
 from rule_engine import Alert, Severity
 
@@ -98,6 +108,8 @@ class ExcelReportGenerator:
         self._write_summary_xlsxwriter(score_result)
         self._write_action_plan_xlsxwriter(alert_groups)
         self._write_compliance_results_xlsxwriter(sia3801_results, sia4010_results)
+        self._write_sia_requirements_xlsxwriter(sia3801_results, sia4010_results)
+        self._write_sia4010_readiness_xlsxwriter(sia4010_results, rooms_data or [])
         self._write_alert_summary_xlsxwriter(alert_groups)
         self._write_alerts_xlsxwriter(score_result.alerts)
         self._write_data_quality_xlsxwriter(score_result.alerts, rooms_data or [])
@@ -163,6 +175,7 @@ class ExcelReportGenerator:
         warning_format = self.workbook.add_format(EXCEL_FORMATS["warning"])
         fail_format = self.workbook.add_format(EXCEL_FORMATS["fail"])
         cell_format = self.workbook.add_format({"border": 1})
+        not_checkable_format = self.workbook.add_format({"bg_color": "#D9EAF7", "font_color": "#1F4E78", "border": 1, "bold": True})
 
         # Titre
         worksheet.merge_range("A1:F1", "Résultats de Conformité SIA", header_format)
@@ -187,16 +200,240 @@ class ExcelReportGenerator:
             row += 1
             worksheet.write(row, 0, test_name, cell_format)
             worksheet.write(row, 1, test_data.get("status", "N/A"), cell_format)
-            if test_data.get("status") == "PASS":
-                worksheet.write(row, 1, test_data.get("status"), pass_format)
-            elif test_data.get("status") == "WARNING":
-                worksheet.write(row, 1, test_data.get("status"), warning_format)
+            status = test_data.get("status")
+            if status == "PASS":
+                worksheet.write(row, 1, status, pass_format)
+            elif status == "WARNING":
+                worksheet.write(row, 1, status, warning_format)
+            elif status == "NOT_CHECKABLE":
+                worksheet.write(row, 1, status, not_checkable_format)
             else:
-                worksheet.write(row, 1, test_data.get("status"), fail_format)
+                worksheet.write(row, 1, status, fail_format)
 
         # Ajuster la largeur des colonnes
         worksheet.set_column("A:A", 30)
         worksheet.set_column("B:B", 20)
+
+    def _write_sia_requirements_xlsxwriter(self, sia3801_results: Dict[str, Any], sia4010_results: Dict[str, Any]):
+        """Write the auditable SIA requirement matrix used by the checker."""
+        worksheet = self.workbook.add_worksheet("SIA REQUIREMENTS")
+
+        header_format = self.workbook.add_format(EXCEL_FORMATS["header"])
+        subheader_format = self.workbook.add_format(EXCEL_FORMATS["subheader"])
+        cell_format = self.workbook.add_format({"border": 1, "text_wrap": True, "valign": "top"})
+        note_format = self.workbook.add_format({"border": 1, "text_wrap": True, "valign": "top", "bg_color": "#EAF3F8"})
+        pass_format = self.workbook.add_format({"bg_color": "#E2EFDA", "font_color": "#375623", "border": 1, "bold": True})
+        fail_format = self.workbook.add_format({"bg_color": "#FDECEA", "font_color": "#C00000", "border": 1, "bold": True})
+        partial_format = self.workbook.add_format({"bg_color": "#FFF2CC", "font_color": "#7F6000", "border": 1, "bold": True})
+        not_checkable_format = self.workbook.add_format({"bg_color": "#D9EAF7", "font_color": "#1F4E78", "border": 1, "bold": True})
+
+        worksheet.merge_range("A1:L1", "SIA 380/2 + SIA 4010 Requirement Matrix", header_format)
+        worksheet.merge_range(
+            "A2:L2",
+            "Cette matrice liste les criteres issus des PDF/config, leur statut d'automatisation et la prochaine action. "
+            "Elle evite de transformer une donnee non verifiable en faux PASS.",
+            note_format,
+        )
+
+        all_alerts = list(sia3801_results.get("alerts", []) or []) + list(sia4010_results.get("alerts", []) or [])
+        rows = [
+            self._build_requirement_matrix_row(requirement, all_alerts)
+            for requirement in SIA_COMPLIANCE_REQUIREMENT_MATRIX
+        ]
+        status_counts = Counter(row["status"] for row in rows)
+
+        worksheet.write("A4", "KPI", header_format)
+        kpis = [
+            ("Requirements listed", len(rows)),
+            ("Automated PASS/CHECK", status_counts.get("PASS", 0) + status_counts.get("PARTIAL_CHECK", 0)),
+            ("Failing or missing", status_counts.get("FAIL", 0) + status_counts.get("MISSING", 0)),
+            ("Not checkable / not implemented", status_counts.get("NOT_CHECKABLE", 0) + status_counts.get("NOT_IMPLEMENTED", 0)),
+        ]
+        number_format = self.workbook.add_format({"border": 1, "num_format": "#,##0"})
+        for offset, (label, value) in enumerate(kpis, start=5):
+            worksheet.write(offset, 0, label, subheader_format)
+            worksheet.write(offset, 1, value, number_format)
+
+        headers = [
+            "Status",
+            "Automation",
+            "MVP/MSP",
+            "Standard",
+            "Domain",
+            "Requirement ID",
+            "Criterion",
+            "Limit",
+            "Unit",
+            "Target",
+            "PDF source",
+            "Next action / blockers",
+        ]
+        start_row = 10
+        worksheet.write_row(start_row, 0, headers, header_format)
+
+        row = start_row + 1
+        for item in rows:
+            status_format = self._requirement_status_format(
+                item["status"],
+                pass_format,
+                fail_format,
+                partial_format,
+                not_checkable_format,
+                cell_format,
+            )
+            worksheet.write(row, 0, item["status"], status_format)
+            worksheet.write(row, 1, item["automation"], cell_format)
+            worksheet.write(row, 2, item["mvp_status"], cell_format)
+            worksheet.write(row, 3, item["standard"], cell_format)
+            worksheet.write(row, 4, item["domain"], cell_format)
+            worksheet.write(row, 5, item["id"], cell_format)
+            worksheet.write(row, 6, item["criterion"], cell_format)
+            worksheet.write(row, 7, item["limit"], cell_format)
+            worksheet.write(row, 8, item["unit"], cell_format)
+            worksheet.write(row, 9, item["target"], cell_format)
+            worksheet.write(row, 10, item["source"], cell_format)
+            worksheet.write(row, 11, item["next_action"], cell_format)
+            worksheet.set_row(row, 52)
+            row += 1
+
+        worksheet.autofilter(start_row, 0, max(start_row, row - 1), len(headers) - 1)
+        worksheet.freeze_panes(start_row + 1, 0)
+        worksheet.set_column("A:A", 18)
+        worksheet.set_column("B:C", 16)
+        worksheet.set_column("D:F", 20)
+        worksheet.set_column("G:G", 42)
+        worksheet.set_column("H:J", 18)
+        worksheet.set_column("K:K", 42)
+        worksheet.set_column("L:L", 54)
+
+    def _write_sia4010_readiness_xlsxwriter(self, sia4010_results: Dict[str, Any], rooms_data: List[Any]):
+        """Write a SIA 4010 readiness matrix backed by the PDF traceability."""
+        worksheet = self.workbook.add_worksheet("SIA4010 READINESS")
+
+        header_format = self.workbook.add_format(EXCEL_FORMATS["header"])
+        subheader_format = self.workbook.add_format(EXCEL_FORMATS["subheader"])
+        cell_format = self.workbook.add_format({"border": 1, "text_wrap": True, "valign": "top"})
+        note_format = self.workbook.add_format({"border": 1, "text_wrap": True, "valign": "top", "bg_color": "#EAF3F8"})
+        percent_format = self.workbook.add_format({"border": 1, "num_format": "0.0%", "valign": "top"})
+        number_format = self.workbook.add_format({"border": 1, "num_format": "#,##0", "valign": "top"})
+        ready_format = self.workbook.add_format({"bg_color": "#E2EFDA", "font_color": "#375623", "border": 1, "bold": True})
+        partial_format = self.workbook.add_format({"bg_color": "#FFF2CC", "font_color": "#7F6000", "border": 1, "bold": True})
+        missing_format = self.workbook.add_format({"bg_color": "#FDECEA", "font_color": "#C00000", "border": 1, "bold": True})
+        not_checkable_format = self.workbook.add_format({"bg_color": "#D9EAF7", "font_color": "#1F4E78", "border": 1, "bold": True})
+
+        rows = self._build_sia4010_readiness_rows(sia4010_results, rooms_data)
+        avg_readiness = sum(row["readiness_ratio"] for row in rows) / len(rows) if rows else 0.0
+        not_checkable_count = sum(1 for row in rows if row["official_status"] == "NOT_CHECKABLE")
+        validation_class = sia4010_results.get("validation_class") or "Non selectionnee"
+        evidence = sia4010_results.get("evidence", {}) or {}
+        evidence_present_count = sum(1 for item in SIA4010_REQUIRED_EVIDENCE if self._has_sia4010_evidence(evidence, item))
+
+        worksheet.merge_range("A1:K1", "SIA 4010 Readiness - Validation Evidence Matrix", header_format)
+        worksheet.merge_range(
+            "A2:K2",
+            "Cet onglet separe la readiness du modele VE et la validation officielle SIA 4010. "
+            "Sans fichiers officiels SIA, les tests restent NOT_CHECKABLE.",
+            note_format,
+        )
+
+        worksheet.write("A4", "KPI", header_format)
+        kpis = [
+            ("Validation class selected", validation_class),
+            ("Tests listed", len(rows)),
+            ("Average VE data readiness", avg_readiness),
+            ("NOT_CHECKABLE tests", not_checkable_count),
+            ("Official evidence items present", evidence_present_count),
+            ("Official evidence items required", len(SIA4010_REQUIRED_EVIDENCE)),
+        ]
+        for offset, (label, value) in enumerate(kpis, start=5):
+            worksheet.write(offset, 0, label, subheader_format)
+            if isinstance(value, float):
+                worksheet.write(offset, 1, value, percent_format)
+            elif isinstance(value, int):
+                worksheet.write(offset, 1, value, number_format)
+            else:
+                worksheet.write(offset, 1, value, cell_format)
+
+        worksheet.write("D4", "Validation classes from SIA 4010 table 63", header_format)
+        worksheet.write_row("D5", ["Class", "Required tests"], subheader_format)
+        class_row = 6
+        for class_name, tests in SIA4010_VALIDATION_CLASSES.items():
+            worksheet.write(class_row, 3, class_name, cell_format)
+            worksheet.write(class_row, 4, tests, cell_format)
+            class_row += 1
+
+        start_row = max(class_row + 2, 16)
+        headers = [
+            "Test",
+            "Classes concerned",
+            "Domain",
+            "VE data readiness",
+            "VE data status",
+            "Official status",
+            "Data currently evidenced",
+            "Missing / blockers",
+            "Official evidence required",
+            "PDF source",
+            "Next action",
+        ]
+        worksheet.write_row(start_row, 0, headers, header_format)
+
+        row = start_row + 1
+        for item in rows:
+            worksheet.write(row, 0, item["test"], cell_format)
+            worksheet.write(row, 1, item["classes"], cell_format)
+            worksheet.write(row, 2, item["domain"], cell_format)
+            worksheet.write(row, 3, item["readiness_ratio"], percent_format)
+            worksheet.write(row, 4, item["ve_status"], self._sia4010_status_format(item["ve_status"], ready_format, partial_format, missing_format, not_checkable_format, cell_format))
+            worksheet.write(row, 5, item["official_status"], self._sia4010_status_format(item["official_status"], ready_format, partial_format, missing_format, not_checkable_format, cell_format))
+            worksheet.write(row, 6, item["present"], cell_format)
+            worksheet.write(row, 7, item["missing"], cell_format)
+            worksheet.write(row, 8, item["official_evidence"], cell_format)
+            worksheet.write(row, 9, item["source"], cell_format)
+            worksheet.write(row, 10, item["next_action"], cell_format)
+            worksheet.set_row(row, 62)
+            row += 1
+
+        worksheet.autofilter(start_row, 0, max(start_row, row - 1), len(headers) - 1)
+
+        evidence_start = row + 2
+        worksheet.write(evidence_start, 0, "Official SIA 4010 evidence checklist", header_format)
+        worksheet.write_row(evidence_start + 1, 0, ["Evidence item", "Status", "Comment"], subheader_format)
+        evidence_row = evidence_start + 2
+        for item in SIA4010_REQUIRED_EVIDENCE:
+            status = "PRESENT" if self._has_sia4010_evidence(evidence, item) else "MISSING"
+            worksheet.write(evidence_row, 0, item, cell_format)
+            worksheet.write(evidence_row, 1, status, ready_format if status == "PRESENT" else missing_format)
+            worksheet.write(
+                evidence_row,
+                2,
+                "A fournir depuis les documents/fichiers officiels SIA 4010." if status == "MISSING" else "Preuve referencee dans sia4010_results.",
+                cell_format,
+            )
+            evidence_row += 1
+
+        system_start = evidence_row + 2
+        worksheet.write(system_start, 0, "System data families required by SIA 4010", header_format)
+        worksheet.write_row(system_start + 1, 0, ["System family", "Required data", "PDF / table source", "Current extraction status"], subheader_format)
+        system_row = system_start + 2
+        for family, data in SIA4010_SYSTEM_REQUIREMENT_SOURCES.items():
+            worksheet.write(system_row, 0, family, cell_format)
+            worksheet.write(system_row, 1, "; ".join(data.get("requires", [])), cell_format)
+            worksheet.write(system_row, 2, f"{data.get('pages', '')}; {data.get('table_range', '')}", cell_format)
+            worksheet.write(system_row, 3, self._sia4010_system_status(family, rooms_data, sia4010_results), cell_format)
+            worksheet.set_row(system_row, 48)
+            system_row += 1
+
+        worksheet.freeze_panes(start_row + 1, 0)
+        worksheet.set_column("A:A", 12)
+        worksheet.set_column("B:B", 18)
+        worksheet.set_column("C:C", 36)
+        worksheet.set_column("D:D", 16)
+        worksheet.set_column("E:F", 18)
+        worksheet.set_column("G:H", 44)
+        worksheet.set_column("I:I", 46)
+        worksheet.set_column("J:J", 34)
+        worksheet.set_column("K:K", 52)
 
     def _write_action_plan_xlsxwriter(self, alert_groups: List[Dict[str, Any]]):
         """Write a prioritized action plan based on grouped alerts."""
@@ -563,6 +800,298 @@ class ExcelReportGenerator:
         for alert in alerts:
             counts[alert.severity.value] += 1
         return counts
+
+    def _build_sia4010_readiness_rows(self, sia4010_results: Dict[str, Any], rooms_data: List[Any]) -> List[Dict[str, Any]]:
+        """Build one readiness row per SIA 4010 validation test."""
+        stats = self._build_sia4010_model_stats(rooms_data, sia4010_results)
+        tests = sia4010_results.get("tests", {}) or {}
+        required_evidence = self._compact_join(SIA4010_REQUIRED_EVIDENCE, max_chars=300)
+
+        checks_by_test = {
+            "test_1": [
+                ("zones/rooms extracted", stats["rooms"] > 0),
+                ("external envelope surfaces extracted", stats["external_surfaces"] > 0),
+                ("surface U-values extracted", stats["surface_u_values"] > 0),
+                ("external window/opening data extracted", stats["external_openings"] > 0),
+                ("official test model/reference outputs attached", False),
+            ],
+            "test_2": [
+                ("external glazing extracted", stats["external_windows"] > 0),
+                ("window g-values extracted", stats["window_g_values"] > 0),
+                ("solar protection type/category documented", False),
+                ("solar protection control strategy documented", False),
+                ("official CH climate/use/infiltration diagnostic attached", False),
+            ],
+            "test_3": [
+                ("lighting power extracted", stats["rooms_with_lighting"] > 0),
+                ("daylight control strategy documented", False),
+                ("SIA 387/4 lighting control type documented", False),
+                ("lighting energy outputs available", False),
+                ("official test 3 evaluation file attached", False),
+            ],
+            "test_4": [
+                ("HVAC systems extracted", stats["rooms_with_hvac"] > 0),
+                ("ventilation/airflow data extracted", stats["rooms_with_ventilation"] > 0),
+                ("cooling/heating coil outputs available", stats["cooling_demand_available"] or stats["heating_demand_available"]),
+                ("CO2/temperature hourly outputs available", False),
+                ("official amphitheatre test/evaluation attached", False),
+            ],
+            "test_5": [
+                ("HVAC/AHU systems extracted", stats["rooms_with_hvac"] > 0),
+                ("ventilation data extracted", stats["rooms_with_ventilation"] > 0),
+                ("fan control identifier documented", False),
+                ("heat/moisture recovery type documented", False),
+                ("humidifier type/control documented", False),
+                ("official test 5 variant/evaluation attached", False),
+            ],
+            "test_6": [
+                ("ventilation systems extracted", stats["rooms_with_ventilation"] > 0),
+                ("constant airflow/stage data documented", False),
+                ("heat recovery data documented", False),
+                ("restaurant/kitchen overflow represented", False),
+                ("official test 6 evaluation file attached", False),
+            ],
+            "test_7": [
+                ("HVAC systems extracted", stats["rooms_with_hvac"] > 0),
+                ("heating/cooling demand outputs available", stats["heating_demand_available"] or stats["cooling_demand_available"]),
+                ("final energy by system/carrier available", stats["final_energy_available"]),
+                ("pump/fan/auxiliary energy available", False),
+                ("official test 7 loads/evaluation attached", False),
+            ],
+        }
+
+        rows = []
+        for test_name, requirement in SIA4010_TEST_READINESS_REQUIREMENTS.items():
+            checks = checks_by_test.get(test_name, [])
+            present = [label for label, ok in checks if ok]
+            missing = [label for label, ok in checks if not ok]
+            readiness_ratio = len(present) / len(checks) if checks else 0.0
+            if readiness_ratio >= 0.85:
+                ve_status = "READY"
+            elif readiness_ratio > 0:
+                ve_status = "PARTIAL"
+            else:
+                ve_status = "MISSING"
+
+            test_status = tests.get(test_name, {}).get("status") or "NOT_CHECKABLE"
+            official_status = test_status if test_status in {"PASS", "VALIDATED", "WARNING"} else "NOT_CHECKABLE"
+            rows.append({
+                "test": test_name,
+                "classes": self._classes_for_sia4010_test(test_name),
+                "domain": requirement.get("domain", tests.get(test_name, {}).get("description", "")),
+                "readiness_ratio": readiness_ratio,
+                "ve_status": ve_status,
+                "official_status": official_status,
+                "present": self._compact_join(present, empty="Aucune donnee cle actuellement prouvee"),
+                "missing": self._compact_join(missing, empty="Aucun blocker detecte dans la matrice actuelle"),
+                "official_evidence": required_evidence,
+                "source": requirement.get("source", ""),
+                "next_action": requirement.get("next_action", ""),
+            })
+        return rows
+
+    @staticmethod
+    def _build_sia4010_model_stats(rooms_data: List[Any], sia4010_results: Dict[str, Any]) -> Dict[str, Any]:
+        """Summarize currently extracted VE data relevant to SIA 4010 readiness."""
+        surfaces = [surface for room in rooms_data for surface in getattr(room, "surfaces", [])]
+        openings = [opening for room in rooms_data for opening in getattr(room, "openings", [])]
+        external_surfaces = [surface for surface in surfaces if getattr(surface, "is_external", False)]
+        external_openings = [opening for opening in openings if getattr(opening, "is_external", False)]
+        external_windows = [
+            opening for opening in external_openings
+            if str(getattr(opening, "opening_type", "") or "").lower() in {"window", "glazing", "ext_glazing", "4"}
+        ]
+        rooms_with_lighting = [
+            room for room in rooms_data
+            if (getattr(room, "internal_gains", {}) or {}).get("lighting") is not None
+        ]
+        rooms_with_equipment = [
+            room for room in rooms_data
+            if (getattr(room, "internal_gains", {}) or {}).get("equipment") is not None
+        ]
+        rooms_with_ventilation = [
+            room for room in rooms_data
+            if getattr(room, "ventilation_rate", None) is not None
+        ]
+        rooms_with_hvac = [
+            room for room in rooms_data
+            if getattr(room, "hvac_systems", None)
+        ]
+        energy = sia4010_results.get("energy", {}) or {}
+        return {
+            "rooms": len(rooms_data),
+            "external_surfaces": len(external_surfaces),
+            "surface_u_values": sum(1 for surface in external_surfaces if getattr(surface, "u_value", None) is not None),
+            "external_openings": len(external_openings),
+            "external_windows": len(external_windows),
+            "window_u_values": sum(1 for opening in external_windows if getattr(opening, "u_value", None) is not None),
+            "window_g_values": sum(1 for opening in external_windows if getattr(opening, "solar_factor", None) is not None),
+            "rooms_with_lighting": len(rooms_with_lighting),
+            "rooms_with_equipment": len(rooms_with_equipment),
+            "rooms_with_ventilation": len(rooms_with_ventilation),
+            "rooms_with_hvac": len(rooms_with_hvac),
+            "heating_demand_available": energy.get("heating_demand") is not None,
+            "cooling_demand_available": energy.get("cooling_demand") is not None,
+            "final_energy_available": any(
+                energy.get(key) is not None
+                for key in ("primary_energy", "co2_emissions", "renewable_energy_share")
+            ),
+        }
+
+    def _classes_for_sia4010_test(self, test_name: str) -> str:
+        """Return validation classes concerned by a test, including SIA sub-variants."""
+        aliases = {
+            "test_2": ["test_2", "test_2A"],
+            "test_3": ["test_3", "test_3A_to_3F"],
+        }.get(test_name, [test_name])
+        classes = []
+        for alias in aliases:
+            classes.extend(SIA4010_TEST_CLASS_COVERAGE.get(alias, []))
+        unique_classes = []
+        for class_name in classes:
+            if class_name not in unique_classes:
+                unique_classes.append(class_name)
+        return ", ".join(unique_classes) if unique_classes else "A confirmer"
+
+    @staticmethod
+    def _compact_join(items: List[str], empty: str = "", max_chars: int = 260) -> str:
+        text = "; ".join(str(item) for item in items if item)
+        if not text:
+            return empty
+        if len(text) <= max_chars:
+            return text
+        return text[: max_chars - 3].rstrip() + "..."
+
+    @staticmethod
+    def _sia4010_status_format(status: str, ready_format: Any, partial_format: Any, missing_format: Any, not_checkable_format: Any, cell_format: Any) -> Any:
+        status_upper = str(status or "").upper()
+        if status_upper in {"READY", "PASS", "VALIDATED", "PRESENT"}:
+            return ready_format
+        if status_upper in {"PARTIAL", "WARNING"}:
+            return partial_format
+        if status_upper in {"NOT_CHECKABLE"}:
+            return not_checkable_format
+        if status_upper in {"MISSING", "FAIL", "EVIDENCE_INCOMPLETE"}:
+            return missing_format
+        return cell_format
+
+    @staticmethod
+    def _has_sia4010_evidence(evidence: Dict[str, Any], evidence_item: str) -> bool:
+        """Best-effort check for future evidence payloads without requiring a strict schema."""
+        if not isinstance(evidence, dict) or not evidence:
+            return False
+
+        def normalize(value: str) -> str:
+            return "".join(ch.lower() for ch in str(value) if ch.isalnum())
+
+        target = normalize(evidence_item)
+        for key, value in evidence.items():
+            key_norm = normalize(key)
+            if target in key_norm or key_norm in target:
+                return bool(value)
+        return False
+
+    def _sia4010_system_status(self, family: str, rooms_data: List[Any], sia4010_results: Dict[str, Any]) -> str:
+        """Describe current extraction coverage for a SIA 4010 system family."""
+        stats = self._build_sia4010_model_stats(rooms_data, sia4010_results)
+        if family == "ventilation":
+            if stats["rooms_with_ventilation"]:
+                return f"PARTIAL: {stats['rooms_with_ventilation']} rooms expose ventilation_rate; detailed AHU SIA 4010 fields still missing."
+            return "MISSING: no ventilation_rate / AHU controls extracted yet."
+        if family == "cooling":
+            if stats["cooling_demand_available"]:
+                return "PARTIAL: cooling demand exists; detailed generation/distribution/storage fields still required."
+            return "MISSING: no cooling dynamic result, EER/SEER or cooling system breakdown extracted yet."
+        if family == "heating":
+            if stats["rooms_with_hvac"] or stats["heating_demand_available"]:
+                return "PARTIAL: HVAC/heating evidence exists; generator, distribution, storage and auxiliary details still required."
+            return "MISSING: no heating demand/generator detail extracted yet."
+        if family == "domestic_hot_water":
+            return "MISSING: DHW coupling/load cycles are not extracted yet."
+        if family == "general_building_electricity":
+            if stats["rooms_with_lighting"] or stats["rooms_with_equipment"]:
+                return "PARTIAL: lighting/equipment gains are partially extracted; SIA 2056/SIA 387/4 evidence still required."
+            return "MISSING: no electricity/lighting evidence extracted yet."
+        if family == "photovoltaics":
+            return "MISSING: PV modules/orientation/performance are not extracted yet."
+        return "TO_CONFIRM"
+
+    def _build_requirement_matrix_row(self, requirement: Dict[str, Any], alerts: List[Alert]) -> Dict[str, Any]:
+        """Build a report row for one SIA requirement without inventing verdicts."""
+        automation = str(requirement.get("automation", "") or "")
+        implemented_rule = str(requirement.get("implemented_rule", "") or "")
+        related_alerts = self._find_requirement_alerts(requirement, alerts)
+
+        if automation in {"NOT_IMPLEMENTED", ""}:
+            status = "NOT_IMPLEMENTED"
+        elif automation == "READINESS_ONLY":
+            status = "NOT_CHECKABLE" if related_alerts else "READINESS_ONLY"
+        elif related_alerts:
+            if any("MISSING" in str(alert.rule or "").upper() for alert in related_alerts):
+                status = "MISSING"
+            elif any("NOT_CHECKABLE" in str(alert.rule or "").upper() for alert in related_alerts):
+                status = "NOT_CHECKABLE"
+            else:
+                status = "FAIL"
+        elif automation == "PARTIAL":
+            status = "PARTIAL_CHECK"
+        elif implemented_rule:
+            status = "PASS"
+        else:
+            status = "NOT_CHECKABLE"
+
+        blockers = [str(alert.description or "") for alert in related_alerts[:3]]
+        next_action = str(requirement.get("next_action", "") or "")
+        if blockers:
+            next_action = next_action + " | Current blockers: " + " ; ".join(blockers)
+
+        return {
+            "status": status,
+            "automation": automation,
+            "mvp_status": requirement.get("mvp_status", ""),
+            "standard": requirement.get("standard", ""),
+            "domain": requirement.get("domain", ""),
+            "id": requirement.get("id", ""),
+            "criterion": requirement.get("criterion", ""),
+            "limit": requirement.get("limit", ""),
+            "unit": requirement.get("unit", ""),
+            "target": requirement.get("target", ""),
+            "source": requirement.get("source", ""),
+            "next_action": next_action,
+        }
+
+    @staticmethod
+    def _find_requirement_alerts(requirement: Dict[str, Any], alerts: List[Alert]) -> List[Alert]:
+        rule_name = str(requirement.get("implemented_rule", "") or "").upper()
+        requirement_id = str(requirement.get("id", "") or "").upper()
+        if not rule_name and not requirement_id:
+            return []
+
+        matches = []
+        for alert in alerts:
+            alert_rule = str(alert.rule or "").upper()
+            if rule_name and alert_rule == rule_name:
+                matches.append(alert)
+                continue
+            if requirement_id.startswith("SIA3802_AIRTIGHTNESS") and alert_rule.startswith("SIA3802_INFILTRATION"):
+                matches.append(alert)
+                continue
+            if requirement_id.startswith("SIA4010") and alert_rule.startswith("SIA4010"):
+                matches.append(alert)
+        return matches
+
+    @staticmethod
+    def _requirement_status_format(status: str, pass_format: Any, fail_format: Any, partial_format: Any, not_checkable_format: Any, cell_format: Any) -> Any:
+        status_upper = str(status or "").upper()
+        if status_upper in {"PASS"}:
+            return pass_format
+        if status_upper in {"PARTIAL_CHECK", "READINESS_ONLY"}:
+            return partial_format
+        if status_upper in {"NOT_CHECKABLE", "NOT_IMPLEMENTED"}:
+            return not_checkable_format
+        if status_upper in {"FAIL", "MISSING"}:
+            return fail_format
+        return cell_format
 
     def _build_alert_groups(self, alerts: List[Alert]) -> List[Dict[str, Any]]:
         """Build stable technical groups from raw alerts."""

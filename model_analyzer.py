@@ -52,6 +52,9 @@ class RoomData:
     openings: List[OpeningData] = field(default_factory=list)
     internal_gains: Dict[str, Optional[float]] = field(default_factory=dict)  # {"lighting": ..., "people": ..., "equipment": ...}
     ventilation_rate: Optional[float] = None
+    infiltration_rate: Optional[float] = None
+    infiltration_unit: Optional[str] = None
+    infiltration_m3_h_m2: Optional[float] = None
     hvac_systems: List[Dict[str, Any]] = field(default_factory=list)
     room_conditions: Dict[str, Any] = field(default_factory=dict)
 
@@ -83,7 +86,11 @@ class ModelAnalyzer:
             surfaces = self._analyze_surfaces(raw_surfaces)
             openings = self._analyze_openings(raw_surfaces)
             internal_gains = self._analyze_internal_gains(room_data_obj) if room_data_obj else {}
-            ventilation_rate = self._analyze_ventilation(room_data_obj) if room_data_obj else None
+            air_exchange_summary = self._analyze_air_exchanges(room_data_obj) if room_data_obj else {}
+            ventilation_rate = air_exchange_summary.get("ventilation_rate")
+            infiltration_rate = air_exchange_summary.get("infiltration_rate")
+            infiltration_unit = air_exchange_summary.get("infiltration_unit")
+            infiltration_m3_h_m2 = air_exchange_summary.get("infiltration_m3_h_m2")
             hvac_systems = self._analyze_hvac_systems(room_data_obj) if room_data_obj else []
             room_conditions = self._analyze_room_conditions(room_data_obj) if room_data_obj else {}
 
@@ -97,6 +104,9 @@ class ModelAnalyzer:
                 openings=openings,
                 internal_gains=internal_gains,
                 ventilation_rate=ventilation_rate,
+                infiltration_rate=infiltration_rate,
+                infiltration_unit=infiltration_unit,
+                infiltration_m3_h_m2=infiltration_m3_h_m2,
                 hvac_systems=hvac_systems,
                 room_conditions=room_conditions,
             )
@@ -233,6 +243,76 @@ class ModelAnalyzer:
                 logger.error(f"Erreur lors de l'analyse de la ventilation: {e}")
         return None
 
+    def _analyze_air_exchanges(self, room_data: Any) -> Dict[str, Optional[float]]:
+        """Analyse ventilation et infiltration depuis les echanges d'air VE."""
+        summary: Dict[str, Any] = {
+            "ventilation_rate": None,
+            "infiltration_rate": None,
+            "infiltration_unit": None,
+            "infiltration_m3_h_m2": None,
+        }
+        if not room_data:
+            return summary
+
+        air_exchanges = self.data_extractor.get_air_exchanges(room_data)
+        for exchange in air_exchanges:
+            try:
+                exchange_data = self._safe_get_data(exchange)
+                exchange_name = str(exchange_data.get("name", "") or "").lower()
+                exchange_type = exchange_data.get("type_val")
+                max_flows = exchange_data.get("max_flows")
+                units = exchange_data.get("units_strs") or {}
+                units_val = exchange_data.get("units_val")
+                active_rate = self._extract_flow_for_unit(max_flows, units_val)
+
+                if exchange_type == 2 or "ventilation" in exchange_name:
+                    summary["ventilation_rate"] = active_rate
+
+                if exchange_type == 0 or "infiltration" in exchange_name:
+                    summary["infiltration_rate"] = active_rate
+                    summary["infiltration_unit"] = self._lookup_unit_label(units, units_val)
+                    summary["infiltration_m3_h_m2"] = self._derive_m3_h_m2_from_flow_table(max_flows, units)
+            except Exception as e:
+                logger.error(f"Erreur lors de l'analyse des echanges d'air: {e}")
+        return summary
+
+    @staticmethod
+    def _lookup_unit_label(units: Any, units_val: Any) -> Optional[str]:
+        if not isinstance(units, dict):
+            return None
+        for key in (units_val, str(units_val)):
+            if key in units:
+                return str(units[key])
+        return None
+
+    @staticmethod
+    def _extract_flow_for_unit(max_flows: Any, units_val: Any) -> Optional[float]:
+        if isinstance(max_flows, dict):
+            for key in (units_val, str(units_val)):
+                if key in max_flows:
+                    return ModelAnalyzer._to_float_or_none(max_flows.get(key))
+        return ModelAnalyzer._extract_first_numeric(max_flows)
+
+    @staticmethod
+    def _derive_m3_h_m2_from_flow_table(max_flows: Any, units: Any) -> Optional[float]:
+        """Convertit l/(s.m2) en m3/(h.m2) quand VE expose cette unite."""
+        if not isinstance(max_flows, dict) or not isinstance(units, dict):
+            return None
+        preferred = []
+        fallback = []
+        for key, unit_label in units.items():
+            label = str(unit_label or "").lower()
+            if "l/(s" in label and "m" in label:
+                if "fac" in label:
+                    preferred.append(key)
+                else:
+                    fallback.append(key)
+        for key in preferred + fallback:
+            value = ModelAnalyzer._to_float_or_none(max_flows.get(key))
+            if value is not None:
+                return value * 3.6
+        return None
+
     def _analyze_hvac_systems(self, room_data: Any) -> List[Dict[str, Any]]:
         """Analyse les systèmes CVC d'une pièce."""
         hvac_systems = []
@@ -332,6 +412,13 @@ class ModelAnalyzer:
             return float(value)
         except (TypeError, ValueError):
             return 0.0
+
+    @staticmethod
+    def _to_float_or_none(value: Any) -> Optional[float]:
+        try:
+            return float(value)
+        except (TypeError, ValueError):
+            return None
 
     def _get_body_name(self, body: Any) -> str:
         """Récupère le nom d'un VEBody via les attributs réellement exposés."""

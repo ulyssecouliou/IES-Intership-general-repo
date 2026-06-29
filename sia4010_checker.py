@@ -4,10 +4,19 @@ Ce module vérifie la conformité du modèle VE aux exigences de la norme suisse
 """
 
 import logging
+import os
 from typing import List, Dict, Optional, Any
 from dataclasses import dataclass
 
-from config import SIA4010_THRESHOLDS, SIA4010_TEST_WEIGHTS, EMISSION_FACTORS
+from config import (
+    SIA4010_EVIDENCE_DIR,
+    SIA4010_EVIDENCE_FILE_PATTERNS,
+    SIA4010_REQUIRED_EVIDENCE,
+    SIA4010_THRESHOLDS,
+    SIA4010_TEST_WEIGHTS,
+    SIA4010_VALIDATION_TESTS,
+    EMISSION_FACTORS,
+)
 from rule_engine import RuleEngine, Rule, Severity, Alert
 from model_analyzer import ModelAnalyzer, RoomData
 
@@ -33,53 +42,51 @@ class SIA4010Checker:
 
     def _setup_rules(self):
         """Configure les règles SIA 4010 dans le moteur de règles."""
-        # Règles pour les besoins énergétiques
+        # SIA 4010 ne fournit pas de limites bâtiment autonomes dans le PDF.
+        # Ces règles restent des emplacements pour indicateurs client futurs.
         self.rule_engine.add_rule(Rule(
             name="SIA4010_HEATING_DEMAND",
-            description=f"Besoin en chauffage ≤ {SIA4010_THRESHOLDS['heating_demand_max']} kWh/m²/an",
-            check=lambda data: data.get("heating_demand") is not None and data.get("heating_demand") <= SIA4010_THRESHOLDS["heating_demand_max"],
-            severity=Severity.CRITICAL,
+            description="Besoin en chauffage disponible; SIA 4010 exige une validation par tests/fichiers officiels, pas un seuil kWh/m².an autonome.",
+            check=lambda data: True,
+            severity=Severity.LOW,
             category="Energy",
-            recommendation=f"Réduire le besoin en chauffage à ≤ {SIA4010_THRESHOLDS['heating_demand_max']} kWh/m²/an en améliorant l'isolation ou les systèmes CVC.",
+            recommendation="Comparer uniquement via le fichier d'évaluation SIA 4010 officiel ou via les exigences SIA 380 applicables au projet.",
         ))
 
         self.rule_engine.add_rule(Rule(
             name="SIA4010_COOLING_DEMAND",
-            description=f"Besoin en refroidissement ≤ {SIA4010_THRESHOLDS['cooling_demand_max']} kWh/m²/an",
-            check=lambda data: data.get("cooling_demand") is not None and data.get("cooling_demand") <= SIA4010_THRESHOLDS["cooling_demand_max"],
-            severity=Severity.HIGH,
+            description="Besoin en refroidissement disponible; SIA 4010 exige une validation par tests/fichiers officiels, pas un seuil kWh/m².an autonome.",
+            check=lambda data: True,
+            severity=Severity.LOW,
             category="Energy",
-            recommendation=f"Réduire le besoin en refroidissement à ≤ {SIA4010_THRESHOLDS['cooling_demand_max']} kWh/m²/an en améliorant l'isolation ou les systèmes CVC.",
+            recommendation="Comparer uniquement via le fichier d'évaluation SIA 4010 officiel ou via les exigences SIA 380 applicables au projet.",
         ))
 
-        # Règles pour l'énergie primaire
         self.rule_engine.add_rule(Rule(
             name="SIA4010_PRIMARY_ENERGY",
-            description=f"Énergie primaire ≤ {SIA4010_THRESHOLDS['primary_energy_max']} kWh/m²/an",
-            check=lambda data: data.get("primary_energy") is not None and data.get("primary_energy") <= SIA4010_THRESHOLDS["primary_energy_max"],
-            severity=Severity.CRITICAL,
+            description="Énergie primaire disponible; SIA 4010 ne donne pas de seuil autonome dans le PDF.",
+            check=lambda data: True,
+            severity=Severity.LOW,
             category="Energy",
-            recommendation=f"Réduire l'énergie primaire à ≤ {SIA4010_THRESHOLDS['primary_energy_max']} kWh/m²/an en optimisant les systèmes énergétiques.",
+            recommendation="Pondérer et juger l'énergie primaire selon SIA 380 / exigences projet, puis joindre la validation SIA 4010 si le moteur de calcul est revendiqué.",
         ))
 
-        # Règles pour les émissions CO₂
         self.rule_engine.add_rule(Rule(
             name="SIA4010_CO2_EMISSIONS",
-            description=f"Émissions CO₂ ≤ {SIA4010_THRESHOLDS['co2_emissions_max']} kg CO₂/m²/an",
-            check=lambda data: data.get("co2_emissions") is not None and data.get("co2_emissions") <= SIA4010_THRESHOLDS["co2_emissions_max"],
-            severity=Severity.HIGH,
+            description="Émissions CO2 disponibles; SIA 4010 ne donne pas de seuil autonome dans le PDF.",
+            check=lambda data: True,
+            severity=Severity.LOW,
             category="Energy",
-            recommendation=f"Réduire les émissions CO₂ à ≤ {SIA4010_THRESHOLDS['co2_emissions_max']} kg CO₂/m²/an en utilisant des énergies moins polluantes.",
+            recommendation="Traiter le CO2 comme indicateur client/cantonal séparé, pas comme verdict SIA 4010.",
         ))
 
-        # Règles pour les énergies renouvelables
         self.rule_engine.add_rule(Rule(
             name="SIA4010_RENEWABLE_ENERGY",
-            description=f"Part des énergies renouvelables ≥ {SIA4010_THRESHOLDS['renewable_energy_min'] * 100}%",
-            check=lambda data: data.get("renewable_energy_share") is not None and data.get("renewable_energy_share") >= SIA4010_THRESHOLDS["renewable_energy_min"],
-            severity=Severity.MEDIUM,
+            description="Part renouvelable disponible; SIA 4010 ne donne pas de seuil autonome dans le PDF.",
+            check=lambda data: True,
+            severity=Severity.LOW,
             category="Energy",
-            recommendation=f"Augmenter la part des énergies renouvelables à ≥ {SIA4010_THRESHOLDS['renewable_energy_min'] * 100}%.",
+            recommendation="Traiter la part renouvelable selon les exigences projet/cantonales; ne pas l'utiliser comme validation SIA 4010.",
         ))
 
     def check_all(self) -> Dict[str, Any]:
@@ -101,8 +108,10 @@ class SIA4010Checker:
             "co2_emissions": None,
             "renewable_energy_share": None,
         }
+        evidence = self._scan_sia4010_evidence()
 
-        # Vérifier uniquement les indicateurs réellement disponibles.
+        # Vérifier uniquement les indicateurs réellement disponibles comme
+        # informations projet. Ils ne remplacent jamais les fichiers SIA 4010.
         self.rule_engine.clear_alerts()
         rule_by_metric = {
             "heating_demand": "SIA4010_HEATING_DEMAND",
@@ -111,21 +120,19 @@ class SIA4010Checker:
             "co2_emissions": "SIA4010_CO2_EMISSIONS",
             "renewable_energy_share": "SIA4010_RENEWABLE_ENERGY",
         }
-        checked_metrics = []
         for metric, rule_name in rule_by_metric.items():
             if energy_data.get(metric) is None:
                 continue
             self.rule_engine.check_rules([rule_name], energy_data)
-            checked_metrics.append(metric)
-        if not checked_metrics:
-            self.rule_engine.add_alert(
-                rule="SIA4010_VALIDATION_EVIDENCE_MISSING",
-                description="Aucun résultat dynamique ou fichier de validation SIA 4010 n'est disponible pour vérifier les indicateurs énergétiques.",
-                severity=Severity.HIGH,
-                category="SIA4010 Validation",
-                recommendation="Importer ou générer les résultats APS correspondant aux tests SIA 4010, puis joindre la matrice de validation au rapport.",
-                data=energy_data,
-            )
+
+        self.rule_engine.add_alert(
+            rule="SIA4010_VALIDATION_EVIDENCE_MISSING",
+            description="Validation SIA 4010 non vérifiable sans spécifications de tests, fichiers Excel d'évaluation et résultats de référence officiels.",
+            severity=Severity.HIGH,
+            category="SIA4010 Validation",
+            recommendation="Joindre les fichiers SIA 4010 officiels remplis, les comparaisons aux références et la classe de validation visée avant tout verdict PASS.",
+            data=energy_data,
+        )
 
         # Exécuter les 7 tests SIA 4010
         test_results = self._run_sia4010_tests(energy_data)
@@ -135,7 +142,63 @@ class SIA4010Checker:
             "alerts": self.rule_engine.alerts,
             "tests": test_results,
             "score": self._calculate_sia4010_score(test_results),
+            "evidence": evidence,
+            "validation_class": evidence.get("validation_class"),
         }
+
+    def _scan_sia4010_evidence(self) -> Dict[str, Any]:
+        """Scan local SIA 4010 evidence files without granting official validation."""
+        repo_dir = os.path.dirname(os.path.abspath(__file__))
+        evidence_dir = os.path.join(repo_dir, SIA4010_EVIDENCE_DIR)
+        files: List[Dict[str, Any]] = []
+        if os.path.isdir(evidence_dir):
+            for root, _dirs, filenames in os.walk(evidence_dir):
+                for filename in filenames:
+                    path = os.path.join(root, filename)
+                    rel_path = os.path.relpath(path, repo_dir)
+                    try:
+                        size_bytes = os.path.getsize(path)
+                    except Exception:
+                        size_bytes = None
+                    files.append({
+                        "name": filename,
+                        "path": rel_path,
+                        "size_bytes": size_bytes,
+                    })
+
+        evidence: Dict[str, Any] = {
+            "evidence_dir": evidence_dir,
+            "files": files,
+            "validation_class": None,
+        }
+        filenames_blob = " ".join(file_data["name"].lower() for file_data in files)
+        for key, patterns in SIA4010_EVIDENCE_FILE_PATTERNS.items():
+            matched = [
+                file_data
+                for file_data in files
+                if any(pattern.lower() in file_data["name"].lower() for pattern in patterns)
+            ]
+            evidence[key] = {
+                "present": bool(matched),
+                "files": matched,
+            }
+
+        class_markers = ["4b", "4a", "3", "2b", "2a", "1b", "1a", "5"]
+        for marker in class_markers:
+            if f"class_{marker}" in filenames_blob or f"classe_{marker}" in filenames_blob or f"class{marker}" in filenames_blob:
+                evidence["validation_class"] = marker.upper()
+                break
+
+        item_key_map = {
+            SIA4010_REQUIRED_EVIDENCE[0]: "official_test_specifications",
+            SIA4010_REQUIRED_EVIDENCE[1]: "official_evaluation_workbooks",
+            SIA4010_REQUIRED_EVIDENCE[2]: "candidate_results",
+            SIA4010_REQUIRED_EVIDENCE[3]: "reference_comparisons",
+            SIA4010_REQUIRED_EVIDENCE[4]: "validation_class_confirmation",
+        }
+        for item, key in item_key_map.items():
+            evidence[item] = bool(evidence.get(key, {}).get("present"))
+        return evidence
 
     def _calculate_heating_demand(self, rooms_data: List[RoomData]) -> Optional[float]:
         """
@@ -212,16 +275,15 @@ class SIA4010Checker:
         Returns:
             Dictionnaire des résultats des tests.
         """
-        # SIA 4010:2023, tableau 62/64. Ces tests valident le logiciel ou la
+        # SIA 4010:2023, tableau 62. Ces tests valident le logiciel ou la
         # méthode de calcul, pas directement un modèle client isolé.
         return {
-            "test_1": {"status": "NOT_CHECKABLE", "score": 0, "description": "Tests de base enveloppe selon EN ISO 52016-1 / ASHRAE 140"},
-            "test_2": {"status": "NOT_CHECKABLE", "score": 0, "description": "Type et régulation de la protection solaire selon SIA 387/4 et SIA 380/2"},
-            "test_3": {"status": "NOT_CHECKABLE", "score": 0, "description": "Régulation de l'éclairage selon SIA 387/4"},
-            "test_4": {"status": "NOT_CHECKABLE", "score": 0, "description": "Climatisation d'une seule pièce, système à air seul"},
-            "test_5": {"status": "NOT_CHECKABLE", "score": 0, "description": "Unité de traitement d'air multizone avec récupération et humidification"},
-            "test_6": {"status": "NOT_CHECKABLE", "score": 0, "description": "Ventilation à trois niveaux avec récupération de chaleur"},
-            "test_7": {"status": "NOT_CHECKABLE", "score": 0, "description": "Émission, distribution, stockage et production de chaleur/froid"},
+            test_name: {
+                "status": "NOT_CHECKABLE",
+                "score": 0,
+                "description": description,
+            }
+            for test_name, description in SIA4010_VALIDATION_TESTS.items()
         }
 
     def _calculate_sia4010_score(self, test_results: Dict[str, Any]) -> float:
