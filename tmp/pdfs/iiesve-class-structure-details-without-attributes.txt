@@ -1,0 +1,474 @@
+VEProject
+VEBody
+IESVE module
+ApachesimMV2 ResultsReaderRoom groups
+VEModel
+VELocate
+close_wea_data()
+open_wea_data()  int
+get()   dict
+save_and_close()
+set(.)
+set_max_dry_bulb(..)
+set_max_wet_bulb(..)
+set_min_dry_bulb(..)
+WeatherFileReader VESankey
+VEThermalTemplate VEApacheSystemVEProfile
+VESurface
+VEAdjacency
+Airexchange Casualgain
+Infiltration
+NaturalVentilation
+AuxilaryVentilation
+EnergyGain
+LightingGain
+People Gain
+VERoomdata
+VESuncast
+RoomAirexchange RoomInternalGain
+Infiltration
+NaturalVentilation
+AuxilaryVentilation
+RoomPowerGain
+RoomLightingGain
+RoomPeopleGain
+get_data() dict
+get_data() dict
+get_data() dict
+get_data() dict
+add_air_exchange(.)
+add_gain(.)
+apply_changes()
+get() tuple
+get_air_exchanges() list
+get_apache_systems() dict
+get_casual_gains() list
+get_room_conditions() dict
+remove_air_exchange(.)
+remove_gain(.)
+set(..) dict
+set_apache_systems(.) dict
+set_room_conditions(.) dict
+EnergySources
+get_all_energy_sources() list
+get_energy_source_by_id(.) dict
+get_energy_meter(..) 
+air_exchanges()   list
+apache_systems()  list
+archive_project(..)
+casual_gains()   list
+create_profile(….)
+daily_profile(.) 
+daily_profiles(.)   list
+register_content(….)
+deregister_content(.)
+get_display_units()
+get-macro_flo_opening_by_id(.)
+get_macroflos_opening_types() list
+get_version()
+group_profile(.)
+group_profiles(.) dict
+profiles() tuple
+save_profiles() bool
+thermal_templates(…) dict
+get_current_project() veobj
+assign_thermal_template_to_rooms(..)
+get_assigned_profiles_list(.) list
+get_bodies_list(.) list
+get_bodies_and_ids_list (.) dict
+suncast () 
+assign_construction_to_surface(..)
+assign_opening_type_to_opening(...)
+get_areas_list() dict
+get_assigned_constructions_list() list tuples
+get_assigned_profiles_list() list tuples
+get_index_of_body()
+get_surfaces_list() list
+get_room_data(.) list
+select_()
+get_data() list
+set_data() bool
+is_absolute() bool
+is_group() bool
+is_modulating() bool
+is_compact() bool
+is_freeform() bool
+is_weekly() bool
+is_yearly() bool
+is_graphable() bool
+load_data(.)
+save_data(.)
+DailyProfile
+GroupProfile
+CompactProfile
+FreeformProfile
+HVACNetwork
+get_component_by_id(.)
+get_controller_by_id(.)
+get_multiplex_by_id(.)
+get_multiplex_on_prototype_system_by_id(.)
+get_system_by_id(.)
+load_network(.)
+air_supply() dict
+apply_ncm()
+auxillary_energy(.) dict
+bivalent_systems_ncm() dict
+control() dict
+cooling(.) dict
+cooling_ncm() dict
+general_ncm() dict
+heating(.) dict
+heating_ncm() dict
+hot_water(.) dict
+metering_provision_ncm() dict
+set_air_supply(.) dict
+set_auxillary_energy(.) dict
+set_bivalent_systems_ncm() list dict
+set_control(.) 
+set_cooling(.)
+set_cooling_ncm(.) dict
+set_default(.)
+set_general_ncm(.) dict
+set_heating(.) dict
+set_heating_ncm(.) dict
+set_hot_water(.) dict
+set_metering_provision_ncm(.) dict
+set_name(.)
+set_solar_water_heating(.) dict
+set_solar_water_heating_ncm(.) dict
+set_system_adjustment_ncm(.) dict
+set_system_controls_ncm(.) dict
+set_ventilation_ncm(.) dict
+solar_water_heating(.) dict
+solar_water_heating_ncm(.) dict
+system_adjustment_ncm(.) dict
+system_controls_ncm(.) dict
+ventilation_ncm(.) dict
+air_supply_cond_names() list
+aux_energy_method_names() list
+cooling_mech_names() list
+default() str
+fuel_names() list
+insulation_names() list
+HVAC NetworkObject
+HVACAbstractController HVACAbstractComponent
+HVACAbstractBoiler
+HVACAbstractChiller
+HVACAbstractDX
+CoolingSystem
+HVACController
+HVACTimeSwitchController
+HVACAbstractController
+WithSensor
+HVACControllerWith
+DifferentialSensor
+HVACControllerWithSensor
+HVACAbstractHeatPump
+HVACAbstractWater
+AirHeatPump
+HVACAirFilter
+HVACAirToAirHeat
+EnthalpyExchanger
+HVACAmbientHeat
+RejectionDevice
+HVACChilledCeiling
+HVACChilledWaterLoop
+HVACCombinedHeat
+AndPower
+HVACComponent
+HVACCondenserWater
+Loop
+HVACCoolingCoil
+HVACDamper
+HVACDamperSplitter
+HVACDedicatedWaterside
+Economizer
+HVACDirectActingHeater
+HVACDirectActingHeater
+Room
+HVACDuct
+HVACFan
+HVACGenericCooling
+Source
+HVACHeatSource
+HVACHeatTransferLoop
+HVACHeatingCoil
+HVACInlet
+HVACJunction
+HVACMultiplex
+HVACOutlet
+HVACPCMBattery
+HVACPlenum
+HVACPreCoolingLoop
+HVACPrototypeSystem
+HVACPump
+HVACRadiator
+HVACRoom
+HVACRoomUnit
+HVACSolarAirCollectorBIST
+HVACSolarWaterHeater
+HVACSprayChamber
+HVACSteamHumidifier
+HVACThermalDuct
+Properties
+HVACThermalStorageLoop
+HVACThermalStorageTank
+HVACUnitaryCooling
+System
+HVACWaterLoopHeat
+Recovery
+HVACWaterSourceLoop
+HVACWaterWaterHeat
+Exchanger
+HVACWaterWaterHeat
+Pump
+HVACBoiler
+HVACEnhancedBoiler
+HVACChiller
+HVACElectricChiller
+HVACPLCChiller
+HVACEACChiller
+HVACEWCChillerHVACDXCoolingInstance
+HVACDXCoolingSystem
+HVACHeatPump
+HVACHeatPumpInstance
+HVACWaterAirHeatPump
+HVACWaterAirHeatPump
+Instance
+HVACCoolingTower
+HVACDryFluidCooler
+HVACGenericHeatSource
+HVACHotWaterLoop
+HVACSourceDependent
+Room
+HVACChilledCeilingRoom
+HVACRadiatorRoom
+IECC
+get_site_permit_Software() dict
+get_owner_agent() dict
+get_designer_contractor() dict
+set_owner_agent(.)
+set_site_permit_Software(.)
+set_designer_contractor(.)
+ImportGBXML
+import_file(….) take_snapshot(….) png
+PRM
+get_thermal_comfort_room_categories_da
+ta() list
+set_thermal_comfort_room_categories_dat
+a(.)
+get_unmet_load_hour_parameters(.) dict
+set_unmet_load_hour_parameters(..)
+get_site_permit_software(.) dict
+get_owner_agent(.) dict
+get_designer_contractor(.) dict
+get_florida() dict
+set_florida(..) 
+set_owner_agent(..)
+set_site_permit_Software(..)
+set_designer_contractor(..)
+open(.)
+open_aps_data(.) int
+close()
+get_all_apache_system_results(.....) dict 
+numpy
+get_all_component_process_results(......) 
+dict numpy
+get_all_opening_results(......) dict numpy
+get_all_process_results(....) dict numpy
+get_all_results(....) dict numpy
+get_all_room_results(.....) dict numpy
+get_all_surface_results(.....) dict numpy
+get_all_weather_results(...) dict numpy
+get_apache_system_results(......) numpy
+get_apache_systems_list() list
+get_component_objects_list() list
+get_component_process_results(.......) list
+get_conditioned_sizes() tuple
+get_hvac_component_results(.....) numpy
+get_hvac_node_results(.....) numpy
+get_opening_results(.....) numpy
+get_peak_results(..) dict
+get_process_list() list
+get_process_results(.....) numpy
+get_process_variables(.) list
+get_results(.....) numpy
+get_room_geometry_details_list(.) list dict
+get_room_geometry_details(.) dict
+get_room_ids() list
+get_room_list() list
+get_room_results(......) numpy
+get_surface_results(......) numpy
+get_energy_uses(.) dict
+get_energy_sources(.) dict
+get_energy_meters(.) dict
+get_energy_results(......) numpy
+get_energy_results_ex(.....) numpy
+get_units() dict
+get_variables() list
+get_weather_results(....) numpy
+assign_rooms_to_group(...)
+create_grouping_scheme(.) int
+create_room_group(...)
+get_grouping_schemes() list dict
+get_room_groups(.) list dict
+open_weather_file(.) int
+close()
+get_results(...) numpy
+get_options() dict
+reset_options() bool
+run_compliance_simulation() bool
+run_loads_sizing()
+run_simulation(.) bool
+set_hvac_network(.)
+set_options(.) bool
+show_simulation_dialog() bool
+stitch(..)
+__init__()
+add_connections(...)
+add_column_names(...)
+add_node_colours(.)
+add_node_columns(.)
+add_node_names_in_order(.)
+clear()
+generate_sankey()
+recommended_ratio() real
+save_png(.)
+save_svg(.)
+set.title(.)
+set_units_str(.)
+set_weight_width_ratio(.)
+get_results(....) list
+get_sun_up_down() list
+get_solar_altitudes(..) list
+SystemParameters
+get_schedules() dict
+get_system_parameters(.) dict
+get_zone_temperature_humidity_equip(.) 
+dict
+get_zone_ventilation_exhaust(.) dict
+get_zone_loads_airflows(.) dict
+get_zone_airflows_turndown_engineering(.
+) dict
+TariffsEngine
+Init(.......) bool
+SetComparisonProfile(.)
+GetUtilitiesNamesAndIDs() list
+GetSelectedCurrency() tuple
+GetSuppliersForUtility(.) list
+GetTariffsForSupplier(..) list
+GetTariffName(..) str
+GetSelectedTariffName(.)  str
+GetTariffCurrencyUnits(..) str
+GetRatesTimeSeries(...) numpy
+ComputeWithTariff(...) 
+ComputeWithFlatRate(..)
+GetProposedNetCost(.) float
+GetBaselineNetCost(.) float 
+Improvement() float 
+AcceptChanges() str
+get_properties() dict
+get_construction() dict
+VERenewables
+get_chp_data() dict
+get_pv_data() list dict
+get_pv_data_by_ID() dict
+get_pv_type_by_ID() dict
+get_pv_types() list dict
+get_wind_data() dict
+set_chp_data(.) 
+set_pv_data(..)
+set_pv_data_type(..)
+set_wind_data(.)
+VECdbConstruction
+add_layer(..)
+delete_layer(.)
+get_default_resistances() -
+get_g_values() dict
+get_layers() list
+get_properties() dict
+get_review_summary_string() str
+get_u_factor()  -
+insert_layer(..)
+set_const_class(.) enum
+set_f_factor(.)  -
+set_properties(.) dict
+VECdbDatabase
+get_projects() dict
+current_database()
+get_project_type_string() str
+VECdbLayer
+get_id()
+get_material() str
+get_review_summary_string(..) str
+get_properties(.) dict
+set_properties() dict
+VECdbMaterial
+get_review_summary_string() str
+get_properties() dict
+set_properties() dict
+VECdbProject
+create_construction(.) veobj
+get_construction() veobj
+get_construction_IDs() list
+get_number_of_constructions_in_category()
+get_category_string() str
+get_class_string() str
+VEComponentProcess
+get_name() str
+get_system_inputs() list dict
+get_waste_heats() list dict
+get_material_inputs() list dict
+get_material_outputs() list dict
+get_energy_inputs() list dict
+get_heat_outputs() list dict
+get_miscellaneous() list dict
+get_product() str
+VEEnergyMeter
+get() dict
+get_air_exchanges() list
+get_apache_systems() dict
+get_bldg_regs() dict
+get_general() dict
+get_internal_gains() list
+get_ncm_lighting() dict
+get_room_conditions() dict
+get_trans_solar_collectors() list
+set_all(...) dict
+set_apache_systems(.) dict
+set_bldg_regs(.) dict
+set_collector_area(..) 
+set_general(.) dict
+set_ncm_lighting(.) dict
+set_room_conditions(.) dict
+VEGeometry
+get_macroflo_id() str
+get_properties() dict
+move_opening(..) 
+centre_to_origin()
+get_building_orientation()
+get_ext_windows(.)
+get_wwr() float
+remove_doors(..)
+remove_holes(..)
+remove_openings_below_area_threshold(.)
+set_body_opening_type(.)
+set_colour(.)
+set_percent_doors(.)
+set_percent_glazing(.)
+set_percent_holes(.)
+set_percent_wall_glazing(.)
+VEMacroflo
+get() dict
+set() dict
+get_adjacencies() list
+get_areas() dict
+get_constructions() list
+get_openings() list
+get_opening_by_id()
+get_opening_totals() dict
+get_properties() dict
+move() list
+HVACSystemCurve
+VE Python API – Class hierarchy with methods:
+Methods in italics are static
