@@ -1,0 +1,51 @@
+Swiss SIA Compliance Checker
+============================
+
+Professional IESVE Run-button workflow for Swiss SIA 380/2:2022 readiness
+checks and SIA 4010:2023 validation-evidence tracking.
+
+This documentation is written in English as the canonical source. French,
+Italian, and German versions can be generated from gettext translation catalogs.
+
+.. warning::
+
+   The checker produces a readiness and audit report. It must not be presented
+   as an official SIA certificate until all required evidence is complete and
+   reviewed by the responsible compliance authority.
+
+Contents
+--------
+
+.. toctree::
+   :maxdepth: 2
+   :caption: User Documentation
+
+   user_guide
+   reporting_guide
+   manager_multilingual_brief_sphinx
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Technical Documentation
+
+   architecture
+   compliance_methodology
+   compliance_coverage_audit
+   developer_guide
+   api_reference
+   multilingual_documentation
+   glossary
+
+Project Status
+--------------
+
+The current product level is a professional MVP:
+
+* automated and partial SIA 380/2 checks where VE data is available;
+* conservative SIA 4010 readiness tracking;
+* client-facing Excel workbook with manager dashboard;
+* explicit separation between automated checks, assumptions, and official
+  validation evidence.
+
+The project is not yet a complete certification engine. Missing MSP work is
+tracked in the report and in the compliance methodology.

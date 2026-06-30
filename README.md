@@ -1,123 +1,132 @@
-# Swiss Compliance Checker
+# Swiss SIA Compliance Checker
 
-**Outil de vérification de conformité aux normes suisses SIA 380/2 et SIA 4010 pour les modèles IESVE.**
+Professional IESVE Run-button workflow for Swiss SIA 380/2:2022 readiness checks and SIA 4010:2023 validation-evidence tracking.
 
----
+This project produces a readiness and audit workbook. It must not be used as an official SIA certificate unless all required evidence is complete and reviewed by the responsible compliance authority.
 
-## 📌 Description
-Le **Swiss Compliance Checker** est un outil conçu pour :
-- **Scanner automatiquement** le projet VE actif dans IESVE.
-- **Extraire toutes les données** accessibles via l'API IESVE.
-- **Analyser le modèle** (enveloppe, ouvertures, systèmes CVC, etc.).
-- **Vérifier la conformité** aux normes **SIA 380/2** et **SIA 4010**.
-- **Détecter les erreurs**, **avertissements**, et **recommandations**.
-- **Produire un score de conformité global** (0-100).
-- **Générer un rapport Excel professionnel** avec :
-  - Onglets dédiés (Résumé, Résultats SIA, Alertes, etc.).
-  - Mise en forme conditionnelle (couleurs pour PASS/WARNING/FAIL).
-  - Graphiques et indicateurs visuels.
+## Supported Workflow
 
----
+Use this file from the IESVE Scripts window:
 
-## 📁 Structure du Projet
-```
-SwissComplianceChecker/
-│
-├── config.py                  # Configuration des seuils SIA et poids des scores.
-├── data_extractor.py          # Extraction des données du modèle VE.
-├── model_analyzer.py          # Analyse du modèle (géométrie, U-values, WWR, etc.).
-├── rule_engine.py             # Moteur de règles pour SIA 380/2 et SIA 4010.
-├── sia380_checker.py          # Vérification des règles SIA 380/2.
-├── sia4010_checker.py         # Vérification des règles SIA 4010 (7 tests).
-├── health_score.py            # Calcul des scores (Compliance Score et Health Score).
-├── excel_report.py            # Génération du rapport Excel.
-├── main.py                    # Point d'entrée du script.
-│
-├── requirements.txt           # Dépendances Python.
-└── README.md                  # Ce fichier.
+```text
+Run_VE_Swiss_Compliance.py
 ```
 
----
+The end user does not need PowerShell or command-line access.
 
-## 🚀 Installation
-1. **Copier le dossier `SwissComplianceChecker`** dans le répertoire des scripts IESVE :
-   - Exemple : `C:\Program Files\Integrated Environmental Solutions\Virtual Environment 2023\Scripts\`
-2. **Installer les dépendances** (si nécessaire) :
-   ```bash
-   pip install -r requirements.txt
-   ```
-   > **Note** : utiliser `xlsxwriter` dans l'environnement VEScripts IESVE. `openpyxl` n'est pas retenu pour les scripts VE.
+## What The Tool Does
 
----
+- Opens the active IESVE project through the IESVE Python API.
+- Extracts rooms, surfaces, openings and available model data.
+- Runs automated and partial SIA 380/2 checks where the VE data is available.
+- Builds a conservative SIA 4010 readiness matrix.
+- Scans `sia4010_evidence/` for official evidence files.
+- Generates a timestamped Excel workbook in `reports/`.
+- Generates one Excel workbook per run by default. The optional latest-report alias is disabled in `swiss_sia/config.py`.
 
-## 🎯 Utilisation
-### **Méthode 1 : Exécution via l'Éditeur de Scripts IESVE**
-1. Ouvrir **IESVE** et charger un **projet VE**.
-2. Ouvrir l'**Éditeur de Scripts** (`Tools > Scripting > Script Editor`).
-3. Charger le fichier `main.py` depuis le dossier `SwissComplianceChecker`.
-4. Exécuter le script (`Run > Run Script`).
-5. Le rapport Excel sera généré dans le dossier `reports/`.
+## What The Tool Does Not Claim
 
-### **Méthode 2 : Exécution en Ligne de Commande (si Python est disponible)**
-```bash
-cd SwissComplianceChecker
-python main.py
+- It does not certify the model as fully SIA compliant.
+- It does not validate IESVE or the model under SIA 4010 without official SIA evidence files.
+- It does not replace the responsible engineer or compliance reviewer.
+- It does not invent pass/fail decisions where the PDF requires external standards, official test files or reviewer judgement.
+
+## Main Workbook Sheets
+
+- `MANAGER DASHBOARD`: executive KPIs, charts and top actions.
+- `CLIENT SUMMARY`: safe manager/client-facing wording and immediate decisions.
+- `PREFLIGHT`: run readiness and extraction checks.
+- `P1 REMEDIATION`: owner-ready board for priority issues.
+- `ASSUMPTIONS LIMITS`: certification guardrails and known limitations.
+- `AUDIT LOG`: run metadata, evidence state and audit guardrails.
+- `SUMMARY`: score summary.
+- `ACTION PLAN`: grouped remediation actions.
+- `COMPLIANCE RESULTS`: category results.
+- `SIA REQUIREMENTS`: source-traced requirement matrix.
+- `SIA DATA COVERAGE`: data, APS/Vista and evidence coverage for SIA 380/2 and all SIA 4010 classes.
+- `INPUT REQUEST`: practical list of missing client/model-reviewer inputs.
+- `SIA4010 READINESS`: SIA 4010 evidence and test readiness.
+- `DYNAMIC RESULTS`: APS/Vista indicators when IESVE ResultsReader exposes them.
+- `ALERT SUMMARY`: grouped technical findings.
+- `ALERTS`: raw detailed findings.
+- `DATA QUALITY`: extraction coverage and missing-data risks.
+- `DETAILED SCORES`: score components.
+- `ROOMS`: extracted room-level data.
+
+## Key Files
+
+- `Run_VE_Swiss_Compliance.py`: IESVE Run-button launcher.
+- `main.py`: compatibility wrapper for existing shortcuts.
+- `swiss_sia/app.py`: workflow orchestration and timestamped report naming.
+- `swiss_sia/excel_report.py`: Excel workbook generation.
+- `swiss_sia/sia380_checker.py`: SIA 380/2 checks.
+- `swiss_sia/sia4010_checker.py`: SIA 4010 readiness/evidence checks.
+- `swiss_sia/config.py`: PDF-traced values, requirement matrix and validation classes.
+- `docs/source/`: Sphinx documentation source.
+- `docs/project/`: project notes, handoff material and compliance traceability notes.
+- `references/standards/`: local PDF standards/reference copies.
+- `references/iesve/`: IESVE API notes and reference PDFs.
+- `scripts/quality/validate_release.py`: local release-quality validator.
+
+## Repository Layout
+
+```text
+.
+|-- Run_VE_Swiss_Compliance.py      # VE Run-button launcher
+|-- main.py                         # compatibility wrapper
+|-- swiss_sia/                      # production Python package
+|-- scripts/                        # probes, quality checks and legacy utilities
+|-- docs/                           # Sphinx docs + project notes
+|-- references/                     # standards and IESVE reference material
+|-- reports/                        # generated workbooks/logs
+`-- sia4010_evidence/               # official SIA 4010 evidence drop zone
 ```
-> **Note** : Cette méthode nécessite que **IESVE soit ouvert** avec un projet VE actif.
 
----
+## SIA 4010 Evidence
 
-## 📊 Sorties
-- **Fichier Excel** : `reports/Swiss_Compliance_Report.xlsx`
-  - **SUMMARY** : Résumé des scores et KPI.
-  - **COMPLIANCE RESULTS** : Résultats détaillés des vérifications SIA 380/2 et SIA 4010.
-  - **ALERTS** : Liste des alertes (erreurs, avertissements, informations).
-  - **DETAILED SCORES** : Scores détaillés par catégorie.
-  - **ROOMS** : Données des pièces (surfaces, volumes, WWR, etc.).
-- **Fichier Log** : `reports/swiss_compliance_checker.log` (pour le débogage).
+Place official evidence in:
 
----
+```text
+sia4010_evidence/
+```
 
-## 🔧 Configuration
-- **`config.py`** : Modifier les **seuils SIA** et **poids des scores** selon vos besoins.
-  - Exemple : adapter les seuils SIA 380/2 ou la matrice de référence validée.
-- **`excel_report.py`** : Personnaliser le **format du rapport Excel** (couleurs, styles, etc.).
+Recommended filename prefixes:
 
----
+- `SIA4010_official_test_specs_*`
+- `SIA4010_official_evaluation_workbook_*`
+- `SIA4010_candidate_results_APS_Vista_*`
+- `SIA4010_reference_comparison_plots_*`
+- `SIA4010_validation_class_confirmation_*`
 
-## 📌 Exigences
-- **IESVE 2023+** (avec API Python activée).
-- **Python 3.8+** (inclus dans IESVE).
-- **Modules Python** :
-  - `xlsxwriter` (inclus dans IESVE).
-  - `iesve` (API IESVE, inclus).
+File presence and classification are readiness indicators only. The content, official source and comparison validity must still be reviewed manually.
 
----
+## MVP Status
 
-## 🛠️ Développement
-### **Ajouter une Nouvelle Règle SIA**
-1. **Dans `rule_engine.py`** :
-   - Définir une nouvelle `Rule` et l'ajouter au `RuleEngine`.
-2. **Dans `sia380_checker.py` ou `sia4010_checker.py`** :
-   - Ajouter la règle au validateur correspondant.
+The MVP is suitable for internal manager review when:
 
-### **Étendre les Fonctionnalités**
-- **Ajouter un nouvel onglet Excel** :
-  - Modifier `excel_report.py` pour ajouter un nouvel onglet (ex: `HVAC`).
-- **Ajouter un nouveau calcul** :
-  - Modifier `model_analyzer.py` pour ajouter une nouvelle méthode (ex: calcul du **WWR moyen**).
+- It runs from the IESVE Run button.
+- A timestamped report is generated.
+- `MANAGER DASHBOARD` is first.
+- `CLIENT SUMMARY`, `P1 REMEDIATION`, `ASSUMPTIONS LIMITS` and `AUDIT LOG` are present.
+- SIA 4010 remains `NOT_CHECKABLE` unless official evidence is complete.
+- The workbook opens in Excel without repair prompts.
 
----
+Run this local quality check outside VE before sharing a release:
 
-## 📞 Support
-Pour toute question ou problème, consulter :
-- **Documentation IESVE** : [VEScripts User Guide](https://www.iesve.com/support/faq/pdf/vescriptsguide)
-- **Normes SIA** :
-  - [SIA 380/2](https://www.sia.ch/)
-  - [SIA 4010](https://www.sia.ch/fr/normes/sia-4010/)
+```powershell
+python -m pip install -r scripts/quality/requirements.txt
+python scripts/quality/validate_release.py
+```
 
----
+## MSP Direction
 
-## 📜 Licence
-Ce projet est **libre d'utilisation** pour les utilisateurs de IESVE.
-© 2026 - Swiss Compliance Checker
+The minimum saleable product should add:
+
+- Expanded APS/Vista hourly result extraction for CO2, lighting, fans and final energy.
+- Richer dynamic heating/cooling and temperature evidence.
+- SIA 2024 use-category mapping.
+- SIA 387/4 lighting and solar-control mapping.
+- Ventilation/AHU control checks.
+- Cooling EER/SEER and heating SCOP checks by system type and power band.
+- PV evidence and energy balance support.
+- Import/comparison support for official SIA 4010 evaluation workbooks.

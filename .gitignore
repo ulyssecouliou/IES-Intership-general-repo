@@ -216,3 +216,13 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Swiss SIA checker generated outputs
+reports/*.xlsx
+reports/*.log
+reports/iesve_extraction_probe_*.json
+reports/previews/
+.tmp_render/
+roadmap_render/
+tmp/
+docs/build/

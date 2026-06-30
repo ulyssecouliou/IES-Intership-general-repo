@@ -1,0 +1,22 @@
+:root {
+  --sia-primary: #0b1f2a;
+  --sia-accent: #0f766e;
+  --sia-warm: #fff7e6;
+}
+
+.wy-side-nav-search {
+  background: linear-gradient(135deg, var(--sia-primary), var(--sia-accent));
+}
+
+.wy-nav-content {
+  max-width: 1180px;
+}
+
+.admonition.note {
+  border-left-color: var(--sia-accent);
+}
+
+.rst-content code.literal {
+  color: #0f766e;
+}
+

@@ -7,7 +7,7 @@ The diagnostic JSON will be written to the local reports folder.
 
 import importlib
 
-import iesve_extraction_probe
+from scripts.probes import iesve_extraction_probe
 
 
 iesve_extraction_probe = importlib.reload(iesve_extraction_probe)
