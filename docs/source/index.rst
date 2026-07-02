@@ -22,6 +22,7 @@ Contents
 
    user_guide
    reporting_guide
+   manager_reference_integration
    manager_multilingual_brief_sphinx
 
 .. toctree::

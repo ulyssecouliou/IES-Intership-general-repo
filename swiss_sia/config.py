@@ -18,7 +18,7 @@ PACKAGE_ROOT = Path(__file__).resolve().parent
 PROJECT_ROOT = PACKAGE_ROOT.parent
 
 # =============================================================================
-# SIA 380/2:2022 - valeurs limites et cibles extraites du PDF
+# SIA 380/2:2022 - limit and target values extracted from the PDF
 # =============================================================================
 SIA3802_SOURCE_REFERENCES = {
     "table_2": "SIA 380/2:2022 FR, tableau 2, pages PDF 32-35",
@@ -30,7 +30,7 @@ SIA3802_SOURCE_REFERENCES = {
 }
 
 SIA3802_LIMIT_VALUES = {
-    # Enveloppe et ouvertures
+    # Envelope and openings
     "external_wall_u": 0.20,
     "external_wall_against_ground_u": 0.30,
     "internal_partition_non_bearing_u": 0.30,
@@ -47,7 +47,7 @@ SIA3802_LIMIT_VALUES = {
     "glazing_g_value": 0.50,
     "glazing_light_transmittance": 0.70,
     "infiltration_m3_h_m2": 0.15,
-    # Ventilation / CTA pour le projet de référence
+    # Ventilation / AHU for the reference project
     "ventilation_efficiency": 1.0,
     "duct_airtightness_class": "C",
     "ahu_airtightness_class": "L2",
@@ -58,7 +58,7 @@ SIA3802_LIMIT_VALUES = {
     "heat_recovery_pressure_drop_pa": 300,
     "heat_recovery_temperature_efficiency": 0.73,
     "heat_recovery_humidity_efficiency": 0.0,
-    # Régulation et systèmes
+    # Control and systems
     "cooling_control_delta_t_k": -1.8,
     "heating_control_delta_t_k": 1.2,
     "pv_power_w_per_m2_sre": 10,
@@ -205,7 +205,7 @@ SIA3801_U_VALUES = SIA3802_U_VALUES
 SIA3801_THRESHOLDS = SIA3802_THRESHOLDS
 
 # =============================================================================
-# SIA 4010:2023 - validation de méthode/logiciel, pas seuil bâtiment autonome
+# SIA 4010:2023 - method/software validation, not a standalone building threshold
 # =============================================================================
 SIA4010_SOURCE_REFERENCES = {
     "purpose": "SIA 4010:2023 FR, page PDF 8, clauses 2.3-2.6",
@@ -214,35 +214,213 @@ SIA4010_SOURCE_REFERENCES = {
     "infrastructure": "SIA 4010:2023 FR, clauses 4.6.1-4.6.2, pages PDF 48-49",
     "test_2_3_variants": "SIA 4010:2023 FR, tableau 65, page PDF 52",
     "test_5_variants": "SIA 4010:2023 FR, tableau 66, page PDF 52",
+    "validated_software_register": "SIA 4010 Register validierter Software_24-09-17.pdf, pages 1-2, Zurich 2024-09-17",
+    "manager_navigator_backlog": "Sia 380_2 Navigator - Executive Summary & Product Backlog.docx",
 }
 
 SIA4010_VALIDATION_TESTS = {
-    "test_1": "Tests de base de l'enveloppe selon EN ISO 52016-1 / ASHRAE 140",
-    "test_2": "Régulation de la protection solaire selon SIA 387/4 et SIA 380/2 annexe A",
-    "test_3": "Régulation de l'éclairage selon SIA 387/4",
-    "test_4": "Climatisation d'une seule pièce, système à air seul",
-    "test_5": "CTA multizone avec réchauffeur, refroidisseur, humidificateur et rotor chaleur/humidité",
-    "test_6": "Ventilation à trois niveaux avec récupération de chaleur, débit constant et débordement",
-    "test_7": "Émission, distribution, stockage et production de chaud/froid; besoin total chauffage/refroidissement",
+    "test_1": "Basic envelope tests according to EN ISO 52016-1 / ASHRAE 140",
+    "test_2": "Solar protection control according to SIA 387/4 and SIA 380/2 Annex A",
+    "test_3": "Lighting control according to SIA 387/4",
+    "test_4": "Single-room all-air air-conditioning system",
+    "test_5": "Multizone AHU with reheater, cooler, humidifier and heat/moisture wheel",
+    "test_6": "Three-stage ventilation with heat recovery, constant airflow and overflow",
+    "test_7": "Heating/cooling emission, distribution, storage and generation; total heating/cooling need",
 }
 
 SIA4010_VALIDATION_CLASSES = {
-    "1A": "Tests 1 et 2A",
-    "1B": "Tests 1 et 2",
-    "2A": "Tests 1, 2A, 3A à 3F",
-    "2B": "Tests 1 à 3",
-    "3": "Tests 1 et 4 à 6",
-    "4A": "Tests 1, 2A, 3A à 3F, 4 à 7",
-    "4B": "Tests 1 à 7",
+    "1A": "Tests 1 and 2A",
+    "1B": "Tests 1 and 2",
+    "2A": "Tests 1, 2A, 3A to 3F",
+    "2B": "Tests 1 to 3",
+    "3": "Tests 1 and 4 to 6",
+    "4A": "Tests 1, 2A, 3A to 3F, 4 to 7",
+    "4B": "Tests 1 to 7",
     "5": "Test 7",
 }
 
+SIA4010_VALIDATION_CLASS_DETAILS = {
+    "1A": {
+        "applications": "Cooling need assessment and basic thermal load calculation",
+        "solar_protection": "Without sun-position-dependent control, e.g. fabric awnings",
+        "tests": "1 and 2A",
+        "source": SIA4010_SOURCE_REFERENCES["validated_software_register"],
+    },
+    "1B": {
+        "applications": "Cooling need assessment and basic thermal load calculation",
+        "solar_protection": "Rafflamellenstoren / venetian blinds",
+        "tests": "1 and 2",
+        "source": SIA4010_SOURCE_REFERENCES["validated_software_register"],
+    },
+    "2A": {
+        "applications": "Lighting energy according to SIA 387/4:2023 clause 3.4, heating demand and cooling demand",
+        "solar_protection": "Without sun-position-dependent control, e.g. fabric awnings",
+        "tests": "1, 2A, 3A to 3F",
+        "source": SIA4010_SOURCE_REFERENCES["validated_software_register"],
+    },
+    "2B": {
+        "applications": "Lighting energy according to SIA 387/4:2023 clause 3.4, heating demand and cooling demand",
+        "solar_protection": "Rafflamellenstoren / venetian blinds",
+        "tests": "1 to 3",
+        "source": SIA4010_SOURCE_REFERENCES["validated_software_register"],
+    },
+    "3": {
+        "applications": "Need assessment for humidification and dehumidification",
+        "solar_protection": "Not separately restricted in the manager-provided register",
+        "tests": "1, 4 to 6",
+        "source": SIA4010_SOURCE_REFERENCES["validated_software_register"],
+    },
+    "4A": {
+        "applications": "System-related thermal load calculation, cooling energy demand and heating energy demand",
+        "solar_protection": "Without sun-position-dependent control, e.g. fabric awnings",
+        "tests": "1, 2A, 3A to 3F, 4 to 7",
+        "source": SIA4010_SOURCE_REFERENCES["validated_software_register"],
+    },
+    "4B": {
+        "applications": "System-related thermal load calculation, cooling energy demand and heating energy demand",
+        "solar_protection": "Rafflamellenstoren / venetian blinds",
+        "tests": "1 to 7",
+        "source": SIA4010_SOURCE_REFERENCES["validated_software_register"],
+    },
+    "5": {
+        "applications": "Cooling and heating energy demand with existing demand profiles",
+        "solar_protection": "Not separately restricted in the manager-provided register",
+        "tests": "7",
+        "source": SIA4010_SOURCE_REFERENCES["validated_software_register"],
+    },
+}
+
+SIA4010_VALIDATED_SOFTWARE_REGISTER = [
+    {
+        "institution": "Equa Solutions AG, Zug",
+        "software": "IDA-ICE 5.0 beta",
+        "validation_classes": ["1A", "1B", "2A", "2B", "3", "4A", "4B", "5"],
+        "valid_until": "2029-03-20",
+        "source": SIA4010_SOURCE_REFERENCES["validated_software_register"],
+    },
+    {
+        "institution": "Fachhochschule Nordwestschweiz, Muttenz",
+        "software": "Energy+ / OpenStudio",
+        "validation_classes": ["1A", "1B", "2A", "2B", "4A", "4B"],
+        "valid_until": "2029-03-20",
+        "source": SIA4010_SOURCE_REFERENCES["validated_software_register"],
+    },
+    {
+        "institution": "Lemon Consult AG, Zurich",
+        "software": "EDSL Tas",
+        "validation_classes": ["1A", "3", "4A"],
+        "valid_until": "2029-03-20",
+        "source": SIA4010_SOURCE_REFERENCES["validated_software_register"],
+    },
+    {
+        "institution": "E4tech Software SA, Lausanne",
+        "software": "Lesosai 2024 build 1903",
+        "validation_classes": ["1A", "1B", "2A", "2B", "3"],
+        "valid_until": "2029-09-17",
+        "source": SIA4010_SOURCE_REFERENCES["validated_software_register"],
+    },
+]
+
+SIA4010_IESVE_REGISTER_STATUS = {
+    "software": "IESVE",
+    "listed_in_manager_register": False,
+    "register_date": "2024-09-17",
+    "source": SIA4010_SOURCE_REFERENCES["validated_software_register"],
+    "guardrail": (
+        "IESVE is not listed in the manager-provided SIA 4010 validated-software register. "
+        "Do not claim software-level SIA 4010 validation without separate official evidence."
+    ),
+}
+
+SIA3802_NAVIGATOR_BACKLOG = [
+    {
+        "epic": "EPIC 1",
+        "name": "Regulatory Framework & Project Setup",
+        "user_story": "Explicitly select SIA 380/2:2022 as the regulatory framework.",
+        "acceptance_criteria": "Mandatory framework selection; framework visible; framework locked once calculation starts.",
+        "current_project_status": "PARTIAL - report states standards scope, but VE input locking is not implemented.",
+        "next_action": "Add project-template fingerprint and framework-lock evidence in preflight/audit log.",
+    },
+    {
+        "epic": "EPIC 2",
+        "name": "Climate Data Management",
+        "user_story": "Select climate files from a validated list.",
+        "acceptance_criteria": "Closed list of approved climate files; no manual weather edits; warning for non-SIA files.",
+        "current_project_status": "READINESS_ONLY - climate evidence is requested but not enforced as a closed VE list.",
+        "next_action": "Create approved Swiss climate-file manifest and compare active VE weather file against it.",
+    },
+    {
+        "epic": "EPIC 3",
+        "name": "Thermal Zoning & Usage Classification",
+        "user_story": "Assign each thermal zone to a SIA usage category.",
+        "acceptance_criteria": "Mandatory SIA usage per zone; locked schedules; cross-zone consistency checks.",
+        "current_project_status": "PARTIAL - rooms are extracted, but SIA 2024 usage assignment remains evidence-driven.",
+        "next_action": "Add room-by-room SIA 2024 usage mapping template and validation sheet.",
+    },
+    {
+        "epic": "EPIC 4",
+        "name": "Building Envelope Inputs",
+        "user_story": "Select envelope U-values from SIA tables or justify manual values.",
+        "acceptance_criteria": "Normative value library; justification required for manual inputs; automatic SIA comparison.",
+        "current_project_status": "PARTIAL - automated comparison exists for extracted envelope/opening values.",
+        "next_action": "Add evidence fields for manual overrides and construction-library provenance.",
+    },
+    {
+        "epic": "EPIC 5",
+        "name": "Internal Gains",
+        "user_story": "Use predefined SIA profiles for occupants, lighting and equipment.",
+        "acceptance_criteria": "Closed SIA profile libraries; no optimized/adaptive profiles; visible densities and power values.",
+        "current_project_status": "MISSING - gains are checked as data coverage, not constrained by SIA profile libraries.",
+        "next_action": "Build SIA profile manifest and detect deviations from active room templates/profiles.",
+    },
+    {
+        "epic": "EPIC 6",
+        "name": "Ventilation & Infiltration",
+        "user_story": "Ventilation rates follow SIA-defined values and scenarios.",
+        "acceptance_criteria": "Predefined SIA airflow rates; limited operating modes; simplified infiltration model only.",
+        "current_project_status": "PARTIAL - infiltration readiness exists; full ventilation mode locking is not implemented.",
+        "next_action": "Map VE ventilation/MacroFlo fields to SIA airflow scenarios and evidence requirements.",
+    },
+    {
+        "epic": "EPIC 7",
+        "name": "Setpoints & Control Logic",
+        "user_story": "Temperature setpoints are fixed and SIA-compliant.",
+        "acceptance_criteria": "Fixed heating/cooling setpoints; no adaptive control; limited night setback options.",
+        "current_project_status": "MISSING - setpoint/control locking is not automated.",
+        "next_action": "Extract thermal template setpoints/profiles and flag adaptive or unsupported controls.",
+    },
+    {
+        "epic": "EPIC 8",
+        "name": "Technical Systems",
+        "user_story": "Select generic SIA-compliant system templates with bounded efficiencies.",
+        "acceptance_criteria": "Generic system library; normative efficiency ranges; no implicit optimization.",
+        "current_project_status": "PARTIAL - HVAC readiness and SIA 380/2 efficiency tables are traced, but templates are not locked.",
+        "next_action": "Create generic system-template manifest and map VE Apache/HVAC networks to SIA ranges.",
+    },
+    {
+        "epic": "EPIC 9",
+        "name": "Results, Validation & Reporting",
+        "user_story": "Map results automatically to SIA 380/2 indicators.",
+        "acceptance_criteria": "Standardized result tables; consistency checks; error/warning list before calculation approval.",
+        "current_project_status": "PARTIAL - Excel report, dynamic result readiness and alerts are implemented.",
+        "next_action": "Expand APS/Vista extraction for official SIA result tables and comparison workbooks.",
+    },
+    {
+        "epic": "EPIC 10",
+        "name": "Audit Trail & Compliance Report",
+        "user_story": "Generate an assumption report so compliance can be reviewed and defended.",
+        "acceptance_criteria": "Full assumption log; compliance status per input; exportable PDF/DOC report.",
+        "current_project_status": "PARTIAL - Excel audit report exists; exportable PDF/DOC package remains future work.",
+        "next_action": "Add evidence-pack export and optional DOCX/PDF manager package generation.",
+    },
+]
+
 SIA4010_REQUIRED_EVIDENCE = [
-    "Spécifications officielles des tests SIA",
-    "Fichiers Excel officiels d'évaluation SIA",
-    "Résultats du logiciel/modèle candidat transférés dans les fichiers d'évaluation",
-    "Graphiques/comparaisons aux résultats de référence générés par les fichiers officiels",
-    "Classe de validation demandée et confirmée par la SIA/sous-commission",
+    "Official SIA test specifications",
+    "Official SIA Excel evaluation workbooks",
+    "Candidate software/model results transferred into the official evaluation workbooks",
+    "Reference-result graphs/comparisons generated by the official files",
+    "Validation class requested and confirmed by SIA or the responsible sub-commission",
 ]
 
 SIA4010_CLIMATE_AND_3802_COMPLEMENTS = {
@@ -390,7 +568,7 @@ SIA4010_SYSTEM_REQUIREMENT_SOURCES = {
 SIA4010_TEST_READINESS_REQUIREMENTS = {
     "test_1": {
         "source": "SIA 4010:2023 FR, tableau 62 page PDF 46; annexe A page PDF 50",
-        "domain": "Enveloppe de base EN ISO 52016-1 / ASHRAE 140",
+        "domain": "Basic envelope EN ISO 52016-1 / ASHRAE 140",
         "model_requirements": [
             "zones/rooms extracted",
             "external envelope surfaces extracted",
@@ -398,11 +576,11 @@ SIA4010_TEST_READINESS_REQUIREMENTS = {
             "external window/opening data extracted",
             "official test model and reference outputs attached",
         ],
-        "next_action": "Importer/executer le cas test officiel et comparer les sorties horaires au fichier SIA.",
+        "next_action": "Import/run the official test case and compare hourly outputs with the SIA file.",
     },
     "test_2": {
         "source": "SIA 4010:2023 FR, tableau 62 page PDF 46; tableau 65 page PDF 52",
-        "domain": "Regulation protection solaire SIA 387/4 + SIA 380/2 annexe A",
+        "domain": "Solar-protection control SIA 387/4 + SIA 380/2 Annex A",
         "model_requirements": [
             "external glazing and g-values extracted",
             "solar protection type/category documented",
@@ -410,11 +588,11 @@ SIA4010_TEST_READINESS_REQUIREMENTS = {
             "CH climate/use/infiltration diagnostic scenario attached",
             "official test 2 evaluation file attached",
         ],
-        "next_action": "Extraire ou documenter les stores, seuils de commande et g_total actif.",
+        "next_action": "Extract or document blinds, control thresholds and active g_total.",
     },
     "test_3": {
         "source": "SIA 4010:2023 FR, tableau 62 page PDF 46; tableau 65 page PDF 52",
-        "domain": "Regulation eclairage SIA 387/4",
+        "domain": "Lighting control SIA 387/4",
         "model_requirements": [
             "lighting power extracted",
             "daylight control strategy documented",
@@ -422,11 +600,11 @@ SIA4010_TEST_READINESS_REQUIREMENTS = {
             "lighting energy outputs available",
             "official test 3 evaluation file attached",
         ],
-        "next_action": "Mapper les templates VE vers puissance eclairage et commande SIA 387/4.",
+        "next_action": "Map VE templates to lighting power and SIA 387/4 control strategy.",
     },
     "test_4": {
         "source": "SIA 4010:2023 FR, tableau 62 page PDF 46; annexe A page PDF 50",
-        "domain": "Climatisation mono-piece, systeme a air seul",
+        "domain": "Single-room all-air air-conditioning system",
         "model_requirements": [
             "HVAC systems extracted",
             "ventilation/airflow data extracted",
@@ -434,11 +612,11 @@ SIA4010_TEST_READINESS_REQUIREMENTS = {
             "CO2/temperature hourly outputs available",
             "official amphitheatre test model and evaluation file attached",
         ],
-        "next_action": "Exporter les resultats horaires APS/Vista requis pour air fourni, CO2, batteries et puissances.",
+        "next_action": "Export the required APS/Vista hourly results for supply air, CO2, coils and powers.",
     },
     "test_5": {
         "source": "SIA 4010:2023 FR, tableau 62 page PDF 46; tableau 66 page PDF 52",
-        "domain": "CTA multizone complexe avec recuperation chaleur/humidite",
+        "domain": "Complex multizone AHU with heat/moisture recovery",
         "model_requirements": [
             "multizone HVAC/AHU data extracted",
             "fan control identifier documented",
@@ -446,11 +624,11 @@ SIA4010_TEST_READINESS_REQUIREMENTS = {
             "humidifier type/control documented",
             "official test 5 variant/evaluation file attached",
         ],
-        "next_action": "Mapper AHU VE vers variantes 5A-5D: FAN_CTRL, recuperateur et humidificateur.",
+        "next_action": "Map VE AHU data to variants 5A-5D: FAN_CTRL, recovery unit and humidifier.",
     },
     "test_6": {
         "source": "SIA 4010:2023 FR, tableau 62 page PDF 46; annexe A page PDF 51",
-        "domain": "Ventilation trois niveaux avec recuperation et debordement",
+        "domain": "Three-stage ventilation with heat recovery and overflow",
         "model_requirements": [
             "ventilation systems extracted",
             "constant airflow and stage data documented",
@@ -458,11 +636,11 @@ SIA4010_TEST_READINESS_REQUIREMENTS = {
             "restaurant/kitchen overflow represented",
             "official test 6 evaluation file attached",
         ],
-        "next_action": "Extraire debits, niveaux, recuperation et logique de debordement restaurant/cuisine.",
+        "next_action": "Extract airflow rates, stages, recovery and restaurant/kitchen overflow logic.",
     },
     "test_7": {
         "source": "SIA 4010:2023 FR, tableau 62 page PDF 46; annexe A page PDF 51",
-        "domain": "Emission, distribution, stockage, production chaud/froid",
+        "domain": "Heating/cooling emission, distribution, storage and generation",
         "model_requirements": [
             "heating/cooling demand outputs available",
             "final energy by system/carrier available",
@@ -470,7 +648,7 @@ SIA4010_TEST_READINESS_REQUIREMENTS = {
             "pump/fan/auxiliary energy available",
             "official test 7 loads and evaluation file attached",
         ],
-        "next_action": "Lire les sorties APS/Vista et separer besoins, energie finale, auxiliaires, stockage et production.",
+        "next_action": "Read APS/Vista outputs and separate needs, final energy, auxiliaries, storage and generation.",
     },
 }
 
@@ -487,8 +665,8 @@ SIA4010_TEST_CLASS_COVERAGE = {
 }
 
 SIA4010_THRESHOLDS = {
-    # Le PDF SIA 4010 ne définit pas de limites bâtiment autonomes en kWh/m2 ou
-    # CO2. Ces clés sont conservées seulement pour de futurs indicateurs client.
+    # The SIA 4010 PDF does not define standalone building limits in kWh/m2 or
+    # CO2. These keys are kept only for future client indicators.
     "heating_demand_max": None,
     "cooling_demand_max": None,
     "primary_energy_max": None,
@@ -497,7 +675,7 @@ SIA4010_THRESHOLDS = {
 }
 
 # =============================================================================
-# POIDS DES CATÉGORIES POUR LE COMPLIANCE SCORE
+# CATEGORY WEIGHTS FOR THE COMPLIANCE SCORE
 # =============================================================================
 SIA_COMPLIANCE_REQUIREMENT_MATRIX = [
     {
@@ -579,8 +757,8 @@ SIA_COMPLIANCE_REQUIREMENT_MATRIX = [
         "unit": "minimum",
         "target": SIA3802_TARGET_VALUES["glazing_light_transmittance"],
         "source": SIA3802_SOURCE_REFERENCES["table_2"],
-        "automation": "NOT_IMPLEMENTED",
-        "implemented_rule": "",
+        "automation": "PARTIAL",
+        "implemented_rule": "SIA3802_VISIBLE_TRANSMITTANCE",
         "mvp_status": "MSP",
         "next_action": "Extract visible transmittance from CDB glazing properties or require external evidence.",
     },
@@ -607,8 +785,8 @@ SIA_COMPLIANCE_REQUIREMENT_MATRIX = [
         "unit": "category",
         "target": "category 2 protection and control category 3",
         "source": f"{SIA3802_SOURCE_REFERENCES['table_2']}; {SIA3802_SOURCE_REFERENCES['table_10']}",
-        "automation": "NOT_IMPLEMENTED",
-        "implemented_rule": "",
+        "automation": "PARTIAL",
+        "implemented_rule": "SIA3802_SOLAR_PROTECTION_TYPE_MISSING / SIA3802_SOLAR_PROTECTION_CONTROL_MISSING / SIA3802_G_TOTAL_WITH_SHADING_MISSING",
         "mvp_status": "MSP",
         "next_action": "Map VE shading devices, optical properties, controls and active g_total.",
     },
@@ -621,7 +799,7 @@ SIA_COMPLIANCE_REQUIREMENT_MATRIX = [
         "unit": "control class",
         "target": "Table 4 target control",
         "source": SIA3802_SOURCE_REFERENCES["table_4"],
-        "automation": "NOT_IMPLEMENTED",
+        "automation": "PARTIAL",
         "implemented_rule": "SIA3802_VENTILATION_RATE",
         "mvp_status": "MSP",
         "next_action": "Extract airflow per m2, zone/system type and control identifiers.",
@@ -635,7 +813,7 @@ SIA_COMPLIANCE_REQUIREMENT_MATRIX = [
         "unit": "EER/SEER",
         "target": "Tables 5-7 target values",
         "source": SIA3802_SOURCE_REFERENCES["tables_5_9"],
-        "automation": "NOT_IMPLEMENTED",
+        "automation": "PARTIAL",
         "implemented_rule": "SIA3802_HVAC_EFFICIENCY",
         "mvp_status": "MSP",
         "next_action": "Extract cooling generator type, cooling power, EER/SEER and part-load data.",
@@ -649,7 +827,7 @@ SIA_COMPLIANCE_REQUIREMENT_MATRIX = [
         "unit": "SCOP",
         "target": "Tables 8-9 target values where provided",
         "source": SIA3802_SOURCE_REFERENCES["tables_5_9"],
-        "automation": "NOT_IMPLEMENTED",
+        "automation": "PARTIAL",
         "implemented_rule": "SIA3802_HVAC_EFFICIENCY",
         "mvp_status": "MSP",
         "next_action": "Extract heating generator type, power band and SCOP/SIA 384/3 evidence.",
@@ -663,8 +841,8 @@ SIA_COMPLIANCE_REQUIREMENT_MATRIX = [
         "unit": "method evidence",
         "target": "Complete APS/Vista hourly evidence pack",
         "source": SIA3802_SOURCE_REFERENCES["method"],
-        "automation": "NOT_IMPLEMENTED",
-        "implemented_rule": "",
+        "automation": "PARTIAL",
+        "implemented_rule": "APS/Vista dynamic result extraction",
         "mvp_status": "MSP",
         "next_action": "Read APS/Vista outputs for heating, cooling, temperatures, CO2 and timestep metadata.",
     },
@@ -829,7 +1007,7 @@ SIA_DATA_COVERAGE_MATRIX = [
         "data_needed": "Visible transmittance per glazing construction",
         "expected_source": "IESVE CDB glazing data or manufacturer evidence",
         "coverage_key": "visible_transmittance",
-        "automation": "NOT_IMPLEMENTED",
+        "automation": "PARTIAL",
         "preferred_format": "CDB export or manufacturer glazing schedule",
         "destination": "sia4010_evidence/",
         "source": SIA3802_SOURCE_REFERENCES["table_2"],
@@ -846,7 +1024,7 @@ SIA_DATA_COVERAGE_MATRIX = [
         "data_needed": "Frame/glass split or equivalent window construction definition",
         "expected_source": "IESVE opening construction data or external schedule",
         "coverage_key": "frame_fraction",
-        "automation": "NOT_IMPLEMENTED",
+        "automation": "PARTIAL",
         "preferred_format": "Window schedule with frame fraction",
         "destination": "sia4010_evidence/",
         "source": SIA3802_SOURCE_REFERENCES["table_2"],
@@ -863,7 +1041,7 @@ SIA_DATA_COVERAGE_MATRIX = [
         "data_needed": "Blind type, reflectance/transmittance, active g_total and control thresholds",
         "expected_source": "VE shading data plus reviewer evidence",
         "coverage_key": "solar_protection",
-        "automation": "NOT_IMPLEMENTED",
+        "automation": "PARTIAL",
         "preferred_format": "Shading schedule/export and control strategy note",
         "destination": "sia4010_evidence/",
         "source": f"{SIA3802_SOURCE_REFERENCES['table_10']}; {SIA4010_SOURCE_REFERENCES['test_2_3_variants']}",
@@ -1174,34 +1352,34 @@ CATEGORY_WEIGHTS = {
     "envelope": 0.25,    # Poids de l'enveloppe (murs, toitures, planchers)
     "openings": 0.20,    # Poids des ouvertures (fenêtres, portes)
     "ventilation": 0.15, # Poids de la ventilation
-    "hvac": 0.20,        # Poids des systèmes CVC
-    "energy": 0.15,      # Poids de l'énergie (consommation, émissions)
+    "hvac": 0.20,        # HVAC system weight
+    "energy": 0.15,      # Energy weight (consumption, emissions)
     "simulation": 0.05,  # Poids des tests de simulation (SIA 4010)
 }
 
 # =============================================================================
-# POIDS DES TESTS SIA 4010
+# SIA 4010 TEST WEIGHTS
 # =============================================================================
 SIA4010_TEST_WEIGHTS = {
-    "test_1": 0.15,  # BESTEST (Enveloppe de base)
-    "test_2": 0.10,  # Contrôle du Sonnenschutz
-    "test_3": 0.10,  # Contrôle de l'éclairage
-    "test_4": 0.10,  # Système CVC (Einzelraum)
-    "test_5": 0.15,  # Système CVC (Mehrzonen)
-    "test_6": 0.10,  # Lüftungsanlage (Système de ventilation)
-    "test_7": 0.30,  # Besoins énergétiques totaux
+    "test_1": 0.15,  # BESTEST basic envelope
+    "test_2": 0.10,  # Solar-protection control
+    "test_3": 0.10,  # Lighting control
+    "test_4": 0.10,  # HVAC system (single room)
+    "test_5": 0.15,  # HVAC system (multizone)
+    "test_6": 0.10,  # Ventilation system
+    "test_7": 0.30,  # Total energy needs
 }
 
 # =============================================================================
-# FACTEURS D'ÉMISSION CO₂ (kg CO₂/kWh)
+# CO2 EMISSION FACTORS (kg CO2/kWh)
 # =============================================================================
 EMISSION_FACTORS = {
-    "electricity": 0.05,   # Mix électrique suisse
+    "electricity": 0.05,   # Swiss electricity mix
     "gas": 0.20,          # Gaz naturel
     "oil": 0.25,          # Fioul
     "wood": 0.02,         # Bois
     "solar": 0.0,         # Solaire
-    "wind": 0.0,          # Éolien
+    "wind": 0.0,          # Wind
     "district_heating": 0.1,  # Chauffage urbain
 }
 
@@ -1216,10 +1394,10 @@ LOG_FILE = "swiss_compliance_checker.log"  # Fichier de log
 # PARAMÈTRES DE SIMULATION (ApacheSim)
 # =============================================================================
 SIMULATION_PARAMS = {
-    "results_filename": "swiss_compliance_simulation",  # Nom du fichier de résultats
+    "results_filename": "swiss_compliance_simulation",  # Results file name
     "simulation_timestep": 2,  # 0=1min, 1=2min, 2=6min, 3=10min, 4=30min
     "reporting_interval": 2,   # 0=6min, 1=10min, 2=30min, 3=60min
-    "HVAC": True,              # Inclure les systèmes CVC
+    "HVAC": True,              # Include HVAC systems
     "nat_ventilation": True,   # Inclure la ventilation naturelle
     "aux_ventilation": True,   # Inclure la ventilation auxiliaire
 }
@@ -1270,24 +1448,24 @@ EXCEL_FORMATS = {
 }
 
 # =============================================================================
-# PÉNALITÉS PAR TYPE D'ALERTE (pour le calcul du Health Score)
+# ALERT-TYPE PENALTIES (for Health Score calculation)
 # =============================================================================
 PENALTIES = {
-    "missing_template": 5.0,       # Template thermique manquant
-    "missing_hvac": 5.0,           # Système CVC manquant
-    "missing_construction": 2.0,   # Construction manquante
-    "zero_area_room": 8.0,         # Pièce avec une surface nulle
-    "zero_volume_room": 8.0,       # Pièce avec un volume nul
-    "tiny_area_room": 3.0,         # Pièce avec une surface ≤ 1 m²
-    "tiny_volume_room": 2.0,       # Pièce avec un volume ≤ 2 m³
-    "duplicate_room_name": 2.0,    # Nom de pièce dupliqué
-    "suspicious_wwr": 3.0,         # WWR > 0.80 ou < 0 sur les murs extérieurs
-    "zero_area_surface": 3.0,      # Surface avec une aire nulle
-    "no_external_openings": 2.0,   # Aucune ouverture externe
-    "missing_occupancy": 4.0,      # Profil d'occupation manquant
-    "missing_lighting": 3.0,       # Profil d'éclairage manquant
-    "missing_equipment": 2.0,      # Profil d'équipements manquant
-    "missing_ventilation": 4.0,    # Profil de ventilation manquant
-    "missing_infiltration": 3.0,   # Profil d'infiltration manquant
-    "invalid_opening": 2.0,         # Ouverture invalide
+    "missing_template": 5.0,       # Missing thermal template
+    "missing_hvac": 5.0,           # Missing HVAC system
+    "missing_construction": 2.0,   # Missing construction
+    "zero_area_room": 8.0,         # Room with zero area
+    "zero_volume_room": 8.0,       # Room with zero volume
+    "tiny_area_room": 3.0,         # Room with area <= 1 m2
+    "tiny_volume_room": 2.0,       # Room with volume <= 2 m3
+    "duplicate_room_name": 2.0,    # Duplicate room name
+    "suspicious_wwr": 3.0,         # WWR > 0.80 or < 0 on external walls
+    "zero_area_surface": 3.0,      # Surface with zero area
+    "no_external_openings": 2.0,   # No external opening
+    "missing_occupancy": 4.0,      # Missing occupancy profile
+    "missing_lighting": 3.0,       # Missing lighting profile
+    "missing_equipment": 2.0,      # Missing equipment profile
+    "missing_ventilation": 4.0,    # Missing ventilation profile
+    "missing_infiltration": 3.0,   # Missing infiltration profile
+    "invalid_opening": 2.0,         # Invalid opening
 }

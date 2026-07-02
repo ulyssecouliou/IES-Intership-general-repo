@@ -37,9 +37,11 @@ OUTPUT_DIR = config_module.OUTPUT_DIR
 EXCEL_REPORT_NAME = config_module.EXCEL_REPORT_NAME
 CREATE_LATEST_REPORT_ALIAS = config_module.CREATE_LATEST_REPORT_ALIAS
 SIA4010_REQUIRED_EVIDENCE = config_module.SIA4010_REQUIRED_EVIDENCE
+SIA4010_EVIDENCE_DIR = config_module.SIA4010_EVIDENCE_DIR
 
 from . import data_extractor as data_extractor_module
 from . import excel_report as excel_report_module
+from . import evidence_manager as evidence_manager_module
 from . import health_score as health_score_module
 from . import model_analyzer as model_analyzer_module
 from . import rule_engine as rule_engine_module
@@ -57,6 +59,7 @@ sia380_checker_module = importlib.reload(sia380_checker_module)
 sia4010_checker_module = importlib.reload(sia4010_checker_module)
 health_score_module = importlib.reload(health_score_module)
 excel_report_module = importlib.reload(excel_report_module)
+evidence_manager_module = importlib.reload(evidence_manager_module)
 simulation_results_module = importlib.reload(simulation_results_module)
 
 VEDataExtractor = data_extractor_module.VEDataExtractor
@@ -66,6 +69,7 @@ SIA3802Checker = sia380_checker_module.SIA3802Checker
 SIA4010Checker = sia4010_checker_module.SIA4010Checker
 HealthScoreCalculator = health_score_module.HealthScoreCalculator
 ExcelReportGenerator = excel_report_module.ExcelReportGenerator
+scan_sia3802_justifications = evidence_manager_module.scan_sia3802_justifications
 
 REPORTS_DIR = os.path.join(str(PROJECT_ROOT), OUTPUT_DIR)
 os.makedirs(REPORTS_DIR, exist_ok=True)
@@ -296,6 +300,7 @@ def _build_preflight_checks(
     rooms_data: List[Any],
     report_path: str,
     sia4010_results: Dict[str, Any],
+    justification_results: Optional[Dict[str, Any]] = None,
     extraction_diagnostics: Optional[Dict[str, Any]] = None,
 ) -> List[Dict[str, Any]]:
     """Create auditable execution checks for the VE Run-button workflow."""
@@ -304,6 +309,7 @@ def _build_preflight_checks(
     external_surfaces = [surface for surface in surfaces if getattr(surface, "is_external", False)]
     external_openings = [opening for opening in openings if getattr(opening, "is_external", False)]
     evidence = sia4010_results.get("evidence", {}) or {}
+    justification_results = justification_results or {}
     evidence_files = evidence.get("files", []) or []
     classified_evidence_count = int(evidence.get("classified_file_count", 0) or 0)
     evidence_present = sum(
@@ -314,6 +320,14 @@ def _build_preflight_checks(
     dynamic_status = str(dynamic_results.get("status", "NOT_CHECKABLE") or "NOT_CHECKABLE")
     dynamic_preflight_status = "PASS" if dynamic_status == "AVAILABLE" else ("WARNING" if dynamic_status == "PARTIAL" else "NOT_CHECKABLE")
     report_dir = os.path.dirname(os.path.abspath(report_path))
+    project_path = str(getattr(project, "path", "") or "")
+    project_path_norm = project_path.replace("/", "\\").lower()
+    is_temp_veproj = "\\appdata\\local\\temp\\veproj\\" in project_path_norm
+    temp_project_status = (
+        "FAIL"
+        if is_temp_veproj and not rooms_data
+        else ("WARNING" if is_temp_veproj else "PASS")
+    )
     body_diagnostics = extraction_diagnostics or {}
     raw_body_count = int(body_diagnostics.get("raw_body_count", 0) or 0)
     relevant_body_count = int(body_diagnostics.get("relevant_body_count", 0) or 0)
@@ -347,11 +361,20 @@ def _build_preflight_checks(
         {
             "status": "PASS" if project else "FAIL",
             "check": "Active VE project",
-            "observed": str(getattr(project, "path", "") or "No active project"),
+            "observed": project_path or "No active project",
             "why": "The script must run from the correct open VE project.",
             "action": "Open the target client VE project before pressing Run.",
             "owner": "Model reviewer",
             "source": "iesve.VEProject.get_current_project",
+        },
+        {
+            "status": temp_project_status,
+            "check": "Saved project path, not temporary VE copy",
+            "observed": project_path or "No active project",
+            "why": "Temporary VEPROJ copies may not expose rooms, surfaces or Vista files reliably through the IESVE API.",
+            "action": "Open the saved client project folder in VE, for example the ZOER_32_C1 project folder, then rerun from the VE Run button.",
+            "owner": "Model reviewer",
+            "source": "VEProject.path",
         },
         {
             "status": body_diagnostic_status,
@@ -448,6 +471,23 @@ def _build_preflight_checks(
             "owner": "Compliance reviewer",
             "source": "SIA 4010 evidence scan",
         },
+        {
+            "status": (
+                "PASS"
+                if int(justification_results.get("accepted_count", 0) or 0)
+                else ("WARNING" if int(justification_results.get("record_count", 0) or 0) else "INFO")
+            ),
+            "check": "SIA 380/2 reviewer justifications",
+            "observed": (
+                f"{int(justification_results.get('accepted_count', 0) or 0)} accepted / "
+                f"{int(justification_results.get('record_count', 0) or 0)} provided record(s) in "
+                f"{justification_results.get('evidence_dir', SIA4010_EVIDENCE_DIR)}"
+            ),
+            "why": "Reviewer-signed evidence can justify a retained model value without hiding the original fail condition.",
+            "action": "Use SIA3802_justification_*.csv records with reviewer, source and accepted review status for auditable exceptions.",
+            "owner": "Compliance reviewer",
+            "source": "SIA 380/2 justification scan",
+        },
     ]
 
 
@@ -487,6 +527,16 @@ def main():
             dynamic_results.get("selected_aps_file") or "no APS selected",
         )
 
+        logger.info("Scanning SIA 380/2 reviewer justifications.")
+        justification_results = scan_sia3802_justifications(PROJECT_ROOT, SIA4010_EVIDENCE_DIR)
+        sia3802_results["justifications"] = justification_results
+        logger.info(
+            "SIA 380/2 justification status: %s (%s accepted / %s provided)",
+            justification_results.get("status"),
+            justification_results.get("accepted_count"),
+            justification_results.get("record_count"),
+        )
+
         logger.info("Calculating scores.")
         score_calculator = HealthScoreCalculator()
         score_result = score_calculator.calculate_scores(sia3802_results, sia4010_results)
@@ -504,6 +554,7 @@ def main():
             rooms_data,
             unique_report_path,
             sia4010_results,
+            justification_results,
             extraction_diagnostics,
         )
         report_generator.generate_report(
@@ -513,6 +564,7 @@ def main():
             rooms_data,
             preflight_checks,
             dynamic_results,
+            justification_results,
         )
         latest_report_path = (
             _copy_latest_report_alias(report_generator.output_path)

@@ -344,68 +344,28 @@ class VEDataExtractor:
             props = self._safe_properties(opening)
             construction_id = self.get_opening_construction(opening)
             construction_props = self.get_construction_properties(construction_id) if construction_id else {}
+            g_audit = self._extract_g_value_audit(props, construction_props)
+            g_total_audit = self._extract_g_total_audit(props, construction_props)
             return {
                 "area": self._safe_lookup(props, "area"),
                 "U-value": (
                     self._find_first_present(props, ("U-value", "u_value", "u", "u-value"))
                     or self._extract_u_value(construction_props)
                 ),
-                "solar_factor": (
-                    self._find_first_present(props, ("solar_factor", "g_value", "g-value"))
-                    or self._extract_g_value(construction_props)
-                ),
-                "visible_transmittance": self._find_first_present(
-                    props,
-                    (
-                        "visible_transmittance",
-                        "light_transmittance",
-                        "transmission_lumineuse",
-                        "tau",
-                        "tvis",
-                    ),
-                )
-                or self._find_first_present(
-                    construction_props,
-                    (
-                        "visible_transmittance",
-                        "light_transmittance",
-                        "transmission_lumineuse",
-                        "tau",
-                        "tvis",
-                    ),
-                ),
-                "frame_fraction": self._find_first_present(
-                    props,
-                    ("frame_fraction", "frame-factor", "frame_factor", "ff"),
-                )
-                or self._find_first_present(
-                    construction_props,
-                    ("frame_fraction", "frame-factor", "frame_factor", "ff"),
-                ),
-                "shading_type": self._find_first_present(
-                    props,
-                    ("shading_type", "solar_protection", "blind_type", "shade_type"),
-                )
-                or self._find_first_present(
-                    construction_props,
-                    ("shading_type", "solar_protection", "blind_type", "shade_type"),
-                ),
-                "shading_control": self._find_first_present(
-                    props,
-                    ("shading_control", "blind_control", "solar_protection_control"),
-                )
-                or self._find_first_present(
-                    construction_props,
-                    ("shading_control", "blind_control", "solar_protection_control"),
-                ),
-                "g_total": self._find_first_present(
-                    props,
-                    ("g_total", "total_g_value", "glazing_shading_g_value"),
-                )
-                or self._find_first_present(
-                    construction_props,
-                    ("g_total", "total_g_value", "glazing_shading_g_value"),
-                ),
+                "solar_factor": g_audit["selected_sia_g_value"],
+                "solar_factor_source": g_audit["selected_source"],
+                "cdb_g_value": g_audit["cdb_g_value"],
+                "g_value_bs_en_410": g_audit["bs_en_410"],
+                "g_value_building_regulations": g_audit["building_regulations"],
+                "g_value_bfrc": g_audit["bfrc"],
+                "g_values": g_audit["g_values"],
+                "visible_transmittance": self._extract_visible_transmittance(props, construction_props),
+                "frame_fraction": self._extract_frame_fraction(props, construction_props),
+                "shading_type": self._extract_shading_type(props, construction_props),
+                "shading_control": self._extract_shading_control(props, construction_props),
+                "shading_properties": self._extract_shading_properties(props, construction_props),
+                "g_total": g_total_audit["value"],
+                "g_total_source": g_total_audit["source"],
                 "orientation": self._safe_lookup(props, "orientation"),
                 "type": self._safe_lookup(props, "type") or self._get_opening_type(opening),
                 "construction_id": construction_id,
@@ -946,8 +906,19 @@ class VEDataExtractor:
     @classmethod
     def _extract_g_value(cls, construction_props: Dict[str, Any]) -> Optional[float]:
         """Extrait le facteur solaire depuis les propriétés CDB d'un vitrage."""
-        direct = cls._find_first_present(
-            construction_props,
+        return cls._extract_g_value_audit(construction_props).get("selected_sia_g_value")
+
+    @classmethod
+    def _extract_g_value_audit(cls, *mappings: Any) -> Dict[str, Any]:
+        """Return audited VE g-values and the value selected for SIA comparison.
+
+        VEScripts documents VECdbConstruction.get_g_values() entries as
+        bs_en_410, building_regulations and bfrc. For SIA readiness, the EN 410
+        value is the preferred comparable value when VE exposes it.
+        """
+        normalized_g_values = cls._collect_normalized_g_values(*mappings)
+        cdb_key, cdb_raw = cls._first_present_from_mappings(
+            mappings,
             (
                 "g_value",
                 "g-value",
@@ -956,25 +927,403 @@ class VEDataExtractor:
                 "total_solar_energy_transmittance",
             ),
         )
-        numeric = cls._to_float_or_none(direct)
-        if numeric is not None:
-            return numeric
+        cdb_g_value = cls._normalize_unit_fraction(cls._to_float_or_none(cdb_raw))
 
-        g_values = construction_props.get("g_values")
-        if isinstance(g_values, dict):
-            for preferred in ("building_regulations", "bs_en_410", "bfrc"):
-                numeric = cls._to_float_or_none(g_values.get(preferred))
-                if numeric is not None:
-                    return numeric
-            for value in g_values.values():
-                numeric = cls._to_float_or_none(value)
-                if numeric is not None:
-                    return numeric
+        selection_order = (
+            ("bs_en_410", "VECdbConstruction.get_g_values().bs_en_410"),
+            ("g_value", f"VECdbConstruction.get_properties().{cdb_key or 'g_value'}"),
+            ("solar_factor", f"opening.get_properties().{cdb_key or 'solar_factor'}"),
+            ("building_regulations", "VECdbConstruction.get_g_values().building_regulations"),
+            ("bfrc", "VECdbConstruction.get_g_values().bfrc"),
+        )
+
+        selected_value: Optional[float] = None
+        selected_source = ""
+        for key, source in selection_order:
+            if key in ("g_value", "solar_factor"):
+                value = cdb_g_value
+            else:
+                value = normalized_g_values.get(key)
+            if value is not None:
+                selected_value = value
+                selected_source = source
+                break
+
+        return {
+            "selected_sia_g_value": selected_value,
+            "selected_source": selected_source,
+            "cdb_g_value": cdb_g_value,
+            "bs_en_410": normalized_g_values.get("bs_en_410"),
+            "building_regulations": normalized_g_values.get("building_regulations"),
+            "bfrc": normalized_g_values.get("bfrc"),
+            "g_values": normalized_g_values,
+        }
+
+    @classmethod
+    def _collect_normalized_g_values(cls, *mappings: Any) -> Dict[str, float]:
+        """Collect and normalize VECdbConstruction.get_g_values() output."""
+        values: Dict[str, float] = {}
+        aliases = {
+            "bs_en_410": ("bs_en_410", "bs-en-410", "bs en 410", "en_410", "en-410", "en 410"),
+            "building_regulations": (
+                "building_regulations",
+                "building-regulations",
+                "building regulations",
+                "building_regs",
+                "building-regs",
+            ),
+            "bfrc": ("bfrc",),
+        }
+        for mapping in mappings:
+            if not isinstance(mapping, dict):
+                continue
+            raw = mapping.get("g_values")
+            if not isinstance(raw, dict):
+                continue
+            normalized_lookup = {
+                str(key).strip().lower().replace("_", "-").replace(" ", "-"): value
+                for key, value in raw.items()
+            }
+            for canonical, keys in aliases.items():
+                if canonical in values:
+                    continue
+                for key in keys:
+                    lookup_key = key.strip().lower().replace("_", "-").replace(" ", "-")
+                    value = normalized_lookup.get(lookup_key)
+                    numeric = cls._normalize_unit_fraction(cls._to_float_or_none(value))
+                    if numeric is not None:
+                        values[canonical] = numeric
+                        break
+        return values
+
+    @classmethod
+    def _extract_visible_transmittance(cls, *mappings: Any) -> Optional[float]:
+        """Read visible transmittance aliases exposed by VE/CDB glazing data."""
+        value = cls._first_numeric_from_mappings(
+            mappings,
+            (
+                "visible_transmittance",
+                "visible_light_transmittance",
+                "light_transmittance",
+                "transmission_lumineuse",
+                "tau_v",
+                "tau",
+                "tvis",
+                "vt",
+            ),
+        )
+        return cls._normalize_unit_fraction(value)
+
+    @classmethod
+    def _extract_frame_fraction(cls, *mappings: Any) -> Optional[float]:
+        """Read and normalize frame fraction from VE CDB fields."""
+        for mapping in mappings:
+            key, value = cls._find_first_present_with_key(
+                mapping,
+                (
+                    "frame_fraction",
+                    "frame-factor",
+                    "frame_factor",
+                    "frame_percent",
+                    "frame_inside_surface_area_ratio",
+                    "frame_outside_surface_area_ratio",
+                    "ff",
+                ),
+            )
+            numeric = cls._to_float_or_none(value)
+            if numeric is None:
+                continue
+            if "percent" in str(key).lower() or numeric > 1.0:
+                numeric = numeric / 100.0
+            return numeric
         return None
+
+    @classmethod
+    def _extract_shading_type(cls, *mappings: Any) -> Optional[str]:
+        """Read shading/protection type from VE CDB construction fields."""
+        direct = cls._first_text_from_mappings(
+            mappings,
+            (
+                "shading_type",
+                "solar_protection",
+                "blind_type",
+                "shade_type",
+                "external_shade_code",
+                "internal_shade_code",
+                "internal_shade_blind_or_curtain",
+                "local_shade_code",
+                "local_shade_overhang_type",
+            ),
+        )
+        if direct:
+            return direct
+
+        descriptions: List[str] = []
+        for mapping in mappings:
+            descriptions.extend(cls._active_shade_descriptions(mapping))
+        if descriptions:
+            return "; ".join(descriptions)
+        if any(cls._has_explicit_no_shading(mapping) for mapping in mappings):
+            return "none declared in CDB"
+        return None
+
+    @classmethod
+    def _extract_shading_control(cls, *mappings: Any) -> Optional[str]:
+        """Read shading control/profile data from VE CDB construction fields."""
+        direct = cls._first_text_from_mappings(
+            mappings,
+            (
+                "shading_control",
+                "blind_control",
+                "solar_protection_control",
+                "external_shade_profile",
+                "internal_shade_profile",
+            ),
+        )
+        control_parts = [direct] if direct else []
+
+        for mapping in mappings:
+            for key in (
+                "external_shade_radiation_to_raise",
+                "external_shade_radiation_to_lower",
+                "internal_shade_radiation_to_raise",
+                "internal_shade_radiation_to_lower",
+                "internal_shade_frac_daylight_closed",
+            ):
+                value = cls._safe_lookup(mapping, key)
+                if value not in (None, ""):
+                    control_parts.append(f"{key}={value}")
+
+        if control_parts:
+            return "; ".join(str(item) for item in control_parts if item)
+        if any(cls._has_explicit_no_shading(mapping) for mapping in mappings):
+            return "none declared in CDB"
+        return None
+
+    @classmethod
+    def _extract_shading_properties(cls, *mappings: Any) -> Dict[str, Any]:
+        """Collect documented VE CDB shade fields for audit/reporting."""
+        shade_keys = (
+            "external_shade_active",
+            "external_shade_code",
+            "external_shade_day_resistance",
+            "external_shade_ground_transmittance",
+            "external_shade_ground_transmittance_default",
+            "external_shade_night_resistance",
+            "external_shade_profile",
+            "external_shade_radiation_to_lower",
+            "external_shade_radiation_to_raise",
+            "external_shade_sky_transmittance",
+            "external_shade_sky_transmittance_default",
+            "external_shade_transmitance_15",
+            "external_shade_transmitance_75",
+            "external_shade_transmittance_0",
+            "external_shade_transmittance_15",
+            "external_shade_transmittance_30",
+            "external_shade_transmittance_45",
+            "external_shade_transmittance_60",
+            "external_shade_transmittance_75",
+            "external_shade_transmittance_90",
+            "internal_shade_active",
+            "internal_shade_blind_or_curtain",
+            "internal_shade_code",
+            "internal_shade_day_resistance",
+            "internal_shade_frac_daylight_closed",
+            "internal_shade_night_resistance",
+            "internal_shade_profile",
+            "internal_shade_radiation_to_lower",
+            "internal_shade_radiation_to_raise",
+            "internal_shade_shading_coefficient",
+            "internal_shade_short_wave_radiant_fraction",
+            "local_shade_active",
+            "local_shade_balcony_depth_h",
+            "local_shade_balcony_height",
+            "local_shade_balcony_projection",
+            "local_shade_code",
+            "local_shade_left_fin_offset",
+            "local_shade_left_fin_projection",
+            "local_shade_overhang_type",
+            "local_shade_projection_offset",
+            "local_shade_projection_overhang",
+            "local_shade_right_fin_offset",
+            "local_shade_right_fin_projection",
+            "local_shade_window_height",
+            "local_shade_window_width",
+            "percent_sky_blocked",
+        )
+        collected: Dict[str, Any] = {}
+        for key in shade_keys:
+            _, value = cls._first_present_from_mappings(mappings, (key,))
+            if value not in (None, ""):
+                collected[key] = value
+        return collected
+
+    @classmethod
+    def _extract_g_total(cls, *mappings: Any) -> Optional[float]:
+        """Read effective glazing-plus-shading g-value when VE exposes it."""
+        return cls._extract_g_total_audit(*mappings).get("value")
+
+    @classmethod
+    def _extract_g_total_audit(cls, *mappings: Any) -> Dict[str, Any]:
+        """Read direct effective glazing-plus-shading g-value aliases if present.
+
+        VEScripts does not document a direct g_total field for VECdbConstruction,
+        so any value found here is reported with its raw field name for review.
+        """
+        key, raw_value = cls._first_numeric_with_key_from_mappings(
+            mappings,
+            (
+                "g_total",
+                "total_g_value",
+                "glazing_shading_g_value",
+                "combined_g_value",
+                "effective_g_value",
+                "shaded_g_value",
+                "g_value_with_shading",
+            ),
+        )
+        value = cls._normalize_unit_fraction(raw_value)
+        return {
+            "value": value,
+            "source": f"undocumented VE field: {key}" if value is not None and key else "",
+        }
+
+    @classmethod
+    def _first_numeric_with_key_from_mappings(cls, mappings: Any, keys: Any) -> Any:
+        for mapping in mappings:
+            key, value = cls._find_first_present_with_key(mapping, keys)
+            numeric = cls._to_float_or_none(value)
+            if numeric is not None:
+                return key, numeric
+            if isinstance(mapping, dict):
+                for layer in mapping.get("layers", []) or []:
+                    key, value = cls._find_first_present_with_key(layer, keys)
+                    numeric = cls._to_float_or_none(value)
+                    if numeric is not None:
+                        return key, numeric
+        return "", None
+
+    @classmethod
+    def _first_present_from_mappings(cls, mappings: Any, keys: Any) -> Any:
+        for mapping in mappings:
+            key, value = cls._find_first_present_with_key(mapping, keys)
+            if value not in (None, ""):
+                return key, value
+        return "", None
+
+    @classmethod
+    def _extract_g_total_legacy(cls, *mappings: Any) -> Optional[float]:
+        """Backward-compatible alias kept for older internal callers."""
+        value = cls._first_numeric_from_mappings(
+            mappings,
+            (
+                "g_total",
+                "total_g_value",
+                "glazing_shading_g_value",
+                "combined_g_value",
+                "effective_g_value",
+                "shaded_g_value",
+                "g_value_with_shading",
+            ),
+        )
+        return cls._normalize_unit_fraction(value)
+
+    @classmethod
+    def _first_numeric_from_mappings(cls, mappings: Any, keys: Any) -> Optional[float]:
+        for mapping in mappings:
+            _, value = cls._find_first_present_with_key(mapping, keys)
+            numeric = cls._to_float_or_none(value)
+            if numeric is not None:
+                return numeric
+            if isinstance(mapping, dict):
+                for layer in mapping.get("layers", []) or []:
+                    _, value = cls._find_first_present_with_key(layer, keys)
+                    numeric = cls._to_float_or_none(value)
+                    if numeric is not None:
+                        return numeric
+        return None
+
+    @classmethod
+    def _first_text_from_mappings(cls, mappings: Any, keys: Any) -> Optional[str]:
+        for mapping in mappings:
+            _, value = cls._find_first_present_with_key(mapping, keys)
+            if value not in (None, ""):
+                return str(value)
+        return None
+
+    @classmethod
+    def _find_first_present_with_key(cls, mapping: Any, keys: Any) -> Any:
+        """Return the first matching key/value while preserving the source key."""
+        for key in keys:
+            value = cls._safe_lookup(mapping, key)
+            if value not in (None, ""):
+                return key, value
+        if isinstance(mapping, dict):
+            normalized = {
+                str(k).strip().lower().replace("_", "-"): (k, v)
+                for k, v in mapping.items()
+            }
+            for key in keys:
+                match = normalized.get(str(key).strip().lower().replace("_", "-"))
+                if match and match[1] not in (None, ""):
+                    return match
+        return "", None
+
+    @classmethod
+    def _active_shade_descriptions(cls, mapping: Any) -> List[str]:
+        if not isinstance(mapping, dict):
+            return []
+        descriptions = []
+        shade_groups = (
+            ("external", "external_shade_active", ("external_shade_code", "external_shade_profile")),
+            ("internal", "internal_shade_active", ("internal_shade_code", "internal_shade_blind_or_curtain", "internal_shade_profile")),
+            ("local", "local_shade_active", ("local_shade_code", "local_shade_overhang_type")),
+        )
+        for label, active_key, detail_keys in shade_groups:
+            if not cls._truthy(mapping.get(active_key)):
+                continue
+            details = [
+                f"{key}={mapping.get(key)}"
+                for key in detail_keys
+                if mapping.get(key) not in (None, "")
+            ]
+            descriptions.append(f"{label} shade" + (f" ({', '.join(details)})" if details else ""))
+        return descriptions
+
+    @classmethod
+    def _has_explicit_no_shading(cls, mapping: Any) -> bool:
+        if not isinstance(mapping, dict):
+            return False
+        active_keys = ("external_shade_active", "internal_shade_active", "local_shade_active")
+        present = [key for key in active_keys if key in mapping]
+        return bool(present) and all(not cls._truthy(mapping.get(key)) for key in present)
+
+    @staticmethod
+    def _normalize_unit_fraction(value: Optional[float]) -> Optional[float]:
+        if value is None:
+            return None
+        if value > 1.0 and value <= 100.0:
+            return value / 100.0
+        return value
+
+    @staticmethod
+    def _truthy(value: Any) -> bool:
+        if isinstance(value, bool):
+            return value
+        if isinstance(value, (int, float)):
+            return value != 0
+        if isinstance(value, str):
+            return value.strip().lower() in {"1", "true", "yes", "y", "on", "active", "enabled"}
+        return bool(value)
 
     @staticmethod
     def _to_float_or_none(value: Any) -> Optional[float]:
         try:
+            if isinstance(value, str):
+                normalized = value.strip().replace(" ", "")
+                if "," in normalized and "." not in normalized:
+                    normalized = normalized.replace(",", ".")
+                return float(normalized)
             return float(value)
         except (TypeError, ValueError):
             return None

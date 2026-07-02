@@ -8,12 +8,17 @@ The MVP is acceptable when all items below are true.
 - Does not require PowerShell or command-line arguments.
 - Creates a timestamped Excel report in `reports/`.
 - Opens with `MANAGER DASHBOARD` as the first worksheet.
-- Includes `CLIENT SUMMARY`, `PREFLIGHT`, `P1 REMEDIATION`, `ASSUMPTIONS LIMITS`, `AUDIT LOG`, `SUMMARY`, `ACTION PLAN`, `COMPLIANCE RESULTS`, `SIA REQUIREMENTS`, `SIA DATA COVERAGE`, `INPUT REQUEST`, `SIA4010 READINESS`, `DYNAMIC RESULTS`, `ALERT SUMMARY`, `ALERTS`, `DATA QUALITY`, `DETAILED SCORES`, and `ROOMS`.
+- Includes `CLIENT SUMMARY`, `PREFLIGHT`, `P1 REMEDIATION`, `FACADE GLAZING REVIEW`, `FRAME FRACTION AUDIT`, `ENVELOPE U REVIEW`, `VE G-VALUES AUDIT`, `ASSUMPTIONS LIMITS`, `AUDIT LOG`, `SUMMARY`, `ACTION PLAN`, `COMPLIANCE RESULTS`, `SIA REQUIREMENTS`, `SIA DATA COVERAGE`, `INPUT REQUEST`, `OPEN ITEMS BACKLOG`, `SIA4010 READINESS`, `SIA4010 SOFTWARE REGISTER`, `NAVIGATOR BACKLOG`, `DYNAMIC RESULTS`, `ALERT SUMMARY`, `ALERTS`, `DATA QUALITY`, `DETAILED SCORES`, and `ROOMS`.
 - Separates SIA 380/2 automated checks from SIA 4010 official evidence status.
 - Never treats missing SIA 4010 evidence as a building `PASS`.
 - Never treats `NOT_CHECKABLE` as a red `FAIL` in the executive view.
 - Lists SIA 4010 detected evidence files and missing evidence families.
 - Lists priority remediation actions with owner/evidence expectations.
+- Shows VE/CDB glazing g-value traceability, including `bs_en_410`, `building_regulations`, `bfrc` and any active `g_total_with_shading` evidence status.
+- Shows frame-fraction and envelope U-value remediation rows by construction.
+- Maintains an `OPEN ITEMS BACKLOG` sheet so deferred or incomplete items remain visible across review cycles.
+- Shows the manager-provided SIA 4010 software-register guardrail and states that IESVE is not software-level validated by that register unless separate official evidence is supplied.
+- Shows the manager-provided SIA 380/2 navigator backlog and distinguishes current MVP capabilities from future constrained-input navigator work.
 - States safe claim wording and certification guardrails.
 - Produces a critical or fail preflight status if no VE rooms are extracted.
 - Compiles without Python syntax errors.

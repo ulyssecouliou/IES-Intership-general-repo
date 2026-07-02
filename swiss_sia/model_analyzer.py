@@ -36,11 +36,19 @@ class OpeningData:
     area: float = 0.0
     u_value: Optional[float] = None
     solar_factor: Optional[float] = None
+    solar_factor_source: Optional[str] = None
+    cdb_g_value: Optional[float] = None
+    g_value_bs_en_410: Optional[float] = None
+    g_value_building_regulations: Optional[float] = None
+    g_value_bfrc: Optional[float] = None
+    g_values: Dict[str, Any] = field(default_factory=dict)
     visible_transmittance: Optional[float] = None
     frame_fraction: Optional[float] = None
     shading_type: Optional[str] = None
     shading_control: Optional[str] = None
+    shading_properties: Dict[str, Any] = field(default_factory=dict)
     g_total: Optional[float] = None
+    g_total_source: Optional[str] = None
     orientation: Optional[str] = None
     opening_type: Optional[str] = None  # "window", "door", etc.
     is_external: bool = False
@@ -193,6 +201,8 @@ class ModelAnalyzer:
                     area = float(props.get("area", 0.0) or 0.0)
                     u_value = props.get("U-value")
                     solar_factor = props.get("solar_factor")
+                    g_values = props.get("g_values") if isinstance(props.get("g_values"), dict) else {}
+                    shading_properties = props.get("shading_properties") if isinstance(props.get("shading_properties"), dict) else {}
                     visible_transmittance = self._to_float_or_none(props.get("visible_transmittance"))
                     frame_fraction = self._to_float_or_none(props.get("frame_fraction"))
                     orientation = props.get("orientation") or surface_orientation
@@ -205,11 +215,19 @@ class ModelAnalyzer:
                         area=area,
                         u_value=u_value,
                         solar_factor=solar_factor,
+                        solar_factor_source=str(props.get("solar_factor_source") or "") or None,
+                        cdb_g_value=self._to_float_or_none(props.get("cdb_g_value")),
+                        g_value_bs_en_410=self._to_float_or_none(props.get("g_value_bs_en_410")),
+                        g_value_building_regulations=self._to_float_or_none(props.get("g_value_building_regulations")),
+                        g_value_bfrc=self._to_float_or_none(props.get("g_value_bfrc")),
+                        g_values=dict(g_values),
                         visible_transmittance=visible_transmittance,
                         frame_fraction=frame_fraction,
                         shading_type=str(props.get("shading_type") or "") or None,
                         shading_control=str(props.get("shading_control") or "") or None,
+                        shading_properties=dict(shading_properties),
                         g_total=self._to_float_or_none(props.get("g_total")),
+                        g_total_source=str(props.get("g_total_source") or "") or None,
                         orientation=orientation,
                         opening_type=opening_type,
                         is_external=is_external,

@@ -36,6 +36,16 @@ File detection is a readiness indicator only. The file content, official source
 and comparison validity must still be reviewed by the responsible compliance
 reviewer.
 
+For glazing and solar-protection evidence, use:
+
+```text
+docs/project/GLAZING_EVIDENCE_GUIDE.md
+```
+
+It maps the required evidence to the documented IESVE API objects and explains
+what can be extracted automatically from VE/CDB versus what still requires a
+reviewed external source.
+
 ## How To Run In VE
 
 1. Open the IESVE Scripts window.
@@ -77,6 +87,8 @@ Use the timestamped report instead.
 - `CLIENT SUMMARY`: safe wording for manager/client communication.
 - `PREFLIGHT`: confirms whether the VE run and data extraction are trustworthy.
 - `P1 REMEDIATION`: owner-ready action board for priority issues.
+- `FACADE GLAZING REVIEW`: construction-level glazing, solar-factor and shading evidence action sheet.
+- `VE G-VALUES AUDIT`: CDB g-value, EN 410, building-regulation and BFRC traceability for glazing.
 - `ASSUMPTIONS LIMITS`: certification guardrails, assumptions and known limits.
 - `AUDIT LOG`: run metadata, APS/Vista status, evidence status and certification guardrails.
 - `SUMMARY`: score summary.
@@ -86,6 +98,8 @@ Use the timestamped report instead.
 - `SIA DATA COVERAGE`: data, APS/Vista and evidence coverage by requirement.
 - `INPUT REQUEST`: owner-ready missing input/evidence checklist.
 - `SIA4010 READINESS`: official validation evidence matrix.
+- `SIA4010 SOFTWARE REGISTER`: manager-provided software-register guardrail and validation-class detail.
+- `NAVIGATOR BACKLOG`: manager-provided SIA 380/2 navigator roadmap and current project gaps.
 - `DYNAMIC RESULTS`: APS/Vista dynamic indicators when readable from VE.
 - `ALERT SUMMARY`: grouped technical findings.
 - `ALERTS`: raw detailed alerts.
@@ -116,5 +130,8 @@ compliance authority.
 1. Start with `MANAGER DASHBOARD`.
 2. Use `CLIENT SUMMARY` for safe executive wording.
 3. Use `P1 REMEDIATION` to explain what must be fixed first.
-4. Use `ASSUMPTIONS LIMITS` to show why the report is professional and conservative.
-5. Use `AUDIT LOG`, `SIA DATA COVERAGE`, `SIA REQUIREMENTS` and `SIA4010 READINESS` when technical traceability is needed.
+4. Use `FACADE GLAZING REVIEW` when openings, g-values or solar protection dominate the P1 actions.
+5. Use `SIA4010 SOFTWARE REGISTER` before making any statement about software-level SIA 4010 validation.
+6. Use `NAVIGATOR BACKLOG` to explain the path from the current MVP to the constrained SIA 380/2 navigator.
+5. Use `ASSUMPTIONS LIMITS` to show why the report is professional and conservative.
+6. Use `AUDIT LOG`, `SIA DATA COVERAGE`, `SIA REQUIREMENTS` and `SIA4010 READINESS` when technical traceability is needed.

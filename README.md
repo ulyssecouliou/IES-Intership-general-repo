@@ -37,6 +37,8 @@ The end user does not need PowerShell or command-line access.
 - `CLIENT SUMMARY`: safe manager/client-facing wording and immediate decisions.
 - `PREFLIGHT`: run readiness and extraction checks.
 - `P1 REMEDIATION`: owner-ready board for priority issues.
+- `FACADE GLAZING REVIEW`: construction-level glazing/solar-protection action sheet.
+- `VE G-VALUES AUDIT`: CDB `g_value`, `bs_en_410`, `building_regulations`, `bfrc` and `g_total` traceability.
 - `ASSUMPTIONS LIMITS`: certification guardrails and known limitations.
 - `AUDIT LOG`: run metadata, evidence state and audit guardrails.
 - `SUMMARY`: score summary.
@@ -46,6 +48,8 @@ The end user does not need PowerShell or command-line access.
 - `SIA DATA COVERAGE`: data, APS/Vista and evidence coverage for SIA 380/2 and all SIA 4010 classes.
 - `INPUT REQUEST`: practical list of missing client/model-reviewer inputs.
 - `SIA4010 READINESS`: SIA 4010 evidence and test readiness.
+- `SIA4010 SOFTWARE REGISTER`: manager-provided validated-software register guardrail.
+- `NAVIGATOR BACKLOG`: SIA 380/2 navigator product backlog from the manager reference document.
 - `DYNAMIC RESULTS`: APS/Vista indicators when IESVE ResultsReader exposes them.
 - `ALERT SUMMARY`: grouped technical findings.
 - `ALERTS`: raw detailed findings.
@@ -64,6 +68,9 @@ The end user does not need PowerShell or command-line access.
 - `swiss_sia/config.py`: PDF-traced values, requirement matrix and validation classes.
 - `docs/source/`: Sphinx documentation source.
 - `docs/project/`: project notes, handoff material and compliance traceability notes.
+- `docs/project/GLAZING_EVIDENCE_GUIDE.md`: IESVE/CDB glazing evidence retrieval and handoff guide.
+- `docs/project/MODEL_REMEDIATION_PLAYBOOK.md`: practical VE/CDB remediation workflow for the current ZOER_32_C1 findings.
+- `docs/project/MANAGER_REFERENCE_INTEGRATION.md`: integration note for the manager-provided register and navigator backlog.
 - `references/standards/`: local PDF standards/reference copies.
 - `references/iesve/`: IESVE API notes and reference PDFs.
 - `scripts/quality/validate_release.py`: local release-quality validator.
@@ -107,7 +114,8 @@ The MVP is suitable for internal manager review when:
 - It runs from the IESVE Run button.
 - A timestamped report is generated.
 - `MANAGER DASHBOARD` is first.
-- `CLIENT SUMMARY`, `P1 REMEDIATION`, `ASSUMPTIONS LIMITS` and `AUDIT LOG` are present.
+- `CLIENT SUMMARY`, `P1 REMEDIATION`, `FACADE GLAZING REVIEW`, `ASSUMPTIONS LIMITS` and `AUDIT LOG` are present.
+- `VE G-VALUES AUDIT`, `SIA4010 SOFTWARE REGISTER` and `NAVIGATOR BACKLOG` are present for manager traceability.
 - SIA 4010 remains `NOT_CHECKABLE` unless official evidence is complete.
 - The workbook opens in Excel without repair prompts.
 

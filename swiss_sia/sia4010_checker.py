@@ -17,6 +17,7 @@ from .config import (
     SIA4010_EVIDENCE_FILE_PATTERNS,
     SIA4010_REQUIRED_EVIDENCE,
     SIA4010_TEST_WEIGHTS,
+    SIA4010_IESVE_REGISTER_STATUS,
     SIA4010_VALIDATION_CLASSES,
     SIA4010_VALIDATION_TESTS,
 )
@@ -117,6 +118,7 @@ class SIA4010Checker:
             self.rule_engine.check_rules([rule_name], energy_data)
 
         self._add_evidence_status_alert(evidence_summary)
+        self._add_software_register_guardrail_alert(evidence_summary)
 
         test_results = self._run_sia4010_tests(evidence_summary)
 
@@ -156,6 +158,8 @@ class SIA4010Checker:
             "classified_files": [],
             "classified_file_count": 0,
             "validation_class": None,
+            "manager_reference_files": self._scan_manager_reference_files(repo_dir),
+            "software_register_status": dict(SIA4010_IESVE_REGISTER_STATUS),
         }
         candidate_files = [
             file_data
@@ -228,6 +232,8 @@ class SIA4010Checker:
             "validation_class": validation_class,
             "validation_class_known": class_is_known,
             "classified_file_count": classified_count,
+            "software_register_status": evidence.get("software_register_status", {}),
+            "manager_reference_files": evidence.get("manager_reference_files", []),
         }
 
     def _add_evidence_status_alert(self, evidence_summary: Dict[str, Any]) -> None:
@@ -271,6 +277,26 @@ class SIA4010Checker:
         )
         self._add_missing_evidence_family_alerts(missing_items, Severity.LOW)
 
+    def _add_software_register_guardrail_alert(self, evidence_summary: Dict[str, Any]) -> None:
+        """Add a non-scoring guardrail from the manager-provided software register."""
+        status = evidence_summary.get("software_register_status", {}) or {}
+        if status.get("listed_in_manager_register"):
+            return
+        self.rule_engine.add_alert(
+            rule="SIA4010_IESVE_NOT_IN_MANAGER_REGISTER",
+            description=(
+                "IESVE is not listed in the manager-provided SIA 4010 validated-software register "
+                f"dated {status.get('register_date', 'unknown')}."
+            ),
+            severity=Severity.LOW,
+            category="SIA4010 Software Register",
+            recommendation=status.get(
+                "guardrail",
+                "Do not claim software-level SIA 4010 validation without separate official evidence.",
+            ),
+            data=status,
+        )
+
     def _add_missing_evidence_family_alerts(
         self,
         missing_items: List[str],
@@ -293,6 +319,33 @@ class SIA4010Checker:
         """Exclude local README/docs from SIA 4010 evidence classification."""
         normalized = str(filename or "").strip().lower()
         return normalized in {"readme.md", "readme.txt", ".gitkeep"} or normalized.startswith("readme.")
+
+    @staticmethod
+    def _scan_manager_reference_files(repo_dir: str) -> List[Dict[str, Any]]:
+        """Detect manager-provided reference files without counting them as evidence."""
+        reference_markers = (
+            "sia 4010 register validierter software",
+            "sia 380_2 navigator",
+            "navigator",
+        )
+        matches: List[Dict[str, Any]] = []
+        try:
+            for filename in os.listdir(repo_dir):
+                normalized = filename.lower()
+                if not any(marker in normalized for marker in reference_markers):
+                    continue
+                path = os.path.join(repo_dir, filename)
+                if not os.path.isfile(path):
+                    continue
+                matches.append({
+                    "name": filename,
+                    "path": os.path.relpath(path, repo_dir),
+                    "size_bytes": os.path.getsize(path),
+                    "role": "manager_reference_not_official_evidence",
+                })
+        except Exception:
+            return []
+        return matches
 
     def _calculate_heating_demand(self, rooms_data: List[RoomData]) -> Optional[float]:
         """Return annual heating demand if an official source is available."""

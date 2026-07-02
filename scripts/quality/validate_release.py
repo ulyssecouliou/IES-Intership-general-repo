@@ -121,6 +121,39 @@ def check_standard_pdfs(validator: Validator) -> None:
     validator.require("SIA 4010 page 52 contains variants", "Tableau 65" in text_4010_52 and "Tableau 66" in text_4010_52)
 
 
+def check_manager_reference_documents(validator: Validator) -> None:
+    """Validate manager-provided reference documents used as project guardrails."""
+    pdf_reader = _load_pdf_reader()
+    register_path = PROJECT_ROOT / "SIA 4010 Register validierter Software_24-09-17.pdf"
+    navigator_path = PROJECT_ROOT / "Sia 380_2 Navigator – Executive Summary & Product Backlog.docx"
+
+    validator.require("Manager SIA 4010 software register exists", register_path.exists(), str(register_path))
+    validator.require("Manager SIA 380/2 navigator backlog exists", navigator_path.exists(), str(navigator_path))
+
+    if register_path.exists():
+        register = pdf_reader(str(register_path))
+        validator.require("Manager SIA 4010 register page count is 2", len(register.pages) == 2, str(len(register.pages)))
+        register_text = " ".join(
+            (page.extract_text() or "")
+            for page in register.pages
+        )
+        validator.require(
+            "Manager register contains validated software markers",
+            "IDA-ICE" in register_text and "OpenStudio" in register_text and "Lesosai" in register_text,
+        )
+
+    if navigator_path.exists():
+        try:
+            with zipfile.ZipFile(navigator_path) as docx_zip:
+                document_xml = docx_zip.read("word/document.xml").decode("utf-8", errors="ignore")
+            validator.require(
+                "Manager navigator contains expected backlog markers",
+                "SIA 380/2 Navigator" in document_xml and "EPIC 10" in document_xml,
+            )
+        except Exception as exc:
+            validator.require("Manager navigator opens as DOCX zip", False, str(exc))
+
+
 def check_config_traceability(validator: Validator) -> None:
     """Validate source-traced constants and coverage matrices."""
     from swiss_sia import config
@@ -134,6 +167,9 @@ def check_config_traceability(validator: Validator) -> None:
     validator.require("SIA 380/2 flat roof limit/target", config.SIA3802_LIMIT_VALUES["flat_roof_u"] == 0.20 and config.SIA3802_TARGET_VALUES["flat_roof_u"] == 0.14)
     validator.require("SIA 4010 has seven tests", len(config.SIA4010_VALIDATION_TESTS) == 7)
     validator.require("SIA 4010 has all validation classes", set(config.SIA4010_VALIDATION_CLASSES) == {"1A", "1B", "2A", "2B", "3", "4A", "4B", "5"})
+    validator.require("SIA 4010 register has manager software entries", len(config.SIA4010_VALIDATED_SOFTWARE_REGISTER) == 4)
+    validator.require("IESVE manager-register guardrail is conservative", config.SIA4010_IESVE_REGISTER_STATUS["listed_in_manager_register"] is False)
+    validator.require("SIA navigator backlog has ten epics", len(config.SIA3802_NAVIGATOR_BACKLOG) == 10)
     validator.require("SIA 4010 has five required evidence families", len(config.SIA4010_REQUIRED_EVIDENCE) == 5)
 
     coverage = config.SIA_DATA_COVERAGE_MATRIX
@@ -251,10 +287,18 @@ def check_documentation_entry_points(validator: Validator) -> None:
     required_files = [
         PROJECT_ROOT / "docs" / "source" / "index.rst",
         PROJECT_ROOT / "docs" / "source" / "manager_multilingual_brief_sphinx.rst",
+        PROJECT_ROOT / "docs" / "source" / "manager_reference_integration.rst",
         PROJECT_ROOT / "docs" / "source" / "compliance_coverage_audit.rst",
         PROJECT_ROOT / "docs" / "source" / "compliance_methodology.rst",
         PROJECT_ROOT / "docs" / "README.md",
         PROJECT_ROOT / "docs" / "project" / "RELEASE_ACCEPTANCE_CHECKLIST.md",
+        PROJECT_ROOT / "docs" / "project" / "GLAZING_EVIDENCE_GUIDE.md",
+        PROJECT_ROOT / "docs" / "project" / "MANAGER_REFERENCE_INTEGRATION.md",
+        PROJECT_ROOT / "templates" / "evidence" / "README.md",
+        PROJECT_ROOT / "templates" / "evidence" / "glazing_solar_protection_template.csv",
+        PROJECT_ROOT / "templates" / "evidence" / "g_values_audit_template.csv",
+        PROJECT_ROOT / "templates" / "evidence" / "sia4010_evidence_index_template.csv",
+        PROJECT_ROOT / "templates" / "evidence" / "sia4010_software_register_review_template.csv",
     ]
     for path in required_files:
         validator.require(f"Documentation file exists: {path.relative_to(PROJECT_ROOT)}", path.exists())
@@ -294,11 +338,18 @@ def check_latest_excel_report(validator: Validator) -> None:
         "CLIENT SUMMARY",
         "PREFLIGHT",
         "P1 REMEDIATION",
+        "FACADE GLAZING REVIEW",
+        "FRAME FRACTION AUDIT",
+        "ENVELOPE U REVIEW",
+        "VE G-VALUES AUDIT",
         "ASSUMPTIONS LIMITS",
         "AUDIT LOG",
         "SIA DATA COVERAGE",
         "INPUT REQUEST",
+        "OPEN ITEMS BACKLOG",
         "SIA4010 READINESS",
+        "SIA4010 SOFTWARE REGISTER",
+        "NAVIGATOR BACKLOG",
         "DYNAMIC RESULTS",
     ]
     error_markers = ["#REF!", "#DIV/0!", "#VALUE!", "#NAME?", "#N/A"]
@@ -341,6 +392,7 @@ def main() -> int:
     """Run all release-quality checks."""
     validator = Validator()
     check_standard_pdfs(validator)
+    check_manager_reference_documents(validator)
     check_config_traceability(validator)
     check_scoring_guardrails(validator)
     check_documentation_entry_points(validator)

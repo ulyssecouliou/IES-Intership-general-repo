@@ -51,6 +51,19 @@ docs/source/manager_multilingual_brief_sphinx.rst
 It summarizes the current product status, latest verified report, safe compliance
 wording, blockers, evidence needs, and recommended manager discussion agenda.
 
+## Manager Reference Integration
+
+The manager-provided SIA 4010 software register and SIA 380/2 navigator backlog
+are summarized in:
+
+```text
+docs/project/MANAGER_REFERENCE_INTEGRATION.md
+docs/source/manager_reference_integration.rst
+```
+
+The generated Excel workbook also includes `SIA4010 SOFTWARE REGISTER` and
+`NAVIGATOR BACKLOG` sheets.
+
 ## Output
 
 Generated HTML documentation is written to:

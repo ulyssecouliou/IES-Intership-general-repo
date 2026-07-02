@@ -1,0 +1,6 @@
+software,listed_in_manager_register,register_date,validated_classes,valid_until,source_document,reviewer,review_status,notes
+IESVE,no,2024-09-17,,,"SIA 4010 Register validierter Software_24-09-17.pdf",,review_required,"Manager-provided register does not list IESVE; do not claim software-level SIA 4010 validation without separate official evidence."
+IDA-ICE 5.0 beta,yes,2024-09-17,"1A;1B;2A;2B;3;4A;4B;5",2029-03-20,"SIA 4010 Register validierter Software_24-09-17.pdf",,reference_only,
+Energy+ / OpenStudio,yes,2024-09-17,"1A;1B;2A;2B;4A;4B",2029-03-20,"SIA 4010 Register validierter Software_24-09-17.pdf",,reference_only,
+EDSL Tas,yes,2024-09-17,"1A;3;4A",2029-03-20,"SIA 4010 Register validierter Software_24-09-17.pdf",,reference_only,
+Lesosai 2024 build 1903,yes,2024-09-17,"1A;1B;2A;2B;3",2029-09-17,"SIA 4010 Register validierter Software_24-09-17.pdf",,reference_only,

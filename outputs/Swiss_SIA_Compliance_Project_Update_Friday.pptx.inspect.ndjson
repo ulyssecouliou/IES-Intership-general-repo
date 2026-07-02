@@ -1,0 +1,331 @@
+{"kind":"deck","id":"pr/lwl3et","name":"Deck"}
+{"kind":"layout","layoutId":"4119139d-4e32-4496-a5fd-f30989a114ba","name":"Master","type":"master"}
+{"kind":"layout","layoutId":"bb70155b-b315-4af1-99b0-439cb4db1ee9","name":"Title Slide","type":"title"}
+{"kind":"slide","id":"sl/ryokte","slide":1,"title":"SWISS SIA COMPLIANCE CHECKER","textShapes":8}
+{"kind":"shape","id":"sh/2lszqtcj","slide":1,"bbox":[0,0,1280,720]}
+{"kind":"shape","id":"sh/d8bat47y","slide":1,"bbox":[0,0,460,720]}
+{"kind":"shape","id":"sh/knih4byh","slide":1,"bbox":[980,0,300,720]}
+{"kind":"shape","id":"sh/vu9knih4","slide":1,"bbox":[1088,0,192,720]}
+{"kind":"shape","id":"sh/29gr2p8n","slide":1,"bbox":[1148,0,132,720]}
+{"kind":"shape","id":"sh/d0z61032","slide":1,"bbox":[72,82,88,8]}
+{"kind":"textbox","id":"sh/kf6dcbul","slide":1,"text":"SWISS SIA COMPLIANCE CHECKER","textPreview":"SWISS SIA COMPLIANCE CHECKER","textChars":28,"textLines":1,"bbox":[72,112,640,34]}
+{"kind":"textbox","id":"sh/vixczed8","slide":1,"text":"Turning IESVE models into evidence-based SIA readiness reports","textPreview":"Turning IESVE models into evidence-based SIA readiness reports","textChars":62,"textLines":1,"bbox":[72,174,830,178]}
+{"kind":"textbox","id":"sh/2x4nap4r","slide":1,"text":"Progress review for Friday oral presentation","textPreview":"Progress review for Friday oral presentation","textChars":44,"textLines":1,"bbox":[76,374,620,34]}
+{"kind":"shape","id":"sh/gfmlkjm1","slide":1,"bbox":[76,446,180,34]}
+{"kind":"textbox","id":"sh/90je9cvi","slide":1,"text":"SIA 380/2:2022","textPreview":"SIA 380/2:2022","textChars":14,"textLines":1,"bbox":[92,453,148,20]}
+{"kind":"shape","id":"sh/yd0z6103","slide":1,"bbox":[274,446,176,34]}
+{"kind":"textbox","id":"sh/rytsvu9k","slide":1,"text":"SIA 4010:2023","textPreview":"SIA 4010:2023","textChars":13,"textLines":1,"bbox":[290,453,144,20]}
+{"kind":"shape","id":"sh/g7adsji5","slide":1,"bbox":[468,446,146,34]}
+{"kind":"textbox","id":"sh/9s36hcrm","slide":1,"text":"IESVE API","textPreview":"IESVE API","textChars":9,"textLines":1,"bbox":[484,453,114,20]}
+{"kind":"textbox","id":"sh/y1kre1w7","slide":1,"text":"Current project: ZOER_32_C1","textPreview":"Current project: ZOER_32_C1","textChars":27,"textLines":1,"bbox":[76,620,360,28]}
+{"kind":"textbox","id":"sh/rmhk3q5o","slide":1,"text":"01","textPreview":"01","textChars":2,"textLines":1,"bbox":[1168,670,40,24]}
+{"kind":"notes","id":"nt/ryokte","slide":1,"text":"Open by framing the project as an evidence workflow, not just a Python script.\nMention that the deck is in English and intended for manager-level progress review."}
+{"kind":"slide","id":"sl/yar6e8","slide":2,"title":"EXECUTIVE MESSAGE","textShapes":16}
+{"kind":"shape","id":"sh/vy90je9c","slide":2,"bbox":[0,0,1280,720]}
+{"kind":"shape","id":"sh/oj2t83it","slide":2,"bbox":[0,0,1280,16]}
+{"kind":"shape","id":"sh/d4vmtwra","slide":2,"bbox":[1020,16,260,704]}
+{"kind":"shape","id":"sh/61032lsz","slide":2,"bbox":[1076,16,204,704]}
+{"kind":"shape","id":"sh/vmtwra5g","slide":2,"bbox":[1150,16,130,704]}
+{"kind":"textbox","id":"sh/o7qpg3ex","slide":2,"text":"EXECUTIVE MESSAGE","textPreview":"EXECUTIVE MESSAGE","textChars":17,"textLines":1,"bbox":[72,44,760,30]}
+{"kind":"shape","id":"sh/dsji5sne","slide":2,"bbox":[72,80,64,4]}
+{"kind":"textbox","id":"sh/6tovahoz","slide":2,"text":"We moved from ad hoc review to a repeatable readiness workflow","textPreview":"We moved from ad hoc review to a repeatable readiness workflow","textChars":62,"textLines":1,"bbox":[72,92,820,98]}
+{"kind":"textbox","id":"sh/vahoza1g","slide":2,"text":"The project now extracts VE data, checks what can be checked, and blocks unsafe compliance claims where evidence is missing.","textPreview":"The project now extracts VE data, checks what can be checked, and blocks unsafe compliance claims where evidence is missing.","textChars":124,"textLines":1,"bbox":[74,202,820,54]}
+{"kind":"textbox","id":"sh/7qpg3ex0","slide":2,"text":"Swiss SIA Compliance Checker for IESVE","textPreview":"Swiss SIA Compliance Checker for IESVE","textChars":38,"textLines":1,"bbox":[72,672,480,24]}
+{"kind":"textbox","id":"sh/i5sneloj","slide":2,"text":"02","textPreview":"02","textChars":2,"textLines":1,"bbox":[1168,670,40,24]}
+{"kind":"shape","id":"sh/pwb2hwfy","slide":2,"bbox":[72,298,250,160]}
+{"kind":"shape","id":"sh/0bi9s36h","slide":2,"bbox":[72,298,8,160]}
+{"kind":"textbox","id":"sh/7y1kre1w","slide":2,"text":"Run button","textPreview":"Run button","textChars":10,"textLines":1,"bbox":[98,316,206,48]}
+{"kind":"textbox","id":"sh/ed8v6psf","slide":2,"text":"Workflow constraint solved","textPreview":"Workflow constraint solved","textChars":26,"textLines":1,"bbox":[100,368,200,40]}
+{"kind":"textbox","id":"sh/p4r65wju","slide":2,"text":"Designed for VE users who cannot run PowerShell.","textPreview":"Designed for VE users who cannot run PowerShell.","textChars":48,"textLines":1,"bbox":[100,410,200,36]}
+{"kind":"shape","id":"sh/wjudg7ad","slide":2,"bbox":[352,298,250,160]}
+{"kind":"shape","id":"sh/72x4nap4","slide":2,"bbox":[352,298,8,160]}
+{"kind":"textbox","id":"sh/ih4byhgn","slide":2,"text":"26 sheets","textPreview":"26 sheets","textChars":9,"textLines":1,"bbox":[378,316,206,48]}
+{"kind":"textbox","id":"sh/mtwra5gb","slide":2,"text":"Professional Excel output","textPreview":"Professional Excel output","textChars":25,"textLines":1,"bbox":[380,368,200,40]}
+{"kind":"textbox","id":"sh/fepkzupw","slide":2,"text":"Dashboard, action board, evidence tabs and raw traceability.","textPreview":"Dashboard, action board, evidence tabs and raw traceability.","textChars":60,"textLines":1,"bbox":[380,410,200,36]}
+{"kind":"shape","id":"sh/4zidonyd","slide":2,"bbox":[632,298,250,160]}
+{"kind":"shape","id":"sh/xkf6dcbu","slide":2,"bbox":[632,298,8,160]}
+{"kind":"textbox","id":"sh/mlkjm1cf","slide":2,"text":"169 checks","textPreview":"169 checks","textChars":10,"textLines":1,"bbox":[658,316,206,48]}
+{"kind":"textbox","id":"sh/f6dcbulw","slide":2,"text":"Release validation","textPreview":"Release validation","textChars":18,"textLines":1,"bbox":[660,368,200,40]}
+{"kind":"textbox","id":"sh/4r65wjud","slide":2,"text":"PDF references, config guardrails, workbook structure and formula health.","textPreview":"PDF references, config guardrails, workbook structure and formula health.","textChars":73,"textLines":1,"bbox":[660,410,200,36]}
+{"kind":"shape","id":"sh/xc3ylc7u","slide":2,"bbox":[918,286,250,190]}
+{"kind":"textbox","id":"sh/m94fu18j","slide":2,"text":"Core principle","textPreview":"Core principle","textChars":14,"textLines":1,"bbox":[950,318,190,28]}
+{"kind":"textbox","id":"sh/fu18jqh0","slide":2,"text":"No evidence,\nno claim.","textPreview":"No evidence, | no claim.","textChars":22,"textLines":2,"bbox":[950,370,176,72]}
+{"kind":"notes","id":"nt/yar6e8","slide":2,"text":"This is the main executive message.\nThe workflow is useful now because it is conservative and auditable."}
+{"kind":"slide","id":"sl/rgziv2","slide":3,"title":"WHY IT MATTERS","textShapes":14}
+{"kind":"shape","id":"sh/kjm1cfa9","slide":3,"bbox":[0,0,1280,720]}
+{"kind":"shape","id":"sh/r2p8nqxs","slide":3,"bbox":[0,0,1280,16]}
+{"kind":"shape","id":"sh/2hwfyxob","slide":3,"bbox":[1020,16,260,704]}
+{"kind":"shape","id":"sh/9gr2p8nq","slide":3,"bbox":[1076,16,204,704]}
+{"kind":"shape","id":"sh/gvy90je9","slide":3,"bbox":[1150,16,130,704]}
+{"kind":"textbox","id":"sh/ra5gbq1o","slide":3,"text":"WHY IT MATTERS","textPreview":"WHY IT MATTERS","textChars":14,"textLines":1,"bbox":[72,44,760,30]}
+{"kind":"shape","id":"sh/2p8nqxs7","slide":3,"bbox":[72,80,64,4]}
+{"kind":"textbox","id":"sh/9knih4by","slide":3,"text":"Swiss compliance needs more than a pass/fail script","textPreview":"Swiss compliance needs more than a pass/fail script","textChars":51,"textLines":1,"bbox":[72,92,820,98]}
+{"kind":"textbox","id":"sh/kzupwb2h","slide":3,"text":"The standards create three simultaneous challenges: technical extraction, source traceability, and official evidence boundaries.","textPreview":"The standards create three simultaneous challenges: technical extraction, source traceability, and official evidence boundaries.","textChars":128,"textLines":1,"bbox":[74,202,820,54]}
+{"kind":"textbox","id":"sh/ulwval87","slide":3,"text":"Swiss SIA Compliance Checker for IESVE","textPreview":"Swiss SIA Compliance Checker for IESVE","textChars":38,"textLines":1,"bbox":[72,672,480,24]}
+{"kind":"textbox","id":"sh/j6tovaho","slide":3,"text":"03","textPreview":"03","textChars":2,"textLines":1,"bbox":[1168,670,40,24]}
+{"kind":"textbox","id":"sh/crmhk3q5","slide":3,"text":"CHALLENGE","textPreview":"CHALLENGE","textChars":9,"textLines":1,"bbox":[84,292,360,24]}
+{"kind":"textbox","id":"sh/1cfa9w3m","slide":3,"text":"1","textPreview":"1","textChars":1,"textLines":1,"bbox":[84,328,34,24]}
+{"kind":"textbox","id":"sh/uxc3ylc7","slide":3,"text":"SIA 380/2 mixes building data, systems, controls and dynamic results.","textPreview":"SIA 380/2 mixes building data, systems, controls and dynamic results.","textChars":69,"textLines":1,"bbox":[128,326,410,42]}
+{"kind":"textbox","id":"sh/ji5snelo","slide":3,"text":"2","textPreview":"2","textChars":1,"textLines":1,"bbox":[84,386,34,24]}
+{"kind":"textbox","id":"sh/c3ylc7u5","slide":3,"text":"SIA 4010 validates method/software evidence, not a single building value.","textPreview":"SIA 4010 validates method/software evidence, not a single building value.","textChars":73,"textLines":1,"bbox":[128,384,410,42]}
+{"kind":"textbox","id":"sh/1kre1w7m","slide":3,"text":"3","textPreview":"3","textChars":1,"textLines":1,"bbox":[84,444,34,24]}
+{"kind":"textbox","id":"sh/q5o7qpg3","slide":3,"text":"VE exposes data through specific IESVE API objects and CDB methods.","textPreview":"VE exposes data through specific IESVE API objects and CDB methods.","textChars":67,"textLines":1,"bbox":[128,442,410,42]}
+{"kind":"shape","id":"sh/jqh0fepk","slide":3,"bbox":[620,286,520,250]}
+{"kind":"textbox","id":"sh/bulwval8","slide":3,"text":"The required shift","textPreview":"The required shift","textChars":18,"textLines":1,"bbox":[650,318,420,30]}
+{"kind":"textbox","id":"sh/i9s36hcr","slide":3,"text":"From checking isolated numbers to proving where each value came from, how it was interpreted, and what remains not checkable.","textPreview":"From checking isolated numbers to proving where each value came from, how it was interpreted, and what remains not checkable.","textChars":125,"textLines":1,"bbox":[650,370,420,108]}
+{"kind":"notes","id":"nt/rgziv2","slide":3,"text":"Explain why this is difficult and why a professional report needs evidence boundaries.\nAvoid claiming certification. The tool creates readiness and audit support."}
+{"kind":"slide","id":"sl/4u88gp","slide":4,"title":"WHAT WE BUILT","textShapes":20}
+{"kind":"shape","id":"sh/qpg3ex0n","slide":4,"bbox":[0,0,1280,720]}
+{"kind":"shape","id":"sh/xczed8v6","slide":4,"bbox":[0,0,1280,16]}
+{"kind":"shape","id":"sh/8v6psfil","slide":4,"bbox":[1020,16,260,704]}
+{"kind":"shape","id":"sh/fyxobm58","slide":4,"bbox":[1076,16,204,704]}
+{"kind":"shape","id":"sh/qd4vmtwr","slide":4,"bbox":[1150,16,130,704]}
+{"kind":"textbox","id":"sh/x4nap4r6","slide":4,"text":"WHAT WE BUILT","textPreview":"WHAT WE BUILT","textChars":13,"textLines":1,"bbox":[72,44,760,30]}
+{"kind":"shape","id":"sh/8jqh0fep","slide":4,"bbox":[72,80,64,4]}
+{"kind":"textbox","id":"sh/fmlkjm1c","slide":4,"text":"The current architecture links VE extraction to manager-ready reporting","textPreview":"The current architecture links VE extraction to manager-ready reporting","textChars":71,"textLines":1,"bbox":[72,92,820,98]}
+{"kind":"textbox","id":"sh/q1orytsv","slide":4,"text":"Each stage is designed to be auditable and safe to run inside VE.","textPreview":"Each stage is designed to be auditable and safe to run inside VE.","textChars":65,"textLines":1,"bbox":[74,202,820,54]}
+{"kind":"textbox","id":"sh/4nap4r65","slide":4,"text":"Swiss SIA Compliance Checker for IESVE","textPreview":"Swiss SIA Compliance Checker for IESVE","textChars":38,"textLines":1,"bbox":[72,672,480,24]}
+{"kind":"textbox","id":"sh/t83itgfm","slide":4,"text":"04","textPreview":"04","textChars":2,"textLines":1,"bbox":[1168,670,40,24]}
+{"kind":"shape","id":"sh/mhk3q5o7","slide":4,"bbox":[82,320,116,116]}
+{"kind":"textbox","id":"sh/b2hwfyxo","slide":4,"text":"1","textPreview":"1","textChars":1,"textLines":1,"bbox":[125,350,30,34]}
+{"kind":"textbox","id":"sh/4byhgn29","slide":4,"text":"VE Run button","textPreview":"VE Run button","textChars":13,"textLines":1,"bbox":[52,452,176,28]}
+{"kind":"textbox","id":"sh/twra5gbq","slide":4,"text":"User launches inside IESVE","textPreview":"User launches inside IESVE","textChars":26,"textLines":1,"bbox":[40,484,200,46]}
+{"kind":"shape","id":"sh/m58z25kb","slide":4,"bbox":[230,365,62,4]}
+{"kind":"shape","id":"sh/bq1oryts","slide":4,"bbox":[292,320,116,116]}
+{"kind":"textbox","id":"sh/47y1kre1","slide":4,"text":"2","textPreview":"2","textChars":1,"textLines":1,"bbox":[335,350,30,34]}
+{"kind":"textbox","id":"sh/tsvu9kni","slide":4,"text":"IESVE API","textPreview":"IESVE API","textChars":9,"textLines":1,"bbox":[262,452,176,28]}
+{"kind":"textbox","id":"sh/xkf6dcbu","slide":4,"text":"Rooms, surfaces, CDB, Vista","textPreview":"Rooms, surfaces, CDB, Vista","textChars":27,"textLines":1,"bbox":[250,484,200,46]}
+{"kind":"shape","id":"sh/4zidonyd","slide":4,"bbox":[440,365,62,4]}
+{"kind":"shape","id":"sh/fepkzupw","slide":4,"bbox":[502,320,116,116]}
+{"kind":"textbox","id":"sh/mtwra5gb","slide":4,"text":"3","textPreview":"3","textChars":1,"textLines":1,"bbox":[545,350,30,34]}
+{"kind":"textbox","id":"sh/xc3ylc7u","slide":4,"text":"SIA checks","textPreview":"SIA checks","textChars":10,"textLines":1,"bbox":[472,452,176,28]}
+{"kind":"textbox","id":"sh/4r65wjud","slide":4,"text":"380/2 values and model QA","textPreview":"380/2 values and model QA","textChars":25,"textLines":1,"bbox":[460,484,200,46]}
+{"kind":"shape","id":"sh/f6dcbulw","slide":4,"bbox":[650,365,62,4]}
+{"kind":"shape","id":"sh/mlkjm1cf","slide":4,"bbox":[712,320,116,116]}
+{"kind":"textbox","id":"sh/x0nuxc3y","slide":4,"text":"4","textPreview":"4","textChars":1,"textLines":1,"bbox":[755,350,30,34]}
+{"kind":"textbox","id":"sh/4fu18jqh","slide":4,"text":"Evidence matrix","textPreview":"Evidence matrix","textChars":15,"textLines":1,"bbox":[682,452,176,28]}
+{"kind":"textbox","id":"sh/ed8v6psf","slide":4,"text":"4010 remains NOT_CHECKABLE","textPreview":"4010 remains NOT_CHECKABLE","textChars":26,"textLines":1,"bbox":[670,484,200,46]}
+{"kind":"shape","id":"sh/7y1kre1w","slide":4,"bbox":[860,365,62,4]}
+{"kind":"shape","id":"sh/wjudg7ad","slide":4,"bbox":[922,320,116,116]}
+{"kind":"textbox","id":"sh/p4r65wju","slide":4,"text":"5","textPreview":"5","textChars":1,"textLines":1,"bbox":[965,350,30,34]}
+{"kind":"textbox","id":"sh/i5sneloj","slide":4,"text":"Reports/docs","textPreview":"Reports/docs","textChars":12,"textLines":1,"bbox":[892,452,176,28]}
+{"kind":"textbox","id":"sh/7qpg3ex0","slide":4,"text":"Excel, Sphinx, playbooks","textPreview":"Excel, Sphinx, playbooks","textChars":24,"textLines":1,"bbox":[880,484,200,46]}
+{"kind":"notes","id":"nt/4u88gp","slide":4,"text":"Walk left to right.\nStress that the tool is run-button compatible and uses IESVE-specific APIs."}
+{"kind":"slide","id":"sl/8qyi7t","slide":5,"title":"WHAT IS DELIVERED","textShapes":13}
+{"kind":"shape","id":"sh/wval87ed","slide":5,"bbox":[0,0,1280,720]}
+{"kind":"shape","id":"sh/7adsji5s","slide":5,"bbox":[0,0,1280,16]}
+{"kind":"shape","id":"sh/epkzupwb","slide":5,"bbox":[1020,16,260,704]}
+{"kind":"shape","id":"sh/psfil0rq","slide":5,"bbox":[1076,16,204,704]}
+{"kind":"shape","id":"sh/w7mp0bi9","slide":5,"bbox":[1150,16,130,704]}
+{"kind":"textbox","id":"sh/7mp0bi9s","slide":5,"text":"WHAT IS DELIVERED","textPreview":"WHAT IS DELIVERED","textChars":17,"textLines":1,"bbox":[72,44,760,30]}
+{"kind":"shape","id":"sh/e1w7mp0b","slide":5,"bbox":[72,80,64,4]}
+{"kind":"textbox","id":"sh/l0rqd4vm","slide":5,"text":"The report has become an action system, not just a spreadsheet","textPreview":"The report has become an action system, not just a spreadsheet","textChars":62,"textLines":1,"bbox":[72,92,820,98]}
+{"kind":"textbox","id":"sh/wfyxobm5","slide":5,"text":"The workbook now separates executive decisions, technical findings, evidence needs and raw traceability.","textPreview":"The workbook now separates executive decisions, technical findings, evidence needs and raw traceability.","textChars":104,"textLines":1,"bbox":[74,202,820,54]}
+{"kind":"textbox","id":"sh/ixczed8v","slide":5,"text":"Swiss SIA Compliance Checker for IESVE","textPreview":"Swiss SIA Compliance Checker for IESVE","textChars":38,"textLines":1,"bbox":[72,672,480,24]}
+{"kind":"textbox","id":"sh/bi9s36hc","slide":5,"text":"05","textPreview":"05","textChars":2,"textLines":1,"bbox":[1168,670,40,24]}
+{"kind":"shape","id":"sh/032lszqt","slide":5,"bbox":[78,304,238,220]}
+{"kind":"shape","id":"sh/tovahoza","slide":5,"bbox":[78,304,238,12]}
+{"kind":"textbox","id":"sh/i9s36hcr","slide":5,"text":"Executive view","textPreview":"Executive view","textChars":14,"textLines":1,"bbox":[100,334,190,30]}
+{"kind":"textbox","id":"sh/bulwval8","slide":5,"text":"MANAGER DASHBOARD\nCLIENT SUMMARY\nPREFLIGHT","textPreview":"MANAGER DASHBOARD | CLIENT SUMMARY | PREFLIGHT","textChars":42,"textLines":3,"bbox":[100,386,190,100]}
+{"kind":"shape","id":"sh/0fepkzup","slide":5,"bbox":[350,304,238,220]}
+{"kind":"shape","id":"sh/p0bi9s36","slide":5,"bbox":[350,304,238,12]}
+{"kind":"textbox","id":"sh/idonyd0z","slide":5,"text":"Action board","textPreview":"Action board","textChars":12,"textLines":1,"bbox":[372,334,190,30]}
+{"kind":"textbox","id":"sh/byhgn29g","slide":5,"text":"P1 REMEDIATION\nINPUT REQUEST\nOPEN ITEMS BACKLOG","textPreview":"P1 REMEDIATION | INPUT REQUEST | OPEN ITEMS BACKLOG","textChars":47,"textLines":3,"bbox":[372,386,190,100]}
+{"kind":"shape","id":"sh/3q5o7qpg","slide":5,"bbox":[622,304,238,220]}
+{"kind":"shape","id":"sh/e9cvixcz","slide":5,"bbox":[622,304,238,12]}
+{"kind":"textbox","id":"sh/lwval87e","slide":5,"text":"Technical audits","textPreview":"Technical audits","textChars":16,"textLines":1,"bbox":[644,334,190,30]}
+{"kind":"textbox","id":"sh/wb2hwfyx","slide":5,"text":"FRAME FRACTION AUDIT\nENVELOPE U REVIEW\nVE G-VALUES AUDIT","textPreview":"FRAME FRACTION AUDIT | ENVELOPE U REVIEW | VE G-VALUES AUDIT","textChars":56,"textLines":3,"bbox":[644,386,190,100]}
+{"kind":"shape","id":"sh/3itgfmlk","slide":5,"bbox":[894,304,238,220]}
+{"kind":"shape","id":"sh/ex0nuxc3","slide":5,"bbox":[894,304,238,12]}
+{"kind":"textbox","id":"sh/loj2t83i","slide":5,"text":"Evidence guardrails","textPreview":"Evidence guardrails","textChars":19,"textLines":1,"bbox":[916,334,190,30]}
+{"kind":"textbox","id":"sh/w3m94fu1","slide":5,"text":"SIA4010 READINESS\nSOFTWARE REGISTER\nNAVIGATOR BACKLOG","textPreview":"SIA4010 READINESS | SOFTWARE REGISTER | NAVIGATOR BACKLOG","textChars":53,"textLines":3,"bbox":[916,386,190,100]}
+{"kind":"notes","id":"nt/8qyi7t","slide":5,"text":"This slide shows what has been built in concrete terms.\nMention that the report is built for managers, model reviewers and compliance reviewers at the same time."}
+{"kind":"slide","id":"sl/g1nqaf","slide":6,"title":"LATEST MODEL RESULT","textShapes":16}
+{"kind":"shape","id":"sh/wfyxobm5","slide":6,"bbox":[0,0,1280,720]}
+{"kind":"shape","id":"sh/7u54zido","slide":6,"bbox":[0,0,1280,16]}
+{"kind":"shape","id":"sh/ed8bat47","slide":6,"bbox":[1020,16,260,704]}
+{"kind":"shape","id":"sh/lc7u54zi","slide":6,"bbox":[1076,16,204,704]}
+{"kind":"shape","id":"sh/wra5gbq1","slide":6,"bbox":[1150,16,130,704]}
+{"kind":"textbox","id":"sh/36hcrmhk","slide":6,"text":"LATEST MODEL RESULT","textPreview":"LATEST MODEL RESULT","textChars":19,"textLines":1,"bbox":[72,44,760,30]}
+{"kind":"shape","id":"sh/eloj2t83","slide":6,"bbox":[72,80,64,4]}
+{"kind":"textbox","id":"sh/pg3ex0nu","slide":6,"text":"ZOER_32_C1 is measurable, but not ready for a final compliance claim","textPreview":"ZOER_32_C1 is measurable, but not ready for a final compliance claim","textChars":68,"textLines":1,"bbox":[72,92,820,98]}
+{"kind":"textbox","id":"sh/wval87ed","slide":6,"text":"The current run is useful because it makes the remaining work explicit.","textPreview":"The current run is useful because it makes the remaining work explicit.","textChars":71,"textLines":1,"bbox":[74,202,820,54]}
+{"kind":"textbox","id":"sh/6hcrmhk3","slide":6,"text":"Swiss SIA Compliance Checker for IESVE","textPreview":"Swiss SIA Compliance Checker for IESVE","textChars":38,"textLines":1,"bbox":[72,672,480,24]}
+{"kind":"textbox","id":"sh/z25kb6xk","slide":6,"text":"06","textPreview":"06","textChars":2,"textLines":1,"bbox":[1168,670,40,24]}
+{"kind":"shape","id":"sh/onyd0z61","slide":6,"bbox":[72,286,188,142]}
+{"kind":"shape","id":"sh/d8v6psfi","slide":6,"bbox":[72,286,8,142]}
+{"kind":"textbox","id":"sh/6tovahoz","slide":6,"text":"65.8","textPreview":"65.8","textChars":4,"textLines":1,"bbox":[98,304,144,48]}
+{"kind":"textbox","id":"sh/vahoza1g","slide":6,"text":"Model QA","textPreview":"Model QA","textChars":8,"textLines":1,"bbox":[100,356,138,40]}
+{"kind":"shape","id":"sh/ovahoza1","slide":6,"bbox":[282,286,188,142]}
+{"kind":"shape","id":"sh/dg7adsji","slide":6,"bbox":[282,286,8,142]}
+{"kind":"textbox","id":"sh/61032lsz","slide":6,"text":"45.6","textPreview":"45.6","textChars":4,"textLines":1,"bbox":[308,304,144,48]}
+{"kind":"textbox","id":"sh/vmtwra5g","slide":6,"text":"SIA 380/2 score","textPreview":"SIA 380/2 score","textChars":15,"textLines":1,"bbox":[310,356,138,40]}
+{"kind":"shape","id":"sh/nqxs72x4","slide":6,"bbox":[492,286,188,142]}
+{"kind":"shape","id":"sh/u54zidon","slide":6,"bbox":[492,286,8,142]}
+{"kind":"textbox","id":"sh/5sneloj2","slide":6,"text":"2/5","textPreview":"2/5","textChars":3,"textLines":1,"bbox":[518,304,144,48]}
+{"kind":"textbox","id":"sh/cbulwval","slide":6,"text":"SIA 4010 evidence","textPreview":"SIA 4010 evidence","textChars":17,"textLines":1,"bbox":[520,356,138,40]}
+{"kind":"shape","id":"sh/neloj2t8","slide":6,"bbox":[702,286,188,142]}
+{"kind":"shape","id":"sh/ytsvu9kn","slide":6,"bbox":[702,286,8,142]}
+{"kind":"textbox","id":"sh/5kb6xkf6","slide":6,"text":"4","textPreview":"4","textChars":1,"textLines":1,"bbox":[728,304,144,48]}
+{"kind":"textbox","id":"sh/czed8v6p","slide":6,"text":"Rooms","textPreview":"Rooms","textChars":5,"textLines":1,"bbox":[730,356,138,40]}
+{"kind":"shape","id":"sh/n29gr2p8","slide":6,"bbox":[912,286,188,142]}
+{"kind":"shape","id":"sh/yhgn29gr","slide":6,"bbox":[912,286,8,142]}
+{"kind":"textbox","id":"sh/8jqh0fep","slide":6,"text":"392.5","textPreview":"392.5","textChars":5,"textLines":1,"bbox":[938,304,144,48]}
+{"kind":"textbox","id":"sh/x4nap4r6","slide":6,"text":"Area m2","textPreview":"Area m2","textChars":7,"textLines":1,"bbox":[940,356,138,40]}
+{"kind":"shape","id":"sh/qd4vmtwr","slide":6,"bbox":[76,492,1024,70]}
+{"kind":"textbox","id":"sh/fyxobm58","slide":6,"text":"Decision today: keep this as a professional readiness report, not a final SIA compliance certificate.","textPreview":"Decision today: keep this as a professional readiness report, not a final SIA compliance certificate.","textChars":101,"textLines":1,"bbox":[108,511,940,34]}
+{"kind":"notes","id":"nt/g1nqaf","slide":6,"text":"Use this slide to be transparent. The report is valuable because it shows exactly what is not ready.\nAvoid over-selling the result."}
+{"kind":"slide","id":"sl/xvrrbq","slide":7,"title":"KEY TECHNICAL BREAKTHROUGH","textShapes":24}
+{"kind":"shape","id":"sh/f6dcbulw","slide":7,"bbox":[0,0,1280,720]}
+{"kind":"shape","id":"sh/4r65wjud","slide":7,"bbox":[0,0,1280,16]}
+{"kind":"shape","id":"sh/xc3ylc7u","slide":7,"bbox":[1020,16,260,704]}
+{"kind":"shape","id":"sh/mtwra5gb","slide":7,"bbox":[1076,16,204,704]}
+{"kind":"shape","id":"sh/fepkzupw","slide":7,"bbox":[1150,16,130,704]}
+{"kind":"textbox","id":"sh/4zidonyd","slide":7,"text":"KEY TECHNICAL BREAKTHROUGH","textPreview":"KEY TECHNICAL BREAKTHROUGH","textChars":26,"textLines":1,"bbox":[72,44,760,30]}
+{"kind":"shape","id":"sh/xkf6dcbu","slide":7,"bbox":[72,80,64,4]}
+{"kind":"textbox","id":"sh/qxs72x4n","slide":7,"text":"The g-value issue is now evidence-backed","textPreview":"The g-value issue is now evidence-backed","textChars":40,"textLines":1,"bbox":[72,92,820,98]}
+{"kind":"textbox","id":"sh/fil0rqd4","slide":7,"text":"The script no longer treats CDB g_value = 0.75 as the SIA-comparable value when bs_en_410 proves otherwise.","textPreview":"The script no longer treats CDB g_value = 0.75 as the SIA-comparable value when bs_en_410 proves otherwise.","textChars":107,"textLines":1,"bbox":[74,202,820,54]}
+{"kind":"textbox","id":"sh/fepkzupw","slide":7,"text":"Swiss SIA Compliance Checker for IESVE","textPreview":"Swiss SIA Compliance Checker for IESVE","textChars":38,"textLines":1,"bbox":[72,672,480,24]}
+{"kind":"textbox","id":"sh/mtwra5gb","slide":7,"text":"07","textPreview":"07","textChars":2,"textLines":1,"bbox":[1168,670,40,24]}
+{"kind":"shape","id":"sh/xkf6dcbu","slide":7,"bbox":[92,304,180,42]}
+{"kind":"textbox","id":"sh/4zidonyd","slide":7,"text":"Construction","textPreview":"Construction","textChars":12,"textLines":1,"bbox":[102,315,160,20]}
+{"kind":"shape","id":"sh/f6dcbulw","slide":7,"bbox":[272,304,130,42]}
+{"kind":"textbox","id":"sh/mlkjm1cf","slide":7,"text":"CDB g","textPreview":"CDB g","textChars":5,"textLines":1,"bbox":[282,315,110,20]}
+{"kind":"shape","id":"sh/xc3ylc7u","slide":7,"bbox":[402,304,130,42]}
+{"kind":"textbox","id":"sh/4r65wjud","slide":7,"text":"EN 410","textPreview":"EN 410","textChars":6,"textLines":1,"bbox":[412,315,110,20]}
+{"kind":"shape","id":"sh/fu18jqh0","slide":7,"bbox":[532,304,130,42]}
+{"kind":"textbox","id":"sh/m94fu18j","slide":7,"text":"Status","textPreview":"Status","textChars":6,"textLines":1,"bbox":[542,315,110,20]}
+{"kind":"shape","id":"sh/y90je9cv","slide":7,"bbox":[92,346,180,42]}
+{"kind":"textbox","id":"sh/nuxc3ylc","slide":7,"text":"STD_EXTW","textPreview":"STD_EXTW","textChars":8,"textLines":1,"bbox":[102,357,160,20]}
+{"kind":"shape","id":"sh/gbq1oryt","slide":7,"bbox":[272,346,130,42]}
+{"kind":"textbox","id":"sh/5wjudg7a","slide":7,"text":"0.750","textPreview":"0.750","textChars":5,"textLines":1,"bbox":[282,357,110,20]}
+{"kind":"shape","id":"sh/yhgn29gr","slide":7,"bbox":[402,346,130,42]}
+{"kind":"textbox","id":"sh/n29gr2p8","slide":7,"text":"0.251","textPreview":"0.251","textChars":5,"textLines":1,"bbox":[412,357,110,20]}
+{"kind":"shape","id":"sh/gn29gr2p","slide":7,"bbox":[532,346,130,42]}
+{"kind":"textbox","id":"sh/58z25kb6","slide":7,"text":"Pass","textPreview":"Pass","textChars":4,"textLines":1,"bbox":[542,357,110,20]}
+{"kind":"shape","id":"sh/ytsvu9kn","slide":7,"bbox":[92,388,180,42]}
+{"kind":"textbox","id":"sh/neloj2t8","slide":7,"text":"STD_EXT1","textPreview":"STD_EXT1","textChars":8,"textLines":1,"bbox":[102,399,160,20]}
+{"kind":"shape","id":"sh/dcbulwva","slide":7,"bbox":[272,388,130,42]}
+{"kind":"textbox","id":"sh/kre1w7mp","slide":7,"text":"0.750","textPreview":"0.750","textChars":5,"textLines":1,"bbox":[282,399,110,20]}
+{"kind":"shape","id":"sh/val87ed8","slide":7,"bbox":[402,388,130,42]}
+{"kind":"textbox","id":"sh/6psfil0r","slide":7,"text":"0.480","textPreview":"0.480","textChars":5,"textLines":1,"bbox":[412,399,110,20]}
+{"kind":"shape","id":"sh/donyd0z6","slide":7,"bbox":[532,388,130,42]}
+{"kind":"textbox","id":"sh/k3q5o7qp","slide":7,"text":"Pass","textPreview":"Pass","textChars":4,"textLines":1,"bbox":[542,399,110,20]}
+{"kind":"shape","id":"sh/vixczed8","slide":7,"bbox":[92,430,180,42]}
+{"kind":"textbox","id":"sh/2x4nap4r","slide":7,"text":"STD_EXT2","textPreview":"STD_EXT2","textChars":8,"textLines":1,"bbox":[102,441,160,20]}
+{"kind":"shape","id":"sh/d0z61032","slide":7,"bbox":[272,430,130,42]}
+{"kind":"textbox","id":"sh/kf6dcbul","slide":7,"text":"0.750","textPreview":"0.750","textChars":5,"textLines":1,"bbox":[282,441,110,20]}
+{"kind":"shape","id":"sh/sji5snel","slide":7,"bbox":[402,430,130,42]}
+{"kind":"textbox","id":"sh/h4byhgn2","slide":7,"text":"0.250","textPreview":"0.250","textChars":5,"textLines":1,"bbox":[412,441,110,20]}
+{"kind":"shape","id":"sh/adsji5sn","slide":7,"bbox":[532,430,130,42]}
+{"kind":"textbox","id":"sh/3ylc7u54","slide":7,"text":"Pass","textPreview":"Pass","textChars":4,"textLines":1,"bbox":[542,441,110,20]}
+{"kind":"shape","id":"sh/s72x4nap","slide":7,"bbox":[744,304,350,232]}
+{"kind":"textbox","id":"sh/lszqtcj6","slide":7,"text":"Why this matters","textPreview":"Why this matters","textChars":16,"textLines":1,"bbox":[778,332,260,26]}
+{"kind":"textbox","id":"sh/a5gbq1or","slide":7,"text":"The report can now prove that raw CDB g-value and EN 410 g_perp are different values.","textPreview":"The report can now prove that raw CDB g-value and EN 410 g_perp are different values.","textChars":85,"textLines":1,"bbox":[778,376,276,70]}
+{"kind":"textbox","id":"sh/3m94fu18","slide":7,"text":"Result: no false g_total blocker when EN 410 already satisfies g <= 0.50.","textPreview":"Result: no false g_total blocker when EN 410 already satisfies g <= 0.50.","textChars":73,"textLines":1,"bbox":[778,480,280,38]}
+{"kind":"notes","id":"nt/xvrrbq","slide":7,"text":"This is a strong technical success.\nMention VECdbConstruction.get_g_values().bs_en_410 as the IESVE API evidence route."}
+{"kind":"slide","id":"sl/0uwcx9","slide":8,"title":"REMAINING SIA 380/2 BLOCKERS","textShapes":9}
+{"kind":"shape","id":"sh/8bat47y1","slide":8,"bbox":[0,0,1280,720]}
+{"kind":"shape","id":"sh/jqh0fepk","slide":8,"bbox":[0,0,1280,16]}
+{"kind":"shape","id":"sh/q5o7qpg3","slide":8,"bbox":[1020,16,260,704]}
+{"kind":"shape","id":"sh/18jqh0fe","slide":8,"bbox":[1076,16,204,704]}
+{"kind":"shape","id":"sh/8nqxs72x","slide":8,"bbox":[1150,16,130,704]}
+{"kind":"textbox","id":"sh/j2t83itg","slide":8,"text":"REMAINING SIA 380/2 BLOCKERS","textPreview":"REMAINING SIA 380/2 BLOCKERS","textChars":28,"textLines":1,"bbox":[72,44,760,30]}
+{"kind":"shape","id":"sh/qh0fepkz","slide":8,"bbox":[72,80,64,4]}
+{"kind":"textbox","id":"sh/1cfa9w3m","slide":8,"text":"The remaining model blockers are concrete and fixable","textPreview":"The remaining model blockers are concrete and fixable","textChars":53,"textLines":1,"bbox":[72,92,820,98]}
+{"kind":"textbox","id":"sh/crmhk3q5","slide":8,"text":"They are no longer vague compliance risks: they are specific constructions with exact values.","textPreview":"They are no longer vague compliance risks: they are specific constructions with exact values.","textChars":93,"textLines":1,"bbox":[74,202,820,54]}
+{"kind":"textbox","id":"sh/2t83itgf","slide":8,"text":"Swiss SIA Compliance Checker for IESVE","textPreview":"Swiss SIA Compliance Checker for IESVE","textChars":38,"textLines":1,"bbox":[72,672,480,24]}
+{"kind":"textbox","id":"sh/re1w7mp0","slide":8,"text":"08","textPreview":"08","textChars":2,"textLines":1,"bbox":[1168,670,40,24]}
+{"kind":"shape","id":"sh/9knih4by","slide":8,"bbox":[646,308,420,114]}
+{"kind":"textbox","id":"sh/25kb6xkf","slide":8,"text":"Frame fraction","textPreview":"Frame fraction","textChars":14,"textLines":1,"bbox":[672,330,220,26]}
+{"kind":"textbox","id":"sh/rqd4vmtw","slide":8,"text":"STD_EXTW = 0.30 and STD_EXT2 = 0.35 are above the retained 0.25 readiness value.","textPreview":"STD_EXTW = 0.30 and STD_EXT2 = 0.35 are above the retained 0.25 readiness value.","textChars":80,"textLines":1,"bbox":[672,370,330,42]}
+{"kind":"shape","id":"sh/kb6xkf6d","slide":8,"bbox":[646,446,420,114]}
+{"kind":"textbox","id":"sh/9w3m94fu","slide":8,"text":"External wall U-value","textPreview":"External wall U-value","textChars":21,"textLines":1,"bbox":[672,468,250,26]}
+{"kind":"textbox","id":"sh/2hwfyxob","slide":8,"text":"STD_EXT1, STD_PAR1, STD_WAL2 = 0.222 W/(m2K), above the retained 0.20 limit.","textPreview":"STD_EXT1, STD_PAR1, STD_WAL2 = 0.222 W/(m2K), above the retained 0.20 limit.","textChars":76,"textLines":1,"bbox":[672,508,340,42]}
+{"kind":"chart","id":"ch/w3m94fu1","slide":8,"name":"","chartType":"bar","bbox":[82,306,500,260]}
+{"kind":"notes","id":"nt/0uwcx9","slide":8,"text":"The point is that the remaining blockers are manageable.\nThey need VE/CDB correction or auditable justification, not script guessing."}
+{"kind":"slide","id":"sl/fzyxmx","slide":9,"title":"SIA 4010 BOUNDARY","textShapes":14}
+{"kind":"shape","id":"sh/il0rqd4v","slide":9,"bbox":[0,0,1280,720]}
+{"kind":"shape","id":"sh/tcj6tova","slide":9,"bbox":[0,0,1280,16]}
+{"kind":"shape","id":"sh/0rqd4vmt","slide":9,"bbox":[1020,16,260,704]}
+{"kind":"shape","id":"sh/byhgn29g","slide":9,"bbox":[1076,16,204,704]}
+{"kind":"shape","id":"sh/idonyd0z","slide":9,"bbox":[1150,16,130,704]}
+{"kind":"textbox","id":"sh/t47y1kre","slide":9,"text":"SIA 4010 BOUNDARY","textPreview":"SIA 4010 BOUNDARY","textChars":17,"textLines":1,"bbox":[72,44,760,30]}
+{"kind":"shape","id":"sh/0je9cvix","slide":9,"bbox":[72,80,64,4]}
+{"kind":"textbox","id":"sh/bulwval8","slide":9,"text":"SIA 4010 remains blocked by official evidence, by design","textPreview":"SIA 4010 remains blocked by official evidence, by design","textChars":56,"textLines":1,"bbox":[72,92,820,98]}
+{"kind":"textbox","id":"sh/i9s36hcr","slide":9,"text":"The workflow is conservative: it tracks readiness, but it does not claim software validation without official files.","textPreview":"The workflow is conservative: it tracks readiness, but it does not claim software validation without official files.","textChars":116,"textLines":1,"bbox":[74,202,820,54]}
+{"kind":"textbox","id":"sh/0fepkzup","slide":9,"text":"Swiss SIA Compliance Checker for IESVE","textPreview":"Swiss SIA Compliance Checker for IESVE","textChars":38,"textLines":1,"bbox":[72,672,480,24]}
+{"kind":"textbox","id":"sh/p0bi9s36","slide":9,"text":"09","textPreview":"09","textChars":2,"textLines":1,"bbox":[1168,670,40,24]}
+{"kind":"shape","id":"sh/i9s36hcr","slide":9,"bbox":[98,298,330,220]}
+{"kind":"textbox","id":"sh/bulwval8","slide":9,"text":"Evidence families","textPreview":"Evidence families","textChars":17,"textLines":1,"bbox":[130,330,240,26]}
+{"kind":"textbox","id":"sh/032lszqt","slide":9,"text":"2 of 5","textPreview":"2 of 5","textChars":6,"textLines":1,"bbox":[130,374,220,60]}
+{"kind":"textbox","id":"sh/tovahoza","slide":9,"text":"Current evidence coverage","textPreview":"Current evidence coverage","textChars":25,"textLines":1,"bbox":[132,440,210,24]}
+{"kind":"shape","id":"sh/ixczed8v","slide":9,"bbox":[132,470,210,18]}
+{"kind":"shape","id":"sh/bi9s36hc","slide":9,"bbox":[132,470,84,18]}
+{"kind":"textbox","id":"sh/0rqd4vmt","slide":9,"text":"40%","textPreview":"40%","textChars":3,"textLines":1,"bbox":[356,466,56,24]}
+{"kind":"shape","id":"sh/tcj6tova","slide":9,"bbox":[508,298,470,220]}
+{"kind":"textbox","id":"sh/x0nuxc3y","slide":9,"text":"Missing before any validation wording","textPreview":"Missing before any validation wording","textChars":37,"textLines":1,"bbox":[542,330,360,26]}
+{"kind":"shape","id":"sh/4fu18jqh","slide":9,"bbox":[546,389,8,8]}
+{"kind":"textbox","id":"sh/fu18jqh0","slide":9,"text":"Official SIA test specifications","textPreview":"Official SIA test specifications","textChars":32,"textLines":1,"bbox":[568,382,338,33]}
+{"kind":"shape","id":"sh/m94fu18j","slide":9,"bbox":[546,417,8,8]}
+{"kind":"textbox","id":"sh/xobm58z2","slide":9,"text":"Official evaluation workbooks","textPreview":"Official evaluation workbooks","textChars":29,"textLines":1,"bbox":[568,410,338,33]}
+{"kind":"shape","id":"sh/83itgfml","slide":9,"bbox":[546,445,8,8]}
+{"kind":"textbox","id":"sh/fil0rqd4","slide":9,"text":"Reference comparisons and class confirmation","textPreview":"Reference comparisons and class confirmation","textChars":44,"textLines":1,"bbox":[568,438,338,33]}
+{"kind":"textbox","id":"sh/qxs72x4n","slide":9,"text":"Also: the manager-provided register does not list IESVE as software-level validated.","textPreview":"Also: the manager-provided register does not list IESVE as software-level validated.","textChars":84,"textLines":1,"bbox":[544,492,360,38]}
+{"kind":"notes","id":"nt/fzyxmx","slide":9,"text":"This is a safeguard slide.\nExplain that SIA 4010 needs official evidence and target class confirmation."}
+{"kind":"slide","id":"sl/pe6six","slide":10,"title":"ROADMAP","textShapes":19}
+{"kind":"shape","id":"sh/psfil0rq","slide":10,"bbox":[0,0,1280,720]}
+{"kind":"shape","id":"sh/e1w7mp0b","slide":10,"bbox":[0,0,1280,16]}
+{"kind":"shape","id":"sh/7mp0bi9s","slide":10,"bbox":[1020,16,260,704]}
+{"kind":"shape","id":"sh/wval87ed","slide":10,"bbox":[1076,16,204,704]}
+{"kind":"shape","id":"sh/pg3ex0nu","slide":10,"bbox":[1150,16,130,704]}
+{"kind":"textbox","id":"sh/epkzupwb","slide":10,"text":"ROADMAP","textPreview":"ROADMAP","textChars":7,"textLines":1,"bbox":[72,44,760,30]}
+{"kind":"shape","id":"sh/7adsji5s","slide":10,"bbox":[72,80,64,4]}
+{"kind":"textbox","id":"sh/wra5gbq1","slide":10,"text":"The MVP is working; the MSP needs evidence automation and reviewer workflows","textPreview":"The MVP is working; the MSP needs evidence automation and reviewer workflows","textChars":76,"textLines":1,"bbox":[72,92,820,98]}
+{"kind":"textbox","id":"sh/lc7u54zi","slide":10,"text":"The next phase should focus on converting open items into repeatable evidence packages.","textPreview":"The next phase should focus on converting open items into repeatable evidence packages.","textChars":87,"textLines":1,"bbox":[74,202,820,54]}
+{"kind":"textbox","id":"sh/9w3m94fu","slide":10,"text":"Swiss SIA Compliance Checker for IESVE","textPreview":"Swiss SIA Compliance Checker for IESVE","textChars":38,"textLines":1,"bbox":[72,672,480,24]}
+{"kind":"textbox","id":"sh/kb6xkf6d","slide":10,"text":"10","textPreview":"10","textChars":2,"textLines":1,"bbox":[1168,670,40,24]}
+{"kind":"shape","id":"sh/rqd4vmtw","slide":10,"bbox":[108,308,52,52]}
+{"kind":"textbox","id":"sh/25kb6xkf","slide":10,"text":"1","textPreview":"1","textChars":1,"textLines":1,"bbox":[124,320,20,24]}
+{"kind":"shape","id":"sh/9knih4by","slide":10,"bbox":[132,362,4,56]}
+{"kind":"textbox","id":"sh/kzupwb2h","slide":10,"text":"Now","textPreview":"Now","textChars":3,"textLines":1,"bbox":[194,300,120,26]}
+{"kind":"textbox","id":"sh/re1w7mp0","slide":10,"text":"Fix current VE model blockers","textPreview":"Fix current VE model blockers","textChars":29,"textLines":1,"bbox":[194,330,560,32]}
+{"kind":"textbox","id":"sh/2t83itgf","slide":10,"text":"Frame fraction, wall U-value, next report validation","textPreview":"Frame fraction, wall U-value, next report validation","textChars":52,"textLines":1,"bbox":[194,368,620,28]}
+{"kind":"shape","id":"sh/9gr2p8nq","slide":10,"bbox":[108,418,52,52]}
+{"kind":"textbox","id":"sh/gvy90je9","slide":10,"text":"2","textPreview":"2","textChars":1,"textLines":1,"bbox":[124,430,20,24]}
+{"kind":"shape","id":"sh/wra5gbq1","slide":10,"bbox":[132,472,4,56]}
+{"kind":"textbox","id":"sh/lc7u54zi","slide":10,"text":"Next","textPreview":"Next","textChars":4,"textLines":1,"bbox":[194,410,120,26]}
+{"kind":"textbox","id":"sh/eloj2t83","slide":10,"text":"Add justified-by-evidence status","textPreview":"Add justified-by-evidence status","textChars":32,"textLines":1,"bbox":[194,440,560,32]}
+{"kind":"textbox","id":"sh/36hcrmhk","slide":10,"text":"Keep true values visible while allowing signed exceptions","textPreview":"Keep true values visible while allowing signed exceptions","textChars":57,"textLines":1,"bbox":[194,478,620,28]}
+{"kind":"shape","id":"sh/wfyxobm5","slide":10,"bbox":[108,528,52,52]}
+{"kind":"textbox","id":"sh/l0rqd4vm","slide":10,"text":"3","textPreview":"3","textChars":1,"textLines":1,"bbox":[124,540,20,24]}
+{"kind":"textbox","id":"sh/ed8bat47","slide":10,"text":"MSP","textPreview":"MSP","textChars":3,"textLines":1,"bbox":[194,520,120,26]}
+{"kind":"textbox","id":"sh/7u54zido","slide":10,"text":"Automate broader evidence pack","textPreview":"Automate broader evidence pack","textChars":30,"textLines":1,"bbox":[194,550,560,32]}
+{"kind":"textbox","id":"sh/w7mp0bi9","slide":10,"text":"Schedules, ventilation, HVAC efficiency, SIA 4010 class files","textPreview":"Schedules, ventilation, HVAC efficiency, SIA 4010 class files","textChars":61,"textLines":1,"bbox":[194,588,620,28]}
+{"kind":"shape","id":"sh/psfil0rq","slide":10,"bbox":[852,310,230,234]}
+{"kind":"textbox","id":"sh/fil0rqd4","slide":10,"text":"Definition of done","textPreview":"Definition of done","textChars":18,"textLines":1,"bbox":[880,340,170,26]}
+{"kind":"textbox","id":"sh/qxs72x4n","slide":10,"text":"A model can be discussed confidently when every pass, fail and exception has a visible source.","textPreview":"A model can be discussed confidently when every pass, fail and exception has a visible source.","textChars":94,"textLines":1,"bbox":[880,386,168,106]}
+{"kind":"notes","id":"nt/pe6six","slide":10,"text":"Use this as the path forward.\nMVP works. MSP means commercial-quality evidence and reviewer workflow."}
+{"kind":"slide","id":"sl/86lfvn","slide":11,"title":"DECISION AND ASK","textShapes":12}
+{"kind":"shape","id":"sh/ih4byhgn","slide":11,"bbox":[0,0,1280,720]}
+{"kind":"shape","id":"sh/p8nqxs72","slide":11,"bbox":[0,0,1280,16]}
+{"kind":"shape","id":"sh/0nuxc3yl","slide":11,"bbox":[1020,16,260,704]}
+{"kind":"shape","id":"sh/7ed8bat4","slide":11,"bbox":[1076,16,204,704]}
+{"kind":"shape","id":"sh/itgfmlkj","slide":11,"bbox":[1150,16,130,704]}
+{"kind":"textbox","id":"sh/pkzupwb2","slide":11,"text":"DECISION AND ASK","textPreview":"DECISION AND ASK","textChars":16,"textLines":1,"bbox":[72,44,760,30]}
+{"kind":"shape","id":"sh/0z61032l","slide":11,"bbox":[72,80,64,4]}
+{"kind":"textbox","id":"sh/7qpg3ex0","slide":11,"text":"The next milestone is a corrected model plus official evidence plan","textPreview":"The next milestone is a corrected model plus official evidence plan","textChars":67,"textLines":1,"bbox":[72,92,820,98]}
+{"kind":"textbox","id":"sh/i5sneloj","slide":11,"text":"With the current tooling in place, the work can now move from scripting to controlled compliance review.","textPreview":"With the current tooling in place, the work can now move from scripting to controlled compliance review.","textChars":104,"textLines":1,"bbox":[74,202,820,54]}
+{"kind":"textbox","id":"sh/0nuxc3yl","slide":11,"text":"Swiss SIA Compliance Checker for IESVE","textPreview":"Swiss SIA Compliance Checker for IESVE","textChars":38,"textLines":1,"bbox":[72,672,480,24]}
+{"kind":"textbox","id":"sh/p8nqxs72","slide":11,"text":"11","textPreview":"11","textChars":2,"textLines":1,"bbox":[1168,670,40,24]}
+{"kind":"shape","id":"sh/ih4byhgn","slide":11,"bbox":[88,306,310,220]}
+{"kind":"textbox","id":"sh/72x4nap4","slide":11,"text":"Ask 1","textPreview":"Ask 1","textChars":5,"textLines":1,"bbox":[118,336,100,24]}
+{"kind":"textbox","id":"sh/0z61032l","slide":11,"text":"Approve model remediation on frame fraction and wall U-value.","textPreview":"Approve model remediation on frame fraction and wall U-value.","textChars":61,"textLines":1,"bbox":[118,382,230,86]}
+{"kind":"shape","id":"sh/pkzupwb2","slide":11,"bbox":[448,306,310,220]}
+{"kind":"textbox","id":"sh/itgfmlkj","slide":11,"text":"Ask 2","textPreview":"Ask 2","textChars":5,"textLines":1,"bbox":[478,336,100,24]}
+{"kind":"textbox","id":"sh/7ed8bat4","slide":11,"text":"Confirm the target SIA 4010 validation class and required official files.","textPreview":"Confirm the target SIA 4010 validation class and required official files.","textChars":73,"textLines":1,"bbox":[478,382,230,86]}
+{"kind":"shape","id":"sh/0bi9s36h","slide":11,"bbox":[808,306,310,220]}
+{"kind":"textbox","id":"sh/pwb2hwfy","slide":11,"text":"Ask 3","textPreview":"Ask 3","textChars":5,"textLines":1,"bbox":[838,336,100,24]}
+{"kind":"textbox","id":"sh/94fu18jq","slide":11,"text":"Use the next VE Run as the go/no-go checkpoint for MVP handoff.","textPreview":"Use the next VE Run as the go/no-go checkpoint for MVP handoff.","textChars":63,"textLines":1,"bbox":[838,382,232,86]}
+{"kind":"textbox","id":"sh/kjm1cfa9","slide":11,"text":"Proposed close: the project is no longer exploratory. It is ready for structured remediation and evidence collection.","textPreview":"Proposed close: the project is no longer exploratory. It is ready for structured remediation and evidence collection.","textChars":117,"textLines":1,"bbox":[104,584,960,42]}
+{"kind":"notes","id":"nt/86lfvn","slide":11,"text":"End with specific asks, not a generic thank-you.\nIf time allows, invite questions on remediation priority or SIA 4010 evidence ownership."}

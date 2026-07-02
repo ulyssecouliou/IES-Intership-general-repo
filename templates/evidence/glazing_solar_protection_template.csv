@@ -1,0 +1,4 @@
+project_name,model_name,construction_id,facade_or_zone,window_count,total_area_m2,window_uw_w_m2k,glazing_g_perp_or_shgc,visible_transmittance_tau_v,frame_fraction,solar_protection_type,solar_protection_category,shading_control_strategy,control_thresholds,g_total_with_shading,source_document,source_page_or_sheet,reviewer,review_status,notes
+ZOER_32_C1,realbuilding,STD_EXTW,,99,206.0,0.716,0.75,,,,,,,,,,,missing,
+ZOER_32_C1,realbuilding,STD_EXT2,,27,51.42,0.748,0.75,,,,,,,,,,,missing,
+ZOER_32_C1,realbuilding,STD_EXT1,,24,54.48,0.675,0.75,,,,,,,,,,,missing,
