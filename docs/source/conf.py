@@ -44,11 +44,15 @@ html_css_files = ["custom.css"]
 
 autodoc_default_options = {
     "members": True,
-    "undoc-members": False,
+    "undoc-members": True,
+    "private-members": True,
+    "special-members": "__init__",
     "show-inheritance": True,
+    "member-order": "bysource",
 }
+autodoc_mock_imports = ["iesve"]
 autosummary_generate = True
 napoleon_google_docstring = True
 napoleon_numpy_docstring = True
 napoleon_include_init_with_doc = True
-napoleon_include_private_with_doc = False
+napoleon_include_private_with_doc = True

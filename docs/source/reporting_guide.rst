@@ -61,8 +61,24 @@ sheets are the most important:
    Owner-ready list of missing inputs/evidence to request from the model team,
    client or compliance reviewer.
 
+``SIA3802 JUSTIFICATIONS``
+   Reviewer-signed retained-deviation evidence. Accepted rows can show
+   ``JUSTIFIED_BY_EVIDENCE`` while preserving the original model value, limit
+   and source traceability.
+
 ``SIA4010 READINESS``
    Validation evidence and test readiness matrix.
+
+``SIA4010 PREVALIDATION``
+   PDF-based prevalidation using SIA 380/2:2022 and SIA 4010:2023 published
+   requirements. It evaluates tests 1 to 7 and validation classes 1A to 5 from
+   available VE/APS data, while explicitly stating that official SIA validation
+   still requires the SIA execution package and sub-commission review.
+
+``SIA4010 CLASS MATRIX``
+   Validation-class matrix for classes ``1A``, ``1B``, ``2A``, ``2B``, ``3``,
+   ``4A``, ``4B`` and ``5``. It maps required tests, VE readiness, missing
+   official evidence and safe status wording.
 
 ``SIA4010 SOFTWARE REGISTER``
    Manager-provided validated-software register guardrail. It lists the software

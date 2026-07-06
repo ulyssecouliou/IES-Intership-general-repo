@@ -7,13 +7,9 @@ Create a polished Excel dashboard for an open IESVE project.
 Purpose
 -------
 This script audits the current VE model and generates a professional workbook
-with:
-    - Executive dashboard
-    - Room and area intelligence
-    - Envelope and opening analysis when available
-    - Thermal template / construction assignment summaries when available
-    - Model QA warnings and recommendations
-    - API diagnostics for traceability
+with executive dashboarding, room and area intelligence, envelope/opening
+analysis, thermal template and construction summaries, QA recommendations, and
+API diagnostics for traceability.
 
 Run from inside the IESVE Python scripting environment.
 """
@@ -786,6 +782,7 @@ class DashboardWindow(tk.Frame):
     """Simple IESVE UI for generating the dashboard."""
 
     def __init__(self, master: tk.Tk, project: Any):
+        """Initialize the dashboard window for the active VE project."""
         super().__init__(master)
         self.master = master
         self.project = project
@@ -795,6 +792,7 @@ class DashboardWindow(tk.Frame):
         self._init_window()
 
     def _init_window(self) -> None:
+        """Create the Tkinter controls used by the dashboard UI."""
         self.grid(row=0, column=0, sticky="nsew", padx=12, pady=12)
 
         ttk.Label(self, text="Create a model intelligence dashboard for the open VE project.").grid(
@@ -823,6 +821,7 @@ class DashboardWindow(tk.Frame):
         )
 
     def run(self) -> None:
+        """Generate the legacy model-intelligence dashboard workbook."""
         output_name = self.output_entry.get().strip() or DEFAULT_OUTPUT_NAME
         if not output_name.lower().endswith(".xlsx"):
             output_name += ".xlsx"

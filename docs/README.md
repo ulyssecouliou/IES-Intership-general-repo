@@ -61,8 +61,9 @@ docs/project/MANAGER_REFERENCE_INTEGRATION.md
 docs/source/manager_reference_integration.rst
 ```
 
-The generated Excel workbook also includes `SIA4010 SOFTWARE REGISTER` and
-`NAVIGATOR BACKLOG` sheets.
+The generated Excel workbook also includes `SIA3802 JUSTIFICATIONS`,
+`SIA4010 READINESS`, `SIA4010 PREVALIDATION`, `SIA4010 CLASS MATRIX`,
+`SIA4010 SOFTWARE REGISTER` and `NAVIGATOR BACKLOG` sheets.
 
 ## Output
 

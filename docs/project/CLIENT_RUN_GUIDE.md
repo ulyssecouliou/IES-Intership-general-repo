@@ -28,9 +28,37 @@ Expected SIA 4010 evidence:
 Recommended evidence filename prefixes:
 - `SIA4010_official_test_specs_*`
 - `SIA4010_official_evaluation_workbook_*`
-- `SIA4010_candidate_results_APS_Vista_*`
-- `SIA4010_reference_comparison_plots_*`
+- `SIA4010_candidate_results_*`
+- `SIA4010_reference_comparison_*`
 - `SIA4010_validation_class_confirmation_*`
+
+Example filenames for a class 4B evidence package:
+- `SIA4010_official_test_specs_class_4B.pdf`
+- `SIA4010_official_evaluation_workbook_class_4B.xlsx`
+- `SIA4010_candidate_results_class_4B_test_1_to_7.xlsx`
+- `SIA4010_reference_comparison_class_4B.pdf`
+- `SIA4010_validation_class_confirmation_class_4B.pdf`
+
+Optional but recommended evidence manifest:
+- copy `templates/evidence/sia4010_evidence_index_template.csv` into `sia4010_evidence/`;
+- rename it as `SIA4010_evidence_index_<project>.csv`;
+- fill `provided_file_name`, `source_authority`, `version_or_date`, `tests_covered`, `reviewer` and `review_status`.
+
+Optional but recommended class-selection manifest:
+- copy `templates/evidence/sia4010_class_validation_template.csv` into `sia4010_evidence/`;
+- rename it as `SIA4010_class_validation_<project>.csv`;
+- set exactly one row to `selected = yes` for the target class `1A`, `1B`, `2A`, `2B`, `3`, `4A`, `4B` or `5`.
+
+Optional official test-result manifest:
+- copy `templates/evidence/sia4010_official_test_results_template.csv` into `sia4010_evidence/`;
+- rename it as `SIA4010_official_test_results_<project>.csv`;
+- fill `status`, `reference_file`, `candidate_file`, `deviation`, `tolerance`, `reviewer`, `review_date`, `source_authority` and `source_reference` for every reviewed test.
+
+Only explicit PASS/VALIDATED rows with the required metadata can upgrade an
+individual SIA 4010 test to `VALIDATED`. The selected validation class remains
+blocked until the five official evidence families and the class manifest are
+also documented. The `reference_file` and `candidate_file` entries must match
+files present in `sia4010_evidence/`; text-only file names are not enough.
 
 File detection is a readiness indicator only. The file content, official source
 and comparison validity must still be reviewed by the responsible compliance
@@ -49,14 +77,22 @@ reviewed external source.
 ## How To Run In VE
 
 1. Open the IESVE Scripts window.
-2. Select:
+2. If the reviewer CSV files are not prepared yet, select:
+
+```text
+Prepare_SIA4010_Evidence_Folder.py
+```
+
+3. Click `Run`.
+4. Fill or review the generated files in `sia4010_evidence/` when evidence is available.
+5. Select:
 
 ```text
 Run_VE_Swiss_Compliance.py
 ```
 
-3. Click `Run`.
-4. Wait until the log says the Excel report has been generated.
+6. Click `Run`.
+7. Wait until the log says the Excel report and evidence-pack ZIP have been generated.
 
 ## Report Output
 
@@ -65,6 +101,25 @@ Reports are written to:
 ```text
 reports/
 ```
+
+Each successful run creates:
+
+- a timestamped Excel workbook;
+- the latest workbook alias, when Excel is not locking it;
+- a timestamped evidence-pack ZIP for manager/reviewer handoff.
+
+Evidence-pack ZIP naming:
+
+```text
+Swiss_Compliance_Evidence_Pack__<project>__<model>__<timestamp>.zip
+```
+
+The ZIP contains the timestamped report, files currently present in
+`sia4010_evidence/`, evidence templates, key project guidance documents and a
+JSON manifest. It intentionally does not include licensed SIA standard PDFs from
+`references/standards`. Files in `sia4010_evidence/` are filtered by safe
+evidence naming rules; excluded files are listed in
+`manifest/evidence_pack_manifest.json`.
 
 Each run creates a timestamped workbook, for example:
 
@@ -97,7 +152,10 @@ Use the timestamped report instead.
 - `SIA REQUIREMENTS`: auditable list of SIA criteria, sources and automation status.
 - `SIA DATA COVERAGE`: data, APS/Vista and evidence coverage by requirement.
 - `INPUT REQUEST`: owner-ready missing input/evidence checklist.
+- `SIA3802 JUSTIFICATIONS`: reviewer-signed retained SIA 380/2 deviations, if supplied.
 - `SIA4010 READINESS`: official validation evidence matrix.
+- `SIA4010 PREVALIDATION`: PDF-based prevalidation of tests 1 to 7 and classes 1A to 5 from VE/APS data.
+- `SIA4010 CLASS MATRIX`: class-by-class SIA 4010 matrix for classes 1A to 5.
 - `SIA4010 SOFTWARE REGISTER`: manager-provided software-register guardrail and validation-class detail.
 - `NAVIGATOR BACKLOG`: manager-provided SIA 380/2 navigator roadmap and current project gaps.
 - `DYNAMIC RESULTS`: APS/Vista dynamic indicators when readable from VE.
@@ -133,5 +191,5 @@ compliance authority.
 4. Use `FACADE GLAZING REVIEW` when openings, g-values or solar protection dominate the P1 actions.
 5. Use `SIA4010 SOFTWARE REGISTER` before making any statement about software-level SIA 4010 validation.
 6. Use `NAVIGATOR BACKLOG` to explain the path from the current MVP to the constrained SIA 380/2 navigator.
-5. Use `ASSUMPTIONS LIMITS` to show why the report is professional and conservative.
-6. Use `AUDIT LOG`, `SIA DATA COVERAGE`, `SIA REQUIREMENTS` and `SIA4010 READINESS` when technical traceability is needed.
+7. Use `ASSUMPTIONS LIMITS` to show why the report is professional and conservative.
+8. Use `AUDIT LOG`, `SIA DATA COVERAGE`, `SIA REQUIREMENTS`, `SIA3802 JUSTIFICATIONS`, `SIA4010 READINESS`, `SIA4010 PREVALIDATION` and `SIA4010 CLASS MATRIX` when technical traceability is needed.

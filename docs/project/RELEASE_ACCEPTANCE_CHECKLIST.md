@@ -8,11 +8,14 @@ The MVP is acceptable when all items below are true.
 - Does not require PowerShell or command-line arguments.
 - Creates a timestamped Excel report in `reports/`.
 - Opens with `MANAGER DASHBOARD` as the first worksheet.
-- Includes `CLIENT SUMMARY`, `PREFLIGHT`, `P1 REMEDIATION`, `FACADE GLAZING REVIEW`, `FRAME FRACTION AUDIT`, `ENVELOPE U REVIEW`, `VE G-VALUES AUDIT`, `ASSUMPTIONS LIMITS`, `AUDIT LOG`, `SUMMARY`, `ACTION PLAN`, `COMPLIANCE RESULTS`, `SIA REQUIREMENTS`, `SIA DATA COVERAGE`, `INPUT REQUEST`, `OPEN ITEMS BACKLOG`, `SIA4010 READINESS`, `SIA4010 SOFTWARE REGISTER`, `NAVIGATOR BACKLOG`, `DYNAMIC RESULTS`, `ALERT SUMMARY`, `ALERTS`, `DATA QUALITY`, `DETAILED SCORES`, and `ROOMS`.
+- Includes `CLIENT SUMMARY`, `PREFLIGHT`, `P1 REMEDIATION`, `FACADE GLAZING REVIEW`, `FRAME FRACTION AUDIT`, `ENVELOPE U REVIEW`, `VE G-VALUES AUDIT`, `ASSUMPTIONS LIMITS`, `AUDIT LOG`, `SUMMARY`, `ACTION PLAN`, `COMPLIANCE RESULTS`, `SIA REQUIREMENTS`, `SIA DATA COVERAGE`, `INPUT REQUEST`, `SIA3802 JUSTIFICATIONS`, `OPEN ITEMS BACKLOG`, `SIA4010 READINESS`, `SIA4010 PREVALIDATION`, `SIA4010 CLASS MATRIX`, `SIA4010 SOFTWARE REGISTER`, `NAVIGATOR BACKLOG`, `DYNAMIC RESULTS`, `ALERT SUMMARY`, `ALERTS`, `DATA QUALITY`, `DETAILED SCORES`, and `ROOMS`.
 - Separates SIA 380/2 automated checks from SIA 4010 official evidence status.
 - Never treats missing SIA 4010 evidence as a building `PASS`.
 - Never treats `NOT_CHECKABLE` as a red `FAIL` in the executive view.
 - Lists SIA 4010 detected evidence files and missing evidence families.
+- Shows a SIA 4010 class matrix covering `1A`, `1B`, `2A`, `2B`, `3`, `4A`, `4B` and `5`, including required tests and missing official evidence.
+- Shows PDF-based SIA 4010 prevalidation for tests `1` to `7` and classes `1A` to `5`, with explicit wording that official SIA validation still requires the SIA execution package/sub-commission review.
+- Shows reviewer-signed SIA 380/2 justifications separately from automated model values.
 - Lists priority remediation actions with owner/evidence expectations.
 - Shows VE/CDB glazing g-value traceability, including `bs_en_410`, `building_regulations`, `bfrc` and any active `g_total_with_shading` evidence status.
 - Shows frame-fraction and envelope U-value remediation rows by construction.
@@ -63,6 +66,8 @@ python scripts/quality/validate_release.py
 5. Confirm `CLIENT SUMMARY`, `P1 REMEDIATION`, `ASSUMPTIONS LIMITS` and `AUDIT LOG` are present.
 6. Confirm `PREFLIGHT` has no unexpected `FAIL`.
 7. Confirm SIA 4010 tests remain `NOT_CHECKABLE` unless official evidence was provided.
-8. Confirm no worksheet is blank or unreadable.
-9. Confirm `SUMMARY`, `COMPLIANCE RESULTS`, `ALERT SUMMARY` and `DETAILED SCORES` are present.
-10. Confirm Excel opens the workbook without asking to repair it.
+8. Confirm `SIA4010 PREVALIDATION` lists tests `1` to `7`.
+9. Confirm `SIA4010 CLASS MATRIX` lists all classes from `1A` to `5`.
+10. Confirm no worksheet is blank or unreadable.
+11. Confirm `SUMMARY`, `COMPLIANCE RESULTS`, `ALERT SUMMARY` and `DETAILED SCORES` are present.
+12. Confirm Excel opens the workbook without asking to repair it.

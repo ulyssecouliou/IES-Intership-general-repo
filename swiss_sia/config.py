@@ -185,12 +185,12 @@ SIA3802_U_VALUES = {
 }
 
 SIA3802_THRESHOLDS = {
-    # Valeurs directes SIA 380/2.
+    # Direct SIA 380/2 values.
     "solar_factor_max": SIA3802_LIMIT_VALUES["glazing_g_value"],
     "light_transmittance_min": SIA3802_LIMIT_VALUES["glazing_light_transmittance"],
     "window_frame_fraction": SIA3802_LIMIT_VALUES["window_frame_fraction"],
     "infiltration_m3_h_m2": SIA3802_LIMIT_VALUES["infiltration_m3_h_m2"],
-    # Indicateurs de revue uniquement: pas des seuils pass/fail SIA 380/2 directs.
+    # Review indicators only; these are not direct SIA 380/2 pass/fail thresholds.
     "wwr_max": 0.3,
     "ventilation_rate_min": None,
     "lighting_power_max": None,
@@ -664,6 +664,110 @@ SIA4010_TEST_CLASS_COVERAGE = {
     "test_7": ["4A", "4B", "5"],
 }
 
+SIA4010_TEST_ALIAS_ORDER = [
+    "test_1",
+    "test_2A",
+    "test_2",
+    "test_3A_to_3F",
+    "test_3",
+    "test_4",
+    "test_5",
+    "test_6",
+    "test_7",
+]
+
+SIA4010_TEST_ALIAS_TO_BASE_TEST = {
+    "test_1": "test_1",
+    "test_2A": "test_2",
+    "test_2": "test_2",
+    "test_3A_to_3F": "test_3",
+    "test_3": "test_3",
+    "test_4": "test_4",
+    "test_5": "test_5",
+    "test_6": "test_6",
+    "test_7": "test_7",
+}
+
+SIA4010_TEST_ALIAS_LABELS = {
+    "test_1": "Test 1",
+    "test_2A": "Test 2A",
+    "test_2": "Test 2",
+    "test_3A_to_3F": "Tests 3A-3F",
+    "test_3": "Test 3",
+    "test_4": "Test 4",
+    "test_5": "Test 5",
+    "test_6": "Test 6",
+    "test_7": "Test 7",
+}
+
+SIA4010_PREVALIDATION_STATUSES = {
+    "pass": "PDF_PRECHECK_PASS",
+    "partial": "PDF_PRECHECK_PARTIAL",
+    "missing": "MISSING_VE_DATA",
+    "fail": "PDF_PRECHECK_FAIL",
+    "package_required": "NEEDS_SIA_EXECUTION_PACKAGE",
+    "official_required": "OFFICIAL_VALIDATION_REQUIRED",
+}
+
+SIA4010_PDF_PREVALIDATION_TESTS = {
+    "test_1": {
+        "title": "Basic envelope thermal behaviour",
+        "pdf_scope": "Envelope base tests derived from EN ISO 52016-1 / ASHRAE 140.",
+        "sia3802_link": "Envelope geometry, opaque U-values, window Uw and opening solar properties.",
+        "close_to_official_scope": "Checks whether the VE model exposes the basic envelope data needed before reproducing the official cell-test comparisons.",
+        "official_gap": "The official BESTEST/SIA reference model and reference outputs from the SIA execution package are still required for official validation.",
+        "source": "SIA 4010:2023 FR, table 62 page PDF 46; annex A table 64 page PDF 50; SIA 380/2:2022 FR, tables 2-3 pages PDF 32-35.",
+    },
+    "test_2": {
+        "title": "Solar-protection control",
+        "pdf_scope": "Solar protection according to SIA 387/4 and SIA 380/2 Annex A, including diagnostic transition cases for Swiss climate, use and infiltration.",
+        "sia3802_link": "Glazing g-value, visible transmittance, shading type/control, infiltration and climate/use assumptions.",
+        "close_to_official_scope": "Checks whether glazing, shading and active solar-control evidence is present and whether SIA 380/2 opening checks remain defensible.",
+        "official_gap": "Official diagnostic cases, reference results and evaluation file are required to replace this precheck with official validation.",
+        "source": "SIA 4010:2023 FR, table 62 page PDF 46; annex A table 64 page PDF 50; table 65 page PDF 52; SIA 380/2:2022 FR, annex A and table 10 page PDF 46.",
+    },
+    "test_3": {
+        "title": "Lighting control",
+        "pdf_scope": "Lighting control according to SIA 387/4, including daylight and lighting-control variants 3A-3F / 3G-3L.",
+        "sia3802_link": "SIA 380/2 requires compatible use, gains and lighting assumptions; SIA 4010 links this test to SIA 387/4.",
+        "close_to_official_scope": "Checks whether lighting power, daylight/control evidence and lighting energy results are available before official comparison.",
+        "official_gap": "SIA 387/4 control variant mapping and official lighting reference comparisons are still required for official validation.",
+        "source": "SIA 4010:2023 FR, table 62 page PDF 46; annex A table 64 page PDF 50; table 65 page PDF 52.",
+    },
+    "test_4": {
+        "title": "Single-room all-air air-conditioning system",
+        "pdf_scope": "Single-zone all-air system for an amphitheatre without windows, including airflow, fan energy, supply air, indoor conditions and heating/cooling coil outputs.",
+        "sia3802_link": "System-related thermal load calculation and dynamic room results.",
+        "close_to_official_scope": "Checks whether HVAC, airflow, dynamic demand and temperature outputs exist for a single-room all-air style assessment.",
+        "official_gap": "The official amphitheatre geometry/system and reference comparisons remain required for official validation.",
+        "source": "SIA 4010:2023 FR, table 62 page PDF 46; annex A table 64 pages PDF 50-51.",
+    },
+    "test_5": {
+        "title": "Complex multizone AHU with heat/moisture recovery",
+        "pdf_scope": "Multizone VAV AHU with reheater, cooler, humidifier and rotor heat/moisture recovery; variants 5A-5D.",
+        "sia3802_link": "Ventilation, AHU heat/moisture recovery, fan controls and humidification/dehumidification demand assessment.",
+        "close_to_official_scope": "Checks whether multizone HVAC/AHU evidence, fan control, recovery and humidifier data are available.",
+        "official_gap": "Official office/meeting-room model, AHU variants and evaluation outputs are still required for official validation.",
+        "source": "SIA 4010:2023 FR, table 62 page PDF 46; annex A table 64 page PDF 51; table 66 page PDF 52.",
+    },
+    "test_6": {
+        "title": "Three-stage ventilation with heat recovery and overflow",
+        "pdf_scope": "Three-stage constant-flow ventilation with heat recovery and restaurant/kitchen overflow logic.",
+        "sia3802_link": "Ventilation rates, heat recovery, airflow control and dynamic system operation.",
+        "close_to_official_scope": "Checks whether staged ventilation, heat recovery and overflow evidence can be represented or documented.",
+        "official_gap": "Official restaurant/kitchen model and reference outputs are still required for official validation.",
+        "source": "SIA 4010:2023 FR, table 62 page PDF 46; annex A table 64 page PDF 51.",
+    },
+    "test_7": {
+        "title": "Heating/cooling emission, distribution, storage and generation",
+        "pdf_scope": "Emission, distribution, storage and generation of heating and cooling; total heating/cooling energy need for systems from tests 4-6.",
+        "sia3802_link": "Heating/cooling energy demand, final energy, auxiliaries, storage and generation efficiency evidence.",
+        "close_to_official_scope": "Checks whether dynamic heating/cooling needs and system-level energy breakdowns are available before official test 7 comparison.",
+        "official_gap": "Official load profile, system setup and reference comparison file are still required for official validation.",
+        "source": "SIA 4010:2023 FR, table 62 page PDF 46; annex A table 64 page PDF 51; SIA 4010 pages PDF 18-45 for cooling/heating/PV system data.",
+    },
+}
+
 SIA4010_THRESHOLDS = {
     # The SIA 4010 PDF does not define standalone building limits in kWh/m2 or
     # CO2. These keys are kept only for future client indicators.
@@ -746,7 +850,7 @@ SIA_COMPLIANCE_REQUIREMENT_MATRIX = [
         "automation": "PARTIAL",
         "implemented_rule": "SIA3802_SOLAR_FACTOR",
         "mvp_status": "MVP",
-        "next_action": "Confirm whether VE value is EN 410 g_perp / SHGC / construction g-value and document mapping.",
+        "next_action": "Accept VECdbConstruction.get_g_values().bs_en_410 automatically; otherwise keep raw g_value as audit evidence until reviewed.",
     },
     {
         "id": "SIA3802_OPENING_LIGHT_TRANSMITTANCE",
@@ -988,14 +1092,14 @@ SIA_DATA_COVERAGE_MATRIX = [
         "criterion": "Glazing normal solar factor",
         "expected_value": "g_perp limit/target 0.50 where applicable",
         "data_needed": "External glazing g-value or SHGC mapping",
-        "expected_source": "IESVE CDB glazing data plus mapping note",
+        "expected_source": "IESVE CDB get_g_values().bs_en_410 or reviewer/manufacturer mapping note",
         "coverage_key": "window_g_values",
         "automation": "PARTIAL",
         "preferred_format": "Extracted value plus note confirming EN 410 g_perp/SHGC interpretation",
         "destination": "Excel ALERTS plus sia4010_evidence/",
         "source": SIA3802_SOURCE_REFERENCES["table_2"],
         "owner": "Compliance reviewer",
-        "next_action": "Confirm the exact meaning of the VE solar-factor field.",
+        "next_action": "Use bs_en_410 as the automatic SIA g_perp candidate; keep raw CDB g_value as audit evidence until reviewed.",
     },
     {
         "id": "SIA3802_LIGHT_TRANSMITTANCE",
@@ -1340,21 +1444,141 @@ SIA_DATA_COVERAGE_MATRIX = [
 ]
 
 SIA4010_EVIDENCE_DIR = "sia4010_evidence"
+
+SIA4010_EVIDENCE_REQUIREMENTS = {
+    "official_test_specifications": {
+        "label": SIA4010_REQUIRED_EVIDENCE[0],
+        "required_prefixes": ["SIA4010_official_test_specs_"],
+        "accepted_extensions": [".pdf", ".docx", ".xlsx"],
+        "example_filename": "SIA4010_official_test_specs_class_4B.pdf",
+        "description": "Official SIA test specification files for the requested validation class.",
+    },
+    "official_evaluation_workbooks": {
+        "label": SIA4010_REQUIRED_EVIDENCE[1],
+        "required_prefixes": ["SIA4010_official_evaluation_workbook_"],
+        "accepted_extensions": [".xlsx", ".xlsm"],
+        "example_filename": "SIA4010_official_evaluation_workbook_class_4B.xlsx",
+        "description": "Official SIA evaluation workbook used to compare candidate results to reference outputs.",
+    },
+    "candidate_results": {
+        "label": SIA4010_REQUIRED_EVIDENCE[2],
+        "required_prefixes": ["SIA4010_candidate_results_"],
+        "accepted_extensions": [".xlsx", ".xlsm", ".csv", ".pdf"],
+        "example_filename": "SIA4010_candidate_results_class_4B_test_1_to_7.xlsx",
+        "description": "IESVE/model outputs transferred into the official evaluation workflow.",
+    },
+    "reference_comparisons": {
+        "label": SIA4010_REQUIRED_EVIDENCE[3],
+        "required_prefixes": ["SIA4010_reference_comparison_"],
+        "accepted_extensions": [".pdf", ".xlsx", ".xlsm", ".csv", ".png"],
+        "example_filename": "SIA4010_reference_comparison_class_4B.pdf",
+        "description": "Official comparison plots, tables or workbook outputs against SIA reference results.",
+    },
+    "validation_class_confirmation": {
+        "label": SIA4010_REQUIRED_EVIDENCE[4],
+        "required_prefixes": ["SIA4010_validation_class_confirmation_"],
+        "accepted_extensions": [".pdf", ".docx", ".txt", ".csv"],
+        "example_filename": "SIA4010_validation_class_confirmation_class_4B.pdf",
+        "description": "Documented target validation class and responsible reviewer/authority confirmation.",
+    },
+}
+
 SIA4010_EVIDENCE_FILE_PATTERNS = {
-    "official_test_specifications": ["spec", "specification", "beschreibung", "description", "test"],
-    "official_evaluation_workbooks": ["evaluation", "auswertung", "validation", "excel", ".xlsx"],
-    "candidate_results": ["candidate", "result", "results", "iesve", "ve", "vista", "aps"],
-    "reference_comparisons": ["reference", "comparison", "compare", "graph", "chart", "plot"],
-    "validation_class_confirmation": ["class", "classe", "validation", "confirmation", "sia"],
+    key: value["required_prefixes"]
+    for key, value in SIA4010_EVIDENCE_REQUIREMENTS.items()
+}
+
+SIA4010_EVIDENCE_MANIFEST_PREFIXES = [
+    "SIA4010_evidence_index_",
+    "sia4010_evidence_index_",
+]
+
+SIA4010_EVIDENCE_MANIFEST_REQUIRED_COLUMNS = [
+    "evidence_family",
+    "provided_file_name",
+    "source_authority",
+    "version_or_date",
+    "tests_covered",
+    "reviewer",
+    "review_status",
+]
+
+SIA4010_EVIDENCE_MANIFEST_ACCEPTED_REVIEW_STATUSES = {
+    "provided",
+    "present",
+    "reviewed",
+    "accepted",
+    "approved",
+    "complete",
+    "ready_for_official_review",
+}
+
+SIA4010_CLASS_MANIFEST_PREFIXES = [
+    "SIA4010_class_validation_",
+    "sia4010_class_validation_",
+]
+
+SIA4010_CLASS_MANIFEST_REQUIRED_COLUMNS = [
+    "validation_class",
+    "selected",
+    "required_tests",
+    "reviewer",
+    "review_status",
+    "review_date",
+    "source_authority",
+    "source_reference",
+]
+
+SIA4010_CLASS_MANIFEST_ACCEPTED_REVIEW_STATUSES = {
+    "selected",
+    "requested",
+    "confirmed",
+    "reviewed",
+    "accepted",
+    "approved",
+    "ready_for_official_review",
+}
+
+SIA4010_OFFICIAL_TEST_RESULTS_PREFIXES = [
+    "SIA4010_official_test_results_",
+    "sia4010_official_test_results_",
+]
+
+SIA4010_OFFICIAL_TEST_RESULTS_REQUIRED_COLUMNS = [
+    "test_id",
+    "status",
+    "reference_file",
+    "candidate_file",
+    "deviation",
+    "tolerance",
+    "reviewer",
+    "review_date",
+    "source_authority",
+    "source_reference",
+]
+
+SIA4010_OFFICIAL_TEST_RESULT_PASS_STATUSES = {
+    "pass",
+    "passed",
+    "validated",
+    "official_pass",
+    "official_validated",
+}
+
+SIA4010_OFFICIAL_TEST_RESULT_FAIL_STATUSES = {
+    "fail",
+    "failed",
+    "not_passed",
+    "rejected",
 }
 
 CATEGORY_WEIGHTS = {
-    "envelope": 0.25,    # Poids de l'enveloppe (murs, toitures, planchers)
-    "openings": 0.20,    # Poids des ouvertures (fenêtres, portes)
-    "ventilation": 0.15, # Poids de la ventilation
+    "envelope": 0.25,    # Envelope weight (walls, roofs, floors)
+    "openings": 0.20,    # Opening weight (windows, doors)
+    "ventilation": 0.15, # Ventilation weight
     "hvac": 0.20,        # HVAC system weight
     "energy": 0.15,      # Energy weight (consumption, emissions)
-    "simulation": 0.05,  # Poids des tests de simulation (SIA 4010)
+    "simulation": 0.05,  # Simulation-test weight (SIA 4010)
 }
 
 # =============================================================================
@@ -1375,35 +1599,35 @@ SIA4010_TEST_WEIGHTS = {
 # =============================================================================
 EMISSION_FACTORS = {
     "electricity": 0.05,   # Swiss electricity mix
-    "gas": 0.20,          # Gaz naturel
-    "oil": 0.25,          # Fioul
-    "wood": 0.02,         # Bois
-    "solar": 0.0,         # Solaire
+    "gas": 0.20,          # Natural gas
+    "oil": 0.25,          # Fuel oil
+    "wood": 0.02,         # Wood
+    "solar": 0.0,         # Solar
     "wind": 0.0,          # Wind
-    "district_heating": 0.1,  # Chauffage urbain
+    "district_heating": 0.1,  # District heating
 }
 
 # =============================================================================
-# CHEMINS DES FICHIERS
+# FILE PATHS
 # =============================================================================
-OUTPUT_DIR = "reports"  # Dossier de sortie pour les rapports
-EXCEL_REPORT_NAME = "Swiss_Compliance_Report.xlsx"  # Nom du fichier Excel
-LOG_FILE = "swiss_compliance_checker.log"  # Fichier de log
+OUTPUT_DIR = "reports"  # Report output folder
+EXCEL_REPORT_NAME = "Swiss_Compliance_Report.xlsx"  # Excel report file name
+LOG_FILE = "swiss_compliance_checker.log"  # Log file name
 
 # =============================================================================
-# PARAMÈTRES DE SIMULATION (ApacheSim)
+# SIMULATION PARAMETERS (ApacheSim)
 # =============================================================================
 SIMULATION_PARAMS = {
     "results_filename": "swiss_compliance_simulation",  # Results file name
     "simulation_timestep": 2,  # 0=1min, 1=2min, 2=6min, 3=10min, 4=30min
     "reporting_interval": 2,   # 0=6min, 1=10min, 2=30min, 3=60min
     "HVAC": True,              # Include HVAC systems
-    "nat_ventilation": True,   # Inclure la ventilation naturelle
-    "aux_ventilation": True,   # Inclure la ventilation auxiliaire
+    "nat_ventilation": True,   # Include natural ventilation
+    "aux_ventilation": True,   # Include auxiliary ventilation
 }
 
 # =============================================================================
-# PARAMÈTRES DE RAPPORT EXCEL
+# EXCEL REPORT PARAMETERS
 # =============================================================================
 EXCEL_FORMATS = {
     "header": {

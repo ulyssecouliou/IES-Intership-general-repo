@@ -1,6 +1,8 @@
-"""
-Extracteur de données du modèle VE via l'API IESVE.
-Ce module centralise tous les appels à l'API IESVE et gère les erreurs.
+"""Defensive VE model data extraction through the documented IESVE API.
+
+This module centralizes all direct IESVE calls used by the compliance checker.
+It normalizes return shapes, caches repeated API calls, and keeps extraction
+failures visible without crashing the VE Run-button workflow.
 """
 
 from __future__ import annotations
@@ -11,16 +13,10 @@ from typing import Any, Dict, List, Optional
 logger = logging.getLogger(__name__)
 
 class VEDataExtractor:
-    """
-    Extrait toutes les données nécessaires du modèle VE pour le Swiss Compliance Checker.
-    Utilise un cache pour éviter les appels redondants à l'API IESVE.
-    """
+    """Extract SIA-relevant data from the active VE project."""
 
     def __init__(self, project: Optional[Any] = None):
-        """
-        Initialise l'extracteur avec un projet VE.
-        Si aucun projet n'est fourni, utilise le projet actif.
-        """
+        """Initialize the extractor with a VE project or the active VE project."""
         self.project = project
         if self.project is None:
             try:
@@ -31,14 +27,14 @@ class VEDataExtractor:
                 self.project = None
 
         if not self.project:
-            raise RuntimeError("Aucun projet VE trouvé. Veuillez ouvrir un projet dans IESVE.")
+            raise RuntimeError("No VE project found. Open a project in IESVE before running the checker.")
 
-        # Cache pour les données fréquemment utilisées
+        # Cache frequently accessed VE objects to keep the Run-button workflow fast.
         self._model: Optional[Any] = None
         self._bodies: Dict[bool, List[Any]] = {}
-        self._surfaces: Dict[str, List[Any]] = {}  # Clé: body_id, Valeur: liste de surfaces
-        self._openings: Dict[str, List[Any]] = {}  # Clé: surface_id, Valeur: liste d'ouvertures
-        self._templates: Dict[str, Any] = {}  # Clé: template_id, Valeur: VEThermalTemplate
+        self._surfaces: Dict[str, List[Any]] = {}  # body_id -> surfaces
+        self._openings: Dict[str, List[Any]] = {}  # surface_id -> openings
+        self._templates: Dict[str, Any] = {}  # template_id -> VEThermalTemplate
         self._hvac_systems: Dict[str, Any] = {}
         self._energy_sources: Dict[str, Any] = {}
         self._construction_properties: Dict[str, Dict[str, Any]] = {}
@@ -46,22 +42,22 @@ class VEDataExtractor:
         self._weather_data: Optional[Any] = None
         self._body_extraction_diagnostics: Optional[Dict[str, Any]] = None
         self._model_selection_diagnostics: Optional[Dict[str, Any]] = None
-        self._room_data_cache: Dict[str, Any] = {}  # Clé: body_id, Valeur: VERoomData
+        self._room_data_cache: Dict[str, Any] = {}  # body_id -> VERoomData
 
-        logger.info("VEDataExtractor initialisé avec succès.")
+        logger.info("VEDataExtractor initialized successfully.")
 
     @property
     def model(self) -> Any:
-        """Récupère le modèle VE (premier modèle du projet)."""
+        """Return the selected VE model that exposes the best room body set."""
         if self._model is None:
             try:
                 models = self._as_list(self.project.models)
                 if models:
                     self._model = self._select_best_model(models)
                 else:
-                    raise RuntimeError("Aucun modèle trouvé dans le projet VE.")
+                    raise RuntimeError("No model found in the VE project.")
             except Exception as e:
-                logger.error(f"Erreur lors de la récupération du modèle VE: {e}")
+                logger.error("Error while retrieving the VE model: %s", e)
                 raise
         return self._model
 
@@ -118,10 +114,7 @@ class VEDataExtractor:
         return dict(self._model_selection_diagnostics or {})
 
     def get_bodies(self, selected_only: bool = False) -> List[Any]:
-        """
-        Récupère toutes les pièces (bodies) du modèle VE.
-        Filtre les éléments non pertinents (ombres, annotations, etc.).
-        """
+        """Return relevant VE room bodies from ``VEModel.get_bodies``."""
         if selected_only not in self._bodies:
             try:
                 all_bodies = self._as_list(self.model.get_bodies(selected_only))
@@ -130,7 +123,7 @@ class VEDataExtractor:
                     if self._is_relevant_body(body)
                 ]
             except Exception as e:
-                logger.error(f"Erreur lors de la récupération des pièces: {e}")
+                logger.error("Error while retrieving VE bodies: %s", e)
                 self._bodies[selected_only] = []
         return self._bodies[selected_only]
 
@@ -181,108 +174,103 @@ class VEDataExtractor:
         return dict(self._body_extraction_diagnostics)
 
     def get_surfaces(self, body: Any) -> List[Any]:
-        """
-        Récupère toutes les surfaces d'une pièce.
-        """
+        """Return all surfaces for one VE body through ``VEBody.get_surfaces``."""
         body_id = self.get_object_id(body)
         if body_id not in self._surfaces:
             try:
                 self._surfaces[body_id] = self._as_list(body.get_surfaces())
             except Exception as e:
-                logger.error(f"Erreur lors de la récupération des surfaces pour la pièce {body_id}: {e}")
+                logger.error("Error while retrieving surfaces for body %s: %s", body_id, e)
                 self._surfaces[body_id] = []
         return self._surfaces[body_id]
 
     def get_openings(self, surface: Any) -> List[Any]:
-        """
-        Récupère toutes les ouvertures (fenêtres, portes) d'une surface.
-        Les ouvertures sont retournées sous forme de liste d'objets génériques.
-        """
+        """Return all openings for one VE surface through ``VESurface.get_openings``."""
         surface_id = self.get_object_id(surface)
         if surface_id not in self._openings:
             try:
                 self._openings[surface_id] = self._as_list(surface.get_openings())
             except Exception as e:
-                logger.error(f"Erreur lors de la récupération des ouvertures pour la surface {surface_id}: {e}")
+                logger.error("Error while retrieving openings for surface %s: %s", surface_id, e)
                 self._openings[surface_id] = []
         return self._openings[surface_id]
 
     def get_thermal_templates(self) -> Dict[str, Any]:
-        """Récupère tous les templates thermiques du projet."""
+        """Return all thermal templates from the active VE project."""
         if not self._templates:
             try:
                 templates = self.project.thermal_templates(assigned=False)
                 self._templates = self._as_dict(templates)
             except Exception as e:
-                logger.error(f"Erreur lors de la récupération des templates thermiques: {e}")
+                logger.error("Error while retrieving thermal templates: %s", e)
                 self._templates = {}
         return self._templates
 
     def get_room_data(self, body: Any) -> Optional[Any]:
-        """Récupère les données de la pièce (VERoomData)."""
+        """Return ``VERoomData`` for one body."""
         body_id = self.get_object_id(body)
         if body_id not in self._room_data_cache:
             try:
                 self._room_data_cache[body_id] = body.get_room_data()
             except Exception as e:
-                logger.error(f"Erreur lors de la récupération des données de la pièce {body_id}: {e}")
+                logger.error("Error while retrieving room data for body %s: %s", body_id, e)
                 self._room_data_cache[body_id] = None
         return self._room_data_cache[body_id]
 
     def get_internal_gains(self, room_data: Any) -> List[Any]:
-        """Récupère les gains internes (éclairage, occupants, équipements)."""
+        """Return room internal gains from ``VERoomData.get_internal_gains``."""
         try:
             return self._as_list(room_data.get_internal_gains())
         except Exception as e:
-            logger.error(f"Erreur lors de la récupération des gains internes: {e}")
+            logger.error("Error while retrieving internal gains: %s", e)
             return []
 
     def get_air_exchanges(self, room_data: Any) -> List[Any]:
-        """Récupère les échanges d'air (ventilation, infiltration)."""
+        """Return room air exchanges from ``VERoomData.get_air_exchanges``."""
         try:
             return self._as_list(room_data.get_air_exchanges())
         except Exception as e:
-            logger.error(f"Erreur lors de la récupération des échanges d'air: {e}")
+            logger.error("Error while retrieving air exchanges: %s", e)
             return []
 
     def get_apache_systems(self, room_data: Any) -> Dict[str, Any]:
-        """Récupère les systèmes Apache (CVC) d'une pièce."""
+        """Return room Apache Systems / ApacheHVAC assignment data."""
         try:
             return self._as_dict(room_data.get_apache_systems())
         except Exception as e:
-            logger.error(f"Erreur lors de la récupération des systèmes Apache: {e}")
+            logger.error("Error while retrieving Apache systems: %s", e)
             return {}
 
     def get_room_conditions(self, room_data: Any) -> Dict[str, Any]:
-        """Récupère les conditions de la pièce (températures, humidité)."""
+        """Return room condition data such as setpoints and humidity fields."""
         try:
             return self._as_dict(room_data.get_room_conditions())
         except Exception as e:
-            logger.error(f"Erreur lors de la récupération des conditions de la pièce: {e}")
+            logger.error("Error while retrieving room conditions: %s", e)
             return {}
 
     def get_weather_data(self) -> Optional[Any]:
-        """Récupère le fichier météo du projet."""
+        """Return the project weather data object when exposed by VE."""
         if self._weather_data is None:
             try:
                 self._weather_data = self.project.weather_file()
             except Exception as e:
-                logger.error(f"Erreur lors de la récupération du fichier météo: {e}")
+                logger.error("Error while retrieving weather data: %s", e)
                 self._weather_data = None
         return self._weather_data
 
     def get_hvac_systems(self) -> Dict[str, Any]:
-        """Récupère tous les systèmes CVC du projet."""
+        """Return project-level Apache systems."""
         if not self._hvac_systems:
             try:
                 self._hvac_systems = self._as_dict(self.project.apache_systems())
             except Exception as e:
-                logger.error(f"Erreur lors de la récupération des systèmes CVC: {e}")
+                logger.error("Error while retrieving HVAC systems: %s", e)
                 self._hvac_systems = {}
         return self._hvac_systems
 
     def get_energy_sources(self) -> Dict[str, Any]:
-        """Récupère toutes les sources d'énergie du projet."""
+        """Return project energy sources through ``iesve.EnergySources``."""
         if not self._energy_sources:
             try:
                 import importlib
@@ -294,20 +282,20 @@ class VEDataExtractor:
                     if isinstance(source, dict)
                 }
             except Exception as e:
-                logger.error(f"Erreur lors de la récupération des sources d'énergie: {e}")
+                logger.error("Error while retrieving energy sources: %s", e)
                 self._energy_sources = {}
         return self._energy_sources
 
     def get_body_areas(self, body: Any) -> Dict[str, float]:
-        """Récupère les aires et le volume d'une pièce via VEBody.get_areas()."""
+        """Return room area and volume values through ``VEBody.get_areas``."""
         try:
             return self._as_dict(body.get_areas())
         except Exception as e:
-            logger.error(f"Erreur lors de la récupération des aires de la pièce {self.get_object_id(body)}: {e}")
+            logger.error("Error while retrieving body areas for %s: %s", self.get_object_id(body), e)
             return {}
 
     def get_surface_properties(self, surface: Any) -> Dict[str, Any]:
-        """Récupère les propriétés d'une surface sans supposer que c'est un dictionnaire Python."""
+        """Return normalized surface properties without assuming a dict return type."""
         try:
             props = self._safe_properties(surface)
             construction_ids = self.get_constructions(surface)
@@ -335,11 +323,11 @@ class VEDataExtractor:
                 "construction_properties": construction_props,
             }
         except Exception as e:
-            logger.error(f"Erreur lors de la récupération des propriétés de la surface {self.get_surface_id(surface)}: {e}")
+            logger.error("Error while retrieving surface properties for %s: %s", self.get_surface_id(surface), e)
             return {}
 
     def get_opening_properties(self, opening: Any) -> Dict[str, Any]:
-        """Récupère les propriétés d'une ouverture sans supposer que c'est un dictionnaire Python."""
+        """Return normalized opening properties and audited glazing values."""
         try:
             props = self._safe_properties(opening)
             construction_id = self.get_opening_construction(opening)
@@ -372,35 +360,35 @@ class VEDataExtractor:
                 "construction_properties": construction_props,
             }
         except Exception as e:
-            logger.error(f"Erreur lors de la récupération des propriétés de l'ouverture {self.get_surface_id(opening)}: {e}")
+            logger.error("Error while retrieving opening properties for %s: %s", self.get_surface_id(opening), e)
             return {}
 
     def get_surface_areas(self, surface: Any) -> Dict[str, float]:
-        """Récupère les aires d'une surface via get_areas() documentée."""
+        """Return documented surface areas through ``VESurface.get_areas``."""
         try:
             return self._as_dict(surface.get_areas())
         except Exception as e:
-            logger.error(f"Erreur lors de la récupération des aires de la surface {self.get_surface_id(surface)}: {e}")
+            logger.error("Error while retrieving surface areas for %s: %s", self.get_surface_id(surface), e)
             return {}
 
     def get_adjacencies(self, surface: Any) -> List[Any]:
-        """Récupère les adjacences d'une surface."""
+        """Return surface adjacencies through ``VESurface.get_adjacencies``."""
         try:
             return self._as_list(surface.get_adjacencies())
         except Exception as e:
-            logger.error(f"Erreur lors de la récupération des adjacences de la surface {self.get_surface_id(surface)}: {e}")
+            logger.error("Error while retrieving adjacencies for surface %s: %s", self.get_surface_id(surface), e)
             return []
 
     def get_constructions(self, surface: Any) -> List[str]:
-        """Récupère les constructions appliquées à une surface."""
+        """Return construction IDs assigned to one surface."""
         try:
             return self._as_list(surface.get_constructions())
         except Exception as e:
-            logger.error(f"Erreur lors de la récupération des constructions de la surface {self.get_surface_id(surface)}: {e}")
+            logger.error("Error while retrieving constructions for surface %s: %s", self.get_surface_id(surface), e)
             return []
 
     def get_opening_construction(self, opening: Any) -> str:
-        """Récupère la construction assignée à une ouverture VEGeometry."""
+        """Return the construction ID assigned to one ``VEGeometry`` opening."""
         try:
             construction_id = opening.get_construction()
             return str(construction_id or "")
@@ -408,7 +396,7 @@ class VEDataExtractor:
             return ""
 
     def get_construction_properties(self, construction_id: Any) -> Dict[str, Any]:
-        """Résout les propriétés thermiques d'une construction CDB à partir de son ID."""
+        """Resolve thermal/CDB properties for one construction ID."""
         construction_key = str(construction_id or "").strip()
         if not construction_key:
             return {}
@@ -417,12 +405,12 @@ class VEDataExtractor:
         return self._construction_properties[construction_key]
 
     def _resolve_construction_properties(self, construction_id: str) -> Dict[str, Any]:
-        """Interroge VECdbConstruction avec plusieurs classes possibles pour rester compatible VE."""
+        """Query ``VECdbConstruction`` using multiple classes for VE compatibility."""
         try:
             import importlib
             iesve = importlib.import_module("iesve")
         except Exception as e:
-            logger.debug("iesve indisponible pour la résolution construction %s: %s", construction_id, e)
+            logger.debug("iesve is unavailable while resolving construction %s: %s", construction_id, e)
             return {}
 
         construction_classes = self._get_cdb_construction_classes(iesve)
@@ -437,7 +425,7 @@ class VEDataExtractor:
         return {}
 
     def _get_cdb_projects(self) -> List[Any]:
-        """Retourne les projets CDB disponibles dans la base courante."""
+        """Return CDB projects available in the current VE construction database."""
         if self._cdb_projects is not None:
             return self._cdb_projects
 
@@ -449,14 +437,14 @@ class VEDataExtractor:
             raw_projects = database.get_projects()
             projects = self._collect_cdb_project_objects(raw_projects)
         except Exception as e:
-            logger.debug("Impossible d'accéder aux projets CDB: %s", e)
+            logger.debug("Could not access CDB projects: %s", e)
 
         self._cdb_projects = projects
         return self._cdb_projects
 
     @staticmethod
     def _get_cdb_construction_classes(iesve_module: Any) -> List[Any]:
-        """Collecte les enums construction_class exposées par les versions IESVE."""
+        """Collect construction-class enum values exposed by IESVE versions."""
         construction_classes = []
         enum_candidates = []
         for owner_name in ("VECdbProject", "VECdbConstruction", ""):
@@ -511,11 +499,12 @@ class VEDataExtractor:
 
     @classmethod
     def _collect_cdb_project_objects(cls, value: Any) -> List[Any]:
-        """Parcourt récursivement get_projects() pour extraire les VECdbProject."""
+        """Recursively walk ``get_projects()`` output and retain CDB projects."""
         projects: List[Any] = []
         seen: set = set()
 
         def visit(item: Any, depth: int = 0) -> None:
+            """Visit nested project containers without looping on repeated objects."""
             if item is None or depth > 6:
                 return
             marker = id(item)
@@ -542,6 +531,7 @@ class VEDataExtractor:
 
     @staticmethod
     def _safe_get_cdb_construction(cdb_project: Any, construction_id: str, construction_class: Any) -> Optional[Any]:
+        """Return a CDB construction while tolerating VE binding signature variants."""
         try:
             if construction_class is None:
                 return cdb_project.get_construction(construction_id)
@@ -550,6 +540,7 @@ class VEDataExtractor:
             return None
 
     def _read_cdb_construction(self, construction: Any, construction_id: str) -> Dict[str, Any]:
+        """Extract normalized construction, U-value, g-value, and layer metadata."""
         props: Dict[str, Any] = {
             "id": construction_id,
             "reference": self._safe_object_attr(construction, "reference"),
@@ -596,6 +587,7 @@ class VEDataExtractor:
         return props
 
     def _read_construction_properties_variants(self, construction: Any) -> Dict[str, Any]:
+        """Read construction properties with every known VE/CDB overload."""
         try:
             props = self._as_dict(construction.get_properties())
             if props:
@@ -620,7 +612,7 @@ class VEDataExtractor:
 
     @staticmethod
     def _get_cdb_uvalue_types(iesve_module: Any) -> List[Any]:
-        """Collecte les enums uvalue_types, avec fallback numérique compatible VE."""
+        """Collect CDB U-value enum values, with numeric fallbacks for VE builds."""
         typed_values = []
         seen = set()
         enum_candidates = []
@@ -661,6 +653,7 @@ class VEDataExtractor:
         return typed_values
 
     def _read_cdb_layer(self, layer: Any) -> Dict[str, Any]:
+        """Read one CDB construction layer and its material reference when available."""
         layer_props = {}
         try:
             layer_props = self._as_dict(layer.get_properties())
@@ -677,6 +670,7 @@ class VEDataExtractor:
         return layer_props
 
     def _first_resolved_construction(self, construction_ids: List[Any]) -> Dict[str, Any]:
+        """Return the first construction ID that resolves to non-empty CDB data."""
         for construction_id in construction_ids:
             props = self.get_construction_properties(construction_id)
             if props:
@@ -723,7 +717,7 @@ class VEDataExtractor:
         return resolved[0]
 
     def get_object_id(self, obj: Any) -> str:
-        """Récupère l'ID d'un objet VE de manière compatible avec les objets exposés par l'API."""
+        """Return a stable VE object ID across documented and observed API shapes."""
         if obj is None:
             return ""
         try:
@@ -743,12 +737,12 @@ class VEDataExtractor:
         return str(id(obj))
 
     def get_surface_id(self, surface: Any) -> str:
-        """Compatibilité avec les appels historiques du projet."""
+        """Compatibility alias for historical project calls."""
         return self.get_object_id(surface)
 
     @staticmethod
     def _normalize_enum_name(value: Any) -> str:
-        """Normalise le nom d'une enum IESVE en chaîne simple."""
+        """Normalize an IESVE enum or callable enum attribute to a plain string."""
         if value is None:
             return ""
         if callable(value):
@@ -762,7 +756,7 @@ class VEDataExtractor:
         return text.replace(" ", "_").replace("-", "_")
 
     def _is_relevant_body(self, body: Any) -> bool:
-        """Vérifie si le body correspond à une pièce exploitable."""
+        """Return true when a VE body represents a usable thermal room."""
         body_type = self._normalize_enum_name(getattr(body, "type", None))
         subtype = self._normalize_enum_name(getattr(body, "subtype", None))
         if body_type != "room":
@@ -793,7 +787,7 @@ class VEDataExtractor:
         }
 
     def _get_surface_type(self, surface: Any) -> str:
-        """Extrait et normalise le type d'une surface VESurface."""
+        """Extract and normalize the type of a ``VESurface`` object."""
         try:
             props = self._safe_properties(surface)
             surface_type = self._safe_lookup(props, "type") or getattr(surface, "type", None)
@@ -802,7 +796,7 @@ class VEDataExtractor:
         return self._normalize_surface_type(surface_type)
 
     def _get_opening_type(self, opening: Any) -> str:
-        """Extrait et normalise le type d'une ouverture VESurface opening."""
+        """Extract and normalize the type of a ``VEGeometry`` opening."""
         try:
             props = self._safe_properties(opening)
             opening_type = self._safe_lookup(props, "type") or getattr(opening, "type", None)
@@ -812,7 +806,7 @@ class VEDataExtractor:
 
     @staticmethod
     def _normalize_surface_type(surface_type: Any) -> str:
-        """Normalise les types de surface IESVE vers des valeurs réutilisables."""
+        """Normalize IESVE surface-type values to reusable compliance labels."""
         raw = str(surface_type or "").strip().lower()
         if not raw:
             return ""
@@ -831,7 +825,7 @@ class VEDataExtractor:
 
     @staticmethod
     def _normalize_opening_type(opening_type: Any) -> str:
-        """Normalise les types d'ouverture IESVE vers des valeurs réutilisables."""
+        """Normalize IESVE opening-type values to reusable compliance labels."""
         if opening_type in (4, "4"):
             return "window"
         if opening_type in (5, "5", 6, "6"):
@@ -847,7 +841,7 @@ class VEDataExtractor:
 
     @staticmethod
     def _safe_lookup(mapping: Any, key: str) -> Any:
-        """Lit une clé de manière sûre même si la valeur n'est pas un dictionnaire Python."""
+        """Read a field safely from dictionaries or VE proxy objects."""
         if isinstance(mapping, dict):
             return mapping.get(key)
         if mapping is None:
@@ -859,7 +853,7 @@ class VEDataExtractor:
 
     @classmethod
     def _find_first_present(cls, mapping: Any, keys: Any) -> Any:
-        """Retourne la première valeur non vide pour une liste de clés possibles."""
+        """Return the first non-empty value found through possible key aliases."""
         for key in keys:
             value = cls._safe_lookup(mapping, key)
             if value not in (None, ""):
@@ -874,7 +868,7 @@ class VEDataExtractor:
 
     @classmethod
     def _extract_u_value(cls, construction_props: Dict[str, Any]) -> Optional[float]:
-        """Extrait une U-value depuis les propriétés CDB d'une construction."""
+        """Extract a construction U-value from normalized CDB properties."""
         direct = cls._find_first_present(
             construction_props,
             (
@@ -905,7 +899,7 @@ class VEDataExtractor:
 
     @classmethod
     def _extract_g_value(cls, construction_props: Dict[str, Any]) -> Optional[float]:
-        """Extrait le facteur solaire depuis les propriétés CDB d'un vitrage."""
+        """Extract the SIA-comparable glazing solar factor when auditable."""
         return cls._extract_g_value_audit(construction_props).get("selected_sia_g_value")
 
     @classmethod
@@ -914,7 +908,9 @@ class VEDataExtractor:
 
         VEScripts documents VECdbConstruction.get_g_values() entries as
         bs_en_410, building_regulations and bfrc. For SIA readiness, the EN 410
-        value is the preferred comparable value when VE exposes it.
+        value is the only automatically comparable g_perp candidate. Other VE
+        values remain visible in the audit trail but do not generate a SIA pass
+        without reviewer/manufacturer evidence.
         """
         normalized_g_values = cls._collect_normalized_g_values(*mappings)
         cdb_key, cdb_raw = cls._first_present_from_mappings(
@@ -929,29 +925,31 @@ class VEDataExtractor:
         )
         cdb_g_value = cls._normalize_unit_fraction(cls._to_float_or_none(cdb_raw))
 
-        selection_order = (
-            ("bs_en_410", "VECdbConstruction.get_g_values().bs_en_410"),
-            ("g_value", f"VECdbConstruction.get_properties().{cdb_key or 'g_value'}"),
-            ("solar_factor", f"opening.get_properties().{cdb_key or 'solar_factor'}"),
-            ("building_regulations", "VECdbConstruction.get_g_values().building_regulations"),
-            ("bfrc", "VECdbConstruction.get_g_values().bfrc"),
+        selected_value = normalized_g_values.get("bs_en_410")
+        selected_source = (
+            "VECdbConstruction.get_g_values().bs_en_410"
+            if selected_value is not None
+            else ""
         )
 
-        selected_value: Optional[float] = None
-        selected_source = ""
-        for key, source in selection_order:
-            if key in ("g_value", "solar_factor"):
-                value = cdb_g_value
-            else:
-                value = normalized_g_values.get(key)
+        fallback_candidates = (
+            (cdb_g_value, f"VECdbConstruction.get_properties().{cdb_key or 'g_value'}"),
+            (normalized_g_values.get("building_regulations"), "VECdbConstruction.get_g_values().building_regulations"),
+            (normalized_g_values.get("bfrc"), "VECdbConstruction.get_g_values().bfrc"),
+        )
+        fallback_value: Optional[float] = None
+        fallback_source = ""
+        for value, source in fallback_candidates:
             if value is not None:
-                selected_value = value
-                selected_source = source
+                fallback_value = value
+                fallback_source = source
                 break
 
         return {
             "selected_sia_g_value": selected_value,
             "selected_source": selected_source,
+            "fallback_g_value": fallback_value,
+            "fallback_source": fallback_source,
             "cdb_g_value": cdb_g_value,
             "bs_en_410": normalized_g_values.get("bs_en_410"),
             "building_regulations": normalized_g_values.get("building_regulations"),
@@ -1190,6 +1188,7 @@ class VEDataExtractor:
 
     @classmethod
     def _first_numeric_with_key_from_mappings(cls, mappings: Any, keys: Any) -> Any:
+        """Return the first numeric alias match and the key that supplied it."""
         for mapping in mappings:
             key, value = cls._find_first_present_with_key(mapping, keys)
             numeric = cls._to_float_or_none(value)
@@ -1205,6 +1204,7 @@ class VEDataExtractor:
 
     @classmethod
     def _first_present_from_mappings(cls, mappings: Any, keys: Any) -> Any:
+        """Return the first non-empty alias match from several mappings."""
         for mapping in mappings:
             key, value = cls._find_first_present_with_key(mapping, keys)
             if value not in (None, ""):
@@ -1230,6 +1230,7 @@ class VEDataExtractor:
 
     @classmethod
     def _first_numeric_from_mappings(cls, mappings: Any, keys: Any) -> Optional[float]:
+        """Return the first numeric alias match, including nested layer mappings."""
         for mapping in mappings:
             _, value = cls._find_first_present_with_key(mapping, keys)
             numeric = cls._to_float_or_none(value)
@@ -1245,6 +1246,7 @@ class VEDataExtractor:
 
     @classmethod
     def _first_text_from_mappings(cls, mappings: Any, keys: Any) -> Optional[str]:
+        """Return the first text alias match from several mappings."""
         for mapping in mappings:
             _, value = cls._find_first_present_with_key(mapping, keys)
             if value not in (None, ""):
@@ -1271,6 +1273,7 @@ class VEDataExtractor:
 
     @classmethod
     def _active_shade_descriptions(cls, mapping: Any) -> List[str]:
+        """Build readable descriptions for active VE shading flags."""
         if not isinstance(mapping, dict):
             return []
         descriptions = []
@@ -1292,6 +1295,7 @@ class VEDataExtractor:
 
     @classmethod
     def _has_explicit_no_shading(cls, mapping: Any) -> bool:
+        """Return true when VE exposes shade-active fields and all are disabled."""
         if not isinstance(mapping, dict):
             return False
         active_keys = ("external_shade_active", "internal_shade_active", "local_shade_active")
@@ -1300,6 +1304,7 @@ class VEDataExtractor:
 
     @staticmethod
     def _normalize_unit_fraction(value: Optional[float]) -> Optional[float]:
+        """Normalize percentage-like values into fractions when safe to do so."""
         if value is None:
             return None
         if value > 1.0 and value <= 100.0:
@@ -1308,6 +1313,7 @@ class VEDataExtractor:
 
     @staticmethod
     def _truthy(value: Any) -> bool:
+        """Interpret VE boolean-like fields consistently."""
         if isinstance(value, bool):
             return value
         if isinstance(value, (int, float)):
@@ -1318,6 +1324,7 @@ class VEDataExtractor:
 
     @staticmethod
     def _to_float_or_none(value: Any) -> Optional[float]:
+        """Convert VE values to float and return ``None`` when conversion fails."""
         try:
             if isinstance(value, str):
                 normalized = value.strip().replace(" ", "")
@@ -1330,6 +1337,7 @@ class VEDataExtractor:
 
     @staticmethod
     def _safe_object_attr(obj: Any, attribute_name: str) -> Any:
+        """Read an object attribute or zero-argument callable attribute safely."""
         try:
             value = getattr(obj, attribute_name)
             if callable(value):
@@ -1340,7 +1348,7 @@ class VEDataExtractor:
 
     @staticmethod
     def _safe_properties(obj: Any) -> Dict[str, Any]:
-        """Extrait les propriétés d'un objet VE de manière sûre."""
+        """Extract VE object properties safely as a Python dictionary."""
         if obj is None:
             return {}
         try:
@@ -1353,7 +1361,7 @@ class VEDataExtractor:
 
     @staticmethod
     def _as_list(value: Any) -> List[Any]:
-        """Normalise une valeur en liste si possible."""
+        """Normalize iterable VE return values to a Python list when possible."""
         if value is None:
             return []
         if isinstance(value, list):
@@ -1369,7 +1377,7 @@ class VEDataExtractor:
 
     @staticmethod
     def _as_dict(value: Any) -> Dict[str, Any]:
-        """Normalise une valeur en dictionnaire si possible."""
+        """Normalize mapping-like VE return values to a Python dictionary."""
         if isinstance(value, dict):
             return value
         try:

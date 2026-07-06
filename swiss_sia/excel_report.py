@@ -24,8 +24,12 @@ from .config import (
     SIA_DATA_COVERAGE_MATRIX,
     SIA_COMPLIANCE_REQUIREMENT_MATRIX,
     SIA3802_LIMIT_VALUES,
+    SIA4010_EVIDENCE_REQUIREMENTS,
     SIA4010_REQUIRED_EVIDENCE,
     SIA4010_SYSTEM_REQUIREMENT_SOURCES,
+    SIA4010_TEST_ALIAS_LABELS,
+    SIA4010_TEST_ALIAS_ORDER,
+    SIA4010_TEST_ALIAS_TO_BASE_TEST,
     SIA4010_TEST_CLASS_COVERAGE,
     SIA4010_TEST_READINESS_REQUIREMENTS,
     SIA4010_VALIDATED_SOFTWARE_REGISTER,
@@ -122,6 +126,8 @@ class ExcelReportGenerator:
         self._write_sia3802_justifications_xlsxwriter(self.sia3802_justifications)
         self._write_open_items_backlog_xlsxwriter(alert_groups, sia3802_results, sia4010_results, rooms_data or [], preflight_checks or [], dynamic_results or {})
         self._write_sia4010_readiness_xlsxwriter(sia4010_results, rooms_data or [])
+        self._write_sia4010_prevalidation_xlsxwriter(sia4010_results)
+        self._write_sia4010_class_matrix_xlsxwriter(sia4010_results, rooms_data or [])
         self._write_sia4010_software_register_xlsxwriter()
         self._write_sia_navigator_backlog_xlsxwriter()
         self._write_dynamic_results_xlsxwriter(dynamic_results or {})
@@ -547,6 +553,7 @@ class ExcelReportGenerator:
 
     @staticmethod
     def _fallback_preflight_checks(rooms_data: List[Any], sia4010_results: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """Return minimal preflight checks when the application layer did not supply them."""
         evidence = sia4010_results.get("evidence", {}) or {}
         classified_evidence_count = int(evidence.get("classified_file_count", 0) or 0)
         return [
@@ -570,6 +577,7 @@ class ExcelReportGenerator:
 
     @staticmethod
     def _preflight_status_format(status: str, pass_format: Any, warning_format: Any, fail_format: Any, info_format: Any, cell_format: Any) -> Any:
+        """Return the Excel cell format for a preflight status."""
         status_upper = str(status or "").upper()
         if status_upper == "PASS":
             return pass_format
@@ -1402,9 +1410,21 @@ class ExcelReportGenerator:
             ("SIA 4010 evidence readiness score", float(sia4010_results.get("readiness_score", 0.0) or 0.0)),
             ("SIA 4010 evidence status", evidence_summary.get("status", "UNKNOWN")),
             ("SIA 4010 validation class", evidence_summary.get("validation_class") or "Not confirmed"),
+            ("SIA 4010 validation class source", evidence_summary.get("validation_class_source", "not_selected")),
+            ("SIA 4010 class manifest status", evidence_summary.get("validation_class_selection_status", "NOT_SELECTED")),
             ("SIA 4010 evidence families", f"{evidence_summary.get('present_count', 0)}/{evidence_summary.get('required_count', len(SIA4010_REQUIRED_EVIDENCE))}"),
             ("APS/Vista status", dynamic_results.get("status", "NOT_CHECKABLE")),
             ("Selected APS file", dynamic_results.get("selected_aps_file") or "None"),
+            ("Project weather file", dynamic_results.get("project_weather_file") or "Not exposed by VE"),
+            (
+                "Selected APS weather references",
+                self._compact_join(
+                    dynamic_results.get("selected_aps_weather_references", []) or [],
+                    empty="No EPW reference detected in APS",
+                    max_chars=500,
+                ),
+            ),
+            ("Skipped stale APS files", len(dynamic_results.get("skipped_aps_files", []) or [])),
             ("APS files detected", len(dynamic_results.get("aps_files", []) or [])),
             ("Preflight PASS/WARNING/FAIL/NOT_CHECKABLE", f"{preflight_counts.get('PASS', 0)}/{preflight_counts.get('WARNING', 0)}/{preflight_counts.get('FAIL', 0)}/{preflight_counts.get('NOT_CHECKABLE', 0)}"),
         ]
@@ -1547,7 +1567,7 @@ class ExcelReportGenerator:
             else:
                 worksheet.write(row, 1, status, fail_format)
 
-        # Ajuster la largeur des colonnes
+        # Set readable column widths.
         worksheet.set_column("A:A", 30)
         worksheet.set_column("B:B", 20)
 
@@ -2072,9 +2092,9 @@ class ExcelReportGenerator:
         integer_format = self.workbook.add_format({"border": 1, "num_format": "#,##0"})
         status_format = self.workbook.add_format({"bg_color": "#D9EAF7", "font_color": "#1F4E78", "border": 1, "bold": True})
 
-        worksheet.merge_range("A1:J1", "APS/Vista Dynamic Results", header_format)
+        worksheet.merge_range("A1:T1", "APS/Vista Dynamic Results", header_format)
         worksheet.merge_range(
-            "A2:J2",
+            "A2:T2",
             "These values are readiness indicators extracted from APS/Vista when IESVE ResultsReader is available. "
             "They support SIA 380/2 and SIA 4010 checks but do not replace official SIA 4010 comparison workbooks.",
             note_format,
@@ -2082,14 +2102,38 @@ class ExcelReportGenerator:
 
         overview = [
             ("Status", dynamic_results.get("status", "NOT_CHECKABLE")),
-            ("Selected APS file", dynamic_results.get("selected_aps_file", "")),
+            ("Selected APS file", dynamic_results.get("selected_aps_file") or "None"),
+            ("Project weather file", dynamic_results.get("project_weather_file") or "Not exposed by VE"),
+            (
+                "Selected APS weather references",
+                self._compact_join(
+                    dynamic_results.get("selected_aps_weather_references", []) or [],
+                    empty="No EPW reference detected in APS",
+                    max_chars=500,
+                ),
+            ),
+            ("Skipped stale APS files", len(dynamic_results.get("skipped_aps_files", []) or [])),
             ("APS files detected", len(dynamic_results.get("aps_files", []) or [])),
             ("Total area used by APS results (m2)", dynamic_results.get("total_area_m2")),
             ("Heating demand (kWh/m2)", dynamic_results.get("heating_kwh_m2")),
             ("Cooling demand (kWh/m2)", dynamic_results.get("cooling_kwh_m2")),
+            ("Lighting energy (kWh/m2)", dynamic_results.get("lighting_kwh_m2")),
+            ("Fan energy (kWh/m2)", dynamic_results.get("fan_kwh_m2")),
+            ("Pump energy (kWh/m2)", dynamic_results.get("pump_kwh_m2")),
+            ("Auxiliary energy (kWh/m2)", dynamic_results.get("auxiliary_kwh_m2")),
+            ("Total lighting energy (kWh)", dynamic_results.get("total_lighting_kwh")),
+            ("Total fan energy (kWh)", dynamic_results.get("total_fan_kwh")),
+            ("Total pump energy (kWh)", dynamic_results.get("total_pump_kwh")),
+            ("Total auxiliary energy (kWh)", dynamic_results.get("total_auxiliary_kwh")),
+            ("Total heating coil energy (kWh)", dynamic_results.get("total_coil_heating_kwh")),
+            ("Total cooling coil energy (kWh)", dynamic_results.get("total_coil_cooling_kwh")),
+            ("Peak CO2 (ppm)", dynamic_results.get("peak_co2_ppm")),
+            ("Average CO2 (ppm)", dynamic_results.get("average_co2_ppm")),
+            ("Peak relative humidity (%)", dynamic_results.get("peak_relative_humidity_percent")),
+            ("Average relative humidity (%)", dynamic_results.get("average_relative_humidity_percent")),
             ("Occupied hours > 26 C", dynamic_results.get("occupied_hours_above_26")),
             ("Occupied hours > 27 C", dynamic_results.get("occupied_hours_above_27")),
-            ("Notes", dynamic_results.get("notes", "")),
+            ("Notes", dynamic_results.get("notes") or "None"),
         ]
         worksheet.write("A4", "Metric", header_format)
         worksheet.write("B4", "Value", header_format)
@@ -2100,15 +2144,49 @@ class ExcelReportGenerator:
             else:
                 worksheet.write(offset, 1, str(value or ""), status_format if label == "Status" else cell_format)
 
-        start_row = 16
+        overview_start = 5
+        overview_end = overview_start + len(overview) - 1
+        section_start = overview_end + 2
+
+        skipped_rows = dynamic_results.get("skipped_aps_files", []) or []
+        skipped_start = section_start
+        if skipped_rows:
+            worksheet.write(skipped_start, 0, "Skipped APS file", header_format)
+            worksheet.write(skipped_start, 1, "Weather references", header_format)
+            worksheet.write(skipped_start, 2, "Reason", header_format)
+            for row_offset, skipped in enumerate(skipped_rows, start=skipped_start + 1):
+                worksheet.write(row_offset, 0, skipped.get("aps_file", ""), cell_format)
+                worksheet.write(
+                    row_offset,
+                    1,
+                    self._compact_join(
+                        skipped.get("weather_references", []) or [],
+                        empty="No EPW reference detected",
+                        max_chars=500,
+                    ),
+                    cell_format,
+                )
+                worksheet.write(row_offset, 2, skipped.get("reason", ""), cell_format)
+
+        start_row = skipped_start + len(skipped_rows) + 3 if skipped_rows else section_start
         headers = [
             "Room",
             "Room ID",
             "Area m2",
             "Heating kWh",
             "Cooling kWh",
+            "Lighting kWh",
+            "Fan kWh",
+            "Pump kWh",
+            "Auxiliary kWh",
+            "Heating coil kWh",
+            "Cooling coil kWh",
             "Peak heating W",
             "Peak cooling W",
+            "Peak CO2 ppm",
+            "Average CO2 ppm",
+            "Peak RH %",
+            "Average RH %",
             "Hours > 26 C",
             "Hours > 27 C",
             "Source notes",
@@ -2124,11 +2202,21 @@ class ExcelReportGenerator:
                 self._write_optional_number(worksheet, row, 2, item.get("area_m2"), number_format, cell_format)
                 self._write_optional_number(worksheet, row, 3, item.get("heating_kwh"), number_format, cell_format)
                 self._write_optional_number(worksheet, row, 4, item.get("cooling_kwh"), number_format, cell_format)
-                self._write_optional_number(worksheet, row, 5, item.get("peak_heating_w"), integer_format, cell_format)
-                self._write_optional_number(worksheet, row, 6, item.get("peak_cooling_w"), integer_format, cell_format)
-                self._write_optional_number(worksheet, row, 7, item.get("occupied_hours_above_26"), number_format, cell_format)
-                self._write_optional_number(worksheet, row, 8, item.get("occupied_hours_above_27"), number_format, cell_format)
-                worksheet.write(row, 9, item.get("source_notes", ""), cell_format)
+                self._write_optional_number(worksheet, row, 5, item.get("lighting_kwh"), number_format, cell_format)
+                self._write_optional_number(worksheet, row, 6, item.get("fan_kwh"), number_format, cell_format)
+                self._write_optional_number(worksheet, row, 7, item.get("pump_kwh"), number_format, cell_format)
+                self._write_optional_number(worksheet, row, 8, item.get("auxiliary_kwh"), number_format, cell_format)
+                self._write_optional_number(worksheet, row, 9, item.get("coil_heating_kwh"), number_format, cell_format)
+                self._write_optional_number(worksheet, row, 10, item.get("coil_cooling_kwh"), number_format, cell_format)
+                self._write_optional_number(worksheet, row, 11, item.get("peak_heating_w"), integer_format, cell_format)
+                self._write_optional_number(worksheet, row, 12, item.get("peak_cooling_w"), integer_format, cell_format)
+                self._write_optional_number(worksheet, row, 13, item.get("peak_co2_ppm"), integer_format, cell_format)
+                self._write_optional_number(worksheet, row, 14, item.get("average_co2_ppm"), number_format, cell_format)
+                self._write_optional_number(worksheet, row, 15, item.get("peak_relative_humidity_percent"), number_format, cell_format)
+                self._write_optional_number(worksheet, row, 16, item.get("average_relative_humidity_percent"), number_format, cell_format)
+                self._write_optional_number(worksheet, row, 17, item.get("occupied_hours_above_26"), number_format, cell_format)
+                self._write_optional_number(worksheet, row, 18, item.get("occupied_hours_above_27"), number_format, cell_format)
+                worksheet.write(row, 19, item.get("source_notes", ""), cell_format)
                 row += 1
         else:
             worksheet.write(row, 0, "No room-level dynamic result was readable in this run.", cell_format)
@@ -2136,8 +2224,8 @@ class ExcelReportGenerator:
         worksheet.autofilter(start_row, 0, max(start_row, row - 1), len(headers) - 1)
         worksheet.freeze_panes(start_row + 1, 0)
         worksheet.set_column("A:B", 24)
-        worksheet.set_column("C:I", 16)
-        worksheet.set_column("J:J", 52)
+        worksheet.set_column("C:S", 16)
+        worksheet.set_column("T:T", 72)
 
     def _write_sia4010_readiness_xlsxwriter(self, sia4010_results: Dict[str, Any], rooms_data: List[Any]):
         """Write a SIA 4010 readiness matrix backed by the PDF traceability."""
@@ -2160,6 +2248,7 @@ class ExcelReportGenerator:
         validation_class = sia4010_results.get("validation_class") or "Not selected"
         evidence = sia4010_results.get("evidence", {}) or {}
         evidence_present_count = sum(1 for item in SIA4010_REQUIRED_EVIDENCE if self._has_sia4010_evidence(evidence, item))
+        official_test_summary = evidence.get("official_test_result_summary", {}) if isinstance(evidence, dict) else {}
 
         worksheet.merge_range("A1:K1", "SIA 4010 Readiness - Validation Evidence Matrix", header_format)
         worksheet.merge_range(
@@ -2177,6 +2266,10 @@ class ExcelReportGenerator:
             ("NOT_CHECKABLE tests", not_checkable_count),
             ("Official evidence items present", evidence_present_count),
             ("Official evidence items required", len(SIA4010_REQUIRED_EVIDENCE)),
+            ("Official test-result files", official_test_summary.get("result_file_count", 0)),
+            ("Official test-result rows", official_test_summary.get("result_row_count", 0)),
+            ("Official validated tests", len(official_test_summary.get("validated_tests", []) or [])),
+            ("Official failed tests", len(official_test_summary.get("failed_tests", []) or [])),
         ]
         for offset, (label, value) in enumerate(kpis, start=5):
             worksheet.write(offset, 0, label, subheader_format)
@@ -2231,25 +2324,69 @@ class ExcelReportGenerator:
 
         evidence_start = row + 2
         worksheet.write(evidence_start, 0, "Official SIA 4010 evidence checklist", header_format)
-        worksheet.write_row(evidence_start + 1, 0, ["Evidence item", "Status", "Comment"], subheader_format)
+        worksheet.write_row(
+            evidence_start + 1,
+            0,
+            [
+                "Evidence item",
+                "File status",
+                "Manifest status",
+                "Required filename prefix",
+                "Example filename",
+                "Source authority",
+                "Tests covered",
+                "Reviewer / review status",
+                "Comment",
+            ],
+            subheader_format,
+        )
         evidence_row = evidence_start + 2
         for item in SIA4010_REQUIRED_EVIDENCE:
             status = "PRESENT" if self._has_sia4010_evidence(evidence, item) else "MISSING"
+            evidence_key = self._evidence_key_for_required_item(item)
+            requirement = SIA4010_EVIDENCE_REQUIREMENTS.get(evidence_key, {})
+            manifest_rows = evidence.get(evidence_key, {}).get("manifest_rows", []) if isinstance(evidence, dict) else []
+            manifest_row = manifest_rows[0] if manifest_rows else {}
+            manifest_status = manifest_row.get("row_status", "NOT_DOCUMENTED") if manifest_row else "NOT_DOCUMENTED"
+            manifest_note = manifest_row.get("row_status_reason", "No manifest row detected for this evidence family.")
+            reviewer_status = " / ".join(
+                value for value in [
+                    manifest_row.get("reviewer", ""),
+                    manifest_row.get("review_status", ""),
+                ]
+                if value
+            )
             worksheet.write(evidence_row, 0, item, cell_format)
             worksheet.write(evidence_row, 1, status, ready_format if status == "PRESENT" else missing_format)
+            worksheet.write(evidence_row, 2, manifest_status, ready_format if manifest_status == "DOCUMENTED" else missing_format)
+            worksheet.write(evidence_row, 3, self._compact_join(requirement.get("required_prefixes", []) or [], empty="See evidence template."), cell_format)
+            worksheet.write(evidence_row, 4, requirement.get("example_filename", ""), cell_format)
+            worksheet.write(evidence_row, 5, manifest_row.get("source_authority", ""), cell_format)
+            worksheet.write(evidence_row, 6, manifest_row.get("tests_covered", ""), cell_format)
+            worksheet.write(evidence_row, 7, reviewer_status, cell_format)
             worksheet.write(
                 evidence_row,
-                2,
-                "To be provided from official SIA 4010 documents/files." if status == "MISSING" else "Evidence referenced in sia4010_results.",
+                8,
+                manifest_note if manifest_status != "DOCUMENTED" else "Evidence file is referenced by a documented manifest row.",
                 cell_format,
             )
             evidence_row += 1
 
         files_start = evidence_row + 2
         worksheet.write(files_start, 0, "Detected evidence files", header_format)
-        worksheet.write_row(files_start + 1, 0, ["File", "Relative path", "Size (KB)", "Detected family"], subheader_format)
+        worksheet.write_row(
+            files_start + 1,
+            0,
+            ["File", "Relative path", "Size (KB)", "Detected family", "Classification note"],
+            subheader_format,
+        )
         files_row = files_start + 2
         evidence_files = evidence.get("files", []) if isinstance(evidence, dict) else []
+        ignored_file_reasons = {
+            str(item.get("path") or item.get("name") or ""): item.get("reason", "")
+            for item in (evidence.get("ignored_files", []) if isinstance(evidence, dict) else [])
+            if isinstance(item, dict)
+        }
         if evidence_files:
             for file_data in evidence_files:
                 detected_families = self._sia4010_detected_families_for_file(evidence, file_data)
@@ -2259,15 +2396,97 @@ class ExcelReportGenerator:
                 size_kb = float(size_bytes) / 1024.0 if isinstance(size_bytes, (int, float)) else None
                 self._write_optional_number(worksheet, files_row, 2, size_kb, number_format, cell_format)
                 worksheet.write(files_row, 3, detected_families, cell_format)
+                reason_key = str(file_data.get("path") or file_data.get("name") or "")
+                worksheet.write(files_row, 4, ignored_file_reasons.get(reason_key, "Counted only if listed under a detected official evidence family."), cell_format)
                 files_row += 1
         else:
             worksheet.write(files_row, 0, "No file detected in sia4010_evidence.", cell_format)
             worksheet.write(files_row, 1, evidence.get("evidence_dir", "sia4010_evidence") if isinstance(evidence, dict) else "sia4010_evidence", cell_format)
             worksheet.write(files_row, 2, "", cell_format)
             worksheet.write(files_row, 3, "NOT_CHECKABLE", not_checkable_format)
+            worksheet.write(files_row, 4, "Add official files using the documented prefixes shown above.", cell_format)
             files_row += 1
 
-        system_start = files_row + 2
+        official_start = files_row + 2
+        worksheet.write(official_start, 0, "Official SIA 4010 test results", header_format)
+        missing_result_columns = official_test_summary.get("missing_columns", {}) if isinstance(official_test_summary, dict) else {}
+        if missing_result_columns:
+            missing_column_note = "; ".join(
+                f"{path}: {', '.join(columns)}"
+                for path, columns in missing_result_columns.items()
+            )
+            worksheet.write(official_start, 1, f"Missing CSV columns: {missing_column_note}", missing_format)
+        else:
+            worksheet.write(official_start, 1, "CSV column structure: OK when a result file is provided.", note_format)
+        worksheet.write_row(
+            official_start + 2,
+            0,
+            [
+                "Raw test ID",
+                "Normalized test",
+                "Input status",
+                "Parsed row status",
+                "Source CSV",
+                "CSV row",
+                "Reference file",
+                "Reference found",
+                "Candidate file",
+                "Candidate found",
+                "Deviation",
+                "Tolerance",
+                "Reviewer",
+                "Review date",
+                "Source authority",
+                "Source reference",
+                "Notes",
+            ],
+            subheader_format,
+        )
+        official_row = official_start + 3
+        official_result_rows = evidence.get("official_test_result_rows", []) if isinstance(evidence, dict) else []
+        if official_result_rows:
+            for result_row in official_result_rows:
+                parsed_status = result_row.get("row_status", "")
+                if parsed_status == "OFFICIAL_PASS":
+                    status_format = ready_format
+                elif parsed_status == "OFFICIAL_FAIL":
+                    status_format = missing_format
+                elif parsed_status in {"PASS_METADATA_INCOMPLETE", "NOT_REVIEWED"}:
+                    status_format = partial_format
+                else:
+                    status_format = not_checkable_format
+
+                reference_found = "YES" if result_row.get("reference_file_exists") else "NO"
+                candidate_found = "YES" if result_row.get("candidate_file_exists") else "NO"
+                worksheet.write(official_row, 0, result_row.get("test_id", ""), cell_format)
+                worksheet.write(official_row, 1, result_row.get("test_key", ""), cell_format)
+                worksheet.write(official_row, 2, result_row.get("status", ""), cell_format)
+                worksheet.write(official_row, 3, parsed_status, status_format)
+                worksheet.write(official_row, 4, result_row.get("result_path") or result_row.get("result_file", ""), cell_format)
+                self._write_optional_number(worksheet, official_row, 5, result_row.get("row_index"), number_format, cell_format)
+                worksheet.write(official_row, 6, result_row.get("reference_file", ""), cell_format)
+                worksheet.write(official_row, 7, reference_found, ready_format if reference_found == "YES" else missing_format)
+                worksheet.write(official_row, 8, result_row.get("candidate_file", ""), cell_format)
+                worksheet.write(official_row, 9, candidate_found, ready_format if candidate_found == "YES" else missing_format)
+                worksheet.write(official_row, 10, result_row.get("deviation", ""), cell_format)
+                worksheet.write(official_row, 11, result_row.get("tolerance", ""), cell_format)
+                worksheet.write(official_row, 12, result_row.get("reviewer", ""), cell_format)
+                worksheet.write(official_row, 13, result_row.get("review_date", ""), cell_format)
+                worksheet.write(official_row, 14, result_row.get("source_authority", ""), cell_format)
+                worksheet.write(official_row, 15, result_row.get("source_reference", ""), cell_format)
+                worksheet.write(official_row, 16, result_row.get("row_status_reason", ""), cell_format)
+                worksheet.set_row(official_row, 54)
+                official_row += 1
+        else:
+            worksheet.write(official_row, 0, "No official test-result CSV detected.", cell_format)
+            worksheet.write(official_row, 1, "NOT_CHECKABLE", not_checkable_format)
+            worksheet.write(official_row, 2, "Add SIA4010_official_test_results_<project>.csv to sia4010_evidence/.", cell_format)
+            for column in range(3, 16):
+                worksheet.write(official_row, column, "", cell_format)
+            worksheet.write(official_row, 16, "Tests can be READY_FOR_OFFICIAL_REVIEW, but not VALIDATED, until explicit official PASS rows are provided.", cell_format)
+            official_row += 1
+
+        system_start = official_row + 2
         worksheet.write(system_start, 0, "System data families required by SIA 4010", header_format)
         worksheet.write_row(system_start + 1, 0, ["System family", "Required data", "PDF / table source", "Current extraction status"], subheader_format)
         system_row = system_start + 2
@@ -2280,15 +2499,290 @@ class ExcelReportGenerator:
             system_row += 1
 
         worksheet.freeze_panes(start_row + 1, 0)
-        worksheet.set_column("A:A", 12)
+        worksheet.set_column("A:A", 24)
         worksheet.set_column("B:B", 18)
-        worksheet.set_column("C:C", 36)
-        worksheet.set_column("D:D", 16)
-        worksheet.set_column("E:F", 18)
-        worksheet.set_column("G:H", 44)
+        worksheet.set_column("C:C", 32)
+        worksheet.set_column("D:D", 30)
+        worksheet.set_column("E:E", 40)
+        worksheet.set_column("F:F", 26)
+        worksheet.set_column("G:H", 34)
         worksheet.set_column("I:I", 46)
         worksheet.set_column("J:J", 34)
         worksheet.set_column("K:K", 52)
+        worksheet.set_column("L:Q", 28)
+
+    def _write_sia4010_prevalidation_xlsxwriter(self, sia4010_results: Dict[str, Any]):
+        """Write PDF-based SIA 4010 prevalidation tests and classes."""
+        worksheet = self.workbook.add_worksheet("SIA4010 PREVALIDATION")
+
+        header_format = self.workbook.add_format(EXCEL_FORMATS["header"])
+        subheader_format = self.workbook.add_format(EXCEL_FORMATS["subheader"])
+        cell_format = self.workbook.add_format({"border": 1, "text_wrap": True, "valign": "top"})
+        note_format = self.workbook.add_format({"border": 1, "text_wrap": True, "valign": "top", "bg_color": "#EAF3F8"})
+        number_format = self.workbook.add_format({"border": 1, "num_format": "#,##0.0", "valign": "top"})
+        pass_format = self.workbook.add_format({"bg_color": "#E2EFDA", "font_color": "#375623", "border": 1, "bold": True, "text_wrap": True, "valign": "top"})
+        partial_format = self.workbook.add_format({"bg_color": "#FFF2CC", "font_color": "#7F6000", "border": 1, "bold": True, "text_wrap": True, "valign": "top"})
+        fail_format = self.workbook.add_format({"bg_color": "#FDECEA", "font_color": "#C00000", "border": 1, "bold": True, "text_wrap": True, "valign": "top"})
+        missing_format = self.workbook.add_format({"bg_color": "#D9EAF7", "font_color": "#1F4E78", "border": 1, "bold": True, "text_wrap": True, "valign": "top"})
+
+        prevalidation = sia4010_results.get("prevalidation", {}) or {}
+        summary = prevalidation.get("summary", {}) or {}
+        tests = prevalidation.get("tests", {}) or {}
+        classes = prevalidation.get("classes", {}) or {}
+
+        worksheet.merge_range("A1:L1", "SIA 4010 PDF-Based Prevalidation - Tests 1 to 7", header_format)
+        worksheet.merge_range(
+            "A2:L3",
+            (
+                "This sheet uses the published SIA 380/2:2022 and SIA 4010:2023 PDFs to perform the closest possible "
+                "prevalidation from the active VE model. It is not official SIA 4010 software validation and it does not "
+                "replace the paid SIA execution package or sub-commission review."
+            ),
+            note_format,
+        )
+
+        worksheet.write("A5", "KPI", header_format)
+        kpis = [
+            ("Overall PDF precheck status", summary.get("overall_status", "NOT_RUN")),
+            ("Tests evaluated", summary.get("test_count", len(tests))),
+            ("Classes evaluated", summary.get("class_count", len(classes))),
+            ("Average test score", float(summary.get("average_test_score", 0.0) or 0.0)),
+            ("Average class score", float(summary.get("average_class_score", 0.0) or 0.0)),
+            ("Official validation required", "YES" if summary.get("official_validation_required", True) else "NO"),
+        ]
+        for row_offset, (label, value) in enumerate(kpis, start=6):
+            worksheet.write(row_offset, 0, label, subheader_format)
+            if isinstance(value, float):
+                worksheet.write(row_offset, 1, value, number_format)
+            else:
+                worksheet.write(row_offset, 1, value, cell_format)
+
+        worksheet.write("D5", "Status counts", header_format)
+        worksheet.write_row("D6", ["Scope", "Status", "Count"], subheader_format)
+        status_row = 7
+        for scope, counts in [
+            ("Tests", summary.get("test_status_counts", {}) or {}),
+            ("Classes", summary.get("class_status_counts", {}) or {}),
+        ]:
+            for status, count in sorted(counts.items()):
+                worksheet.write(status_row, 3, scope, cell_format)
+                worksheet.write(status_row, 4, status, self._sia4010_prevalidation_status_format(status, pass_format, partial_format, fail_format, missing_format, cell_format))
+                worksheet.write(status_row, 5, count, cell_format)
+                status_row += 1
+
+        start_row = max(status_row + 2, 16)
+        headers = [
+            "Test",
+            "PDF precheck status",
+            "Score",
+            "PDF scope",
+            "SIA 380/2 link",
+            "Passed checks",
+            "Missing data",
+            "Blocking risks",
+            "Close-to-official scope",
+            "Official gap",
+            "Source",
+            "Next action",
+        ]
+        worksheet.write_row(start_row, 0, headers, header_format)
+
+        row = start_row + 1
+        for test_name in sorted(tests):
+            item = tests[test_name]
+            status = item.get("status", "")
+            worksheet.write(row, 0, test_name, cell_format)
+            worksheet.write(row, 1, status, self._sia4010_prevalidation_status_format(status, pass_format, partial_format, fail_format, missing_format, cell_format))
+            worksheet.write(row, 2, float(item.get("score", 0.0) or 0.0), number_format)
+            worksheet.write(row, 3, item.get("pdf_scope", ""), cell_format)
+            worksheet.write(row, 4, item.get("sia3802_link", ""), cell_format)
+            worksheet.write(row, 5, self._compact_join(item.get("passed_checks", []) or [], max_chars=340), cell_format)
+            worksheet.write(row, 6, self._compact_join(item.get("missing_checks", []) or [], empty="No missing data recorded.", max_chars=340), cell_format)
+            worksheet.write(row, 7, self._compact_join(item.get("blocking_risks", []) or [], empty="No blocking SIA 380/2 risk detected.", max_chars=340), cell_format)
+            worksheet.write(row, 8, item.get("close_to_official_scope", ""), cell_format)
+            worksheet.write(row, 9, item.get("official_gap", ""), cell_format)
+            worksheet.write(row, 10, item.get("source", ""), cell_format)
+            worksheet.write(row, 11, item.get("next_action", ""), cell_format)
+            worksheet.set_row(row, 84)
+            row += 1
+
+        class_start = row + 2
+        worksheet.write(class_start, 0, "PDF-Based Class Prevalidation", header_format)
+        class_headers = [
+            "Class",
+            "Status",
+            "Score",
+            "Required tests",
+            "Application",
+            "Solar protection",
+            "Missing / failed tests",
+            "Official validation required",
+            "Source",
+        ]
+        worksheet.write_row(class_start + 1, 0, class_headers, subheader_format)
+        class_row = class_start + 2
+        for class_name in sorted(classes):
+            item = classes[class_name]
+            status = item.get("status", "")
+            worksheet.write(class_row, 0, class_name, cell_format)
+            worksheet.write(class_row, 1, status, self._sia4010_prevalidation_status_format(status, pass_format, partial_format, fail_format, missing_format, cell_format))
+            worksheet.write(class_row, 2, float(item.get("score", 0.0) or 0.0), number_format)
+            worksheet.write(class_row, 3, item.get("required_tests_label", ""), cell_format)
+            worksheet.write(class_row, 4, item.get("application", ""), cell_format)
+            worksheet.write(class_row, 5, item.get("solar_protection", ""), cell_format)
+            worksheet.write(class_row, 6, self._compact_join(item.get("missing_or_failed_tests", []) or [], empty="No missing/failed PDF precheck.", max_chars=260), cell_format)
+            worksheet.write(class_row, 7, "YES" if item.get("official_validation_required", True) else "NO", cell_format)
+            worksheet.write(class_row, 8, item.get("source", ""), cell_format)
+            worksheet.set_row(class_row, 60)
+            class_row += 1
+
+        worksheet.autofilter(start_row, 0, max(start_row, row - 1), len(headers) - 1)
+        worksheet.freeze_panes(start_row + 1, 0)
+        worksheet.set_column("A:A", 12)
+        worksheet.set_column("B:B", 24)
+        worksheet.set_column("C:C", 10)
+        worksheet.set_column("D:E", 42)
+        worksheet.set_column("F:H", 42)
+        worksheet.set_column("I:J", 46)
+        worksheet.set_column("K:L", 46)
+
+    def _write_sia4010_class_matrix_xlsxwriter(self, sia4010_results: Dict[str, Any], rooms_data: List[Any]):
+        """Write the SIA 4010 validation-class matrix for classes 1A to 5."""
+        worksheet = self.workbook.add_worksheet("SIA4010 CLASS MATRIX")
+
+        header_format = self.workbook.add_format(EXCEL_FORMATS["header"])
+        subheader_format = self.workbook.add_format(EXCEL_FORMATS["subheader"])
+        cell_format = self.workbook.add_format({"border": 1, "text_wrap": True, "valign": "top"})
+        note_format = self.workbook.add_format({"border": 1, "text_wrap": True, "valign": "top", "bg_color": "#EAF3F8"})
+        percent_format = self.workbook.add_format({"border": 1, "num_format": "0.0%", "valign": "top"})
+        integer_format = self.workbook.add_format({"border": 1, "num_format": "#,##0", "valign": "top"})
+        ready_format = self.workbook.add_format({"bg_color": "#E2EFDA", "font_color": "#375623", "border": 1, "bold": True, "text_wrap": True, "valign": "top"})
+        partial_format = self.workbook.add_format({"bg_color": "#FFF2CC", "font_color": "#7F6000", "border": 1, "bold": True, "text_wrap": True, "valign": "top"})
+        missing_format = self.workbook.add_format({"bg_color": "#FDECEA", "font_color": "#C00000", "border": 1, "bold": True, "text_wrap": True, "valign": "top"})
+        not_checkable_format = self.workbook.add_format({"bg_color": "#D9EAF7", "font_color": "#1F4E78", "border": 1, "bold": True, "text_wrap": True, "valign": "top"})
+
+        rows = self._build_sia4010_class_matrix_rows(sia4010_results, rooms_data)
+        evidence = sia4010_results.get("evidence", {}) or {}
+        evidence_summary = evidence.get("summary", {}) if isinstance(evidence, dict) else {}
+        selected_class = str(sia4010_results.get("validation_class") or evidence_summary.get("validation_class") or "Not selected")
+        class_manifest_summary = evidence.get("class_manifest_summary", {}) if isinstance(evidence, dict) else {}
+        status_counts = Counter(row["class_status"] for row in rows)
+        avg_ve_readiness = sum(row["ve_readiness_ratio"] for row in rows) / len(rows) if rows else 0.0
+
+        worksheet.merge_range("A1:L1", "SIA 4010 Validation-Class Matrix - Classes 1A to 5", header_format)
+        worksheet.merge_range(
+            "A2:L3",
+            (
+                "This matrix maps every SIA 4010 validation class to its required tests and official evidence state. "
+                "It supports all classes 1A, 1B, 2A, 2B, 3, 4A, 4B and 5, but it does not claim certification "
+                "unless official SIA evidence and reviewer confirmation are available."
+            ),
+            note_format,
+        )
+
+        worksheet.write("A5", "KPI", header_format)
+        kpis = [
+            ("Selected / detected class", selected_class),
+            ("Classes covered by matrix", len(rows)),
+            ("Average VE data readiness", avg_ve_readiness),
+            ("Official evidence status", evidence_summary.get("status", "NOT_CHECKABLE")),
+            ("Evidence families present", evidence_summary.get("present_count", 0)),
+            ("Evidence families required", evidence_summary.get("required_count", len(SIA4010_REQUIRED_EVIDENCE))),
+            ("Class selection source", evidence_summary.get("validation_class_source", "not_selected")),
+            ("Class manifest status", class_manifest_summary.get("selection_status", "NOT_SELECTED")),
+        ]
+        for offset, (label, value) in enumerate(kpis, start=6):
+            worksheet.write(offset, 0, label, subheader_format)
+            if isinstance(value, float):
+                worksheet.write(offset, 1, value, percent_format)
+            elif isinstance(value, int):
+                worksheet.write(offset, 1, value, integer_format)
+            else:
+                worksheet.write(offset, 1, value, cell_format)
+
+        worksheet.write("D5", "Class status summary", header_format)
+        worksheet.write_row("D6", ["Status", "Class count"], subheader_format)
+        summary_row = 7
+        for status, count in sorted(status_counts.items()):
+            worksheet.write(summary_row, 3, status, self._sia4010_status_format(status, ready_format, partial_format, missing_format, not_checkable_format, cell_format))
+            worksheet.write(summary_row, 4, count, integer_format)
+            summary_row += 1
+
+        start_row = max(summary_row + 2, 16)
+        headers = [
+            "Class",
+            "Selected",
+            "Class status",
+            "Application",
+            "Solar protection condition",
+            "Required tests",
+            "VE data readiness",
+            "Official test/evidence state",
+            "Missing official evidence",
+            "Status reason",
+            "Next action",
+            "Source",
+        ]
+        worksheet.write_row(start_row, 0, headers, header_format)
+
+        row = start_row + 1
+        for item in rows:
+            worksheet.write(row, 0, item["class"], cell_format)
+            worksheet.write(row, 1, "YES" if item["selected"] else "NO", ready_format if item["selected"] else cell_format)
+            worksheet.write(row, 2, item["class_status"], self._sia4010_status_format(item["class_status"], ready_format, partial_format, missing_format, not_checkable_format, cell_format))
+            worksheet.write(row, 3, item["application"], cell_format)
+            worksheet.write(row, 4, item["solar_protection"], cell_format)
+            worksheet.write(row, 5, item["required_tests_label"], cell_format)
+            worksheet.write(row, 6, item["ve_readiness_ratio"], percent_format)
+            worksheet.write(row, 7, item["official_test_state"], cell_format)
+            worksheet.write(row, 8, item["missing_official_evidence"], cell_format)
+            worksheet.write(row, 9, item["status_reason"], cell_format)
+            worksheet.write(row, 10, item["next_action"], cell_format)
+            worksheet.write(row, 11, item["source"], cell_format)
+            worksheet.set_row(row, 70)
+            row += 1
+
+        worksheet.autofilter(start_row, 0, max(start_row, row - 1), len(headers) - 1)
+
+        class_manifest_rows = evidence.get("class_manifest_rows", []) if isinstance(evidence, dict) else []
+        manifest_start = row + 2
+        worksheet.write(manifest_start, 0, "Class Selection Manifest", header_format)
+        worksheet.write_row(
+            manifest_start + 1,
+            0,
+            ["Class", "Selected", "Row status", "Required tests", "Reviewer", "Review status", "Source authority", "Source reference", "Notes"],
+            subheader_format,
+        )
+        manifest_row_index = manifest_start + 2
+        if class_manifest_rows:
+            for manifest_row in class_manifest_rows:
+                row_status = manifest_row.get("row_status", "")
+                worksheet.write(manifest_row_index, 0, manifest_row.get("validation_class", ""), cell_format)
+                worksheet.write(manifest_row_index, 1, "YES" if manifest_row.get("selected_bool") else "NO", ready_format if manifest_row.get("selected_bool") else cell_format)
+                worksheet.write(manifest_row_index, 2, row_status, ready_format if row_status == "SELECTED_DOCUMENTED" else missing_format if manifest_row.get("selected_bool") else cell_format)
+                worksheet.write(manifest_row_index, 3, manifest_row.get("required_tests", ""), cell_format)
+                worksheet.write(manifest_row_index, 4, manifest_row.get("reviewer", ""), cell_format)
+                worksheet.write(manifest_row_index, 5, manifest_row.get("review_status", ""), cell_format)
+                worksheet.write(manifest_row_index, 6, manifest_row.get("source_authority", ""), cell_format)
+                worksheet.write(manifest_row_index, 7, manifest_row.get("source_reference", ""), cell_format)
+                worksheet.write(manifest_row_index, 8, manifest_row.get("row_status_reason", "") or manifest_row.get("notes", ""), cell_format)
+                worksheet.set_row(manifest_row_index, 46)
+                manifest_row_index += 1
+        else:
+            worksheet.write(manifest_row_index, 0, "No SIA4010_class_validation_<project>.csv manifest detected.", cell_format)
+            worksheet.write(manifest_row_index, 1, "NO", missing_format)
+            worksheet.write(manifest_row_index, 2, "NOT_SELECTED", missing_format)
+            worksheet.write(manifest_row_index, 8, "Copy templates/evidence/sia4010_class_validation_template.csv into sia4010_evidence/ and rename it for the project.", cell_format)
+            manifest_row_index += 1
+
+        worksheet.freeze_panes(start_row + 1, 0)
+        worksheet.set_column("A:A", 10)
+        worksheet.set_column("B:C", 18)
+        worksheet.set_column("D:E", 42)
+        worksheet.set_column("F:F", 20)
+        worksheet.set_column("G:G", 18)
+        worksheet.set_column("H:K", 44)
+        worksheet.set_column("L:L", 44)
 
     def _write_sia4010_software_register_xlsxwriter(self):
         """Write manager-provided SIA 4010 validated-software register guardrails."""
@@ -2595,7 +3089,7 @@ class ExcelReportGenerator:
                 worksheet.write(row, 3, alert.severity.value, low_format)
             row += 1
 
-        # Ajuster la largeur des colonnes
+        # Set readable column widths.
         worksheet.set_column("A:A", 15)
         worksheet.set_column("B:B", 20)
         worksheet.set_column("C:C", 40)
@@ -2719,7 +3213,7 @@ class ExcelReportGenerator:
             worksheet.write(row, 1, score, cell_format)
             row += 1
 
-        # Ajuster la largeur des colonnes
+        # Set readable column widths.
         worksheet.set_column("A:A", 30)
         worksheet.set_column("B:B", 20)
 
@@ -2750,7 +3244,7 @@ class ExcelReportGenerator:
             worksheet.write(row, 5, self._calculate_average_u_value(room, "wall"), cell_format)
             row += 1
 
-        # Ajuster la largeur des colonnes
+        # Set readable column widths.
         worksheet.set_column("A:A", 10)
         worksheet.set_column("B:B", 20)
         worksheet.set_column("C:C", 15)
@@ -2865,6 +3359,7 @@ class ExcelReportGenerator:
     ) -> Any:
         """Return status and observed evidence text for one coverage key."""
         def availability(count: int, total: int, label: str) -> Any:
+            """Return coverage status text for count/total evidence pairs."""
             if total <= 0:
                 return "MISSING", f"No {label} detected."
             if count >= total:
@@ -2902,11 +3397,22 @@ class ExcelReportGenerator:
                 "external window U-values",
             )
         if key == "window_g_values":
-            return availability(
-                int(stats.get("window_g_values", 0) or 0),
-                int(stats.get("external_windows", 0) or 0),
-                "external window g-values",
-            )
+            total_windows = int(stats.get("external_windows", 0) or 0)
+            en410_count = int(stats.get("en410_g_values", stats.get("window_g_values", 0)) or 0)
+            raw_cdb_count = int(stats.get("raw_cdb_g_values", 0) or 0)
+            if total_windows <= 0:
+                return "MISSING", "No external window data available for g-value evidence."
+            if en410_count >= total_windows:
+                return "AVAILABLE", f"{en410_count}/{total_windows} external window EN 410 g_perp values available."
+            if en410_count or raw_cdb_count:
+                return (
+                    "PARTIAL",
+                    (
+                        f"{en410_count}/{total_windows} EN 410 g_perp values available; "
+                        f"{raw_cdb_count}/{total_windows} raw CDB g_value entries available but not automatically SIA-comparable."
+                    ),
+                )
+            return "MISSING", "No EN 410 g_perp or raw CDB g-value evidence extracted."
         if key == "visible_transmittance":
             return availability(
                 int(stats.get("visible_transmittance_values", 0) or 0),
@@ -2965,9 +3471,17 @@ class ExcelReportGenerator:
             )
         if key == "lighting_control":
             lighting_rooms = int(stats.get("rooms_with_lighting", 0) or 0)
-            if lighting_rooms:
-                return "PARTIAL", f"{lighting_rooms} room(s) expose lighting gains; control strategy still missing."
-            return "MISSING", "No lighting power/control evidence extracted."
+            dynamic_lighting_rows = int(stats.get("dynamic_lighting_rows", 0) or 0)
+            if lighting_rooms or dynamic_lighting_rows:
+                return (
+                    "PARTIAL",
+                    (
+                        f"{lighting_rooms} room(s) expose lighting gains; "
+                        f"{dynamic_lighting_rows} APS room row(s) expose lighting energy; "
+                        "daylight/presence control strategy still needs SIA 387/4 mapping."
+                    ),
+                )
+            return "MISSING", "No lighting power, lighting energy or control evidence extracted."
         if key == "dynamic_aps":
             status = str(dynamic_results.get("status", "NOT_CHECKABLE") or "NOT_CHECKABLE").upper()
             aps_count = len(dynamic_results.get("aps_files", []) or [])
@@ -3004,6 +3518,7 @@ class ExcelReportGenerator:
 
     @staticmethod
     def _coverage_status_format(status: str, available_format: Any, partial_format: Any, missing_format: Any, not_checkable_format: Any, cell_format: Any) -> Any:
+        """Return the Excel cell format for a data-coverage status."""
         status_upper = str(status or "").upper()
         if status_upper == "AVAILABLE":
             return available_format
@@ -3038,6 +3553,84 @@ class ExcelReportGenerator:
         if callable(show_hidden_data):
             show_hidden_data()
 
+    def _build_sia4010_class_matrix_rows(self, sia4010_results: Dict[str, Any], rooms_data: List[Any]) -> List[Dict[str, Any]]:
+        """Build one report row per SIA 4010 validation class."""
+        class_results = sia4010_results.get("classes", {}) or {}
+        test_rows = {
+            row["test"]: row
+            for row in self._build_sia4010_readiness_rows(sia4010_results, rooms_data)
+        }
+        evidence = sia4010_results.get("evidence", {}) or {}
+        evidence_summary = evidence.get("summary", {}) if isinstance(evidence, dict) else {}
+        missing_evidence = evidence_summary.get("missing_items", []) or [
+            item for item in SIA4010_REQUIRED_EVIDENCE
+            if not self._has_sia4010_evidence(evidence, item)
+        ]
+        selected_class = str(sia4010_results.get("validation_class") or evidence_summary.get("validation_class") or "").upper()
+
+        rows: List[Dict[str, Any]] = []
+        for class_name, tests_label in SIA4010_VALIDATION_CLASSES.items():
+            class_data = class_results.get(class_name, {}) if isinstance(class_results, dict) else {}
+            aliases = class_data.get("required_test_aliases") or self._required_sia4010_aliases_for_class(class_name)
+            base_tests = []
+            for alias in aliases:
+                base_test = SIA4010_TEST_ALIAS_TO_BASE_TEST.get(alias, alias)
+                if base_test not in base_tests:
+                    base_tests.append(base_test)
+
+            readiness_values = [
+                float(test_rows.get(base_test, {}).get("readiness_ratio", 0.0) or 0.0)
+                for base_test in base_tests
+            ]
+            ve_readiness_ratio = sum(readiness_values) / len(readiness_values) if readiness_values else 0.0
+            official_states = [
+                f"{SIA4010_TEST_ALIAS_LABELS.get(alias, alias)}={class_data.get('required_test_statuses', {}).get(alias, test_rows.get(SIA4010_TEST_ALIAS_TO_BASE_TEST.get(alias, alias), {}).get('official_status', 'NOT_CHECKABLE'))}"
+                for alias in aliases
+            ]
+            missing_text = self._compact_join(
+                class_data.get("missing_official_evidence", missing_evidence) or [],
+                empty="No missing evidence recorded.",
+                max_chars=320,
+            )
+            class_status = class_data.get("class_status")
+            if not class_status:
+                if selected_class and selected_class != class_name:
+                    class_status = "NOT_REQUESTED"
+                elif not selected_class:
+                    class_status = "CLASS_NOT_SELECTED"
+                elif missing_text and missing_text != "No missing evidence recorded.":
+                    class_status = "EVIDENCE_INCOMPLETE"
+                else:
+                    class_status = "READY_FOR_OFFICIAL_REVIEW"
+
+            if class_status == "READY_FOR_OFFICIAL_REVIEW":
+                next_action = "Submit the official evidence package for reviewer/sub-commission acceptance."
+            elif class_status == "VALIDATED":
+                next_action = "Keep the official validation evidence and version traceability with the project archive."
+            elif class_status == "NOT_REQUESTED":
+                next_action = f"Select class {class_name} only if this class is intended for the project claim."
+            elif class_status == "CLASS_NOT_SELECTED":
+                next_action = "Attach validation class confirmation naming the intended class before claiming SIA 4010 validation."
+            else:
+                next_action = "Complete the missing official SIA 4010 evidence families and rerun the report."
+
+            details = SIA4010_VALIDATION_CLASS_DETAILS.get(class_name, {})
+            rows.append({
+                "class": class_name,
+                "selected": bool(class_data.get("selected", selected_class == class_name)),
+                "class_status": class_status,
+                "application": class_data.get("application") or details.get("applications", ""),
+                "solar_protection": class_data.get("solar_protection") or details.get("solar_protection", ""),
+                "required_tests_label": class_data.get("required_tests_label") or tests_label,
+                "ve_readiness_ratio": ve_readiness_ratio,
+                "official_test_state": self._compact_join(official_states, max_chars=320),
+                "missing_official_evidence": missing_text,
+                "status_reason": class_data.get("status_reason", ""),
+                "next_action": next_action,
+                "source": class_data.get("source") or details.get("source", ""),
+            })
+        return rows
+
     def _build_sia4010_readiness_rows(self, sia4010_results: Dict[str, Any], rooms_data: List[Any]) -> List[Dict[str, Any]]:
         """Build one readiness row per SIA 4010 validation test."""
         stats = self._build_sia4010_model_stats(rooms_data, sia4010_results)
@@ -3049,12 +3642,13 @@ class ExcelReportGenerator:
                 ("zones/rooms extracted", stats["rooms"] > 0),
                 ("external envelope surfaces extracted", stats["external_surfaces"] > 0),
                 ("surface U-values extracted", stats["surface_u_values"] > 0),
+                ("surface tilt/adjacency metadata extracted", stats["surface_tilt_values"] > 0 or stats["surface_adjacency_values"] > 0),
                 ("external window/opening data extracted", stats["external_openings"] > 0),
                 ("official test model/reference outputs attached", False),
             ],
             "test_2": [
                 ("external glazing extracted", stats["external_windows"] > 0),
-                ("window g-values extracted", stats["window_g_values"] > 0),
+                ("EN 410/SIA-comparable g_perp values extracted", stats["en410_g_values"] > 0),
                 ("solar protection type/category documented", stats["solar_protection_types"] > 0),
                 ("solar protection control strategy documented", stats["solar_protection_controls"] > 0),
                 (
@@ -3071,15 +3665,15 @@ class ExcelReportGenerator:
                 ("lighting power extracted", stats["rooms_with_lighting"] > 0),
                 ("daylight control strategy documented", False),
                 ("SIA 387/4 lighting control type documented", False),
-                ("lighting energy outputs available", False),
+                ("lighting energy outputs available", stats["dynamic_lighting_rows"] > 0 or stats["lighting_energy_available"]),
                 ("official test 3 evaluation file attached", False),
             ],
             "test_4": [
                 ("HVAC systems extracted", stats["rooms_with_hvac"] > 0),
                 ("ventilation/airflow data extracted", stats["rooms_with_ventilation"] > 0),
-                ("cooling/heating coil outputs available", stats["dynamic_demand_rows"] > 0 or stats["cooling_demand_available"] or stats["heating_demand_available"]),
+                ("cooling/heating coil outputs available", stats["dynamic_coil_rows"] > 0 or stats["dynamic_demand_rows"] > 0 or stats["cooling_demand_available"] or stats["heating_demand_available"]),
                 ("temperature hourly outputs available", stats["dynamic_temperature_rows"] > 0),
-                ("CO2 hourly outputs available or manually evidenced", False),
+                ("CO2 hourly outputs available or manually evidenced", stats["dynamic_co2_rows"] > 0),
                 ("official amphitheatre test/evaluation attached", False),
             ],
             "test_5": [
@@ -3101,7 +3695,7 @@ class ExcelReportGenerator:
                 ("HVAC systems extracted", stats["rooms_with_hvac"] > 0),
                 ("heating/cooling demand outputs available", stats["dynamic_demand_rows"] > 0 or stats["heating_demand_available"] or stats["cooling_demand_available"]),
                 ("final energy by system/carrier available", stats["final_energy_available"]),
-                ("pump/fan/auxiliary energy available", False),
+                ("pump/fan/auxiliary energy available", stats["dynamic_auxiliary_energy_rows"] > 0 or stats["auxiliary_energy_available"]),
                 ("official test 7 loads/evaluation attached", False),
             ],
         }
@@ -3122,7 +3716,7 @@ class ExcelReportGenerator:
             test_status = tests.get(test_name, {}).get("status") or "NOT_CHECKABLE"
             official_status = (
                 test_status
-                if test_status in {"PASS", "VALIDATED", "WARNING", "EVIDENCE_INCOMPLETE", "READY_FOR_OFFICIAL_REVIEW"}
+                if test_status in {"PASS", "VALIDATED", "FAIL", "WARNING", "EVIDENCE_INCOMPLETE", "READY_FOR_OFFICIAL_REVIEW"}
                 else "NOT_CHECKABLE"
             )
             rows.append({
@@ -3186,6 +3780,35 @@ class ExcelReportGenerator:
             row for row in dynamic_room_rows
             if row.get("occupied_hours_above_26") is not None or row.get("occupied_hours_above_27") is not None
         ]
+        dynamic_lighting_rows = [
+            row for row in dynamic_room_rows
+            if row.get("lighting_kwh") is not None
+        ]
+        dynamic_fan_rows = [
+            row for row in dynamic_room_rows
+            if row.get("fan_kwh") is not None
+        ]
+        dynamic_pump_rows = [
+            row for row in dynamic_room_rows
+            if row.get("pump_kwh") is not None
+        ]
+        dynamic_auxiliary_rows = [
+            row for row in dynamic_room_rows
+            if row.get("auxiliary_kwh") is not None
+        ]
+        dynamic_coil_rows = [
+            row for row in dynamic_room_rows
+            if row.get("coil_heating_kwh") is not None or row.get("coil_cooling_kwh") is not None
+        ]
+        dynamic_co2_rows = [
+            row for row in dynamic_room_rows
+            if row.get("peak_co2_ppm") is not None or row.get("average_co2_ppm") is not None
+        ]
+        dynamic_humidity_rows = [
+            row for row in dynamic_room_rows
+            if row.get("peak_relative_humidity_percent") is not None
+            or row.get("average_relative_humidity_percent") is not None
+        ]
         g_total_not_required_for_g_limit = 0
         for opening in external_windows:
             try:
@@ -3198,10 +3821,14 @@ class ExcelReportGenerator:
             "rooms": len(rooms_data),
             "external_surfaces": len(external_surfaces),
             "surface_u_values": sum(1 for surface in external_surfaces if getattr(surface, "u_value", None) is not None),
+            "surface_tilt_values": sum(1 for surface in external_surfaces if getattr(surface, "tilt", None) is not None),
+            "surface_adjacency_values": sum(1 for surface in external_surfaces if getattr(surface, "adjacency_types", None)),
             "external_openings": len(external_openings),
             "external_windows": len(external_windows),
             "window_u_values": sum(1 for opening in external_windows if getattr(opening, "u_value", None) is not None),
             "window_g_values": sum(1 for opening in external_windows if getattr(opening, "solar_factor", None) is not None),
+            "en410_g_values": sum(1 for opening in external_windows if getattr(opening, "g_value_bs_en_410", None) is not None),
+            "raw_cdb_g_values": sum(1 for opening in external_windows if getattr(opening, "cdb_g_value", None) is not None),
             "visible_transmittance_values": sum(1 for opening in external_windows if getattr(opening, "visible_transmittance", None) is not None),
             "frame_fraction_values": sum(1 for opening in external_windows if getattr(opening, "frame_fraction", None) is not None),
             "solar_protection_types": sum(1 for opening in external_windows if getattr(opening, "shading_type", None)),
@@ -3217,8 +3844,21 @@ class ExcelReportGenerator:
             "dynamic_room_rows": len(dynamic_room_rows),
             "dynamic_demand_rows": len(dynamic_demand_rows),
             "dynamic_temperature_rows": len(dynamic_temperature_rows),
+            "dynamic_lighting_rows": len(dynamic_lighting_rows),
+            "dynamic_fan_rows": len(dynamic_fan_rows),
+            "dynamic_pump_rows": len(dynamic_pump_rows),
+            "dynamic_auxiliary_rows": len(dynamic_auxiliary_rows),
+            "dynamic_auxiliary_energy_rows": max(len(dynamic_fan_rows), len(dynamic_pump_rows), len(dynamic_auxiliary_rows)),
+            "dynamic_coil_rows": len(dynamic_coil_rows),
+            "dynamic_co2_rows": len(dynamic_co2_rows),
+            "dynamic_humidity_rows": len(dynamic_humidity_rows),
             "heating_demand_available": energy.get("heating_demand") is not None,
             "cooling_demand_available": energy.get("cooling_demand") is not None,
+            "lighting_energy_available": energy.get("lighting_energy") is not None,
+            "auxiliary_energy_available": any(
+                energy.get(key) is not None
+                for key in ("fan_energy", "pump_energy", "auxiliary_energy")
+            ),
             "final_energy_available": any(
                 energy.get(key) is not None
                 for key in ("primary_energy", "co2_emissions", "renewable_energy_share")
@@ -3241,7 +3881,17 @@ class ExcelReportGenerator:
         return ", ".join(unique_classes) if unique_classes else "To be confirmed"
 
     @staticmethod
+    def _required_sia4010_aliases_for_class(class_name: str) -> List[str]:
+        """Return SIA 4010 test aliases required by one validation class."""
+        return [
+            alias
+            for alias in SIA4010_TEST_ALIAS_ORDER
+            if class_name in SIA4010_TEST_CLASS_COVERAGE.get(alias, [])
+        ]
+
+    @staticmethod
     def _compact_join(items: List[str], empty: str = "", max_chars: int = 260) -> str:
+        """Join text fragments and truncate them for readable report cells."""
         text = "; ".join(str(item) for item in items if item)
         if not text:
             return empty
@@ -3251,11 +3901,14 @@ class ExcelReportGenerator:
 
     @staticmethod
     def _sia4010_status_format(status: str, ready_format: Any, partial_format: Any, missing_format: Any, not_checkable_format: Any, cell_format: Any) -> Any:
+        """Return the Excel cell format for SIA 4010 readiness statuses."""
         status_upper = str(status or "").upper()
         if status_upper in {"READY", "PASS", "VALIDATED", "PRESENT"}:
             return ready_format
         if status_upper in {"PARTIAL", "WARNING", "READY_FOR_OFFICIAL_REVIEW"}:
             return partial_format
+        if status_upper in {"NOT_REQUESTED", "CLASS_NOT_SELECTED"}:
+            return not_checkable_format
         if status_upper in {"NOT_CHECKABLE"}:
             return not_checkable_format
         if status_upper in {"MISSING", "FAIL", "EVIDENCE_INCOMPLETE"}:
@@ -3263,19 +3916,52 @@ class ExcelReportGenerator:
         return cell_format
 
     @staticmethod
+    def _sia4010_prevalidation_status_format(status: str, pass_format: Any, partial_format: Any, fail_format: Any, missing_format: Any, cell_format: Any) -> Any:
+        """Return a color format for PDF-based prevalidation statuses."""
+        status_upper = str(status or "").upper()
+        if status_upper == "PDF_PRECHECK_PASS":
+            return pass_format
+        if status_upper == "PDF_PRECHECK_PARTIAL":
+            return partial_format
+        if status_upper == "PDF_PRECHECK_FAIL":
+            return fail_format
+        if status_upper in {"MISSING_VE_DATA", "NEEDS_SIA_EXECUTION_PACKAGE", "OFFICIAL_VALIDATION_REQUIRED"}:
+            return missing_format
+        return cell_format
+
+    @staticmethod
     def _has_sia4010_evidence(evidence: Dict[str, Any], evidence_item: str) -> bool:
-        """Best-effort check for future evidence payloads without requiring a strict schema."""
+        """Return true only when an official evidence family has detected files."""
         if not isinstance(evidence, dict) or not evidence:
             return False
 
+        structured_key = ExcelReportGenerator._evidence_key_for_required_item(evidence_item)
+        structured_value = evidence.get(structured_key)
+        if isinstance(structured_value, dict):
+            files = structured_value.get("files", []) or []
+            return bool(structured_value.get("present") and files)
+
+        exact_value = evidence.get(evidence_item)
+        if isinstance(exact_value, dict):
+            files = exact_value.get("files", []) or []
+            return bool(exact_value.get("present") and files)
+        if isinstance(exact_value, bool):
+            return False
+
         def normalize(value: str) -> str:
+            """Normalize evidence labels to alphanumeric lowercase keys."""
             return "".join(ch.lower() for ch in str(value) if ch.isalnum())
 
         target = normalize(evidence_item)
         for key, value in evidence.items():
             key_norm = normalize(key)
             if target in key_norm or key_norm in target:
-                return bool(value)
+                if isinstance(value, dict):
+                    files = value.get("files", []) or []
+                    return bool(value.get("present") and files)
+                if isinstance(value, (list, tuple)):
+                    return bool(value)
+                return False
         return False
 
     @staticmethod
@@ -3355,6 +4041,7 @@ class ExcelReportGenerator:
 
     @staticmethod
     def _dashboard_score_rows(score_result: ScoreResult) -> List[List[Any]]:
+        """Return chart-ready dashboard rows for score metrics."""
         rows = [
             ["Compliance indicator", float(score_result.compliance_score or 0.0)],
             ["Model health", float(score_result.health_score or 0.0)],
@@ -3366,6 +4053,7 @@ class ExcelReportGenerator:
         return rows
 
     def _dashboard_requirement_status_rows(self, sia3802_results: Dict[str, Any], sia4010_results: Dict[str, Any]) -> List[List[Any]]:
+        """Return chart-ready dashboard rows for requirement-matrix statuses."""
         all_alerts = list(sia3802_results.get("alerts", []) or []) + list(sia4010_results.get("alerts", []) or [])
         rows = [
             self._build_requirement_matrix_row(requirement, all_alerts)
@@ -3386,6 +4074,7 @@ class ExcelReportGenerator:
 
     @staticmethod
     def _dashboard_verdict(score_result: ScoreResult, sia4010_results: Dict[str, Any], rooms_data: List[Any]) -> str:
+        """Return the executive dashboard verdict from scores and blockers."""
         critical_count = sum(1 for alert in score_result.alerts if alert.severity == Severity.CRITICAL)
         high_count = sum(1 for alert in score_result.alerts if alert.severity == Severity.HIGH)
         blocked_tests = ExcelReportGenerator._count_blocked_sia4010_tests(sia4010_results)
@@ -3452,6 +4141,7 @@ class ExcelReportGenerator:
 
     @staticmethod
     def _find_requirement_alerts(requirement: Dict[str, Any], alerts: List[Alert]) -> List[Alert]:
+        """Return alerts that map to one requirement-matrix row."""
         rule_name = str(requirement.get("implemented_rule", "") or "").upper()
         requirement_id = str(requirement.get("id", "") or "").upper()
         if not rule_name and not requirement_id:
@@ -3472,6 +4162,7 @@ class ExcelReportGenerator:
 
     @staticmethod
     def _requirement_status_format(status: str, pass_format: Any, fail_format: Any, partial_format: Any, not_checkable_format: Any, cell_format: Any) -> Any:
+        """Return the Excel cell format for a requirement-matrix status."""
         status_upper = str(status or "").upper()
         if status_upper in {"PASS"}:
             return pass_format
@@ -4052,7 +4743,12 @@ class ExcelReportGenerator:
                 else None
             )
             g_proof_status = self._g_proof_status(cdb_g_value, bs_en_410, selected_sia_g)
-            g_total_status = self._g_total_status(selected_sia_g, g_total, item["active_shading_count"])
+            g_total_status = self._g_total_status(
+                selected_sia_g,
+                g_total,
+                item["active_shading_count"],
+                g_proof_status,
+            )
             rows.append({
                 "construction": item["construction"],
                 "window_count": item["window_count"],
@@ -4086,6 +4782,7 @@ class ExcelReportGenerator:
 
     @staticmethod
     def _weighted_average(values: List[Any]) -> Optional[float]:
+        """Return a weighted average from ``(value, weight)`` tuples."""
         total = 0.0
         total_weight = 0.0
         for item in values:
@@ -4100,11 +4797,13 @@ class ExcelReportGenerator:
 
     @staticmethod
     def _is_shading_optical_field(key: str) -> bool:
+        """Return true when a CDB field looks like shading optical evidence."""
         lowered = key.lower()
         return any(token in lowered for token in ("transmittance", "transmitance", "coefficient", "radiant_fraction", "sky", "ground"))
 
     @staticmethod
     def _has_active_shading_from_properties(properties: Dict[str, Any]) -> bool:
+        """Return true when VE properties indicate an active shading device."""
         for key in ("external_shade_active", "internal_shade_active", "local_shade_active"):
             value = properties.get(key)
             if isinstance(value, bool):
@@ -4119,6 +4818,7 @@ class ExcelReportGenerator:
 
     @staticmethod
     def _g_proof_status(cdb_g_value: Optional[float], bs_en_410: Optional[float], selected_sia_g: Optional[float]) -> str:
+        """Classify whether glazing data proves a SIA-comparable g-value."""
         if bs_en_410 is not None and cdb_g_value is not None and abs(cdb_g_value - bs_en_410) > 0.005:
             return "PROVES_CDB_G_IS_NOT_EN410"
         if bs_en_410 is not None:
@@ -4128,9 +4828,19 @@ class ExcelReportGenerator:
         return "MISSING_G_VALUE"
 
     @staticmethod
-    def _g_total_status(selected_sia_g: Optional[float], g_total: Optional[float], active_shading_count: int) -> str:
+    def _g_total_status(
+        selected_sia_g: Optional[float],
+        g_total: Optional[float],
+        active_shading_count: int,
+        g_proof_status: str = "",
+    ) -> str:
+        """Classify whether shaded total solar factor evidence is available."""
         if g_total is not None:
             return "DIRECT_OR_IMPORTED_VALUE"
+        if g_proof_status not in {"EN410_AVAILABLE", "PROVES_CDB_G_IS_NOT_EN410"}:
+            if active_shading_count:
+                return "CALCULATION_REQUIRED"
+            return "MISSING_SHADING_OR_CALCULATION"
         if selected_sia_g is not None and selected_sia_g <= SIA3802_LIMIT_VALUES["glazing_g_value"]:
             return "NOT_REQUIRED_FOR_G_LIMIT"
         if active_shading_count:
@@ -4145,6 +4855,7 @@ class ExcelReportGenerator:
         cdb_g_value: Optional[float],
         bs_en_410: Optional[float],
     ) -> str:
+        """Return the recommended reviewer action for one glazing construction."""
         if g_proof_status == "PROVES_CDB_G_IS_NOT_EN410":
             return (
                 "Use bs_en_410 as the SIA g_perp candidate and keep the CDB export/review summary proving "
@@ -4164,6 +4875,7 @@ class ExcelReportGenerator:
 
     @staticmethod
     def _ve_g_proof_format(status: str, pass_format: Any, partial_format: Any, fail_format: Any, info_format: Any) -> Any:
+        """Return the Excel cell format for g-value proof status."""
         if status in {"EN410_AVAILABLE", "PROVES_CDB_G_IS_NOT_EN410"}:
             return pass_format if status == "EN410_AVAILABLE" else info_format
         if status == "SIA_MAPPING_REQUIRED":
@@ -4172,6 +4884,7 @@ class ExcelReportGenerator:
 
     @staticmethod
     def _ve_g_total_format(status: str, pass_format: Any, partial_format: Any, fail_format: Any, info_format: Any) -> Any:
+        """Return the Excel cell format for shaded g-total status."""
         if status in {"DIRECT_OR_IMPORTED_VALUE", "NOT_REQUIRED_FOR_G_LIMIT"}:
             return pass_format
         if status == "CALCULATION_REQUIRED":
@@ -4244,6 +4957,7 @@ class ExcelReportGenerator:
         )
 
     def _get_alert_construction_key(self, alert: Alert) -> str:
+        """Return the best grouping key for an alert's construction scope."""
         data = getattr(alert, "data", None)
         if isinstance(data, dict):
             value = data.get("construction_id") or data.get("construction")
@@ -4267,6 +4981,7 @@ class ExcelReportGenerator:
 
     @staticmethod
     def _get_alert_object_type(alert: Alert) -> str:
+        """Return a compact object type label for alert grouping."""
         data = getattr(alert, "data", None)
         if isinstance(data, dict):
             value = data.get("type") or data.get("system_type")
@@ -4303,6 +5018,7 @@ class ExcelReportGenerator:
 
     @staticmethod
     def _get_alert_area(alert: Alert) -> float:
+        """Return the affected area attached to an alert when available."""
         data = getattr(alert, "data", None)
         if isinstance(data, dict):
             value = data.get("area")
@@ -4312,6 +5028,7 @@ class ExcelReportGenerator:
 
     @staticmethod
     def _get_alert_numeric(alert: Alert, key: str) -> Optional[float]:
+        """Return a numeric value from alert data by attribute or dictionary key."""
         data = getattr(alert, "data", None)
         if isinstance(data, dict):
             value = data.get(key)
@@ -4323,6 +5040,7 @@ class ExcelReportGenerator:
 
     @staticmethod
     def _write_optional_number(worksheet: Any, row: int, col: int, value: Optional[float], number_format: Any, cell_format: Any):
+        """Write a number when available or an empty formatted cell otherwise."""
         if value is None:
             worksheet.write(row, col, "", cell_format)
         else:
@@ -4330,6 +5048,7 @@ class ExcelReportGenerator:
 
     @staticmethod
     def _severity_rank(severity_value: str) -> int:
+        """Return an ordering rank for alert severities."""
         order = {
             "Critical": 0,
             "High": 1,
@@ -4340,6 +5059,7 @@ class ExcelReportGenerator:
 
     @staticmethod
     def _get_priority(group: Dict[str, Any]) -> str:
+        """Assign a remediation priority to an alert group."""
         severity = group.get("max_severity", "")
         count = int(group.get("count", 0) or 0)
         rule = str(group.get("rule", "")).upper()
@@ -4350,6 +5070,7 @@ class ExcelReportGenerator:
         return "P3"
 
     def _get_priority_score(self, group: Dict[str, Any]) -> int:
+        """Return a stable sort score for remediation priority groups."""
         base = {
             "P1": 100,
             "P2": 200,
@@ -4363,6 +5084,7 @@ class ExcelReportGenerator:
 
     @staticmethod
     def _action_for_alert_group(group: Dict[str, Any]) -> str:
+        """Return a practical remediation action for an alert group."""
         rule = str(group.get("rule", "")).upper()
         recommendation = str(group.get("recommendation", "") or "")
         if rule in {"SIA3802_SOLAR_FACTOR", "SIA3801_SOLAR_FACTOR"}:
@@ -4413,6 +5135,7 @@ class ExcelReportGenerator:
         )]
 
     def _status_for_alert_group(self, group: Dict[str, Any]) -> str:
+        """Return the report status for an alert group, including evidence overrides."""
         if self._accepted_justification_for_group(group):
             return "Justified by evidence"
         rule = str(group.get("rule", "")).upper()
@@ -4422,6 +5145,7 @@ class ExcelReportGenerator:
 
     @staticmethod
     def _p1_current_value_for_group(group: Dict[str, Any]) -> Optional[float]:
+        """Return the representative current value for a P1 alert group."""
         rule = str(group.get("rule", "")).upper()
         if rule in {"SIA3802_SOLAR_FACTOR", "SIA3801_SOLAR_FACTOR"}:
             return group.get("avg_g")
@@ -4440,6 +5164,7 @@ class ExcelReportGenerator:
 
     @staticmethod
     def _p1_limit_for_group(group: Dict[str, Any]) -> Optional[float]:
+        """Return the applicable limit for a P1 alert group when available."""
         rule = str(group.get("rule", "")).upper()
         if rule in {"SIA3802_SOLAR_FACTOR", "SIA3801_SOLAR_FACTOR"}:
             return SIA3802_LIMIT_VALUES["glazing_g_value"]
@@ -4454,12 +5179,14 @@ class ExcelReportGenerator:
         return None
 
     def _p1_gap_for_group(self, group: Dict[str, Any]) -> Optional[float]:
+        """Return the numerical gap between current value and limit for a P1 group."""
         current_value = self._p1_current_value_for_group(group)
         limit_value = self._p1_limit_for_group(group)
         return self._p1_gap_for_values(str(group.get("rule", "")).upper(), current_value, limit_value)
 
     @staticmethod
     def _p1_gap_for_values(rule: str, current_value: Optional[float], limit_value: Optional[float]) -> Optional[float]:
+        """Return the signed compliance gap for one P1 value/limit pair."""
         if current_value is None or limit_value is None:
             return None
         if "SIA4010" in str(rule).upper():
@@ -4468,6 +5195,7 @@ class ExcelReportGenerator:
 
     @staticmethod
     def _p1_decision_for_group(group: Dict[str, Any]) -> str:
+        """Return the decision needed to close one P1 group."""
         rule = str(group.get("rule", "")).upper()
         if rule in {"SIA3802_SOLAR_FACTOR", "SIA3801_SOLAR_FACTOR"}:
             return "Confirm whether VE solar_factor is EN 410 g_perp/SHGC/g_total, then replace or document glazing/shading so the retained value is <= 0.50."
@@ -4481,6 +5209,7 @@ class ExcelReportGenerator:
 
     @staticmethod
     def _p1_evidence_needed_for_group(group: Dict[str, Any]) -> str:
+        """Return the evidence package expected for one P1 group."""
         rule = str(group.get("rule", "")).upper()
         if rule in {"SIA3802_SOLAR_FACTOR", "SIA3801_SOLAR_FACTOR"}:
             return "CDB glazing construction export; EN 410 g_perp or SHGC mapping note; shading device/control evidence if g_total is used; before/after VE screenshot or export."
@@ -4498,6 +5227,7 @@ class ExcelReportGenerator:
 
     @staticmethod
     def _p1_owner_for_group(group: Dict[str, Any]) -> str:
+        """Return the recommended owner for resolving one P1 group."""
         rule = str(group.get("rule", "")).upper()
         category = str(group.get("category", "")).upper()
         if rule in {"SIA3802_SOLAR_FACTOR", "SIA3801_SOLAR_FACTOR"}:
@@ -4515,6 +5245,7 @@ class ExcelReportGenerator:
         return "Model reviewer"
 
     def _calculate_wwr(self, room: Any) -> float:
+        """Calculate window-to-wall ratio directly when no analyzer is available."""
         if self.model_analyzer is not None:
             try:
                 return self.model_analyzer.calculate_wwr(room)
@@ -4535,6 +5266,7 @@ class ExcelReportGenerator:
         return window_area / wall_area if wall_area > 0 else 0.0
 
     def _calculate_average_u_value(self, room: Any, surface_type: str) -> float:
+        """Calculate area-weighted U-value directly when no analyzer is available."""
         if self.model_analyzer is not None:
             try:
                 return self.model_analyzer.calculate_average_u_value(room, surface_type)
@@ -4602,8 +5334,17 @@ class ExcelReportGenerator:
             parts.append(f"area={self._safe_float(getattr(data, 'area'), 0.0):.2f} m2")
         if hasattr(data, "net_area"):
             parts.append(f"net_area={self._safe_float(getattr(data, 'net_area'), 0.0):.2f} m2")
+        if hasattr(data, "tilt") and getattr(data, "tilt") is not None:
+            tilt = self._safe_float(getattr(data, "tilt"), None)
+            if tilt is not None:
+                parts.append(f"tilt={tilt:.1f} deg")
         if hasattr(data, "surface_type") and getattr(data, "surface_type"):
             parts.append(f"type={getattr(data, 'surface_type')}")
+        if hasattr(data, "adjacency_types") and getattr(data, "adjacency_types"):
+            parts.append(
+                "adjacency="
+                + ",".join(str(item) for item in getattr(data, "adjacency_types") if item)
+            )
         if hasattr(data, "opening_type") and getattr(data, "opening_type"):
             parts.append(f"type={getattr(data, 'opening_type')}")
         if hasattr(data, "ventilation_rate") and getattr(data, "ventilation_rate") is not None:

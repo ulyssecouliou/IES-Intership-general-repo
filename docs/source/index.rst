@@ -9,9 +9,10 @@ Italian, and German versions can be generated from gettext translation catalogs.
 
 .. warning::
 
-   The checker produces a readiness and audit report. It must not be presented
-   as an official SIA certificate until all required evidence is complete and
-   reviewed by the responsible compliance authority.
+   The checker produces readiness and audit artifacts. The generated workbook
+   and evidence pack are not official SIA certificates by themselves; official
+   certification or validation remains a separate decision by the responsible
+   authority after reviewing the required evidence.
 
 Contents
 --------
@@ -32,6 +33,7 @@ Contents
    architecture
    compliance_methodology
    compliance_coverage_audit
+   sia3802_gap_audit
    developer_guide
    api_reference
    multilingual_documentation

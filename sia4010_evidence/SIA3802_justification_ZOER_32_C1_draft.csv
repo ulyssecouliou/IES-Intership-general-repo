@@ -1,0 +1,5 @@
+standard,domain,rule,construction_or_scope,model_value,limit_value,unit,decision_status,review_status,reviewer,review_date,source_document,source_reference,justification_summary,notes
+SIA 380/2:2022,Openings,SIA3802_FRAME_FRACTION,STD_EXTW,0.30,0.25,fraction,correct_or_justify,draft,,,,,"Draft only: reduce the VE/CDB frame fraction to <= 0.25 or attach reviewer-accepted facade/window evidence.",99 windows; approx 206.00 m2; source report 20260706_145738.
+SIA 380/2:2022,Openings,SIA3802_FRAME_FRACTION,STD_EXT2,0.35,0.25,fraction,correct_or_justify,draft,,,,,"Draft only: reduce the VE/CDB frame fraction to <= 0.25 or attach reviewer-accepted facade/window evidence.",27 windows; approx 51.42 m2; source report 20260706_145738.
+SIA 380/2:2022,Envelope,SIA3802_U_VALUE_EXTERNAL_WALL,"STD_EXT1; STD_PAR1; STD_WAL2",0.222316,0.20,W/(m2K),correct_or_justify,draft,,,,,"Draft only: update the construction build-up or assignment to U <= 0.20 W/(m2K), or attach a complete SIA 380/2 reference-calculation justification.",2 external wall surfaces; approx 31.00 m2; gap 0.022316 W/(m2K); source report 20260706_145738.
+

@@ -42,11 +42,13 @@ SIA4010_EVIDENCE_DIR = config_module.SIA4010_EVIDENCE_DIR
 from . import data_extractor as data_extractor_module
 from . import excel_report as excel_report_module
 from . import evidence_manager as evidence_manager_module
+from . import evidence_pack as evidence_pack_module
 from . import health_score as health_score_module
 from . import model_analyzer as model_analyzer_module
 from . import rule_engine as rule_engine_module
 from . import sia380_checker as sia380_checker_module
 from . import sia4010_checker as sia4010_checker_module
+from . import sia4010_prevalidation as sia4010_prevalidation_module
 from . import simulation_results as simulation_results_module
 
 
@@ -57,9 +59,11 @@ model_analyzer_module = importlib.reload(model_analyzer_module)
 rule_engine_module = importlib.reload(rule_engine_module)
 sia380_checker_module = importlib.reload(sia380_checker_module)
 sia4010_checker_module = importlib.reload(sia4010_checker_module)
+sia4010_prevalidation_module = importlib.reload(sia4010_prevalidation_module)
 health_score_module = importlib.reload(health_score_module)
 excel_report_module = importlib.reload(excel_report_module)
 evidence_manager_module = importlib.reload(evidence_manager_module)
+evidence_pack_module = importlib.reload(evidence_pack_module)
 simulation_results_module = importlib.reload(simulation_results_module)
 
 VEDataExtractor = data_extractor_module.VEDataExtractor
@@ -67,9 +71,11 @@ ModelAnalyzer = model_analyzer_module.ModelAnalyzer
 RuleEngine = rule_engine_module.RuleEngine
 SIA3802Checker = sia380_checker_module.SIA3802Checker
 SIA4010Checker = sia4010_checker_module.SIA4010Checker
+build_sia4010_pdf_prevalidation = sia4010_prevalidation_module.build_sia4010_pdf_prevalidation
 HealthScoreCalculator = health_score_module.HealthScoreCalculator
 ExcelReportGenerator = excel_report_module.ExcelReportGenerator
 scan_sia3802_justifications = evidence_manager_module.scan_sia3802_justifications
+create_evidence_pack = evidence_pack_module.create_evidence_pack
 
 REPORTS_DIR = os.path.join(str(PROJECT_ROOT), OUTPUT_DIR)
 os.makedirs(REPORTS_DIR, exist_ok=True)
@@ -177,30 +183,152 @@ def _select_latest_aps_file(project: Any, aps_files: List[str]) -> Optional[str]
     return dated_files[0][1]
 
 
+def _rank_aps_files_by_mtime(project: Any, aps_files: List[str]) -> List[str]:
+    """Return APS file names ordered from newest to oldest."""
+    vista_dir = os.path.join(str(getattr(project, "path", "") or ""), "Vista")
+    dated_files = []
+    for file_name in aps_files:
+        path = os.path.join(vista_dir, file_name)
+        try:
+            dated_files.append((os.path.getmtime(path), file_name))
+        except Exception:
+            dated_files.append((0.0, file_name))
+    dated_files.sort(reverse=True)
+    return [file_name for _mtime, file_name in dated_files]
+
+
+def _weather_reference_label(value: Any) -> str:
+    """Return a readable weather-file label from VE strings or proxy objects."""
+    if value in (None, ""):
+        return ""
+    if isinstance(value, (str, bytes, os.PathLike)):
+        return os.path.basename(os.fspath(value)) or str(value)
+    for attr in ("path", "filename", "file_name", "name", "weather_file"):
+        try:
+            candidate = getattr(value, attr, None)
+            if callable(candidate):
+                candidate = candidate()
+            if candidate not in (None, ""):
+                return os.path.basename(os.fspath(candidate)) if isinstance(candidate, (str, bytes, os.PathLike)) else str(candidate)
+        except Exception:
+            continue
+    return str(value)
+
+
+def _current_project_weather_label(project: Any) -> str:
+    """Return the current project weather-file label when VE exposes it."""
+    for attr in ("weather_file", "weather", "climate_file"):
+        try:
+            candidate = getattr(project, attr, None)
+            if callable(candidate):
+                candidate = candidate()
+            label = _weather_reference_label(candidate)
+            if label:
+                return label
+        except Exception:
+            continue
+    return ""
+
+
+def _aps_matches_project_weather(aps_references: List[str], project_weather: str) -> bool:
+    """Return true when APS weather references are empty or match the project weather."""
+    if not aps_references or not project_weather:
+        return True
+    project_weather_name = os.path.basename(project_weather).lower()
+    return any(os.path.basename(reference).lower() == project_weather_name for reference in aps_references)
+
+
+def _sum_numeric_rows(rows: List[Dict[str, Any]], key: str) -> Optional[float]:
+    """Return the sum of numeric row values, or ``None`` when no value exists."""
+    values = [float(row[key]) for row in rows if isinstance(row.get(key), (int, float))]
+    return sum(values) if values else None
+
+
+def _max_numeric_rows(rows: List[Dict[str, Any]], key: str) -> Optional[float]:
+    """Return the maximum numeric row value, or ``None`` when no value exists."""
+    values = [float(row[key]) for row in rows if isinstance(row.get(key), (int, float))]
+    return max(values) if values else None
+
+
+def _average_numeric_rows(rows: List[Dict[str, Any]], key: str) -> Optional[float]:
+    """Return the arithmetic average of numeric row values, or ``None`` when absent."""
+    values = [float(row[key]) for row in rows if isinstance(row.get(key), (int, float))]
+    return sum(values) / len(values) if values else None
+
+
 def _collect_dynamic_results(project: Any) -> Dict[str, Any]:
     """Read available APS/Vista room results when the VE ResultsReader is available."""
     summary: Dict[str, Any] = {
         "status": "NOT_CHECKABLE",
         "aps_files": [],
         "selected_aps_file": None,
+        "project_weather_file": "",
+        "selected_aps_weather_references": [],
+        "skipped_aps_files": [],
         "rooms": [],
         "total_area_m2": 0.0,
         "total_heating_kwh": None,
         "total_cooling_kwh": None,
+        "total_lighting_kwh": None,
+        "total_fan_kwh": None,
+        "total_pump_kwh": None,
+        "total_auxiliary_kwh": None,
+        "total_coil_heating_kwh": None,
+        "total_coil_cooling_kwh": None,
         "heating_kwh_m2": None,
         "cooling_kwh_m2": None,
+        "lighting_kwh_m2": None,
+        "fan_kwh_m2": None,
+        "pump_kwh_m2": None,
+        "auxiliary_kwh_m2": None,
+        "peak_co2_ppm": None,
+        "average_co2_ppm": None,
+        "peak_relative_humidity_percent": None,
+        "average_relative_humidity_percent": None,
         "occupied_hours_above_26": None,
         "occupied_hours_above_27": None,
         "notes": "",
     }
 
     try:
+        project_weather = _current_project_weather_label(project)
+        summary["project_weather_file"] = project_weather
         aps_files = simulation_results_module.list_aps_files(project)
         summary["aps_files"] = aps_files
-        selected_aps = _select_latest_aps_file(project, aps_files)
+        selected_aps = None
+        selected_refs: List[str] = []
+        for candidate_aps in _rank_aps_files_by_mtime(project, aps_files):
+            aps_path = simulation_results_module.get_aps_path(project, candidate_aps)
+            aps_refs = simulation_results_module.extract_epw_references_from_aps(aps_path)
+            if _aps_matches_project_weather(aps_refs, project_weather):
+                selected_aps = candidate_aps
+                selected_refs = aps_refs
+                break
+            summary["skipped_aps_files"].append({
+                "aps_file": candidate_aps,
+                "weather_references": aps_refs,
+                "reason": f"APS references do not match current project weather file {project_weather}.",
+            })
+
+        if selected_aps is None:
+            selected_aps = _select_latest_aps_file(project, aps_files)
+            if selected_aps:
+                selected_refs = simulation_results_module.extract_epw_references_from_aps(
+                    simulation_results_module.get_aps_path(project, selected_aps)
+                )
+
         summary["selected_aps_file"] = selected_aps
+        summary["selected_aps_weather_references"] = selected_refs
         if not selected_aps:
             summary["notes"] = "No APS file found in the project Vista folder."
+            return summary
+
+        if summary["skipped_aps_files"] and not _aps_matches_project_weather(selected_refs, project_weather):
+            summary["notes"] = (
+                "APS/Vista results were not opened because available APS files reference "
+                "a weather file different from the current VE project weather. "
+                "Rerun the simulation after changing the project weather file."
+            )
             return summary
 
         results_file = simulation_results_module.open_results_reader(selected_aps)
@@ -213,24 +341,24 @@ def _collect_dynamic_results(project: Any) -> Dict[str, Any]:
                 "area_m2": item.area_m2,
                 "heating_kwh": item.heating_kwh,
                 "cooling_kwh": item.cooling_kwh,
+                "lighting_kwh": item.lighting_kwh,
+                "fan_kwh": item.fan_kwh,
+                "pump_kwh": item.pump_kwh,
+                "auxiliary_kwh": item.auxiliary_kwh,
+                "coil_heating_kwh": item.coil_heating_kwh,
+                "coil_cooling_kwh": item.coil_cooling_kwh,
                 "peak_heating_w": item.peak_heating_w,
                 "peak_cooling_w": item.peak_cooling_w,
+                "peak_co2_ppm": item.peak_co2_ppm,
+                "average_co2_ppm": item.average_co2_ppm,
+                "peak_relative_humidity_percent": item.peak_relative_humidity_percent,
+                "average_relative_humidity_percent": item.average_relative_humidity_percent,
                 "occupied_hours_above_26": item.occupied_hours_above_26,
                 "occupied_hours_above_27": item.occupied_hours_above_27,
                 "source_notes": item.source_notes,
             })
 
         total_area = sum(float(row.get("area_m2") or 0.0) for row in rows)
-        heating_values = [
-            float(row["heating_kwh"])
-            for row in rows
-            if isinstance(row.get("heating_kwh"), (int, float))
-        ]
-        cooling_values = [
-            float(row["cooling_kwh"])
-            for row in rows
-            if isinstance(row.get("cooling_kwh"), (int, float))
-        ]
         over_26_values = [
             float(row["occupied_hours_above_26"])
             for row in rows
@@ -242,23 +370,47 @@ def _collect_dynamic_results(project: Any) -> Dict[str, Any]:
             if isinstance(row.get("occupied_hours_above_27"), (int, float))
         ]
 
-        total_heating = sum(heating_values) if heating_values else None
-        total_cooling = sum(cooling_values) if cooling_values else None
+        total_heating = _sum_numeric_rows(rows, "heating_kwh")
+        total_cooling = _sum_numeric_rows(rows, "cooling_kwh")
+        total_lighting = _sum_numeric_rows(rows, "lighting_kwh")
+        total_fan = _sum_numeric_rows(rows, "fan_kwh")
+        total_pump = _sum_numeric_rows(rows, "pump_kwh")
+        total_auxiliary = _sum_numeric_rows(rows, "auxiliary_kwh")
+        total_coil_heating = _sum_numeric_rows(rows, "coil_heating_kwh")
+        total_coil_cooling = _sum_numeric_rows(rows, "coil_cooling_kwh")
         summary.update({
             "status": "AVAILABLE" if rows else "PARTIAL",
             "rooms": rows,
             "total_area_m2": total_area,
             "total_heating_kwh": total_heating,
             "total_cooling_kwh": total_cooling,
+            "total_lighting_kwh": total_lighting,
+            "total_fan_kwh": total_fan,
+            "total_pump_kwh": total_pump,
+            "total_auxiliary_kwh": total_auxiliary,
+            "total_coil_heating_kwh": total_coil_heating,
+            "total_coil_cooling_kwh": total_coil_cooling,
             "heating_kwh_m2": total_heating / total_area if total_heating is not None and total_area > 0 else None,
             "cooling_kwh_m2": total_cooling / total_area if total_cooling is not None and total_area > 0 else None,
+            "lighting_kwh_m2": total_lighting / total_area if total_lighting is not None and total_area > 0 else None,
+            "fan_kwh_m2": total_fan / total_area if total_fan is not None and total_area > 0 else None,
+            "pump_kwh_m2": total_pump / total_area if total_pump is not None and total_area > 0 else None,
+            "auxiliary_kwh_m2": total_auxiliary / total_area if total_auxiliary is not None and total_area > 0 else None,
+            "peak_co2_ppm": _max_numeric_rows(rows, "peak_co2_ppm"),
+            "average_co2_ppm": _average_numeric_rows(rows, "average_co2_ppm"),
+            "peak_relative_humidity_percent": _max_numeric_rows(rows, "peak_relative_humidity_percent"),
+            "average_relative_humidity_percent": _average_numeric_rows(rows, "average_relative_humidity_percent"),
             "occupied_hours_above_26": sum(over_26_values) if over_26_values else None,
             "occupied_hours_above_27": sum(over_27_values) if over_27_values else None,
             "notes": "Read from IESVE ResultsReader.",
         })
     except Exception as exc:
         summary["status"] = "NOT_CHECKABLE"
-        summary["notes"] = f"APS/Vista results could not be read by the current VE Python environment: {exc}"
+        summary["notes"] = (
+            "APS/Vista results could not be read by the current VE Python environment: "
+            f"{exc}. If this mentions an EPW file, rerun the APS simulation after "
+            "confirming the project weather file."
+        )
 
     return summary
 
@@ -277,20 +429,51 @@ def _apply_dynamic_results_to_sia4010(
         energy["heating_demand"] = dynamic_results.get("heating_kwh_m2")
     if dynamic_results.get("cooling_kwh_m2") is not None:
         energy["cooling_demand"] = dynamic_results.get("cooling_kwh_m2")
+    if dynamic_results.get("lighting_kwh_m2") is not None:
+        energy["lighting_energy"] = dynamic_results.get("lighting_kwh_m2")
+    if dynamic_results.get("fan_kwh_m2") is not None:
+        energy["fan_energy"] = dynamic_results.get("fan_kwh_m2")
+    if dynamic_results.get("pump_kwh_m2") is not None:
+        energy["pump_energy"] = dynamic_results.get("pump_kwh_m2")
+    if dynamic_results.get("auxiliary_kwh_m2") is not None:
+        energy["auxiliary_energy"] = dynamic_results.get("auxiliary_kwh_m2")
 
 
 def _has_evidence_item(evidence: Dict[str, Any], evidence_item: str) -> bool:
-    """Return whether an evidence item is present in the SIA 4010 scan result."""
+    """Return whether an official evidence item has detected files."""
     if not isinstance(evidence, dict) or not evidence:
         return False
 
+    known_keys = {
+        SIA4010_REQUIRED_EVIDENCE[0]: "official_test_specifications",
+        SIA4010_REQUIRED_EVIDENCE[1]: "official_evaluation_workbooks",
+        SIA4010_REQUIRED_EVIDENCE[2]: "candidate_results",
+        SIA4010_REQUIRED_EVIDENCE[3]: "reference_comparisons",
+        SIA4010_REQUIRED_EVIDENCE[4]: "validation_class_confirmation",
+    }
+    structured_value = evidence.get(known_keys.get(evidence_item, evidence_item))
+    if isinstance(structured_value, dict):
+        files = structured_value.get("files", []) or []
+        return bool(structured_value.get("present") and files)
+
+    exact_value = evidence.get(evidence_item)
+    if isinstance(exact_value, dict):
+        files = exact_value.get("files", []) or []
+        return bool(exact_value.get("present") and files)
+    if isinstance(exact_value, bool):
+        return exact_value
+
     def normalize(value: str) -> str:
+        """Normalize evidence labels to alphanumeric lowercase keys."""
         return "".join(ch.lower() for ch in str(value) if ch.isalnum())
 
     target = normalize(evidence_item)
     for key, value in evidence.items():
         key_norm = normalize(key)
         if target in key_norm or key_norm in target:
+            if isinstance(value, dict):
+                files = value.get("files", []) or []
+                return bool(value.get("present") and files)
             return bool(value)
     return False
 
@@ -319,6 +502,9 @@ def _build_preflight_checks(
     dynamic_results = sia4010_results.get("dynamic_results", {}) or {}
     dynamic_status = str(dynamic_results.get("status", "NOT_CHECKABLE") or "NOT_CHECKABLE")
     dynamic_preflight_status = "PASS" if dynamic_status == "AVAILABLE" else ("WARNING" if dynamic_status == "PARTIAL" else "NOT_CHECKABLE")
+    project_weather = dynamic_results.get("project_weather_file") or "Not exposed by VE"
+    selected_aps_weather = ", ".join(dynamic_results.get("selected_aps_weather_references", []) or []) or "No EPW reference detected in APS"
+    skipped_aps_count = len(dynamic_results.get("skipped_aps_files", []) or [])
     report_dir = os.path.dirname(os.path.abspath(report_path))
     project_path = str(getattr(project, "path", "") or "")
     project_path_norm = project_path.replace("/", "\\").lower()
@@ -442,10 +628,12 @@ def _build_preflight_checks(
             "observed": (
                 f"status={dynamic_status}; selected APS="
                 f"{dynamic_results.get('selected_aps_file') or 'not selected'}; "
-                f"{len(dynamic_results.get('aps_files', []) or [])} APS file(s) detected"
+                f"{len(dynamic_results.get('aps_files', []) or [])} APS file(s) detected; "
+                f"project weather={project_weather}; APS weather={selected_aps_weather}; "
+                f"skipped stale APS={skipped_aps_count}"
             ),
             "why": "SIA 380/2 dynamic checks and SIA 4010 tests need hourly/sub-hourly simulation outputs.",
-            "action": "Run the APS simulation in VE and keep the APS/Vista result file in the project Vista folder.",
+            "action": "If the APS references an old EPW, rerun the APS simulation after saving the current VE project weather file.",
             "owner": "Model reviewer",
             "source": "IESVE ResultsReader / Vista APS",
         },
@@ -548,6 +736,13 @@ def main():
             model_analyzer=model_analyzer,
         )
         rooms_data = model_analyzer.analyze_all_rooms()
+        logger.info("Running SIA 4010 PDF-based prevalidation.")
+        sia4010_results["prevalidation"] = build_sia4010_pdf_prevalidation(
+            rooms_data,
+            sia3802_results,
+            sia4010_results,
+            dynamic_results,
+        )
         extraction_diagnostics = data_extractor.get_body_extraction_diagnostics()
         preflight_checks = _build_preflight_checks(
             project,
@@ -571,6 +766,26 @@ def main():
             if CREATE_LATEST_REPORT_ALIAS
             else None
         )
+        evidence_pack_result = None
+        try:
+            evidence_pack_result = create_evidence_pack(
+                project_root=PROJECT_ROOT,
+                report_path=Path(report_generator.output_path),
+                latest_report_path=Path(latest_report_path) if latest_report_path else None,
+                sia4010_results=sia4010_results,
+                preflight_checks=preflight_checks,
+                evidence_dir_name=SIA4010_EVIDENCE_DIR,
+            )
+            logger.info(
+                "Generated evidence pack ZIP: %s (%s included file(s))",
+                evidence_pack_result.get("path"),
+                evidence_pack_result.get("file_count"),
+            )
+        except Exception as exc:
+            logger.warning(
+                "Excel report was generated, but the optional evidence pack ZIP could not be created: %s",
+                exc,
+            )
 
         logger.info("Analysis completed successfully.")
         logger.info(
@@ -583,6 +798,8 @@ def main():
             logger.info("Updated latest report alias: %s", latest_report_path)
         else:
             logger.info("Latest report alias disabled; only the timestamped workbook was generated.")
+        if evidence_pack_result:
+            logger.info("Generated evidence pack: %s", evidence_pack_result.get("path"))
 
         critical_alerts = [
             alert for alert in score_result.alerts

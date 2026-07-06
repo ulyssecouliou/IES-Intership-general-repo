@@ -1,0 +1,10 @@
+validation_class,selected,required_tests,official_test_specifications,official_evaluation_workbooks,candidate_results,reference_comparisons,validation_class_confirmation,reviewer,review_status,review_date,source_authority,source_reference,notes
+1A,no,Test 1; Test 2A,missing,missing,missing,missing,missing,,,,"SIA / responsible reviewer",SIA 4010:2023 table 63,Draft row; select only if this is the agreed target class.
+1B,no,Test 1; Test 2,missing,missing,missing,missing,missing,,,,"SIA / responsible reviewer",SIA 4010:2023 table 63,Draft row; select only if this is the agreed target class.
+2A,no,Test 1; Test 2A; Tests 3A-3F,missing,missing,missing,missing,missing,,,,"SIA / responsible reviewer",SIA 4010:2023 table 63,Draft row; select only if this is the agreed target class.
+2B,no,Test 1; Test 2; Test 3,missing,missing,missing,missing,missing,,,,"SIA / responsible reviewer",SIA 4010:2023 table 63,Draft row; select only if this is the agreed target class.
+3,no,Test 1; Test 4; Test 5; Test 6,missing,missing,missing,missing,missing,,,,"SIA / responsible reviewer",SIA 4010:2023 table 63,Draft row; select only if this is the agreed target class.
+4A,no,Test 1; Test 2A; Tests 3A-3F; Test 4; Test 5; Test 6; Test 7,missing,missing,missing,missing,missing,,,,"SIA / responsible reviewer",SIA 4010:2023 table 63,Draft row; select only if this is the agreed target class.
+4B,no,Test 1; Test 2; Test 3; Test 4; Test 5; Test 6; Test 7,missing,missing,missing,missing,missing,,,,"SIA / responsible reviewer",SIA 4010:2023 table 63,Draft row; recommended target when the workflow aims to cover tests 1 to 7.
+5,no,Test 7,missing,missing,missing,missing,missing,,,,"SIA / responsible reviewer",SIA 4010:2023 table 63,Draft row; select only if this is the agreed target class.
+

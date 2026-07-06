@@ -1,0 +1,8 @@
+test_id,status,reference_file,candidate_file,deviation,tolerance,reviewer,review_date,source_authority,source_reference,notes
+test_1,missing,,,,,,,,,Replace missing with pass/validated/fail after official comparison review.
+test_2,missing,,,,,,,,,Use test_2 for base Test 2; aliases such as test_2A are normalized to test_2.
+test_3,missing,,,,,,,,,Use test_3 for Test 3 and documented 3A-3F variants.
+test_4,missing,,,,,,,,,
+test_5,missing,,,,,,,,,
+test_6,missing,,,,,,,,,
+test_7,missing,,,,,,,,,

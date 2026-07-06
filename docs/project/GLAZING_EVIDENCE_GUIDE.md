@@ -69,7 +69,8 @@ opening properties and CDB construction properties:
 - Opening construction ID.
 - Opening area.
 - Window U-value / Uw.
-- Glazing solar factor / g-value.
+- SIA-comparable glazing solar factor only when
+  `VECdbConstruction.get_g_values().bs_en_410` is available.
 - Visible transmittance from `visible_transmittance`,
   `visible_light_transmittance`, `light_transmittance`, `tau_v`, `tau` or
   `tvis`.
@@ -80,10 +81,11 @@ opening properties and CDB construction properties:
 - Effective glazing-plus-shading g-value when VE exposes a direct value such as
   `g_total`, `effective_g_value`, `shaded_g_value` or equivalent.
 - Named VE/CDB g-values from `VECdbConstruction.get_g_values()`:
-  `bs_en_410`, `building_regulations` and `bfrc`. The generated workbook sheet
-  `VE G-VALUES AUDIT` exposes these side by side so reviewers can prove whether
-  a CDB `g_value` such as `0.75` is the same value as the SIA-comparable EN 410
-  normal solar factor.
+  `bs_en_410`, `building_regulations` and `bfrc`. Only `bs_en_410` is accepted
+  automatically as the SIA-comparable `g_perp` candidate. The generated workbook
+  sheet `VE G-VALUES AUDIT` exposes the raw CDB `g_value` side by side with
+  `bs_en_410`, so reviewers can prove whether a CDB `g_value` such as `0.75`
+  is or is not the EN 410 normal solar factor.
 
 Percent values are normalized to fractions where needed. For example,
 `frame_percent = 25` is interpreted as `0.25`.
@@ -93,8 +95,10 @@ Percent values are normalized to fractions where needed. For example,
 The following items may remain manual because VE may not expose them as a
 single certifiable field:
 
-- Confirmation that the VE `solar_factor` / `g_value` is the correct SIA
-  comparable value, for example EN 410 `g_perp` or a justified SHGC mapping.
+- Confirmation that any raw VE/CDB `g_value` not coming from
+  `VECdbConstruction.get_g_values().bs_en_410` is the correct SIA-comparable
+  value, for example through manufacturer EN 410 `g_perp` evidence or a
+  reviewer-approved SHGC mapping.
 - Manufacturer glazing schedule when the CDB value is not sufficient or not
   auditable.
 - Active `g_total` with solar protection if the base glazing g-value exceeds
@@ -146,10 +150,12 @@ The latest report shows three glazing constructions in the facade review:
 - `STD_EXT2`
 
 They currently have acceptable extracted Uw values, but an extracted g-value of
-about `0.75`, compared against the current SIA 380/2 readiness threshold of
-`0.50`. If that `0.75` is the correct comparable EN 410 normal solar factor,
-the glazing fails the readiness check unless an auditable active-shading
-`g_total` is provided and accepted.
+about `0.75` may appear as a raw CDB value. The checker no longer treats this
+raw `g_value` as an automatic SIA `g_perp`. If `bs_en_410` is missing, the report
+keeps the value visible as audit evidence and asks for EN 410/manufacturer proof
+before comparing it with the SIA 380/2 threshold of `0.50`. If EN 410 confirms
+`g_perp = 0.75`, the glazing fails the readiness check unless an auditable
+active-shading `g_total` is provided and accepted.
 
 ## Practical Rule
 

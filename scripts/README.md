@@ -14,6 +14,10 @@ Developer and diagnostic scripts.
 The production Run-button workflow is `Run_VE_Swiss_Compliance.py` at the
 repository root.
 
+If the reviewer evidence CSV files need to be initialized from inside VE, run
+`Prepare_SIA4010_Evidence_Folder.py` first. It copies project-named templates
+into `sia4010_evidence/` without overwriting existing reviewer files.
+
 Run the release validator outside VE before sharing a report/code snapshot:
 
 ```powershell

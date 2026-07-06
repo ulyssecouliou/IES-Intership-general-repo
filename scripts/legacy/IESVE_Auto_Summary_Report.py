@@ -985,6 +985,7 @@ class SummaryReportWindow(tk.Frame):
     """Small IESVE UI for selecting an APS file and creating the report."""
 
     def __init__(self, master: tk.Tk, project: Any, results_reader: Any):
+        """Initialize the report window with the active project and results reader."""
         super().__init__(master)
         self.master = master
         self.project = project
@@ -996,6 +997,7 @@ class SummaryReportWindow(tk.Frame):
         self._init_window()
 
     def _init_window(self) -> None:
+        """Create the Tkinter controls used by the legacy report UI."""
         self.grid(row=0, column=0, sticky="nsew", padx=10, pady=10)
 
         ttk.Label(self, text="Select a Vista Results File (.aps):").grid(
@@ -1033,6 +1035,7 @@ class SummaryReportWindow(tk.Frame):
         self.rowconfigure(1, weight=1)
 
     def _get_aps_files(self) -> List[str]:
+        """Return available APS files from the active project Vista folder."""
         try:
             files = os.listdir(self.vista_folder)
         except FileNotFoundError:
@@ -1044,6 +1047,7 @@ class SummaryReportWindow(tk.Frame):
         return sorted(file_name for file_name in files if file_name.lower().endswith(".aps"))
 
     def run_report(self) -> None:
+        """Generate the selected legacy summary workbook."""
         aps_file_name = self.listbox.get(tk.ACTIVE)
         if not aps_file_name:
             messagebox.showerror("No APS file", "Select an APS file first.")

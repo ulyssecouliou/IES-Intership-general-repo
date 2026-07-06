@@ -4,7 +4,7 @@ Developer Guide
 Code Language Policy
 --------------------
 
-All source-code documentation should be written in English:
+All source-code documentation must be written in English:
 
 * module docstrings;
 * class and function docstrings;
@@ -12,6 +12,14 @@ All source-code documentation should be written in English:
 * developer-facing exceptions;
 * test names;
 * Sphinx documentation pages.
+
+Every project-owned Python module, class, and function must have a meaningful
+docstring. Comments should explain intent, evidence handling, API constraints,
+or non-obvious compliance logic; they should not restate each assignment line by
+line.
+
+The release validator enforces this policy for the project Python files under
+``swiss_sia/``, ``scripts/``, ``docs/tools/`` and the root run-button launchers.
 
 User-facing workbook labels can later be localized through an i18n layer. They
 should not be translated directly in multiple places.

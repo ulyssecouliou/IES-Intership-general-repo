@@ -1,6 +1,7 @@
-"""
-Analyseur du modèle VE pour calculer des indicateurs (U-values, WWR, gains internes, etc.).
-Ce module prépare les données du modèle pour les vérifications SIA.
+"""Normalize VE model data into SIA-ready analytical objects.
+
+The analyzer converts raw IESVE API objects into stable room, surface, opening,
+air-exchange and HVAC structures used by the SIA 380/2 and SIA 4010 checkers.
 """
 
 from __future__ import annotations
@@ -16,23 +17,26 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class SurfaceData:
-    """Données d'une surface (mur, toiture, plancher)."""
+    """Normalized data for one VE surface such as a wall, roof or floor."""
+
     id: str
-    name: str = ""  # Nom de la surface (peut être vide)
+    name: str = ""  # Surface name when exposed by VE.
     area: float = 0.0
     net_area: float = 0.0
     u_value: Optional[float] = None
     orientation: Optional[str] = None
+    tilt: Optional[float] = None
     materials: List[str] = field(default_factory=list)
     is_external: bool = False
-    surface_type: Optional[str] = None  # "wall", "roof", "floor", etc.
+    surface_type: Optional[str] = None  # Normalized type such as wall, roof or floor.
     construction_ids: List[str] = field(default_factory=list)
+    adjacency_types: List[str] = field(default_factory=list)
 
 @dataclass
 class OpeningData:
     """Normalized opening data extracted from VE."""
     id: str
-    name: str = ""  # Nom de l'ouverture (peut être vide)
+    name: str = ""  # Opening name when exposed by VE.
     area: float = 0.0
     u_value: Optional[float] = None
     solar_factor: Optional[float] = None
@@ -50,20 +54,21 @@ class OpeningData:
     g_total: Optional[float] = None
     g_total_source: Optional[str] = None
     orientation: Optional[str] = None
-    opening_type: Optional[str] = None  # "window", "door", etc.
+    opening_type: Optional[str] = None  # Normalized type such as window or door.
     is_external: bool = False
     construction_id: str = ""
 
 @dataclass
 class RoomData:
-    """Données d'une pièce."""
+    """Normalized data for one thermal room or zone."""
+
     id: str
-    name: str = ""  # Nom de la pièce (peut être vide)
+    name: str = ""  # Room name when exposed by VE.
     volume: float = 0.0
     area: float = 0.0
     surfaces: List[SurfaceData] = field(default_factory=list)
     openings: List[OpeningData] = field(default_factory=list)
-    internal_gains: Dict[str, Optional[float]] = field(default_factory=dict)  # {"lighting": ..., "people": ..., "equipment": ...}
+    internal_gains: Dict[str, Optional[float]] = field(default_factory=dict)  # Lighting, people and equipment values.
     ventilation_rate: Optional[float] = None
     ventilation_m3_h_m2: Optional[float] = None
     infiltration_rate: Optional[float] = None
@@ -73,16 +78,15 @@ class RoomData:
     room_conditions: Dict[str, Any] = field(default_factory=dict)
 
 class ModelAnalyzer:
-    """
-    Analyse le modèle VE pour calculer des indicateurs utiles pour la conformité SIA.
-    """
+    """Analyze the VE model and expose normalized indicators for SIA checks."""
 
     def __init__(self, data_extractor: "VEDataExtractor"):
+        """Initialize the analyzer with a VE data extractor."""
         self.data_extractor = data_extractor
         self._rooms_data: Dict[str, RoomData] = {}
 
     def analyze_all_rooms(self) -> List[RoomData]:
-        """Analyse toutes les pièces du modèle et retourne leurs données."""
+        """Analyze all relevant VE rooms and return normalized room data."""
         rooms_data = []
         bodies = self.data_extractor.get_bodies()
         for body in bodies:
@@ -93,7 +97,7 @@ class ModelAnalyzer:
         return rooms_data
 
     def analyze_room(self, body: Any) -> Optional[RoomData]:
-        """Analyse une pièce et retourne ses données structurées."""
+        """Analyze one VE body and return normalized room data when usable."""
         try:
             room_data_obj = self.data_extractor.get_room_data(body)
             raw_surfaces = self.data_extractor.get_surfaces(body) or []
@@ -127,11 +131,11 @@ class ModelAnalyzer:
                 room_conditions=room_conditions,
             )
         except Exception as e:
-            logger.debug("Pièce ignorée lors de l'analyse: %s", e)
+            logger.debug("Room ignored during analysis: %s", e)
             return None
 
     def _analyze_surfaces(self, surfaces: List[Any]) -> List[SurfaceData]:
-        """Analyse les surfaces d'une pièce via les méthodes documentées de VESurface."""
+        """Analyze room surfaces through documented ``VESurface`` methods."""
         surfaces_data = []
         for surface in surfaces:
             try:
@@ -151,16 +155,27 @@ class ModelAnalyzer:
                     net_area = gross_area
                 u_value = props.get("U-value")
                 orientation = props.get("orientation")
+                tilt = self._to_float_or_none(props.get("tilt"))
                 materials = list(props.get("materials", []) or [])
                 surface_type = str(props.get("type", "") or "").lower()
                 construction_ids = [str(item) for item in props.get("construction_ids", []) or []]
 
                 is_external = self._is_external_surface(surface_type) or float(areas.get("external_gross", 0.0) or 0.0) > 0
-                if not is_external:
-                    try:
-                        adjacencies = self.data_extractor.get_adjacencies(surface) or []
-                        is_external = any(self._get_adjacency_type(adj) == "external_air" for adj in adjacencies)
-                    except Exception:
+                adjacency_types: List[str] = []
+                try:
+                    adjacencies = self.data_extractor.get_adjacencies(surface) or []
+                    adjacency_types = [
+                        normalized
+                        for normalized in (
+                            self._normalize_adjacency_type(self._get_adjacency_type(adjacency))
+                            for adjacency in adjacencies
+                        )
+                        if normalized
+                    ]
+                    if not is_external:
+                        is_external = any(adjacency_type == "external_air" for adjacency_type in adjacency_types)
+                except Exception:
+                    if not is_external:
                         is_external = False
 
                 surfaces_data.append(SurfaceData(
@@ -170,17 +185,19 @@ class ModelAnalyzer:
                     net_area=net_area,
                     u_value=u_value,
                     orientation=orientation,
+                    tilt=tilt,
                     materials=materials,
                     is_external=is_external,
                     surface_type=surface_type,
                     construction_ids=construction_ids,
+                    adjacency_types=adjacency_types,
                 ))
             except Exception:
                 continue
         return surfaces_data
 
     def _analyze_openings(self, surfaces: List[Any]) -> List[OpeningData]:
-        """Analyse les ouvertures d'une pièce via get_openings() sur les surfaces."""
+        """Analyze room openings through ``VESurface.get_openings()``."""
         openings_data = []
         for surface in surfaces:
             try:
@@ -238,7 +255,7 @@ class ModelAnalyzer:
         return openings_data
 
     def _analyze_internal_gains(self, room_data: Any) -> Dict[str, Optional[float]]:
-        """Analyse les gains internes (éclairage, occupants, équipements) d'une pièce."""
+        """Extract lighting, occupancy and equipment internal gains."""
         gains = {"lighting": None, "people": None, "equipment": None}
         if not room_data:
             return gains
@@ -258,11 +275,11 @@ class ModelAnalyzer:
                 elif any(token in gain_type for token in ("machinery", "misc", "cooking", "computer", "equipment")):
                     gains["equipment"] = density or gains["equipment"]
             except Exception as e:
-                logger.error(f"Erreur lors de l'analyse des gains internes: {e}")
+                logger.error("Error while analyzing internal gains: %s", e)
         return gains
 
     def _analyze_ventilation(self, room_data: Any) -> Optional[float]:
-        """Analyse le débit de ventilation d'une pièce."""
+        """Extract a basic room ventilation flow indicator when available."""
         if not room_data:
             return None
 
@@ -273,11 +290,11 @@ class ModelAnalyzer:
                 if exchange_data.get("type_val") == 2 and exchange_data.get("units_val") == 0:
                     return self._extract_first_numeric(exchange_data.get("max_flows"))
             except Exception as e:
-                logger.error(f"Erreur lors de l'analyse de la ventilation: {e}")
+                logger.error("Error while analyzing ventilation: %s", e)
         return None
 
     def _analyze_air_exchanges(self, room_data: Any) -> Dict[str, Optional[float]]:
-        """Analyse ventilation et infiltration depuis les echanges d'air VE."""
+        """Analyze ventilation and infiltration from VE room air exchanges."""
         summary: Dict[str, Any] = {
             "ventilation_rate": None,
             "ventilation_m3_h_m2": None,
@@ -308,11 +325,13 @@ class ModelAnalyzer:
                     summary["infiltration_unit"] = self._lookup_unit_label(units, units_val)
                     summary["infiltration_m3_h_m2"] = self._derive_m3_h_m2_from_flow_table(max_flows, units)
             except Exception as e:
-                logger.error(f"Erreur lors de l'analyse des echanges d'air: {e}")
+                logger.error("Error while analyzing air exchanges: %s", e)
         return summary
 
     @staticmethod
     def _lookup_unit_label(units: Any, units_val: Any) -> Optional[str]:
+        """Return the VE unit label matching a unit index/value."""
+
         if not isinstance(units, dict):
             return None
         for key in (units_val, str(units_val)):
@@ -322,6 +341,8 @@ class ModelAnalyzer:
 
     @staticmethod
     def _extract_flow_for_unit(max_flows: Any, units_val: Any) -> Optional[float]:
+        """Extract the active flow value for the selected VE unit."""
+
         if isinstance(max_flows, dict):
             for key in (units_val, str(units_val)):
                 if key in max_flows:
@@ -330,7 +351,7 @@ class ModelAnalyzer:
 
     @staticmethod
     def _derive_m3_h_m2_from_flow_table(max_flows: Any, units: Any) -> Optional[float]:
-        """Convertit l/(s.m2) en m3/(h.m2) quand VE expose cette unite."""
+        """Convert l/(s.m2) values to m3/(h.m2) when VE exposes that unit."""
         if not isinstance(max_flows, dict) or not isinstance(units, dict):
             return None
         preferred = []
@@ -349,7 +370,7 @@ class ModelAnalyzer:
         return None
 
     def _analyze_hvac_systems(self, room_data: Any) -> List[Dict[str, Any]]:
-        """Analyse les systèmes CVC d'une pièce."""
+        """Extract room Apache Systems / ApacheHVAC assignment data."""
         hvac_systems = []
         if not room_data:
             return hvac_systems
@@ -367,17 +388,17 @@ class ModelAnalyzer:
         return hvac_systems
 
     def _analyze_room_conditions(self, room_data: Any) -> Dict[str, Any]:
-        """Analyse les conditions de la pièce (températures, humidité)."""
+        """Extract room setpoint, schedule and humidity condition data."""
         if not room_data:
             return {}
         try:
             return self.data_extractor.get_room_conditions(room_data)
         except Exception as e:
-            logger.error(f"Erreur lors de l'analyse des conditions de la pièce: {e}")
+            logger.error("Error while analyzing room conditions: %s", e)
             return {}
 
     def _safe_get_attribute(self, obj: Any, attribute_name: str) -> Any:
-        """Lit un attribut VE de manière totalement tolérante."""
+        """Read a VE attribute defensively, including callable attributes."""
         if obj is None:
             return None
         try:
@@ -394,7 +415,7 @@ class ModelAnalyzer:
         return value
 
     def _get_body_areas(self, body: Any) -> Dict[str, float]:
-        """Récupère les aires documentées de VEBody.get_areas()."""
+        """Return documented ``VEBody.get_areas()`` values."""
         if hasattr(self.data_extractor, "get_body_areas"):
             return self.data_extractor.get_body_areas(body)
         try:
@@ -404,7 +425,7 @@ class ModelAnalyzer:
 
     @staticmethod
     def _safe_get_data(obj: Any) -> Dict[str, Any]:
-        """Lit les dictionnaires renvoyés par les objets VERoomData enfants."""
+        """Read dictionaries returned by child ``VERoomData`` objects."""
         if obj is None:
             return {}
         if isinstance(obj, dict):
@@ -419,7 +440,7 @@ class ModelAnalyzer:
 
     @staticmethod
     def _extract_first_numeric(value: Any) -> Optional[float]:
-        """Extrait une valeur numérique depuis les dictionnaires VE indexés par unités."""
+        """Extract the first numeric value from VE unit-indexed dictionaries."""
         if value is None:
             return None
         if isinstance(value, dict):
@@ -443,6 +464,8 @@ class ModelAnalyzer:
 
     @staticmethod
     def _to_float(value: Any) -> float:
+        """Convert a value to float, returning ``0.0`` when conversion fails."""
+
         try:
             return float(value)
         except (TypeError, ValueError):
@@ -450,13 +473,15 @@ class ModelAnalyzer:
 
     @staticmethod
     def _to_float_or_none(value: Any) -> Optional[float]:
+        """Convert a value to float, returning ``None`` when conversion fails."""
+
         try:
             return float(value)
         except (TypeError, ValueError):
             return None
 
     def _get_body_name(self, body: Any) -> str:
-        """Récupère le nom d'un VEBody via les attributs réellement exposés."""
+        """Return the best available ``VEBody`` name or ID."""
         if body is None:
             return ""
         name = self._safe_get_attribute(body, "name")
@@ -465,7 +490,7 @@ class ModelAnalyzer:
         return self.data_extractor.get_object_id(body)
 
     def _get_surface_name(self, surface: Any) -> str:
-        """Récupère le nom d'un VESurface via les méthodes documentées et les propriétés."""
+        """Return the best available ``VESurface`` name or ID."""
         if surface is None:
             return ""
 
@@ -485,7 +510,7 @@ class ModelAnalyzer:
         return self.data_extractor.get_object_id(surface)
 
     def _get_opening_name(self, opening: Any) -> str:
-        """Récupère le nom d'une ouverture via ses propriétés si elle n'expose pas d'attribut name."""
+        """Return the best available opening name or ID."""
         if opening is None:
             return ""
 
@@ -505,7 +530,7 @@ class ModelAnalyzer:
         return self.data_extractor.get_object_id(opening)
 
     def _get_adjacency_type(self, adjacency: Any) -> str:
-        """Retourne le type d'une adjacence via les propriétés documentées de VEAdjacency."""
+        """Return the adjacency type through documented ``VEAdjacency`` properties."""
         if adjacency is None:
             return ""
 
@@ -526,7 +551,7 @@ class ModelAnalyzer:
         return ""
 
     def _normalize_surface_type(self, surface_type: Any) -> str:
-        """Normalise les types de surface IESVE vers des catégories réutilisables."""
+        """Normalize IESVE surface types to reusable categories."""
         raw = str(surface_type or "").strip().lower()
         if not raw:
             return ""
@@ -541,8 +566,17 @@ class ModelAnalyzer:
             raw = raw[7:]
         return raw if raw in {"wall", "roof", "floor", "ceiling", "glazing", "door", "hole"} else raw
 
+    def _normalize_adjacency_type(self, adjacency_type: Any) -> str:
+        """Normalize IESVE adjacency labels to reusable boundary categories."""
+        raw = str(adjacency_type or "").strip().lower()
+        if not raw:
+            return ""
+        if "." in raw:
+            raw = raw.split(".")[-1]
+        return raw.replace(" ", "_").replace("-", "_")
+
     def _normalize_opening_type(self, opening_type: Any) -> str:
-        """Normalise les types d'ouverture IESVE vers des catégories réutilisables."""
+        """Normalize IESVE opening types to reusable categories."""
         if opening_type in (4, "4"):
             return "window"
         if opening_type in (5, "5", 6, "6"):
@@ -557,7 +591,7 @@ class ModelAnalyzer:
         return normalized
 
     def _is_external_surface(self, surface_type: Any) -> bool:
-        """Détermine si une surface VESurface est externe à partir de son type."""
+        """Return whether a ``VESurface`` type should be treated as external."""
         raw = str(surface_type or "").strip().lower()
         if not raw:
             return False
@@ -571,18 +605,18 @@ class ModelAnalyzer:
         return raw in {"roof", "ground_floor"}
 
     # =============================================================================
-    # MÉTHODES DE CALCUL
+    # Calculation helpers
     # =============================================================================
 
     def calculate_wwr(self, room_data: RoomData) -> float:
-        """Calcule le Window-to-Wall Ratio (WWR) pour une pièce."""
+        """Calculate the window-to-wall ratio for one room."""
         external_walls = [s for s in room_data.surfaces if s.is_external and self._normalize_surface_type(s.surface_type) in {"wall", "ext_wall"}]
         wall_area = sum(s.area for s in external_walls)
         window_area = sum(o.area for o in room_data.openings if o.is_external and o.opening_type == "window")
         return window_area / wall_area if wall_area > 0 else 0.0
 
     def calculate_average_u_value(self, room_data: RoomData, surface_type: str) -> float:
-        """Calcule la U-value moyenne pour un type de surface donné."""
+        """Calculate the area-weighted average U-value for one surface type."""
         normalized_target = self._normalize_surface_type(surface_type)
         surfaces = [
             s for s in room_data.surfaces
@@ -595,37 +629,37 @@ class ModelAnalyzer:
         return weighted_sum / total_area if total_area > 0 else 0.0
 
     def calculate_total_energy_consumption(self, energy_sources: Dict[str, Any]) -> float:
-        """Calcule la consommation énergétique totale (kWh/an)."""
+        """Calculate total annual energy consumption from VE energy sources."""
         total_energy = 0.0
         for source in energy_sources.values():
             try:
                 total_energy += source.get_annual_consumption()
             except Exception as e:
-                logger.error(f"Erreur lors du calcul de la consommation énergétique: {e}")
+                logger.error("Error while calculating energy consumption: %s", e)
         return total_energy
 
     def calculate_total_area(self, rooms_data: List[RoomData]) -> float:
-        """Calcule la surface totale du bâtiment (m²)."""
+        """Calculate the total analyzed floor area."""
         return sum(room.area for room in rooms_data)
 
     def calculate_total_volume(self, rooms_data: List[RoomData]) -> float:
-        """Calcule le volume total du bâtiment (m³)."""
+        """Calculate the total analyzed room volume."""
         return sum(room.volume for room in rooms_data)
 
     def calculate_compacity(self, rooms_data: List[RoomData]) -> float:
-        """Calcule la compacité du bâtiment (Volume / Surface)."""
+        """Calculate the volume-to-area compactness indicator."""
         total_volume = self.calculate_total_volume(rooms_data)
         total_area = self.calculate_total_area(rooms_data)
         return total_volume / total_area if total_area > 0 else 0.0
 
     def get_external_surfaces(self, room_data: RoomData) -> List[SurfaceData]:
-        """Retourne les surfaces externes d'une pièce."""
+        """Return external surfaces for one room."""
         return [s for s in room_data.surfaces if s.is_external]
 
     def get_windows(self, room_data: RoomData) -> List[OpeningData]:
-        """Retourne les fenêtres d'une pièce."""
+        """Return window openings for one room."""
         return [o for o in room_data.openings if self._normalize_opening_type(o.opening_type) == "window"]
 
     def get_external_walls(self, room_data: RoomData) -> List[SurfaceData]:
-        """Retourne les murs extérieurs d'une pièce."""
+        """Return external wall surfaces for one room."""
         return [s for s in room_data.surfaces if s.is_external and self._normalize_surface_type(s.surface_type) == "wall"]

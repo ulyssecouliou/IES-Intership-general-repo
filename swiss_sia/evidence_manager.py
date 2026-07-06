@@ -9,7 +9,6 @@ visible.
 from __future__ import annotations
 
 import csv
-import os
 import re
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional
@@ -120,6 +119,7 @@ def describe_justification(record: Optional[Dict[str, Any]]) -> str:
 
 
 def _matching_files(evidence_dir: Path, patterns: Iterable[str]) -> List[Path]:
+    """Return evidence files matching any accepted justification pattern."""
     if not evidence_dir.is_dir():
         return []
     files: List[Path] = []
@@ -129,6 +129,7 @@ def _matching_files(evidence_dir: Path, patterns: Iterable[str]) -> List[Path]:
 
 
 def _read_justification_csv(file_path: Path) -> List[Dict[str, Any]]:
+    """Read one reviewer justification CSV and normalize every row."""
     with file_path.open("r", encoding="utf-8-sig", newline="") as handle:
         reader = csv.DictReader(handle)
         rows = []
@@ -141,6 +142,7 @@ def _read_justification_csv(file_path: Path) -> List[Dict[str, Any]]:
 
 
 def _normalize_record(raw_row: Dict[str, Any]) -> Dict[str, Any]:
+    """Normalize reviewer justification fields and compute acceptance status."""
     record = {
         _normalize_header(key): _clean_value(value)
         for key, value in (raw_row or {}).items()
@@ -172,24 +174,29 @@ def _normalize_record(raw_row: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def _normalize_header(value: Any) -> str:
+    """Normalize a CSV header to a stable snake_case key."""
     text = str(value or "").strip().lower()
     text = re.sub(r"[^a-z0-9]+", "_", text)
     return text.strip("_")
 
 
 def _clean_value(value: Any) -> str:
+    """Return a stripped string for a CSV field value."""
     return str(value or "").strip()
 
 
 def _status_key(value: Any) -> str:
+    """Normalize review/decision statuses for comparisons."""
     return re.sub(r"[^a-z0-9]+", "_", str(value or "").strip().lower()).strip("_")
 
 
 def _key(value: Any) -> str:
+    """Normalize a value to an uppercase alphanumeric comparison key."""
     return re.sub(r"[^A-Z0-9]+", "", str(value or "").upper())
 
 
 def _scope_key(value: Any) -> str:
+    """Normalize comma/semicolon separated scope labels for matching."""
     tokens = [
         _key(token)
         for token in re.split(r"[,;|]+", str(value or ""))
@@ -199,12 +206,14 @@ def _scope_key(value: Any) -> str:
 
 
 def _field_matches(record_value: Any, requested_value: Any) -> bool:
+    """Return true when a record field matches the requested value fuzzily."""
     record_key = _key(record_value)
     requested_key = _key(requested_value)
     return bool(record_key and requested_key and (record_key == requested_key or requested_key in record_key or record_key in requested_key))
 
 
 def _scope_matches(record_scope: Any, requested_scope: Any) -> bool:
+    """Return true when a justification scope covers the requested scope."""
     record_key = _scope_key(record_scope)
     requested_key = _scope_key(requested_scope)
     if not record_key or not requested_key:

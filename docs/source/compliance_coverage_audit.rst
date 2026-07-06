@@ -77,15 +77,15 @@ in ``config.py``.
    * - Glazing solar factor ``g_perp``
      - Table 2, PDF page 32
      - Limit/target 0.50
-     - ``PARTIAL`` because the VE value must be confirmed as the SIA-comparable g-value.
+     - ``PARTIAL`` unless ``VECdbConstruction.get_g_values().bs_en_410`` is available or reviewer evidence proves comparability.
    * - Visible light transmittance
      - Table 2, PDF page 32
      - Limit/target 0.70
-     - ``NOT_IMPLEMENTED``; no reliable VE extraction currently mapped.
+     - ``PARTIAL``; extracted from VE/CDB aliases when available, otherwise evidence is requested.
    * - Window frame fraction
      - Table 2, PDF page 32
      - Limit/target 0.25
-     - ``NOT_IMPLEMENTED``; no reliable VE extraction currently mapped.
+     - ``PARTIAL``; extracted from VE/CDB frame aliases when available, otherwise facade evidence is requested.
    * - Glazing ratio
      - Table 2, PDF page 32
      - Delegated to SIA 2024

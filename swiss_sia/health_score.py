@@ -167,6 +167,11 @@ class HealthScoreCalculator:
                 {},
             ).get("score", 0.0)
 
+        detailed_scores["SIA3802_VALUE_INTEGRITY"] = sia3802_results.get(
+            "value_integrity",
+            {},
+        ).get("score", 0.0)
+
         detailed_scores["SIA4010_ENERGY"] = sia4010_results.get("score", 0.0)
         detailed_scores["SIA4010_EVIDENCE_READINESS"] = sia4010_results.get("readiness_score", 0.0)
 

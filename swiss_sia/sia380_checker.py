@@ -11,6 +11,7 @@ from typing import Any, Dict, List
 from .config import SIA3802_LIMIT_VALUES, SIA3802_THRESHOLDS, SIA3802_U_VALUES
 from .model_analyzer import ModelAnalyzer, RoomData
 from .rule_engine import Alert, Rule, RuleEngine, Severity
+from .value_integrity import add_value_integrity_alerts
 
 
 class SIA3802Checker:
@@ -155,12 +156,20 @@ class SIA3802Checker:
         rooms_data = self.model_analyzer.analyze_all_rooms()
         self.rule_engine.clear_alerts()
 
+        envelope = self._check_envelope(rooms_data)
+        openings = self._check_openings(rooms_data)
+        ventilation = self._check_ventilation(rooms_data)
+        gains = self._check_gains(rooms_data)
+        hvac = self._check_hvac(rooms_data)
+        value_integrity = add_value_integrity_alerts(self.rule_engine, rooms_data)
+
         results = {
-            "envelope": self._check_envelope(rooms_data),
-            "openings": self._check_openings(rooms_data),
-            "ventilation": self._check_ventilation(rooms_data),
-            "gains": self._check_gains(rooms_data),
-            "hvac": self._check_hvac(rooms_data),
+            "envelope": envelope,
+            "openings": openings,
+            "ventilation": ventilation,
+            "gains": gains,
+            "hvac": hvac,
+            "value_integrity": value_integrity,
             "alerts": list(self.rule_engine.alerts),
         }
         return results
@@ -249,8 +258,17 @@ class SIA3802Checker:
                             data=opening,
                         )
 
-                    if opening.solar_factor is not None:
+                    if opening.solar_factor is not None and self._is_sia_comparable_g_value(opening):
                         self.rule_engine.check_rules(["SIA3802_SOLAR_FACTOR"], opening)
+                    elif opening.solar_factor is not None:
+                        self.rule_engine.add_alert(
+                            rule="SIA3802_G_VALUE_SOURCE_NOT_COMPARABLE",
+                            description=f"Solar factor is present for external window {opening.name or opening.id}, but its source is not proven as EN 410 g_perp.",
+                            severity=Severity.MEDIUM,
+                            category="Openings",
+                            recommendation="Use VECdbConstruction.get_g_values().bs_en_410 or manufacturer evidence before comparing to the SIA 380/2 g-value limit.",
+                            data=opening,
+                        )
                     else:
                         self.rule_engine.add_alert(
                             rule="SIA3802_SOLAR_FACTOR_MISSING",
@@ -532,6 +550,12 @@ class SIA3802Checker:
         if value_m3_h_m2 <= 6:
             return "3-6"
         return ">6"
+
+    @staticmethod
+    def _is_sia_comparable_g_value(opening: Any) -> bool:
+        """Return true when the glazing g-value is proven as EN 410 g_perp."""
+        source = str(getattr(opening, "solar_factor_source", "") or "").lower()
+        return "bs_en_410" in source or getattr(opening, "g_value_bs_en_410", None) is not None
 
 
 # Backward-compatible alias for older launchers or notebooks.

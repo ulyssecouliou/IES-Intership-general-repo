@@ -7,6 +7,7 @@ intended for developer machines and CI only.
 from __future__ import annotations
 
 import argparse
+import importlib.util
 import subprocess
 import sys
 from pathlib import Path
@@ -20,6 +21,15 @@ BUILD_DIR = DOCS_DIR / "build"
 
 def build_docs(language: str, builder: str) -> int:
     """Run sphinx-build for one builder/language combination."""
+    if importlib.util.find_spec("sphinx") is None:
+        print(
+            "Sphinx is not installed in this Python environment.\n"
+            "Install the documentation dependencies first:\n"
+            f"{sys.executable} -m pip install -r {DOCS_DIR / 'requirements-docs.txt'}",
+            file=sys.stderr,
+        )
+        return 2
+
     if builder == "gettext":
         output_dir = BUILD_DIR / "gettext"
         command = [
@@ -60,4 +70,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

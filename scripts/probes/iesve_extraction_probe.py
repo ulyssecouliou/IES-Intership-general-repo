@@ -21,17 +21,19 @@ except Exception:  # pragma: no cover - only available inside IESVE.
     iesve = None
 
 from swiss_sia.config import OUTPUT_DIR
-from swiss_sia import data_extractor
+from swiss_sia import data_extractor, simulation_results
 
 
 data_extractor = importlib.reload(data_extractor)
+simulation_results = importlib.reload(simulation_results)
 VEDataExtractor = data_extractor.VEDataExtractor
 
 DEFAULT_BODY_LIMIT = 6
 DEFAULT_SURFACE_LIMIT = 40
 DEFAULT_OPENING_LIMIT = 20
-PROBE_SCHEMA_VERSION = "2026-06-29-cdb-diagnostics-v2"
+PROBE_SCHEMA_VERSION = "2026-07-06-cdb-aps-diagnostics-v3"
 DATA_EXTRACTOR_MODULE_PATH = getattr(data_extractor, "__file__", "")
+SIMULATION_RESULTS_MODULE_PATH = getattr(simulation_results, "__file__", "")
 
 
 def jsonable(value: Any, depth: int = 0) -> Any:
@@ -58,6 +60,7 @@ def jsonable(value: Any, depth: int = 0) -> Any:
 
 
 def safe_attr(obj: Any, name: str) -> Any:
+    """Read an attribute or zero-argument callable for diagnostics."""
     try:
         value = getattr(obj, name)
         if callable(value):
@@ -71,6 +74,7 @@ def safe_attr(obj: Any, name: str) -> Any:
 
 
 def safe_call(obj: Any, method_name: str, *args: Any) -> Any:
+    """Call a VE method and return a structured error instead of failing."""
     try:
         method = getattr(obj, method_name)
         return method(*args)
@@ -79,6 +83,7 @@ def safe_call(obj: Any, method_name: str, *args: Any) -> Any:
 
 
 def object_header(extractor: VEDataExtractor, obj: Any) -> Dict[str, Any]:
+    """Build a compact diagnostic header for a VE object."""
     return {
         "id": extractor.get_object_id(obj),
         "class": obj.__class__.__name__ if obj is not None else None,
@@ -89,6 +94,7 @@ def object_header(extractor: VEDataExtractor, obj: Any) -> Dict[str, Any]:
 
 
 def child_get_values(children: List[Any]) -> List[Any]:
+    """Safely call ``get()`` on sampled child API objects."""
     values = []
     for child in children[:30]:
         if isinstance(child, dict):
@@ -197,7 +203,65 @@ def probe_cdb(extractor: VEDataExtractor, construction_ids: List[str]) -> Dict[s
     return diagnostics
 
 
+def probe_results_reader(project: Any) -> Dict[str, Any]:
+    """Capture APS/Vista diagnostics exposed by ``iesve.ResultsReader``."""
+    diagnostics: Dict[str, Any] = {
+        "simulation_results_path": SIMULATION_RESULTS_MODULE_PATH,
+        "aps_files": [],
+        "files": [],
+    }
+    aps_files = simulation_results.list_aps_files(project)
+    diagnostics["aps_files"] = aps_files
+
+    for aps_file in aps_files[:5]:
+        file_info: Dict[str, Any] = {
+            "aps_file": aps_file,
+            "aps_path": simulation_results.get_aps_path(project, aps_file),
+            "weather_references": simulation_results.extract_epw_references_from_aps(
+                simulation_results.get_aps_path(project, aps_file)
+            ),
+            "opened": False,
+        }
+        results_file = None
+        try:
+            results_file = simulation_results.open_results_reader(aps_file)
+            variables = simulation_results.get_available_variables(results_file)
+            levels: Dict[str, int] = {}
+            for variable in variables:
+                level = str(variable.get("model_level") or variable.get("level") or "unknown")
+                levels[level] = levels.get(level, 0) + 1
+
+            file_info.update({
+                "opened": True,
+                "results_per_hour": simulation_results.get_results_per_hour(results_file),
+                "results_per_day_attr": jsonable(safe_attr(results_file, "results_per_day")),
+                "first_day_attr": jsonable(safe_attr(results_file, "first_day")),
+                "last_day_attr": jsonable(safe_attr(results_file, "last_day")),
+                "variable_count": len(variables),
+                "variable_levels": levels,
+                "variables_sample": jsonable(variables[:250]),
+                "room_list_sample": jsonable(safe_call(results_file, "get_room_list")),
+                "apache_systems_sample": jsonable(safe_call(results_file, "get_apache_systems")),
+                "energy_uses_sample": jsonable(safe_call(results_file, "get_energy_uses")),
+                "energy_sources_sample": jsonable(safe_call(results_file, "get_energy_sources")),
+                "energy_meters_sample": jsonable(safe_call(results_file, "get_energy_meters")),
+                "component_objects_sample": jsonable(safe_call(results_file, "get_component_objects")),
+            })
+        except Exception as exc:
+            file_info["error"] = str(exc)
+        finally:
+            if results_file is not None and hasattr(results_file, "close"):
+                try:
+                    results_file.close()
+                except Exception:
+                    file_info["close_warning"] = "ResultsReader close() failed."
+        diagnostics["files"].append(file_info)
+
+    return diagnostics
+
+
 def probe_project(body_limit: int, surface_limit: int, opening_limit: int) -> Dict[str, Any]:
+    """Capture a diagnostic snapshot of the active IESVE project."""
     if iesve is None:
         raise RuntimeError("The iesve Python module is only available inside IESVE.")
     project = iesve.VEProject.get_current_project()
@@ -274,6 +338,7 @@ def probe_project(body_limit: int, surface_limit: int, opening_limit: int) -> Di
         payload["bodies"].append(body_info)
 
     payload["cdb_diagnostics"] = probe_cdb(extractor, collect_construction_ids(payload))
+    payload["aps_diagnostics"] = probe_results_reader(project)
 
     return payload
 
@@ -297,6 +362,7 @@ def run_with_defaults() -> str:
 
 
 def main() -> None:
+    """Command-line entry point for running the diagnostic probe."""
     parser = argparse.ArgumentParser(description="Dump a small diagnostic snapshot of the active IESVE model.")
     parser.add_argument("--body-limit", type=int, default=DEFAULT_BODY_LIMIT)
     parser.add_argument("--surface-limit", type=int, default=DEFAULT_SURFACE_LIMIT)

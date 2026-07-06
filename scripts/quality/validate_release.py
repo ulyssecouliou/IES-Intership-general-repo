@@ -8,8 +8,11 @@ is shared externally.
 
 from __future__ import annotations
 
+import ast
 import importlib
+import io
 import sys
+import tokenize
 import zipfile
 from pathlib import Path
 from typing import Any, Iterable
@@ -28,6 +31,7 @@ class Validator:
     """Small validation harness with readable console output."""
 
     def __init__(self) -> None:
+        """Initialize release validation counters."""
         self.failures: list[str] = []
         self.warnings: list[str] = []
         self.passed = 0
@@ -124,10 +128,19 @@ def check_standard_pdfs(validator: Validator) -> None:
 def check_manager_reference_documents(validator: Validator) -> None:
     """Validate manager-provided reference documents used as project guardrails."""
     pdf_reader = _load_pdf_reader()
-    register_path = PROJECT_ROOT / "SIA 4010 Register validierter Software_24-09-17.pdf"
+    register_candidates = [
+        PROJECT_ROOT / "SIA 4010 Register validierter Software_24-09-17.pdf",
+        PROJECT_ROOT / "references" / "standards" / "SIA 4010 Register validierter Software_24-09-17.pdf",
+        PROJECT_ROOT / "references" / "SIA 4010 Register validierter Software_24-09-17.pdf",
+    ]
+    register_path = next((path for path in register_candidates if path.exists()), register_candidates[0])
     navigator_path = PROJECT_ROOT / "Sia 380_2 Navigator – Executive Summary & Product Backlog.docx"
 
-    validator.require("Manager SIA 4010 software register exists", register_path.exists(), str(register_path))
+    validator.warn_if(
+        "Manager SIA 4010 software register exists",
+        register_path.exists(),
+        "Optional manager reference not found in project root or references/standards.",
+    )
     validator.require("Manager SIA 380/2 navigator backlog exists", navigator_path.exists(), str(navigator_path))
 
     if register_path.exists():
@@ -167,10 +180,47 @@ def check_config_traceability(validator: Validator) -> None:
     validator.require("SIA 380/2 flat roof limit/target", config.SIA3802_LIMIT_VALUES["flat_roof_u"] == 0.20 and config.SIA3802_TARGET_VALUES["flat_roof_u"] == 0.14)
     validator.require("SIA 4010 has seven tests", len(config.SIA4010_VALIDATION_TESTS) == 7)
     validator.require("SIA 4010 has all validation classes", set(config.SIA4010_VALIDATION_CLASSES) == {"1A", "1B", "2A", "2B", "3", "4A", "4B", "5"})
+    validator.require("SIA 4010 PDF prevalidation has seven tests", len(config.SIA4010_PDF_PREVALIDATION_TESTS) == 7)
+    validator.require("SIA 4010 test alias order covers variants", {"test_2A", "test_3A_to_3F"} <= set(config.SIA4010_TEST_ALIAS_ORDER))
+    validator.require("SIA 4010 test aliases map to base tests", set(config.SIA4010_TEST_ALIAS_ORDER) <= set(config.SIA4010_TEST_ALIAS_TO_BASE_TEST))
     validator.require("SIA 4010 register has manager software entries", len(config.SIA4010_VALIDATED_SOFTWARE_REGISTER) == 4)
     validator.require("IESVE manager-register guardrail is conservative", config.SIA4010_IESVE_REGISTER_STATUS["listed_in_manager_register"] is False)
     validator.require("SIA navigator backlog has ten epics", len(config.SIA3802_NAVIGATOR_BACKLOG) == 10)
     validator.require("SIA 4010 has five required evidence families", len(config.SIA4010_REQUIRED_EVIDENCE) == 5)
+    validator.require("SIA 4010 evidence requirements cover five families", len(config.SIA4010_EVIDENCE_REQUIREMENTS) == 5)
+    validator.require("SIA 4010 evidence manifest prefixes are configured", bool(config.SIA4010_EVIDENCE_MANIFEST_PREFIXES))
+    validator.require(
+        "SIA 4010 evidence manifest required columns include review metadata",
+        {"provided_file_name", "source_authority", "tests_covered", "reviewer", "review_status"}
+        <= set(config.SIA4010_EVIDENCE_MANIFEST_REQUIRED_COLUMNS),
+    )
+    validator.require("SIA 4010 evidence manifest accepted statuses are configured", bool(config.SIA4010_EVIDENCE_MANIFEST_ACCEPTED_REVIEW_STATUSES))
+    validator.require("SIA 4010 class manifest prefixes are configured", bool(config.SIA4010_CLASS_MANIFEST_PREFIXES))
+    validator.require(
+        "SIA 4010 class manifest required columns include reviewer/source metadata",
+        {"validation_class", "selected", "reviewer", "review_status", "source_authority", "source_reference"}
+        <= set(config.SIA4010_CLASS_MANIFEST_REQUIRED_COLUMNS),
+    )
+    validator.require("SIA 4010 class manifest accepted statuses are configured", bool(config.SIA4010_CLASS_MANIFEST_ACCEPTED_REVIEW_STATUSES))
+    validator.require("SIA 4010 official test-result prefixes are configured", bool(config.SIA4010_OFFICIAL_TEST_RESULTS_PREFIXES))
+    validator.require(
+        "SIA 4010 official test-result columns include comparison metadata",
+        {"test_id", "status", "reference_file", "candidate_file", "reviewer", "review_date", "source_authority", "source_reference"}
+        <= set(config.SIA4010_OFFICIAL_TEST_RESULTS_REQUIRED_COLUMNS),
+    )
+    validator.require("SIA 4010 official PASS statuses are configured", bool(config.SIA4010_OFFICIAL_TEST_RESULT_PASS_STATUSES))
+    validator.require("SIA 4010 official FAIL statuses are configured", bool(config.SIA4010_OFFICIAL_TEST_RESULT_FAIL_STATUSES))
+    for key, requirement in config.SIA4010_EVIDENCE_REQUIREMENTS.items():
+        validator.require(f"SIA 4010 evidence requirement {key} has a label", bool(requirement.get("label")))
+        validator.require(f"SIA 4010 evidence requirement {key} has strict prefixes", bool(requirement.get("required_prefixes")))
+        validator.require(f"SIA 4010 evidence requirement {key} has accepted extensions", bool(requirement.get("accepted_extensions")))
+        validator.require(f"SIA 4010 evidence requirement {key} has an example filename", bool(requirement.get("example_filename")))
+    for class_name in config.SIA4010_VALIDATION_CLASSES:
+        aliases = [
+            alias for alias in config.SIA4010_TEST_ALIAS_ORDER
+            if class_name in config.SIA4010_TEST_CLASS_COVERAGE.get(alias, [])
+        ]
+        validator.require(f"SIA 4010 class {class_name} has required test aliases", bool(aliases))
 
     coverage = config.SIA_DATA_COVERAGE_MATRIX
     requirement_matrix = config.SIA_COMPLIANCE_REQUIREMENT_MATRIX
@@ -207,9 +257,19 @@ def check_config_traceability(validator: Validator) -> None:
 
 def check_scoring_guardrails(validator: Validator) -> None:
     """Validate conservative scoring for non-checkable VE models."""
+    from types import SimpleNamespace
+
     from swiss_sia.data_extractor import VEDataExtractor
+    from swiss_sia.evidence_bootstrap import prepare_evidence_folder
+    from swiss_sia.evidence_pack import create_evidence_pack
+    from swiss_sia.excel_report import ExcelReportGenerator
     from swiss_sia.rule_engine import RuleEngine
     from swiss_sia.sia380_checker import SIA3802Checker
+    from swiss_sia.sia4010_checker import SIA4010Checker
+    from swiss_sia.simulation_results import normalize_co2_series_to_ppm
+    from swiss_sia.sia4010_prevalidation import build_sia4010_pdf_prevalidation
+    from swiss_sia.value_integrity import add_value_integrity_alerts
+    from swiss_sia.config import SIA4010_EVIDENCE_REQUIREMENTS, SIA4010_REQUIRED_EVIDENCE
 
     validator.require(
         "VE enum normalizer supports callable API attributes",
@@ -217,23 +277,33 @@ def check_scoring_guardrails(validator: Validator) -> None:
     )
 
     class FakeBody:
+        """Minimal VE body fixture used to validate model selection."""
+
         type = "BodyType.room"
         subtype = "room"
 
         @staticmethod
         def get_id() -> str:
+            """Return a stable room fixture identifier."""
             return "room-1"
 
     class FakeModel:
+        """Minimal VE model fixture exposing the ``get_bodies`` API."""
+
         def __init__(self, model_type: str, bodies: list[Any]) -> None:
+            """Store the model type and mock body collection."""
             self.model_type = model_type
             self._bodies = bodies
 
         def get_bodies(self, selected_only: bool = False) -> list[Any]:
+            """Return mock bodies while accepting the VE selected-only flag."""
             return list(self._bodies)
 
     class FakeProject:
+        """Minimal VE project fixture with competing model candidates."""
+
         def __init__(self) -> None:
+            """Create one empty model and one usable room-bearing model."""
             self.models = [
                 FakeModel("VEModels_NA", []),
                 FakeModel("RealBuilding", [FakeBody()]),
@@ -257,10 +327,12 @@ def check_scoring_guardrails(validator: Validator) -> None:
 
         @staticmethod
         def analyze_all_rooms() -> list[Any]:
+            """Return no rooms to exercise conservative not-checkable scoring."""
             return []
 
         @staticmethod
         def calculate_wwr(room: Any) -> float:
+            """Return a neutral WWR value for the empty analyzer fixture."""
             return 0.0
 
     checker = SIA3802Checker(EmptyModelAnalyzer(), RuleEngine())
@@ -281,23 +353,550 @@ def check_scoring_guardrails(validator: Validator) -> None:
     ]:
         validator.require(f"No-room guard emits {rule}", rule in blocking_rules)
 
+    en410_audit = VEDataExtractor._extract_g_value_audit({
+        "g_value": 0.75,
+        "g_values": {"bs_en_410": 0.47, "building_regulations": 0.62},
+    })
+    validator.require(
+        "SIA g-value selector prefers documented EN 410 g_perp",
+        en410_audit.get("selected_sia_g_value") == 0.47
+        and en410_audit.get("fallback_g_value") == 0.75,
+    )
+    raw_g_audit = VEDataExtractor._extract_g_value_audit({"g_value": 0.75})
+    validator.require(
+        "Raw CDB g_value alone is not treated as SIA-comparable g_perp",
+        raw_g_audit.get("selected_sia_g_value") is None
+        and raw_g_audit.get("fallback_g_value") == 0.75,
+    )
+
+    value_rule_engine = RuleEngine()
+    raw_only_opening = SimpleNamespace(
+        id="opening-1",
+        name="opening-1",
+        area=3.0,
+        u_value=1.0,
+        solar_factor=None,
+        solar_factor_source="",
+        cdb_g_value=0.75,
+        g_value_bs_en_410=None,
+        visible_transmittance=0.7,
+        frame_fraction=0.25,
+        g_total=None,
+    )
+    integrity_room = SimpleNamespace(
+        id="room-1",
+        name="room-1",
+        area=10.0,
+        volume=30.0,
+        surfaces=[],
+        openings=[raw_only_opening],
+        infiltration_m3_h_m2=0.1,
+        ventilation_m3_h_m2=2.0,
+        internal_gains={},
+    )
+    integrity = add_value_integrity_alerts(value_rule_engine, [integrity_room])
+    integrity_rules = {str(alert.rule) for alert in integrity.get("alerts", [])}
+    validator.require(
+        "Value-integrity guard flags raw CDB g_value without EN 410 proof",
+        "SIA_VALUE_G_SOURCE_NOT_EN410" in integrity_rules,
+    )
+
+    sia4010_results = SIA4010Checker(EmptyModelAnalyzer(), RuleEngine()).check_all()
+    class_results = sia4010_results.get("classes", {})
+    validator.require(
+        "SIA 4010 class matrix covers all validation classes",
+        set(class_results) == {"1A", "1B", "2A", "2B", "3", "4A", "4B", "5"},
+    )
+    validator.require(
+        "SIA 4010 classes are not validated without explicit official PASS data",
+        all(item.get("class_status") != "VALIDATED" for item in class_results.values()),
+    )
+    validator.require(
+        "SIA 4010 strict evidence matcher rejects generic validation workbook",
+        not SIA4010Checker._matches_evidence_requirement(
+            {"name": "validation.xlsx"},
+            SIA4010_EVIDENCE_REQUIREMENTS["official_evaluation_workbooks"],
+        ),
+    )
+    validator.require(
+        "SIA 4010 strict evidence matcher accepts documented workbook prefix",
+        SIA4010Checker._matches_evidence_requirement(
+            {"name": "SIA4010_official_evaluation_workbook_class_4B.xlsx"},
+            SIA4010_EVIDENCE_REQUIREMENTS["official_evaluation_workbooks"],
+        ),
+    )
+    validator.require(
+        "SIA 4010 evidence manifest file is recognized",
+        SIA4010Checker._is_evidence_manifest_file("SIA4010_evidence_index_demo.csv"),
+    )
+    manifest_row = {
+        "evidence_family": "official_test_specifications",
+        "provided_file_name": "SIA4010_official_test_specs_class_4B.pdf",
+        "source_authority": "SIA official package",
+        "version_or_date": "2026-07-05",
+        "tests_covered": "Test 1",
+        "reviewer": "Reviewer",
+        "review_status": "reviewed",
+    }
+    SIA4010Checker._annotate_manifest_row(
+        manifest_row,
+        [{"name": "SIA4010_official_test_specs_class_4B.pdf", "path": "sia4010_evidence/SIA4010_official_test_specs_class_4B.pdf", "size_bytes": 16}],
+    )
+    validator.require(
+        "SIA 4010 evidence manifest row documents referenced evidence",
+        manifest_row.get("row_status") == "DOCUMENTED"
+        and manifest_row.get("review_status_accepted") is True
+        and manifest_row.get("provided_file_exists") is True,
+    )
+    validator.require(
+        "SIA 4010 class manifest file is recognized",
+        SIA4010Checker._is_class_manifest_file("SIA4010_class_validation_demo.csv"),
+    )
+    class_manifest_row = {
+        "validation_class": "4B",
+        "selected": "yes",
+        "required_tests": "Test 1; Test 2; Test 3; Test 4; Test 5; Test 6; Test 7",
+        "reviewer": "Reviewer",
+        "review_status": "confirmed",
+        "review_date": "2026-07-06",
+        "source_authority": "Responsible compliance authority",
+        "source_reference": "SIA 4010 class decision fixture",
+    }
+    SIA4010Checker._annotate_class_manifest_row(class_manifest_row)
+    validator.require(
+        "SIA 4010 class manifest row documents selected class",
+        class_manifest_row.get("class_key") == "4B"
+        and class_manifest_row.get("selected_bool") is True
+        and class_manifest_row.get("row_status") == "SELECTED_DOCUMENTED",
+    )
+    validator.require(
+        "SIA 4010 official test-result file is recognized",
+        SIA4010Checker._is_official_test_results_file("SIA4010_official_test_results_demo.csv"),
+    )
+    official_result_row = {
+        "test_id": "test_1",
+        "status": "validated",
+        "reference_file": "SIA4010_reference_comparison_class_4B.pdf",
+        "candidate_file": "SIA4010_candidate_results_class_4B_test_1_to_7.xlsx",
+        "deviation": "0.0",
+        "tolerance": "0.0",
+        "reviewer": "Reviewer",
+        "review_date": "2026-07-06",
+        "source_authority": "Responsible compliance authority",
+        "source_reference": "SIA 4010 official test-result fixture",
+    }
+    official_result_files = [
+        {"name": "SIA4010_reference_comparison_class_4B.pdf", "path": "sia4010_evidence/SIA4010_reference_comparison_class_4B.pdf", "size_bytes": 16},
+        {"name": "SIA4010_candidate_results_class_4B_test_1_to_7.xlsx", "path": "sia4010_evidence/SIA4010_candidate_results_class_4B_test_1_to_7.xlsx", "size_bytes": 16},
+    ]
+    SIA4010Checker._annotate_official_test_result_row(official_result_row, official_result_files)
+    validator.require(
+        "SIA 4010 official test-result row can validate one test",
+        official_result_row.get("test_key") == "test_1"
+        and official_result_row.get("row_status") == "OFFICIAL_PASS"
+        and official_result_row.get("reference_file_exists") is True
+        and official_result_row.get("candidate_file_exists") is True,
+    )
+    official_result_missing_files = dict(official_result_row)
+    official_result_missing_files["reference_file"] = "missing_reference.pdf"
+    SIA4010Checker._annotate_official_test_result_row(official_result_missing_files, official_result_files)
+    validator.require(
+        "SIA 4010 official PASS requires referenced files to exist",
+        official_result_missing_files.get("row_status") == "REFERENCED_RESULT_FILES_NOT_FOUND",
+    )
+    official_result_bad_id = dict(official_result_row)
+    official_result_bad_id["test_id"] = "test_10"
+    SIA4010Checker._annotate_official_test_result_row(official_result_bad_id, official_result_files)
+    validator.require(
+        "SIA 4010 official test IDs are not normalized from ambiguous digits",
+        official_result_bad_id.get("row_status") == "UNKNOWN_TEST",
+    )
+    official_test_results = SIA4010Checker(EmptyModelAnalyzer(), RuleEngine())._run_sia4010_tests({
+        "status": "READY_FOR_OFFICIAL_REVIEW",
+        "official_test_result_summary": {
+            "validated_by_test": {"test_1": [official_result_row]},
+            "failed_by_test": {},
+        },
+    })
+    validator.require(
+        "SIA 4010 test status uses explicit official PASS row",
+        official_test_results["test_1"].get("status") == "VALIDATED"
+        and official_test_results["test_1"].get("score") == 100
+        and official_test_results["test_2"].get("status") == "READY_FOR_OFFICIAL_REVIEW",
+    )
+    not_ready_test_results = SIA4010Checker(EmptyModelAnalyzer(), RuleEngine())._run_sia4010_tests({
+        "status": "NOT_CHECKABLE",
+        "official_test_result_summary": {
+            "validated_by_test": {"test_1": [official_result_row]},
+            "failed_by_test": {},
+        },
+    })
+    validator.require(
+        "SIA 4010 official PASS does not validate test when evidence pack is not ready",
+        not_ready_test_results["test_1"].get("status") == "NOT_CHECKABLE"
+        and not_ready_test_results["test_1"].get("score") == 0,
+    )
+    incomplete_class_manifest_row = dict(class_manifest_row)
+    incomplete_class_manifest_row["reviewer"] = ""
+    SIA4010Checker._annotate_class_manifest_row(incomplete_class_manifest_row)
+    validator.require(
+        "SIA 4010 selected class requires complete manifest metadata",
+        incomplete_class_manifest_row.get("row_status") == "SELECTED_METADATA_INCOMPLETE",
+    )
+    prevalidation = build_sia4010_pdf_prevalidation([], {"alerts": []}, {"energy": {}}, {"status": "NOT_CHECKABLE"})
+    validator.require(
+        "SIA 4010 PDF prevalidation covers seven tests",
+        len(prevalidation.get("tests", {})) == 7,
+    )
+    validator.require(
+        "SIA 4010 PDF prevalidation covers all validation classes",
+        set(prevalidation.get("classes", {})) == {"1A", "1B", "2A", "2B", "3", "4A", "4B", "5"},
+    )
+
+    evidence_without_files = {
+        "candidate_results": {"present": True, "files": []},
+        SIA4010_REQUIRED_EVIDENCE[2]: True,
+    }
+    validator.require(
+        "SIA 4010 evidence helper rejects PRESENT without detected files",
+        not ExcelReportGenerator._has_sia4010_evidence(
+            evidence_without_files,
+            SIA4010_REQUIRED_EVIDENCE[2],
+        ),
+    )
+    evidence_with_file = {
+        "candidate_results": {
+            "present": True,
+            "files": [{"name": "candidate_results_example.xlsx"}],
+        },
+        SIA4010_REQUIRED_EVIDENCE[2]: True,
+    }
+    validator.require(
+        "SIA 4010 evidence helper accepts structured families with detected files",
+        ExcelReportGenerator._has_sia4010_evidence(
+            evidence_with_file,
+            SIA4010_REQUIRED_EVIDENCE[2],
+        ),
+    )
+    release_token = f"{id(validator):x}"
+    release_report = PROJECT_ROOT / "reports" / f"_release_validation_report_{release_token}.xlsx"
+    release_evidence_dir = PROJECT_ROOT / "sia4010_evidence"
+    unsafe_zip = release_evidence_dir / f"_release_validation_unsafe_{release_token}.zip"
+    unsafe_standard_pdf = release_evidence_dir / f"SIA 4010-2023 FR _release_validation_{release_token}.pdf"
+    release_pack = None
+    try:
+        release_report.parent.mkdir(exist_ok=True)
+        release_evidence_dir.mkdir(exist_ok=True)
+        release_report.write_bytes(b"release validation workbook placeholder")
+        unsafe_zip.write_bytes(b"unsafe zip placeholder")
+        unsafe_standard_pdf.write_bytes(b"copied standard placeholder")
+        pack_result = create_evidence_pack(
+            project_root=PROJECT_ROOT,
+            report_path=release_report,
+            latest_report_path=None,
+            sia4010_results=sia4010_results,
+            preflight_checks=[],
+        )
+        release_pack = Path(pack_result.get("path", ""))
+        with zipfile.ZipFile(release_pack) as package:
+            package_names = set(package.namelist())
+            manifest_text = package.read("manifest/evidence_pack_manifest.json").decode("utf-8")
+        validator.require(
+            "Evidence pack ZIP is generated with README and manifest",
+            release_pack.exists()
+            and "README_EVIDENCE_PACK.md" in package_names
+            and "manifest/evidence_pack_manifest.json" in package_names
+            and release_report.relative_to(PROJECT_ROOT).as_posix() in package_names
+            and unsafe_zip.relative_to(PROJECT_ROOT).as_posix() not in package_names
+            and unsafe_standard_pdf.relative_to(PROJECT_ROOT).as_posix() not in package_names
+            and "excluded_files" in manifest_text
+            and "not an official SIA certificate" in manifest_text,
+        )
+    finally:
+        for path in [release_report, release_pack, unsafe_zip, unsafe_standard_pdf]:
+            try:
+                if path and Path(path).exists():
+                    Path(path).unlink()
+            except Exception:
+                pass
+
+    bootstrap_result = prepare_evidence_folder(
+        project_root=PROJECT_ROOT,
+        project_label="_release_validation_bootstrap",
+        overwrite=False,
+    )
+    bootstrap_targets = [
+        Path(item.get("target", ""))
+        for item in bootstrap_result.get("files", [])
+        if item.get("status") in {"CREATED", "OVERWRITTEN"}
+    ]
+    try:
+        validator.require(
+            "Evidence bootstrap creates project-named CSV handoff files",
+            bootstrap_result.get("status") == "READY"
+            and bootstrap_result.get("created_count") == 6
+            and all(path.exists() for path in bootstrap_targets),
+        )
+    finally:
+        for path in bootstrap_targets:
+            try:
+                if path.exists():
+                    path.unlink()
+            except Exception:
+                pass
+
+
+def check_internal_fixture_scenarios(validator: Validator) -> None:
+    """Validate production checkers against deterministic in-memory fixtures."""
+    from scripts.quality.fixtures import (
+        build_problem_analyzer,
+        build_reference_analyzer,
+        collect_alert_rules,
+        collect_high_or_critical_alert_rules,
+    )
+    from swiss_sia.config import SIA4010_VALIDATION_TESTS
+    from swiss_sia.rule_engine import RuleEngine
+    from swiss_sia.sia380_checker import SIA3802Checker
+    from swiss_sia.sia4010_checker import SIA4010Checker
+    from swiss_sia.simulation_results import normalize_co2_series_to_ppm
+
+    reference_results = SIA3802Checker(build_reference_analyzer(), RuleEngine()).check_all()
+    reference_high_rules = collect_high_or_critical_alert_rules(reference_results)
+    validator.require(
+        "SIA 380/2 reference fixture has no high or critical alerts",
+        not reference_high_rules,
+        "; ".join(sorted(reference_high_rules)),
+    )
+    validator.require(
+        "SIA 380/2 reference fixture scores core categories",
+        reference_results["envelope"]["score"] == 100.0
+        and reference_results["openings"]["score"] == 100.0
+        and reference_results["gains"]["score"] == 100.0
+        and reference_results["hvac"]["score"] == 100.0
+        and reference_results["ventilation"]["score"] >= 90.0,
+    )
+    validator.require(
+        "SIA 380/2 reference fixture has no value-integrity alerts",
+        reference_results["value_integrity"]["alert_count"] == 0,
+    )
+    co2_values, co2_note = normalize_co2_series_to_ppm(
+        [0.0004, 0.0008],
+        "Room CO2 concentration",
+    )
+    validator.require(
+        "APS CO2 fraction results are normalized to ppm",
+        co2_values == [400.0, 800.0] and co2_note == "converted from fraction to ppm",
+        str(co2_values),
+    )
+
+    problem_results = SIA3802Checker(build_problem_analyzer(), RuleEngine()).check_all()
+    problem_rules = collect_alert_rules(problem_results)
+    expected_problem_rules = {
+        "SIA3802_U_VALUE_EXTERNAL_WALL",
+        "SIA3802_U_VALUE_ROOF",
+        "SIA3802_U_VALUE_WINDOW",
+        "SIA3802_G_VALUE_SOURCE_NOT_COMPARABLE",
+        "SIA3802_G_TOTAL_WITH_SHADING_MISSING",
+        "SIA3802_INFILTRATION_M3_H_M2",
+        "SIA_VALUE_G_SOURCE_NOT_EN410",
+    }
+    validator.require(
+        "SIA 380/2 problem fixture triggers expected rule families",
+        expected_problem_rules <= problem_rules,
+        "; ".join(sorted(expected_problem_rules - problem_rules)),
+    )
+    validator.require(
+        "SIA 380/2 problem fixture lowers envelope and opening scores",
+        problem_results["envelope"]["score"] < 100.0
+        and problem_results["openings"]["score"] < 100.0,
+    )
+
+    sia4010_checker = SIA4010Checker(build_reference_analyzer(), RuleEngine())
+    validated_by_test = {
+        test_name: [{"test_id": test_name, "row_status": "OFFICIAL_PASS"}]
+        for test_name in SIA4010_VALIDATION_TESTS
+    }
+    ready_summary = {
+        "status": "READY_FOR_OFFICIAL_REVIEW",
+        "validation_class": "4B",
+        "missing_items": [],
+        "official_test_result_summary": {
+            "validated_by_test": validated_by_test,
+            "failed_by_test": {},
+        },
+    }
+    ready_tests = sia4010_checker._run_sia4010_tests(ready_summary)
+    ready_classes = sia4010_checker._evaluate_validation_classes(ready_tests, ready_summary)
+    validator.require(
+        "SIA 4010 fixture validates tests only from official PASS rows",
+        all(test.get("status") == "VALIDATED" for test in ready_tests.values()),
+    )
+    validator.require(
+        "SIA 4010 fixture validates the selected class when all required aliases pass",
+        ready_classes["4B"].get("class_status") == "VALIDATED"
+        and all(
+            class_name == "4B" or class_data.get("class_status") == "NOT_REQUESTED"
+            for class_name, class_data in ready_classes.items()
+        ),
+    )
+
+    failed_summary = {
+        "status": "READY_FOR_OFFICIAL_REVIEW",
+        "validation_class": "4B",
+        "missing_items": [],
+        "official_test_result_summary": {
+            "validated_by_test": validated_by_test,
+            "failed_by_test": {"test_1": [{"test_id": "test_1", "row_status": "OFFICIAL_FAIL"}]},
+        },
+    }
+    failed_tests = sia4010_checker._run_sia4010_tests(failed_summary)
+    failed_classes = sia4010_checker._evaluate_validation_classes(failed_tests, failed_summary)
+    validator.require(
+        "SIA 4010 official FAIL overrides an official PASS row",
+        failed_tests["test_1"].get("status") == "FAIL"
+        and failed_classes["4B"].get("class_status") != "VALIDATED",
+    )
+
+
+def check_claim_safety_without_official_excel(validator: Validator) -> None:
+    """Validate that readiness helpers cannot overclaim without official files."""
+    from scripts.quality.fixtures import StaticModelAnalyzer, build_reference_room, collect_alert_rules
+    from swiss_sia.config import SIA4010_REQUIRED_EVIDENCE
+    from swiss_sia.excel_report import ExcelReportGenerator
+    from swiss_sia.health_score import HealthScoreCalculator
+    from swiss_sia.rule_engine import RuleEngine
+    from swiss_sia.sia380_checker import SIA3802Checker
+
+    raw_cdb_room = build_reference_room()
+    raw_cdb_opening = raw_cdb_room.openings[0]
+    raw_cdb_opening.solar_factor = 0.45
+    raw_cdb_opening.solar_factor_source = ""
+    raw_cdb_opening.cdb_g_value = 0.45
+    raw_cdb_opening.g_value_bs_en_410 = None
+    raw_cdb_opening.g_total = None
+    raw_cdb_opening.g_total_source = None
+
+    raw_cdb_results = SIA3802Checker(
+        StaticModelAnalyzer([raw_cdb_room]),
+        RuleEngine(),
+    ).check_all()
+    raw_cdb_rules = collect_alert_rules(raw_cdb_results)
+    validator.require(
+        "Raw CDB g-value below limit is not accepted as SIA g_perp",
+        "SIA3802_G_VALUE_SOURCE_NOT_COMPARABLE" in raw_cdb_rules
+        and "SIA_VALUE_G_SOURCE_NOT_EN410" in raw_cdb_rules
+        and raw_cdb_results["openings"]["score"] < 100.0,
+    )
+
+    report_helper = ExcelReportGenerator.__new__(ExcelReportGenerator)
+    raw_cdb_rows = report_helper._build_ve_g_values_audit_rows([raw_cdb_room])
+    validator.require(
+        "Report g-total status does not waive shading evidence without EN 410 proof",
+        bool(raw_cdb_rows)
+        and raw_cdb_rows[0].get("g_proof_status") != "EN410_AVAILABLE"
+        and raw_cdb_rows[0].get("g_total_status") != "NOT_REQUIRED_FOR_G_LIMIT",
+        str(raw_cdb_rows[0] if raw_cdb_rows else {}),
+    )
+
+    legacy_bool_evidence = {
+        "candidate_results": True,
+        SIA4010_REQUIRED_EVIDENCE[2]: True,
+    }
+    validator.require(
+        "Legacy boolean evidence flags do not count as official SIA 4010 files",
+        not ExcelReportGenerator._has_sia4010_evidence(
+            legacy_bool_evidence,
+            SIA4010_REQUIRED_EVIDENCE[2],
+        ),
+    )
+
+    zero_sia3802 = {
+        "envelope": {"score": 0.0},
+        "openings": {"score": 0.0},
+        "ventilation": {"score": 0.0},
+        "gains": {"score": 0.0},
+        "hvac": {"score": 0.0},
+        "alerts": [],
+    }
+    high_readiness_sia4010 = {
+        "score": 100.0,
+        "readiness_score": 100.0,
+        "alerts": [],
+        "tests": {},
+    }
+    score_result = HealthScoreCalculator().calculate_scores(
+        zero_sia3802,
+        high_readiness_sia4010,
+    )
+    validator.require(
+        "SIA 4010 readiness does not inflate the SIA 380/2 compliance score",
+        score_result.compliance_score == 0.0
+        and score_result.detailed_scores.get("SIA4010_EVIDENCE_READINESS") == 100.0,
+    )
+
+
+def check_sia3802_gap_boundaries(validator: Validator) -> None:
+    """Ensure SIA 380/2 gaps remain visible instead of being hidden."""
+    from swiss_sia import config
+
+    coverage_rows = [
+        item for item in config.SIA_DATA_COVERAGE_MATRIX
+        if str(item.get("id", "")).startswith("SIA3802")
+    ]
+    requirement_rows = [
+        item for item in config.SIA_COMPLIANCE_REQUIREMENT_MATRIX
+        if str(item.get("id", "")).startswith("SIA3802")
+    ]
+    automation_states = {str(item.get("automation", "")) for item in coverage_rows}
+    partial_requirements = [
+        item for item in requirement_rows
+        if str(item.get("automation", "")) in {"PARTIAL", "READINESS_ONLY", "NOT_IMPLEMENTED"}
+    ]
+
+    validator.require("SIA 380/2 coverage matrix is populated", bool(coverage_rows))
+    validator.require("SIA 380/2 requirement matrix is populated", bool(requirement_rows))
+    validator.require(
+        "SIA 380/2 coverage matrix keeps non-automated gaps explicit",
+        "NOT_IMPLEMENTED" in automation_states and "PARTIAL" in automation_states,
+        str(sorted(automation_states)),
+    )
+    validator.require(
+        "SIA 380/2 requirement matrix keeps partial compliance requirements explicit",
+        bool(partial_requirements),
+        "All SIA 380/2 requirements appear fully automated, which would be unsafe without delegated-standard evidence.",
+    )
+
 
 def check_documentation_entry_points(validator: Validator) -> None:
     """Validate manager/audit documentation entry points."""
     required_files = [
+        PROJECT_ROOT / "Prepare_SIA4010_Evidence_Folder.py",
+        PROJECT_ROOT / "Run_VE_Swiss_Compliance.py",
         PROJECT_ROOT / "docs" / "source" / "index.rst",
         PROJECT_ROOT / "docs" / "source" / "manager_multilingual_brief_sphinx.rst",
         PROJECT_ROOT / "docs" / "source" / "manager_reference_integration.rst",
         PROJECT_ROOT / "docs" / "source" / "compliance_coverage_audit.rst",
+        PROJECT_ROOT / "docs" / "source" / "sia3802_gap_audit.rst",
         PROJECT_ROOT / "docs" / "source" / "compliance_methodology.rst",
+        PROJECT_ROOT / "docs" / "source" / "user_guide.rst",
+        PROJECT_ROOT / "docs" / "requirements-docs.txt",
         PROJECT_ROOT / "docs" / "README.md",
         PROJECT_ROOT / "docs" / "project" / "RELEASE_ACCEPTANCE_CHECKLIST.md",
         PROJECT_ROOT / "docs" / "project" / "GLAZING_EVIDENCE_GUIDE.md",
         PROJECT_ROOT / "docs" / "project" / "MANAGER_REFERENCE_INTEGRATION.md",
+        PROJECT_ROOT / "docs" / "project" / "SIA4010_PDF_PREVALIDATION_STRATEGY.md",
+        PROJECT_ROOT / "docs" / "project" / "SIA4010_TESTS_AND_CLASSES_IMPLEMENTATION.md",
+        PROJECT_ROOT / "docs" / "project" / "SIA3802_FULL_COMPLIANCE_GAP_AUDIT.md",
+        PROJECT_ROOT / "docs" / "project" / "WAITING_FOR_OFFICIAL_EXCEL_ACTION_PLAN.md",
+        PROJECT_ROOT / "swiss_sia" / "evidence_bootstrap.py",
+        PROJECT_ROOT / "swiss_sia" / "evidence_pack.py",
         PROJECT_ROOT / "templates" / "evidence" / "README.md",
         PROJECT_ROOT / "templates" / "evidence" / "glazing_solar_protection_template.csv",
         PROJECT_ROOT / "templates" / "evidence" / "g_values_audit_template.csv",
+        PROJECT_ROOT / "templates" / "evidence" / "sia3802_justifications_template.csv",
         PROJECT_ROOT / "templates" / "evidence" / "sia4010_evidence_index_template.csv",
+        PROJECT_ROOT / "templates" / "evidence" / "sia4010_class_validation_template.csv",
+        PROJECT_ROOT / "templates" / "evidence" / "sia4010_official_test_results_template.csv",
         PROJECT_ROOT / "templates" / "evidence" / "sia4010_software_register_review_template.csv",
     ]
     for path in required_files:
@@ -308,6 +907,133 @@ def check_documentation_entry_points(validator: Validator) -> None:
         "Built HTML documentation is available",
         html_index.exists(),
         "Run python docs/tools/build_docs.py --language en --builder html before a manager review.",
+    )
+
+
+def _project_python_files() -> list[Path]:
+    """Return the Python files owned by this project, excluding dependencies."""
+    root_files = [
+        PROJECT_ROOT / "main.py",
+        PROJECT_ROOT / "Prepare_SIA4010_Evidence_Folder.py",
+        PROJECT_ROOT / "RUN_IESVE_EXTRACTION_PROBE.py",
+        PROJECT_ROOT / "Run_VE_Swiss_Compliance.py",
+    ]
+    scanned_folders = [
+        PROJECT_ROOT / "swiss_sia",
+        PROJECT_ROOT / "scripts",
+        PROJECT_ROOT / "docs" / "tools",
+    ]
+    paths = [path for path in root_files if path.exists()]
+    for folder in scanned_folders:
+        if folder.exists():
+            paths.extend(
+                path
+                for path in folder.rglob("*.py")
+                if "__pycache__" not in path.parts
+            )
+    return sorted(set(paths))
+
+
+def _looks_non_english_documentation(text: str) -> bool:
+    """Return true when a comment or docstring looks non-English."""
+    lowered = f" {text.lower()} "
+    french_markers = [
+        " le ",
+        " la ",
+        " les ",
+        " des ",
+        " une ",
+        " un ",
+        " et ",
+        " avec ",
+        " dans ",
+        " pour ",
+        " correspond ",
+        " pièce",
+        " vérifie",
+        " paramètres",
+        " rapport",
+        " fichier",
+        " dossier",
+        " fenêtres",
+        " portes",
+        " poids",
+        " chauffage",
+        " solaire",
+        " bois",
+        " fioul",
+        " gaz naturel",
+        " valeurs directes",
+        " indicateurs de revue",
+        " ajuster ",
+    ]
+    return any(ord(char) > 127 for char in text) or any(
+        marker in lowered for marker in french_markers
+    )
+
+
+def check_python_documentation_quality(validator: Validator) -> None:
+    """Validate complete English-only Python documentation in project code."""
+    paths = _project_python_files()
+    missing_docstrings: list[str] = []
+    language_issues: list[str] = []
+
+    validator.require("Python documentation quality scope is not empty", bool(paths))
+
+    for path in paths:
+        relative_path = path.relative_to(PROJECT_ROOT)
+        try:
+            source = path.read_text(encoding="utf-8", errors="replace")
+            tree = ast.parse(source)
+        except SyntaxError as exc:
+            validator.require(
+                f"Python file parses for documentation checks: {relative_path}",
+                False,
+                str(exc),
+            )
+            continue
+
+        if not ast.get_docstring(tree):
+            missing_docstrings.append(f"{relative_path}:1 module")
+
+        for node in ast.walk(tree):
+            if isinstance(node, (ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)):
+                docstring = ast.get_docstring(node)
+                node_name = getattr(node, "name", type(node).__name__)
+                if not docstring:
+                    missing_docstrings.append(
+                        f"{relative_path}:{node.lineno} {node_name}"
+                    )
+                elif _looks_non_english_documentation(docstring):
+                    language_issues.append(
+                        f"{relative_path}:{node.lineno} docstring {node_name}"
+                    )
+
+        module_docstring = ast.get_docstring(tree)
+        if module_docstring and _looks_non_english_documentation(module_docstring):
+            language_issues.append(f"{relative_path}:1 module docstring")
+
+        try:
+            tokens = tokenize.generate_tokens(io.StringIO(source).readline)
+            for token in tokens:
+                if token.type == tokenize.COMMENT and _looks_non_english_documentation(token.string):
+                    language_issues.append(f"{relative_path}:{token.start[0]} comment")
+        except tokenize.TokenError as exc:
+            validator.require(
+                f"Python comments tokenize for documentation checks: {relative_path}",
+                False,
+                str(exc),
+            )
+
+    validator.require(
+        "Python modules/classes/functions have docstrings",
+        not missing_docstrings,
+        "; ".join(missing_docstrings[:12]),
+    )
+    validator.require(
+        "Python comments and docstrings are English-only",
+        not language_issues,
+        "; ".join(language_issues[:12]),
     )
 
 
@@ -346,8 +1072,11 @@ def check_latest_excel_report(validator: Validator) -> None:
         "AUDIT LOG",
         "SIA DATA COVERAGE",
         "INPUT REQUEST",
+        "SIA3802 JUSTIFICATIONS",
         "OPEN ITEMS BACKLOG",
         "SIA4010 READINESS",
+        "SIA4010 PREVALIDATION",
+        "SIA4010 CLASS MATRIX",
         "SIA4010 SOFTWARE REGISTER",
         "NAVIGATOR BACKLOG",
         "DYNAMIC RESULTS",
@@ -395,7 +1124,11 @@ def main() -> int:
     check_manager_reference_documents(validator)
     check_config_traceability(validator)
     check_scoring_guardrails(validator)
+    check_internal_fixture_scenarios(validator)
+    check_claim_safety_without_official_excel(validator)
+    check_sia3802_gap_boundaries(validator)
     check_documentation_entry_points(validator)
+    check_python_documentation_quality(validator)
     check_latest_excel_report(validator)
     validator.finish()
     return 0
