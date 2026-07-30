@@ -1,0 +1,39 @@
+name: engine-tests
+
+# Exécute uniquement le moteur de validation pur (engine/), sans IESVE.
+# Doit échouer si engine/tests/ ne contient aucun test collectable, plutôt
+# que de rapporter un CI vert qui masquerait l'absence réelle de tests.
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Vérifier l'absence d'import iesve dans engine/
+        run: |
+          if grep -rl "import iesve" engine/ 2>/dev/null; then
+            echo "engine/ doit rester du Python pur : import iesve interdit."
+            exit 1
+          fi
+
+      - name: Installer les dépendances du moteur
+        run: |
+          if [ -f engine/requirements.txt ]; then
+            pip install -r engine/requirements.txt
+          fi
+          pip install pytest
+
+      - name: Lancer les tests du moteur
+        # pytest sort en code 5 ("no tests collected") si engine/tests/ est
+        # vide : c'est un échec voulu, pas un CI vert par défaut.
+        run: pytest engine/tests/ -q
