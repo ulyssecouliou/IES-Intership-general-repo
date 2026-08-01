@@ -1,0 +1,231 @@
+"""Derive the reported compliance verdict for the company SIA report.
+
+The verdict is deliberately conservative and fail-closed, because the report
+carries a company signature:
+
+- a domain is ``COMPLIANT`` only when it was actually evaluated and produced no
+  critical or high finding;
+- any critical or high finding makes it ``NOT_COMPLIANT``;
+- anything unevaluated, or missing decisive evidence, is ``NOT_DETERMINED`` -
+  never silently compliant.
+
+The overall SIA 380/2 statement additionally requires the reviewed global
+project/reference comparison, because SIA 380/2 decides compliance on that
+comparison and the component checks are diagnostics. The SIA 4010 statement
+reports the validation-class state of the toolchain and never reads as an
+official validation: that requires the official test results plus SIA
+sub-commission attestation.
+"""
+
+from dataclasses import dataclass, field
+from typing import Any, Dict, List, Optional, Sequence, Tuple
+
+COMPLIANT = "COMPLIANT"
+NOT_COMPLIANT = "NOT_COMPLIANT"
+NOT_DETERMINED = "NOT_DETERMINED"
+
+# Reported SIA 380/2 domains, in reading order, mapped to the alert category the
+# checker emits for them.
+DOMAINS: Tuple[Tuple[str, str], ...] = (
+    ("envelope", "Envelope"),
+    ("openings", "Openings"),
+    ("ventilation", "Ventilation"),
+    ("gains", "Gains"),
+    ("setpoints", "Setpoints"),
+    ("hvac", "HVAC"),
+)
+
+_BLOCKING_SEVERITIES = {"CRITICAL", "HIGH"}
+
+
+@dataclass(frozen=True)
+class DomainVerdict:
+    """Reported status of one SIA 380/2 domain."""
+
+    domain: str
+    status: str
+    blocking_count: int
+    advisory_count: int
+    reason: str
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Return the domain verdict as serializable data."""
+
+        return {
+            "domain": self.domain,
+            "status": self.status,
+            "blocking_count": self.blocking_count,
+            "advisory_count": self.advisory_count,
+            "reason": self.reason,
+        }
+
+
+@dataclass(frozen=True)
+class ComplianceVerdict:
+    """Overall reported verdict for one analysed VE model."""
+
+    sia3802_status: str
+    sia3802_reason: str
+    sia4010_status: str
+    sia4010_reason: str
+    domains: Tuple[DomainVerdict, ...] = ()
+    blocking_total: int = 0
+    advisory_total: int = 0
+    outstanding: Tuple[str, ...] = ()
+
+    @property
+    def overall_status(self) -> str:
+        """Return the combined status, taking the least favourable of the two."""
+
+        for status in (NOT_COMPLIANT, NOT_DETERMINED):
+            if status in (self.sia3802_status, self.sia4010_status):
+                return status
+        return COMPLIANT
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Return the verdict as serializable data."""
+
+        return {
+            "overall_status": self.overall_status,
+            "sia3802_status": self.sia3802_status,
+            "sia3802_reason": self.sia3802_reason,
+            "sia4010_status": self.sia4010_status,
+            "sia4010_reason": self.sia4010_reason,
+            "domains": [domain.to_dict() for domain in self.domains],
+            "blocking_total": self.blocking_total,
+            "advisory_total": self.advisory_total,
+            "outstanding": list(self.outstanding),
+        }
+
+
+def _severity_name(alert: Any) -> str:
+    """Return the upper-case severity name of one alert, however it is typed."""
+
+    severity = getattr(alert, "severity", None)
+    name = getattr(severity, "name", None) or getattr(severity, "value", None) or severity
+    return str(name or "").upper()
+
+
+def _category(alert: Any) -> str:
+    """Return the alert category as a plain string."""
+
+    return str(getattr(alert, "category", "") or "")
+
+
+def _count_by_category(alerts: Sequence[Any]) -> Dict[str, Dict[str, int]]:
+    """Return {category: {'blocking': n, 'advisory': n}} across all alerts."""
+
+    counts: Dict[str, Dict[str, int]] = {}
+    for alert in alerts or ():
+        bucket = counts.setdefault(
+            _category(alert), {"blocking": 0, "advisory": 0}
+        )
+        if _severity_name(alert) in _BLOCKING_SEVERITIES:
+            bucket["blocking"] += 1
+        else:
+            bucket["advisory"] += 1
+    return counts
+
+
+def _domain_evaluated(sia3802_results: Dict[str, Any], key: str) -> bool:
+    """Return whether the checker actually produced a result for one domain."""
+
+    return isinstance(sia3802_results.get(key), dict)
+
+
+def build_compliance_verdict(
+    sia3802_results: Optional[Dict[str, Any]],
+    sia4010_results: Optional[Dict[str, Any]],
+    rooms_analysed: int,
+) -> ComplianceVerdict:
+    """Return the reported verdict, fail-closed on every missing input."""
+
+    sia3802 = dict(sia3802_results or {})
+    sia4010 = dict(sia4010_results or {})
+    alerts = list(sia3802.get("alerts", []) or [])
+    counts = _count_by_category(alerts)
+
+    outstanding: List[str] = []
+    domains: List[DomainVerdict] = []
+    for key, category in DOMAINS:
+        bucket = counts.get(category, {"blocking": 0, "advisory": 0})
+        blocking = bucket["blocking"]
+        advisory = bucket["advisory"]
+        if not rooms_analysed or not _domain_evaluated(sia3802, key):
+            status = NOT_DETERMINED
+            reason = "domain_not_evaluated"
+        elif blocking:
+            status = NOT_COMPLIANT
+            reason = "blocking_findings"
+        else:
+            status = COMPLIANT
+            reason = "no_blocking_finding"
+        domains.append(
+            DomainVerdict(
+                domain=key,
+                status=status,
+                blocking_count=blocking,
+                advisory_count=advisory,
+                reason=reason,
+            )
+        )
+
+    blocking_total = sum(item.blocking_count for item in domains)
+    advisory_total = sum(item.advisory_count for item in domains)
+
+    # SIA 380/2 decides on the reviewed global project/reference comparison.
+    comparison = sia3802.get("global_reference_comparison", {}) or {}
+    comparison_available = (
+        str(comparison.get("status") or "") == "REVIEWED_RESULT_AVAILABLE"
+    )
+    if not rooms_analysed:
+        sia3802_status, sia3802_reason = NOT_DETERMINED, "no_room_analysed"
+    elif blocking_total:
+        sia3802_status, sia3802_reason = NOT_COMPLIANT, "blocking_findings"
+    elif not comparison_available:
+        sia3802_status, sia3802_reason = NOT_DETERMINED, "global_comparison_missing"
+    else:
+        sia3802_status, sia3802_reason = COMPLIANT, "comparison_reviewed_no_blocker"
+    if not comparison_available:
+        outstanding.append("global_reference_comparison")
+
+    # SIA 4010 reports the toolchain's validation-class state. Official class
+    # validation additionally requires SIA sub-commission attestation, so the
+    # strongest status this report can carry is "results recorded".
+    class_rows = sia4010.get("class_readiness", {}) or {}
+    tests = sia4010.get("tests", {}) or {}
+    blocked_tests = [
+        name
+        for name, data in tests.items()
+        if str((data or {}).get("status", "")).upper()
+        in {"NOT_CHECKABLE", "EVIDENCE_INCOMPLETE"}
+    ]
+    selected_class = str(sia4010.get("validation_class") or "").strip()
+    if not tests:
+        sia4010_status, sia4010_reason = NOT_DETERMINED, "no_official_test_state"
+    elif any(
+        str((data or {}).get("status", "")).upper() in {"FAIL", "FAILED"}
+        for data in tests.values()
+    ):
+        sia4010_status, sia4010_reason = NOT_COMPLIANT, "official_test_failed"
+    elif blocked_tests or not selected_class:
+        sia4010_status, sia4010_reason = NOT_DETERMINED, "official_evidence_incomplete"
+    else:
+        sia4010_status, sia4010_reason = NOT_DETERMINED, "attestation_required"
+    if blocked_tests:
+        outstanding.append("sia4010_official_results")
+    if not selected_class:
+        outstanding.append("sia4010_validation_class")
+    if not class_rows:
+        outstanding.append("sia4010_class_readiness")
+
+    return ComplianceVerdict(
+        sia3802_status=sia3802_status,
+        sia3802_reason=sia3802_reason,
+        sia4010_status=sia4010_status,
+        sia4010_reason=sia4010_reason,
+        domains=tuple(domains),
+        blocking_total=blocking_total,
+        advisory_total=advisory_total,
+        outstanding=tuple(dict.fromkeys(outstanding)),
+    )

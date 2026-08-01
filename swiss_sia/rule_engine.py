@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 
 class Severity(Enum):
-    """Alert severity levels."""
+    """Alert severity levels used to prioritize compliance remediation work."""
 
     CRITICAL = "Critical"
     HIGH = "High"
@@ -56,6 +56,7 @@ class RuleEngine:
         self.rules: List[Rule] = []
         self._rules_by_name: Dict[str, Rule] = {}
         self.alerts: List[Alert] = []
+        self.evaluated_counts: Dict[str, int] = {}
 
     def add_rule(self, rule: Rule):
         """Register a single rule."""
@@ -103,11 +104,12 @@ class RuleEngine:
     def check_all(self, data: Any, reset: bool = False) -> List[Alert]:
         """Apply every registered rule to one data object."""
         if reset:
-            self.alerts = []
+            self.clear_alerts()
 
         new_alerts: List[Alert] = []
         for rule in self.rules:
             try:
+                self.evaluated_counts[rule.name] = self.evaluated_counts.get(rule.name, 0) + 1
                 if not rule.check(data):
                     alert = self._make_alert(rule, data)
                     self.alerts.append(alert)
@@ -124,6 +126,7 @@ class RuleEngine:
             if rule is None:
                 continue
             try:
+                self.evaluated_counts[rule.name] = self.evaluated_counts.get(rule.name, 0) + 1
                 if not rule.check(data):
                     alert = self._make_alert(rule, data)
                     self.alerts.append(alert)
@@ -138,6 +141,7 @@ class RuleEngine:
         if rule is None:
             return None
         try:
+            self.evaluated_counts[rule.name] = self.evaluated_counts.get(rule.name, 0) + 1
             if not rule.check(data):
                 return self._make_alert(rule, data)
         except Exception as exc:
@@ -145,8 +149,9 @@ class RuleEngine:
         return None
 
     def clear_alerts(self):
-        """Clear all collected alerts."""
+        """Clear collected alerts and rule-evaluation counters."""
         self.alerts = []
+        self.evaluated_counts = {}
 
     def get_alerts_by_severity(self, severity: Severity) -> List[Alert]:
         """Return collected alerts for one severity level."""
@@ -157,19 +162,19 @@ class RuleEngine:
         return [alert for alert in self.alerts if alert.category == category]
 
     def get_critical_alerts(self) -> List[Alert]:
-        """Return critical alerts."""
+        """Return alerts that block a safe compliance-readiness claim."""
         return self.get_alerts_by_severity(Severity.CRITICAL)
 
     def get_high_alerts(self) -> List[Alert]:
-        """Return high-severity alerts."""
+        """Return high-severity alerts that should be corrected before review."""
         return self.get_alerts_by_severity(Severity.HIGH)
 
     def get_medium_alerts(self) -> List[Alert]:
-        """Return medium-severity alerts."""
+        """Return medium-severity alerts that represent partial readiness gaps."""
         return self.get_alerts_by_severity(Severity.MEDIUM)
 
     def get_low_alerts(self) -> List[Alert]:
-        """Return low-severity alerts."""
+        """Return low-severity alerts used for traceability and minor cleanup."""
         return self.get_alerts_by_severity(Severity.LOW)
 
     def count_alerts_by_severity(self) -> Dict[str, int]:
@@ -187,4 +192,3 @@ class RuleEngine:
         for alert in self.alerts:
             categories[alert.category] = categories.get(alert.category, 0) + 1
         return categories
-

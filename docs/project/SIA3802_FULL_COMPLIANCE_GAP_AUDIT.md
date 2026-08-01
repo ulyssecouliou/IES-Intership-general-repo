@@ -100,8 +100,8 @@ reported with source references to the local SIA 380/2 PDF.
 
 | Criterion | Limit/Source | Current automation |
 | --- | --- | --- |
-| Cooling EER/SEER by generator type and power band | SIA 380/2 tables 5 to 9 | Not fully automated |
-| Heating/heat-pump SCOP by type and power band | SIA 380/2 tables 5 to 9 and delegated evidence | Not fully automated |
+| Cooling EER/SEER by generator type and power band | SIA 380/2 tables 5 to 9 | Automated when class, capacity and metric are exposed; Table 7 EER+ remains evidence-bound |
+| Heating/heat-pump SCOP by type and power band | SIA 380/2 tables 8 to 9 and delegated evidence | Automated when source class, capacity and SCOP are exposed |
 | PV power | 10 W/m2 SRE | Evidence requirement only |
 | PV conversion efficiency | 0.90 | Evidence requirement only |
 | PV module efficiency target | 0.17 | Evidence requirement only |
@@ -120,16 +120,17 @@ reported with source references to the local SIA 380/2 PDF.
 | Frame fraction | Partial | Checks frame fraction when CDB exposes it | Confirm frame/glass split or provide facade evidence |
 | Solar protection | Partial | Reports type, control, category and active `g_total` when exposed | Manufacturer/proven `g_total_with_shading` and control mapping |
 | Infiltration | Partial | Converts explicit compatible units to `m3/(h.m2)` | Unit-safe mapping for all infiltration templates |
-| Internal gains | Partial | Extracts lighting/equipment/occupancy indicators from VE where available | SIA 2024 profile mapping and schedules |
-| Schedules | Not implemented | Listed as a blocker | Full auditable schedule export or reviewer workbook |
-| Ventilation rates | Partial | Extracts room ventilation rates where VE exposes them | Table 4 control class, airflow band and AHU evidence |
-| AHU heat recovery | Not implemented | Listed as evidence gap | Recovery type, efficiencies, pressure drops, leakage and controls |
-| Cooling EER/SEER | Not implemented | Listed as evidence gap | Generator type, capacity band, EER/SEER and part-load evidence |
-| Heating SCOP | Not implemented | Listed as evidence gap | Heat-pump/heating type, capacity band and SCOP evidence |
+| Internal gains | Partial | Extracts gain densities and integrates representative daily-equivalent profile hours | Reviewer-accepted SIA 2024 mapping and complete weekly/exception schedules |
+| Schedules | Partial | Resolves documented VE profile groups and reports daily-equivalent hours | Full auditable weekly/exception schedule export or reviewer workbook |
+| Ventilation rates | Partial | Keeps floor and facade denominators separate and extracts normalized room rates | Unit provenance and AHU design evidence where VE metadata is incomplete |
+| Ventilation control | Partial | Applies Table 4 when monozone/multizone type, airflow band and control level are all extractable | Reviewed mapping for ambiguous VE control objects |
+| AHU heat recovery | Partial | Extracts recovery and fan/control identifiers where exposed | Efficiencies, pressure drops, leakage, heat transfer and humidification evidence |
+| Cooling EER/SEER | Partial | Applies exact limit bands to classified systems with capacity and metric data | Table 7 EER+, auxiliary shares, part-load curves and unclassified systems |
+| Heating SCOP | Partial | Applies exact limit/target bands to classified heat pumps with capacity and SCOP | SIA 384/3/manufacturer evidence for missing source classification or metrics |
 | Lighting control | Partial | Reads lighting gains and now APS lighting energy if available | SIA 387/4 daylight/presence/control variant mapping |
 | Dynamic APS results | Partial | Reads APS rooms, loads, temperatures, occupancy and optional system outputs | Official method setup, climate/use validation and reference comparisons |
-| Hourly temperatures | Partial | Counts occupied hours above 26 C and 27 C when temperature and occupancy exist | Official comfort/overheating criterion mapping |
-| Heating/cooling demands | Partial | Integrates APS heating/cooling loads to kWh and kWh/m2 | Official annual/reference comparison workflow |
+| Hourly temperatures | Partial | Counts fixed diagnostic thresholds and, when present, annual hours outside the SIA 180 upper/lower curves | Complete annual curves, reviewed new/existing status and climate provenance |
+| Heating/cooling demands | Partial | Integrates non-empty APS heating/cooling load series to kWh and kWh/m2 | Official annual/reference comparison and separate design-day peak workflow |
 
 ## New APS/Vista Outputs Added in This Pass
 

@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Swiss SIA reference model configuration overrides",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "parameters"],
+  "properties": {
+    "schema_version": {
+      "const": "1.0"
+    },
+    "metadata": {
+      "type": "object"
+    },
+    "parameters": {
+      "type": "object",
+      "additionalProperties": {
+        "oneOf": [
+          {
+            "type": ["string", "number", "integer", "boolean", "null"]
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["value"],
+            "properties": {
+              "value": {
+                "type": ["string", "number", "integer", "boolean", "null"]
+              },
+              "source": {
+                "type": "string",
+                "minLength": 1
+              },
+              "source_locator": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}

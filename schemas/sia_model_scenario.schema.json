@@ -1,0 +1,115 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/swiss-sia/sia-model-scenario.schema.json",
+  "title": "Swiss SIA VE model scenario",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "scenario_id",
+    "profile",
+    "selection",
+    "features",
+    "files",
+    "execution"
+  ],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "scenario_id": {"type": "string", "minLength": 1},
+    "profile": {
+      "enum": ["SIA4010_OFFICIAL", "CUSTOM_REFERENCE"]
+    },
+    "selection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["target_class", "variant", "case_id"],
+      "properties": {
+        "target_class": {"enum": ["1A", "1B", "2A", "2B", "3", "4A", "4B", "5"]},
+        "variant": {
+          "enum": [
+            "test_1", "test_2A", "test_2B", "test_2C", "test_2D",
+            "test_3A", "test_3B", "test_3C", "test_3D", "test_3E", "test_3F",
+            "test_3G", "test_3H", "test_3I", "test_3J", "test_3K", "test_3L",
+            "test_4", "test_5A", "test_5B", "test_5C", "test_5D", "test_6", "test_7"
+          ]
+        },
+        "case_id": {
+          "enum": [
+            "600", "640", "600FF", "900", "940", "900FF", "1E",
+            "2A", "2B", "2C", "2D",
+            "3A", "3B", "3C", "3D", "3E", "3F", "3G", "3H", "3I", "3J", "3K", "3L",
+            "4", "5A", "5B", "5C", "5D", "6", "7"
+          ]
+        }
+      }
+    },
+    "features": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "geometry",
+        "opaque_envelope",
+        "glazing",
+        "thermal_template",
+        "ideal_heating",
+        "ideal_cooling",
+        "infiltration",
+        "internal_gains",
+        "weather",
+        "solar_protection",
+        "lighting_controls",
+        "mechanical_ventilation",
+        "heat_recovery",
+        "humidification",
+        "energy_systems",
+        "hourly_distributions",
+        "aps_results",
+        "audit_report"
+      ],
+      "properties": {
+        "geometry": {"type": "boolean"},
+        "opaque_envelope": {"type": "boolean"},
+        "glazing": {"type": "boolean"},
+        "thermal_template": {"type": "boolean"},
+        "ideal_heating": {"type": "boolean"},
+        "ideal_cooling": {"type": "boolean"},
+        "infiltration": {"type": "boolean"},
+        "internal_gains": {"type": "boolean"},
+        "weather": {"type": "boolean"},
+        "solar_protection": {"type": "boolean"},
+        "lighting_controls": {"type": "boolean"},
+        "mechanical_ventilation": {"type": "boolean"},
+        "heat_recovery": {"type": "boolean"},
+        "humidification": {"type": "boolean"},
+        "energy_systems": {"type": "boolean"},
+        "hourly_distributions": {"type": "boolean"},
+        "aps_results": {"type": "boolean"},
+        "audit_report": {"type": "boolean"}
+      }
+    },
+    "files": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "case_manifest_file",
+        "ve_config_file",
+        "ve_asset_manifest_file"
+      ],
+      "properties": {
+        "case_manifest_file": {"type": "string", "minLength": 1},
+        "ve_config_file": {"type": "string", "minLength": 1},
+        "ve_asset_manifest_file": {"type": "string", "minLength": 1}
+      }
+    },
+    "execution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode"],
+      "properties": {
+        "mode": {
+          "enum": ["PREPARE_ONLY", "CREATE_IN_ACTIVE_VE_PROJECT"]
+        }
+      }
+    }
+  }
+}

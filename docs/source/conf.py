@@ -41,6 +41,19 @@ html_theme = (
 html_title = "Swiss SIA Compliance Checker"
 html_static_path = ["_static"]
 html_css_files = ["custom.css"]
+if html_theme == "sphinx_rtd_theme":
+    html_theme_options = {
+        "collapse_navigation": False,
+        "navigation_depth": 4,
+        "sticky_navigation": True,
+    }
+else:
+    html_theme_options = {
+        "description": "IESVE Swiss SIA 380/2 and SIA 4010 readiness toolkit",
+        "fixed_sidebar": True,
+        "page_width": "1180px",
+        "sidebar_width": "280px",
+    }
 
 autodoc_default_options = {
     "members": True,
@@ -51,7 +64,11 @@ autodoc_default_options = {
     "member-order": "bysource",
 }
 autodoc_mock_imports = ["iesve"]
+add_module_names = False
 autosummary_generate = True
+autodoc_class_signature = "mixed"
+autodoc_typehints = "description"
+autodoc_typehints_format = "short"
 napoleon_google_docstring = True
 napoleon_numpy_docstring = True
 napoleon_include_init_with_doc = True

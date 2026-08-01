@@ -39,32 +39,32 @@ CREATE_LATEST_REPORT_ALIAS = config_module.CREATE_LATEST_REPORT_ALIAS
 SIA4010_REQUIRED_EVIDENCE = config_module.SIA4010_REQUIRED_EVIDENCE
 SIA4010_EVIDENCE_DIR = config_module.SIA4010_EVIDENCE_DIR
 
-from . import data_extractor as data_extractor_module
-from . import excel_report as excel_report_module
-from . import evidence_manager as evidence_manager_module
-from . import evidence_pack as evidence_pack_module
-from . import health_score as health_score_module
-from . import model_analyzer as model_analyzer_module
-from . import rule_engine as rule_engine_module
-from . import sia380_checker as sia380_checker_module
-from . import sia4010_checker as sia4010_checker_module
-from . import sia4010_prevalidation as sia4010_prevalidation_module
-from . import simulation_results as simulation_results_module
+def _reload_local_module(module_name: str) -> Any:
+    """Import and reload one package module retained by the VE interpreter."""
+    module = importlib.import_module(f"{__package__}.{module_name}")
+    return importlib.reload(module)
 
 
-# VE Scripts can keep a Python interpreter alive between Run clicks. Force local
-# modules to reload so the button always uses the latest workspace code.
-data_extractor_module = importlib.reload(data_extractor_module)
-model_analyzer_module = importlib.reload(model_analyzer_module)
-rule_engine_module = importlib.reload(rule_engine_module)
-sia380_checker_module = importlib.reload(sia380_checker_module)
-sia4010_checker_module = importlib.reload(sia4010_checker_module)
-sia4010_prevalidation_module = importlib.reload(sia4010_prevalidation_module)
-health_score_module = importlib.reload(health_score_module)
-excel_report_module = importlib.reload(excel_report_module)
-evidence_manager_module = importlib.reload(evidence_manager_module)
-evidence_pack_module = importlib.reload(evidence_pack_module)
-simulation_results_module = importlib.reload(simulation_results_module)
+# VE Scripts keeps a Python interpreter alive between Run clicks. Reload every
+# provider before modules that import symbols from it, preventing mixed APIs
+# after the workspace code changes while VE remains open.
+data_extractor_module = _reload_local_module("data_extractor")
+model_analyzer_module = _reload_local_module("model_analyzer")
+rule_engine_module = _reload_local_module("rule_engine")
+evidence_manager_module = _reload_local_module("evidence_manager")
+evidence_pack_module = _reload_local_module("evidence_pack")
+simulation_results_module = _reload_local_module("simulation_results")
+_reload_local_module("value_integrity")
+
+health_score_module = _reload_local_module("health_score")
+sia380_checker_module = _reload_local_module("sia380_checker")
+sia4010_checker_module = _reload_local_module("sia4010_checker")
+sia4010_prevalidation_module = _reload_local_module("sia4010_prevalidation")
+validation_class_scope_module = _reload_local_module("validation_class_scope")
+reference_project_module = _reload_local_module("reference_project")
+company_profile_module = _reload_local_module("company_profile")
+compliance_report_pdf_module = _reload_local_module("compliance_report_pdf")
+excel_report_module = _reload_local_module("excel_report")
 
 VEDataExtractor = data_extractor_module.VEDataExtractor
 ModelAnalyzer = model_analyzer_module.ModelAnalyzer
@@ -72,25 +72,52 @@ RuleEngine = rule_engine_module.RuleEngine
 SIA3802Checker = sia380_checker_module.SIA3802Checker
 SIA4010Checker = sia4010_checker_module.SIA4010Checker
 build_sia4010_pdf_prevalidation = sia4010_prevalidation_module.build_sia4010_pdf_prevalidation
+derive_validation_class_scope = validation_class_scope_module.derive_validation_class_scope
+build_reference_project_specification = (
+    reference_project_module.build_reference_project_specification
+)
+load_company_profile = company_profile_module.load_company_profile
+render_compliance_report_pdf = (
+    compliance_report_pdf_module.render_compliance_report_pdf
+)
+# The client chooses the report language; Swiss work runs in DE/FR/IT plus EN.
+REPORT_LANGUAGE_ENV_VAR = "SIA_REPORT_LANGUAGE"
 HealthScoreCalculator = health_score_module.HealthScoreCalculator
 ExcelReportGenerator = excel_report_module.ExcelReportGenerator
 scan_sia3802_justifications = evidence_manager_module.scan_sia3802_justifications
+scan_sia3802_project_metadata = evidence_manager_module.scan_sia3802_project_metadata
+find_accepted_project_metadata = evidence_manager_module.find_accepted_project_metadata
+scan_sia3802_global_comparisons = evidence_manager_module.scan_sia3802_global_comparisons
+find_accepted_global_comparison = evidence_manager_module.find_accepted_global_comparison
 create_evidence_pack = evidence_pack_module.create_evidence_pack
 
 REPORTS_DIR = os.path.join(str(PROJECT_ROOT), OUTPUT_DIR)
 os.makedirs(REPORTS_DIR, exist_ok=True)
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    handlers=[
-        logging.FileHandler(
-            os.path.join(REPORTS_DIR, "swiss_compliance_checker.log"),
-            encoding="utf-8",
-        ),
-        logging.StreamHandler(sys.stdout),
-    ],
-)
+
+def _configure_logging() -> None:
+    """Configure console logging and add the report log when it is writable."""
+    handlers: List[logging.Handler] = [logging.StreamHandler(sys.stdout)]
+    try:
+        handlers.insert(
+            0,
+            logging.FileHandler(
+                os.path.join(REPORTS_DIR, "swiss_compliance_checker.log"),
+                encoding="utf-8",
+            ),
+        )
+    except OSError:
+        # Documentation builds and concurrent reviewers may hold the file lock.
+        pass
+
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        handlers=handlers,
+    )
+
+
+_configure_logging()
 logger = logging.getLogger(__name__)
 
 
@@ -216,7 +243,24 @@ def _weather_reference_label(value: Any) -> str:
 
 
 def _current_project_weather_label(project: Any) -> str:
-    """Return the current project weather-file label when VE exposes it."""
+    """Return the current project weather file through documented VE APIs."""
+    if iesve is not None:
+        locator = None
+        try:
+            locator = iesve.VELocate()
+            if locator.open_wea_data() != -1:
+                location = locator.get() or {}
+                label = _weather_reference_label(location.get("weather_file"))
+                if label:
+                    return label
+        except Exception:
+            pass
+        finally:
+            if locator is not None:
+                try:
+                    locator.close_wea_data()
+                except Exception:
+                    pass
     for attr in ("weather_file", "weather", "climate_file"):
         try:
             candidate = getattr(project, attr, None)
@@ -231,9 +275,9 @@ def _current_project_weather_label(project: Any) -> str:
 
 
 def _aps_matches_project_weather(aps_references: List[str], project_weather: str) -> bool:
-    """Return true when APS weather references are empty or match the project weather."""
+    """Return true only when both weather references are known and match."""
     if not aps_references or not project_weather:
-        return True
+        return False
     project_weather_name = os.path.basename(project_weather).lower()
     return any(os.path.basename(reference).lower() == project_weather_name for reference in aps_references)
 
@@ -287,52 +331,145 @@ def _collect_dynamic_results(project: Any) -> Dict[str, Any]:
         "average_relative_humidity_percent": None,
         "occupied_hours_above_26": None,
         "occupied_hours_above_27": None,
+        "max_occupied_hours_above_sia180_upper": None,
+        "max_occupied_hours_below_sia180_lower": None,
+        "sia180_curve_room_count": 0,
+        "annual_comfort_room_count": 0,
+        "building_status": config_module.SIA3802_DYNAMIC_COMFORT.get(
+            "building_status", "UNSPECIFIED"
+        ),
+        "building_status_source": "config fallback",
+        "project_metadata_status": "NOT_PROVIDED",
+        "global_reference_comparison_status": "NOT_PROVIDED",
+        "global_reference_comparison": {},
+        "reviewed_weather_basis": "",
+        "reviewed_weather_file": "",
+        "reviewed_weather_match_status": "NOT_CHECKABLE",
+        "reviewed_location": "",
+        "reviewed_altitude_m": "",
+        "design_power_status": "NOT_CHECKABLE",
+        "heating_design_power_w": None,
+        "cooling_design_power_w": None,
         "notes": "",
     }
 
     try:
+        project_label = os.path.basename(
+            os.path.normpath(str(getattr(project, "path", "") or ""))
+        ) or "VE_Project"
+        metadata_scan = scan_sia3802_project_metadata(
+            PROJECT_ROOT,
+            SIA4010_EVIDENCE_DIR,
+            project_label,
+        )
+        summary["project_metadata_status"] = metadata_scan.get("status", "NOT_PROVIDED")
+        metadata = find_accepted_project_metadata(metadata_scan, project_label)
+        if metadata:
+            summary["building_status"] = metadata.get("building_status", "UNSPECIFIED")
+            summary["building_status_source"] = (
+                f"reviewed project metadata: {metadata.get('file', '')} row {metadata.get('row', '')}"
+            )
+            summary["reviewed_weather_basis"] = metadata.get("weather_basis", "")
+            summary["reviewed_weather_file"] = metadata.get("weather_file", "")
+            summary["reviewed_location"] = metadata.get("location", "")
+            summary["reviewed_altitude_m"] = metadata.get("altitude_m", "")
+
+        comparison_scan = scan_sia3802_global_comparisons(
+            PROJECT_ROOT,
+            SIA4010_EVIDENCE_DIR,
+            project_label,
+        )
+        summary["global_reference_comparison_status"] = comparison_scan.get(
+            "status", "NOT_PROVIDED"
+        )
+        comparison = find_accepted_global_comparison(
+            comparison_scan,
+            project_label,
+        )
+        if comparison:
+            summary["global_reference_comparison"] = dict(comparison)
+
         project_weather = _current_project_weather_label(project)
         summary["project_weather_file"] = project_weather
+        reviewed_weather = str(summary.get("reviewed_weather_file") or "")
+        if reviewed_weather and project_weather:
+            summary["reviewed_weather_match_status"] = (
+                "MATCH"
+                if _aps_matches_project_weather([reviewed_weather], project_weather)
+                else "MISMATCH"
+            )
         aps_files = simulation_results_module.list_aps_files(project)
         summary["aps_files"] = aps_files
         selected_aps = None
         selected_refs: List[str] = []
-        for candidate_aps in _rank_aps_files_by_mtime(project, aps_files):
+        results_file = None
+        fallback_reader = None
+        fallback_data = None
+        ranked_aps = _rank_aps_files_by_mtime(project, aps_files)
+        for candidate_aps in ranked_aps:
             aps_path = simulation_results_module.get_aps_path(project, candidate_aps)
-            aps_refs = simulation_results_module.extract_epw_references_from_aps(aps_path)
-            if _aps_matches_project_weather(aps_refs, project_weather):
+            binary_refs = simulation_results_module.extract_epw_references_from_aps(aps_path)
+            try:
+                candidate_reader = simulation_results_module.open_results_reader(candidate_aps)
+            except Exception as exc:
+                summary["skipped_aps_files"].append({
+                    "aps_file": candidate_aps,
+                    "weather_references": binary_refs,
+                    "reason": f"ResultsReader could not open the APS file: {exc}",
+                })
+                continue
+
+            reader_weather = _weather_reference_label(
+                getattr(candidate_reader, "weather_file", "")
+            )
+            authoritative_refs = [reader_weather] if reader_weather else binary_refs
+            weather_matches = _aps_matches_project_weather(
+                authoritative_refs,
+                project_weather,
+            )
+            if not project_weather or weather_matches:
+                if fallback_reader is not None:
+                    try:
+                        fallback_reader.close()
+                    except Exception:
+                        pass
+                    fallback_reader = None
                 selected_aps = candidate_aps
-                selected_refs = aps_refs
+                selected_refs = authoritative_refs
+                results_file = candidate_reader
                 break
+
+            if not authoritative_refs and fallback_reader is None:
+                fallback_reader = candidate_reader
+                fallback_data = (candidate_aps, authoritative_refs)
+                continue
+
+            try:
+                candidate_reader.close()
+            except Exception:
+                pass
             summary["skipped_aps_files"].append({
                 "aps_file": candidate_aps,
-                "weather_references": aps_refs,
-                "reason": f"APS references do not match current project weather file {project_weather}.",
+                "weather_references": authoritative_refs,
+                "reason": f"ResultsReader weather does not match current project weather file {project_weather}.",
             })
 
-        if selected_aps is None:
-            selected_aps = _select_latest_aps_file(project, aps_files)
-            if selected_aps:
-                selected_refs = simulation_results_module.extract_epw_references_from_aps(
-                    simulation_results_module.get_aps_path(project, selected_aps)
-                )
+        if results_file is None and fallback_reader is not None and fallback_data:
+            selected_aps, selected_refs = fallback_data
+            results_file = fallback_reader
 
         summary["selected_aps_file"] = selected_aps
         summary["selected_aps_weather_references"] = selected_refs
-        if not selected_aps:
+        if not selected_aps or results_file is None:
             summary["notes"] = "No APS file found in the project Vista folder."
             return summary
-
-        if summary["skipped_aps_files"] and not _aps_matches_project_weather(selected_refs, project_weather):
-            summary["notes"] = (
-                "APS/Vista results were not opened because available APS files reference "
-                "a weather file different from the current VE project weather. "
-                "Rerun the simulation after changing the project weather file."
-            )
-            return summary
-
-        results_file = simulation_results_module.open_results_reader(selected_aps)
-        room_results = simulation_results_module.collect_room_dynamic_results(results_file)
+        try:
+            room_results = simulation_results_module.collect_room_dynamic_results(results_file)
+        finally:
+            try:
+                results_file.close()
+            except Exception:
+                pass
         rows = []
         for item in room_results:
             rows.append({
@@ -355,6 +492,10 @@ def _collect_dynamic_results(project: Any) -> Dict[str, Any]:
                 "average_relative_humidity_percent": item.average_relative_humidity_percent,
                 "occupied_hours_above_26": item.occupied_hours_above_26,
                 "occupied_hours_above_27": item.occupied_hours_above_27,
+                "occupied_hours_above_sia180_upper": item.occupied_hours_above_sia180_upper,
+                "occupied_hours_below_sia180_lower": item.occupied_hours_below_sia180_lower,
+                "annual_comfort_period_complete": item.annual_comfort_period_complete,
+                "comfort_curve_source": item.comfort_curve_source,
                 "source_notes": item.source_notes,
             })
 
@@ -369,6 +510,16 @@ def _collect_dynamic_results(project: Any) -> Dict[str, Any]:
             for row in rows
             if isinstance(row.get("occupied_hours_above_27"), (int, float))
         ]
+        over_sia180_upper_values = [
+            float(row["occupied_hours_above_sia180_upper"])
+            for row in rows
+            if isinstance(row.get("occupied_hours_above_sia180_upper"), (int, float))
+        ]
+        below_sia180_lower_values = [
+            float(row["occupied_hours_below_sia180_lower"])
+            for row in rows
+            if isinstance(row.get("occupied_hours_below_sia180_lower"), (int, float))
+        ]
 
         total_heating = _sum_numeric_rows(rows, "heating_kwh")
         total_cooling = _sum_numeric_rows(rows, "cooling_kwh")
@@ -378,8 +529,32 @@ def _collect_dynamic_results(project: Any) -> Dict[str, Any]:
         total_auxiliary = _sum_numeric_rows(rows, "auxiliary_kwh")
         total_coil_heating = _sum_numeric_rows(rows, "coil_heating_kwh")
         total_coil_cooling = _sum_numeric_rows(rows, "coil_cooling_kwh")
+        meaningful_fields = (
+            "heating_kwh",
+            "cooling_kwh",
+            "lighting_kwh",
+            "fan_kwh",
+            "pump_kwh",
+            "auxiliary_kwh",
+            "peak_co2_ppm",
+            "occupied_hours_above_26",
+        )
+        meaningful_result_count = sum(
+            1
+            for row in rows
+            if any(row.get(field) is not None for field in meaningful_fields)
+        )
+        weather_confirmed = bool(
+            project_weather
+            and selected_refs
+            and _aps_matches_project_weather(selected_refs, project_weather)
+        )
         summary.update({
-            "status": "AVAILABLE" if rows else "PARTIAL",
+            "status": (
+                "AVAILABLE"
+                if rows and meaningful_result_count and weather_confirmed
+                else ("PARTIAL" if rows and meaningful_result_count else "NOT_CHECKABLE")
+            ),
             "rooms": rows,
             "total_area_m2": total_area,
             "total_heating_kwh": total_heating,
@@ -402,7 +577,15 @@ def _collect_dynamic_results(project: Any) -> Dict[str, Any]:
             "average_relative_humidity_percent": _average_numeric_rows(rows, "average_relative_humidity_percent"),
             "occupied_hours_above_26": sum(over_26_values) if over_26_values else None,
             "occupied_hours_above_27": sum(over_27_values) if over_27_values else None,
-            "notes": "Read from IESVE ResultsReader.",
+            "max_occupied_hours_above_sia180_upper": max(over_sia180_upper_values) if over_sia180_upper_values else None,
+            "max_occupied_hours_below_sia180_lower": max(below_sia180_lower_values) if below_sia180_lower_values else None,
+            "sia180_curve_room_count": len(over_sia180_upper_values),
+            "annual_comfort_room_count": sum(1 for row in rows if row.get("annual_comfort_period_complete")),
+            "notes": (
+                "Read from IESVE ResultsReader with APS/project weather match."
+                if weather_confirmed
+                else "Results were read, but project/APS weather provenance is incomplete; dynamic compliance remains partial."
+            ),
         })
     except Exception as exc:
         summary["status"] = "NOT_CHECKABLE"
@@ -437,6 +620,30 @@ def _apply_dynamic_results_to_sia4010(
         energy["pump_energy"] = dynamic_results.get("pump_kwh_m2")
     if dynamic_results.get("auxiliary_kwh_m2") is not None:
         energy["auxiliary_energy"] = dynamic_results.get("auxiliary_kwh_m2")
+
+
+def _attach_dynamic_results_to_rooms(
+    rooms_data: List[Any],
+    dynamic_results: Dict[str, Any],
+) -> None:
+    """Attach APS rows to normalized rooms for variant-readiness checks."""
+    by_id = {
+        str(row.get("room_id") or "").strip().lower(): row
+        for row in (dynamic_results.get("rooms", []) or [])
+        if isinstance(row, dict) and row.get("room_id") not in (None, "")
+    }
+    by_name = {
+        str(row.get("room_name") or "").strip().lower(): row
+        for row in (dynamic_results.get("rooms", []) or [])
+        if isinstance(row, dict) and row.get("room_name")
+    }
+    for room in rooms_data:
+        room_id = str(getattr(room, "id", "") or "").strip().lower()
+        room_name = str(getattr(room, "name", "") or "").strip().lower()
+        row = by_id.get(room_id) or by_name.get(room_name) or {}
+        if row:
+            row["window_operable"] = getattr(room, "window_operable", None)
+        setattr(room, "dynamic_results", dict(row))
 
 
 def _has_evidence_item(evidence: Dict[str, Any], evidence_item: str) -> bool:
@@ -692,31 +899,71 @@ def main():
             raise RuntimeError("No active VE project found. Please open a project in IESVE.")
 
         logger.info("Loaded VE project: %s", project.path)
+        project_label = os.path.basename(
+            os.path.normpath(str(getattr(project, "path", "") or ""))
+        ) or "VE_Project"
 
         logger.info("Extracting VE model data.")
         data_extractor = VEDataExtractor(project)
         model_analyzer = ModelAnalyzer(data_extractor)
         logger.info("Loaded model_analyzer from: %s", model_analyzer_module.__file__)
 
-        logger.info("Running SIA 380/2 checks.")
-        sia3802_checker = SIA3802Checker(model_analyzer, RuleEngine())
-        sia3802_results = sia3802_checker.check_all()
-
-        logger.info("Running SIA 4010 readiness checks.")
-        sia4010_checker = SIA4010Checker(model_analyzer, RuleEngine())
-        sia4010_results = sia4010_checker.check_all()
+        rooms_data = model_analyzer.analyze_all_rooms()
 
         logger.info("Collecting APS/Vista dynamic results where available.")
         dynamic_results = _collect_dynamic_results(project)
-        _apply_dynamic_results_to_sia4010(sia4010_results, dynamic_results)
+        _attach_dynamic_results_to_rooms(rooms_data, dynamic_results)
         logger.info(
             "APS/Vista dynamic result status: %s (%s)",
             dynamic_results.get("status"),
             dynamic_results.get("selected_aps_file") or "no APS selected",
         )
 
+        logger.info("Running SIA 380/2 checks.")
+        sia3802_checker = SIA3802Checker(model_analyzer, RuleEngine())
+        sia3802_results = sia3802_checker.check_all(
+            rooms_data=rooms_data,
+            dynamic_results=dynamic_results,
+        )
+
+        logger.info("Preparing the SIA 380/2 reference-project input specification.")
+        reference_specification = build_reference_project_specification(
+            rooms_data,
+            model_analyzer,
+        )
+        sia3802_results["reference_project"] = reference_specification.to_dict()
+        logger.info(
+            "Reference-project specification: %s (%s substitutions, %s blockers)",
+            reference_specification.status,
+            len(reference_specification.substitutions),
+            len(reference_specification.blockers),
+        )
+
+        logger.info("Running SIA 4010 readiness checks.")
+        sia4010_checker = SIA4010Checker(
+            model_analyzer,
+            RuleEngine(),
+            project_label=project_label,
+        )
+        sia4010_results = sia4010_checker.check_all(rooms_data=rooms_data)
+        _apply_dynamic_results_to_sia4010(sia4010_results, dynamic_results)
+
+        logger.info("Deriving the SIA 4010 validation-class scope of this model.")
+        class_scope = derive_validation_class_scope(rooms_data)
+        sia4010_results["required_class_scope"] = class_scope.to_dict()
+        logger.info(
+            "Required validation class: %s (conservative: %s, status %s)",
+            class_scope.required_class or "not derived",
+            class_scope.conservative_class or "not derived",
+            class_scope.status,
+        )
+
         logger.info("Scanning SIA 380/2 reviewer justifications.")
-        justification_results = scan_sia3802_justifications(PROJECT_ROOT, SIA4010_EVIDENCE_DIR)
+        justification_results = scan_sia3802_justifications(
+            PROJECT_ROOT,
+            SIA4010_EVIDENCE_DIR,
+            project_label,
+        )
         sia3802_results["justifications"] = justification_results
         logger.info(
             "SIA 380/2 justification status: %s (%s accepted / %s provided)",
@@ -735,7 +982,6 @@ def main():
             output_path=unique_report_path,
             model_analyzer=model_analyzer,
         )
-        rooms_data = model_analyzer.analyze_all_rooms()
         logger.info("Running SIA 4010 PDF-based prevalidation.")
         sia4010_results["prevalidation"] = build_sia4010_pdf_prevalidation(
             rooms_data,
@@ -766,6 +1012,33 @@ def main():
             if CREATE_LATEST_REPORT_ALIAS
             else None
         )
+
+        logger.info("Rendering the company SIA compliance report (PDF).")
+        compliance_pdf_path = None
+        try:
+            company_profile = load_company_profile(PROJECT_ROOT)
+            compliance_pdf_path = render_compliance_report_pdf(
+                os.path.splitext(unique_report_path)[0] + ".pdf",
+                project_label=project_label,
+                rooms_data=rooms_data,
+                sia3802_results=sia3802_results,
+                sia4010_results=sia4010_results,
+                score_result=score_result,
+                profile=company_profile,
+                project_root=PROJECT_ROOT,
+                language=os.environ.get(REPORT_LANGUAGE_ENV_VAR, "") or "en",
+                model_name=_object_label(data_extractor.model, ""),
+            )
+            logger.info("Compliance report PDF: %s", compliance_pdf_path)
+            if not company_profile.is_configured:
+                logger.warning(
+                    "No config/company_profile.json found: the PDF letterhead and "
+                    "signature block are printed as not specified."
+                )
+        except Exception as exc:
+            # The PDF is an additional deliverable; never lose the workbook run.
+            logger.error("Could not render the compliance report PDF: %s", exc)
+
         evidence_pack_result = None
         try:
             evidence_pack_result = create_evidence_pack(
@@ -775,6 +1048,7 @@ def main():
                 sia4010_results=sia4010_results,
                 preflight_checks=preflight_checks,
                 evidence_dir_name=SIA4010_EVIDENCE_DIR,
+                project_label=project_label,
             )
             logger.info(
                 "Generated evidence pack ZIP: %s (%s included file(s))",
@@ -789,7 +1063,7 @@ def main():
 
         logger.info("Analysis completed successfully.")
         logger.info(
-            "SIA 380/2 automated compliance indicator: %.1f/100",
+            "SIA 380/2 automated precheck indicator: %.1f/100",
             score_result.compliance_score,
         )
         logger.info("Health Score: %.1f/100", score_result.health_score)

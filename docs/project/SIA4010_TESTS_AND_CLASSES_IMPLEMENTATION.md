@@ -54,17 +54,22 @@ These statuses are not official SIA validation statuses.
 | Test 6 | Three-stage ventilation with heat recovery and overflow | Checks ventilation readiness; staged airflow, recovery and overflow logic remain required. |
 | Test 7 | Heating/cooling emission, distribution, storage and generation | Checks dynamic demand and system-energy readiness; final energy, auxiliaries and official loads/evaluation files remain required. |
 
+The exact execution matrix contains 24 variants: `1`, `2A-2D`, `3A-3L`, `4`,
+`5A-5D`, `6` and `7`. The PDF prevalidation sheet remains intentionally
+aggregated into seven base tests; the exact variant resolver separately checks
+the system identifiers and class-specific scope.
+
 ## Validation Classes Covered
 
 | Class | Required tests | Implementation status |
 | --- | --- | --- |
 | 1A | Test 1 and Test 2A | Supported in `SIA4010 CLASS MATRIX`. |
-| 1B | Test 1 and Test 2 | Supported in `SIA4010 CLASS MATRIX`. |
+| 1B | Test 1 and Tests 2B-2D | Supported in `SIA4010 CLASS MATRIX`. |
 | 2A | Test 1, Test 2A and Tests 3A-3F | Supported in `SIA4010 CLASS MATRIX`. |
-| 2B | Tests 1 to 3 | Supported in `SIA4010 CLASS MATRIX`. |
+| 2B | Test 1, Tests 2B-2D and Tests 3A-3L | Supported in `SIA4010 CLASS MATRIX`. |
 | 3 | Test 1 and Tests 4 to 6 | Supported in `SIA4010 CLASS MATRIX`. |
 | 4A | Test 1, Test 2A, Tests 3A-3F and Tests 4 to 7 | Supported in `SIA4010 CLASS MATRIX`. |
-| 4B | Tests 1 to 7 | Supported in `SIA4010 CLASS MATRIX`. |
+| 4B | Test 1, Tests 2B-2D, Tests 3A-3L and Tests 4 to 7 | Supported in `SIA4010 CLASS MATRIX`. |
 | 5 | Test 7 | Supported in `SIA4010 CLASS MATRIX`. |
 
 ## Status Logic
@@ -78,8 +83,12 @@ The workbook uses conservative status wording:
 - `EVIDENCE_INCOMPLETE`: at least one required evidence family is missing.
 - `READY_FOR_OFFICIAL_REVIEW`: all required evidence families are detected, but
   official reviewer acceptance is still required.
-- `VALIDATED`: reserved for explicit official PASS/VALIDATED evidence for every
-  required test in the selected class.
+- `OFFICIAL_RESULTS_RECORDED`: every exact result row and referenced result file
+  required by the selected class is recorded, but the SIA sub-commission
+  attestation is not independently demonstrated.
+
+The checker never produces `VALIDATED`, certification or a non-zero official
+SIA 4010 score from the manifest alone.
 
 ## Required Evidence Families
 
@@ -107,11 +116,11 @@ This separates two levels of readiness:
 - file documented by a manifest row with accepted `review_status`, source and
   test coverage.
 
-All five evidence files must be detected and all five families must be
+All five evidence families must be detected and all five families must be
 documented in the manifest before the workflow can reach
-`READY_FOR_OFFICIAL_REVIEW`. Even then, `VALIDATED` remains reserved for
-explicit official PASS/VALIDATED evidence and reviewer/sub-commission
-acceptance.
+`READY_FOR_OFFICIAL_REVIEW`. Result rows can then move the selected scope to
+`OFFICIAL_RESULTS_RECORDED`; only the responsible SIA authority can establish a
+validated claim.
 
 ## Class Selection Manifest
 
@@ -141,17 +150,25 @@ SIA4010_official_test_results_<project>.csv
 
 This file is based on
 `templates/evidence/sia4010_official_test_results_template.csv`. It records
-explicit reviewer outcomes for tests 1 to 7. Accepted PASS values are `pass`,
+explicit reviewer outcomes for the exact variants required by the selected
+class. Accepted PASS values are `pass`,
 `passed`, `validated`, `official_pass` and `official_validated`. Accepted FAIL
 values are `fail`, `failed`, `not_passed` and `rejected`.
 
-A test is upgraded to `VALIDATED` only when the official result row maps to one
-of `test_1` to `test_7`, has a PASS/VALIDATED status, and includes
+A test is upgraded to `OFFICIAL_RESULTS_RECORDED` only when every exact variant
+required by the selected class has a PASS/VALIDATED row and includes
 `reference_file`, `candidate_file`, `reviewer`, `review_date`,
 `deviation`, `tolerance`, `source_authority` and `source_reference`. The
 referenced candidate and reference files must also exist in `sia4010_evidence/`.
 Malformed IDs such as `test_10` are rejected instead of being normalized to
 `test_1`.
+
+This ingestion status does not assert that the row, workbook formula or method
+has been accepted by the SIA sub-commission. Its official score remains zero.
+
+Reduced and full scopes are intentionally distinct. `test_2A` never satisfies
+`test_2B`; `test_3A` to `test_3F` never satisfy a class requiring `test_3A` to
+`test_3L`; and `test_5A` to `test_5D` must each be documented where required.
 
 The class matrix remains conservative:
 
@@ -159,7 +176,7 @@ The class matrix remains conservative:
   `SIA4010_class_validation_<project>.csv`;
 - all five official evidence families must be present and documented by
   `SIA4010_evidence_index_<project>.csv`;
-- every test required by the selected class must have an explicit
+- every exact variant required by the selected class must have an explicit
   PASS/VALIDATED official result row.
 
 ## Files Added for This Workflow
@@ -167,7 +184,8 @@ The class matrix remains conservative:
 - `swiss_sia/sia4010_checker.py`: returns `classes` results covering all
   validation classes.
 - `swiss_sia/sia4010_checker.py`: imports official test-result rows and uses
-  them to distinguish `READY_FOR_OFFICIAL_REVIEW` from `VALIDATED`.
+  them to distinguish `READY_FOR_OFFICIAL_REVIEW` from
+  `OFFICIAL_RESULTS_RECORDED`.
 - `swiss_sia/sia4010_prevalidation.py`: returns PDF-based prevalidation results
   for tests 1 to 7 and classes 1A to 5.
 - `swiss_sia/excel_report.py`: writes `SIA4010 CLASS MATRIX`.
@@ -175,7 +193,7 @@ The class matrix remains conservative:
 - `templates/evidence/sia4010_class_validation_template.csv`: class tracker for
   reviewer handoff.
 - `templates/evidence/sia4010_official_test_results_template.csv`: result
-  tracker for official PASS/VALIDATED/FAIL rows on tests 1 to 7.
+  tracker for official PASS/VALIDATED/FAIL rows on all 24 exact variants.
 - `scripts/quality/validate_release.py`: checks that the class matrix and
   templates remain present.
 

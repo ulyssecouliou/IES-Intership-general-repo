@@ -55,10 +55,24 @@ Optional official test-result manifest:
 - fill `status`, `reference_file`, `candidate_file`, `deviation`, `tolerance`, `reviewer`, `review_date`, `source_authority` and `source_reference` for every reviewed test.
 
 Only explicit PASS/VALIDATED rows with the required metadata can upgrade an
-individual SIA 4010 test to `VALIDATED`. The selected validation class remains
-blocked until the five official evidence families and the class manifest are
-also documented. The `reference_file` and `candidate_file` entries must match
-files present in `sia4010_evidence/`; text-only file names are not enough.
+individual SIA 4010 test to `OFFICIAL_RESULTS_RECORDED`. This status is an
+auditable ingestion state, not a validation decision. The selected validation
+class remains blocked until the five official evidence families and the class
+manifest are also documented, and no `VALIDATED` claim is produced without a
+separate SIA sub-commission attestation. The `reference_file` and
+`candidate_file` entries must match files present in `sia4010_evidence/`;
+text-only file names are not enough.
+
+For the whole-project SIA 380/2 method comparison, fill the generated file:
+
+```text
+SIA3802_global_reference_comparison_<project>.csv
+```
+
+The accepted row must cover `complete_sia3802_project`, identify the project
+and reference values and unit, show a favourable project/reference result, and
+include reviewer, review date and source traceability. Component checks against
+Tables 2 to 9 remain diagnostics and cannot replace this global comparison.
 
 File detection is a readiness indicator only. The file content, official source
 and comparison validity must still be reviewed by the responsible compliance
@@ -105,8 +119,37 @@ reports/
 Each successful run creates:
 
 - a timestamped Excel workbook;
-- the latest workbook alias, when Excel is not locking it;
+- a timestamped one-page compliance report PDF on the engineering office's
+  letterhead, beside the workbook and with the same base name;
 - a timestamped evidence-pack ZIP for manager/reviewer handoff.
+
+### Compliance report PDF
+
+The PDF is the client-facing deliverable. It carries the office letterhead and
+logo, the assessed verdict per SIA 380/2 domain, a schematic of the analysed
+model (external opaque and glazed area per orientation), the key figures, the
+scope statements and a signature block.
+
+Configure the letterhead once by copying the template:
+
+```text
+config/company_profile.template.json  ->  config/company_profile.json
+```
+
+Fill in the office name, address, contacts, author and report reference, and set
+`logo_path` to a PNG (greyscale or RGB, non-interlaced, no alpha) or a JPEG. Any
+field left empty is printed as "not specified" - nothing is invented. If the
+file is absent the PDF is still produced, with the letterhead visibly unset.
+
+Choose the language with the `SIA_REPORT_LANGUAGE` environment variable
+(`en`, `de`, `fr`, `it`; English by default).
+
+The PDF is an engineering assessment report, not an official SIA certificate and
+not an SIA 4010 validation attestation. A domain reads COMPLIANT only when it
+was actually evaluated with no blocking finding; the overall SIA 380/2 statement
+additionally requires the reviewed project/reference comparison, and SIA 4010
+always requires SIA sub-commission attestation. Everything else is reported as
+NOT DETERMINED, with the outstanding evidence named in the report.
 
 Evidence-pack ZIP naming:
 
@@ -127,43 +170,43 @@ Each run creates a timestamped workbook, for example:
 Swiss_Compliance_Report__Project__Model__YYYYMMDD_HHMMSS.xlsx
 ```
 
-The script also tries to update:
-
-```text
-reports/Swiss_Compliance_Report.xlsx
-```
-
-If that alias cannot be updated, it is usually because Excel has the file open.
-Use the timestamped report instead.
+The convenience alias `reports/Swiss_Compliance_Report.xlsx` is disabled by
+default, so one Excel workbook is generated per run. The evidence-pack ZIP is a
+separate handoff archive, not a second report.
 
 ## How To Read The Workbook
 
+- `COVER`: branded landing page with the project, date, headline KPIs and the non-certification disclaimer.
+- `INDEX`: clickable index linking to every sheet, grouped by section.
 - `MANAGER DASHBOARD`: executive summary, KPI cards, charts and priority actions.
+- `ACTION DASHBOARD`: consolidated action and priority view.
 - `CLIENT SUMMARY`: safe wording for manager/client communication.
 - `PREFLIGHT`: confirms whether the VE run and data extraction are trustworthy.
 - `P1 REMEDIATION`: owner-ready action board for priority issues.
 - `FACADE GLAZING REVIEW`: construction-level glazing, solar-factor and shading evidence action sheet.
+- `FRAME FRACTION AUDIT`: construction-level frame-fraction values, failing counts and evidence needs.
+- `ENVELOPE U REVIEW`: construction-level external wall/roof/floor U-value gaps.
 - `VE G-VALUES AUDIT`: CDB g-value, EN 410, building-regulation and BFRC traceability for glazing.
 - `ASSUMPTIONS LIMITS`: certification guardrails, assumptions and known limits.
 - `AUDIT LOG`: run metadata, APS/Vista status, evidence status and certification guardrails.
-- `SUMMARY`: score summary.
-- `ACTION PLAN`: grouped remediation actions.
-- `COMPLIANCE RESULTS`: category-level result tables.
-- `SIA REQUIREMENTS`: auditable list of SIA criteria, sources and automation status.
 - `SIA DATA COVERAGE`: data, APS/Vista and evidence coverage by requirement.
 - `INPUT REQUEST`: owner-ready missing input/evidence checklist.
 - `SIA3802 JUSTIFICATIONS`: reviewer-signed retained SIA 380/2 deviations, if supplied.
+- `OPEN ITEMS BACKLOG`: dynamic backlog of model alerts, coverage gaps and navigator items.
 - `SIA4010 READINESS`: official validation evidence matrix.
 - `SIA4010 PREVALIDATION`: PDF-based prevalidation of tests 1 to 7 and classes 1A to 5 from VE/APS data.
-- `SIA4010 CLASS MATRIX`: class-by-class SIA 4010 matrix for classes 1A to 5.
+- `SIA4010 CLASS MATRIX`: class-by-class SIA 4010 matrix, including the non-gating automated band cross-check column (`NOT_RUN` until an official test run is performed).
 - `SIA4010 SOFTWARE REGISTER`: manager-provided software-register guardrail and validation-class detail.
 - `NAVIGATOR BACKLOG`: manager-provided SIA 380/2 navigator roadmap and current project gaps.
 - `DYNAMIC RESULTS`: APS/Vista dynamic indicators when readable from VE.
 - `ALERT SUMMARY`: grouped technical findings.
-- `ALERTS`: raw detailed alerts.
+- `ALERTS`: detailed alerts (repetitive low-severity rules are capped for readability, with a per-rule summary).
 - `DATA QUALITY`: extraction coverage and missing-data risks.
 - `DETAILED SCORES`: score components.
 - `ROOMS`: extracted room data.
+
+The legacy `SUMMARY`, `COMPLIANCE RESULTS`, `ACTION PLAN` and `SIA REQUIREMENTS`
+sheets were consolidated into the sheets above and are no longer generated.
 
 ## Verdict Rules
 

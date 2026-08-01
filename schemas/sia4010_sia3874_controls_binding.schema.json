@@ -1,0 +1,191 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "sia4010.sia3874_shading_lighting_controls.v1",
+  "title": "Normalized SIA 387/4 Tables 9 and 10 control binding",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_id",
+    "schema_version",
+    "primary_source_sha256",
+    "source_locator",
+    "standard_edition",
+    "tables",
+    "conventions",
+    "signals",
+    "parameters",
+    "controls"
+  ],
+  "properties": {
+    "schema_id": {
+      "const": "sia4010.sia3874_shading_lighting_controls.v1"
+    },
+    "schema_version": {"const": "1.0"},
+    "primary_source_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "source_locator": {"$ref": "#/$defs/text"},
+    "standard_edition": {"$ref": "#/$defs/text"},
+    "tables": {
+      "type": "array",
+      "prefixItems": [{"const": "9"}, {"const": "10"}],
+      "items": false,
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "conventions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "time_basis",
+        "boundary_comparisons",
+        "angle_convention",
+        "signal_sampling",
+        "rule_evaluation_order"
+      ],
+      "properties": {
+        "time_basis": {"type": "object", "minProperties": 1},
+        "boundary_comparisons": {"type": "object", "minProperties": 1},
+        "angle_convention": {"type": "object", "minProperties": 1},
+        "signal_sampling": {"type": "object", "minProperties": 1},
+        "rule_evaluation_order": {"type": "object", "minProperties": 1}
+      }
+    },
+    "signals": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/signal"}
+    },
+    "parameters": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/parameter"}
+    },
+    "controls": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["shading", "lighting"],
+      "properties": {
+        "shading": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {"$ref": "#/$defs/control"}
+        },
+        "lighting": {
+          "type": "array",
+          "minItems": 6,
+          "maxItems": 6,
+          "items": {"$ref": "#/$defs/control"}
+        }
+      }
+    }
+  },
+  "$defs": {
+    "text": {"type": "string", "minLength": 1},
+    "identifier": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_.-]+$"
+    },
+    "signal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "physical_quantity",
+        "unit",
+        "value_type",
+        "source_locator"
+      ],
+      "properties": {
+        "id": {"$ref": "#/$defs/identifier"},
+        "physical_quantity": {"$ref": "#/$defs/text"},
+        "unit": {"$ref": "#/$defs/text"},
+        "value_type": {
+          "enum": ["boolean", "integer", "number", "string"]
+        },
+        "source_locator": {"$ref": "#/$defs/text"}
+      }
+    },
+    "parameter": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "value_type",
+        "unit",
+        "source_kind",
+        "source_locator"
+      ],
+      "properties": {
+        "id": {"$ref": "#/$defs/identifier"},
+        "value_type": {"$ref": "#/$defs/text"},
+        "unit": {"$ref": "#/$defs/text"},
+        "source_kind": {
+          "enum": [
+            "NORMATIVE_CONSTANT",
+            "SCENARIO_PARAMETER",
+            "DERIVED_NORMATIVE_VALUE"
+          ]
+        },
+        "value": {},
+        "scenario_parameter_ref": {"$ref": "#/$defs/identifier"},
+        "source_locator": {"$ref": "#/$defs/text"}
+      },
+      "oneOf": [
+        {
+          "required": ["value"],
+          "not": {"required": ["scenario_parameter_ref"]}
+        },
+        {
+          "required": ["scenario_parameter_ref"],
+          "not": {"required": ["value"]}
+        }
+      ]
+    },
+    "control": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "normative_type",
+        "source_locator",
+        "inputs",
+        "parameters",
+        "states",
+        "rules",
+        "default_actions",
+        "outputs",
+        "required_runtime_capabilities"
+      ],
+      "properties": {
+        "id": {"$ref": "#/$defs/identifier"},
+        "normative_type": {"type": "integer", "minimum": 1},
+        "source_locator": {"$ref": "#/$defs/text"},
+        "inputs": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"$ref": "#/$defs/identifier"}
+        },
+        "parameters": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/identifier"}
+        },
+        "states": {"type": "array"},
+        "rules": {"type": "array", "minItems": 1},
+        "default_actions": {"type": "array", "minItems": 1},
+        "outputs": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"$ref": "#/$defs/identifier"}
+        },
+        "required_runtime_capabilities": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"$ref": "#/$defs/identifier"}
+        }
+      }
+    }
+  }
+}

@@ -112,8 +112,9 @@ sheets are the most important:
 Scores
 ------
 
-``SIA 380/2 Automated Compliance Indicator``
-   Weighted indicator based only on implemented or partial SIA 380/2 checks.
+``SIA 380/2 Automated Precheck Indicator``
+   Weighted indicator based only on implemented or partial SIA 380/2 checks. It
+   does not replace the reviewed whole-project/reference comparison.
 
 ``Health Score``
    Data-completeness and model-quality indicator.

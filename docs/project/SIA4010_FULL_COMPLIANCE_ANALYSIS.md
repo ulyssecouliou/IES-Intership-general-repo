@@ -515,7 +515,7 @@ Statut a appliquer:
 | Aucun fichier officiel joint | `NOT_CHECKABLE` |
 | Fichiers joints mais incomplets | `EVIDENCE_INCOMPLETE` |
 | Resultats exportes sans comparaison officielle | `REFERENCE_COMPARISON_MISSING` |
-| Comparaison officielle favorable et classe confirmee | `VALIDATED` |
+| Comparaison officielle favorable, fichiers traces et classe confirmee | `OFFICIAL_RESULTS_RECORDED` jusqu'a preuve separee de l'attestation SIA |
 
 ## 11. Variantes officielles de tests
 
@@ -581,8 +581,8 @@ Source: SIA 4010:2023 FR, page PDF 52, tableaux 65-66.
 | Couche | Verdicts autorises | Exemple |
 |---|---|---|
 | Readiness modele VE | `OK`, `MISSING`, `INCOMPLETE`, `INCONSISTENT` | classe AHU absente |
-| SIA 380/2 direct | `PASS`, `FAIL`, `NOT_APPLICABLE`, `EXTERNAL_STANDARD_REQUIRED` | Uw fenetre, g vitrage |
-| SIA 4010 validation | `NOT_CHECKABLE`, `EVIDENCE_INCOMPLETE`, `VALIDATED` | fichiers Excel officiels manquants |
+| SIA 380/2 methode | `PASS`, `FAIL`, `NOT_CHECKABLE`, `REFERENCE_DIAGNOSTIC` | comparaison globale projet/reference et diagnostics des entrees |
+| SIA 4010 validation | `NOT_CHECKABLE`, `EVIDENCE_INCOMPLETE`, `READY_FOR_OFFICIAL_REVIEW`, `OFFICIAL_RESULTS_RECORDED` | fichiers Excel officiels manquants ou attestation SIA non demontree |
 
 ### 13.2 Pseudo-logique
 
@@ -594,8 +594,9 @@ else:
     list required tests
     verify official files exist for each test
     verify candidate results were transferred
-    verify official comparison status
-    only then mark VALIDATED
+    verify official comparison status and referenced files
+    mark OFFICIAL_RESULTS_RECORDED
+    require separate SIA sub-commission attestation before any VALIDATED claim
 ```
 
 ### 13.3 Ce que le checker doit exporter de VE

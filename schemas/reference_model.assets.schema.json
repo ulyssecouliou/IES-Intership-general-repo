@@ -1,0 +1,221 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Source-traced VE asset provisioning manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "on_existing",
+    "profiles",
+    "materials",
+    "constructions",
+    "gains",
+    "air_exchanges",
+    "thermal_template"
+  ],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "on_existing": {"const": "fail"},
+    "metadata": {"type": "object"},
+    "profiles": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/profile"}
+    },
+    "materials": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/material"}
+    },
+    "constructions": {
+      "type": "array",
+      "minItems": 6,
+      "items": {"$ref": "#/$defs/construction"}
+    },
+    "gains": {
+      "type": "array",
+      "minItems": 3,
+      "items": {"$ref": "#/$defs/gain"}
+    },
+    "air_exchanges": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/airExchange"}
+    },
+    "thermal_template": {"$ref": "#/$defs/thermalTemplate"},
+    "apache_system": {
+      "oneOf": [
+        {"type": "null"},
+        {"$ref": "#/$defs/apacheSystem"}
+      ]
+    }
+  },
+  "$defs": {
+    "evidenceProperties": {
+      "type": "object",
+      "properties": {
+        "description": {"type": "string", "minLength": 1},
+        "source": {"type": "string", "minLength": 1},
+        "source_locator": {"type": "string", "minLength": 1}
+      }
+    },
+    "validationRange": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["expected_type"],
+      "properties": {
+        "expected_type": {
+          "enum": ["number", "integer", "string", "path", "boolean", "array", "object", "any"]
+        },
+        "minimum": {"type": "number"},
+        "maximum": {"type": "number"},
+        "allowed_values": {"type": "array"},
+        "allow_none": {"type": "boolean"}
+      }
+    },
+    "traceableField": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["value", "description", "units", "source", "source_locator", "validation_range"],
+      "properties": {
+        "value": {},
+        "description": {"type": "string", "minLength": 1},
+        "units": {"type": "string", "minLength": 1},
+        "source": {"type": "string", "minLength": 1},
+        "source_locator": {"type": "string", "minLength": 1},
+        "validation_range": {"$ref": "#/$defs/validationRange"},
+        "required": {"type": "boolean"}
+      }
+    },
+    "fieldMap": {
+      "type": "object",
+      "additionalProperties": {"$ref": "#/$defs/traceableField"}
+    },
+    "profile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["key", "profile_type", "reference", "data", "description", "source", "source_locator"],
+      "properties": {
+        "key": {"type": "string", "minLength": 1},
+        "profile_type": {"enum": ["daily", "weekly", "yearly", "compact", "freeform"]},
+        "reference": {"type": "string", "minLength": 1},
+        "modulating": {"type": "boolean"},
+        "units": {"type": "integer", "minimum": -1, "maximum": 1},
+        "data": {"$ref": "#/$defs/traceableField"},
+        "description": {"type": "string", "minLength": 1},
+        "source": {"type": "string", "minLength": 1},
+        "source_locator": {"type": "string", "minLength": 1}
+      }
+    },
+    "material": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["key", "category", "properties", "description", "source", "source_locator"],
+      "properties": {
+        "key": {"type": "string", "minLength": 1},
+        "category": {"type": "string", "minLength": 1},
+        "properties": {"$ref": "#/$defs/fieldMap"},
+        "description": {"type": "string", "minLength": 1},
+        "source": {"type": "string", "minLength": 1},
+        "source_locator": {"type": "string", "minLength": 1}
+      }
+    },
+    "layer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["material_key", "is_cavity", "properties"],
+      "properties": {
+        "material_key": {"type": "string", "minLength": 1},
+        "is_cavity": {"type": "boolean"},
+        "properties": {"$ref": "#/$defs/fieldMap"}
+      }
+    },
+    "construction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["key", "assignment_parameter", "category", "construction_class", "properties", "layers", "description", "source", "source_locator"],
+      "properties": {
+        "key": {"type": "string", "minLength": 1},
+        "assignment_parameter": {
+          "enum": [
+            "external_wall_construction_id",
+            "roof_construction_id",
+            "ground_floor_construction_id",
+            "internal_wall_construction_id",
+            "door_construction_id",
+            "glazing_construction_id"
+          ]
+        },
+        "category": {"type": "string", "minLength": 1},
+        "construction_class": {"enum": ["opaque", "glazed"]},
+        "properties": {"$ref": "#/$defs/fieldMap"},
+        "layers": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"$ref": "#/$defs/layer"}
+        },
+        "description": {"type": "string", "minLength": 1},
+        "source": {"type": "string", "minLength": 1},
+        "source_locator": {"type": "string", "minLength": 1}
+      }
+    },
+    "gain": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["key", "category", "subtype", "units", "properties", "description", "source", "source_locator"],
+      "properties": {
+        "key": {"type": "string", "minLength": 1},
+        "category": {"enum": ["people", "lighting", "energy"]},
+        "subtype": {"type": "string", "minLength": 1},
+        "units": {"type": "string", "minLength": 1},
+        "properties": {"$ref": "#/$defs/fieldMap"},
+        "description": {"type": "string", "minLength": 1},
+        "source": {"type": "string", "minLength": 1},
+        "source_locator": {"type": "string", "minLength": 1}
+      }
+    },
+    "airExchange": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["key", "exchange_type", "units", "adjacent_condition", "properties", "description", "source", "source_locator"],
+      "properties": {
+        "key": {"type": "string", "minLength": 1},
+        "exchange_type": {"enum": ["infiltration", "mechanical_ventilation", "natural_ventilation"]},
+        "units": {"type": "string", "minLength": 1},
+        "adjacent_condition": {"enum": ["external_air", "external_air_and_offset_temp", "from_adjacent_room", "temperature_from_profile"]},
+        "properties": {"$ref": "#/$defs/fieldMap"},
+        "description": {"type": "string", "minLength": 1},
+        "source": {"type": "string", "minLength": 1},
+        "source_locator": {"type": "string", "minLength": 1}
+      }
+    },
+    "thermalTemplate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "standard", "room_conditions", "system_data", "gain_keys", "air_exchange_keys", "description", "source", "source_locator"],
+      "properties": {
+        "name": {"type": "string", "minLength": 1},
+        "standard": {"const": "generic"},
+        "room_conditions": {"$ref": "#/$defs/fieldMap"},
+        "system_data": {"$ref": "#/$defs/fieldMap"},
+        "gain_keys": {"type": "array", "minItems": 1, "items": {"type": "string"}, "uniqueItems": true},
+        "air_exchange_keys": {"type": "array", "minItems": 1, "items": {"type": "string"}, "uniqueItems": true},
+        "description": {"type": "string", "minLength": 1},
+        "source": {"type": "string", "minLength": 1},
+        "source_locator": {"type": "string", "minLength": 1}
+      }
+    },
+    "apacheSystem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "description", "source", "source_locator"],
+      "properties": {
+        "name": {"type": "string", "minLength": 1},
+        "from_id": {"type": ["string", "null"]},
+        "description": {"type": "string", "minLength": 1},
+        "source": {"type": "string", "minLength": 1},
+        "source_locator": {"type": "string", "minLength": 1}
+      }
+    }
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "sia4010.sia2028_hourly_weather.v1",
+  "title": "Normalized SIA 2028 hourly weather binding",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "schema_id",
+    "schema_version",
+    "primary_source_sha256",
+    "source_locator",
+    "station_name",
+    "dataset_identity",
+    "weather_file"
+  ],
+  "properties": {
+    "schema_id": {"const": "sia4010.sia2028_hourly_weather.v1"},
+    "schema_version": {"const": "1.0"},
+    "primary_source_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "source_locator": {"type": "string", "minLength": 1},
+    "station_name": {"type": "string", "minLength": 1},
+    "dataset_identity": {"type": "string", "minLength": 1},
+    "weather_file": {
+      "type": "object",
+      "required": ["path", "sha256", "format", "hour_count"],
+      "properties": {
+        "path": {"type": "string", "minLength": 1},
+        "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "format": {"enum": ["EPW", "FWT", "TMY", "TMY1"]},
+        "hour_count": {"const": 8760}
+      }
+    }
+  }
+}

@@ -36,6 +36,10 @@ class VEDataExtractor:
         self._openings: Dict[str, List[Any]] = {}  # surface_id -> openings
         self._templates: Dict[str, Any] = {}  # template_id -> VEThermalTemplate
         self._hvac_systems: Dict[str, Any] = {}
+        self._profiles: Optional[Dict[str, Any]] = None
+        self._profile_daily_hours: Dict[str, Optional[float]] = {}
+        self._room_zone_membership: Optional[Dict[str, Dict[str, Any]]] = None
+        self._macroflo_openings: Optional[Dict[str, Dict[str, Any]]] = None
         self._energy_sources: Dict[str, Any] = {}
         self._construction_properties: Dict[str, Dict[str, Any]] = {}
         self._cdb_projects: Optional[List[Any]] = None
@@ -62,11 +66,8 @@ class VEDataExtractor:
         return self._model
 
     def _select_best_model(self, models: List[Any]) -> Any:
-        """Select the VE model that exposes the most usable room bodies."""
+        """Select the documented real/proposed VE building at model index zero."""
         model_rows: List[Dict[str, Any]] = []
-        best_model = models[0]
-        best_score = (-1, -1)
-        selected_index = 0
 
         for index, model in enumerate(models):
             raw_bodies: List[Any] = []
@@ -81,12 +82,6 @@ class VEDataExtractor:
                 if self._is_relevant_body(body)
             )
             raw_count = len(raw_bodies)
-            score = (relevant_count, raw_count)
-            if score > best_score:
-                best_score = score
-                best_model = model
-                selected_index = index
-
             model_rows.append({
                 "index": index,
                 "model_type": self._normalize_enum_name(getattr(model, "model_type", None)),
@@ -97,15 +92,11 @@ class VEDataExtractor:
 
         self._model_selection_diagnostics = {
             "model_count": len(models),
-            "selected_model_index": selected_index,
+            "selected_model_index": 0,
+            "selection_basis": "IESVE documents project.models[0] as the real/proposed building",
             "models": model_rows,
         }
-        if selected_index != 0:
-            logger.info(
-                "Selected VE model index %s because it exposes more room bodies than model 0.",
-                selected_index,
-            )
-        return best_model
+        return models[0]
 
     def get_model_selection_diagnostics(self) -> Dict[str, Any]:
         """Return model-selection diagnostics for report preflight checks."""
@@ -206,6 +197,114 @@ class VEDataExtractor:
                 self._templates = {}
         return self._templates
 
+    def get_profiles(self) -> Dict[str, Any]:
+        """Return daily and group profiles indexed by their VE identifiers."""
+        if self._profiles is not None:
+            return dict(self._profiles)
+        profiles: Dict[str, Any] = {}
+        try:
+            daily_profiles, group_profiles = self.project.profiles()
+            for mapping in (self._as_dict(daily_profiles), self._as_dict(group_profiles)):
+                for key, profile in mapping.items():
+                    profiles[str(key)] = profile
+                    profile_id = self._safe_object_attr(profile, "id")
+                    if profile_id not in (None, ""):
+                        profiles[str(profile_id)] = profile
+        except Exception as exc:
+            logger.error("Error while retrieving VE profiles: %s", exc)
+        self._profiles = profiles
+        return dict(profiles)
+
+    def get_profile_daily_equivalent_hours(self, profile_id: Any) -> Optional[float]:
+        """Return conservative full-load hours for a representative profile day.
+
+        Daily modulating profiles are integrated from their numeric points.
+        Weekly/yearly groups use the maximum referenced day so cooling screening
+        is conservative. Unsupported absolute, compact, formula-only, or freeform
+        profiles remain ``None`` instead of being approximated.
+        """
+        key = str(profile_id or "").strip()
+        if not key:
+            return None
+        if key in self._profile_daily_hours:
+            return self._profile_daily_hours[key]
+        value = self._resolve_profile_daily_equivalent_hours(key, set())
+        self._profile_daily_hours[key] = value
+        return value
+
+    def _resolve_profile_daily_equivalent_hours(self, profile_id: str, visited: set) -> Optional[float]:
+        """Resolve one VE daily/group profile without following recursive loops."""
+        if profile_id in visited:
+            return None
+        visited = set(visited)
+        visited.add(profile_id)
+        profile = self.get_profiles().get(profile_id)
+        if profile is None:
+            return None
+        try:
+            if hasattr(profile, "is_modulating") and not bool(profile.is_modulating()):
+                return None
+            data = profile.get_data()
+            if hasattr(profile, "is_weekly") and profile.is_weekly():
+                child_values = [
+                    self._resolve_profile_daily_equivalent_hours(str(child), visited)
+                    for child in self._as_list(data)
+                ]
+                numeric = [value for value in child_values if value is not None]
+                return max(numeric) if numeric else None
+            if hasattr(profile, "is_yearly") and profile.is_yearly():
+                child_values = []
+                for row in self._as_list(data):
+                    if isinstance(row, (list, tuple)) and row:
+                        child_values.append(
+                            self._resolve_profile_daily_equivalent_hours(str(row[0]), visited)
+                        )
+                numeric = [value for value in child_values if value is not None]
+                return max(numeric) if numeric else None
+            if (
+                hasattr(profile, "is_compact")
+                and profile.is_compact()
+            ) or (
+                hasattr(profile, "is_freeform")
+                and profile.is_freeform()
+            ):
+                return None
+            return self._integrate_daily_profile_points(data)
+        except Exception:
+            return None
+
+    @staticmethod
+    def _integrate_daily_profile_points(data: Any) -> Optional[float]:
+        """Integrate numeric VE daily-profile points over a 24-hour day."""
+        points = []
+        for row in data if isinstance(data, (list, tuple)) else []:
+            if not isinstance(row, (list, tuple)) or len(row) < 2:
+                continue
+            formula = str(row[2] or "").strip() if len(row) > 2 else ""
+            # VE serializes the absence of a point formula as ``"-"``.  It is
+            # metadata, not an executable formula, and must not make an
+            # otherwise numeric daily profile non-resolvable.
+            if formula not in {"", "-"}:
+                return None
+            try:
+                hour = float(row[0])
+                value = float(row[1])
+            except (TypeError, ValueError):
+                continue
+            if 0.0 <= hour <= 24.0:
+                points.append((hour, value))
+        if not points:
+            return None
+        points = sorted(set(points))
+        if points[0][0] > 0.0:
+            points.insert(0, (0.0, points[0][1]))
+        if points[-1][0] < 24.0:
+            points.append((24.0, points[-1][1]))
+        integral = 0.0
+        for (start_hour, start_value), (end_hour, end_value) in zip(points, points[1:]):
+            integral += (end_hour - start_hour) * (start_value + end_value) / 2.0
+        return max(0.0, integral)
+
     def get_room_data(self, body: Any) -> Optional[Any]:
         """Return ``VERoomData`` for one body."""
         body_id = self.get_object_id(body)
@@ -216,6 +315,14 @@ class VEDataExtractor:
                 logger.error("Error while retrieving room data for body %s: %s", body_id, e)
                 self._room_data_cache[body_id] = None
         return self._room_data_cache[body_id]
+
+    def get_room_general(self, room_data: Any) -> Dict[str, Any]:
+        """Return room identity, area and thermal-template assignment data."""
+        try:
+            return self._as_dict(room_data.get_general())
+        except Exception as exc:
+            logger.error("Error while retrieving room general data: %s", exc)
+            return {}
 
     def get_internal_gains(self, room_data: Any) -> List[Any]:
         """Return room internal gains from ``VERoomData.get_internal_gains``."""
@@ -250,24 +357,137 @@ class VEDataExtractor:
             return {}
 
     def get_weather_data(self) -> Optional[Any]:
-        """Return the project weather data object when exposed by VE."""
+        """Return project weather metadata through the documented ``VELocate`` API."""
         if self._weather_data is None:
+            locator = None
             try:
-                self._weather_data = self.project.weather_file()
+                import importlib
+
+                iesve = importlib.import_module("iesve")
+                locator = iesve.VELocate()
+                if locator.open_wea_data() != -1:
+                    self._weather_data = self._as_dict(locator.get())
             except Exception as e:
                 logger.error("Error while retrieving weather data: %s", e)
                 self._weather_data = None
+            finally:
+                if locator is not None:
+                    try:
+                        locator.close_wea_data()
+                    except Exception:
+                        pass
         return self._weather_data
 
     def get_hvac_systems(self) -> Dict[str, Any]:
         """Return project-level Apache systems."""
         if not self._hvac_systems:
             try:
-                self._hvac_systems = self._as_dict(self.project.apache_systems())
+                raw_systems = self.project.apache_systems()
+                if isinstance(raw_systems, dict):
+                    iterable = list(raw_systems.items())
+                else:
+                    iterable = list(enumerate(self._as_list(raw_systems)))
+                systems: Dict[str, Any] = {}
+                for fallback_id, system in iterable:
+                    system_id = self._safe_object_attr(system, "id")
+                    system_name = self._safe_object_attr(system, "name")
+                    key = str(system_id or system_name or fallback_id)
+                    systems[key] = system
+                self._hvac_systems = systems
             except Exception as e:
                 logger.error("Error while retrieving HVAC systems: %s", e)
                 self._hvac_systems = {}
         return self._hvac_systems
+
+    def get_apache_system_data(self, system_id: Any) -> Dict[str, Any]:
+        """Return documented Apache-system dictionaries for one assigned ID."""
+        requested = str(system_id or "").strip().lower()
+        if not requested:
+            return {}
+        selected = None
+        for key, system in self.get_hvac_systems().items():
+            candidates = {
+                str(key).strip().lower(),
+                str(self._safe_object_attr(system, "id") or "").strip().lower(),
+                str(self._safe_object_attr(system, "name") or "").strip().lower(),
+            }
+            if requested in candidates:
+                selected = system
+                break
+        if selected is None:
+            return {}
+
+        def call_dict(method_name: str) -> Dict[str, Any]:
+            """Call one zero-argument Apache-system method as a dictionary."""
+            try:
+                method = getattr(selected, method_name)
+                return self._as_dict(method())
+            except Exception:
+                return {}
+
+        return {
+            "id": str(self._safe_object_attr(selected, "id") or system_id),
+            "name": str(self._safe_object_attr(selected, "name") or ""),
+            "heating": call_dict("heating"),
+            "heating_ncm": call_dict("heating_ncm"),
+            "cooling": call_dict("cooling"),
+            "cooling_ncm": call_dict("cooling_ncm"),
+            "ventilation_ncm": call_dict("ventilation_ncm"),
+            "air_supply": call_dict("air_supply"),
+            "control": call_dict("control"),
+            "general_ncm": call_dict("general_ncm"),
+            "system_controls_ncm": call_dict("system_controls_ncm"),
+        }
+
+    def get_room_zone_membership(self) -> Dict[str, Dict[str, Any]]:
+        """Return documented RoomGroups HVAC-zone membership by room ID."""
+        if self._room_zone_membership is not None:
+            return dict(self._room_zone_membership)
+        membership: Dict[str, Dict[str, Any]] = {}
+        try:
+            import importlib
+
+            iesve = importlib.import_module("iesve")
+            room_groups = iesve.RoomGroups()
+            for zone_group in self._as_list(room_groups.get_zone_groups()):
+                zone_group_id = str((zone_group or {}).get("id") or "")
+                if not zone_group_id:
+                    continue
+                for zone in self._as_list(room_groups.get_zones(zone_group_id)):
+                    zone_rooms = [str(room_id) for room_id in (zone or {}).get("rooms", [])]
+                    for room_id in zone_rooms:
+                        membership[room_id] = {
+                            "zone_group_id": zone_group_id,
+                            "zone_group_name": str((zone_group or {}).get("name") or ""),
+                            "zone_id": str((zone or {}).get("id") or ""),
+                            "zone_name": str((zone or {}).get("name") or ""),
+                            "zone_room_count": len(zone_rooms),
+                            "master_room": str((zone or {}).get("master_room") or ""),
+                        }
+        except Exception as exc:
+            logger.info("RoomGroups HVAC-zone membership is unavailable: %s", exc)
+        self._room_zone_membership = membership
+        return dict(membership)
+
+    def get_macroflo_openings(self) -> Dict[str, Dict[str, Any]]:
+        """Return MacroFlo opening definitions indexed by reference ID."""
+        if self._macroflo_openings is not None:
+            return dict(self._macroflo_openings)
+        openings: Dict[str, Dict[str, Any]] = {}
+        try:
+            import importlib
+
+            iesve = importlib.import_module("iesve")
+            for row in self._as_list(iesve.VEMacroFlo().get()):
+                if not isinstance(row, dict):
+                    continue
+                reference_id = str(row.get("reference_id") or "").strip()
+                if reference_id:
+                    openings[reference_id] = dict(row)
+        except Exception as exc:
+            logger.info("MacroFlo opening definitions are unavailable: %s", exc)
+        self._macroflo_openings = openings
+        return dict(openings)
 
     def get_energy_sources(self) -> Dict[str, Any]:
         """Return project energy sources through ``iesve.EnergySources``."""
@@ -356,6 +576,7 @@ class VEDataExtractor:
                 "g_total_source": g_total_audit["source"],
                 "orientation": self._safe_lookup(props, "orientation"),
                 "type": self._safe_lookup(props, "type") or self._get_opening_type(opening),
+                "macroflo_id": self._safe_object_attr(opening, "get_macroflo_id"),
                 "construction_id": construction_id,
                 "construction_properties": construction_props,
             }
@@ -704,6 +925,26 @@ class VEDataExtractor:
 
         if normalized_type in {"wall", "roof", "floor", "ceiling", "partition"}:
             opaque = [props for props in resolved if props.get("opaque") is True]
+            exact_category = [
+                props
+                for props in opaque
+                if self._normalize_surface_type(props.get("category")) == normalized_type
+            ]
+            if exact_category:
+                return exact_category[0]
+
+            # A VE parent surface may list its openings before its own opaque
+            # construction (for example DOOR, EXTW5, WALL).  Never use a door
+            # or glazed-opening construction as the U-value of the opaque
+            # wall/roof/floor merely because it appears first.
+            non_opening_opaque = [
+                props
+                for props in opaque
+                if self._normalize_surface_type(props.get("category"))
+                not in {"door", "glazing", "window"}
+            ]
+            if non_opening_opaque:
+                return non_opening_opaque[0]
             if opaque:
                 return opaque[0]
             if net_area is not None and net_area <= 1e-6:
@@ -1053,21 +1294,30 @@ class VEDataExtractor:
                 "local_shade_overhang_type",
             ),
         )
-        if direct:
-            return direct
-
         descriptions: List[str] = []
         for mapping in mappings:
             descriptions.extend(cls._active_shade_descriptions(mapping))
         if descriptions:
-            return "; ".join(descriptions)
+            return direct if direct and not cls._is_no_shading_label(direct) else "; ".join(descriptions)
         if any(cls._has_explicit_no_shading(mapping) for mapping in mappings):
             return "none declared in CDB"
+        if direct and not cls._is_no_shading_label(direct):
+            return direct
         return None
 
     @classmethod
     def _extract_shading_control(cls, *mappings: Any) -> Optional[str]:
         """Read shading control/profile data from VE CDB construction fields."""
+        active_descriptions = [
+            description
+            for mapping in mappings
+            for description in cls._active_shade_descriptions(mapping)
+        ]
+        if not active_descriptions and any(
+            cls._has_explicit_no_shading(mapping) for mapping in mappings
+        ):
+            return "none declared in CDB"
+
         direct = cls._first_text_from_mappings(
             mappings,
             (
@@ -1078,7 +1328,7 @@ class VEDataExtractor:
                 "internal_shade_profile",
             ),
         )
-        control_parts = [direct] if direct else []
+        control_parts = [direct] if direct and not cls._is_no_shading_label(direct) else []
 
         for mapping in mappings:
             for key in (
@@ -1094,8 +1344,6 @@ class VEDataExtractor:
 
         if control_parts:
             return "; ".join(str(item) for item in control_parts if item)
-        if any(cls._has_explicit_no_shading(mapping) for mapping in mappings):
-            return "none declared in CDB"
         return None
 
     @classmethod
@@ -1301,6 +1549,19 @@ class VEDataExtractor:
         active_keys = ("external_shade_active", "internal_shade_active", "local_shade_active")
         present = [key for key in active_keys if key in mapping]
         return bool(present) and all(not cls._truthy(mapping.get(key)) for key in present)
+
+    @staticmethod
+    def _is_no_shading_label(value: Any) -> bool:
+        """Return true for CDB labels that explicitly represent no active shade."""
+        return str(value or "").strip().lower() in {
+            "0",
+            "false",
+            "no",
+            "none",
+            "off",
+            "disabled",
+            "none declared in cdb",
+        }
 
     @staticmethod
     def _normalize_unit_fraction(value: Optional[float]) -> Optional[float]:

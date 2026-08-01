@@ -453,7 +453,7 @@ def build_qa_rows(
 
 
 def make_formats(workbook: Any) -> Dict[str, Any]:
-    """Create workbook formats."""
+    """Create all reusable workbook formats for dashboard worksheets."""
     navy = "#17365D"
     blue = "#D9EAF7"
     green = "#DDEBDA"

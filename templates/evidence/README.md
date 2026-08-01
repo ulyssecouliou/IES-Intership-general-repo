@@ -73,8 +73,8 @@ required for the five-family SIA 4010 evidence pack.
 ## SIA 4010 Official Test Results
 
 Use `sia4010_official_test_results_template.csv` when a reviewer can document
-the official result of tests 1 to 7. Copy it into `sia4010_evidence/`, rename it
-for the project, and fill one row per reviewed test:
+official results. Copy it into `sia4010_evidence/`, rename it for the project,
+and fill one row per exact variant required by the selected class:
 
 ```text
 SIA4010_official_test_results_<project>.csv
@@ -84,15 +84,35 @@ Accepted PASS values are `pass`, `passed`, `validated`, `official_pass` and
 `official_validated`. Accepted FAIL values are `fail`, `failed`, `not_passed`
 and `rejected`.
 
-A PASS/VALIDATED row only upgrades a test to `VALIDATED` when the row includes
+A PASS/VALIDATED row is accepted as `OFFICIAL_RESULTS_RECORDED` only when the row includes
 `reference_file`, `candidate_file`, `reviewer`, `review_date`,
 `deviation`, `tolerance`, `source_authority` and `source_reference`. The
-`reference_file` and `candidate_file` values must match files present in
-`sia4010_evidence/`. Missing metadata or missing referenced files are kept
-visible in the Excel report but do not validate the test.
+`reference_file` and `candidate_file` values must match the configured
+`SIA4010_reference_comparison_` and `SIA4010_candidate_results_` evidence
+families. Missing metadata or wrong-family files remain visible but do not
+record the result. A separate SIA sub-commission attestation is still required
+before any validated or certified claim.
+
+Variant identifiers are not collapsed. For example, `test_2A` cannot satisfy
+`test_2B`, six rows `test_3A` to `test_3F` cannot satisfy the twelve-variant
+scope `test_3A` to `test_3L`, and a generic `test_5` row cannot replace
+`test_5A` to `test_5D`.
 
 ## Templates
 
+- `sia2024_usage_mapping_template.csv`: reviewer-accepted VE room/template to
+  SIA 2024 use-category mapping. The checker never invents missing SIA 2024
+  categories or numeric values.
+- `sia3874_lighting_control_mapping_template.csv`: reviewer-accepted VE
+  lighting/daylight-control to SIA 387/4 control-type mapping used by SIA 4010
+  test-3 readiness. It does not replace the official comparison workbook.
+- `sia3802_project_metadata_template.csv`: reviewer-approved active-project
+  metadata. It selects the new/existing building comfort allowance and proves
+  the reviewed weather file, climate basis, location and altitude. The
+  `project_id` must match the active VE project folder name.
+- `sia3802_global_reference_comparison_template.csv`: reviewer-approved global
+  project/reference result. Component deviations remain diagnostic until this
+  project-level comparison is documented and accepted.
 - `glazing_solar_protection_template.csv`: glazing, frame and shading evidence
   needed for SIA 380/2 opening and solar-protection checks.
 - `g_values_audit_template.csv`: VE/CDB g-value traceability template for
@@ -105,7 +125,8 @@ visible in the Excel report but do not validate the test.
   classes 1A, 1B, 2A, 2B, 3, 4A, 4B and 5. Use it to document the intended
   class, required tests and official reviewer status.
 - `sia4010_official_test_results_template.csv`: reviewer-filled result tracker
-  for explicit SIA 4010 PASS/VALIDATED/FAIL outcomes on tests 1 to 7.
+  for explicit SIA 4010 result outcomes on all 24 exact variants. Recorded
+  result rows do not replace the SIA sub-commission attestation.
 - `sia4010_software_register_review_template.csv`: manager-register review
   template. This is a guardrail file only; it must not be counted as official
   SIA 4010 validation evidence for the active IESVE workflow.

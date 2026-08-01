@@ -1,0 +1,105 @@
+{
+  "schema_version": "1.0",
+  "purpose": "Fail-closed source contract for all SIA 4010 validation classes. Each unresolved structured input is an explicit blocker until the corresponding official specification has been implemented and verified in VE.",
+  "classes": {
+    "1A": ["test_1", "test_2A"],
+    "1B": ["test_1", "test_2B", "test_2C", "test_2D"],
+    "2A": ["test_1", "test_2A", "test_3A", "test_3B", "test_3C", "test_3D", "test_3E", "test_3F"],
+    "2B": ["test_1", "test_2B", "test_2C", "test_2D", "test_3A", "test_3B", "test_3C", "test_3D", "test_3E", "test_3F", "test_3G", "test_3H", "test_3I", "test_3J", "test_3K", "test_3L"],
+    "3": ["test_1", "test_4", "test_5A", "test_5B", "test_5C", "test_5D", "test_6"],
+    "4A": ["test_1", "test_2A", "test_3A", "test_3B", "test_3C", "test_3D", "test_3E", "test_3F", "test_4", "test_5A", "test_5B", "test_5C", "test_5D", "test_6", "test_7"],
+    "4B": ["test_1", "test_2B", "test_2C", "test_2D", "test_3A", "test_3B", "test_3C", "test_3D", "test_3E", "test_3F", "test_3G", "test_3H", "test_3I", "test_3J", "test_3K", "test_3L", "test_4", "test_5A", "test_5B", "test_5C", "test_5D", "test_6", "test_7"],
+    "5": ["test_7"]
+  },
+  "variants": {
+    "test_1": {"case_ids": ["600", "640", "600FF", "900", "940", "900FF", "1E"], "required_parameters": ["official_test_1_model_inputs"]},
+    "test_2A": {"case_ids": ["2A"], "required_parameters": ["official_test_2_model_inputs"]},
+    "test_2B": {"case_ids": ["2B"], "required_parameters": ["official_test_2_model_inputs"]},
+    "test_2C": {"case_ids": ["2C"], "required_parameters": ["official_test_2_model_inputs"]},
+    "test_2D": {"case_ids": ["2D"], "required_parameters": ["official_test_2_model_inputs"]},
+    "test_3A": {"case_ids": ["3A"], "required_parameters": ["official_test_3_model_inputs"]},
+    "test_3B": {"case_ids": ["3B"], "required_parameters": ["official_test_3_model_inputs"]},
+    "test_3C": {"case_ids": ["3C"], "required_parameters": ["official_test_3_model_inputs"]},
+    "test_3D": {"case_ids": ["3D"], "required_parameters": ["official_test_3_model_inputs"]},
+    "test_3E": {"case_ids": ["3E"], "required_parameters": ["official_test_3_model_inputs"]},
+    "test_3F": {"case_ids": ["3F"], "required_parameters": ["official_test_3_model_inputs"]},
+    "test_3G": {"case_ids": ["3G"], "required_parameters": ["official_test_3_model_inputs"]},
+    "test_3H": {"case_ids": ["3H"], "required_parameters": ["official_test_3_model_inputs"]},
+    "test_3I": {"case_ids": ["3I"], "required_parameters": ["official_test_3_model_inputs"]},
+    "test_3J": {"case_ids": ["3J"], "required_parameters": ["official_test_3_model_inputs"]},
+    "test_3K": {"case_ids": ["3K"], "required_parameters": ["official_test_3_model_inputs"]},
+    "test_3L": {"case_ids": ["3L"], "required_parameters": ["official_test_3_model_inputs"]},
+    "test_4": {"case_ids": ["4"], "required_parameters": ["official_test_4_model_inputs"]},
+    "test_5A": {"case_ids": ["5A"], "required_parameters": ["official_test_5_model_inputs"]},
+    "test_5B": {"case_ids": ["5B"], "required_parameters": ["official_test_5_model_inputs"]},
+    "test_5C": {"case_ids": ["5C"], "required_parameters": ["official_test_5_model_inputs"]},
+    "test_5D": {"case_ids": ["5D"], "required_parameters": ["official_test_5_model_inputs"]},
+    "test_6": {"case_ids": ["6"], "required_parameters": ["official_test_6_model_inputs"]},
+    "test_7": {"case_ids": ["7"], "required_parameters": ["official_test_7_model_inputs"]}
+  },
+  "parameters": {
+    "official_test_1_model_inputs": {
+      "name": "Official Test 1 model input set",
+      "description": "Complete, machine-implemented geometry, constructions, schedules, climate and ideal-load settings for every Test 1 case.",
+      "units": "structured input set",
+      "source": "SIA_4010_geteilter_Link/Test1/Spezifikation_Test1.pdf",
+      "validation": {"type": "object"},
+      "status": "UNRESOLVED",
+      "value": null
+    },
+    "official_test_2_model_inputs": {
+      "name": "Official Test 2 model input set",
+      "description": "Complete, machine-implemented solar-protection cases 2A-2D, including the exact SIA 387/4 controls.",
+      "units": "structured input set",
+      "source": "SIA_4010_geteilter_Link/Test2/Spezifikation_Test2.pdf",
+      "validation": {"type": "object"},
+      "status": "UNRESOLVED",
+      "value": null
+    },
+    "official_test_3_model_inputs": {
+      "name": "Official Test 3 model input set",
+      "description": "Complete, machine-implemented lighting and coupled shading-control cases 3A-3L.",
+      "units": "structured input set",
+      "source": "SIA_4010_geteilter_Link/Test3/Spezifikation_Test3.pdf",
+      "validation": {"type": "object"},
+      "status": "UNRESOLVED",
+      "value": null
+    },
+    "official_test_4_model_inputs": {
+      "name": "Official Test 4 model input set",
+      "description": "Complete, machine-implemented single-zone all-air system and amphitheatre case.",
+      "units": "structured input set",
+      "source": "SIA_4010_geteilter_Link/Test4/Spezifikation_Test4.pdf",
+      "validation": {"type": "object"},
+      "status": "UNRESOLVED",
+      "value": null
+    },
+    "official_test_5_model_inputs": {
+      "name": "Official Test 5 model input set",
+      "description": "Complete, machine-implemented multizone AHU, recovery and humidification cases 5A-5D.",
+      "units": "structured input set",
+      "source": "SIA_4010_geteilter_Link/Test5/Spezifikation_Test5.pdf",
+      "validation": {"type": "object"},
+      "status": "UNRESOLVED",
+      "value": null
+    },
+    "official_test_6_model_inputs": {
+      "name": "Official Test 6 model input set",
+      "description": "Complete, machine-implemented staged ventilation, recovery and overflow case.",
+      "units": "structured input set",
+      "source": "SIA_4010_geteilter_Link/Test6/Spezifikation_Test6.pdf",
+      "validation": {"type": "object"},
+      "status": "UNRESOLVED",
+      "value": null
+    },
+    "official_test_7_model_inputs": {
+      "name": "Official Test 7 model input set",
+      "description": "Complete, machine-implemented emission, distribution, storage, generation and total-energy case, including supplied demand profiles.",
+      "units": "structured input set",
+      "source": "SIA_4010_geteilter_Link/Test7/Spezifikation_Test7.pdf",
+      "validation": {"type": "object"},
+      "status": "UNRESOLVED",
+      "value": null
+    }
+  }
+}

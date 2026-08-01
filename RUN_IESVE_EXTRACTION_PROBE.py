@@ -10,9 +10,14 @@ import importlib
 from scripts.probes import iesve_extraction_probe
 
 
-iesve_extraction_probe = importlib.reload(iesve_extraction_probe)
+def main() -> str:
+    """Run the IESVE extraction probe with default limits and print the output path."""
+    probe_module = importlib.reload(iesve_extraction_probe)
+    output_path = probe_module.run_with_defaults()
+    print(f"IESVE extraction probe written to: {output_path}")
+    print(f"Probe schema version: {probe_module.PROBE_SCHEMA_VERSION}")
+    return str(output_path)
 
 
-output_path = iesve_extraction_probe.run_with_defaults()
-print(f"IESVE extraction probe written to: {output_path}")
-print(f"Probe schema version: {iesve_extraction_probe.PROBE_SCHEMA_VERSION}")
+if __name__ == "__main__":
+    main()

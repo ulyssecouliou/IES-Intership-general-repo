@@ -150,6 +150,8 @@ activemq-data/
 # Environments
 .env
 .envrc
+.claude/settings.local.json
+.claude/agent-memory-local/
 .venv
 env/
 venv/
@@ -226,3 +228,31 @@ reports/previews/
 roadmap_render/
 tmp/
 docs/build/
+
+# --------------------------------------------------------------------------
+# Ajouts 2026-08-01 : repertoires lourds qui n'etaient couverts par AUCUNE
+# regle ci-dessus. Mesure avant ajout : 821 Mo au total, tous non ignores.
+# --------------------------------------------------------------------------
+# Bacs a sable et sorties d'outils historiques
+.codex_tmp/
+.codex_spreadsheet/
+
+# Sources normatives officielles SIA : sous licence, 118 Mo, et deja presentes
+# dans le depot SIA_Compliance_Scripts. A ne jamais dupliquer ici.
+SIA_4010_geteilter_Link/
+
+# Sorties d'execution : classeurs, PDF et paquets de preuves produits par
+# Run_VE_Swiss_Compliance.py. Les regles existantes ne couvraient que
+# reports/*.xlsx, *.log et les sondes ; ni les .zip ni les .pdf.
+reports/
+sia4010_evidence/
+
+# Donnees de projet CLIENT (~50 Mo : archives .zip de modeles VE, rapport de
+# simulation, resultats par zone). Ecarte du versionnement le 2026-08-01 :
+# ce ne sont pas des sources, et l'historique Git est definitif — mieux vaut
+# les ajouter plus tard si c'est voulu que de ne plus pouvoir les retirer.
+# Decision a confirmer par le commanditaire.
+VE - Validation for Swiss Building Regs/
+
+# Sorties de simulation a blanc
+outputs/

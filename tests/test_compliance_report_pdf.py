@@ -1,0 +1,413 @@
+"""Tests for the company-letterhead SIA compliance report PDF."""
+
+import struct
+import unittest
+import zlib
+from pathlib import Path
+
+from pypdf import PdfReader
+
+from scripts.quality.fixtures import StaticModelAnalyzer, build_reference_room
+from swiss_sia.company_profile import CompanyProfile, load_company_profile
+from swiss_sia.compliance_report_pdf import (
+    render_compliance_report_pdf,
+    summarise_model,
+)
+from swiss_sia.compliance_verdict import (
+    COMPLIANT,
+    NOT_COMPLIANT,
+    NOT_DETERMINED,
+    build_compliance_verdict,
+)
+from swiss_sia.model_analyzer import OpeningData, RoomData, SurfaceData
+from swiss_sia.pdf_writer import PdfDocument, wrap_to_width
+from swiss_sia.reference_model.sia4010.ui_translations import LANGUAGES, translate
+from swiss_sia.rule_engine import RuleEngine
+from swiss_sia.sia380_checker import SIA3802Checker
+from swiss_sia.sia4010_checker import SIA4010Checker
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
+OUTPUT_ROOT = REPO_ROOT / ".codex_tmp" / "compliance_pdf_tests"
+
+
+def _write_test_png(path: Path, width: int = 12, height: int = 8) -> Path:
+    """Write a small 8-bit RGB PNG without needing an imaging library.
+
+    A synthetic gradient keeps the fixture free of any licensed material while
+    still exercising the per-scanline PNG predictor that the writer relies on.
+    """
+
+    raw = bytearray()
+    for row in range(height):
+        raw.append(0)  # filter type 0 (None) for this scanline
+        for column in range(width):
+            raw += bytes((column * 20 % 256, row * 30 % 256, 128))
+
+    def chunk(tag: bytes, body: bytes) -> bytes:
+        """Return one length-prefixed, CRC-checked PNG chunk."""
+        return (
+            struct.pack(">I", len(body))
+            + tag
+            + body
+            + struct.pack(">I", zlib.crc32(tag + body) & 0xFFFFFFFF)
+        )
+
+    header = struct.pack(">IIBBBBB", width, height, 8, 2, 0, 0, 0)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_bytes(
+        b"\x89PNG\r\n\x1a\n"
+        + chunk(b"IHDR", header)
+        + chunk(b"IDAT", zlib.compress(bytes(raw)))
+        + chunk(b"IEND", b"")
+    )
+    return path
+
+
+class LogoEmbeddingTests(unittest.TestCase):
+    """The company logo must embed and decode back to real pixels."""
+
+    def test_png_logo_round_trips_through_the_pdf(self):
+        from swiss_sia.pdf_writer import load_image
+
+        logo = _write_test_png(OUTPUT_ROOT / "logo.png")
+        parsed = load_image(logo)
+        self.assertEqual((parsed["width"], parsed["height"]), (12, 8))
+        self.assertEqual(parsed["colour_space"], "/DeviceRGB")
+
+        path = OUTPUT_ROOT / "logo_embedded.pdf"
+        document = PdfDocument(title="logo")
+        page = document.add_page()
+        page.image(16, 6, 17, 17, logo)
+        document.save(path)
+
+        image = PdfReader(str(path)).pages[0]["/Resources"]["/XObject"]["/Im1"]
+        obj = image.get_object()
+        self.assertEqual(int(obj["/Width"]), 12)
+        # get_data() applies FlateDecode and the PNG predictor: a correct
+        # DecodeParms yields exactly width * height * 3 bytes.
+        self.assertEqual(len(obj.get_data()), 12 * 8 * 3)
+
+    def test_palette_png_is_refused_rather_than_silently_flattened(self):
+        from swiss_sia.pdf_writer import ImageError, load_image
+
+        path = OUTPUT_ROOT / "palette.png"
+
+        def chunk(tag, body):
+            """Return one CRC-checked PNG chunk."""
+            return (
+                struct.pack(">I", len(body))
+                + tag
+                + body
+                + struct.pack(">I", zlib.crc32(tag + body) & 0xFFFFFFFF)
+            )
+
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(
+            b"\x89PNG\r\n\x1a\n"
+            + chunk(b"IHDR", struct.pack(">IIBBBBB", 2, 2, 8, 3, 0, 0, 0))
+            + chunk(b"IDAT", zlib.compress(b"\x00\x00\x00\x00\x00\x00"))
+            + chunk(b"IEND", b"")
+        )
+        with self.assertRaises(ImageError):
+            load_image(path)
+
+    def test_unusable_logo_never_blocks_the_report(self):
+        broken = OUTPUT_ROOT / "broken_logo.png"
+        broken.parent.mkdir(parents=True, exist_ok=True)
+        broken.write_bytes(b"not a real png")
+        profile = CompanyProfile(name="Office", logo_path=broken)
+        rooms = [build_reference_room()]
+        path = render_compliance_report_pdf(
+            OUTPUT_ROOT / "report_broken_logo.pdf",
+            project_label="P",
+            rooms_data=rooms,
+            sia3802_results={},
+            sia4010_results={},
+            profile=profile,
+            language="en",
+        )
+        self.assertIn("Office", PdfReader(str(path)).pages[0].extract_text())
+
+
+class _Alert:
+    """Minimal alert double carrying only what the verdict engine reads."""
+
+    def __init__(self, category, severity):
+        """Record the alert category and severity name."""
+        self.category = category
+        self.severity = type("Severity", (), {"name": severity})()
+
+
+class PdfWriterTests(unittest.TestCase):
+    """The dependency-free writer must produce a readable, valid PDF."""
+
+    def test_pages_and_accented_text_survive_a_round_trip(self):
+        OUTPUT_ROOT.mkdir(parents=True, exist_ok=True)
+        path = OUTPUT_ROOT / "writer.pdf"
+        document = PdfDocument(title="T")
+        first = document.add_page()
+        first.text(15, 20, "Zürich Genève Lugano éàçöäÉÀ", size_pt=11)
+        second = document.add_page()
+        second.text(15, 20, "Second page", size_pt=11, bold=True)
+        document.save(path)
+        reader = PdfReader(str(path))
+        self.assertEqual(len(reader.pages), 2)
+        self.assertIn("Zürich Genève Lugano", reader.pages[0].extract_text())
+        self.assertIn("Second page", reader.pages[1].extract_text())
+
+    def test_wrap_never_drops_words(self):
+        sentence = "A limitation clause must stay readable in full at all times."
+        lines = wrap_to_width(sentence, 8.0, 40.0)
+        self.assertGreater(len(lines), 1)
+        self.assertEqual(" ".join(lines).split(), sentence.split())
+
+
+class VerdictEngineTests(unittest.TestCase):
+    """The verdict must never read as compliant on missing evidence."""
+
+    def _sia3802(self, alerts=(), comparison_status=""):
+        """Build a minimal checker-shaped result for the verdict engine."""
+        return {
+            "envelope": {}, "openings": {}, "ventilation": {},
+            "gains": {}, "setpoints": {}, "hvac": {},
+            "alerts": list(alerts),
+            "global_reference_comparison": {"status": comparison_status},
+        }
+
+    def test_no_room_is_not_determined(self):
+        verdict = build_compliance_verdict(self._sia3802(), {}, rooms_analysed=0)
+        self.assertEqual(verdict.sia3802_status, NOT_DETERMINED)
+        self.assertEqual(verdict.overall_status, NOT_DETERMINED)
+
+    def test_missing_global_comparison_blocks_a_compliant_statement(self):
+        verdict = build_compliance_verdict(self._sia3802(), {}, rooms_analysed=3)
+        self.assertEqual(verdict.sia3802_status, NOT_DETERMINED)
+        self.assertEqual(verdict.sia3802_reason, "global_comparison_missing")
+        self.assertIn("global_reference_comparison", verdict.outstanding)
+
+    def test_blocking_finding_makes_the_domain_and_overall_not_compliant(self):
+        verdict = build_compliance_verdict(
+            self._sia3802(
+                alerts=[_Alert("Envelope", "CRITICAL")],
+                comparison_status="REVIEWED_RESULT_AVAILABLE",
+            ),
+            {},
+            rooms_analysed=3,
+        )
+        envelope = next(d for d in verdict.domains if d.domain == "envelope")
+        self.assertEqual(envelope.status, NOT_COMPLIANT)
+        self.assertEqual(verdict.sia3802_status, NOT_COMPLIANT)
+        self.assertEqual(verdict.overall_status, NOT_COMPLIANT)
+
+    def test_advisory_findings_do_not_block_a_domain(self):
+        verdict = build_compliance_verdict(
+            self._sia3802(
+                alerts=[_Alert("Gains", "LOW"), _Alert("Gains", "MEDIUM")],
+                comparison_status="REVIEWED_RESULT_AVAILABLE",
+            ),
+            {},
+            rooms_analysed=3,
+        )
+        gains = next(d for d in verdict.domains if d.domain == "gains")
+        self.assertEqual(gains.status, COMPLIANT)
+        self.assertEqual(gains.advisory_count, 2)
+
+    def test_sia3802_compliant_only_with_reviewed_comparison_and_no_blocker(self):
+        verdict = build_compliance_verdict(
+            self._sia3802(comparison_status="REVIEWED_RESULT_AVAILABLE"),
+            {},
+            rooms_analysed=3,
+        )
+        self.assertEqual(verdict.sia3802_status, COMPLIANT)
+
+    def test_sia4010_never_reports_compliant_without_attestation(self):
+        # Even with every official test recorded, the strongest SIA 4010 status
+        # this report may carry is NOT_DETERMINED: attestation is external.
+        verdict = build_compliance_verdict(
+            self._sia3802(comparison_status="REVIEWED_RESULT_AVAILABLE"),
+            {
+                "tests": {"test_1": {"status": "OFFICIAL_RESULTS_RECORDED"}},
+                "validation_class": "1A",
+                "class_readiness": {"1A": {}},
+            },
+            rooms_analysed=3,
+        )
+        self.assertEqual(verdict.sia4010_status, NOT_DETERMINED)
+        self.assertEqual(verdict.sia4010_reason, "attestation_required")
+        self.assertEqual(verdict.overall_status, NOT_DETERMINED)
+
+    def test_failed_official_test_is_not_compliant(self):
+        verdict = build_compliance_verdict(
+            self._sia3802(comparison_status="REVIEWED_RESULT_AVAILABLE"),
+            {"tests": {"test_1": {"status": "FAILED"}}, "validation_class": "1A"},
+            rooms_analysed=3,
+        )
+        self.assertEqual(verdict.sia4010_status, NOT_COMPLIANT)
+
+
+class ModelSummaryTests(unittest.TestCase):
+    """The schematic must chart only orientations it can actually resolve."""
+
+    def test_areas_are_grouped_by_compass_sector(self):
+        room = RoomData(
+            id="r", name="R", area=50.0, volume=150.0,
+            surfaces=[
+                SurfaceData(id="s", name="S", area=10.0, net_area=10.0,
+                            is_external=True, orientation=180.0),
+                SurfaceData(id="n", name="N", area=6.0, net_area=6.0,
+                            is_external=True, orientation=0.0),
+            ],
+            openings=[OpeningData(id="w", name="W", area=2.0, is_external=True,
+                                  orientation=180.0)],
+        )
+        summary = summarise_model([room])
+        self.assertEqual(summary["opaque_by_sector"]["S"], 10.0)
+        self.assertEqual(summary["opaque_by_sector"]["N"], 6.0)
+        self.assertEqual(summary["glazed_by_sector"]["S"], 2.0)
+        self.assertAlmostEqual(summary["window_wall_ratio"], 2.0 / 16.0)
+
+    def test_unresolvable_orientation_is_not_charted_in_a_wrong_sector(self):
+        room = RoomData(
+            id="r", name="R",
+            surfaces=[SurfaceData(id="s", name="S", area=9.0, net_area=9.0,
+                                  is_external=True, orientation="unknown")],
+        )
+        summary = summarise_model([room])
+        self.assertEqual(sum(summary["opaque_by_sector"].values()), 0.0)
+        self.assertEqual(summary["unplaced_opaque_m2"], 9.0)
+        self.assertEqual(summary["total_opaque_m2"], 9.0)
+
+    def test_empty_model_is_safe(self):
+        summary = summarise_model([])
+        self.assertEqual(summary["rooms"], 0)
+        self.assertIsNone(summary["window_wall_ratio"])
+
+
+class CompanyProfileTests(unittest.TestCase):
+    """A missing or malformed profile must never break the report."""
+
+    def test_absent_config_yields_an_unconfigured_profile(self):
+        profile = load_company_profile(OUTPUT_ROOT / "does-not-exist")
+        self.assertFalse(profile.is_configured)
+        self.assertIsNone(profile.logo_path)
+
+    def test_malformed_config_is_tolerated(self):
+        root = OUTPUT_ROOT / "bad"
+        (root / "config").mkdir(parents=True, exist_ok=True)
+        (root / "config" / "company_profile.json").write_text("{ not json", encoding="utf-8")
+        self.assertFalse(load_company_profile(root).is_configured)
+
+    def test_missing_logo_file_is_ignored(self):
+        root = OUTPUT_ROOT / "nologo"
+        (root / "config").mkdir(parents=True, exist_ok=True)
+        (root / "config" / "company_profile.json").write_text(
+            '{"name": "Office", "logo_path": "assets/absent.png"}', encoding="utf-8"
+        )
+        profile = load_company_profile(root)
+        self.assertTrue(profile.is_configured)
+        self.assertIsNone(profile.logo_path)
+
+
+class RenderedReportTests(unittest.TestCase):
+    """Render the real report and pin its compliance-critical wording."""
+
+    @classmethod
+    def setUpClass(cls):
+        """Run the checkers on the deterministic fixture room once."""
+        rooms = [build_reference_room()]
+        analyzer = StaticModelAnalyzer(rooms)
+        dynamic = {
+            "status": "NOT_CHECKABLE", "building_status": "NEW_BUILDING",
+            "rooms": [], "design_power_status": "NOT_CHECKABLE",
+        }
+        cls.rooms = rooms
+        cls.sia3802 = SIA3802Checker(analyzer, RuleEngine()).check_all(
+            rooms_data=rooms, dynamic_results=dynamic
+        )
+        cls.sia4010 = SIA4010Checker(analyzer, RuleEngine()).check_all(rooms_data=rooms)
+        cls.profile = CompanyProfile(
+            name="Bureau Technique Alpin SA",
+            tagline="Ingénieurs conseils",
+            address_lines=("Rue du Simplon 12", "1950 Sion"),
+            contact_lines=("+41 27 000 00 00",),
+            author_name="A. Rossi",
+            author_role="Ingénieur SIA",
+            report_reference="BTA-2026-0142",
+        )
+        OUTPUT_ROOT.mkdir(parents=True, exist_ok=True)
+
+    def _render(self, language):
+        """Render the report in one language and return its extracted text."""
+        path = render_compliance_report_pdf(
+            OUTPUT_ROOT / "report_{}.pdf".format(language),
+            project_label="ZOER_32_C1",
+            rooms_data=self.rooms,
+            sia3802_results=self.sia3802,
+            sia4010_results=self.sia4010,
+            profile=self.profile,
+            language=language,
+            model_name="ZOER_32_C1.mit",
+        )
+        return PdfReader(str(path)).pages[0].extract_text()
+
+    def test_company_identity_reaches_the_letterhead(self):
+        text = self._render("fr")
+        self.assertIn("Bureau Technique Alpin SA", text)
+        self.assertIn("1950 Sion", text)
+        self.assertIn("BTA-2026-0142", text)
+        self.assertIn("A. Rossi", text)
+
+    def test_project_and_model_are_identified(self):
+        text = self._render("en")
+        self.assertIn("ZOER_32_C1", text)
+        self.assertIn("ZOER_32_C1.mit", text)
+        self.assertIn("SIA 380/2:2022 + SIA 4010:2023", text)
+
+    def test_model_schematic_and_key_figures_are_present(self):
+        text = self._render("en")
+        for sector in ("N", "NE", "E", "SE", "S", "SW", "W", "NW"):
+            self.assertIn(sector, text)
+        self.assertIn(translate("figure_wwr", "en"), text)
+        self.assertIn(translate("legend_glazed", "en"), text)
+
+    def test_every_language_renders_its_own_wording(self):
+        for code in LANGUAGES:
+            with self.subTest(language=code):
+                text = self._render(code)
+                self.assertIn(translate("report_title", code), text)
+                self.assertIn(translate("section_signature", code).upper(), text)
+
+    def test_report_never_claims_to_be_a_certificate(self):
+        for code in LANGUAGES:
+            with self.subTest(language=code):
+                text = self._render(code)
+                # The scope statements must appear in full, not truncated.
+                for key in ("scope_line_1", "scope_line_2"):
+                    statement = translate(key, code)
+                    tail = statement.split()[-1].strip(".")
+                    self.assertIn(tail, text)
+                self.assertIn(translate("footer_not_certificate", code)[:40], text)
+
+    def test_undetermined_verdict_is_reported_not_hidden(self):
+        # The fixture supplies no reviewed global comparison, so the headline
+        # verdict must be NOT DETERMINED rather than compliant.
+        text = self._render("en")
+        self.assertIn(translate("verdict_not_determined", "en"), text)
+        self.assertNotIn(translate("verdict_compliant", "en") + "\n" + "SIA", text)
+
+    def test_report_renders_without_any_company_profile(self):
+        path = render_compliance_report_pdf(
+            OUTPUT_ROOT / "report_noprofile.pdf",
+            project_label="P",
+            rooms_data=self.rooms,
+            sia3802_results=self.sia3802,
+            sia4010_results=self.sia4010,
+            profile=CompanyProfile(),
+            language="en",
+        )
+        text = PdfReader(str(path)).pages[0].extract_text()
+        self.assertIn(translate("company_unspecified", "en"), text)
+
+
+if __name__ == "__main__":
+    unittest.main()

@@ -1,4 +1,2 @@
 standard,domain,rule,construction_or_scope,model_value,limit_value,unit,decision_status,review_status,reviewer,review_date,source_document,source_reference,justification_summary,notes
-SIA 380/2:2022,Envelope,SIA3802_U_VALUE_EXTERNAL_WALL,STD_EXT1; STD_PAR1; STD_WAL2,0.222,0.20,W/(m2K),pending,pending,,,,,Reviewer must cite the official calculation or accepted project-specific rationale.,
-SIA 380/2:2022,Openings,SIA3802_FRAME_FRACTION,STD_EXTW,0.30,0.25,fraction,pending,pending,,,,,Reviewer must cite facade/window evidence if the VE frame fraction is intentionally retained.,
-SIA 380/2:2022,Openings,SIA3802_FRAME_FRACTION,STD_EXT2,0.35,0.25,fraction,pending,pending,,,,,Reviewer must cite facade/window evidence if the VE frame fraction is intentionally retained.,
+SIA 380/2:2022,DOMAIN,RULE,CONSTRUCTION_OR_SCOPE,MODEL_VALUE,LIMIT_VALUE,UNIT,pending,pending,REVIEWER_NAME,YYYY-MM-DD,SOURCE_DOCUMENT,SOURCE_REFERENCE,JUSTIFICATION_SUMMARY,"Use only a project-specific reviewed rationale supported by a controlled source."

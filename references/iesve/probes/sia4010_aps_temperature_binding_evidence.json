@@ -1,0 +1,77 @@
+{
+  "schema_version": "1.0",
+  "purpose": "Portable evidence extract for the SIA 4010 Test 1 temperature bindings",
+  "source_diagnostic": {
+    "filename": "sia4010_aps_probe_20260728_154627.json",
+    "sha256": "F3E1338C3CC49331F4BFC123E986EC42BF8E455DA12CCC68237633752BBA035F",
+    "generated_at_utc": "2026-07-28T14:46:27.134826+00:00",
+    "status": "READY_FOR_BINDING_REVIEW",
+    "project": "test",
+    "aps_file": "test.aps",
+    "results_per_hour": 1.0
+  },
+  "room": {
+    "name": "SIA4010_TEST_1_600_ZONE",
+    "id": "S4000000",
+    "area_m2": 48.0
+  },
+  "variables": [
+    {
+      "quantity_id": "room_air_temperature",
+      "aps_varname": "Room air temperature",
+      "display_name": "Air temperature",
+      "model_level": "z",
+      "metric_unit": "°C",
+      "metric_divisor": 1.0,
+      "metric_offset": 0.0,
+      "series_summary": {
+        "count": 8760,
+        "minimum": 19.999998092651367,
+        "maximum": 27.000001907348633,
+        "sum": 202936.11789512634,
+        "first_values": [
+          20.000001907348633,
+          20.000001907348633,
+          20.000001907348633,
+          20.0,
+          20.000001907348633,
+          20.0,
+          20.000001907348633,
+          20.000001907348633
+        ]
+      }
+    },
+    {
+      "quantity_id": "operative_temperature",
+      "aps_varname": "Comfort temperature",
+      "display_name": "Dry resultant temperature",
+      "model_level": "z",
+      "metric_unit": "°C",
+      "metric_divisor": 1.0,
+      "metric_offset": 0.0,
+      "series_summary": {
+        "count": 8760,
+        "minimum": 18.137788772583008,
+        "maximum": 32.525875091552734,
+        "sum": 207347.09587478638,
+        "first_values": [
+          19.24551773071289,
+          19.250455856323242,
+          19.262210845947266,
+          19.266738891601562,
+          19.27140235900879,
+          19.274799346923828,
+          19.2967529296875,
+          19.377656936645508
+        ]
+      }
+    }
+  ],
+  "semantic_qualification": {
+    "source": "IES VE 2025 official help",
+    "url": "https://help.iesve.com/ve2025/hot_water_radiator_control_.htm",
+    "finding": "IES documents dry resultant temperature as operative temperature in still-air conditions.",
+    "test1_context": "The official SIA 4010 Test 1 specification states that no ventilation or HVAC system is present."
+  },
+  "claim_guardrail": "This extract qualifies ResultsReader identities, units and complete-year series only. It does not validate the Test 1 model or establish SIA compliance."
+}

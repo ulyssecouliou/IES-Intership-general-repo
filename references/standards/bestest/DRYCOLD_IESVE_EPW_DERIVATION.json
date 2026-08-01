@@ -1,0 +1,52 @@
+{
+  "schema_version": "1.0",
+  "status": "PASS",
+  "purpose": "IESVE-compatible transport conversion; not a normative SIA compliance result.",
+  "source_identity_supported": true,
+  "compliance_claim_allowed": false,
+  "weather": {
+    "path": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\references\\standards\\bestest\\DRYCOLD_IESVE.epw",
+    "sha256": "C30E1ECFC07DF60D2DED3F0663E4B3C112C49796920629FC60E86B160B6C6DD0",
+    "format": "EPW",
+    "record_count": 8760
+  },
+  "source_tmy1": {
+    "path": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\references\\standards\\bestest\\DRYCOLD.TMY",
+    "sha256": "C33778B4E89C82245A12E17903225F2EB3AFF89C526E9E69A7DC3798D52B2D4E",
+    "format": "NOAA_TMY1_FIXED_WIDTH"
+  },
+  "conversion": {
+    "location": {
+      "latitude_degrees": 39.74,
+      "longitude_degrees": -104.99,
+      "time_zone_hours": -7.0,
+      "elevation_m": 1609.0
+    },
+    "hour_interpretation": "TMY1 hour-ending; solar geometry at midpoint",
+    "diffuse_radiation_method": "DHI=max(0,GHI-DNI*cos(zenith)); DNI capped to preserve GHI"
+  },
+  "controls": {
+    "record_count": {
+      "status": "PASS",
+      "expected": 8760,
+      "observed": 8760
+    },
+    "dry_bulb_preserved": {
+      "status": "PASS",
+      "maximum_absolute_difference_c": 0.0
+    },
+    "wind_speed_preserved": {
+      "status": "PASS",
+      "maximum_absolute_difference_m_s": 0.0
+    },
+    "global_horizontal_preserved_with_integer_epw_rounding": {
+      "status": "PASS",
+      "maximum_absolute_difference_w_m2": 0.5
+    }
+  },
+  "limitations": [
+    "The TMY1 source lacks diffuse horizontal radiation for this dataset; DHI is reconstructed for EPW interoperability.",
+    "The generated EPW must be opened and read back through IESVE WeatherFileReader before model mutation.",
+    "Official/certification use still requires approval of source provenance and the SIA-authorized test procedure."
+  ]
+}

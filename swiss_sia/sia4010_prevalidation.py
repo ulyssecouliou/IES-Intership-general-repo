@@ -22,25 +22,17 @@ from .config import (
     SIA4010_VALIDATION_CLASS_DETAILS,
     SIA4010_VALIDATION_CLASSES,
 )
+from .model_analyzer import has_active_solar_protection
 
 
 BLOCKING_SIA3802_RULES_BY_TEST = {
     "test_1": {
-        "SIA3802_U_VALUE_EXTERNAL_WALL",
-        "SIA3802_U_VALUE_ROOF",
-        "SIA3802_U_VALUE_FLOOR",
-        "SIA3802_U_VALUE_WINDOW",
-        "SIA3802_SOLAR_FACTOR",
-        "SIA3802_VISIBLE_TRANSMITTANCE",
         "SIA_VALUE_SURFACE_U_IMPLAUSIBLE",
         "SIA_VALUE_WINDOW_U_IMPLAUSIBLE",
         "SIA_VALUE_SURFACE_AREA_INVALID",
         "SIA_VALUE_OPENING_AREA_INVALID",
     },
     "test_2": {
-        "SIA3802_SOLAR_FACTOR",
-        "SIA3802_VISIBLE_TRANSMITTANCE",
-        "SIA3802_FRAME_FRACTION",
         "SIA_VALUE_G_FRACTION_OUT_OF_RANGE",
         "SIA_VALUE_TAU_FRACTION_OUT_OF_RANGE",
         "SIA_VALUE_FRAME_FRACTION_OUT_OF_RANGE",
@@ -151,7 +143,7 @@ def _checks_for_test(test_name: str, stats: Dict[str, Any]) -> List[Any]:
             ("visible transmittance extracted", stats["visible_transmittance_values"] > 0),
             ("solar-protection type/category documented", stats["solar_protection_types"] > 0),
             ("solar-protection control/profile documented", stats["solar_protection_controls"] > 0),
-            ("active g_total available or EN 410 g already below SIA limit", g_total_coverage >= stats["external_windows"] > 0),
+            ("active g_total available or EN 410 g already at/below the table 2 reference input", g_total_coverage >= stats["external_windows"] > 0),
             ("infiltration evidence available for diagnostic transition", stats["rooms_with_infiltration_m3_h_m2"] > 0),
         ]
     if test_name == "test_3":
@@ -187,7 +179,10 @@ def _checks_for_test(test_name: str, stats: Dict[str, Any]) -> List[Any]:
         ]
     if test_name == "test_7":
         return [
-            ("dynamic heating/cooling demand available", stats["dynamic_demand_rows"] > 0),
+            (
+                "dynamic heating and cooling demand available",
+                stats["dynamic_heating_rows"] > 0 and stats["dynamic_cooling_rows"] > 0,
+            ),
             ("final energy by system/carrier available", stats["final_energy_available"]),
             ("emission/distribution/storage/generation evidence available", stats["system_chain_evidence"] > 0),
             ("pump/fan/auxiliary energy available", stats["auxiliary_energy_available"]),
@@ -299,6 +294,14 @@ def _build_stats(
         row for row in dynamic_room_rows
         if row.get("heating_kwh") is not None or row.get("cooling_kwh") is not None
     ]
+    dynamic_heating_rows = [
+        row for row in dynamic_room_rows
+        if row.get("heating_kwh") is not None
+    ]
+    dynamic_cooling_rows = [
+        row for row in dynamic_room_rows
+        if row.get("cooling_kwh") is not None
+    ]
     dynamic_temperature_rows = [
         row for row in dynamic_room_rows
         if row.get("occupied_hours_above_26") is not None or row.get("occupied_hours_above_27") is not None
@@ -354,17 +357,25 @@ def _build_stats(
         if getattr(room, "infiltration_m3_h_m2", None) is not None
     ]
     rooms_with_hvac = [room for room in rooms if getattr(room, "hvac_systems", None)]
-    hvac_payloads = [
-        str(item).lower()
+    hvac_systems = [
+        item
         for room in rooms
         for item in (getattr(room, "hvac_systems", []) or [])
+        if isinstance(item, dict)
     ]
-    room_condition_payloads = [
-        str(getattr(room, "room_conditions", {}) or {}).lower()
-        for room in rooms
-    ]
-    evidence_blob = " ".join(hvac_payloads + room_condition_payloads)
     energy = sia4010_results.get("energy", {}) or {}
+
+    def has_system_value(*keys: str) -> bool:
+        """Return true when an explicit non-empty HVAC field is available."""
+        return any(
+            system.get(key) not in (None, "", False, [], {})
+            for system in hvac_systems
+            for key in keys
+        )
+
+    def has_final_energy() -> bool:
+        """Treat zero final energy as an explicit and therefore available result."""
+        return any(system.get("final_energy") is not None for system in hvac_systems)
 
     return {
         "rooms": len(rooms),
@@ -377,8 +388,15 @@ def _build_stats(
         "en410_g_values": sum(1 for opening in external_windows if getattr(opening, "g_value_bs_en_410", None) is not None),
         "raw_cdb_g_values": sum(1 for opening in external_windows if getattr(opening, "cdb_g_value", None) is not None),
         "visible_transmittance_values": sum(1 for opening in external_windows if getattr(opening, "visible_transmittance", None) is not None),
-        "solar_protection_types": sum(1 for opening in external_windows if getattr(opening, "shading_type", None)),
-        "solar_protection_controls": sum(1 for opening in external_windows if getattr(opening, "shading_control", None)),
+        "solar_protection_types": sum(
+            1 for opening in external_windows if has_active_solar_protection(opening)
+        ),
+        "solar_protection_controls": sum(
+            1
+            for opening in external_windows
+            if has_active_solar_protection(opening)
+            and getattr(opening, "shading_control", None)
+        ),
         "g_total_values": sum(1 for opening in external_windows if getattr(opening, "g_total", None) is not None),
         "g_total_not_required_for_g_limit": g_total_not_required_for_g_limit,
         "rooms_with_lighting": len(rooms_with_lighting),
@@ -387,6 +405,8 @@ def _build_stats(
         "rooms_with_hvac": len(rooms_with_hvac),
         "dynamic_available": str(dynamic_payload.get("status", "")).upper() == "AVAILABLE",
         "dynamic_demand_rows": len(dynamic_demand_rows),
+        "dynamic_heating_rows": len(dynamic_heating_rows),
+        "dynamic_cooling_rows": len(dynamic_cooling_rows),
         "dynamic_temperature_rows": len(dynamic_temperature_rows),
         "dynamic_lighting_rows": len(dynamic_lighting_rows),
         "dynamic_fan_rows": len(dynamic_fan_rows),
@@ -396,38 +416,53 @@ def _build_stats(
         "dynamic_coil_rows": len(dynamic_coil_rows),
         "dynamic_co2_rows": len(dynamic_co2_rows),
         "dynamic_humidity_rows": len(dynamic_humidity_rows),
-        "lighting_control_evidence": _contains_any(evidence_blob, ["daylight", "lighting_control", "presence", "dimming"]),
+        "lighting_control_evidence": any(
+            getattr(room, "daylight_dimming_profile", "")
+            or getattr(room, "lighting_control_type", "")
+            for room in rooms
+        ),
         "lighting_energy_available": (
-            _contains_any(evidence_blob, ["lighting_energy", "light_energy"])
-            or len(dynamic_lighting_rows) > 0
+            len(dynamic_lighting_rows) > 0
             or energy.get("lighting_energy") is not None
         ),
-        "co2_available": _contains_any(evidence_blob, ["co2", "carbon dioxide"]) or len(dynamic_co2_rows) > 0,
+        "co2_available": has_system_value("co2_control", "co2_sensor") or len(dynamic_co2_rows) > 0,
         "coil_or_supply_air_available": (
-            _contains_any(evidence_blob, ["coil", "supply", "sup_air", "heater", "cooler"])
-            or len(dynamic_coil_rows) > 0
+            len(dynamic_coil_rows) > 0
+            or has_system_value("supply_air_temperature", "coil_heating", "coil_cooling")
         ),
-        "multizone_hvac_evidence": _contains_any(evidence_blob, ["multi_zone", "multizone", "ahu", "air handling"]),
-        "fan_control_evidence": _contains_any(evidence_blob, ["fan_ctrl", "const_pres", "min_pres", "direct"]),
-        "heat_recovery_evidence": _contains_any(evidence_blob, ["heat_rec", "recovery", "rotor", "plate"]),
-        "humidifier_evidence": _contains_any(evidence_blob, ["humid", "steam", "adiabatic"]) or len(dynamic_humidity_rows) > 0,
-        "staged_airflow_evidence": _contains_any(evidence_blob, ["stage", "staged", "multi_stage", "constant airflow"]),
-        "overflow_evidence": _contains_any(evidence_blob, ["overflow", "kitchen", "restaurant"]),
-        "final_energy_available": any(
+        "multizone_hvac_evidence": any(
+            "MULTIZONE" in "".join(character for character in str(system.get("system_type") or "").upper() if character.isalnum())
+            for system in hvac_systems
+        ),
+        "fan_control_evidence": has_system_value("fan_control"),
+        "heat_recovery_evidence": (
+            has_system_value("heat_recovery_type", "heat_recovery_characteristic")
+            or any(getattr(room, "heat_recovery_type", None) for room in rooms)
+        ),
+        "humidifier_evidence": has_system_value("humidifier_type", "humidifier_control") or len(dynamic_humidity_rows) > 0,
+        "staged_airflow_evidence": (
+            has_system_value("ventilation_stages")
+            or any(getattr(room, "ventilation_control_level", None) is not None for room in rooms)
+        ),
+        "overflow_evidence": has_system_value("overflow_paths"),
+        "final_energy_available": has_final_energy() or any(
             energy.get(key) is not None
             for key in ("primary_energy", "co2_emissions", "renewable_energy_share")
         ),
-        "system_chain_evidence": _contains_any(evidence_blob, ["distribution", "storage", "emission", "generation"]),
+        "system_chain_evidence": has_system_value("storage_generation_data", "distribution_data", "emission_data"),
         "auxiliary_energy_available": (
-            _contains_any(evidence_blob, ["pump", "fan_energy", "auxiliary"])
-            or len(dynamic_fan_rows) > 0
+            len(dynamic_fan_rows) > 0
             or len(dynamic_pump_rows) > 0
             or len(dynamic_auxiliary_rows) > 0
             or energy.get("fan_energy") is not None
             or energy.get("pump_energy") is not None
             or energy.get("auxiliary_energy") is not None
         ),
-        "generation_evidence": _contains_any(evidence_blob, ["boiler", "heat pump", "chiller", "generator"]),
+        "generation_evidence": has_system_value(
+            "cooling_generator_class",
+            "heating_generator_class",
+            "storage_generation_data",
+        ),
     }
 
 

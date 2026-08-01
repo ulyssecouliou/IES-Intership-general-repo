@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "sia4010.shading_device_definition.v1",
+  "title": "Normalized SIA 4010 Test 3 shading-device definition",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_id",
+    "schema_version",
+    "primary_source_sha256",
+    "source_locator",
+    "device_id",
+    "device_type",
+    "mounting_position",
+    "states"
+  ],
+  "properties": {
+    "schema_id": {"const": "sia4010.shading_device_definition.v1"},
+    "schema_version": {"const": "1.0"},
+    "primary_source_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "source_locator": {"type": "string", "minLength": 1},
+    "device_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_.-]+$"
+    },
+    "device_type": {"type": "string", "minLength": 1},
+    "mounting_position": {"type": "string", "minLength": 1},
+    "states": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "properties", "source_locator"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_.-]+$"
+          },
+          "properties": {
+            "type": "object",
+            "minProperties": 1
+          },
+          "source_locator": {"type": "string", "minLength": 1}
+        }
+      }
+    }
+  }
+}

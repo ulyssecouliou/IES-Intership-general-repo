@@ -1,0 +1,99 @@
+{
+  "schema_version": "1.0",
+  "scope": [
+    "SIA 380/2 dynamic room heating and cooling needs",
+    "SIA 4010 Test 1 sensible heating and cooling",
+    "SIA 4010 Test 1 room air and operative temperatures",
+    "SIA 4010 Test 2 total room solar heat gain"
+  ],
+  "source_probe": {
+    "filename": "sia4010_aps_probe_20260728_154627.json",
+    "project": "test",
+    "aps_file": "test.aps",
+    "sha256": "F3E1338C3CC49331F4BFC123E986EC42BF8E455DA12CCC68237633752BBA035F",
+    "generated_at_utc": "2026-07-28T14:46:27.134826+00:00",
+    "results_per_hour": 1.0,
+    "portable_evidence_extract": "references/iesve/probes/sia4010_aps_temperature_binding_evidence.json"
+  },
+  "bindings": {
+    "sensible_heating_power": {
+      "aps_varname": "Room units heating load",
+      "display_name": "Heating plant sensible load",
+      "model_level": "z",
+      "metric_unit": "kW",
+      "metric_divisor": 1000.0,
+      "metric_offset": 0.0,
+      "status": "RUNTIME_METADATA_CONFIRMED",
+      "qualification_limit": "The ResultsReader identity, unit and timestep contract are confirmed. Physical compliance is established only by comparison with the official SIA 4010 Test 1 reference results.",
+      "validation": {
+        "requires_complete_365_day_series": true,
+        "accepted_results_per_hour": [1, 2, 4, 6, 12]
+      }
+    },
+    "sensible_cooling_power": {
+      "aps_varname": "Room units cooling load",
+      "display_name": "Cooling plant sensible load",
+      "model_level": "z",
+      "metric_unit": "kW",
+      "metric_divisor": 1000.0,
+      "metric_offset": 0.0,
+      "status": "RUNTIME_METADATA_CONFIRMED",
+      "qualification_limit": "The ResultsReader identity, unit and timestep contract are confirmed. Physical compliance is established only by comparison with the official SIA 4010 Test 1 reference results.",
+      "validation": {
+        "requires_complete_365_day_series": true,
+        "accepted_results_per_hour": [1, 2, 4, 6, 12]
+      }
+    },
+    "total_room_solar_heat_gain_power": {
+      "aps_varname": "Window solar gains",
+      "display_name": "Solar gain",
+      "model_level": "z",
+      "metric_unit": "kW",
+      "metric_divisor": 1000.0,
+      "metric_offset": 0.0,
+      "status": "RUNTIME_METADATA_CONFIRMED",
+      "qualification_limit": "The ResultsReader identity, unit and timestep contract are confirmed. Equivalence with the SIA 4010 total-room-solar-heat-gain alternative must be demonstrated with the official Test 2 diagnostic and reference results.",
+      "validation": {
+        "requires_complete_365_day_series": true,
+        "accepted_results_per_hour": [1, 2, 4, 6, 12]
+      }
+    },
+    "room_air_temperature": {
+      "aps_varname": "Room air temperature",
+      "display_name": "Air temperature",
+      "model_level": "z",
+      "metric_unit": "°C",
+      "metric_divisor": 1.0,
+      "metric_offset": 0.0,
+      "status": "RUNTIME_METADATA_CONFIRMED",
+      "qualification_limit": "The ResultsReader identity, unit, complete-year series and timestep contract are confirmed by the guarded Case 600 runtime probe. This binding does not validate the physical model.",
+      "validation": {
+        "requires_complete_365_day_series": true,
+        "accepted_results_per_hour": [1, 2, 4, 6, 12]
+      }
+    },
+    "operative_temperature": {
+      "aps_varname": "Comfort temperature",
+      "display_name": "Dry resultant temperature",
+      "model_level": "z",
+      "metric_unit": "°C",
+      "metric_divisor": 1.0,
+      "metric_offset": 0.0,
+      "status": "RUNTIME_METADATA_CONFIRMED",
+      "qualification_limit": "The ResultsReader identity, unit, complete-year series and timestep contract are confirmed by the guarded Case 600 runtime probe. IES documents dry resultant temperature as operative temperature in still-air conditions; Test 1 has no ventilation system. This binding does not validate the physical model.",
+      "source_reference": "https://help.iesve.com/ve2025/hot_water_radiator_control_.htm",
+      "validation": {
+        "requires_complete_365_day_series": true,
+        "accepted_results_per_hour": [1, 2, 4, 6, 12]
+      }
+    }
+  },
+  "explicitly_unbound": {
+    "total_transmitted_solar_radiation": {
+      "reason": "The probe exposed a surface-level transmittance property without a qualified power series. Test 2 uses the allowed total-solar-heat-gain alternative instead."
+    },
+    "all_other_probe_candidates": {
+      "reason": "Outside the current SIA 380/2 and SIA 4010 Test 1/Test 2 extraction contract."
+    }
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "schema_version": "1.0",
+  "input_id": "<EXACT_ID_FROM_sia4010_external_inputs.json>",
+  "source_sha256": "<LOWERCASE_SHA256_OF_THE_EXACT_SOURCE_FILE>",
+  "status": "PENDING",
+  "validated_by": "<PERSON_OR_CONTROLLED_VALIDATOR>",
+  "validation_method": "<DOCUMENTED_SCHEMA_AND_SEMANTIC_CHECK_METHOD>",
+  "binding_artifact": {
+    "path": "<PROJECT_RELATIVE_PATH_TO_NORMALIZED_MACHINE_READABLE_ARTIFACT>",
+    "sha256": "<LOWERCASE_SHA256_OF_THE_BINDING_ARTIFACT>",
+    "schema_id": "<EXPECTED_SCHEMA_ID_REPORTED_BY_THE_PREPARATION_AUDIT>"
+  },
+  "checks": [
+    {
+      "id": "<STABLE_CHECK_ID>",
+      "status": "PENDING",
+      "detail": "<WHAT_WAS_CHECKED_AND_AGAINST_WHICH_SOURCE_LOCATION>"
+    }
+  ],
+  "claim_guardrail": "Set status to PASS only when every required check is PASS. This technical report does not constitute SIA authorization or attestation."
+}

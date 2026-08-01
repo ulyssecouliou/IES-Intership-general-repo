@@ -1,0 +1,162 @@
+{
+  "schema_id": "sia4010.sia3874_shading_lighting_controls.v1",
+  "schema_version": "1.0",
+  "primary_source_sha256": "<LOWERCASE_SHA256_OF_AUTHORIZED_PRIMARY_SOURCE>",
+  "source_locator": "<SIA_387_4_EDITION_TABLES_9_10_LOCATORS>",
+  "standard_edition": "<AUTHORIZED_EDITION>",
+  "tables": ["9", "10"],
+  "conventions": {
+    "time_basis": {"source_text": "<TRANSCRIBE_EXACTLY>"},
+    "boundary_comparisons": {"source_text": "<TRANSCRIBE_EXACTLY>"},
+    "angle_convention": {"source_text": "<TRANSCRIBE_EXACTLY>"},
+    "signal_sampling": {"source_text": "<TRANSCRIBE_EXACTLY>"},
+    "rule_evaluation_order": {"source_text": "<TRANSCRIBE_EXACTLY>"}
+  },
+  "signals": [
+    {
+      "id": "source_input_signal",
+      "physical_quantity": "<SOURCE_PHYSICAL_QUANTITY>",
+      "unit": "<SOURCE_UNIT>",
+      "value_type": "number",
+      "source_locator": "<SOURCE_LOCATOR>"
+    },
+    {
+      "id": "shading_output",
+      "physical_quantity": "<SOURCE_SHADING_OUTPUT>",
+      "unit": "<SOURCE_UNIT>",
+      "value_type": "number",
+      "source_locator": "<SOURCE_LOCATOR>"
+    },
+    {
+      "id": "lighting_output",
+      "physical_quantity": "<SOURCE_LIGHTING_OUTPUT>",
+      "unit": "<SOURCE_UNIT>",
+      "value_type": "number",
+      "source_locator": "<SOURCE_LOCATOR>"
+    }
+  ],
+  "parameters": [
+    {
+      "id": "source_parameter",
+      "value_type": "number",
+      "unit": "<SOURCE_UNIT>",
+      "source_kind": "NORMATIVE_CONSTANT",
+      "value": null,
+      "source_locator": "<SOURCE_LOCATOR>"
+    }
+  ],
+  "controls": {
+    "shading": [
+      {
+        "id": "shade_type_1",
+        "normative_type": 1,
+        "source_locator": "<TABLE_9_FUNCTION_1>",
+        "inputs": ["source_input_signal"],
+        "parameters": ["source_parameter"],
+        "states": [],
+        "rules": [{"priority": 1, "when": {"op": "<SOURCE_OPERATOR>"}, "actions": [{"target_ref": "shading_output", "value": {"op": "literal", "value": null}}], "source_locator": "<SOURCE_LOCATOR>"}],
+        "default_actions": [{"target_ref": "shading_output", "value": {"op": "literal", "value": null}}],
+        "outputs": ["shading_output"],
+        "required_runtime_capabilities": ["<VE_CAPABILITY>"]
+      },
+      {
+        "id": "shade_type_2",
+        "normative_type": 2,
+        "source_locator": "<TABLE_9_FUNCTION_2>",
+        "inputs": ["source_input_signal"],
+        "parameters": ["source_parameter"],
+        "states": [],
+        "rules": [{"priority": 1, "when": {"op": "<SOURCE_OPERATOR>"}, "actions": [{"target_ref": "shading_output", "value": {"op": "literal", "value": null}}], "source_locator": "<SOURCE_LOCATOR>"}],
+        "default_actions": [{"target_ref": "shading_output", "value": {"op": "literal", "value": null}}],
+        "outputs": ["shading_output"],
+        "required_runtime_capabilities": ["<VE_CAPABILITY>"]
+      },
+      {
+        "id": "shade_type_3",
+        "normative_type": 3,
+        "source_locator": "<TABLE_9_FUNCTION_3>",
+        "inputs": ["source_input_signal"],
+        "parameters": ["source_parameter"],
+        "states": [],
+        "rules": [{"priority": 1, "when": {"op": "<SOURCE_OPERATOR>"}, "actions": [{"target_ref": "shading_output", "value": {"op": "literal", "value": null}}], "source_locator": "<SOURCE_LOCATOR>"}],
+        "default_actions": [{"target_ref": "shading_output", "value": {"op": "literal", "value": null}}],
+        "outputs": ["shading_output"],
+        "required_runtime_capabilities": ["<VE_CAPABILITY>"]
+      }
+    ],
+    "lighting": [
+      {
+        "id": "lighting_type_1",
+        "normative_type": 1,
+        "source_locator": "<TABLE_10_FUNCTION_1>",
+        "inputs": ["source_input_signal"],
+        "parameters": ["source_parameter"],
+        "states": [],
+        "rules": [{"priority": 1, "when": {"op": "<SOURCE_OPERATOR>"}, "actions": [{"target_ref": "lighting_output", "value": {"op": "literal", "value": null}}], "source_locator": "<SOURCE_LOCATOR>"}],
+        "default_actions": [{"target_ref": "lighting_output", "value": {"op": "literal", "value": null}}],
+        "outputs": ["lighting_output"],
+        "required_runtime_capabilities": ["<VE_CAPABILITY>"]
+      },
+      {
+        "id": "lighting_type_2",
+        "normative_type": 2,
+        "source_locator": "<TABLE_10_FUNCTION_2>",
+        "inputs": ["source_input_signal"],
+        "parameters": ["source_parameter"],
+        "states": [],
+        "rules": [{"priority": 1, "when": {"op": "<SOURCE_OPERATOR>"}, "actions": [{"target_ref": "lighting_output", "value": {"op": "literal", "value": null}}], "source_locator": "<SOURCE_LOCATOR>"}],
+        "default_actions": [{"target_ref": "lighting_output", "value": {"op": "literal", "value": null}}],
+        "outputs": ["lighting_output"],
+        "required_runtime_capabilities": ["<VE_CAPABILITY>"]
+      },
+      {
+        "id": "lighting_type_3",
+        "normative_type": 3,
+        "source_locator": "<TABLE_10_FUNCTION_3>",
+        "inputs": ["source_input_signal"],
+        "parameters": ["source_parameter"],
+        "states": [],
+        "rules": [{"priority": 1, "when": {"op": "<SOURCE_OPERATOR>"}, "actions": [{"target_ref": "lighting_output", "value": {"op": "literal", "value": null}}], "source_locator": "<SOURCE_LOCATOR>"}],
+        "default_actions": [{"target_ref": "lighting_output", "value": {"op": "literal", "value": null}}],
+        "outputs": ["lighting_output"],
+        "required_runtime_capabilities": ["<VE_CAPABILITY>"]
+      },
+      {
+        "id": "lighting_type_4",
+        "normative_type": 4,
+        "source_locator": "<TABLE_10_FUNCTION_4>",
+        "inputs": ["source_input_signal"],
+        "parameters": ["source_parameter"],
+        "states": [],
+        "rules": [{"priority": 1, "when": {"op": "<SOURCE_OPERATOR>"}, "actions": [{"target_ref": "lighting_output", "value": {"op": "literal", "value": null}}], "source_locator": "<SOURCE_LOCATOR>"}],
+        "default_actions": [{"target_ref": "lighting_output", "value": {"op": "literal", "value": null}}],
+        "outputs": ["lighting_output"],
+        "required_runtime_capabilities": ["<VE_CAPABILITY>"]
+      },
+      {
+        "id": "lighting_type_5",
+        "normative_type": 5,
+        "source_locator": "<TABLE_10_FUNCTION_5>",
+        "inputs": ["source_input_signal"],
+        "parameters": ["source_parameter"],
+        "states": [],
+        "rules": [{"priority": 1, "when": {"op": "<SOURCE_OPERATOR>"}, "actions": [{"target_ref": "lighting_output", "value": {"op": "literal", "value": null}}], "source_locator": "<SOURCE_LOCATOR>"}],
+        "default_actions": [{"target_ref": "lighting_output", "value": {"op": "literal", "value": null}}],
+        "outputs": ["lighting_output"],
+        "required_runtime_capabilities": ["<VE_CAPABILITY>"]
+      },
+      {
+        "id": "lighting_type_6",
+        "normative_type": 6,
+        "source_locator": "<TABLE_10_FUNCTION_6>",
+        "inputs": ["source_input_signal"],
+        "parameters": ["source_parameter"],
+        "states": [],
+        "rules": [{"priority": 1, "when": {"op": "<SOURCE_OPERATOR>"}, "actions": [{"target_ref": "lighting_output", "value": {"op": "literal", "value": null}}], "source_locator": "<SOURCE_LOCATOR>"}],
+        "default_actions": [{"target_ref": "lighting_output", "value": {"op": "literal", "value": null}}],
+        "outputs": ["lighting_output"],
+        "required_runtime_capabilities": ["<VE_CAPABILITY>"]
+      }
+    ]
+  }
+}

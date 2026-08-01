@@ -1,0 +1,250 @@
+{
+  "schema_version": "1.0",
+  "metadata": {
+    "purpose": "Executable single-storey office reference model using the SIA 380/2 comparison-project limit-case envelope and documented engineering assumptions where SIA 2024 or project data would normally be required.",
+    "claim_guardrail": "This is a compliance-workflow reference model, not proof of official SIA 4010 software validation or project certification.",
+    "baseline_id": "SIA3802_LIMIT_REFERENCE_OFFICE_2026_01"
+  },
+  "parameters": {
+    "model_identifier": {
+      "value": "SIA_REF",
+      "source": "Reference-model engineering basis",
+      "source_locator": "RM-BASELINE-2026 section 2"
+    },
+    "model_schema_version": {
+      "value": "1.0.0",
+      "source": "Reference-model architecture",
+      "source_locator": "RM-002"
+    },
+    "gbxml_schema_version": {
+      "value": "6.01",
+      "source": "Reference-model VE interoperability baseline",
+      "source_locator": "RM-006; confirm with the installed VE 2025 build through the capability probe"
+    },
+    "building_name": {
+      "value": "Swiss SIA 380-2 Limit Reference Office",
+      "source": "Reference-model engineering basis",
+      "source_locator": "RM-BASELINE-2026 section 2"
+    },
+    "gbxml_building_type": {
+      "value": "Office",
+      "source": "Reference-model engineering basis",
+      "source_locator": "RM-BASELINE-2026 section 2"
+    },
+    "building_width_m": {
+      "value": 20.0,
+      "source": "Reference-model engineering assumption",
+      "source_locator": "RM-BASELINE-2026 section 2"
+    },
+    "building_depth_m": {
+      "value": 12.0,
+      "source": "Reference-model engineering assumption",
+      "source_locator": "RM-BASELINE-2026 section 2"
+    },
+    "storey_height_m": {
+      "value": 3.0,
+      "source": "Reference-model engineering assumption",
+      "source_locator": "RM-BASELINE-2026 section 2"
+    },
+    "zone_columns": {
+      "value": 2,
+      "source": "Reference-model deterministic zoning decision",
+      "source_locator": "RM-BASELINE-2026 section 2"
+    },
+    "zone_rows": {
+      "value": 2,
+      "source": "Reference-model deterministic zoning decision",
+      "source_locator": "RM-BASELINE-2026 section 2"
+    },
+    "north_axis_degrees": {
+      "value": 0.0,
+      "source": "Reference-model engineering assumption",
+      "source_locator": "RM-BASELINE-2026 section 2"
+    },
+    "asset_provisioning_mode": {
+      "value": "create",
+      "source": "Reference-model architecture",
+      "source_locator": "RM-007"
+    },
+    "asset_manifest_file": {
+      "value": "reference_model_assets.json",
+      "source": "Reference-model project input package",
+      "source_locator": "Active VE project folder"
+    },
+    "external_wall_construction_id": {
+      "value": null,
+      "source": "Runtime-created from the source-traced asset manifest",
+      "source_locator": "reference_model_assets.json: external_wall construction"
+    },
+    "roof_construction_id": {
+      "value": null,
+      "source": "Runtime-created from the source-traced asset manifest",
+      "source_locator": "reference_model_assets.json: roof construction"
+    },
+    "ground_floor_construction_id": {
+      "value": null,
+      "source": "Runtime-created from the source-traced asset manifest",
+      "source_locator": "reference_model_assets.json: ground_floor construction"
+    },
+    "internal_wall_construction_id": {
+      "value": null,
+      "source": "Runtime-created from the source-traced asset manifest",
+      "source_locator": "reference_model_assets.json: internal_wall construction"
+    },
+    "door_construction_id": {
+      "value": null,
+      "source": "Runtime-created from the source-traced asset manifest",
+      "source_locator": "reference_model_assets.json: door construction"
+    },
+    "glazing_construction_id": {
+      "value": null,
+      "source": "Runtime-created from the source-traced asset manifest",
+      "source_locator": "reference_model_assets.json: glazing construction"
+    },
+    "project_external_wall_u_w_m2k": {
+      "value": 0.2,
+      "source": "SIA 380/2:2022 comparison-project limit construction",
+      "source_locator": "Table 3, external-wall limit case, licensed PDF page 35"
+    },
+    "project_roof_u_w_m2k": {
+      "value": 0.2,
+      "source": "SIA 380/2:2022 comparison-project limit construction",
+      "source_locator": "Table 3, flat-roof limit case, licensed PDF page 36"
+    },
+    "project_ground_floor_u_w_m2k": {
+      "value": 0.3,
+      "source": "SIA 380/2:2022 comparison-project limit construction",
+      "source_locator": "Table 3, ground-floor limit case, licensed PDF page 35"
+    },
+    "project_window_u_w_m2k": {
+      "value": 1.1,
+      "source": "SIA 380/2:2022 comparison-project limit input",
+      "source_locator": "Table 2, whole-window U-value, licensed PDF page 32"
+    },
+    "project_glazing_g_value": {
+      "value": 0.5,
+      "source": "SIA 380/2:2022 comparison-project input",
+      "source_locator": "Table 2, glazing g-value, licensed PDF page 32"
+    },
+    "project_visible_light_transmittance": {
+      "value": 0.7,
+      "source": "SIA 380/2:2022 comparison-project input",
+      "source_locator": "Table 2, glazing light-transmittance factor, licensed PDF page 32"
+    },
+    "solar_protection_control_category": {
+      "value": "External venetian blind; solar-protection category 4; SIA 387/4 control category 2; facade-wise automatic irradiance control",
+      "source": "SIA 380/2:2022 comparison-project input and summer-control requirements",
+      "source_locator": "Table 2 page 32 and clauses 7.1.2.3-7.1.2.4 page 31"
+    },
+    "linear_thermal_bridge_psi_w_mk": {
+      "value": 0.0,
+      "source": "SIA 380/2:2022 comparison-project input",
+      "source_locator": "Table 2, thermal bridges, licensed PDF page 32"
+    },
+    "point_thermal_bridge_chi_w_k": {
+      "value": 0.0,
+      "source": "SIA 380/2:2022 comparison-project input",
+      "source_locator": "Table 2, thermal bridges, licensed PDF page 32"
+    },
+    "weather_file": {
+      "value": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SMA_2035_RCP85_DRY.epw",
+      "source": "Client-provided Swiss future-weather dataset",
+      "source_locator": "EPW LOCATION header and local file SHA-256 to be captured in the run report"
+    },
+    "weather_station": {
+      "value": "Zurich Fluntern",
+      "source": "Client-provided EPW metadata",
+      "source_locator": "SMA_2035_RCP85_DRY.epw, LOCATION header"
+    },
+    "weather_dataset_type": {
+      "value": "DRY EPW",
+      "source": "Client-provided EPW metadata and filename",
+      "source_locator": "SMA_2035_RCP85_DRY.epw, LOCATION header"
+    },
+    "climate_scenario": {
+      "value": "2035 RCP8.5",
+      "source": "Client-provided EPW dataset naming and year field",
+      "source_locator": "SMA_2035_RCP85_DRY.epw"
+    },
+    "site_latitude_degrees": {
+      "value": 47.377925,
+      "source": "Client-provided EPW metadata",
+      "source_locator": "SMA_2035_RCP85_DRY.epw, LOCATION header"
+    },
+    "site_longitude_degrees": {
+      "value": 8.565742,
+      "source": "Client-provided EPW metadata",
+      "source_locator": "SMA_2035_RCP85_DRY.epw, LOCATION header"
+    },
+    "infiltration_m3_h_m2": {
+      "value": 0.15,
+      "source": "SIA 380/2:2022 comparison-project input",
+      "source_locator": "Table 2, infiltration per net floor area, licensed PDF page 32"
+    },
+    "outdoor_air_l_s_person": {
+      "value": 10.0,
+      "source": "Reference-model office engineering assumption; not asserted as a SIA 2024 table value",
+      "source_locator": "RM-BASELINE-2026 section 4"
+    },
+    "heat_recovery_temperature_efficiency": {
+      "value": 0.73,
+      "source": "SIA 380/2:2022 comparison-project limit input",
+      "source_locator": "Table 2 continuation, heat-recovery temperature ratio at 2 m/s, licensed PDF page 33"
+    },
+    "sia2024_use_category": {
+      "value": "Generic office reference use - project assumption pending licensed SIA 2024 category confirmation",
+      "source": "Reference-model office engineering assumption",
+      "source_locator": "RM-BASELINE-2026 section 4; replace for a formal SIA claim"
+    },
+    "occupancy_density_m2_person": {
+      "value": 15.0,
+      "source": "Reference-model office engineering assumption; not asserted as a SIA 2024 table value",
+      "source_locator": "RM-BASELINE-2026 section 4"
+    },
+    "occupancy_profile_id": {
+      "value": null,
+      "source": "PLACEHOLDER - approved VE profile ID required",
+      "source_locator": "Thermal template evidence"
+    },
+    "people_gain_w_person": {
+      "value": 120.0,
+      "source": "Reference-model office engineering assumption: 75 W sensible plus 45 W latent per person",
+      "source_locator": "RM-BASELINE-2026 section 4"
+    },
+    "lighting_gain_w_m2": {
+      "value": 12.0,
+      "source": "Reference-model office engineering assumption; not asserted as a universal SIA 387/4 limit",
+      "source_locator": "RM-BASELINE-2026 section 4"
+    },
+    "equipment_gain_w_m2": {
+      "value": 20.0,
+      "source": "Reference-model office engineering assumption; not asserted as a SIA 2024 table value",
+      "source_locator": "RM-BASELINE-2026 section 4"
+    },
+    "thermal_template_name": {
+      "value": null,
+      "source": "Runtime-created from the source-traced asset manifest",
+      "source_locator": "reference_model_assets.json: thermal_template.name"
+    },
+    "thermal_template_source_record": {
+      "value": null,
+      "source": "Runtime-generated manifest SHA-256 receipt",
+      "source_locator": "reference_model_assets.json"
+    },
+    "hvac_system_id": {
+      "value": null,
+      "source": "No explicit Apache system is created in baseline v1; ideal room conditioning is represented by template setpoints",
+      "source_locator": "RM-BASELINE-2026 section 5"
+    },
+    "sia4010_official_bundle_path": {
+      "value": null,
+      "source": "Official SIA 4010 bundle intentionally not assumed",
+      "source_locator": "Future official evidence register"
+    },
+    "sia4010_target_validation_class": {
+      "value": null,
+      "source": "No official validation class claimed by this baseline",
+      "source_locator": "SIA 4010 validation plan"
+    }
+  }
+}

@@ -20,6 +20,19 @@ Build the English HTML documentation:
 python docs/tools/build_docs.py --language en --builder html
 ```
 
+If an earlier HTML directory is locked by a browser or synchronization client,
+build into a clean stable output root:
+
+```powershell
+python docs/tools/build_docs.py --language en --builder html --output-root docs/build/latest
+```
+
+Build a single-page English handout for manager reviews:
+
+```powershell
+python docs/tools/build_docs.py --language en --builder singlehtml
+```
+
 Extract translatable strings:
 
 ```powershell
@@ -51,6 +64,17 @@ docs/source/manager_multilingual_brief_sphinx.rst
 It summarizes the current product status, latest verified report, safe compliance
 wording, blockers, evidence needs, and recommended manager discussion agenda.
 
+## Documentation Quality Audit
+
+The code handover audit is documented in:
+
+```text
+docs/source/documentation_quality.rst
+```
+
+It explains the files covered by the release validator, the English-only
+docstring policy, and the generated API reference strategy.
+
 ## Manager Reference Integration
 
 The manager-provided SIA 4010 software register and SIA 380/2 navigator backlog
@@ -65,12 +89,34 @@ The generated Excel workbook also includes `SIA3802 JUSTIFICATIONS`,
 `SIA4010 READINESS`, `SIA4010 PREVALIDATION`, `SIA4010 CLASS MATRIX`,
 `SIA4010 SOFTWARE REGISTER` and `NAVIGATOR BACKLOG` sheets.
 
+## Three-Room Reference Model
+
+The current `SIA_compatible_model` VE remediation and regression workflow is
+documented in:
+
+```text
+docs/project/SIA_COMPATIBLE_MODEL_REFERENCE_ACTIONS.md
+docs/source/reference_model_guide.rst
+```
+
 ## Output
 
 Generated HTML documentation is written to:
 
 ```text
 docs/build/html/<language>/
+```
+
+The current verified multilingual build is written to:
+
+```text
+docs/build/latest/html/<language>/
+```
+
+Generated single-page documentation is written to:
+
+```text
+docs/build/singlehtml/<language>/
 ```
 
 Generated gettext templates are written to:

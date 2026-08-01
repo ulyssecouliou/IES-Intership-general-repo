@@ -19,8 +19,8 @@ SOURCE_DIR = DOCS_DIR / "source"
 BUILD_DIR = DOCS_DIR / "build"
 
 
-def build_docs(language: str, builder: str) -> int:
-    """Run sphinx-build for one builder/language combination."""
+def build_docs(language: str, builder: str, output_root: Path = BUILD_DIR) -> int:
+    """Run Sphinx for one builder/language combination under an output root."""
     if importlib.util.find_spec("sphinx") is None:
         print(
             "Sphinx is not installed in this Python environment.\n"
@@ -31,24 +31,30 @@ def build_docs(language: str, builder: str) -> int:
         return 2
 
     if builder == "gettext":
-        output_dir = BUILD_DIR / "gettext"
+        output_dir = output_root / "gettext"
+        doctree_dir = output_root / "doctrees" / "gettext"
         command = [
             sys.executable,
             "-m",
             "sphinx",
             "-b",
             "gettext",
+            "-d",
+            str(doctree_dir),
             str(SOURCE_DIR),
             str(output_dir),
         ]
     else:
-        output_dir = BUILD_DIR / builder / language
+        output_dir = output_root / builder / language
+        doctree_dir = output_root / "doctrees" / language
         command = [
             sys.executable,
             "-m",
             "sphinx",
             "-b",
             builder,
+            "-d",
+            str(doctree_dir),
             str(SOURCE_DIR),
             str(output_dir),
             "-D",
@@ -63,9 +69,19 @@ def main() -> int:
     """Parse command-line arguments and build the documentation."""
     parser = argparse.ArgumentParser(description="Build Swiss SIA checker documentation.")
     parser.add_argument("--language", default="en", choices=["en", "fr", "it", "de"])
-    parser.add_argument("--builder", default="html", choices=["html", "gettext"])
+    parser.add_argument("--builder", default="html", choices=["html", "singlehtml", "gettext"])
+    parser.add_argument(
+        "--output-root",
+        type=Path,
+        default=BUILD_DIR,
+        help="Root directory for generated HTML and doctrees.",
+    )
     args = parser.parse_args()
-    return build_docs(language=args.language, builder=args.builder)
+    return build_docs(
+        language=args.language,
+        builder=args.builder,
+        output_root=args.output_root.resolve(),
+    )
 
 
 if __name__ == "__main__":

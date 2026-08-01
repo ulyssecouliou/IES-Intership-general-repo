@@ -1,0 +1,78 @@
+# Swiss SIA Compliance Checker - Claude Code Instructions
+
+## Mission
+
+Develop a production-quality IESVE/VEScripts workflow for conservative Swiss SIA 380/2 readiness assessment and future SIA 4010 validation. The software produces auditable evidence and readiness results; it does not issue certification.
+
+## Non-negotiable guardrails
+
+- Never invent, infer, or silently default a regulatory, physical, climatic, occupancy, ventilation, HVAC, glazing, or construction value.
+- Keep every compliance-relevant value in a source-traced configuration or manifest record with units, source, locator, validation range, and placeholder state.
+- Report unavailable official evidence as `NOT_CHECKABLE`, `WARNING`, or `FAIL` as defined by the current architecture. Never convert missing evidence into `PASS`.
+- Do not claim SIA 4010 validation without the official test package, accepted result evidence, selected class, and reviewer confirmation.
+- Treat project reports, evidence CSV files, standards, customer models, and manager documents as user-owned data. Preserve them unless the task explicitly authorizes changes.
+- Before reading licensed standards or customer files with Claude Code, confirm that IES policy authorizes those files for the configured enterprise service. Never reproduce long copyrighted extracts.
+- Do not publish, push, create a PR, upload files, install dependencies, or contact external systems unless the user explicitly authorizes that action.
+- Do not use destructive Git or filesystem commands. Preserve unrelated changes in a dirty worktree.
+
+## Runtime boundary
+
+- The `iesve` module is available only inside the IESVE VEScripts runtime. Normal Python tests must use gateways, fakes, fixtures, or pure-Python dry runs.
+- Do not assume an IESVE API member exists because it appears in another release. Check the local manual under `references/iesve/`, the installed runtime with a read-only probe, or current official IESVE documentation.
+- Keep capability checks before VE mutation. Validate every created object by immediate readback.
+- A simulated API test is not a real-VE qualification. State this boundary in every relevant handoff.
+- VE model creation starts from an already open and saved blank VE project unless a documented project-creation API is verified.
+
+## Architecture map
+
+- `Run_VE_Swiss_Compliance.py`: production compliance-checker Run-button launcher.
+- `Run_VE_Swiss_Reference_Model.py`: programmatic reference-model Run-button launcher.
+- `swiss_sia/`: compliance extraction, rules, reports, evidence and orchestration.
+- `swiss_sia/reference_model/`: configuration, geometry, gbXML, VE gateways, asset provisioning, validation, reporting and SIA 4010 hooks.
+- `config/`: source-traced example inputs; examples intentionally fail closed until completed.
+- `schemas/`: machine-readable configuration contracts.
+- `tests/`: pure-Python regression and API-double tests.
+- `scripts/quality/validate_release.py`: repository release gate.
+- `docs/project/`: architecture, status, risks and handoff records.
+- `references/`: local authoritative/reference material; access remains subject to IES policy.
+- `reports/`, `outputs/`, `sia4010_evidence/`: generated or reviewer-owned artifacts, not source-code scratch space.
+
+## Change workflow
+
+1. Read `README.md` and only the architecture/status documents relevant to the task.
+2. Inspect `git status --short`; distinguish task changes from pre-existing user changes.
+3. Identify the compliance claim, API contract, input source and validation impact before editing.
+4. Implement the smallest cohesive change through existing interfaces. Avoid parallel implementations and hard-coded paths.
+5. Add or update focused tests, including failure and placeholder paths.
+6. Run focused tests, then the full suite when shared code changes.
+7. Run release validation for compliance, report, evidence, configuration or documentation changes.
+8. Report what was verified locally and what still requires a real IESVE or expert-review gate.
+
+## Commands
+
+From the repository root on Windows:
+
+```powershell
+python -m unittest discover -s tests -p "test_*.py"
+python -m unittest discover -s tests -p "test_reference_model*.py"
+python scripts/reference_model_dry_run.py config/reference_model.example.json
+python scripts/quality/validate_release.py
+python -m compileall -q swiss_sia scripts Run_VE_Swiss_Compliance.py Run_VE_Swiss_Reference_Model.py
+git diff --check
+git status --short
+```
+
+If release validation reports that `pypdf` is missing, use the approved project environment or request approval before installing `scripts/quality/requirements.txt`.
+
+## Coding conventions
+
+- Use English for code, identifiers, comments, docstrings and committed technical documentation. User-facing explanations may be French.
+- Preserve compatibility with the confirmed IESVE Python runtime; do not introduce newer syntax or dependencies without verifying that runtime.
+- Prefer typed boundaries, dataclasses for structured records, dependency injection for VE access, explicit exceptions, logging and deterministic outputs.
+- Keep compliance configuration separate from geometry, VE mutation, validation and reporting.
+- Use atomic writes for audit artifacts where practical.
+- Add descriptive docstrings to public and internal modules, classes and functions covered by release checks.
+
+## Definition of done
+
+A change is done only when its scoped tests pass, failure paths are conservative, source traceability remains intact, generated artifacts are not misrepresented as certification, documentation is updated when the workflow changes, and remaining real-VE or regulatory-review work is explicit.

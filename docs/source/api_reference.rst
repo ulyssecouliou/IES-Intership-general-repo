@@ -14,11 +14,17 @@ Production Launchers
 .. automodule:: Run_VE_Swiss_Compliance
    :members:
 
+.. automodule:: RUN_IESVE_EXTRACTION_PROBE
+   :members:
+
 .. automodule:: main
    :members:
 
 Main Orchestration
 ------------------
+
+.. automodule:: swiss_sia
+   :members:
 
 .. automodule:: swiss_sia.app
    :members:
@@ -57,6 +63,12 @@ SIA 4010 Checker
 ----------------
 
 .. automodule:: swiss_sia.sia4010_checker
+   :members:
+
+SIA 4010 Official Workbook Adapters
+-----------------------------------
+
+.. automodule:: swiss_sia.sia4010_test_adapters
    :members:
 
 SIA 4010 PDF Prevalidation
@@ -110,7 +122,19 @@ Evidence Pack Export
 Developer Scripts
 -----------------
 
+.. automodule:: scripts
+   :members:
+
+.. automodule:: scripts.quality
+   :members:
+
+.. automodule:: scripts.quality.fixtures
+   :members:
+
 .. automodule:: scripts.quality.validate_release
+   :members:
+
+.. automodule:: scripts.probes
    :members:
 
 .. automodule:: scripts.probes.iesve_extraction_probe
@@ -123,4 +147,13 @@ Legacy Reference Scripts
    :members:
 
 .. automodule:: scripts.legacy.IESVE_Model_Intelligence_Dashboard
+   :members:
+
+Documentation Tooling
+---------------------
+
+.. automodule:: docs.source.conf
+   :members:
+
+.. automodule:: docs.tools.build_docs
    :members:

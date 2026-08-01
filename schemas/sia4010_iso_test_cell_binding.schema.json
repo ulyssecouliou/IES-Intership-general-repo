@@ -1,0 +1,132 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "sia4010.iso52016_chapter7_test_cell.v1",
+  "title": "Normalized ISO 52016 Chapter 7 test-cell binding",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "schema_id",
+    "schema_version",
+    "primary_source_sha256",
+    "source_locator",
+    "cell",
+    "surface_coefficients_w_m2k",
+    "lightweight_opaque_constructions"
+  ],
+  "properties": {
+    "schema_id": {
+      "const": "sia4010.iso52016_chapter7_test_cell.v1"
+    },
+    "schema_version": {
+      "const": "1.0"
+    },
+    "primary_source_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "source_locator": {
+      "type": "string",
+      "minLength": 1
+    },
+    "cell": {
+      "type": "object",
+      "required": [
+        "width_m",
+        "depth_m",
+        "height_m",
+        "south_windows"
+      ],
+      "properties": {
+        "width_m": {"type": "number", "exclusiveMinimum": 0},
+        "depth_m": {"type": "number", "exclusiveMinimum": 0},
+        "height_m": {"type": "number", "exclusiveMinimum": 0},
+        "south_windows": {
+          "type": "object",
+          "required": [
+            "count",
+            "width_m",
+            "height_m",
+            "sill_m",
+            "side_margin_m",
+            "gap_m"
+          ],
+          "properties": {
+            "count": {"type": "integer", "minimum": 1},
+            "width_m": {"type": "number", "exclusiveMinimum": 0},
+            "height_m": {"type": "number", "exclusiveMinimum": 0},
+            "sill_m": {"type": "number", "minimum": 0},
+            "side_margin_m": {"type": "number", "minimum": 0},
+            "gap_m": {"type": "number", "minimum": 0}
+          }
+        }
+      }
+    },
+    "surface_coefficients_w_m2k": {
+      "type": "object",
+      "required": ["inside", "outside"],
+      "properties": {
+        "inside": {"type": "number", "exclusiveMinimum": 0},
+        "outside": {"type": "number", "exclusiveMinimum": 0}
+      }
+    },
+    "lightweight_opaque_constructions": {
+      "type": "object",
+      "required": ["external_wall", "roof", "floor"],
+      "properties": {
+        "external_wall": {"$ref": "#/$defs/construction"},
+        "roof": {"$ref": "#/$defs/construction"},
+        "floor": {"$ref": "#/$defs/construction"}
+      }
+    }
+  },
+  "$defs": {
+    "construction": {
+      "type": "object",
+      "required": [
+        "construction_id",
+        "layers_outside_to_inside",
+        "surface_properties"
+      ],
+      "properties": {
+        "construction_id": {"type": "string", "minLength": 1},
+        "layers_outside_to_inside": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"$ref": "#/$defs/layer"}
+        },
+        "surface_properties": {
+          "type": "object",
+          "required": [
+            "inside_ir_emissivity",
+            "outside_ir_emissivity",
+            "inside_solar_absorptance",
+            "outside_solar_absorptance"
+          ],
+          "properties": {
+            "inside_ir_emissivity": {"type": "number", "minimum": 0, "maximum": 1},
+            "outside_ir_emissivity": {"type": "number", "minimum": 0, "maximum": 1},
+            "inside_solar_absorptance": {"type": "number", "minimum": 0, "maximum": 1},
+            "outside_solar_absorptance": {"type": "number", "minimum": 0, "maximum": 1}
+          }
+        }
+      }
+    },
+    "layer": {
+      "type": "object",
+      "required": [
+        "material_id",
+        "thickness_m",
+        "conductivity_w_mk",
+        "density_kg_m3",
+        "specific_heat_j_kgk"
+      ],
+      "properties": {
+        "material_id": {"type": "string", "minLength": 1},
+        "thickness_m": {"type": "number", "exclusiveMinimum": 0},
+        "conductivity_w_mk": {"type": "number", "exclusiveMinimum": 0},
+        "density_kg_m3": {"type": "number", "minimum": 0},
+        "specific_heat_j_kgk": {"type": "number", "minimum": 0}
+      }
+    }
+  }
+}

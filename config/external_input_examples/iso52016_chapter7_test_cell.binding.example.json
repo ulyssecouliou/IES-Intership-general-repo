@@ -1,0 +1,80 @@
+{
+  "schema_id": "sia4010.iso52016_chapter7_test_cell.v1",
+  "schema_version": "1.0",
+  "primary_source_sha256": "<LOWERCASE_SHA256_OF_AUTHORIZED_PRIMARY_SOURCE>",
+  "source_locator": "<EDITION_CHAPTER_TABLE_AND_ROW_LOCATORS>",
+  "cell": {
+    "width_m": null,
+    "depth_m": null,
+    "height_m": null,
+    "south_windows": {
+      "count": null,
+      "width_m": null,
+      "height_m": null,
+      "sill_m": null,
+      "side_margin_m": null,
+      "gap_m": null
+    }
+  },
+  "surface_coefficients_w_m2k": {
+    "inside": null,
+    "outside": null
+  },
+  "lightweight_opaque_constructions": {
+    "external_wall": {
+      "construction_id": "<SOURCE_STABLE_ID>",
+      "layers_outside_to_inside": [
+        {
+          "material_id": "<SOURCE_STABLE_MATERIAL_ID>",
+          "thickness_m": null,
+          "conductivity_w_mk": null,
+          "density_kg_m3": null,
+          "specific_heat_j_kgk": null
+        }
+      ],
+      "surface_properties": {
+        "inside_ir_emissivity": null,
+        "outside_ir_emissivity": null,
+        "inside_solar_absorptance": null,
+        "outside_solar_absorptance": null
+      }
+    },
+    "roof": {
+      "construction_id": "<SOURCE_STABLE_ID>",
+      "layers_outside_to_inside": [
+        {
+          "material_id": "<SOURCE_STABLE_MATERIAL_ID>",
+          "thickness_m": null,
+          "conductivity_w_mk": null,
+          "density_kg_m3": null,
+          "specific_heat_j_kgk": null
+        }
+      ],
+      "surface_properties": {
+        "inside_ir_emissivity": null,
+        "outside_ir_emissivity": null,
+        "inside_solar_absorptance": null,
+        "outside_solar_absorptance": null
+      }
+    },
+    "floor": {
+      "construction_id": "<SOURCE_STABLE_ID>",
+      "layers_outside_to_inside": [
+        {
+          "material_id": "<SOURCE_STABLE_MATERIAL_ID>",
+          "thickness_m": null,
+          "conductivity_w_mk": null,
+          "density_kg_m3": null,
+          "specific_heat_j_kgk": null
+        }
+      ],
+      "surface_properties": {
+        "inside_ir_emissivity": null,
+        "outside_ir_emissivity": null,
+        "inside_solar_absorptance": null,
+        "outside_solar_absorptance": null
+      }
+    }
+  },
+  "completion_guardrail": "Replace every null and placeholder from an authorized source. Do not infer missing values."
+}

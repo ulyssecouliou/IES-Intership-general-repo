@@ -9,6 +9,7 @@ reviewer can see what was available for the run.
 from __future__ import annotations
 
 import json
+import re
 import zipfile
 from datetime import datetime
 from fnmatch import fnmatch
@@ -42,6 +43,10 @@ HELPER_EVIDENCE_PATTERNS = [
     "readme.md",
     "sia3802_justification_*.csv",
     "sia3802_justifications_*.csv",
+    "sia2024_usage_mapping_*.csv",
+    "sia3802_global_reference_comparison_*.csv",
+    "sia3802_project_metadata_*.csv",
+    "sia3874_lighting_control_mapping_*.csv",
     "glazing_solar_protection_*.csv",
     "g_values_audit_*.csv",
 ]
@@ -54,6 +59,7 @@ def create_evidence_pack(
     sia4010_results: Dict[str, Any],
     preflight_checks: List[Dict[str, Any]],
     evidence_dir_name: str = "sia4010_evidence",
+    project_label: Optional[str] = None,
 ) -> Dict[str, Any]:
     """Create a ZIP evidence pack and return a report-ready status payload."""
     project_root = Path(project_root).resolve()
@@ -69,6 +75,7 @@ def create_evidence_pack(
         sia4010_results=sia4010_results,
         preflight_checks=preflight_checks,
         evidence_dir_name=evidence_dir_name,
+        project_label=project_label,
     )
 
     file_entries: List[Dict[str, Any]] = []
@@ -79,6 +86,15 @@ def create_evidence_pack(
     excluded_files: List[Dict[str, str]] = []
     evidence_root = project_root / evidence_dir_name
     for file_path in _iter_existing_files(evidence_root):
+        if not matches_active_project_scope(file_path, project_label):
+            excluded_files.append({
+                "path": _relative_or_absolute(project_root, file_path),
+                "reason": (
+                    "Project-scoped helper/manifest file belongs to another VE project; "
+                    f"active project is {project_label}."
+                ),
+            })
+            continue
         include_file, exclusion_reason = _should_include_evidence_file(file_path, evidence_root)
         if include_file:
             _collect_file_entry(project_root, file_path, file_entries, evidence_dir_name)
@@ -159,6 +175,7 @@ def _build_manifest(
     sia4010_results: Dict[str, Any],
     preflight_checks: List[Dict[str, Any]],
     evidence_dir_name: str,
+    project_label: Optional[str],
 ) -> Dict[str, Any]:
     """Build the JSON manifest embedded in the ZIP evidence pack."""
     evidence = sia4010_results.get("evidence", {}) if isinstance(sia4010_results, dict) else {}
@@ -173,6 +190,7 @@ def _build_manifest(
         "generated_at": datetime.now().isoformat(timespec="seconds"),
         "purpose": "Manager/reviewer handoff package; not an official SIA certificate.",
         "project_root": str(project_root),
+        "project_label": project_label or "",
         "report_path": _relative_or_absolute(project_root, report_path),
         "latest_report_alias": _relative_or_absolute(project_root, latest_report_path) if latest_report_path else "",
         "package_path": _relative_or_absolute(project_root, output_path),
@@ -184,7 +202,7 @@ def _build_manifest(
         "sia4010_required_evidence_count": evidence_summary.get("required_count", 0),
         "sia4010_manifest_documented_count": evidence_summary.get("manifest_documented_count", 0),
         "sia4010_official_test_result_rows": official_summary.get("result_row_count", 0),
-        "sia4010_official_validated_tests": official_summary.get("validated_tests", []),
+        "sia4010_recorded_pass_tests": official_summary.get("recorded_pass_tests", []),
         "sia4010_official_failed_tests": official_summary.get("failed_tests", []),
         "preflight_status_counts": preflight_counts,
         "copyright_note": (
@@ -196,7 +214,7 @@ def _build_manifest(
 
 def _build_pack_readme(manifest: Dict[str, Any]) -> str:
     """Return the README text stored in the generated evidence pack."""
-    validated_tests = manifest.get("sia4010_official_validated_tests") or []
+    recorded_pass_tests = manifest.get("sia4010_recorded_pass_tests") or []
     failed_tests = manifest.get("sia4010_official_failed_tests") or []
     return "\n".join([
         "# Swiss SIA Evidence Pack",
@@ -221,7 +239,7 @@ def _build_pack_readme(manifest: Dict[str, Any]) -> str:
         f"- Evidence families present: `{manifest.get('sia4010_present_evidence_count', 0)}/{manifest.get('sia4010_required_evidence_count', 0)}`.",
         f"- Manifest-documented evidence families: `{manifest.get('sia4010_manifest_documented_count', 0)}`.",
         f"- Official result rows: `{manifest.get('sia4010_official_test_result_rows', 0)}`.",
-        f"- Official validated tests: `{', '.join(validated_tests) if validated_tests else 'none'}`.",
+        f"- Tests with recorded PASS result rows: `{', '.join(recorded_pass_tests) if recorded_pass_tests else 'none'}`.",
         f"- Official failed tests: `{', '.join(failed_tests) if failed_tests else 'none'}`.",
         "",
         "## Important Guardrail",
@@ -240,6 +258,41 @@ def _iter_existing_files(root: Path) -> Iterable[Path]:
     if not root.exists() or not root.is_dir():
         return []
     return sorted(path for path in root.rglob("*") if path.is_file())
+
+
+def matches_active_project_scope(file_path: Path, project_label: Optional[str]) -> bool:
+    """Exclude project helper/manifests whose filename targets another VE project."""
+    file_path = Path(file_path)
+    if not project_label:
+        return True
+    normalized_name = file_path.name.lower()
+    if normalized_name == "readme.md":
+        return True
+    matched_prefix = ""
+    for pattern in HELPER_EVIDENCE_PATTERNS:
+        if pattern != "readme.md" and fnmatch(normalized_name, pattern):
+            matched_prefix = pattern.split("*", 1)[0]
+            break
+    if not matched_prefix:
+        for prefix in (
+            *SIA4010_EVIDENCE_MANIFEST_PREFIXES,
+            *SIA4010_CLASS_MANIFEST_PREFIXES,
+            *SIA4010_OFFICIAL_TEST_RESULTS_PREFIXES,
+        ):
+            if normalized_name.startswith(prefix.lower()):
+                matched_prefix = prefix
+                break
+    if not matched_prefix:
+        return True
+    scope_key = re.sub(r"[^a-z0-9]+", "", str(project_label).lower())
+    file_key = re.sub(r"[^a-z0-9]+", "", file_path.stem.lower())
+    prefix_key = re.sub(r"[^a-z0-9]+", "", Path(matched_prefix).stem.lower())
+    return bool(
+        scope_key
+        and prefix_key
+        and file_key.startswith(prefix_key)
+        and file_key[len(prefix_key):] == scope_key
+    )
 
 
 def _collect_file_entry(

@@ -41,6 +41,7 @@ from .config import (
 from .health_score import ScoreResult
 from .rule_engine import Alert, Severity
 from .evidence_manager import describe_justification, find_accepted_justification
+from .model_analyzer import has_active_solar_protection
 
 logger = logging.getLogger(__name__)
 
@@ -106,8 +107,14 @@ class ExcelReportGenerator:
     ):
         """Generate the workbook with xlsxwriter."""
         self.sia3802_justifications = justification_results or sia3802_results.get("justifications", {}) or {}
+        # Round all displayed scores once, at the source, so no sheet renders
+        # raw floating-point noise (e.g. 73.6842105263158 -> 73.7).
+        score_result = self._display_score_result(score_result)
         alert_groups = self._build_alert_groups(score_result.alerts)
+        self._write_cover_xlsxwriter(score_result, sia3802_results, sia4010_results, rooms_data or [])
+        self._write_index_xlsxwriter(bool(rooms_data))
         self._write_manager_dashboard_xlsxwriter(score_result, sia3802_results, sia4010_results, rooms_data or [], alert_groups)
+        self._write_action_dashboard_xlsxwriter(score_result, sia3802_results, sia4010_results, rooms_data or [], alert_groups, dynamic_results or {})
         self._write_client_summary_xlsxwriter(score_result, sia4010_results, rooms_data or [], alert_groups)
         self._write_preflight_xlsxwriter(preflight_checks or [], rooms_data or [], sia4010_results)
         self._write_p1_remediation_xlsxwriter(alert_groups, sia4010_results)
@@ -117,9 +124,12 @@ class ExcelReportGenerator:
         self._write_ve_g_values_audit_xlsxwriter(rooms_data or [])
         self._write_assumptions_limits_xlsxwriter(score_result, sia4010_results, rooms_data or [])
         self._write_audit_log_xlsxwriter(score_result, sia4010_results, rooms_data or [], preflight_checks or [], dynamic_results or {})
-        self._write_summary_xlsxwriter(score_result)
-        self._write_action_plan_xlsxwriter(alert_groups)
+        # Legacy sheets SUMMARY, ACTION PLAN, COMPLIANCE RESULTS and SIA
+        # REQUIREMENTS were removed: their content is fully covered by the
+        # newer CLIENT SUMMARY, ACTION DASHBOARD / P1 REMEDIATION, the domain
+        # scores on the dashboards, and SIA DATA COVERAGE respectively.
         self._write_compliance_results_xlsxwriter(sia3802_results, sia4010_results)
+        self._write_reference_project_xlsxwriter(sia3802_results)
         self._write_sia_requirements_xlsxwriter(sia3802_results, sia4010_results)
         self._write_sia_data_coverage_xlsxwriter(sia3802_results, sia4010_results, rooms_data or [], preflight_checks or [], dynamic_results or {})
         self._write_input_request_xlsxwriter(sia3802_results, sia4010_results, rooms_data or [], preflight_checks or [], dynamic_results or {})
@@ -137,7 +147,240 @@ class ExcelReportGenerator:
         self._write_detailed_scores_xlsxwriter(score_result.detailed_scores)
         if rooms_data:
             self._write_rooms_xlsxwriter(rooms_data)
+        self._finalize_workbook_xlsxwriter()
         self.workbook.close()
+
+    # =============================================================================
+    # Report identity, cover, index and finalize (shared presentation layer)
+    # =============================================================================
+
+    # Ordered section -> (tab colour, member sheets). Drives both the clickable
+    # index grouping and the uniform tab colours applied at finalize.
+    _REPORT_SECTIONS = [
+        ("Executive", "#0F766E", ["MANAGER DASHBOARD", "ACTION DASHBOARD", "CLIENT SUMMARY"]),
+        ("Readiness & priority", "#B45309", ["PREFLIGHT", "P1 REMEDIATION"]),
+        ("Envelope & glazing", "#C2410C", [
+            "FACADE GLAZING REVIEW", "FRAME FRACTION AUDIT",
+            "ENVELOPE U REVIEW", "VE G-VALUES AUDIT",
+        ]),
+        ("SIA 380/2", "#1F4E78", [
+            "COMPLIANCE RESULTS", "REFERENCE PROJECT", "SIA REQUIREMENTS",
+            "SIA DATA COVERAGE", "SIA3802 JUSTIFICATIONS", "ASSUMPTIONS LIMITS",
+        ]),
+        ("SIA 4010", "#6D28D9", [
+            "SIA4010 READINESS", "SIA4010 PREVALIDATION",
+            "SIA4010 CLASS MATRIX", "SIA4010 SOFTWARE REGISTER",
+        ]),
+        ("Actions & inputs", "#334155", [
+            "INPUT REQUEST", "OPEN ITEMS BACKLOG", "NAVIGATOR BACKLOG",
+            "AUDIT LOG",
+        ]),
+        ("Data & detail", "#64748B", [
+            "DYNAMIC RESULTS", "ALERT SUMMARY", "ALERTS", "DATA QUALITY",
+            "DETAILED SCORES", "ROOMS",
+        ]),
+    ]
+    _COVER_TAB_COLOR = "#0B3D3A"
+
+    @staticmethod
+    def _display_score_result(score_result: "ScoreResult") -> "ScoreResult":
+        """Return a display copy with scores rounded to one decimal.
+
+        Rounding once at the source keeps every downstream sheet, KPI card and
+        chart free of raw floating-point noise, independent of each cell's
+        number format. The alert list is preserved unchanged.
+        """
+
+        def _r(value: Any) -> Any:
+            """Round one value to a single decimal, leaving non-numerics as-is."""
+
+            try:
+                return round(float(value), 1)
+            except (TypeError, ValueError):
+                return value
+
+        return ScoreResult(
+            compliance_score=_r(getattr(score_result, "compliance_score", 0.0)),
+            health_score=_r(getattr(score_result, "health_score", 0.0)),
+            detailed_scores={
+                key: _r(value)
+                for key, value in (getattr(score_result, "detailed_scores", {}) or {}).items()
+            },
+            alerts=getattr(score_result, "alerts", []),
+        )
+
+    def _project_label(self) -> str:
+        """Derive a human project label from the output filename."""
+
+        base = os.path.splitext(os.path.basename(self.output_path or ""))[0]
+        parts = base.split("__")
+        if len(parts) >= 2 and parts[1]:
+            return parts[1].replace("_", " ").strip()
+        return "Swiss SIA project"
+
+    def _write_cover_xlsxwriter(self, score_result, sia3802_results, sia4010_results, rooms_data):
+        """Write the branded cover landing page with rounded headline KPIs."""
+
+        worksheet = self.workbook.add_worksheet("COVER")
+        worksheet.hide_gridlines(2)
+        worksheet.set_tab_color(self._COVER_TAB_COLOR)
+        worksheet.set_column("A:A", 2)
+        worksheet.set_column("B:E", 22)
+        worksheet.set_column("F:F", 2)
+
+        title_format = self.workbook.add_format({
+            "bold": True, "font_size": 24, "font_color": "#0B3D3A",
+            "font_name": "Calibri", "valign": "vcenter",
+        })
+        subtitle_format = self.workbook.add_format({
+            "font_size": 12, "font_color": "#334155", "italic": True,
+        })
+        logo_format = self.workbook.add_format({
+            "align": "center", "valign": "vcenter", "font_size": 10,
+            "font_color": "#94A3B8", "border": 1, "border_color": "#CBD5E1",
+        })
+        label_format = self.workbook.add_format({
+            "bold": True, "font_color": "#475569", "font_size": 10,
+        })
+        value_format = self.workbook.add_format({
+            "font_size": 11, "font_color": "#0F172A",
+        })
+        kpi_label_format = self.workbook.add_format({
+            "bold": True, "font_color": "#0B3D3A", "font_size": 10,
+            "bg_color": "#E6F0EE", "border": 1, "border_color": "#CBD5E1",
+        })
+        kpi_value_format = self.workbook.add_format({
+            "bold": True, "font_size": 18, "font_color": "#0F766E",
+            "num_format": "0.0", "border": 1, "border_color": "#CBD5E1",
+            "align": "center",
+        })
+        kpi_int_format = self.workbook.add_format({
+            "bold": True, "font_size": 18, "font_color": "#0F766E",
+            "num_format": "#,##0", "border": 1, "border_color": "#CBD5E1",
+            "align": "center",
+        })
+        disclaimer_format = self.workbook.add_format({
+            "font_size": 10, "font_color": "#7F1D1D", "italic": True,
+            "text_wrap": True, "valign": "top",
+        })
+
+        # Logo placeholder (drop a PNG at assets/ies_logo.png to brand it).
+        worksheet.merge_range("B2:C4", "", logo_format)
+        logo_path = os.path.join(os.path.dirname(os.path.abspath(self.output_path or ".")), "..", "assets", "ies_logo.png")
+        if os.path.isfile(logo_path):
+            try:
+                worksheet.insert_image("B2", logo_path, {"x_scale": 1, "y_scale": 1})
+            except Exception:
+                worksheet.write("B2", "[ IES logo ]", logo_format)
+        else:
+            worksheet.write("B2", "[ IES logo ]", logo_format)
+
+        worksheet.merge_range("B6:E6", "Swiss SIA Compliance Report", title_format)
+        worksheet.set_row(5, 32)
+        worksheet.merge_range(
+            "B7:E7",
+            "Automated SIA 380/2 readiness review and SIA 4010 evidence status",
+            subtitle_format,
+        )
+
+        worksheet.write("B9", "Project", label_format)
+        worksheet.write("C9", self._project_label(), value_format)
+        worksheet.write("B10", "Generated", label_format)
+        worksheet.write("C10", datetime.now().strftime("%Y-%m-%d %H:%M:%S"), value_format)
+        # Regulatory framework is fixed for the whole assessment (constrained
+        # navigator): stating the editions on the cover keeps the scope explicit
+        # and immutable from the first sheet, per the SIA 380/2 navigator brief.
+        worksheet.write("B11", "Regulatory framework", label_format)
+        worksheet.merge_range(
+            "C11:E11",
+            "SIA 380/2:2022 (FR) + SIA 4010:2023 (FR) - editions fixed for this assessment",
+            value_format,
+        )
+
+        # Headline KPIs (rounded - no raw floating-point noise).
+        worksheet.write("B12", "SIA 380/2 automated score", kpi_label_format)
+        worksheet.write_number("C12", round(float(getattr(score_result, "compliance_score", 0.0) or 0.0), 1), kpi_value_format)
+        worksheet.write("B13", "Model health score", kpi_label_format)
+        worksheet.write_number("C13", round(float(getattr(score_result, "health_score", 0.0) or 0.0), 1), kpi_value_format)
+        worksheet.write("B14", "Rooms analysed", kpi_label_format)
+        worksheet.write_number("C14", len(rooms_data), kpi_int_format)
+
+        worksheet.merge_range(
+            "B16:E19",
+            "This workbook is an automated readiness and evidence review. It is "
+            "NOT an SIA certificate and does not constitute SIA 4010 validation. "
+            "Scores are indicators computed from the directly extracted VE model; "
+            "missing official evidence is reported as WARNING or NOT_CHECKABLE, "
+            "never as a pass. See the INDEX sheet to navigate all sections.",
+            disclaimer_format,
+        )
+
+    def _write_index_xlsxwriter(self, has_rooms: bool):
+        """Write a clickable index grouped by report section."""
+
+        worksheet = self.workbook.add_worksheet("INDEX")
+        worksheet.hide_gridlines(2)
+        worksheet.set_tab_color(self._COVER_TAB_COLOR)
+        worksheet.set_column("A:A", 2)
+        worksheet.set_column("B:B", 40)
+        worksheet.set_column("C:C", 60)
+
+        title_format = self.workbook.add_format({
+            "bold": True, "font_size": 16, "font_color": "#0B3D3A",
+        })
+        section_format = self.workbook.add_format({
+            "bold": True, "font_size": 11, "font_color": "white",
+            "bg_color": "#0F766E", "border": 1, "border_color": "#0B3D3A",
+        })
+        link_format = self.workbook.add_format({
+            "font_color": "#1D4ED8", "underline": 1,
+        })
+
+        worksheet.write("B2", "Report index", title_format)
+        row = 3
+        for section, color, sheets in self._REPORT_SECTIONS:
+            visible = [s for s in sheets if s != "ROOMS" or has_rooms]
+            if not visible:
+                continue
+            worksheet.merge_range(row, 1, row, 2, section, section_format)
+            row += 1
+            for sheet in visible:
+                worksheet.write_url(
+                    row, 1, "internal:'{}'!A1".format(sheet), link_format, sheet
+                )
+                row += 1
+            row += 1
+
+    def _finalize_workbook_xlsxwriter(self):
+        """Apply uniform print setup, tab colours and header/footer to all sheets."""
+
+        color_by_sheet = {}
+        for _section, color, sheets in self._REPORT_SECTIONS:
+            for sheet in sheets:
+                color_by_sheet[sheet] = color
+
+        project = self._project_label()
+        generated = datetime.now().strftime("%Y-%m-%d %H:%M")
+        header = "&L{}&CSwiss SIA Compliance Report&R&D".format(project)
+        footer = (
+            "&LNot a certificate - automated SIA readiness review"
+            "&C&P / &N&Rgenerated {}".format(generated)
+        )
+        for worksheet in self.workbook.worksheets():
+            name = getattr(worksheet, "name", "")
+            worksheet.hide_gridlines(2)
+            if name in ("COVER", "INDEX"):
+                worksheet.set_tab_color(self._COVER_TAB_COLOR)
+            elif name in color_by_sheet:
+                worksheet.set_tab_color(color_by_sheet[name])
+            worksheet.set_paper(9)  # A4
+            worksheet.set_margins(left=0.5, right=0.5, top=0.75, bottom=0.75)
+            worksheet.center_horizontally()
+            if name not in ("COVER", "INDEX"):
+                worksheet.set_landscape()
+                worksheet.fit_to_pages(1, 0)
+            worksheet.set_header(header)
+            worksheet.set_footer(footer)
 
     # =============================================================================
     # xlsxwriter methods
@@ -271,10 +514,10 @@ class ExcelReportGenerator:
             subtitle_format,
         )
         nav_links = [
-            ("A3:B3", "P1 Actions", "P1 REMEDIATION"),
-            ("C3:D3", "Input Request", "INPUT REQUEST"),
-            ("E3:F3", "SIA Coverage", "SIA DATA COVERAGE"),
-            ("G3:H3", "Dynamic Results", "DYNAMIC RESULTS"),
+            ("A3:B3", "Action Page", "ACTION DASHBOARD"),
+            ("C3:D3", "P1 Actions", "P1 REMEDIATION"),
+            ("E3:F3", "Input Request", "INPUT REQUEST"),
+            ("G3:H3", "SIA Coverage", "SIA DATA COVERAGE"),
             ("I3:J3", "SIA4010", "SIA4010 READINESS"),
             ("K3:L3", "Audit Log", "AUDIT LOG"),
         ]
@@ -393,6 +636,420 @@ class ExcelReportGenerator:
             worksheet.merge_range("G34:K34", "No priority action generated from alerts.", cell_format)
 
         worksheet.freeze_panes(3, 0)
+
+    def _write_action_dashboard_xlsxwriter(
+        self,
+        score_result: ScoreResult,
+        sia3802_results: Dict[str, Any],
+        sia4010_results: Dict[str, Any],
+        rooms_data: List[Any],
+        alert_groups: List[Dict[str, Any]],
+        dynamic_results: Dict[str, Any],
+    ):
+        """Write a single-page action view with separated SIA 380/2 and SIA 4010 scores."""
+        del sia3802_results  # Scores and alert groups already contain the model-facing details.
+        worksheet = self.workbook.add_worksheet("ACTION DASHBOARD")
+        worksheet.hide_gridlines(2)
+        worksheet.set_tab_color("#F97316")
+        worksheet.set_landscape()
+        worksheet.fit_to_pages(1, 0)
+        worksheet.freeze_panes(22, 0)
+
+        title_format = self.workbook.add_format({
+            "bold": True,
+            "font_size": 20,
+            "font_color": "#FFFFFF",
+            "bg_color": "#111827",
+            "align": "left",
+            "valign": "vcenter",
+        })
+        subtitle_format = self.workbook.add_format({
+            "font_size": 10,
+            "font_color": "#E5E7EB",
+            "bg_color": "#111827",
+            "align": "left",
+            "valign": "vcenter",
+        })
+        section_format = self.workbook.add_format({
+            "bold": True,
+            "font_color": "#FFFFFF",
+            "bg_color": "#C2410C",
+            "border": 1,
+            "border_color": "#FDBA74",
+            "align": "left",
+            "valign": "vcenter",
+        })
+        header_format = self.workbook.add_format({
+            "bold": True,
+            "font_color": "#FFFFFF",
+            "bg_color": "#9A3412",
+            "border": 1,
+            "border_color": "#FED7AA",
+            "align": "center",
+            "valign": "vcenter",
+            "text_wrap": True,
+        })
+        cell_format = self.workbook.add_format({
+            "border": 1,
+            "border_color": "#FED7AA",
+            "text_wrap": True,
+            "valign": "top",
+        })
+        muted_format = self.workbook.add_format({
+            "border": 1,
+            "border_color": "#E5E7EB",
+            "font_color": "#4B5563",
+            "text_wrap": True,
+            "valign": "top",
+        })
+        card_title_format = self.workbook.add_format({
+            "bold": True,
+            "font_size": 9,
+            "font_color": "#7C2D12",
+            "bg_color": "#FFEDD5",
+            "align": "center",
+            "valign": "vcenter",
+            "border": 1,
+            "border_color": "#FDBA74",
+        })
+        card_value_format = self.workbook.add_format({
+            "bold": True,
+            "font_size": 18,
+            "font_color": "#111827",
+            "bg_color": "#FFFFFF",
+            "align": "center",
+            "valign": "vcenter",
+            "border": 1,
+            "border_color": "#FDBA74",
+        })
+        card_note_format = self.workbook.add_format({
+            "font_size": 8,
+            "font_color": "#4B5563",
+            "bg_color": "#FFFFFF",
+            "align": "center",
+            "valign": "vcenter",
+            "text_wrap": True,
+            "border": 1,
+            "border_color": "#FDBA74",
+        })
+        score_format = self.workbook.add_format({
+            "border": 1,
+            "border_color": "#FED7AA",
+            "num_format": "0",
+            "align": "center",
+            "valign": "vcenter",
+        })
+        number_format = self.workbook.add_format({
+            "border": 1,
+            "border_color": "#FED7AA",
+            "num_format": "#,##0",
+            "align": "center",
+        })
+        decimal_format = self.workbook.add_format({
+            "border": 1,
+            "border_color": "#FED7AA",
+            "num_format": "0.000",
+            "align": "center",
+        })
+        gap_format = self.workbook.add_format({
+            "border": 1,
+            "border_color": "#FED7AA",
+            "num_format": "+0.000;-0.000;0.000",
+            "align": "center",
+        })
+        p1_format = self.workbook.add_format({
+            "bold": True,
+            "font_color": "#7F1D1D",
+            "bg_color": "#FEE2E2",
+            "border": 1,
+            "border_color": "#FCA5A5",
+            "align": "center",
+        })
+        p2_format = self.workbook.add_format({
+            "bold": True,
+            "font_color": "#92400E",
+            "bg_color": "#FEF3C7",
+            "border": 1,
+            "border_color": "#FCD34D",
+            "align": "center",
+        })
+        p3_format = self.workbook.add_format({
+            "bold": True,
+            "font_color": "#075985",
+            "bg_color": "#E0F2FE",
+            "border": 1,
+            "border_color": "#7DD3FC",
+            "align": "center",
+        })
+        link_format = self.workbook.add_format({
+            "font_color": "#2563EB",
+            "underline": True,
+            "border": 1,
+            "border_color": "#FED7AA",
+            "align": "center",
+        })
+        ok_format = self.workbook.add_format({
+            "bold": True,
+            "font_color": "#166534",
+            "bg_color": "#DCFCE7",
+            "border": 1,
+            "border_color": "#86EFAC",
+            "align": "center",
+        })
+        warn_format = self.workbook.add_format({
+            "bold": True,
+            "font_color": "#92400E",
+            "bg_color": "#FEF3C7",
+            "border": 1,
+            "border_color": "#FCD34D",
+            "align": "center",
+        })
+        fail_format = self.workbook.add_format({
+            "bold": True,
+            "font_color": "#7F1D1D",
+            "bg_color": "#FEE2E2",
+            "border": 1,
+            "border_color": "#FCA5A5",
+            "align": "center",
+        })
+
+        worksheet.set_column("A:A", 11)
+        worksheet.set_column("B:B", 13)
+        worksheet.set_column("C:C", 16)
+        worksheet.set_column("D:D", 24)
+        worksheet.set_column("E:E", 30)
+        worksheet.set_column("F:F", 10)
+        worksheet.set_column("G:I", 12)
+        worksheet.set_column("J:J", 17)
+        worksheet.set_column("K:K", 42)
+        worksheet.set_column("L:L", 40)
+        worksheet.set_column("M:M", 18)
+        worksheet.set_column("N:N", 18)
+        worksheet.set_column("O:O", 18)
+        worksheet.set_column("P:P", 18)
+
+        worksheet.merge_range("A1:P1", "Action Dashboard - What To Change Next", title_format)
+        worksheet.merge_range(
+            "A2:P2",
+            "Single-page operational view: separated SIA 380/2 and SIA 4010 scores, current blockers, VE actions, evidence and owners.",
+            subtitle_format,
+        )
+
+        evidence = sia4010_results.get("evidence", {}) or {}
+        evidence_summary = evidence.get("summary", {}) if isinstance(evidence, dict) else {}
+        evidence_present = sum(1 for item in SIA4010_REQUIRED_EVIDENCE if self._has_sia4010_evidence(evidence, item))
+        alerts_count = self._count_alerts_by_severity(score_result.alerts)
+        priority_counts = Counter(str(group.get("priority", "")) for group in alert_groups)
+        blocked_tests = self._count_blocked_sia4010_tests(sia4010_results)
+        total_area = sum(self._safe_float(getattr(room, "area", 0.0), 0.0) or 0.0 for room in rooms_data)
+
+        self._write_dashboard_card(
+            worksheet,
+            "A4:B7",
+            "SIA 380/2 SCORE",
+            f"{float(score_result.compliance_score or 0.0):.1f}",
+            "Automated model-readiness indicator from direct SIA 380/2 checks.",
+            card_title_format,
+            card_value_format,
+            card_note_format,
+        )
+        self._write_dashboard_card(
+            worksheet,
+            "C4:D7",
+            "SIA 4010 OFFICIAL",
+            f"{float(sia4010_results.get('score', 0.0) or 0.0):.1f}",
+            "Official validation score remains zero until reviewed test evidence is present.",
+            card_title_format,
+            card_value_format,
+            card_note_format,
+        )
+        self._write_dashboard_card(
+            worksheet,
+            "E4:F7",
+            "4010 EVIDENCE",
+            f"{evidence_present}/{len(SIA4010_REQUIRED_EVIDENCE)}",
+            "Detected official evidence families in sia4010_evidence/.",
+            card_title_format,
+            card_value_format,
+            card_note_format,
+        )
+        self._write_dashboard_card(
+            worksheet,
+            "G4:H7",
+            "MODEL HEALTH",
+            f"{float(score_result.health_score or 0.0):.1f}",
+            "Data completeness and consistency indicator.",
+            card_title_format,
+            card_value_format,
+            card_note_format,
+        )
+        self._write_dashboard_card(
+            worksheet,
+            "I4:J7",
+            "P1 / P2 / P3",
+            f"{priority_counts.get('P1', 0)} / {priority_counts.get('P2', 0)} / {priority_counts.get('P3', 0)}",
+            "Grouped actions by priority.",
+            card_title_format,
+            card_value_format,
+            card_note_format,
+        )
+        self._write_dashboard_card(
+            worksheet,
+            "K4:L7",
+            "SIA 4010 TESTS",
+            f"{blocked_tests} blocked",
+            "Tests blocked until official evidence and reviewer acceptance are complete.",
+            card_title_format,
+            card_value_format,
+            card_note_format,
+        )
+        self._write_dashboard_card(
+            worksheet,
+            "M4:N7",
+            "ROOMS / AREA",
+            f"{len(rooms_data)} / {total_area:,.1f}",
+            "Thermal rooms and m2 extracted from VE.",
+            card_title_format,
+            card_value_format,
+            card_note_format,
+        )
+        self._write_dashboard_card(
+            worksheet,
+            "O4:P7",
+            "HIGH + CRITICAL",
+            f"{alerts_count.get('Critical', 0) + alerts_count.get('High', 0)}",
+            "Blocking or near-blocking findings.",
+            card_title_format,
+            card_value_format,
+            card_note_format,
+        )
+
+        worksheet.merge_range("A9:P10", self._dashboard_verdict(score_result, sia4010_results, rooms_data), muted_format)
+
+        worksheet.merge_range("A12:G12", "SIA 380/2 Model Scores", section_format)
+        worksheet.write_row("A13", ["Domain", "Score", "Meaning"], header_format)
+        sia3802_rows = self._action_dashboard_sia3802_score_rows(score_result)
+        for row_index, row_values in enumerate(sia3802_rows, start=13):
+            worksheet.write(row_index, 0, row_values[0], cell_format)
+            worksheet.write(row_index, 1, row_values[1], score_format)
+            worksheet.write(row_index, 2, row_values[2], cell_format)
+        if sia3802_rows:
+            worksheet.conditional_format(13, 1, 12 + len(sia3802_rows), 1, {
+                "type": "data_bar",
+                "bar_color": "#22C55E",
+                "min_type": "num",
+                "min_value": 0,
+                "max_type": "num",
+                "max_value": 100,
+            })
+
+        worksheet.merge_range("I12:P12", "SIA 4010 Official Validation Scores", section_format)
+        worksheet.write_row("I13", ["Area / test", "Score", "Status / evidence"], header_format)
+        sia4010_rows = self._action_dashboard_sia4010_score_rows(score_result, sia4010_results)
+        for row_index, row_values in enumerate(sia4010_rows, start=13):
+            worksheet.write(row_index, 8, row_values[0], cell_format)
+            worksheet.write(row_index, 9, row_values[1], score_format)
+            worksheet.write(row_index, 10, row_values[2], cell_format)
+        if sia4010_rows:
+            worksheet.conditional_format(13, 9, 12 + len(sia4010_rows), 9, {
+                "type": "data_bar",
+                "bar_color": "#F97316",
+                "min_type": "num",
+                "min_value": 0,
+                "max_type": "num",
+                "max_value": 100,
+            })
+
+        worksheet.merge_range("A22:P22", "Detailed Action Matrix - Change In VE Or Provide Evidence", section_format)
+        headers = [
+            "Priority",
+            "Standard",
+            "Domain",
+            "Construction / scope",
+            "Rule",
+            "Item score",
+            "Current",
+            "Limit",
+            "Gap",
+            "Status",
+            "What to change / do",
+            "Evidence needed",
+            "Owner",
+            "Issue count",
+            "Detail sheet",
+            "Evidence sample",
+        ]
+        start_row = 22
+        worksheet.write_row(start_row, 0, headers, header_format)
+
+        row = start_row + 1
+        for group in alert_groups[:24]:
+            rule = str(group.get("rule", "") or "")
+            current_value, limit_value, gap_value = self._action_dashboard_values_for_group(group, sia4010_results)
+            item_score = self._action_item_score_for_group(group, sia4010_results)
+            priority = str(group.get("priority", "") or "")
+            detail_sheet = self._detail_sheet_for_alert_group(group)
+
+            priority_format = p1_format if priority == "P1" else (p2_format if priority == "P2" else p3_format)
+            status_text = self._status_for_alert_group(group)
+            status_format = self._action_status_format(item_score, ok_format, warn_format, fail_format)
+
+            worksheet.write(row, 0, priority, priority_format)
+            worksheet.write(row, 1, self._standard_for_alert_group(group), cell_format)
+            worksheet.write(row, 2, group.get("category", ""), cell_format)
+            worksheet.write(row, 3, group.get("construction", ""), cell_format)
+            worksheet.write(row, 4, rule, cell_format)
+            worksheet.write(row, 5, item_score, score_format)
+            self._write_optional_number(worksheet, row, 6, current_value, decimal_format, cell_format)
+            self._write_optional_number(worksheet, row, 7, limit_value, decimal_format, cell_format)
+            self._write_optional_number(worksheet, row, 8, gap_value, gap_format, cell_format)
+            worksheet.write(row, 9, status_text, status_format)
+            worksheet.write(row, 10, self._action_for_alert_group(group), cell_format)
+            worksheet.write(row, 11, self._p1_evidence_needed_for_group(group), cell_format)
+            worksheet.write(row, 12, self._p1_owner_for_group(group), cell_format)
+            worksheet.write(row, 13, int(group.get("count", 0) or 0), number_format)
+            if detail_sheet:
+                worksheet.write_url(row, 14, f"internal:'{detail_sheet}'!A1", link_format, string=detail_sheet)
+            else:
+                worksheet.write(row, 14, "", cell_format)
+            worksheet.write(row, 15, "; ".join(group.get("evidence_samples", [])[:2]), cell_format)
+            worksheet.set_row(row, 48)
+            row += 1
+
+        if not alert_groups:
+            worksheet.merge_range(row, 0, row, len(headers) - 1, "No action item generated from current alerts.", cell_format)
+            row += 1
+
+        if row > start_row + 1:
+            worksheet.conditional_format(start_row + 1, 5, row - 1, 5, {
+                "type": "data_bar",
+                "bar_color": "#F59E0B",
+                "min_type": "num",
+                "min_value": 0,
+                "max_type": "num",
+                "max_value": 100,
+            })
+            worksheet.autofilter(start_row, 0, row - 1, len(headers) - 1)
+
+        next_row = row + 1
+        worksheet.merge_range(next_row, 0, next_row, 7, "Most important next step", section_format)
+        worksheet.merge_range(
+            next_row + 1,
+            0,
+            next_row + 3,
+            7,
+            self._action_dashboard_next_step(alert_groups, evidence_summary, dynamic_results),
+            muted_format,
+        )
+        worksheet.merge_range(next_row, 8, next_row, 15, "Safe wording", section_format)
+        worksheet.merge_range(
+            next_row + 1,
+            8,
+            next_row + 3,
+            15,
+            "Use this workbook as a professional SIA 380/2 and SIA 4010 readiness report. Do not claim final SIA compliance or SIA 4010 validation until model blockers, evidence files and reviewer acceptance are complete.",
+            muted_format,
+        )
 
     def _write_client_summary_xlsxwriter(
         self,
@@ -788,23 +1445,26 @@ class ExcelReportGenerator:
         })
 
         rows = self._build_facade_glazing_rows(alert_groups, rooms_data)
-        fail_rows = sum(1 for row in rows if row["status"] == "FAIL")
+        reference_deviation_rows = sum(
+            1 for row in rows
+            if "REFERENCE_DEVIATION" in {row["uw_status"], row["g_status"]}
+        )
         missing_rows = sum(1 for row in rows if row.get("missing_evidence") not in (None, "", "None"))
 
         worksheet.merge_range("A1:N1", "Facade Glazing Review - SIA 380/2 Action Sheet", title_format)
         worksheet.merge_range(
             "A2:N4",
             (
-                "Construction-level view for facade/glazing remediation. This sheet converts repeated opening alerts "
-                "into an owner-ready action list: confirm VE solar-factor semantics, provide EN 410 / SHGC mapping, "
-                "document shading control and frame fraction, then update VE or attach auditable evidence."
+                "Construction-level view for facade/glazing review. Table 2 values are reference-project inputs, "
+                "not standalone component compliance limits. The sheet therefore separates reference deviations "
+                "from genuinely missing EN 410, shading-control or active g_total evidence."
             ),
             note_format,
         )
         worksheet.write("A6", "Constructions", header_format)
         worksheet.write("B6", len(rows), cell_format)
-        worksheet.write("C6", "Failing g rows", header_format)
-        worksheet.write("D6", fail_rows, cell_format)
+        worksheet.write("C6", "Reference-deviation rows", header_format)
+        worksheet.write("D6", reference_deviation_rows, cell_format)
         worksheet.write("E6", "Rows missing evidence", header_format)
         worksheet.write("F6", missing_rows, cell_format)
         worksheet.write("G6", "SIA source", header_format)
@@ -818,8 +1478,8 @@ class ExcelReportGenerator:
             "Avg g",
             "Max g",
             "g gap",
-            "Uw status",
-            "g status",
+            "Uw reference status",
+            "g reference status",
             "Evidence status",
             "Missing evidence",
             "Recommended action",
@@ -835,10 +1495,8 @@ class ExcelReportGenerator:
 
         for row_index, row_data in enumerate(rows, start=8):
             status_format = (
-                fail_format
-                if row_data["status"] == "FAIL"
-                else partial_format
-                if row_data["status"] == "MISSING_EVIDENCE"
+                partial_format
+                if row_data["status"] in {"MISSING_EVIDENCE", "REFERENCE_DEVIATION"}
                 else pass_format
             )
             worksheet.write(row_index, 0, row_data["construction"], cell_format)
@@ -848,8 +1506,8 @@ class ExcelReportGenerator:
             self._write_optional_number(worksheet, row_index, 4, row_data["avg_g"], number_format, cell_format)
             self._write_optional_number(worksheet, row_index, 5, row_data["max_g"], number_format, cell_format)
             self._write_optional_number(worksheet, row_index, 6, row_data["g_gap"], number_format, cell_format)
-            uw_format = fail_format if row_data["uw_status"] == "FAIL" else partial_format if row_data["uw_status"] == "MISSING" else pass_format
-            g_format = fail_format if row_data["g_status"] == "FAIL" else partial_format if row_data["g_status"] == "MISSING" else pass_format
+            uw_format = partial_format if row_data["uw_status"] in {"MISSING", "REFERENCE_DEVIATION"} else pass_format
+            g_format = partial_format if row_data["g_status"] in {"MISSING", "REFERENCE_DEVIATION"} else pass_format
             worksheet.write(row_index, 7, row_data["uw_status"], uw_format)
             worksheet.write(row_index, 8, row_data["g_status"], g_format)
             worksheet.write(row_index, 9, row_data["status"], status_format)
@@ -902,26 +1560,26 @@ class ExcelReportGenerator:
         justified_format = self.workbook.add_format({"bold": True, "font_color": "#1E3A8A", "bg_color": "#DBEAFE", "border": 1, "align": "center", "text_wrap": True})
 
         rows = self._build_frame_fraction_rows(rooms_data)
-        failing_rows = sum(1 for row in rows if row["status"] == "FAIL")
+        failing_rows = sum(1 for row in rows if row["status"] == "REFERENCE_DEVIATION")
         missing_rows = sum(1 for row in rows if row["status"] == "MISSING")
 
         worksheet.merge_range("A1:L1", "Frame Fraction Audit - SIA 380/2 Table 2", title_format)
         worksheet.merge_range(
             "A2:L4",
             (
-                "Construction-level audit for window frame fraction ff. The SIA readiness limit is kept as "
-                "ff <= 0.25; rows above the limit require either a corrected VE construction/frame split "
-                "or auditable facade evidence/reference-calculation justification."
+                "Construction-level comparison of window frame fraction ff with the SIA 380/2 table 2 "
+                "reference-project value. A deviation remains visible for the global project/reference calculation; "
+                "it is not a standalone component-compliance failure."
             ),
             note_format,
         )
         worksheet.write("A6", "Constructions", header_format)
         worksheet.write("B6", len(rows), cell_format)
-        worksheet.write("C6", "Failing rows", header_format)
+        worksheet.write("C6", "Reference deviations", header_format)
         worksheet.write("D6", failing_rows, cell_format)
         worksheet.write("E6", "Missing rows", header_format)
         worksheet.write("F6", missing_rows, cell_format)
-        worksheet.write("G6", "Limit", header_format)
+        worksheet.write("G6", "Reference value", header_format)
         worksheet.write("H6", SIA3802_LIMIT_VALUES["window_frame_fraction"], number_format)
 
         headers = [
@@ -930,8 +1588,8 @@ class ExcelReportGenerator:
             "Area m2",
             "Avg frame fraction",
             "Max frame fraction",
-            "Limit",
-            "Failing windows",
+            "Reference value",
+            "Deviation windows",
             "Missing values",
             "Status",
             "Action",
@@ -948,8 +1606,8 @@ class ExcelReportGenerator:
             status_format = (
                 justified_format
                 if row_data["status"] == "JUSTIFIED_BY_EVIDENCE"
-                else fail_format
-                if row_data["status"] == "FAIL"
+                else partial_format
+                if row_data["status"] == "REFERENCE_DEVIATION"
                 else partial_format
                 if row_data["status"] == "MISSING"
                 else pass_format
@@ -1015,26 +1673,27 @@ class ExcelReportGenerator:
         justified_format = self.workbook.add_format({"bold": True, "font_color": "#1E3A8A", "bg_color": "#DBEAFE", "border": 1, "align": "center", "text_wrap": True})
 
         rows = self._build_envelope_u_rows(rooms_data)
-        failing_rows = sum(1 for row in rows if row["status"] == "FAIL")
+        failing_rows = sum(1 for row in rows if row["status"] == "REFERENCE_DEVIATION")
         missing_rows = sum(1 for row in rows if row["status"] == "MISSING")
 
         worksheet.merge_range("A1:L1", "Envelope U-Value Review - SIA 380/2 Table 3", title_format)
         worksheet.merge_range(
             "A2:L4",
             (
-                "Construction-level envelope review for external walls, roofs and ground floors. "
-                "Rows above the limit require a VE construction update or a documented full SIA 380/2 reference-calculation justification."
+                "Construction-level comparison for external walls, roofs and ground floors. Table 3 values are "
+                "reference-project inputs; deviations remain visible for the global comparison and are not "
+                "standalone component-compliance failures."
             ),
             note_format,
         )
         worksheet.write("A6", "Rows", header_format)
         worksheet.write("B6", len(rows), cell_format)
-        worksheet.write("C6", "Failing rows", header_format)
+        worksheet.write("C6", "Reference deviations", header_format)
         worksheet.write("D6", failing_rows, cell_format)
         worksheet.write("E6", "Missing rows", header_format)
         worksheet.write("F6", missing_rows, cell_format)
         worksheet.write("G6", "Source", header_format)
-        worksheet.merge_range("H6:L6", "SIA 380/2:2022 FR, table 3 envelope U-value limits", cell_format)
+        worksheet.merge_range("H6:L6", "SIA 380/2:2022 FR, table 3 reference-project U-values", cell_format)
 
         headers = [
             "Type",
@@ -1043,7 +1702,7 @@ class ExcelReportGenerator:
             "Net area m2",
             "Avg U",
             "Max U",
-            "Limit",
+            "Reference value",
             "Gap",
             "Status",
             "Action",
@@ -1060,8 +1719,8 @@ class ExcelReportGenerator:
             status_format = (
                 justified_format
                 if row_data["status"] == "JUSTIFIED_BY_EVIDENCE"
-                else fail_format
-                if row_data["status"] == "FAIL"
+                else partial_format
+                if row_data["status"] == "REFERENCE_DEVIATION"
                 else partial_format
                 if row_data["status"] == "MISSING"
                 else pass_format
@@ -1180,7 +1839,14 @@ class ExcelReportGenerator:
 
         rows = self._build_ve_g_values_audit_rows(rooms_data)
         proven_rows = sum(1 for row in rows if row["g_proof_status"] == "PROVES_CDB_G_IS_NOT_EN410")
-        calculation_rows = sum(1 for row in rows if row["g_total_status"] == "CALCULATION_REQUIRED")
+        action_rows = sum(
+            1
+            for row in rows
+            if row["g_total_status"] in {
+                "CALCULATION_REQUIRED",
+                "BASE_G_ABOVE_REFERENCE_NO_ACTIVE_SHADING",
+            }
+        )
 
         worksheet.merge_range("A1:R1", "VE G-Values Audit - VEScripts Traceability", title_format)
         worksheet.merge_range(
@@ -1198,8 +1864,8 @@ class ExcelReportGenerator:
         worksheet.write("B6", len(rows), cell_format)
         worksheet.write("C6", "CDB g != EN 410", header_format)
         worksheet.write("D6", proven_rows, cell_format)
-        worksheet.write("E6", "g_total calculations required", header_format)
-        worksheet.write("F6", calculation_rows, cell_format)
+        worksheet.write("E6", "Glazing / g_total actions", header_format)
+        worksheet.write("F6", action_rows, cell_format)
         worksheet.write("G6", "VEScripts source", header_format)
         worksheet.merge_range("H6:R6", "VEScripts.pdf pages 198-200: get_g_values() and documented CDB glazing/shade fields", cell_format)
 
@@ -1495,7 +2161,7 @@ class ExcelReportGenerator:
 
         # KPI
         worksheet.write("A4", "KPI", header_format)
-        worksheet.write("A5", "SIA 380/2 Automated Compliance Indicator:", subheader_format)
+        worksheet.write("A5", "SIA 380/2 Automated Precheck Indicator:", subheader_format)
         worksheet.write("B5", score_result.compliance_score, score_format)
         worksheet.write("A6", "Health Score (Model Quality):", subheader_format)
         worksheet.write("B6", score_result.health_score, score_format)
@@ -1511,11 +2177,11 @@ class ExcelReportGenerator:
         # Alert count
         alerts_count = self._count_alerts_by_severity(score_result.alerts)
         row += 1
-        worksheet.write(row, 0, "Nombre d'erreurs critiques:", subheader_format)
+        worksheet.write(row, 0, "Critical errors:", subheader_format)
         worksheet.write(row, 1, alerts_count.get("Critical", 0), cell_format)
-        worksheet.write(row + 1, 0, "Nombre d'avertissements:", subheader_format)
+        worksheet.write(row + 1, 0, "Warnings:", subheader_format)
         worksheet.write(row + 1, 1, alerts_count.get("High", 0) + alerts_count.get("Medium", 0), cell_format)
-        worksheet.write(row + 2, 0, "Nombre d'informations:", subheader_format)
+        worksheet.write(row + 2, 0, "Information alerts:", subheader_format)
         worksheet.write(row + 2, 1, alerts_count.get("Low", 0), cell_format)
 
         # Adjust column widths.
@@ -1548,11 +2214,11 @@ class ExcelReportGenerator:
 
         # SIA 4010 results
         worksheet.write(row + 1, 0, "SIA 4010", header_format)
-        worksheet.write(row + 2, 0, "Score Global", header_format)
+        worksheet.write(row + 2, 0, "Overall score", header_format)
         worksheet.write(row + 2, 1, sia4010_results.get("score", 0), cell_format)
 
         row += 3
-        worksheet.write(row, 0, "Tests SIA 4010", header_format)
+        worksheet.write(row, 0, "SIA 4010 tests", header_format)
         for test_name, test_data in sia4010_results.get("tests", {}).items():
             row += 1
             worksheet.write(row, 0, test_name, cell_format)
@@ -1571,6 +2237,132 @@ class ExcelReportGenerator:
         worksheet.set_column("A:A", 30)
         worksheet.set_column("B:B", 20)
 
+    def _write_reference_project_xlsxwriter(self, sia3802_results: Dict[str, Any]):
+        """Write the SIA 380/2 reference-project input specification.
+
+        The decisive SIA 380/2 conclusion compares the project demand with the
+        reference-project demand. This sheet is the deterministic build
+        instruction for that reference variant: per construction, the project
+        value, the normative reference value and its SIA locator.
+        """
+        worksheet = self.workbook.add_worksheet("REFERENCE PROJECT")
+
+        header_format = self.workbook.add_format(EXCEL_FORMATS["header"])
+        subheader_format = self.workbook.add_format(EXCEL_FORMATS["subheader"])
+        cell_format = self.workbook.add_format({"border": 1, "text_wrap": True, "valign": "top"})
+        note_format = self.workbook.add_format({"border": 1, "text_wrap": True, "valign": "top", "bg_color": "#EAF3F8"})
+        number_format = self.workbook.add_format({"border": 1, "num_format": "0.000", "valign": "top"})
+        integer_format = self.workbook.add_format({"border": 1, "num_format": "#,##0", "valign": "top"})
+        ok_format = self.workbook.add_format({"bg_color": "#E2EFDA", "font_color": "#375623", "border": 1, "bold": True})
+        blocked_format = self.workbook.add_format({"bg_color": "#FDECEA", "font_color": "#C00000", "border": 1, "bold": True})
+        warn_format = self.workbook.add_format({"bg_color": "#FFF2CC", "font_color": "#7F6000", "border": 1, "bold": True})
+
+        specification = sia3802_results.get("reference_project", {}) or {}
+        substitutions = specification.get("substitutions", []) or []
+        status = str(specification.get("status") or "NOT_CHECKABLE")
+
+        worksheet.merge_range("A1:H1", "SIA 380/2 Reference-Project Input Specification", header_format)
+        worksheet.merge_range(
+            "A2:H3",
+            (
+                "The decisive SIA 380/2 conclusion compares the project demand with the reference-project "
+                "demand. This sheet lists, per construction, the substitution required to build that "
+                "reference variant. It is NOT a compliance conclusion: the reference demand still requires "
+                "a VE/ApacheSim run and the project/reference comparison still requires reviewer acceptance."
+            ),
+            note_format,
+        )
+
+        status_format = {
+            "READY_FOR_REFERENCE_RUN": ok_format,
+            "BLOCKED_INCOMPLETE_INPUTS": blocked_format,
+        }.get(status, warn_format)
+        worksheet.write("A5", "Specification status", subheader_format)
+        worksheet.write("B5", status, status_format)
+        worksheet.write("A6", "Substitutions listed", subheader_format)
+        worksheet.write("B6", len(substitutions), integer_format)
+        worksheet.write("A7", "Blockers", subheader_format)
+        worksheet.write("B7", len(specification.get("blockers", []) or []), integer_format)
+
+        headers = [
+            "Parameter",
+            "Construction / scope",
+            "Element type",
+            "Project value",
+            "Reference value",
+            "Unit",
+            "Elements",
+            "Status",
+            "SIA source",
+        ]
+        start_row = 9
+        worksheet.write_row(start_row, 0, headers, header_format)
+        row = start_row + 1
+        for item in substitutions:
+            item_status = str(item.get("status") or "")
+            worksheet.write(row, 0, item.get("parameter", ""), cell_format)
+            worksheet.write(row, 1, item.get("scope", ""), cell_format)
+            worksheet.write(row, 2, item.get("element_type", ""), cell_format)
+            self._write_optional_number(worksheet, row, 3, item.get("project_value"), number_format, cell_format)
+            self._write_optional_number(worksheet, row, 4, item.get("reference_value"), number_format, cell_format)
+            worksheet.write(row, 5, item.get("unit", ""), cell_format)
+            worksheet.write(row, 6, item.get("affected_elements", 0), integer_format)
+            worksheet.write(
+                row,
+                7,
+                item_status,
+                ok_format if item_status == "SUBSTITUTABLE" else blocked_format,
+            )
+            worksheet.write(row, 8, item.get("source", ""), cell_format)
+            row += 1
+        if not substitutions:
+            worksheet.merge_range(
+                row, 0, row, 8,
+                "No external construction was available for substitution.",
+                cell_format,
+            )
+            row += 1
+
+        worksheet.autofilter(start_row, 0, max(start_row, row - 1), len(headers) - 1)
+        worksheet.freeze_panes(start_row + 1, 0)
+
+        blockers_start = row + 2
+        worksheet.write(blockers_start, 0, "Blockers before the reference run", header_format)
+        blocker_row = blockers_start + 1
+        for blocker in specification.get("blockers", []) or []:
+            worksheet.merge_range(blocker_row, 0, blocker_row, 8, blocker, cell_format)
+            blocker_row += 1
+        if not (specification.get("blockers") or []):
+            worksheet.merge_range(
+                blocker_row, 0, blocker_row, 8,
+                "No blocker: every listed construction can be substituted deterministically.",
+                ok_format,
+            )
+            blocker_row += 1
+
+        notes_start = blocker_row + 1
+        for note in specification.get("notes", []) or []:
+            worksheet.merge_range(notes_start, 0, notes_start, 8, note, note_format)
+            notes_start += 1
+
+        worksheet.set_column("A:A", 32)
+        worksheet.set_column("B:B", 34)
+        worksheet.set_column("C:C", 16)
+        worksheet.set_column("D:E", 16)
+        worksheet.set_column("F:F", 12)
+        worksheet.set_column("G:G", 11)
+        worksheet.set_column("H:H", 24)
+        worksheet.set_column("I:I", 46)
+
+    @staticmethod
+    def _write_optional_number(worksheet, row, column, value, number_format, text_format):
+        """Write a numeric cell, or a readable placeholder when the value is absent."""
+
+        if isinstance(value, (int, float)) and not isinstance(value, bool):
+            worksheet.write(row, column, value, number_format)
+        else:
+            worksheet.write(row, column, "Not available", text_format)
+
     def _write_sia_requirements_xlsxwriter(self, sia3802_results: Dict[str, Any], sia4010_results: Dict[str, Any]):
         """Write the auditable SIA requirement matrix used by the checker."""
         worksheet = self.workbook.add_worksheet("SIA REQUIREMENTS")
@@ -1584,17 +2376,18 @@ class ExcelReportGenerator:
         partial_format = self.workbook.add_format({"bg_color": "#FFF2CC", "font_color": "#7F6000", "border": 1, "bold": True})
         not_checkable_format = self.workbook.add_format({"bg_color": "#D9EAF7", "font_color": "#1F4E78", "border": 1, "bold": True})
 
-        worksheet.merge_range("A1:L1", "SIA 380/2 + SIA 4010 Requirement Matrix", header_format)
+        worksheet.merge_range("A1:M1", "SIA 380/2 + SIA 4010 Requirement Matrix", header_format)
         worksheet.merge_range(
-            "A2:L2",
+            "A2:M2",
             "This matrix lists criteria from the PDF/config sources, their automation status and the next action. "
             "It prevents non-verifiable data from being converted into a false PASS.",
             note_format,
         )
 
         all_alerts = list(sia3802_results.get("alerts", []) or []) + list(sia4010_results.get("alerts", []) or [])
+        rule_evaluations = sia3802_results.get("rule_evaluations", {}) or {}
         rows = [
-            self._build_requirement_matrix_row(requirement, all_alerts)
+            self._build_requirement_matrix_row(requirement, all_alerts, rule_evaluations)
             for requirement in SIA_COMPLIANCE_REQUIREMENT_MATRIX
         ]
         status_counts = Counter(row["status"] for row in rows)
@@ -1618,6 +2411,7 @@ class ExcelReportGenerator:
             "Standard",
             "Domain",
             "Requirement ID",
+            "Evaluated objects",
             "Criterion",
             "Limit",
             "Unit",
@@ -1644,12 +2438,13 @@ class ExcelReportGenerator:
             worksheet.write(row, 3, item["standard"], cell_format)
             worksheet.write(row, 4, item["domain"], cell_format)
             worksheet.write(row, 5, item["id"], cell_format)
-            worksheet.write(row, 6, item["criterion"], cell_format)
-            worksheet.write(row, 7, item["limit"], cell_format)
-            worksheet.write(row, 8, item["unit"], cell_format)
-            worksheet.write(row, 9, item["target"], cell_format)
-            worksheet.write(row, 10, item["source"], cell_format)
-            worksheet.write(row, 11, item["next_action"], cell_format)
+            worksheet.write(row, 6, item["evaluated_count"], number_format)
+            worksheet.write(row, 7, item["criterion"], cell_format)
+            worksheet.write(row, 8, item["limit"], cell_format)
+            worksheet.write(row, 9, item["unit"], cell_format)
+            worksheet.write(row, 10, item["target"], cell_format)
+            worksheet.write(row, 11, item["source"], cell_format)
+            worksheet.write(row, 12, item["next_action"], cell_format)
             worksheet.set_row(row, 52)
             row += 1
 
@@ -1658,10 +2453,11 @@ class ExcelReportGenerator:
         worksheet.set_column("A:A", 18)
         worksheet.set_column("B:C", 16)
         worksheet.set_column("D:F", 20)
-        worksheet.set_column("G:G", 42)
-        worksheet.set_column("H:J", 18)
-        worksheet.set_column("K:K", 42)
-        worksheet.set_column("L:L", 54)
+        worksheet.set_column("G:G", 16)
+        worksheet.set_column("H:H", 42)
+        worksheet.set_column("I:K", 18)
+        worksheet.set_column("L:L", 42)
+        worksheet.set_column("M:M", 54)
 
     def _write_sia_data_coverage_xlsxwriter(
         self,
@@ -2133,6 +2929,31 @@ class ExcelReportGenerator:
             ("Average relative humidity (%)", dynamic_results.get("average_relative_humidity_percent")),
             ("Occupied hours > 26 C", dynamic_results.get("occupied_hours_above_26")),
             ("Occupied hours > 27 C", dynamic_results.get("occupied_hours_above_27")),
+            ("Maximum occupied hours above SIA 180 upper curve", dynamic_results.get("max_occupied_hours_above_sia180_upper")),
+            ("Maximum occupied hours below SIA 180 lower curve", dynamic_results.get("max_occupied_hours_below_sia180_lower")),
+            ("Rooms with a complete annual comfort series", dynamic_results.get("annual_comfort_room_count")),
+            ("Reviewed building status", dynamic_results.get("building_status") or "UNSPECIFIED"),
+            ("Building-status evidence", dynamic_results.get("building_status_source") or "Not provided"),
+            ("Project metadata status", dynamic_results.get("project_metadata_status") or "NOT_PROVIDED"),
+            ("Reviewed weather basis", dynamic_results.get("reviewed_weather_basis") or "Not provided"),
+            ("Reviewed weather file", dynamic_results.get("reviewed_weather_file") or "Not provided"),
+            ("Reviewed weather match", dynamic_results.get("reviewed_weather_match_status") or "NOT_CHECKABLE"),
+            ("Reviewed location", dynamic_results.get("reviewed_location") or "Not provided"),
+            ("Reviewed altitude (m)", dynamic_results.get("reviewed_altitude_m") or "Not provided"),
+            ("Global project/reference evidence", dynamic_results.get("global_reference_comparison_status") or "NOT_PROVIDED"),
+            (
+                "Reviewed global project value",
+                (dynamic_results.get("global_reference_comparison", {}) or {}).get("project_value_numeric"),
+            ),
+            (
+                "Reviewed global reference value",
+                (dynamic_results.get("global_reference_comparison", {}) or {}).get("reference_value_numeric"),
+            ),
+            (
+                "Reviewed global comparison unit",
+                (dynamic_results.get("global_reference_comparison", {}) or {}).get("unit") or "Not provided",
+            ),
+            ("Design-power result status", dynamic_results.get("design_power_status")),
             ("Notes", dynamic_results.get("notes") or "None"),
         ]
         worksheet.write("A4", "Metric", header_format)
@@ -2189,6 +3010,10 @@ class ExcelReportGenerator:
             "Average RH %",
             "Hours > 26 C",
             "Hours > 27 C",
+            "Hours above SIA 180 upper",
+            "Hours below SIA 180 lower",
+            "Annual comfort period complete",
+            "Comfort curve source",
             "Source notes",
         ]
         worksheet.write_row(start_row, 0, headers, header_format)
@@ -2216,7 +3041,11 @@ class ExcelReportGenerator:
                 self._write_optional_number(worksheet, row, 16, item.get("average_relative_humidity_percent"), number_format, cell_format)
                 self._write_optional_number(worksheet, row, 17, item.get("occupied_hours_above_26"), number_format, cell_format)
                 self._write_optional_number(worksheet, row, 18, item.get("occupied_hours_above_27"), number_format, cell_format)
-                worksheet.write(row, 19, item.get("source_notes", ""), cell_format)
+                self._write_optional_number(worksheet, row, 19, item.get("occupied_hours_above_sia180_upper"), number_format, cell_format)
+                self._write_optional_number(worksheet, row, 20, item.get("occupied_hours_below_sia180_lower"), number_format, cell_format)
+                worksheet.write(row, 21, "YES" if item.get("annual_comfort_period_complete") else "NO", cell_format)
+                worksheet.write(row, 22, item.get("comfort_curve_source", ""), cell_format)
+                worksheet.write(row, 23, item.get("source_notes", ""), cell_format)
                 row += 1
         else:
             worksheet.write(row, 0, "No room-level dynamic result was readable in this run.", cell_format)
@@ -2224,8 +3053,8 @@ class ExcelReportGenerator:
         worksheet.autofilter(start_row, 0, max(start_row, row - 1), len(headers) - 1)
         worksheet.freeze_panes(start_row + 1, 0)
         worksheet.set_column("A:B", 24)
-        worksheet.set_column("C:S", 16)
-        worksheet.set_column("T:T", 72)
+        worksheet.set_column("C:V", 16)
+        worksheet.set_column("W:X", 72)
 
     def _write_sia4010_readiness_xlsxwriter(self, sia4010_results: Dict[str, Any], rooms_data: List[Any]):
         """Write a SIA 4010 readiness matrix backed by the PDF traceability."""
@@ -2268,7 +3097,7 @@ class ExcelReportGenerator:
             ("Official evidence items required", len(SIA4010_REQUIRED_EVIDENCE)),
             ("Official test-result files", official_test_summary.get("result_file_count", 0)),
             ("Official test-result rows", official_test_summary.get("result_row_count", 0)),
-            ("Official validated tests", len(official_test_summary.get("validated_tests", []) or [])),
+            ("Tests with recorded PASS rows", len(official_test_summary.get("recorded_pass_tests", []) or [])),
             ("Official failed tests", len(official_test_summary.get("failed_tests", []) or [])),
         ]
         for offset, (label, value) in enumerate(kpis, start=5):
@@ -2680,8 +3509,15 @@ class ExcelReportGenerator:
             note_format,
         )
 
+        # Which class does THIS model's analysis actually rely on? Derived from
+        # the extracted model features; an undetermined feature is kept in the
+        # conservative class rather than assumed absent.
+        class_scope = sia4010_results.get("required_class_scope", {}) or {}
+
         worksheet.write("A5", "KPI", header_format)
         kpis = [
+            ("Class required by this model", class_scope.get("required_class") or "Not derived"),
+            ("Conservative class (incl. undetermined)", class_scope.get("conservative_class") or "Not derived"),
             ("Selected / detected class", selected_class),
             ("Classes covered by matrix", len(rows)),
             ("Average VE data readiness", avg_ve_readiness),
@@ -2708,6 +3544,38 @@ class ExcelReportGenerator:
             worksheet.write(summary_row, 4, count, integer_format)
             summary_row += 1
 
+        # Side panel: why this model requires that class (feature -> official test).
+        worksheet.write("G5", "Why this model requires that class", header_format)
+        worksheet.write_row(
+            "G6",
+            ["Model feature", "Detected", "Relies on official test", "Evidence"],
+            subheader_format,
+        )
+        scope_row = 6
+        for finding in class_scope.get("findings", []) or []:
+            state = str(finding.get("state", ""))
+            state_format = {
+                "PRESENT": ready_format,
+                "ABSENT": cell_format,
+                "UNDETERMINED": partial_format,
+            }.get(state, cell_format)
+            worksheet.write(scope_row, 6, finding.get("label", ""), cell_format)
+            worksheet.write(scope_row, 7, state, state_format)
+            worksheet.write(
+                scope_row,
+                8,
+                "{} - {}".format(
+                    finding.get("test_family", ""), finding.get("test_scope", "")
+                ),
+                cell_format,
+            )
+            worksheet.write(scope_row, 9, finding.get("evidence", ""), cell_format)
+            scope_row += 1
+        for note in class_scope.get("notes", []) or []:
+            worksheet.merge_range(scope_row, 6, scope_row, 9, note, note_format)
+            scope_row += 1
+        summary_row = max(summary_row, scope_row)
+
         start_row = max(summary_row + 2, 16)
         headers = [
             "Class",
@@ -2722,6 +3590,7 @@ class ExcelReportGenerator:
             "Status reason",
             "Next action",
             "Source",
+            "Automated band cross-check",
         ]
         worksheet.write_row(start_row, 0, headers, header_format)
 
@@ -2739,6 +3608,7 @@ class ExcelReportGenerator:
             worksheet.write(row, 9, item["status_reason"], cell_format)
             worksheet.write(row, 10, item["next_action"], cell_format)
             worksheet.write(row, 11, item["source"], cell_format)
+            worksheet.write(row, 12, item.get("band_crosscheck", "NOT_RUN"), cell_format)
             worksheet.set_row(row, 70)
             row += 1
 
@@ -2775,13 +3645,108 @@ class ExcelReportGenerator:
             worksheet.write(manifest_row_index, 8, "Copy templates/evidence/sia4010_class_validation_template.csv into sia4010_evidence/ and rename it for the project.", cell_format)
             manifest_row_index += 1
 
+        readiness_start = manifest_row_index + 2
+        worksheet.write(readiness_start, 0, "Variant-Level Class Readiness", header_format)
+        worksheet.write(
+            readiness_start,
+            1,
+            "VE-data readiness and official evidence are separate; neither column grants certification.",
+            note_format,
+        )
+        variant_headers = [
+            "Class",
+            "Variant",
+            "VE readiness",
+            "VE status",
+            "Official evidence status",
+            "Required identifiers",
+            "Identifier matches",
+            "Identifier mismatches",
+            "Present VE data",
+            "Missing VE data",
+            "Test object",
+            "Source",
+        ]
+        worksheet.write_row(readiness_start + 2, 0, variant_headers, subheader_format)
+        readiness_row = readiness_start + 3
+        class_readiness = sia4010_results.get("class_readiness", {}) or {}
+        for class_name, class_data in class_readiness.items():
+            for variant in class_data.get("variant_rows", []) or []:
+                ve_status = str(variant.get("ve_status") or "MISSING")
+                official_status = str(variant.get("official_status") or "NOT_CHECKABLE")
+                identifiers = ", ".join(
+                    f"{key}={value}"
+                    for key, value in (variant.get("system_identifiers", {}) or {}).items()
+                )
+                worksheet.write(readiness_row, 0, class_name, cell_format)
+                worksheet.write(readiness_row, 1, variant.get("variant", ""), cell_format)
+                worksheet.write(readiness_row, 2, variant.get("readiness_ratio", 0.0), percent_format)
+                worksheet.write(
+                    readiness_row,
+                    3,
+                    ve_status,
+                    self._sia4010_status_format(
+                        ve_status,
+                        ready_format,
+                        partial_format,
+                        missing_format,
+                        not_checkable_format,
+                        cell_format,
+                    ),
+                )
+                worksheet.write(
+                    readiness_row,
+                    4,
+                    official_status,
+                    self._sia4010_status_format(
+                        official_status,
+                        ready_format,
+                        partial_format,
+                        missing_format,
+                        not_checkable_format,
+                        cell_format,
+                    ),
+                )
+                worksheet.write(readiness_row, 5, identifiers, cell_format)
+                worksheet.write(
+                    readiness_row,
+                    6,
+                    self._compact_join(variant.get("matching_identifiers", []) or [], empty="None"),
+                    cell_format,
+                )
+                worksheet.write(
+                    readiness_row,
+                    7,
+                    self._compact_join(variant.get("mismatching_identifiers", []) or [], empty="None"),
+                    missing_format if variant.get("mismatching_identifiers") else ready_format,
+                )
+                worksheet.write(
+                    readiness_row,
+                    8,
+                    self._compact_join(variant.get("present_labels", []) or [], empty="None"),
+                    cell_format,
+                )
+                worksheet.write(
+                    readiness_row,
+                    9,
+                    self._compact_join(variant.get("missing_labels", []) or [], empty="None"),
+                    cell_format,
+                )
+                worksheet.write(readiness_row, 10, variant.get("object", ""), cell_format)
+                worksheet.write(readiness_row, 11, variant.get("source", ""), cell_format)
+                worksheet.set_row(readiness_row, 58)
+                readiness_row += 1
+        if readiness_row == readiness_start + 3:
+            worksheet.write(readiness_row, 0, "Variant readiness was not generated in this run.", cell_format)
+            worksheet.write(readiness_row, 4, "NOT_CHECKABLE", not_checkable_format)
+
         worksheet.freeze_panes(start_row + 1, 0)
         worksheet.set_column("A:A", 10)
         worksheet.set_column("B:C", 18)
         worksheet.set_column("D:E", 42)
         worksheet.set_column("F:F", 20)
         worksheet.set_column("G:G", 18)
-        worksheet.set_column("H:K", 44)
+        worksheet.set_column("H:L", 44)
         worksheet.set_column("L:L", 44)
 
     def _write_sia4010_software_register_xlsxwriter(self):
@@ -3060,25 +4025,46 @@ class ExcelReportGenerator:
         low_format = self.workbook.add_format({"bg_color": "#DEEAF1", "border": 1})
         cell_format = self.workbook.add_format({"border": 1})
 
+        note_format = self.workbook.add_format({
+            "italic": True, "font_color": "#64748B", "border": 1, "text_wrap": True,
+        })
+
         # Title
         worksheet.merge_range("A1:F1", "Alert List", header_format)
+        worksheet.merge_range(
+            "A2:F2",
+            "All CRITICAL and HIGH alerts are listed individually. Repetitive "
+            "lower-severity alerts of the same rule are capped for readability, "
+            "with a summary row for the remainder (see DATA QUALITY for full counts).",
+            note_format,
+        )
 
         # Header
         headers = ["Category", "Rule", "Description", "Severity", "Value / evidence", "Recommendation"]
         for col, header in enumerate(headers):
-            worksheet.write(2, col, header, header_format)
+            worksheet.write(3, col, header, header_format)
+        worksheet.freeze_panes(4, 0)
 
-        # Data
-        row = 3
-        for alert in alerts:
+        # Show blocking alerts in full; cap repetitive lower-severity rules so a
+        # single rule (e.g. SIA3802_FRAME_FRACTION x126) cannot drown the list.
+        cap_per_rule = 5
+        severity_rank = {
+            Severity.CRITICAL: 0, Severity.HIGH: 1, Severity.MEDIUM: 2, Severity.LOW: 3,
+        }
+        ordered = sorted(alerts, key=lambda a: severity_rank.get(a.severity, 4))
+        rule_totals = Counter(alert.rule for alert in alerts)
+        written_per_rule: Dict[str, int] = {}
+        row = 4
+        for alert in ordered:
+            always = alert.severity in (Severity.CRITICAL, Severity.HIGH)
+            written = written_per_rule.get(alert.rule, 0)
+            if not always and written >= cap_per_rule:
+                continue
             worksheet.write(row, 0, alert.category, cell_format)
             worksheet.write(row, 1, alert.rule, cell_format)
             worksheet.write(row, 2, alert.description, cell_format)
-            worksheet.write(row, 3, alert.severity.value, cell_format)
             worksheet.write(row, 4, self._format_alert_data(alert), cell_format)
             worksheet.write(row, 5, alert.recommendation, cell_format)
-
-            # Apply color formatting based on severity
             if alert.severity == Severity.CRITICAL:
                 worksheet.write(row, 3, alert.severity.value, critical_format)
             elif alert.severity == Severity.HIGH:
@@ -3087,7 +4073,22 @@ class ExcelReportGenerator:
                 worksheet.write(row, 3, alert.severity.value, medium_format)
             else:
                 worksheet.write(row, 3, alert.severity.value, low_format)
+            written_per_rule[alert.rule] = written + 1
             row += 1
+            if (
+                not always
+                and written_per_rule[alert.rule] == cap_per_rule
+                and rule_totals[alert.rule] > cap_per_rule
+            ):
+                remaining = rule_totals[alert.rule] - cap_per_rule
+                worksheet.merge_range(
+                    row, 0, row, 5,
+                    "... +{} more '{}' alerts of the same type (capped for readability)".format(
+                        remaining, alert.rule
+                    ),
+                    note_format,
+                )
+                row += 1
 
         # Set readable column widths.
         worksheet.set_column("A:A", 15)
@@ -3107,6 +4108,7 @@ class ExcelReportGenerator:
         warning_format = self.workbook.add_format(EXCEL_FORMATS["warning"])
         fail_format = self.workbook.add_format(EXCEL_FORMATS["fail"])
         percent_format = self.workbook.add_format({"border": 1, "num_format": "0.0%"})
+        uvalue_format = self.workbook.add_format({"border": 1, "num_format": "0.000"})
 
         severity_counts = self._count_alerts_by_severity(alerts)
         category_counts = Counter(alert.category for alert in alerts)
@@ -3180,7 +4182,7 @@ class ExcelReportGenerator:
             worksheet.write(row, 1, getattr(room, "name", ""), cell_format)
             worksheet.write(row, 2, float(getattr(room, "area", 0.0) or 0.0), cell_format)
             worksheet.write(row, 3, wwr, percent_format)
-            worksheet.write(row, 4, avg_u, cell_format)
+            worksheet.write(row, 4, avg_u, uvalue_format)
             worksheet.write(row, 5, "; ".join(comment), fail_format if comment else cell_format)
             row += 1
 
@@ -3224,6 +4226,9 @@ class ExcelReportGenerator:
         # Styles
         header_format = self.workbook.add_format(EXCEL_FORMATS["header"])
         cell_format = self.workbook.add_format({"border": 1})
+        number_format = self.workbook.add_format({"border": 1, "num_format": "#,##0.0"})
+        percent_format = self.workbook.add_format({"border": 1, "num_format": "0.0%"})
+        uvalue_format = self.workbook.add_format({"border": 1, "num_format": "0.000"})
 
         # Title
         worksheet.merge_range("A1:F1", "Room Data", header_format)
@@ -3238,10 +4243,10 @@ class ExcelReportGenerator:
         for room in rooms_data:
             worksheet.write(row, 0, room.id, cell_format)
             worksheet.write(row, 1, room.name, cell_format)
-            worksheet.write(row, 2, room.area, cell_format)
-            worksheet.write(row, 3, room.volume, cell_format)
-            worksheet.write(row, 4, self._calculate_wwr(room), cell_format)
-            worksheet.write(row, 5, self._calculate_average_u_value(room, "wall"), cell_format)
+            worksheet.write(row, 2, room.area, number_format)
+            worksheet.write(row, 3, room.volume, number_format)
+            worksheet.write(row, 4, self._calculate_wwr(room), percent_format)
+            worksheet.write(row, 5, self._calculate_average_u_value(room, "wall"), uvalue_format)
             row += 1
 
         # Set readable column widths.
@@ -3369,9 +4374,19 @@ class ExcelReportGenerator:
             return "MISSING", f"0/{total} {label} available."
 
         if key == "project_climate":
+            metadata_status = str(dynamic_results.get("project_metadata_status") or "NOT_PROVIDED").upper()
+            weather_match = str(dynamic_results.get("reviewed_weather_match_status") or "NOT_CHECKABLE").upper()
+            if metadata_status == "AVAILABLE" and weather_match == "MATCH":
+                return (
+                    "AVAILABLE",
+                    "Reviewer-approved project metadata is available and its weather file matches the active VE project weather.",
+                )
             active_project_status = preflight_status_by_check.get("Active VE project", "")
             if active_project_status == "PASS":
-                return "PARTIAL", "Active project detected; weather/climate basis still needs explicit confirmation."
+                return (
+                    "PARTIAL",
+                    f"Active project detected; metadata={metadata_status}, reviewed weather match={weather_match}.",
+                )
             return "MISSING", "No active project evidence in preflight checks."
         if key == "rooms":
             count = int(stats.get("rooms", 0) or 0)
@@ -3389,6 +4404,14 @@ class ExcelReportGenerator:
                 int(stats.get("surface_u_values", 0) or 0),
                 int(stats.get("external_surfaces", 0) or 0),
                 "external surface U-values",
+            )
+        if key == "thermal_bridges":
+            # VE envelope U-values do not prove that junction/point losses have
+            # been included.  Keep this evidence requirement fail-closed until
+            # a dedicated, reviewed thermal-bridge dataset is ingested.
+            return (
+                "MISSING",
+                "No reviewed linear psi / point chi thermal-bridge schedule is ingested; the configured zero remains a placeholder, not evidence.",
             )
         if key == "window_u_values":
             return availability(
@@ -3445,8 +4468,33 @@ class ExcelReportGenerator:
             if type_count or control_count or g_total_count or g_total_not_required:
                 return "PARTIAL", evidence_text
             return "MISSING", evidence_text
-        if key in {"schedules", "ventilation_control", "ahu_heat_recovery", "cooling_efficiency", "heating_efficiency"}:
-            return "MISSING", "Not extracted by the current IESVE API mapping; external evidence or a new extractor is required."
+        if key == "schedules":
+            return availability(
+                int(stats.get("rooms_with_daily_profile_hours", 0) or 0),
+                int(stats.get("rooms", 0) or 0),
+                "rooms with resolved representative daily profile hours",
+            )
+        if key == "ventilation_control":
+            return availability(
+                int(stats.get("rooms_with_ventilation_control", 0) or 0),
+                int(stats.get("rooms_with_ventilation", 0) or 0),
+                "ventilated rooms with system/control classification",
+            )
+        if key == "ahu_heat_recovery":
+            count = int(stats.get("rooms_with_ahu_identifiers", 0) or 0)
+            if count:
+                return "PARTIAL", f"{count} room(s) expose fan/recovery/humidification identifiers; pressure-drop, leakage and verified efficiency evidence remains external."
+            return "MISSING", "No AHU fan/recovery/humidification identifier was extracted."
+        if key == "cooling_efficiency":
+            count = int(stats.get("cooling_systems_with_efficiency", 0) or 0)
+            if count:
+                return "PARTIAL", f"{count} cooling system(s) expose class, capacity and EER/SEER; Table 7 EER+ and part-load evidence remains conditional."
+            return "MISSING", "No cooling system exposes a complete class/capacity/EER-or-SEER tuple."
+        if key == "heating_efficiency":
+            count = int(stats.get("heating_systems_with_efficiency", 0) or 0)
+            if count:
+                return "PARTIAL", f"{count} heating system(s) expose heat-pump class, capacity and SCOP; delegated evidence remains conditional."
+            return "MISSING", "No heating system exposes a complete heat-pump class/capacity/SCOP tuple."
         if key == "infiltration":
             rooms = int(stats.get("rooms", 0) or 0)
             converted = int(stats.get("rooms_with_infiltration_m3_h_m2", 0) or 0)
@@ -3492,17 +4540,29 @@ class ExcelReportGenerator:
                 return "PARTIAL", f"{aps_count} APS file(s) detected; selected {selected}; room results incomplete."
             return "NOT_CHECKABLE", dynamic_results.get("notes") or f"{aps_count} APS file(s) detected; ResultsReader did not provide room results."
         if key == "hourly_temperatures":
-            return availability(
-                int(stats.get("dynamic_temperature_rows", 0) or 0),
-                int(stats.get("dynamic_room_rows", 0) or 0),
-                "dynamic room temperature/occupancy indicators",
-            )
+            room_rows = int(stats.get("dynamic_room_rows", 0) or 0)
+            temperature_rows = int(stats.get("dynamic_temperature_rows", 0) or 0)
+            complete_rows = int(stats.get("dynamic_annual_comfort_rows", 0) or 0)
+            if room_rows > 0 and complete_rows == room_rows:
+                return "AVAILABLE", f"{complete_rows}/{room_rows} room(s) have complete annual temperature, occupancy and SIA 180 limit-curve series."
+            if temperature_rows > 0:
+                return (
+                    "PARTIAL",
+                    f"{temperature_rows}/{room_rows} room(s) expose temperature/occupancy indicators, but only {complete_rows}/{room_rows} have complete annual SIA 180 comfort series.",
+                )
+            return "MISSING", "No usable APS room temperature/occupancy series was extracted."
         if key == "heating_cooling_demands":
-            return availability(
-                int(stats.get("dynamic_demand_rows", 0) or 0),
-                int(stats.get("dynamic_room_rows", 0) or 0),
-                "dynamic heating/cooling demand indicators",
-            )
+            room_rows = int(stats.get("dynamic_room_rows", 0) or 0)
+            heating_rows = int(stats.get("dynamic_heating_rows", 0) or 0)
+            cooling_rows = int(stats.get("dynamic_cooling_rows", 0) or 0)
+            if room_rows > 0 and heating_rows == room_rows and cooling_rows == room_rows:
+                return "AVAILABLE", f"Heating and cooling demand series are available for all {room_rows} APS room(s)."
+            if heating_rows or cooling_rows:
+                return (
+                    "PARTIAL",
+                    f"Heating demand is available for {heating_rows}/{room_rows} room(s); cooling demand is available for {cooling_rows}/{room_rows} room(s).",
+                )
+            return "MISSING", "No usable APS room heating or cooling demand series was extracted."
 
         evidence_prefix = "evidence_"
         if key.startswith(evidence_prefix):
@@ -3605,8 +4665,8 @@ class ExcelReportGenerator:
 
             if class_status == "READY_FOR_OFFICIAL_REVIEW":
                 next_action = "Submit the official evidence package for reviewer/sub-commission acceptance."
-            elif class_status == "VALIDATED":
-                next_action = "Keep the official validation evidence and version traceability with the project archive."
+            elif class_status == "OFFICIAL_RESULTS_RECORDED":
+                next_action = "Obtain and archive the SIA sub-commission attestation before using any validated or certified claim."
             elif class_status == "NOT_REQUESTED":
                 next_action = f"Select class {class_name} only if this class is intended for the project claim."
             elif class_status == "CLASS_NOT_SELECTED":
@@ -3628,6 +4688,9 @@ class ExcelReportGenerator:
                 "status_reason": class_data.get("status_reason", ""),
                 "next_action": next_action,
                 "source": class_data.get("source") or details.get("source", ""),
+                "band_crosscheck": (class_data.get("band_crosscheck", {}) or {}).get(
+                    "summary", "NOT_RUN"
+                ),
             })
         return rows
 
@@ -3652,7 +4715,7 @@ class ExcelReportGenerator:
                 ("solar protection type/category documented", stats["solar_protection_types"] > 0),
                 ("solar protection control strategy documented", stats["solar_protection_controls"] > 0),
                 (
-                    "active glazing-plus-shading g_total documented when needed for the SIA g-limit",
+                    "active glazing-plus-shading g_total documented when needed for the table 2 reference-input comparison",
                     stats["external_windows"] > 0
                     and (
                         stats["g_total_values"] > 0
@@ -3663,8 +4726,8 @@ class ExcelReportGenerator:
             ],
             "test_3": [
                 ("lighting power extracted", stats["rooms_with_lighting"] > 0),
-                ("daylight control strategy documented", False),
-                ("SIA 387/4 lighting control type documented", False),
+                ("daylight control strategy documented", stats["daylight_control_evidence"] > 0),
+                ("SIA 387/4 lighting control type documented", stats["lighting_control_mappings"] > 0),
                 ("lighting energy outputs available", stats["dynamic_lighting_rows"] > 0 or stats["lighting_energy_available"]),
                 ("official test 3 evaluation file attached", False),
             ],
@@ -3679,23 +4742,34 @@ class ExcelReportGenerator:
             "test_5": [
                 ("HVAC/AHU systems extracted", stats["rooms_with_hvac"] > 0),
                 ("ventilation data extracted", stats["rooms_with_ventilation"] > 0),
-                ("fan control identifier documented", False),
-                ("heat/moisture recovery type documented", False),
-                ("humidifier type/control documented", False),
+                ("fan control identifier documented", stats["fan_controls"] > 0),
+                ("heat/moisture recovery type documented", stats["heat_recovery_types"] > 0),
+                ("humidifier type/control documented", stats["humidifier_controls"] > 0),
                 ("official test 5 variant/evaluation attached", False),
             ],
             "test_6": [
                 ("ventilation systems extracted", stats["rooms_with_ventilation"] > 0),
-                ("constant airflow/stage data documented", False),
-                ("heat recovery data documented", False),
-                ("restaurant/kitchen overflow represented", False),
+                ("constant airflow/stage data documented", stats["ventilation_stages"] > 0),
+                ("heat recovery data documented", stats["heat_recovery_types"] > 0),
+                ("restaurant/kitchen overflow represented", stats["overflow_paths"] > 0),
                 ("official test 6 evaluation file attached", False),
             ],
             "test_7": [
                 ("HVAC systems extracted", stats["rooms_with_hvac"] > 0),
-                ("heating/cooling demand outputs available", stats["dynamic_demand_rows"] > 0 or stats["heating_demand_available"] or stats["cooling_demand_available"]),
+                (
+                    "heating and cooling demand outputs available",
+                    (
+                        stats["dynamic_heating_rows"] > 0
+                        and stats["dynamic_cooling_rows"] > 0
+                    )
+                    or (
+                        stats["heating_demand_available"]
+                        and stats["cooling_demand_available"]
+                    ),
+                ),
                 ("final energy by system/carrier available", stats["final_energy_available"]),
                 ("pump/fan/auxiliary energy available", stats["dynamic_auxiliary_energy_rows"] > 0 or stats["auxiliary_energy_available"]),
+                ("emission/distribution/storage/generation chain documented", stats["storage_generation_data"] > 0),
                 ("official test 7 loads/evaluation attached", False),
             ],
         }
@@ -3716,7 +4790,7 @@ class ExcelReportGenerator:
             test_status = tests.get(test_name, {}).get("status") or "NOT_CHECKABLE"
             official_status = (
                 test_status
-                if test_status in {"PASS", "VALIDATED", "FAIL", "WARNING", "EVIDENCE_INCOMPLETE", "READY_FOR_OFFICIAL_REVIEW"}
+                if test_status in {"PASS", "VALIDATED", "OFFICIAL_RESULTS_RECORDED", "FAIL", "WARNING", "EVIDENCE_INCOMPLETE", "READY_FOR_OFFICIAL_REVIEW"}
                 else "NOT_CHECKABLE"
             )
             rows.append({
@@ -3769,6 +4843,77 @@ class ExcelReportGenerator:
             room for room in rooms_data
             if getattr(room, "hvac_systems", None)
         ]
+        hvac_systems = [
+            system
+            for room in rooms_with_hvac
+            for system in (getattr(room, "hvac_systems", []) or [])
+            if isinstance(system, dict)
+        ]
+        rooms_with_daily_profile_hours = [
+            room for room in rooms_data
+            if getattr(room, "internal_gains_wh_m2_day", None) is not None
+        ]
+        rooms_with_ventilation_control = [
+            room for room in rooms_with_ventilation
+            if getattr(room, "ventilation_installation_type", None)
+            and getattr(room, "ventilation_control_level", None) is not None
+        ]
+        rooms_with_ahu_identifiers = [
+            room for room in rooms_with_hvac
+            if getattr(room, "fan_control", None)
+            or getattr(room, "heat_recovery_type", None)
+            or getattr(room, "ventilation_control", None)
+        ]
+        cooling_systems_with_efficiency = [
+            system for system in hvac_systems
+            if system.get("cooling_generator_class")
+            and system.get("cooling_capacity_kw") is not None
+            and (system.get("nominal_eer") is not None or system.get("seer") is not None)
+        ]
+        heating_systems_with_efficiency = [
+            system for system in hvac_systems
+            if system.get("heating_generator_class")
+            and system.get("heating_capacity_kw") is not None
+            and system.get("scop") is not None
+        ]
+        daylight_control_evidence = [
+            room for room in rooms_data
+            if getattr(room, "daylight_dimming_profile", "")
+            or getattr(room, "lighting_control_type", "")
+        ]
+        lighting_control_mappings = [
+            room for room in rooms_data
+            if getattr(room, "lighting_control_type", "")
+        ]
+        fan_controls = [
+            system for system in hvac_systems
+            if system.get("fan_control")
+        ]
+        heat_recovery_types = [
+            room for room in rooms_data
+            if getattr(room, "heat_recovery_type", None)
+            or any(
+                system.get("heat_recovery_type")
+                for system in (getattr(room, "hvac_systems", []) or [])
+                if isinstance(system, dict)
+            )
+        ]
+        humidifier_controls = [
+            system for system in hvac_systems
+            if system.get("humidifier_control") or system.get("humidifier_type")
+        ]
+        ventilation_stages = [
+            room for room in rooms_data
+            if getattr(room, "ventilation_control_level", None) is not None
+        ]
+        overflow_paths = [
+            system for system in hvac_systems
+            if system.get("overflow_paths")
+        ]
+        storage_generation_data = [
+            system for system in hvac_systems
+            if system.get("storage_generation_data")
+        ]
         energy = sia4010_results.get("energy", {}) or {}
         dynamic_results = sia4010_results.get("dynamic_results", {}) or {}
         dynamic_room_rows = dynamic_results.get("rooms", []) or []
@@ -3776,9 +4921,23 @@ class ExcelReportGenerator:
             row for row in dynamic_room_rows
             if row.get("heating_kwh") is not None or row.get("cooling_kwh") is not None
         ]
+        dynamic_heating_rows = [
+            row for row in dynamic_room_rows
+            if row.get("heating_kwh") is not None
+        ]
+        dynamic_cooling_rows = [
+            row for row in dynamic_room_rows
+            if row.get("cooling_kwh") is not None
+        ]
         dynamic_temperature_rows = [
             row for row in dynamic_room_rows
             if row.get("occupied_hours_above_26") is not None or row.get("occupied_hours_above_27") is not None
+        ]
+        dynamic_annual_comfort_rows = [
+            row for row in dynamic_room_rows
+            if row.get("annual_comfort_period_complete") is True
+            and row.get("occupied_hours_above_sia180_upper") is not None
+            and row.get("occupied_hours_below_sia180_lower") is not None
         ]
         dynamic_lighting_rows = [
             row for row in dynamic_room_rows
@@ -3822,7 +4981,7 @@ class ExcelReportGenerator:
             "external_surfaces": len(external_surfaces),
             "surface_u_values": sum(1 for surface in external_surfaces if getattr(surface, "u_value", None) is not None),
             "surface_tilt_values": sum(1 for surface in external_surfaces if getattr(surface, "tilt", None) is not None),
-            "surface_adjacency_values": sum(1 for surface in external_surfaces if getattr(surface, "adjacency_types", None)),
+            "surface_adjacency_values": sum(1 for surface in external_surfaces if getattr(surface, "adjacency_room_ids", None)),
             "external_openings": len(external_openings),
             "external_windows": len(external_windows),
             "window_u_values": sum(1 for opening in external_windows if getattr(opening, "u_value", None) is not None),
@@ -3831,8 +4990,16 @@ class ExcelReportGenerator:
             "raw_cdb_g_values": sum(1 for opening in external_windows if getattr(opening, "cdb_g_value", None) is not None),
             "visible_transmittance_values": sum(1 for opening in external_windows if getattr(opening, "visible_transmittance", None) is not None),
             "frame_fraction_values": sum(1 for opening in external_windows if getattr(opening, "frame_fraction", None) is not None),
-            "solar_protection_types": sum(1 for opening in external_windows if getattr(opening, "shading_type", None)),
-            "solar_protection_controls": sum(1 for opening in external_windows if getattr(opening, "shading_control", None)),
+            "solar_protection_types": sum(
+                1
+                for opening in external_windows
+                if has_active_solar_protection(opening) and getattr(opening, "shading_type", None)
+            ),
+            "solar_protection_controls": sum(
+                1
+                for opening in external_windows
+                if has_active_solar_protection(opening) and getattr(opening, "shading_control", None)
+            ),
             "g_total_values": sum(1 for opening in external_windows if getattr(opening, "g_total", None) is not None),
             "g_total_not_required_for_g_limit": g_total_not_required_for_g_limit,
             "rooms_with_lighting": len(rooms_with_lighting),
@@ -3841,9 +5008,25 @@ class ExcelReportGenerator:
             "rooms_with_infiltration": len(rooms_with_infiltration),
             "rooms_with_infiltration_m3_h_m2": len(rooms_with_infiltration_m3_h_m2),
             "rooms_with_hvac": len(rooms_with_hvac),
+            "rooms_with_daily_profile_hours": len(rooms_with_daily_profile_hours),
+            "rooms_with_ventilation_control": len(rooms_with_ventilation_control),
+            "rooms_with_ahu_identifiers": len(rooms_with_ahu_identifiers),
+            "cooling_systems_with_efficiency": len(cooling_systems_with_efficiency),
+            "heating_systems_with_efficiency": len(heating_systems_with_efficiency),
+            "daylight_control_evidence": len(daylight_control_evidence),
+            "lighting_control_mappings": len(lighting_control_mappings),
+            "fan_controls": len(fan_controls),
+            "heat_recovery_types": len(heat_recovery_types),
+            "humidifier_controls": len(humidifier_controls),
+            "ventilation_stages": len(ventilation_stages),
+            "overflow_paths": len(overflow_paths),
+            "storage_generation_data": len(storage_generation_data),
             "dynamic_room_rows": len(dynamic_room_rows),
             "dynamic_demand_rows": len(dynamic_demand_rows),
+            "dynamic_heating_rows": len(dynamic_heating_rows),
+            "dynamic_cooling_rows": len(dynamic_cooling_rows),
             "dynamic_temperature_rows": len(dynamic_temperature_rows),
+            "dynamic_annual_comfort_rows": len(dynamic_annual_comfort_rows),
             "dynamic_lighting_rows": len(dynamic_lighting_rows),
             "dynamic_fan_rows": len(dynamic_fan_rows),
             "dynamic_pump_rows": len(dynamic_pump_rows),
@@ -3862,7 +5045,7 @@ class ExcelReportGenerator:
             "final_energy_available": any(
                 energy.get(key) is not None
                 for key in ("primary_energy", "co2_emissions", "renewable_energy_share")
-            ),
+            ) or any(system.get("final_energy") is not None for system in hvac_systems),
         }
 
     def _classes_for_sia4010_test(self, test_name: str) -> str:
@@ -3905,7 +5088,7 @@ class ExcelReportGenerator:
         status_upper = str(status or "").upper()
         if status_upper in {"READY", "PASS", "VALIDATED", "PRESENT"}:
             return ready_format
-        if status_upper in {"PARTIAL", "WARNING", "READY_FOR_OFFICIAL_REVIEW"}:
+        if status_upper in {"PARTIAL", "WARNING", "READY_FOR_OFFICIAL_REVIEW", "OFFICIAL_RESULTS_RECORDED", "OFFICIAL_RESULT_RECORDED"}:
             return partial_format
         if status_upper in {"NOT_REQUESTED", "CLASS_NOT_SELECTED"}:
             return not_checkable_format
@@ -4043,7 +5226,7 @@ class ExcelReportGenerator:
     def _dashboard_score_rows(score_result: ScoreResult) -> List[List[Any]]:
         """Return chart-ready dashboard rows for score metrics."""
         rows = [
-            ["Compliance indicator", float(score_result.compliance_score or 0.0)],
+            ["Automated precheck", float(score_result.compliance_score or 0.0)],
             ["Model health", float(score_result.health_score or 0.0)],
         ]
         for key, value in list(score_result.detailed_scores.items())[:10]:
@@ -4052,15 +5235,181 @@ class ExcelReportGenerator:
                 rows.append([label[:34], float(value)])
         return rows
 
+    @staticmethod
+    def _action_dashboard_sia3802_score_rows(score_result: ScoreResult) -> List[List[Any]]:
+        """Return the SIA 380/2 score rows shown on the action dashboard."""
+        detailed_scores = score_result.detailed_scores or {}
+        return [
+            ["Overall SIA 380/2", float(score_result.compliance_score or 0.0), "Weighted automated indicator from model-facing SIA 380/2 checks."],
+            ["Envelope", float(detailed_scores.get("SIA3802_ENVELOPE", 0.0) or 0.0), "Opaque external surfaces, U-values and boundary classification."],
+            ["Openings", float(detailed_scores.get("SIA3802_OPENINGS", 0.0) or 0.0), "Window Uw, g_perp, tau_v, frame fraction and shading evidence."],
+            ["Ventilation", float(detailed_scores.get("SIA3802_VENTILATION", 0.0) or 0.0), "Infiltration, airflow rates and ventilation control evidence."],
+            ["Gains", float(detailed_scores.get("SIA3802_GAINS", 0.0) or 0.0), "Occupancy, lighting, equipment gains and schedules."],
+            ["HVAC", float(detailed_scores.get("SIA3802_HVAC", 0.0) or 0.0), "System type, efficiency evidence and plant readiness."],
+            ["Value integrity", float(detailed_scores.get("SIA3802_VALUE_INTEGRITY", 0.0) or 0.0), "Guards against non-comparable values such as raw CDB g-values."],
+        ]
+
+    @staticmethod
+    def _action_dashboard_sia4010_score_rows(
+        score_result: ScoreResult,
+        sia4010_results: Dict[str, Any],
+    ) -> List[List[Any]]:
+        """Return the SIA 4010 score rows shown on the action dashboard."""
+        detailed_scores = score_result.detailed_scores or {}
+        evidence = sia4010_results.get("evidence", {}) or {}
+        evidence_summary = evidence.get("summary", {}) if isinstance(evidence, dict) else {}
+        tests = sia4010_results.get("tests", {}) or {}
+        rows = [
+            [
+                "Official validation",
+                float(sia4010_results.get("score", 0.0) or 0.0),
+                "Reserved for explicit official PASS/VALIDATED rows and accepted evidence.",
+            ],
+            [
+                "Evidence readiness",
+                float(sia4010_results.get("readiness_score", 0.0) or 0.0),
+                f"{evidence_summary.get('status', 'UNKNOWN')} - {evidence_summary.get('present_count', 0)}/{evidence_summary.get('required_count', len(SIA4010_REQUIRED_EVIDENCE))} evidence families.",
+            ],
+        ]
+        for index in range(1, 8):
+            test_key = f"test_{index}"
+            test_data = tests.get(test_key, {}) or {}
+            rows.append([
+                f"Test {index}",
+                float(detailed_scores.get(f"SIA4010_TEST_{index}", 0.0) or test_data.get("score", 0.0) or 0.0),
+                str(test_data.get("status") or test_data.get("official_status") or "NOT_CHECKABLE"),
+            ])
+        return rows
+
+    def _action_dashboard_values_for_group(
+        self,
+        group: Dict[str, Any],
+        sia4010_results: Dict[str, Any],
+    ) -> tuple:
+        """Return current, limit and gap values for one action-dashboard row."""
+        rule = str(group.get("rule", "") or "").upper()
+        current_value = self._p1_current_value_for_group(group)
+        limit_value = self._p1_limit_for_group(group)
+        if "SIA4010" in rule:
+            evidence = sia4010_results.get("evidence", {}) or {}
+            current_value = float(sum(1 for item in SIA4010_REQUIRED_EVIDENCE if self._has_sia4010_evidence(evidence, item)))
+            limit_value = float(len(SIA4010_REQUIRED_EVIDENCE))
+        gap_value = self._p1_gap_for_values(rule, current_value, limit_value)
+        return current_value, limit_value, gap_value
+
+    def _action_item_score_for_group(
+        self,
+        group: Dict[str, Any],
+        sia4010_results: Dict[str, Any],
+    ) -> float:
+        """Return a 0-100 closure score for one action item."""
+        rule = str(group.get("rule", "") or "").upper()
+        current_value, limit_value, _gap_value = self._action_dashboard_values_for_group(group, sia4010_results)
+
+        if "SIA4010" in rule:
+            if not limit_value:
+                return 0.0
+            return max(0.0, min(100.0, (float(current_value or 0.0) / float(limit_value)) * 100.0))
+
+        if "MISSING" in rule or "NOT_CHECKABLE" in rule:
+            return 0.0
+
+        if current_value is not None and limit_value is not None:
+            current = float(current_value)
+            limit = float(limit_value)
+            if current <= limit:
+                return 100.0
+            if current > 0:
+                return max(0.0, min(99.0, (limit / current) * 100.0))
+
+        fallback_by_severity = {
+            "Critical": 0.0,
+            "High": 25.0,
+            "Medium": 55.0,
+            "Low": 75.0,
+        }
+        return fallback_by_severity.get(str(group.get("max_severity", "")), 50.0)
+
+    @staticmethod
+    def _standard_for_alert_group(group: Dict[str, Any]) -> str:
+        """Return the standard family affected by an action group."""
+        rule = str(group.get("rule", "") or "").upper()
+        category = str(group.get("category", "") or "").upper()
+        if "SIA4010" in rule or "SIA4010" in category:
+            return "SIA 4010"
+        if "SIA3802" in rule or "SIA3801" in rule:
+            return "SIA 380/2"
+        return "Model data"
+
+    @staticmethod
+    def _detail_sheet_for_alert_group(group: Dict[str, Any]) -> str:
+        """Return the best workbook sheet for detailed evidence behind an action row."""
+        rule = str(group.get("rule", "") or "").upper()
+        if "SIA4010" in rule:
+            return "SIA4010 READINESS"
+        if "SOLAR_FACTOR" in rule or "G_TOTAL" in rule:
+            return "FACADE GLAZING REVIEW"
+        if "FRAME_FRACTION" in rule:
+            return "FRAME FRACTION AUDIT"
+        if "U_VALUE" in rule or "OPAQUE" in rule:
+            return "ENVELOPE U REVIEW"
+        if any(token in rule for token in ("VENTILATION", "INFILTRATION", "LIGHTING", "EQUIPMENT", "HVAC")):
+            return "INPUT REQUEST"
+        if "MISSING" in rule or "NOT_CHECKABLE" in rule:
+            return "DATA QUALITY"
+        return "ALERT SUMMARY"
+
+    @staticmethod
+    def _action_status_format(item_score: float, ok_format: Any, warn_format: Any, fail_format: Any) -> Any:
+        """Return a visual status format for one action row."""
+        if item_score >= 100.0:
+            return ok_format
+        if item_score >= 50.0:
+            return warn_format
+        return fail_format
+
+    def _action_dashboard_next_step(
+        self,
+        alert_groups: List[Dict[str, Any]],
+        evidence_summary: Dict[str, Any],
+        dynamic_results: Dict[str, Any],
+    ) -> str:
+        """Return the strongest next-step sentence for the action dashboard."""
+        model_groups = [
+            group for group in alert_groups
+            if self._standard_for_alert_group(group) != "SIA 4010"
+        ]
+        if model_groups:
+            group = model_groups[0]
+            return (
+                f"Next VE model action: {self._action_for_alert_group(group)} "
+                f"Scope: {group.get('construction', 'model')}; rule: {group.get('rule', '')}; "
+                f"owner: {self._p1_owner_for_group(group)}."
+            )
+
+        if evidence_summary.get("status") != "READY_FOR_OFFICIAL_REVIEW":
+            return (
+                "Next compliance action: complete the SIA 4010 evidence pack and class/test manifests. "
+                f"Current official evidence: {evidence_summary.get('present_count', 0)}/"
+                f"{evidence_summary.get('required_count', len(SIA4010_REQUIRED_EVIDENCE))} families."
+            )
+
+        dynamic_status = str(dynamic_results.get("status", "UNKNOWN") if isinstance(dynamic_results, dict) else "UNKNOWN")
+        return (
+            "Next review action: submit the complete SIA 4010 package for responsible reviewer/sub-commission acceptance. "
+            f"APS/Vista dynamic result status: {dynamic_status}."
+        )
+
     def _dashboard_requirement_status_rows(self, sia3802_results: Dict[str, Any], sia4010_results: Dict[str, Any]) -> List[List[Any]]:
         """Return chart-ready dashboard rows for requirement-matrix statuses."""
         all_alerts = list(sia3802_results.get("alerts", []) or []) + list(sia4010_results.get("alerts", []) or [])
+        rule_evaluations = sia3802_results.get("rule_evaluations", {}) or {}
         rows = [
-            self._build_requirement_matrix_row(requirement, all_alerts)
+            self._build_requirement_matrix_row(requirement, all_alerts, rule_evaluations)
             for requirement in SIA_COMPLIANCE_REQUIREMENT_MATRIX
         ]
         counts = Counter(row["status"] for row in rows)
-        order = ["PASS", "PARTIAL_CHECK", "READINESS_ONLY", "FAIL", "MISSING", "NOT_CHECKABLE", "NOT_IMPLEMENTED"]
+        order = ["PASS", "PARTIAL_CHECK", "REFERENCE_DIAGNOSTIC", "REFERENCE_DEVIATION", "READINESS_ONLY", "FAIL", "MISSING", "NOT_CHECKABLE", "NOT_IMPLEMENTED"]
         return [[status, counts.get(status, 0)] for status in order if counts.get(status, 0)]
 
     @staticmethod
@@ -4095,14 +5444,26 @@ class ExcelReportGenerator:
             )
         return "READY FOR DETAILED REVIEW: no critical/high alert detected and SIA 4010 tests are no longer blocked by missing evidence."
 
-    def _build_requirement_matrix_row(self, requirement: Dict[str, Any], alerts: List[Alert]) -> Dict[str, Any]:
+    def _build_requirement_matrix_row(
+        self,
+        requirement: Dict[str, Any],
+        alerts: List[Alert],
+        rule_evaluations: Optional[Dict[str, int]] = None,
+    ) -> Dict[str, Any]:
         """Build a report row for one SIA requirement without inventing verdicts."""
         automation = str(requirement.get("automation", "") or "")
         implemented_rule = str(requirement.get("implemented_rule", "") or "")
         related_alerts = self._find_requirement_alerts(requirement, alerts)
+        rule_names = self._implemented_rule_names(implemented_rule)
+        evaluated_count = sum(
+            int((rule_evaluations or {}).get(rule_name, 0) or 0)
+            for rule_name in rule_names
+        )
 
         if automation in {"NOT_IMPLEMENTED", ""}:
             status = "NOT_IMPLEMENTED"
+        elif automation == "REFERENCE_DIAGNOSTIC":
+            status = "REFERENCE_DEVIATION" if related_alerts else "REFERENCE_DIAGNOSTIC"
         elif automation == "READINESS_ONLY":
             status = "NOT_CHECKABLE" if related_alerts else "READINESS_ONLY"
         elif related_alerts:
@@ -4112,6 +5473,8 @@ class ExcelReportGenerator:
                 status = "NOT_CHECKABLE"
             else:
                 status = "FAIL"
+        elif automation == "AUTOMATED" and evaluated_count <= 0:
+            status = "NOT_CHECKABLE"
         elif automation == "PARTIAL":
             status = "PARTIAL_CHECK"
         elif implemented_rule:
@@ -4131,6 +5494,7 @@ class ExcelReportGenerator:
             "standard": requirement.get("standard", ""),
             "domain": requirement.get("domain", ""),
             "id": requirement.get("id", ""),
+            "evaluated_count": evaluated_count,
             "criterion": requirement.get("criterion", ""),
             "limit": requirement.get("limit", ""),
             "unit": requirement.get("unit", ""),
@@ -4143,6 +5507,7 @@ class ExcelReportGenerator:
     def _find_requirement_alerts(requirement: Dict[str, Any], alerts: List[Alert]) -> List[Alert]:
         """Return alerts that map to one requirement-matrix row."""
         rule_name = str(requirement.get("implemented_rule", "") or "").upper()
+        rule_names = set(ExcelReportGenerator._implemented_rule_names(rule_name))
         requirement_id = str(requirement.get("id", "") or "").upper()
         if not rule_name and not requirement_id:
             return []
@@ -4150,7 +5515,7 @@ class ExcelReportGenerator:
         matches = []
         for alert in alerts:
             alert_rule = str(alert.rule or "").upper()
-            if rule_name and alert_rule == rule_name:
+            if rule_names and alert_rule in rule_names:
                 matches.append(alert)
                 continue
             if requirement_id.startswith("SIA3802_AIRTIGHTNESS") and alert_rule.startswith("SIA3802_INFILTRATION"):
@@ -4161,12 +5526,21 @@ class ExcelReportGenerator:
         return matches
 
     @staticmethod
+    def _implemented_rule_names(value: str) -> List[str]:
+        """Split a requirement rule field into exact registered rule names."""
+        return [
+            token.strip().upper()
+            for token in str(value or "").split("/")
+            if token.strip()
+        ]
+
+    @staticmethod
     def _requirement_status_format(status: str, pass_format: Any, fail_format: Any, partial_format: Any, not_checkable_format: Any, cell_format: Any) -> Any:
         """Return the Excel cell format for a requirement-matrix status."""
         status_upper = str(status or "").upper()
         if status_upper in {"PASS"}:
             return pass_format
-        if status_upper in {"PARTIAL_CHECK", "READINESS_ONLY"}:
+        if status_upper in {"PARTIAL_CHECK", "REFERENCE_DIAGNOSTIC", "REFERENCE_DEVIATION", "READINESS_ONLY"}:
             return partial_format
         if status_upper in {"NOT_CHECKABLE", "NOT_IMPLEMENTED"}:
             return not_checkable_format
@@ -4200,6 +5574,7 @@ class ExcelReportGenerator:
                 shading_type = getattr(opening, "shading_type", None)
                 shading_control = getattr(opening, "shading_control", None)
                 g_total = self._safe_float(getattr(opening, "g_total", None), None)
+                active_solar_protection = has_active_solar_protection(opening)
 
                 row = grouped.setdefault(construction, {
                     "construction": construction,
@@ -4215,6 +5590,7 @@ class ExcelReportGenerator:
                     "missing_frame_fraction": 0,
                     "missing_shading_type": 0,
                     "missing_shading_control": 0,
+                    "active_solar_protection": 0,
                     "g_total_required": 0,
                     "missing_g_total": 0,
                     "missing_u": 0,
@@ -4244,15 +5620,17 @@ class ExcelReportGenerator:
                     row["max_g"] = g_value if row["max_g"] is None else max(row["max_g"], g_value)
                     if g_value > SIA3802_LIMIT_VALUES["glazing_g_value"]:
                         row["fail_g"] += 1
-                        g_total_required_for_limit = True
+                        g_total_required_for_limit = active_solar_protection
                 if visible_transmittance is None:
                     row["missing_visible_transmittance"] += 1
                 if frame_fraction is None:
                     row["missing_frame_fraction"] += 1
-                if not shading_type:
-                    row["missing_shading_type"] += 1
-                if not shading_control:
-                    row["missing_shading_control"] += 1
+                if active_solar_protection:
+                    row["active_solar_protection"] += 1
+                    if not shading_type:
+                        row["missing_shading_type"] += 1
+                    if not shading_control:
+                        row["missing_shading_control"] += 1
                 if g_total_required_for_limit:
                     row["g_total_required"] += 1
                     if g_total is None:
@@ -4264,8 +5642,8 @@ class ExcelReportGenerator:
             avg_g = item["g_weighted"] / item["g_area"] if item["g_area"] else None
             max_g = item["max_g"]
             g_gap = max_g - SIA3802_LIMIT_VALUES["glazing_g_value"] if max_g is not None else None
-            uw_status = "MISSING" if item["missing_u"] else ("FAIL" if item["fail_u"] else "PASS")
-            g_status = "MISSING" if item["missing_g"] else ("FAIL" if item["fail_g"] else "PASS")
+            uw_status = "MISSING" if item["missing_u"] else ("REFERENCE_DEVIATION" if item["fail_u"] else "REFERENCE_MATCH")
+            g_status = "MISSING" if item["missing_g"] else ("REFERENCE_DEVIATION" if item["fail_g"] else "REFERENCE_MATCH")
             missing_evidence_items = []
             if item["missing_visible_transmittance"]:
                 missing_evidence_items.append("tau_v visible transmittance")
@@ -4276,26 +5654,29 @@ class ExcelReportGenerator:
             if item["missing_shading_control"]:
                 missing_evidence_items.append("solar protection control")
             if item["missing_g_total"]:
-                missing_evidence_items.append("active g_total with shading for glazing above the SIA g-limit")
+                missing_evidence_items.append("active g_total with shading for glazing above the table 2 reference input")
 
-            if g_status == "FAIL" or uw_status == "FAIL":
-                status = "FAIL"
-            elif missing_evidence_items or g_status == "MISSING" or uw_status == "MISSING":
+            if missing_evidence_items or g_status == "MISSING" or uw_status == "MISSING":
                 status = "MISSING_EVIDENCE"
+            elif "REFERENCE_DEVIATION" in {g_status, uw_status}:
+                status = "REFERENCE_DEVIATION"
             else:
-                status = "PASS"
+                status = "REFERENCE_MATCH"
 
             evidence_items = [
                 "CDB glazing export",
                 "EN 410 g_perp or SHGC mapping note",
                 "visible transmittance tau_v",
                 "frame/glass split",
-                "shading device type, optical properties and control thresholds",
             ]
-            if item["g_total_required"]:
-                evidence_items.append("active g_total with shading for the glazing rows above the SIA g-limit")
+            if item["active_solar_protection"]:
+                evidence_items.append("shading device type, optical properties and control thresholds")
             else:
-                evidence_items.append("proof that EN 410 g_perp already satisfies the SIA g-limit")
+                evidence_items.append("confirmation that no active solar-protection device is modelled")
+            if item["g_total_required"]:
+                evidence_items.append("active g_total with shading for glazing rows above the table 2 reference input")
+            else:
+                evidence_items.append("actual EN 410 g_perp retained for the global project/reference comparison")
 
             rows.append({
                 "construction": item["construction"],
@@ -4311,13 +5692,13 @@ class ExcelReportGenerator:
                 "missing_evidence": self._compact_join(missing_evidence_items, empty="None", max_chars=220),
                 "recommended_action": self._facade_glazing_action(status, g_status, uw_status),
                 "evidence_needed": self._compact_join(evidence_items, max_chars=360),
-                "owner": "Facade/glazing lead" if status == "FAIL" else "Model reviewer / compliance reviewer",
+                "owner": "Facade/glazing lead" if status in {"MISSING_EVIDENCE", "REFERENCE_DEVIATION"} else "Model reviewer / compliance reviewer",
             })
 
         return sorted(
             rows,
             key=lambda row: (
-                0 if row["status"] == "FAIL" else 1 if row["status"] == "MISSING_EVIDENCE" else 2,
+                0 if row["status"] == "MISSING_EVIDENCE" else 1 if row["status"] == "REFERENCE_DEVIATION" else 2,
                 -(row["g_gap"] or 0.0),
                 -row["area"],
                 row["construction"],
@@ -4377,15 +5758,15 @@ class ExcelReportGenerator:
                     action = "Keep the extracted frame fraction visible and retain the reviewer-signed facade justification in the audit pack."
                     evidence = describe_justification(justification)
                 else:
-                    status = "FAIL"
-                    action = "Review the frame/glass split in VE/CDB; reduce the retained frame fraction or attach audited facade evidence/reference calculation."
-                    evidence = "CDB glazing/frame export; manufacturer frame/glass schedule; reviewer note confirming ff <= 0.25 or justified alternative."
+                    status = "REFERENCE_DEVIATION"
+                    action = "Keep the actual frame/glass split and evaluate the deviation in the global SIA project/reference calculation; correct it only if the model is intended to reproduce the reference input."
+                    evidence = "CDB glazing/frame export; manufacturer frame/glass schedule; global project/reference calculation evidence."
             elif item["missing_count"]:
                 status = "MISSING"
                 action = "Provide frame fraction ff for every external window construction before final SIA 380/2 wording."
                 evidence = "CDB construction properties, manufacturer schedule or facade take-off with frame/glass split."
             else:
-                status = "PASS"
+                status = "REFERENCE_MATCH"
                 action = "Keep frame-fraction evidence in the audit pack and monitor if window constructions change."
                 evidence = "CDB export or reviewed glazing schedule proving the retained frame fraction."
 
@@ -4401,13 +5782,13 @@ class ExcelReportGenerator:
                 "status": status,
                 "action": action,
                 "evidence": evidence,
-                "owner": "Facade/glazing lead" if status == "FAIL" else "Model reviewer / compliance reviewer",
+                "owner": "Facade/glazing lead" if status == "REFERENCE_DEVIATION" else "Model reviewer / compliance reviewer",
             })
 
         return sorted(
             rows,
             key=lambda row: (
-                0 if row["status"] == "FAIL" else 1 if row["status"] == "MISSING" else 2,
+                0 if row["status"] == "REFERENCE_DEVIATION" else 1 if row["status"] == "MISSING" else 2,
                 -row["fail_count"],
                 -(row["max_frame_fraction"] or 0.0),
                 -row["area"],
@@ -4469,15 +5850,15 @@ class ExcelReportGenerator:
                     action = "Keep the extracted U-value visible and retain the reviewer-signed SIA reference-calculation justification in the audit pack."
                     evidence = describe_justification(justification)
                 else:
-                    status = "FAIL"
-                    action = "Update the VE construction to meet the limit or prepare a full SIA 380/2 reference-calculation justification."
-                    evidence = "Construction build-up, CDB U-value source, changed construction assignment or full reference-calculation note."
+                    status = "REFERENCE_DEVIATION"
+                    action = "Keep the actual construction value and evaluate it in the global SIA project/reference calculation; change it only if reproducing the table 3 reference input."
+                    evidence = "Construction build-up, CDB U-value source and global project/reference calculation evidence."
             elif item["missing_count"]:
                 status = "MISSING"
                 action = "Provide U-value/construction evidence for every external opaque surface in this construction group."
                 evidence = "CDB construction export or audited U-value calculation."
             else:
-                status = "PASS"
+                status = "REFERENCE_MATCH"
                 action = "Keep construction evidence in the audit pack."
                 evidence = "CDB construction export and U-value source."
 
@@ -4493,13 +5874,13 @@ class ExcelReportGenerator:
                 "status": status,
                 "action": action,
                 "evidence": evidence,
-                "owner": "Envelope lead" if status == "FAIL" else "Model reviewer / compliance reviewer",
+                "owner": "Envelope lead" if status == "REFERENCE_DEVIATION" else "Model reviewer / compliance reviewer",
             })
 
         return sorted(
             rows,
             key=lambda row: (
-                0 if row["status"] == "FAIL" else 1 if row["status"] == "MISSING" else 2,
+                0 if row["status"] == "REFERENCE_DEVIATION" else 1 if row["status"] == "MISSING" else 2,
                 -(row["gap"] or 0.0),
                 -row["net_area"],
                 row["surface_type"],
@@ -4652,13 +6033,13 @@ class ExcelReportGenerator:
     @staticmethod
     def _facade_glazing_action(status: str, g_status: str, uw_status: str) -> str:
         """Return a concise action for a facade/glazing construction row."""
-        if status == "FAIL" and g_status == "FAIL":
+        if status == "REFERENCE_DEVIATION" and g_status == "REFERENCE_DEVIATION":
             return (
                 "Confirm whether VE solar_factor is EN 410 g_perp, SHGC or another CDB value. "
-                "If comparable, reduce/document g <= 0.50 or prove active shading g_total."
+                "Retain the actual value for the global project/reference calculation, or reproduce 0.50 when building a reference-input model."
             )
-        if status == "FAIL" and uw_status == "FAIL":
-            return "Review window construction Uw and update the construction or provide a full reference-calculation justification."
+        if status == "REFERENCE_DEVIATION" and uw_status == "REFERENCE_DEVIATION":
+            return "Retain the actual Uw for the global comparison, or reproduce the table 2 value when building a reference-input model."
         if status == "MISSING_EVIDENCE":
             return "Complete the missing facade evidence before any final SIA 380/2 claim for openings."
         return "Keep construction evidence in the audit pack and monitor if glazing/shading assumptions change."
@@ -4711,12 +6092,15 @@ class ExcelReportGenerator:
                 source = str(getattr(opening, "solar_factor_source", "") or "")
                 if source:
                     row["selected_source"].add(source)
-                shading_type = str(getattr(opening, "shading_type", "") or "")
-                if shading_type:
-                    row["shading_type"].add(shading_type)
-                shading_control = str(getattr(opening, "shading_control", "") or "")
-                if shading_control:
-                    row["shading_control"].add(shading_control)
+                active_solar_protection = has_active_solar_protection(opening)
+                if active_solar_protection:
+                    row["active_shading_count"] += 1
+                    shading_type = str(getattr(opening, "shading_type", "") or "")
+                    if shading_type:
+                        row["shading_type"].add(shading_type)
+                    shading_control = str(getattr(opening, "shading_control", "") or "")
+                    if shading_control:
+                        row["shading_control"].add(shading_control)
 
                 shading_properties = getattr(opening, "shading_properties", {}) or {}
                 if isinstance(shading_properties, dict):
@@ -4726,8 +6110,6 @@ class ExcelReportGenerator:
                         row["shading_field_names"].add(str(key))
                         if self._is_shading_optical_field(str(key)):
                             row["shading_optical"].add(f"{key}={value}")
-                    if self._has_active_shading_from_properties(shading_properties):
-                        row["active_shading_count"] += 1
 
         rows: List[Dict[str, Any]] = []
         for item in grouped.values():
@@ -4773,7 +6155,12 @@ class ExcelReportGenerator:
         return sorted(
             rows,
             key=lambda row: (
-                0 if row["g_total_status"] == "CALCULATION_REQUIRED" else 1,
+                0
+                if row["g_total_status"] in {
+                    "CALCULATION_REQUIRED",
+                    "BASE_G_ABOVE_REFERENCE_NO_ACTIVE_SHADING",
+                }
+                else 1,
                 0 if row["g_proof_status"] in {"MISSING_G_VALUE", "SIA_MAPPING_REQUIRED"} else 1,
                 -(row["area"] or 0.0),
                 row["construction"],
@@ -4837,15 +6224,29 @@ class ExcelReportGenerator:
         """Classify whether shaded total solar factor evidence is available."""
         if g_total is not None:
             return "DIRECT_OR_IMPORTED_VALUE"
-        if g_proof_status not in {"EN410_AVAILABLE", "PROVES_CDB_G_IS_NOT_EN410"}:
-            if active_shading_count:
-                return "CALCULATION_REQUIRED"
-            return "MISSING_SHADING_OR_CALCULATION"
-        if selected_sia_g is not None and selected_sia_g <= SIA3802_LIMIT_VALUES["glazing_g_value"]:
-            return "NOT_REQUIRED_FOR_G_LIMIT"
+        comparable_base_g = g_proof_status in {
+            "EN410_AVAILABLE",
+            "PROVES_CDB_G_IS_NOT_EN410",
+        }
         if active_shading_count:
+            if (
+                comparable_base_g
+                and selected_sia_g is not None
+                and selected_sia_g <= SIA3802_LIMIT_VALUES["glazing_g_value"]
+            ):
+                return "NOT_REQUIRED_FOR_G_LIMIT"
             return "CALCULATION_REQUIRED"
-        return "MISSING_SHADING_OR_CALCULATION"
+        if (
+            comparable_base_g
+            and selected_sia_g is not None
+            and selected_sia_g <= SIA3802_LIMIT_VALUES["glazing_g_value"]
+        ):
+            return "NOT_REQUIRED_FOR_G_LIMIT"
+        if selected_sia_g is not None:
+            if comparable_base_g and selected_sia_g > SIA3802_LIMIT_VALUES["glazing_g_value"]:
+                return "BASE_G_ABOVE_REFERENCE_NO_ACTIVE_SHADING"
+            return "NOT_APPLICABLE_NO_ACTIVE_SHADING"
+        return "NOT_APPLICABLE_NO_ACTIVE_SHADING"
 
     @staticmethod
     def _ve_g_values_action(
@@ -4856,15 +6257,21 @@ class ExcelReportGenerator:
         bs_en_410: Optional[float],
     ) -> str:
         """Return the recommended reviewer action for one glazing construction."""
+        if g_total_status == "BASE_G_ABOVE_REFERENCE_NO_ACTIVE_SHADING":
+            return (
+                "No active solar protection is modelled, so g_total is not applicable. Retain the actual base g_perp in the "
+                "global comparison, or select glazing at/below 0.50 when reproducing the table 2 reference-input model."
+            )
+        if g_total_status == "CALCULATION_REQUIRED":
+            return (
+                "An active solar-protection device is modelled. Extract its optical/control fields and provide a reviewed "
+                "ISO 52022-3 / ISO 15099 calculation or manufacturer g_total evidence."
+            )
         if g_proof_status == "PROVES_CDB_G_IS_NOT_EN410":
             return (
                 "Use bs_en_410 as the SIA g_perp candidate and keep the CDB export/review summary proving "
                 f"that cdb g_value {cdb_g_value:.3f} differs from EN 410 {bs_en_410:.3f}."
             )
-        if g_proof_status == "EN410_AVAILABLE" and g_total_status == "CALCULATION_REQUIRED":
-            return "EN 410 g_perp is available but exceeds the SIA readiness limit; provide reviewed active shading g_total."
-        if g_total_status == "CALCULATION_REQUIRED":
-            return "Extract shade optical/control fields and provide ISO 52022-3 / ISO 15099 or manufacturer g_total evidence."
         if g_proof_status == "SIA_MAPPING_REQUIRED":
             return "Attach a reviewer note mapping the selected VE g-value to the SIA comparable g_perp before claiming compliance."
         if g_proof_status == "MISSING_G_VALUE":
@@ -4888,6 +6295,8 @@ class ExcelReportGenerator:
         if status in {"DIRECT_OR_IMPORTED_VALUE", "NOT_REQUIRED_FOR_G_LIMIT"}:
             return pass_format
         if status == "CALCULATION_REQUIRED":
+            return partial_format
+        if status == "BASE_G_ABOVE_REFERENCE_NO_ACTIVE_SHADING":
             return partial_format
         if status == "MISSING_SHADING_OR_CALCULATION":
             return fail_format
@@ -5063,9 +6472,11 @@ class ExcelReportGenerator:
         severity = group.get("max_severity", "")
         count = int(group.get("count", 0) or 0)
         rule = str(group.get("rule", "")).upper()
-        if severity in {"Critical", "High"} or count >= 20:
+        if severity in {"Critical", "High"}:
             return "P1"
         if severity == "Medium" or "MISSING" in rule or "NOT_CHECKABLE" in rule:
+            return "P2"
+        if count >= 20:
             return "P2"
         return "P3"
 
@@ -5340,10 +6751,10 @@ class ExcelReportGenerator:
                 parts.append(f"tilt={tilt:.1f} deg")
         if hasattr(data, "surface_type") and getattr(data, "surface_type"):
             parts.append(f"type={getattr(data, 'surface_type')}")
-        if hasattr(data, "adjacency_types") and getattr(data, "adjacency_types"):
+        if hasattr(data, "adjacency_room_ids") and getattr(data, "adjacency_room_ids"):
             parts.append(
-                "adjacency="
-                + ",".join(str(item) for item in getattr(data, "adjacency_types") if item)
+                "adjacent_room_ids="
+                + ",".join(str(item) for item in getattr(data, "adjacency_room_ids") if item)
             )
         if hasattr(data, "opening_type") and getattr(data, "opening_type"):
             parts.append(f"type={getattr(data, 'opening_type')}")

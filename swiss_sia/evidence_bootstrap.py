@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import re
-import shutil
 import unicodedata
 from pathlib import Path
 from typing import Any, Dict, List, Optional
@@ -16,9 +15,18 @@ TEMPLATE_TARGETS = [
     ("sia4010_class_validation_template.csv", "SIA4010_class_validation_{project}.csv"),
     ("sia4010_official_test_results_template.csv", "SIA4010_official_test_results_{project}.csv"),
     ("sia3802_justifications_template.csv", "SIA3802_justifications_{project}.csv"),
+    ("sia2024_usage_mapping_template.csv", "SIA2024_usage_mapping_{project}.csv"),
+    ("sia3874_lighting_control_mapping_template.csv", "SIA3874_lighting_control_mapping_{project}.csv"),
+    ("sia3802_project_metadata_template.csv", "SIA3802_project_metadata_{project}.csv"),
+    ("sia3802_global_reference_comparison_template.csv", "SIA3802_global_reference_comparison_{project}.csv"),
     ("glazing_solar_protection_template.csv", "glazing_solar_protection_{project}.csv"),
     ("g_values_audit_template.csv", "g_values_audit_{project}.csv"),
 ]
+
+PROJECT_LABEL_TOKENS = (
+    "VE_PROJECT_FOLDER_NAME",
+    "PROJECT_FOLDER_NAME",
+)
 
 
 def prepare_evidence_folder(
@@ -54,11 +62,12 @@ def prepare_evidence_folder(
             })
             continue
 
-        shutil.copy2(source, target)
+        target_existed = target.exists()
+        _copy_project_template(source, target, project_label)
         results.append({
             "template": template_name,
             "target": str(target),
-            "status": "CREATED" if not overwrite else "OVERWRITTEN",
+            "status": "OVERWRITTEN" if target_existed else "CREATED",
             "message": "Project evidence template is ready.",
         })
 
@@ -104,6 +113,14 @@ def _detect_ve_project_label() -> str:
     except Exception:
         return ""
     return ""
+
+
+def _copy_project_template(source: Path, target: Path, project_label: str) -> None:
+    """Copy a UTF-8 CSV template while replacing controlled project tokens."""
+    content = source.read_text(encoding="utf-8-sig")
+    for token in PROJECT_LABEL_TOKENS:
+        content = content.replace(token, project_label)
+    target.write_text(content, encoding="utf-8", newline="")
 
 
 def _safe_filename_part(value: object, fallback: str = "VE_Project") -> str:

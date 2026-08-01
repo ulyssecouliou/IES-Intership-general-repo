@@ -1,0 +1,58 @@
+{
+  "schema_version": "1.0",
+  "status": "PASS",
+  "purpose": "Source-identity verification only; this is not a SIA 4010 compliance result.",
+  "source_identity_supported": true,
+  "compliance_claim_allowed": false,
+  "weather": {
+    "path": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\references\\standards\\bestest\\DRYCOLD.TMY",
+    "sha256": "C33778B4E89C82245A12E17903225F2EB3AFF89C526E9E69A7DC3798D52B2D4E",
+    "format": "NOAA_TMY1_FIXED_WIDTH",
+    "station_ids": [
+      "23062"
+    ]
+  },
+  "iso_climate_workbook": {
+    "path": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\references\\standards\\iso52016\\ISO_52016_1_BESTEST_ClimData_2016.08.24.xls",
+    "sha256": "5C1E19F9DC508D28371552992EA8AA67EA0EF7FFE87E72C903F1A3BDF03B8347",
+    "sheet_name": "ISO_FDIS_52016_1_BESTEST_ClimDa",
+    "header": "Climate data: DRYCOLD.TMY (BESTESTS), converted according to draft ISO/FDIS 52010-1, spreadsheet version 2015.09.06",
+    "initialization_hours_excluded": 744,
+    "annual_data_start_excel_row": 750
+  },
+  "controls": {
+    "workbook_declares_drycold_tmy_source": {
+      "status": "PASS",
+      "observed": "Climate data: DRYCOLD.TMY (BESTESTS), converted according to draft ISO/FDIS 52010-1, spreadsheet version 2015.09.06"
+    },
+    "annual_record_count": {
+      "status": "PASS",
+      "expected": 8760,
+      "observed": 8760
+    },
+    "calendar_alignment": {
+      "status": "PASS",
+      "mismatch_count": 0,
+      "first_mismatch_hours": []
+    },
+    "dry_bulb_identity": {
+      "status": "PASS",
+      "maximum_absolute_difference_c": 0.0
+    },
+    "wind_speed_identity": {
+      "status": "PASS",
+      "maximum_absolute_difference_m_s": 0.0
+    },
+    "solar_series_relationship": {
+      "status": "INFORMATION",
+      "raw_tmy1_vs_iso_converted_ghi_maximum_absolute_difference_w_m2": 77.15989969999998,
+      "raw_tmy1_vs_iso_converted_ghi_mean_absolute_difference_w_m2": 14.010220580797057,
+      "interpretation": "No raw-value identity is expected: the workbook header says the climate was converted according to draft ISO/FDIS 52010-1. The converted directional irradiances remain the authoritative inputs for calculation paths that require them."
+    }
+  },
+  "limitations": [
+    "The public TMY1 file is retained as reference evidence; acquisition provenance must be approved before certification.",
+    "IESVE readability and the weather actually recorded in the APS file require separate runtime verification.",
+    "This audit does not establish the normative identity of all Case 600 construction or simulation settings."
+  ]
+}

@@ -1,0 +1,100 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/schemas/sia4010_official_input_contract.schema.json",
+  "title": "SIA 4010 official test input extraction contract",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "purpose",
+    "claim_guardrail",
+    "common",
+    "tests"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1.0"
+    },
+    "purpose": {
+      "type": "string",
+      "minLength": 1
+    },
+    "claim_guardrail": {
+      "type": "string",
+      "minLength": 1
+    },
+    "common": {
+      "type": "object",
+      "minProperties": 1
+    },
+    "tests": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["2", "3", "4", "5", "6", "7"],
+      "properties": {
+        "2": {"$ref": "#/$defs/testInput"},
+        "3": {"$ref": "#/$defs/testInput"},
+        "4": {"$ref": "#/$defs/testInput"},
+        "5": {"$ref": "#/$defs/testInput"},
+        "6": {"$ref": "#/$defs/testInput"},
+        "7": {"$ref": "#/$defs/testInput"}
+      }
+    }
+  },
+  "$defs": {
+    "testInput": {
+      "type": "object",
+      "required": [
+        "variants",
+        "source",
+        "source_pages",
+        "confirmed_inputs",
+        "unresolved_dependencies",
+        "ve_generation_status"
+      ],
+      "properties": {
+        "variants": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1}
+        },
+        "source": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_pages": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"type": "integer", "minimum": 1}
+        },
+        "confirmed_inputs": {
+          "type": "object",
+          "minProperties": 1
+        },
+        "variant_matrix": {
+          "type": "object"
+        },
+        "required_results": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1}
+        },
+        "mandatory_criteria": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1}
+        },
+        "unresolved_dependencies": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1}
+        },
+        "ve_generation_status": {
+          "const": "NOT_IMPLEMENTED"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

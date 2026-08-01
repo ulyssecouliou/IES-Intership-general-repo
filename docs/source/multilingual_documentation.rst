@@ -67,7 +67,7 @@ Examples:
 * official evidence;
 * validation class;
 * not checkable;
-* automated compliance indicator;
+* automated precheck indicator;
 * reference calculation.
 
 Runtime Report Localization
@@ -88,4 +88,3 @@ should be implemented separately through a Python i18n layer, for example:
 
 The report generator would then call ``tr("dashboard.title")`` instead of
 hardcoding labels in ``excel_report.py``.
-

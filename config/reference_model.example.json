@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "metadata": {
+    "purpose": "Fail-closed example showing unresolved inputs. Use reference_model_config.json for the executable reference baseline."
+  },
+  "parameters": {
+    "asset_provisioning_mode": {
+      "value": "existing",
+      "source": "Reference-model example",
+      "source_locator": "Example only"
+    },
+    "weather_file": {
+      "value": null,
+      "source": "PLACEHOLDER - approved weather file required",
+      "source_locator": "Project climate decision"
+    }
+  }
+}

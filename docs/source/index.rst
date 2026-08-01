@@ -23,8 +23,8 @@ Contents
 
    user_guide
    reporting_guide
+   reference_model_guide
    manager_reference_integration
-   manager_multilingual_brief_sphinx
 
 .. toctree::
    :maxdepth: 2
@@ -33,7 +33,9 @@ Contents
    architecture
    compliance_methodology
    compliance_coverage_audit
+   implementation_status
    sia3802_gap_audit
+   documentation_quality
    developer_guide
    api_reference
    multilingual_documentation

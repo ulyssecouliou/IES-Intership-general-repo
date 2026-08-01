@@ -1,0 +1,25 @@
+{
+  "schema_id": "sia4010.shading_device_definition.v1",
+  "schema_version": "1.0",
+  "primary_source_sha256": "<LOWERCASE_SHA256_OF_AUTHORIZED_PRIMARY_SOURCE>",
+  "source_locator": "<EXAMPLE_BUILDING_DOCUMENT_PAGE_TABLE_OR_OBJECT>",
+  "device_id": "<SOURCE_STABLE_DEVICE_ID>",
+  "device_type": "<SOURCE_DEVICE_TYPE>",
+  "mounting_position": "<SOURCE_MOUNTING_POSITION>",
+  "states": [
+    {
+      "id": "open",
+      "properties": {
+        "<SOURCE_PROPERTY_ID>": null
+      },
+      "source_locator": "<SOURCE_LOCATOR>"
+    },
+    {
+      "id": "closed",
+      "properties": {
+        "<SOURCE_PROPERTY_ID>": null
+      },
+      "source_locator": "<SOURCE_LOCATOR>"
+    }
+  ]
+}

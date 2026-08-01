@@ -1,0 +1,116 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "sia4010.sia2024_usage_profiles.v1",
+  "title": "Normalized SIA 2024 use-profile binding",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "schema_id",
+    "schema_version",
+    "primary_source_sha256",
+    "source_locator",
+    "use_category",
+    "value_set",
+    "calendar_basis",
+    "annual_simultaneity_method",
+    "profiles"
+  ],
+  "properties": {
+    "schema_id": {"const": "sia4010.sia2024_usage_profiles.v1"},
+    "schema_version": {"const": "1.0"},
+    "primary_source_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "source_locator": {"type": "string", "minLength": 1},
+    "use_category": {"type": "string", "minLength": 1},
+    "value_set": {"type": "string", "minLength": 1},
+    "calendar_basis": {"type": "string", "minLength": 1},
+    "annual_simultaneity_method": {"type": "string", "minLength": 1},
+    "profiles": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "required": [
+          "key",
+          "profile_type",
+          "reference",
+          "modulating",
+          "units",
+          "data",
+          "source_locator"
+        ],
+        "properties": {
+          "key": {
+            "enum": [
+              "occupancy_profile",
+              "equipment_profile",
+              "lighting_profile"
+            ]
+          },
+          "profile_type": {
+            "enum": ["daily", "weekly", "yearly", "compact", "freeform"]
+          },
+          "reference": {"type": "string", "minLength": 1},
+          "modulating": {"type": "boolean"},
+          "units": {"type": "integer", "minimum": -1, "maximum": 1},
+          "data": {"type": "array", "minItems": 1},
+          "source_locator": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "ve_profile_graph": {
+      "description": "Optional native VE daily/weekly/yearly dependency graph. The three source schedules above are not implicitly provisionable as VE group profiles.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["nodes", "outputs", "source_locator"],
+      "properties": {
+        "source_locator": {"type": "string", "minLength": 1},
+        "nodes": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "key",
+              "profile_type",
+              "reference",
+              "modulating",
+              "units",
+              "data",
+              "source_locator"
+            ],
+            "properties": {
+              "key": {"type": "string", "minLength": 1},
+              "profile_type": {
+                "enum": ["daily", "weekly", "yearly"]
+              },
+              "reference": {"type": "string", "minLength": 1},
+              "modulating": {"type": "boolean"},
+              "units": {"type": "integer", "minimum": -1, "maximum": 1},
+              "data": {"type": "array", "minItems": 1},
+              "source_locator": {"type": "string", "minLength": 1}
+            }
+          }
+        },
+        "outputs": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "occupancy_profile",
+            "equipment_profile",
+            "lighting_profile"
+          ],
+          "properties": {
+            "occupancy_profile": {"type": "string", "minLength": 1},
+            "equipment_profile": {"type": "string", "minLength": 1},
+            "lighting_profile": {"type": "string", "minLength": 1}
+          }
+        }
+      }
+    }
+  }
+}

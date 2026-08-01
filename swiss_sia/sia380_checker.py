@@ -6,12 +6,39 @@ evidence/readiness checks when the standard requires a reference calculation,
 SIA 2024 mapping or official SIA 4010 validation evidence.
 """
 
-from typing import Any, Dict, List
+from pathlib import Path
+from typing import Any, Dict, List, Optional
 
-from .config import SIA3802_LIMIT_VALUES, SIA3802_THRESHOLDS, SIA3802_U_VALUES
-from .model_analyzer import ModelAnalyzer, RoomData
+from .config import (
+    PROJECT_ROOT,
+    SIA3802_COOLING_EER_SEER_LIMITS,
+    SIA3802_COOLING_EER_SEER_TARGETS,
+    SIA3802_COOLING_NEED_SCREENING,
+    SIA3802_DYNAMIC_COMFORT,
+    SIA3802_HEATING_SCOP_LIMITS,
+    SIA3802_HEATING_SCOP_TARGETS,
+    SIA3802_LIMIT_VALUES,
+    SIA3802_THRESHOLDS,
+    SIA3802_U_VALUES,
+    SIA3802_VENTILATION_CONTROL_TABLE,
+    SIA3802_WATER_COOLED_POST_COOLING_EERPLUS,
+    SIA4010_EVIDENCE_DIR,
+)
+from .evidence_manager import (
+    find_accepted_mapping,
+    scan_sia2024_usage_mappings,
+    scan_sia3874_lighting_mappings,
+)
+from .model_analyzer import ModelAnalyzer, RoomData, has_active_solar_protection
 from .rule_engine import Alert, Rule, RuleEngine, Severity
 from .value_integrity import add_value_integrity_alerts
+
+
+# Engineering epsilon used only to absorb floating-point/CDB serialization
+# noise.  It is deliberately far smaller than a regulatory tolerance and does
+# not turn meaningful reference-input deviations (for example 0.3033 vs 0.30)
+# into a match.
+REFERENCE_INPUT_NUMERICAL_EPSILON_W_M2K = 1.0e-4
 
 
 class SIA3802Checker:
@@ -25,58 +52,63 @@ class SIA3802Checker:
 
     def _setup_rules(self):
         """Register SIA 380/2 rules in the shared rule engine."""
+        reference_category = "Reference Project Diagnostics"
+        reference_note = (
+            "This is a deviation from a SIA 380/2 reference-project input, "
+            "not a standalone component-compliance failure."
+        )
         self.rule_engine.add_rule(Rule(
             name="SIA3802_U_VALUE_EXTERNAL_WALL",
-            description=f"External wall U-value <= {SIA3802_U_VALUES['external_wall']} W/m2K (SIA 380/2:2022, table 3, limit value).",
-            check=lambda surface: surface.u_value <= SIA3802_U_VALUES["external_wall"] if surface.u_value is not None else False,
-            severity=Severity.HIGH,
-            category="Envelope",
-            recommendation=f"Reduce/document the wall construction to U <= {SIA3802_U_VALUES['external_wall']} W/m2K or provide the complete SIA 380/2 reference-calculation justification.",
+            description=f"External wall U-value differs from the table 3 reference-project limit input of {SIA3802_U_VALUES['external_wall']} W/m2K. {reference_note}",
+            check=lambda surface: surface.u_value <= SIA3802_U_VALUES["external_wall"] + REFERENCE_INPUT_NUMERICAL_EPSILON_W_M2K if surface.u_value is not None else False,
+            severity=Severity.LOW,
+            category=reference_category,
+            recommendation="Retain the actual project value and complete the global project/reference calculation before drawing a compliance conclusion.",
         ))
 
         self.rule_engine.add_rule(Rule(
             name="SIA3802_U_VALUE_ROOF",
-            description=f"Flat roof U-value <= {SIA3802_U_VALUES['roof']} W/m2K (SIA 380/2:2022, table 3, limit value).",
-            check=lambda surface: surface.u_value <= SIA3802_U_VALUES["roof"] if surface.u_value is not None else False,
-            severity=Severity.HIGH,
-            category="Envelope",
-            recommendation=f"Reduce/document the roof construction to U <= {SIA3802_U_VALUES['roof']} W/m2K or justify why the generic roof threshold does not apply.",
+            description=f"Flat roof U-value differs from the table 3 reference-project limit input of {SIA3802_U_VALUES['roof']} W/m2K. {reference_note}",
+            check=lambda surface: surface.u_value <= SIA3802_U_VALUES["roof"] + REFERENCE_INPUT_NUMERICAL_EPSILON_W_M2K if surface.u_value is not None else False,
+            severity=Severity.LOW,
+            category=reference_category,
+            recommendation="Retain the actual project value and complete the global project/reference calculation before drawing a compliance conclusion.",
         ))
 
         self.rule_engine.add_rule(Rule(
             name="SIA3802_U_VALUE_FLOOR",
-            description=f"Ground or unconditioned-floor U-value <= {SIA3802_U_VALUES['floor']} W/m2K (SIA 380/2:2022, table 3, generic limit value).",
-            check=lambda surface: surface.u_value <= SIA3802_U_VALUES["floor"] if surface.u_value is not None else False,
-            severity=Severity.HIGH,
-            category="Envelope",
-            recommendation=f"Reduce/document the floor construction to U <= {SIA3802_U_VALUES['floor']} W/m2K or classify the floor boundary condition more precisely.",
+            description=f"Floor U-value differs from the table 3 reference-project limit input of {SIA3802_U_VALUES['floor']} W/m2K. {reference_note}",
+            check=lambda surface: surface.u_value <= SIA3802_U_VALUES["floor"] + REFERENCE_INPUT_NUMERICAL_EPSILON_W_M2K if surface.u_value is not None else False,
+            severity=Severity.LOW,
+            category=reference_category,
+            recommendation="Confirm the boundary classification and complete the global project/reference calculation.",
         ))
 
         self.rule_engine.add_rule(Rule(
             name="SIA3802_U_VALUE_WINDOW",
-            description=f"Window Uw <= {SIA3802_U_VALUES['window']} W/m2K (SIA 380/2:2022, table 2, limit value).",
-            check=lambda opening: opening.u_value <= SIA3802_U_VALUES["window"] if opening.u_value is not None else False,
-            severity=Severity.HIGH,
-            category="Openings",
-            recommendation=f"Check glazing/frame data and reach Uw <= {SIA3802_U_VALUES['window']} W/m2K, or provide the complete reference calculation.",
+            description=f"Window Uw differs from the table 2 reference-project limit input of {SIA3802_U_VALUES['window']} W/m2K. {reference_note}",
+            check=lambda opening: opening.u_value <= SIA3802_U_VALUES["window"] + REFERENCE_INPUT_NUMERICAL_EPSILON_W_M2K if opening.u_value is not None else False,
+            severity=Severity.LOW,
+            category=reference_category,
+            recommendation="Confirm that the extracted value is Uw and complete the global project/reference calculation.",
         ))
 
         self.rule_engine.add_rule(Rule(
             name="SIA3802_U_VALUE_DOOR",
             description=f"Door U-value checked conservatively against Uw <= {SIA3802_U_VALUES['door']} W/m2K where the opening is treated like a window/opening.",
             check=lambda opening: opening.u_value <= SIA3802_U_VALUES["door"] if opening.u_value is not None else False,
-            severity=Severity.MEDIUM,
-            category="Openings",
+            severity=Severity.LOW,
+            category=reference_category,
             recommendation=f"Confirm whether the door must be treated as a window/opening or opaque element, then target <= {SIA3802_U_VALUES['door']} W/m2K if this grouping applies.",
         ))
 
         self.rule_engine.add_rule(Rule(
             name="SIA3802_SOLAR_FACTOR",
-            description=f"Glazing solar factor g_perp <= {SIA3802_THRESHOLDS['solar_factor_max']} (SIA 380/2:2022, table 2, limit value).",
+            description=f"Glazing g_perp differs from the table 2 reference-project limit input of {SIA3802_THRESHOLDS['solar_factor_max']}. {reference_note}",
             check=lambda opening: opening.solar_factor <= SIA3802_THRESHOLDS["solar_factor_max"] if opening.solar_factor is not None else False,
-            severity=Severity.MEDIUM,
-            category="Openings",
-            recommendation=f"Use/document glazing with EN 410 g_perp <= {SIA3802_THRESHOLDS['solar_factor_max']} and keep the VE value mapping evidence.",
+            severity=Severity.LOW,
+            category=reference_category,
+            recommendation="Keep EN 410 provenance and evaluate the value through the global project/reference calculation.",
         ))
 
         self.rule_engine.add_rule(Rule(
@@ -84,8 +116,8 @@ class SIA3802Checker:
             description=f"Glazing visible transmittance tau_v >= {SIA3802_THRESHOLDS['light_transmittance_min']} (SIA 380/2:2022, table 2, reference value).",
             check=lambda opening: opening.visible_transmittance >= SIA3802_THRESHOLDS["light_transmittance_min"] if opening.visible_transmittance is not None else False,
             severity=Severity.LOW,
-            category="Openings",
-            recommendation="Extract or document glazing visible transmittance; if the VE value is not comparable, attach an auditable glazing datasheet.",
+            category=reference_category,
+            recommendation="Retain the extracted tau_v in the global project/reference calculation, or use tau_v >= 0.70 when reproducing the table 2 reference input.",
         ))
 
         self.rule_engine.add_rule(Rule(
@@ -93,7 +125,7 @@ class SIA3802Checker:
             description=f"Window frame fraction ff <= {SIA3802_THRESHOLDS['window_frame_fraction']} (SIA 380/2:2022, table 2, reference value).",
             check=lambda opening: opening.frame_fraction <= SIA3802_THRESHOLDS["window_frame_fraction"] if opening.frame_fraction is not None else False,
             severity=Severity.LOW,
-            category="Openings",
+            category=reference_category,
             recommendation="Check the extracted frame fraction; if it exceeds 0.25, correct the window construction or attach facade/glazing justification.",
         ))
 
@@ -119,8 +151,8 @@ class SIA3802Checker:
             name="SIA3802_INFILTRATION_M3_H_M2",
             description=f"Infiltration <= {SIA3802_LIMIT_VALUES['infiltration_m3_h_m2']} m3/(h.m2) when the VE value is comparable (SIA 380/2:2022, table 2).",
             check=lambda room: room.infiltration_m3_h_m2 <= SIA3802_LIMIT_VALUES["infiltration_m3_h_m2"] if room.infiltration_m3_h_m2 is not None else False,
-            severity=Severity.MEDIUM,
-            category="Ventilation",
+            severity=Severity.LOW,
+            category=reference_category,
             recommendation="Confirm the VE infiltration unit and document the retained conversion to m3/(h.m2).",
         ))
 
@@ -143,36 +175,171 @@ class SIA3802Checker:
         ))
 
         self.rule_engine.add_rule(Rule(
-            name="SIA3802_HVAC_EFFICIENCY",
-            description="HVAC efficiency is present; SIA 380/2 uses EER/SEER/SCOP tables and SIA 4010 validation, not one generic efficiency.",
-            check=lambda hvac: True,
+            name="SIA3802_VENTILATION_CONTROL_CLASS",
+            description="Extracted ventilation control meets the SIA 380/2 table 4 reference-project limit for its installation type and airflow band.",
+            check=lambda room: self._ventilation_control_meets_limit(room),
             severity=Severity.LOW,
-            category="Data Completeness",
-            recommendation="Classify system type, capacity band and performance value to compare against SIA 380/2 tables 5 to 9 and provide the applicable SIA 4010 evidence.",
+            category=reference_category,
+            recommendation="Update or document fan staging, schedule/demand sensors and zone/room control scope for the applicable table 4 cell.",
         ))
 
-    def check_all(self) -> Dict[str, Any]:
+        self.rule_engine.add_rule(Rule(
+            name="SIA3802_COOLING_EER_MIN",
+            description=f"Cooling EER meets the capacity-banded SIA 380/2 table 5 or 6 limit. {reference_note}",
+            check=lambda hvac: self._hvac_metric_meets_limit(hvac, "eer"),
+            severity=Severity.LOW,
+            category=reference_category,
+            recommendation="Check generator classification, rated capacity and nominal EER against the applicable reference-project row.",
+        ))
+
+        self.rule_engine.add_rule(Rule(
+            name="SIA3802_COOLING_SEER_MIN",
+            description=f"Cooling SEER meets the capacity-banded SIA 380/2 table 5 or 6 limit. {reference_note}",
+            check=lambda hvac: self._hvac_metric_meets_limit(hvac, "seer"),
+            severity=Severity.LOW,
+            category=reference_category,
+            recommendation="Check generator classification, rated capacity and seasonal SEER against the applicable reference-project row.",
+        ))
+
+        self.rule_engine.add_rule(Rule(
+            name="SIA3802_HEATING_SCOP_MIN",
+            description=f"Heat-pump SCOP meets the capacity-banded SIA 380/2 table 8 or 9 limit. {reference_note}",
+            check=lambda hvac: self._hvac_metric_meets_limit(hvac, "scop"),
+            severity=Severity.LOW,
+            category=reference_category,
+            recommendation="Check heat-source classification, rated capacity and SCoP against the applicable reference-project row.",
+        ))
+
+        self.rule_engine.add_rule(Rule(
+            name="SIA3802_SUMMER_COMFORT_DYNAMIC",
+            description="Annual occupied-hour temperatures satisfy the SIA 380/2 upper-hour allowance and never undercut the lower limit curve.",
+            check=lambda data: (
+                data.get("upper_hours") is not None
+                and data.get("lower_hours") is not None
+                and data.get("upper_limit_hours") is not None
+                and data["upper_hours"] <= data["upper_limit_hours"]
+                and data["lower_hours"] <= 0.0
+            ),
+            severity=Severity.HIGH,
+            category="Dynamic Method",
+            recommendation="Review the critical rooms, shading, ventilation and system operation, then rerun a full-year SIA-compatible dynamic simulation.",
+        ))
+
+    def check_all(
+        self,
+        rooms_data: Optional[List[RoomData]] = None,
+        dynamic_results: Optional[Dict[str, Any]] = None,
+        external_mappings: Optional[Dict[str, Any]] = None,
+    ) -> Dict[str, Any]:
         """Run all implemented SIA 380/2 checks and return category results."""
-        rooms_data = self.model_analyzer.analyze_all_rooms()
+        rooms_data = rooms_data if rooms_data is not None else self.model_analyzer.analyze_all_rooms()
         self.rule_engine.clear_alerts()
+
+        if external_mappings is None:
+            project = getattr(
+                getattr(self.model_analyzer, "data_extractor", None),
+                "project",
+                None,
+            )
+            project_path = str(getattr(project, "path", "") or "")
+            project_label = Path(project_path).name if project_path else None
+            external_mappings = {
+                "sia2024_usage": scan_sia2024_usage_mappings(
+                    PROJECT_ROOT,
+                    SIA4010_EVIDENCE_DIR,
+                    project_label,
+                ),
+                "sia3874_lighting": scan_sia3874_lighting_mappings(
+                    PROJECT_ROOT,
+                    SIA4010_EVIDENCE_DIR,
+                    project_label,
+                ),
+            }
 
         envelope = self._check_envelope(rooms_data)
         openings = self._check_openings(rooms_data)
         ventilation = self._check_ventilation(rooms_data)
-        gains = self._check_gains(rooms_data)
+        gains = self._check_gains(rooms_data, external_mappings)
+        setpoints = self._check_setpoints(rooms_data)
         hvac = self._check_hvac(rooms_data)
+        dynamic = self._check_dynamic_method(dynamic_results or {})
         value_integrity = add_value_integrity_alerts(self.rule_engine, rooms_data)
+        global_reference_comparison = self._check_global_reference_comparison(
+            dynamic_results or {}
+        )
 
         results = {
             "envelope": envelope,
             "openings": openings,
             "ventilation": ventilation,
             "gains": gains,
+            "setpoints": setpoints,
             "hvac": hvac,
+            "dynamic": dynamic,
             "value_integrity": value_integrity,
+            "global_reference_comparison": global_reference_comparison,
+            "reference_project_diagnostics": {
+                "status": "DIAGNOSTIC_ONLY",
+                "alerts": self.rule_engine.get_alerts_by_category(
+                    "Reference Project Diagnostics"
+                ),
+                "note": (
+                    "Tables 2 to 9 define inputs for reference-project comparisons. "
+                    "Their component-level deviations are not standalone compliance failures."
+                ),
+            },
+            "external_mappings": external_mappings,
+            "rule_evaluations": dict(self.rule_engine.evaluated_counts),
             "alerts": list(self.rule_engine.alerts),
         }
         return results
+
+    def _check_global_reference_comparison(
+        self,
+        dynamic_results: Dict[str, Any],
+    ) -> Dict[str, Any]:
+        """Require an explicit reviewed project/reference result for compliance."""
+        comparison = dynamic_results.get("global_reference_comparison", {}) or {}
+        accepted = bool(comparison.get("accepted"))
+        project_value = self._float_or_none(
+            comparison.get("project_value_numeric", comparison.get("project_value"))
+        )
+        reference_value = self._float_or_none(
+            comparison.get("reference_value_numeric", comparison.get("reference_value"))
+        )
+        source = str(
+            comparison.get("source_document")
+            or comparison.get("source_reference")
+            or ""
+        ).strip()
+        if accepted and project_value is not None and reference_value is not None and source:
+            return {
+                "status": "REVIEWED_RESULT_AVAILABLE",
+                "project_value": project_value,
+                "reference_value": reference_value,
+                "source": source,
+            }
+
+        self.rule_engine.add_alert(
+            rule="SIA3802_GLOBAL_REFERENCE_COMPARISON_NOT_CHECKABLE",
+            description=(
+                "No reviewed global SIA 380/2 project/reference comparison was "
+                "provided; component diagnostics cannot establish compliance."
+            ),
+            severity=Severity.CRITICAL,
+            category="Global Reference Comparison",
+            recommendation=(
+                "Provide the auditable project and reference calculation results, "
+                "their common metric/unit, calculation source and reviewer acceptance."
+            ),
+            data=None,
+        )
+        return {
+            "status": "NOT_CHECKABLE",
+            "project_value": project_value,
+            "reference_value": reference_value,
+            "source": source,
+        }
 
     def _check_envelope(self, rooms_data: List[RoomData]) -> Dict[str, Any]:
         """Check external envelope surfaces: walls, roofs and floors."""
@@ -246,6 +413,7 @@ class SIA3802Checker:
                     continue
                 opening_type = self.model_analyzer._normalize_opening_type(opening.opening_type)
                 if opening_type == "window":
+                    active_solar_protection = has_active_solar_protection(opening)
                     if opening.u_value is not None:
                         self.rule_engine.check_rules(["SIA3802_U_VALUE_WINDOW"], opening)
                     else:
@@ -303,7 +471,7 @@ class SIA3802Checker:
                             data=opening,
                         )
 
-                    if not getattr(opening, "shading_type", None):
+                    if active_solar_protection and not getattr(opening, "shading_type", None):
                         self.rule_engine.add_alert(
                             rule="SIA3802_SOLAR_PROTECTION_TYPE_MISSING",
                             description=f"Solar-protection type is not available for external window {opening.name or opening.id}.",
@@ -313,7 +481,7 @@ class SIA3802Checker:
                             data=opening,
                         )
 
-                    if not getattr(opening, "shading_control", None):
+                    if active_solar_protection and not getattr(opening, "shading_control", None):
                         self.rule_engine.add_alert(
                             rule="SIA3802_SOLAR_PROTECTION_CONTROL_MISSING",
                             description=f"Solar-protection control is not available for external window {opening.name or opening.id}.",
@@ -326,15 +494,16 @@ class SIA3802Checker:
                     solar_factor = getattr(opening, "solar_factor", None)
                     if (
                         getattr(opening, "g_total", None) is None
+                        and active_solar_protection
                         and solar_factor is not None
                         and solar_factor > SIA3802_THRESHOLDS["solar_factor_max"]
                     ):
                         self.rule_engine.add_alert(
                             rule="SIA3802_G_TOTAL_WITH_SHADING_MISSING",
-                            description=f"Active glazing-plus-shading g_total is not available for external window {opening.name or opening.id}, while g_perp is above the SIA g-limit.",
+                            description=f"Active glazing-plus-shading g_total is not available for external window {opening.name or opening.id}, while g_perp is above the table 2 reference input.",
                             severity=Severity.LOW,
                             category="Openings",
-                            recommendation="Provide active g_total if solar protection is used for compliance, or replace/document glazing with EN 410 g_perp <= the SIA limit.",
+                            recommendation="Provide active g_total for the modelled protection, retain the actual value in the global comparison, or use EN 410 g_perp <= 0.50 when reproducing the table 2 reference-input model.",
                             data=opening,
                         )
                 elif opening_type == "door" and opening.u_value is not None:
@@ -382,18 +551,27 @@ class SIA3802Checker:
                     )
                 else:
                     band = self._ventilation_band(ventilation_m3_h_m2)
-                    self.rule_engine.add_alert(
-                        rule="SIA3802_VENTILATION_CONTROL_EVIDENCE_MISSING",
-                        description=(
-                            f"Ventilation rate {ventilation_m3_h_m2:.3g} m3/(h.m2) "
-                            f"for room {room.name or room.id}; table 4 band: {band}. "
-                            "Single-zone/multizone strategy and fan-control evidence are not proven yet."
-                        ),
-                        severity=Severity.LOW,
-                        category="Ventilation",
-                        recommendation="Document system type, FAN_CTRL, occupancy/gas sensors and airflow reduction to validate SIA 380/2 table 4 control.",
-                        data=room,
-                    )
+                    if (
+                        getattr(room, "ventilation_installation_type", None)
+                        and getattr(room, "ventilation_control_level", None) is not None
+                    ):
+                        self.rule_engine.check_rules(
+                            ["SIA3802_VENTILATION_CONTROL_CLASS"],
+                            room,
+                        )
+                    else:
+                        self.rule_engine.add_alert(
+                            rule="SIA3802_VENTILATION_CONTROL_EVIDENCE_MISSING",
+                            description=(
+                                f"Ventilation rate {ventilation_m3_h_m2:.3g} m3/(h.m2) "
+                                f"for room {room.name or room.id}; table 4 band: {band}. "
+                                "The installation type or comparable control strategy could not be extracted."
+                            ),
+                            severity=Severity.LOW,
+                            category="Ventilation",
+                            recommendation="Document system type, FAN_CTRL, occupancy/gas sensors and airflow reduction to validate the applicable SIA 380/2 table 4 cell.",
+                            data=room,
+                        )
             else:
                 self.rule_engine.add_alert(
                     rule="SIA3802_VENTILATION_RATE_MISSING",
@@ -430,7 +608,11 @@ class SIA3802Checker:
             "score": self._calculate_category_score("Ventilation"),
         }
 
-    def _check_gains(self, rooms_data: List[RoomData]) -> Dict[str, Any]:
+    def _check_gains(
+        self,
+        rooms_data: List[RoomData],
+        external_mappings: Dict[str, Any],
+    ) -> Dict[str, Any]:
         """Check internal-gain evidence for lighting and equipment."""
         if not rooms_data:
             self.rule_engine.add_alert(
@@ -442,7 +624,27 @@ class SIA3802Checker:
                 data=None,
             )
 
+        screening_rows: List[Dict[str, Any]] = []
+        sia2024_mappings = external_mappings.get("sia2024_usage", {}) or {}
+        lighting_mappings = external_mappings.get("sia3874_lighting", {}) or {}
         for room in rooms_data:
+            usage_mapping = find_accepted_mapping(
+                sia2024_mappings,
+                room_id=room.id,
+                thermal_template_id=getattr(room, "thermal_template_id", ""),
+            )
+            if not usage_mapping:
+                self.rule_engine.add_alert(
+                    rule="SIA3802_SIA2024_MAPPING_MISSING",
+                    description=f"No reviewer-confirmed SIA 2024 use category is mapped to room {room.name or room.id} or its thermal template.",
+                    severity=Severity.MEDIUM,
+                    category="Gains",
+                    recommendation="Complete SIA2024_usage_mapping_*.csv with room/template, SIA category, reviewer, source and accepted review status.",
+                    data=room,
+                )
+            else:
+                setattr(room, "sia2024_category", usage_mapping.get("sia2024_category", ""))
+
             if room.internal_gains.get("lighting") is None:
                 self.rule_engine.add_alert(
                     rule="SIA3802_LIGHTING_POWER_MISSING",
@@ -454,6 +656,31 @@ class SIA3802Checker:
                 )
             else:
                 self.rule_engine.check_rules(["SIA3802_LIGHTING_POWER"], room)
+
+            lighting_mapping = find_accepted_mapping(
+                lighting_mappings,
+                room_id=room.id,
+                thermal_template_id=getattr(room, "thermal_template_id", ""),
+            )
+            if not lighting_mapping:
+                dimming = getattr(room, "daylight_dimming_profile", "")
+                self.rule_engine.add_alert(
+                    rule="SIA3802_LIGHTING_CONTROL_TYPE_MISSING",
+                    description=(
+                        f"No reviewer-confirmed SIA 387/4 lighting-control mapping is available for room {room.name or room.id}. "
+                        f"VE daylight-dimming profile: {dimming or 'not extracted'}."
+                    ),
+                    severity=Severity.LOW,
+                    category="Gains",
+                    recommendation="Complete SIA3874_lighting_control_mapping_*.csv; the two current standards do not contain the missing SIA 387/4 numeric/control tables.",
+                    data=room,
+                )
+            else:
+                setattr(
+                    room,
+                    "lighting_control_type",
+                    lighting_mapping.get("sia3874_control_type", ""),
+                )
 
             if room.internal_gains.get("equipment") is None:
                 self.rule_engine.add_alert(
@@ -467,9 +694,111 @@ class SIA3802Checker:
             else:
                 self.rule_engine.check_rules(["SIA3802_EQUIPMENT_POWER"], room)
 
+            screening = self._cooling_need_screening_row(room)
+            screening_rows.append(screening)
+            if screening["status"] == "NOT_CHECKABLE":
+                self.rule_engine.add_alert(
+                    rule="SIA3802_COOLING_NEED_SCREENING_NOT_CHECKABLE",
+                    description=f"Table 1 cooling-need screening is not checkable for room {room.name or room.id}: {screening['reason']}",
+                    severity=Severity.LOW,
+                    category="Gains",
+                    recommendation="Provide resolvable daily gain profiles and explicit window-operability/support evidence.",
+                    data=room,
+                )
+
         return {
             "alerts": self.rule_engine.get_alerts_by_category("Gains"),
             "score": self._calculate_category_score("Gains"),
+            "cooling_need_screening": screening_rows,
+        }
+
+    def _check_setpoints(self, rooms_data: List[RoomData]) -> Dict[str, Any]:
+        """Report heating/cooling operating setpoints and flag missing ones.
+
+        SIA 380/2 operating setpoints are fixed by the normative VE template
+        for each SIA 2024 use category. This check does not invent a numeric
+        limit or derive a project requirement from a target: it surfaces each
+        room's extracted setpoint value, type and profile for reviewer
+        confirmation and records ``NOT_CHECKABLE`` when no setpoint can be
+        extracted, so a missing operating condition is never silently treated
+        as compliant.
+        """
+        if not rooms_data:
+            self.rule_engine.add_alert(
+                rule="SIA3802_MODEL_NOT_CHECKABLE_SETPOINTS",
+                description="No usable VE room was analysed for operating-setpoint checks.",
+                severity=Severity.CRITICAL,
+                category="Setpoints",
+                recommendation="Confirm the active VE model contains thermal rooms with assigned SIA operating conditions.",
+                data=None,
+            )
+
+        observations: List[Dict[str, Any]] = []
+        for room in rooms_data:
+            conditions = getattr(room, "room_conditions", {}) or {}
+            heating = self._float_or_none(conditions.get("heating_setpoint"))
+            cooling = self._float_or_none(conditions.get("cooling_setpoint"))
+            heating_type = str(conditions.get("heating_setpoint_type") or "").strip()
+            cooling_type = str(conditions.get("cooling_setpoint_type") or "").strip()
+            heating_profile = str(
+                conditions.get("heating_setpoint_profile")
+                or conditions.get("heating_profile")
+                or ""
+            ).strip()
+            cooling_profile = str(
+                conditions.get("cooling_setpoint_profile")
+                or conditions.get("cooling_profile")
+                or ""
+            ).strip()
+            # A variable/two-value setpoint is still present through its profile.
+            heating_present = (
+                heating is not None
+                or bool(heating_profile)
+                or heating_type in {"variable", "two_value"}
+            )
+            cooling_present = (
+                cooling is not None
+                or bool(cooling_profile)
+                or cooling_type in {"variable", "two_value"}
+            )
+            status = "REPORTED" if (heating_present or cooling_present) else "NOT_CHECKABLE"
+            observations.append(
+                {
+                    "room": room.name or room.id,
+                    "status": status,
+                    "heating_setpoint_c": heating,
+                    "heating_setpoint_type": heating_type,
+                    "heating_setpoint_profile": heating_profile,
+                    "cooling_setpoint_c": cooling,
+                    "cooling_setpoint_type": cooling_type,
+                    "cooling_setpoint_profile": cooling_profile,
+                }
+            )
+            if status == "NOT_CHECKABLE":
+                self.rule_engine.add_alert(
+                    rule="SIA3802_SETPOINTS_NOT_CHECKABLE",
+                    description=(
+                        "No heating or cooling operating setpoint could be extracted for "
+                        f"room {room.name or room.id}."
+                    ),
+                    severity=Severity.MEDIUM,
+                    category="Setpoints",
+                    recommendation=(
+                        "Confirm the SIA operating conditions (heating/cooling setpoint or "
+                        "profile) are assigned in the VE thermal template."
+                    ),
+                    data=room,
+                )
+
+        return {
+            "status": "DIAGNOSTIC_ONLY",
+            "alerts": self.rule_engine.get_alerts_by_category("Setpoints"),
+            "observations": observations,
+            "note": (
+                "Operating setpoints are fixed by the normative VE template (SIA 2024 "
+                "usage). Values are reported for reviewer confirmation; this check does "
+                "not assign a numeric pass/fail against an invented limit."
+            ),
         }
 
     def _check_hvac(self, rooms_data: List[RoomData]) -> Dict[str, Any]:
@@ -495,15 +824,73 @@ class SIA3802Checker:
                     data=room,
                 )
             for hvac in room.hvac_systems:
-                if hvac.get("efficiency") is not None:
-                    self.rule_engine.check_rules(["SIA3802_HVAC_EFFICIENCY"], hvac)
-                else:
+                cooling_class = hvac.get("cooling_generator_class")
+                heating_class = hvac.get("heating_generator_class")
+                if cooling_class in {"air_cooled", "water_cooled"}:
+                    self._check_hvac_metric(
+                        hvac,
+                        "eer",
+                        "SIA3802_COOLING_EER_MIN",
+                        "nominal EER",
+                        "cooling_capacity_kw",
+                    )
+                    self._check_hvac_metric(
+                        hvac,
+                        "seer",
+                        "SIA3802_COOLING_SEER_MIN",
+                        "seasonal SEER",
+                        "cooling_capacity_kw",
+                    )
+                    self._annotate_hvac_targets(hvac)
+                elif cooling_class == "water_cooled_post_cooling":
                     self.rule_engine.add_alert(
-                        rule="SIA3802_HVAC_EFFICIENCY_MISSING",
-                        description=f"HVAC efficiency is not available for system {hvac.get('id', 'unknown')}.",
+                        rule="SIA3802_COOLING_EERPLUS_NOT_CHECKABLE",
+                        description=f"System {hvac.get('id', 'unknown')} is classified as water-cooled with dry post-cooling, but system-level EER+ at full and 50% load is not exposed by the current VE extraction.",
                         severity=Severity.LOW,
                         category="HVAC",
-                        recommendation="Read efficiencies from Apache Systems/ApacheHVAC or document the retained assumption.",
+                        recommendation="Provide Table 7-comparable EER+ including post-cooling fan/pump and chilled-water pump shares; do not substitute nominal EER or SSEER.",
+                        data=hvac,
+                    )
+                elif any(hvac.get(metric) is not None for metric in ("eer", "seer", "sseer")):
+                    self.rule_engine.add_alert(
+                        rule="SIA3802_COOLING_GENERATOR_CLASS_MISSING",
+                        description=f"Cooling efficiency is available for system {hvac.get('id', 'unknown')}, but air-cooled, water-cooled or dry-post-cooling classification is not proven.",
+                        severity=Severity.LOW,
+                        category="HVAC",
+                        recommendation="Expose/document condenser and heat-rejection type before selecting a SIA 380/2 table 5-7 row.",
+                        data=hvac,
+                    )
+
+                if heating_class in {"air_water_heat_pump", "ground_source_heat_pump"}:
+                    self._check_hvac_metric(
+                        hvac,
+                        "scop",
+                        "SIA3802_HEATING_SCOP_MIN",
+                        "seasonal SCoP",
+                        "heating_capacity_kw",
+                    )
+                    self._annotate_hvac_targets(hvac)
+                elif heating_class == "heat_pump_unclassified":
+                    self.rule_engine.add_alert(
+                        rule="SIA3802_HEAT_PUMP_CLASS_MISSING",
+                        description=f"System {hvac.get('id', 'unknown')} is a heat pump, but its air-water or ground/brine-water class is not proven.",
+                        severity=Severity.LOW,
+                        category="HVAC",
+                        recommendation="Document the heat source/sink before selecting SIA 380/2 table 8 or table 9.",
+                        data=hvac,
+                    )
+
+                if (
+                    cooling_class is None
+                    and heating_class is None
+                    and not any(hvac.get(metric) is not None for metric in ("eer", "seer", "sseer", "scop"))
+                ):
+                    self.rule_engine.add_alert(
+                        rule="SIA3802_HVAC_EFFICIENCY_MISSING",
+                        description=f"No table-comparable HVAC generator efficiency is available for system {hvac.get('id', 'unknown')}.",
+                        severity=Severity.LOW,
+                        category="HVAC",
+                        recommendation="Read EER/SEER/SCoP and generator type/capacity from Apache Systems or attach reviewed system evidence.",
                         data=hvac,
                     )
 
@@ -511,6 +898,348 @@ class SIA3802Checker:
             "alerts": self.rule_engine.get_alerts_by_category("HVAC"),
             "score": self._calculate_category_score("HVAC"),
         }
+
+    def _check_dynamic_method(self, dynamic_results: Dict[str, Any]) -> Dict[str, Any]:
+        """Check full-year comfort evidence and design-power result availability."""
+        status = str(dynamic_results.get("status") or "NOT_CHECKABLE").upper()
+        building_status = str(
+            dynamic_results.get("building_status")
+            or SIA3802_DYNAMIC_COMFORT.get("building_status")
+            or "UNSPECIFIED"
+        ).upper()
+        climate_provenance_status = str(
+            dynamic_results.get("reviewed_weather_match_status") or "NOT_CHECKABLE"
+        ).upper()
+        room_rows = [
+            row for row in (dynamic_results.get("rooms", []) or [])
+            if isinstance(row, dict)
+        ]
+        complete_room_rows = [
+            row for row in room_rows
+            if row.get("annual_comfort_period_complete")
+            and row.get("occupied_hours_above_sia180_upper") is not None
+            and row.get("occupied_hours_below_sia180_lower") is not None
+        ]
+        incomplete_room_rows = [row for row in room_rows if row not in complete_room_rows]
+        unknown_operability_rows = [
+            row for row in complete_room_rows
+            if row.get("window_operable") is None
+        ]
+        non_operable_rows = [
+            row for row in complete_room_rows
+            if row.get("window_operable") is False
+        ]
+        upper_hours = dynamic_results.get("max_occupied_hours_above_sia180_upper")
+        lower_hours = dynamic_results.get("max_occupied_hours_below_sia180_lower")
+        upper_limit_hours = None
+        if building_status in {"NEW", "NEW_BUILDING", "NEW_CONSTRUCTION"}:
+            upper_limit_hours = SIA3802_DYNAMIC_COMFORT["new_building_upper_exceedance_hours"]
+        elif building_status in {"EXISTING", "EXISTING_BUILDING"}:
+            upper_limit_hours = SIA3802_DYNAMIC_COMFORT["existing_building_upper_exceedance_hours"]
+
+        comfort_data = {
+            "status": status,
+            "building_status": building_status,
+            "upper_hours": upper_hours,
+            "lower_hours": lower_hours,
+            "upper_limit_hours": upper_limit_hours,
+            "climate_provenance_status": climate_provenance_status,
+            "expected_room_count": len(room_rows),
+            "complete_room_count": len(complete_room_rows),
+            "incomplete_room_count": len(incomplete_room_rows),
+            "unknown_operability_room_count": len(unknown_operability_rows),
+            "room_results": [],
+        }
+        if status != "AVAILABLE":
+            self.rule_engine.add_alert(
+                rule="SIA3802_SUMMER_COMFORT_NOT_CHECKABLE",
+                description="SIA 380/2 full-year dynamic comfort is not checkable because APS results or weather provenance are incomplete.",
+                severity=Severity.MEDIUM,
+                category="Dynamic Method",
+                recommendation="Run a full 2022-calendar DRY simulation and ensure the APS weather matches the active VE project weather.",
+                data=dynamic_results,
+            )
+        elif climate_provenance_status != "MATCH":
+            self.rule_engine.add_alert(
+                rule="SIA3802_REVIEWED_CLIMATE_PROVENANCE_MISSING",
+                description="The active VE weather file is not matched to an accepted reviewer-owned SIA climate metadata record.",
+                severity=Severity.MEDIUM,
+                category="Dynamic Method",
+                recommendation="Complete SIA3802_project_metadata_<project>.csv with the reviewed SIA 2028 weather file and confirm it matches the active VE project weather.",
+                data=dynamic_results,
+            )
+        elif not room_rows or incomplete_room_rows:
+            self.rule_engine.add_alert(
+                rule="SIA3802_ANNUAL_COMFORT_ROOM_COVERAGE_INCOMPLETE",
+                description=(
+                    f"Annual SIA comfort evidence is complete for {len(complete_room_rows)} "
+                    f"of {len(room_rows)} dynamic rooms; every applicable room must be complete."
+                ),
+                severity=Severity.MEDIUM,
+                category="Dynamic Method",
+                recommendation="Export aligned annual temperature, occupancy and both SIA 180 limit series for every applicable room.",
+                data=incomplete_room_rows,
+            )
+        elif unknown_operability_rows:
+            self.rule_engine.add_alert(
+                rule="SIA3802_WINDOW_OPERABILITY_EVIDENCE_MISSING",
+                description="Window operability is unknown for at least one comfort room, so clauses 3.2.4.2 and 3.2.4.3 cannot be selected safely.",
+                severity=Severity.MEDIUM,
+                category="Dynamic Method",
+                recommendation="Provide reviewed MacroFlo/window-opening evidence for every applicable room.",
+                data=unknown_operability_rows,
+            )
+        elif non_operable_rows and upper_limit_hours is None:
+            self.rule_engine.add_alert(
+                rule="SIA3802_BUILDING_STATUS_MISSING",
+                description="New/existing building status is not set, so the 100 h/year or 400 h/year upper-limit allowance cannot be selected.",
+                severity=Severity.MEDIUM,
+                category="Dynamic Method",
+                recommendation="Set dynamic_results['building_status'] to NEW_BUILDING or EXISTING_BUILDING from reviewed project metadata.",
+                data=dynamic_results,
+            )
+        else:
+            for row in complete_room_rows:
+                is_user_operable = row.get("window_operable") is True
+                room_limit = 0.0 if is_user_operable else upper_limit_hours
+                room_data = {
+                    "room_id": row.get("room_id"),
+                    "room_name": row.get("room_name"),
+                    "window_operable": row.get("window_operable"),
+                    "method": (
+                        "SIA3802_3.2.4.2_USER_OPERABLE"
+                        if is_user_operable
+                        else "SIA3802_3.2.4.3_TO_3.2.4.5_ANNUAL_ALLOWANCE"
+                    ),
+                    "upper_hours": row.get("occupied_hours_above_sia180_upper"),
+                    "lower_hours": row.get("occupied_hours_below_sia180_lower"),
+                    "upper_limit_hours": room_limit,
+                }
+                comfort_data["room_results"].append(room_data)
+                self.rule_engine.check_rules(
+                    ["SIA3802_SUMMER_COMFORT_DYNAMIC"],
+                    room_data,
+                )
+
+        design_power_status = str(dynamic_results.get("design_power_status") or "NOT_CHECKABLE").upper()
+        if design_power_status != "AVAILABLE":
+            for rule, label in (
+                ("SIA3802_HEATING_DESIGN_POWER_NOT_CHECKABLE", "four-day January heating design-power"),
+                ("SIA3802_COOLING_DESIGN_POWER_NOT_CHECKABLE", "three-day cooling design-power"),
+            ):
+                self.rule_engine.add_alert(
+                    rule=rule,
+                    description=f"The SIA 380/2 {label} result is not checkable from the selected annual APS file.",
+                    severity=Severity.LOW,
+                    category="Dynamic Method",
+                    recommendation="Provide documented design-day/sizing results with the required 14-day preconditioning; annual simulated peaks are not equivalent.",
+                    data=dynamic_results,
+                )
+
+        return {
+            "status": (
+                "CHECKED"
+                if status == "AVAILABLE"
+                and climate_provenance_status == "MATCH"
+                and bool(room_rows)
+                and not incomplete_room_rows
+                and not unknown_operability_rows
+                and (not non_operable_rows or upper_limit_hours is not None)
+                else "NOT_CHECKABLE"
+            ),
+            "comfort": comfort_data,
+            "design_power_status": design_power_status,
+            "score": self._calculate_category_score("Dynamic Method"),
+            "alerts": self.rule_engine.get_alerts_by_category("Dynamic Method"),
+        }
+
+    def _check_hvac_metric(
+        self,
+        hvac: Dict[str, Any],
+        metric: str,
+        rule_name: str,
+        metric_label: str,
+        capacity_key: str,
+    ) -> None:
+        """Run one capacity-banded HVAC rule or emit an explicit missing alert."""
+        if hvac.get(capacity_key) is None:
+            self.rule_engine.add_alert(
+                rule=f"{rule_name}_CAPACITY_MISSING",
+                description=f"{metric_label} cannot be compared for system {hvac.get('id', 'unknown')} because rated capacity is missing.",
+                severity=Severity.LOW,
+                category="HVAC",
+                recommendation="Expose generator gen_size in kW or provide reviewed capacity evidence.",
+                data=hvac,
+            )
+            return
+        if hvac.get(metric) is None:
+            self.rule_engine.add_alert(
+                rule=f"{rule_name}_VALUE_MISSING",
+                description=f"{metric_label} is missing for system {hvac.get('id', 'unknown')}.",
+                severity=Severity.LOW,
+                category="HVAC",
+                recommendation=f"Expose the documented VE {metric} value before comparing the SIA reference-project row.",
+                data=hvac,
+            )
+            return
+        if self._hvac_limit(hvac, metric) is None:
+            self.rule_engine.add_alert(
+                rule=f"{rule_name}_BAND_NOT_CHECKABLE",
+                description=f"No SIA 380/2 table row covers the extracted class/capacity for system {hvac.get('id', 'unknown')}.",
+                severity=Severity.LOW,
+                category="HVAC",
+                recommendation="Verify generator class, units and capacity-band boundary; do not extrapolate beyond the published table.",
+                data=hvac,
+            )
+            return
+        self.rule_engine.check_rules([rule_name], hvac)
+
+    @classmethod
+    def _hvac_metric_meets_limit(cls, hvac: Dict[str, Any], metric: str) -> bool:
+        """Compare one HVAC metric with its exact capacity-banded limit."""
+        value = cls._float_or_none(hvac.get(metric))
+        limit = cls._hvac_limit(hvac, metric)
+        return value is not None and limit is not None and value >= limit
+
+    @classmethod
+    def _hvac_limit(cls, hvac: Dict[str, Any], metric: str) -> Optional[float]:
+        """Return the applicable table 5, 6, 8 or 9 limit without extrapolation."""
+        if metric in {"eer", "seer"}:
+            generator_class = hvac.get("cooling_generator_class")
+            table = SIA3802_COOLING_EER_SEER_LIMITS.get(str(generator_class), {})
+            capacity = cls._float_or_none(hvac.get("cooling_capacity_kw"))
+            band = cls._capacity_band(capacity, table)
+            return cls._float_or_none((table.get(band, {}) or {}).get(metric)) if band else None
+        if metric == "scop":
+            generator_class = hvac.get("heating_generator_class")
+            table = SIA3802_HEATING_SCOP_LIMITS.get(str(generator_class), {})
+            capacity = cls._float_or_none(hvac.get("heating_capacity_kw"))
+            band = cls._capacity_band(capacity, table)
+            return cls._float_or_none(table.get(band)) if band else None
+        return None
+
+    @classmethod
+    def _annotate_hvac_targets(cls, hvac: Dict[str, Any]) -> None:
+        """Attach secondary target indicators without changing pass/fail status."""
+        cooling_class = str(hvac.get("cooling_generator_class") or "")
+        cooling_targets = SIA3802_COOLING_EER_SEER_TARGETS.get(cooling_class, {})
+        cooling_band = cls._capacity_band(
+            cls._float_or_none(hvac.get("cooling_capacity_kw")),
+            cooling_targets,
+        )
+        if cooling_band:
+            hvac["eer_target"] = cls._float_or_none(cooling_targets[cooling_band].get("eer"))
+            hvac["seer_target"] = cls._float_or_none(cooling_targets[cooling_band].get("seer"))
+
+        heating_class = str(hvac.get("heating_generator_class") or "")
+        heating_targets = SIA3802_HEATING_SCOP_TARGETS.get(heating_class)
+        heating_band = cls._capacity_band(
+            cls._float_or_none(hvac.get("heating_capacity_kw")),
+            heating_targets if isinstance(heating_targets, dict) else {},
+        )
+        hvac["scop_target"] = (
+            cls._float_or_none(heating_targets.get(heating_band))
+            if isinstance(heating_targets, dict) and heating_band
+            else None
+        )
+        hvac["table_8_target_exists"] = heating_class != "air_water_heat_pump"
+
+    @staticmethod
+    def _capacity_band(capacity_kw: Optional[float], table: Dict[str, Any]) -> Optional[str]:
+        """Select a published capacity band with deterministic boundary handling."""
+        if capacity_kw is None or capacity_kw < 0 or not isinstance(table, dict):
+            return None
+        ordered_bands = ("<=12", "12-50", "50-150", "150-450", "450-1000", ">1000")
+        for band in ordered_bands:
+            if band not in table:
+                continue
+            if band == "<=12" and capacity_kw <= 12:
+                return band
+            if band == "12-50" and (
+                (12 < capacity_kw <= 50)
+                or ("<=12" not in table and 12 <= capacity_kw <= 50)
+            ):
+                return band
+            if band == "50-150" and 50 < capacity_kw <= 150:
+                return band
+            if band == "150-450" and 150 < capacity_kw <= 450:
+                return band
+            if band == "450-1000" and 450 < capacity_kw <= 1000:
+                return band
+            if band == ">1000" and capacity_kw > 1000:
+                return band
+        return None
+
+    @classmethod
+    def _cooling_need_screening_row(cls, room: RoomData) -> Dict[str, Any]:
+        """Evaluate the informational SIA 380/2 table 1 cooling screening."""
+        gains = cls._float_or_none(getattr(room, "internal_gains_wh_m2_day", None))
+        support = str(getattr(room, "window_ventilation_support", "") or "")
+        row = {
+            "rule": "SIA3802_COOLING_NEED_SCREENING_RESULT",
+            "room_id": room.id,
+            "room_name": room.name,
+            "internal_gains_wh_m2_day": gains,
+            "window_ventilation_support": support,
+            "status": "NOT_CHECKABLE",
+            "hard_pass_fail": False,
+            "reason": "",
+            "source": SIA3802_COOLING_NEED_SCREENING.get("source", ""),
+        }
+        thresholds = SIA3802_COOLING_NEED_SCREENING.get(support)
+        if gains is None:
+            row["reason"] = "daily internal gains could not be integrated from VE profiles"
+            return row
+        if not isinstance(thresholds, dict):
+            row["reason"] = "window ventilation support is missing or not comparable"
+            return row
+        necessary_above = float(thresholds["necessary_above_wh_m2_day"])
+        desirable_min = float(thresholds["desirable_min_wh_m2_day"])
+        if gains > necessary_above:
+            row["status"] = "NECESSARY"
+        elif gains >= desirable_min:
+            row["status"] = "DESIRABLE"
+        else:
+            row["status"] = "NOT_NECESSARY"
+        row["reason"] = "Informational table 1 screening; not an autonomous compliance verdict"
+        return row
+
+    @classmethod
+    def _ventilation_control_meets_limit(cls, room: RoomData) -> bool:
+        """Compare extracted control strategy rank with the applicable table-4 limit."""
+        installation_type = str(getattr(room, "ventilation_installation_type", "") or "").lower()
+        airflow = cls._float_or_none(getattr(room, "ventilation_m3_h_m2", None))
+        actual_level = getattr(room, "ventilation_control_level", None)
+        if not installation_type or airflow is None or actual_level is None:
+            return False
+        band = cls._ventilation_band(airflow)
+        cell = SIA3802_VENTILATION_CONTROL_TABLE.get((installation_type, band), {})
+        required_level = cls._ventilation_control_rank(cell.get("limit"))
+        return required_level is not None and int(actual_level) >= required_level
+
+    @staticmethod
+    def _ventilation_control_rank(label: Any) -> Optional[int]:
+        """Map exact table-4 control descriptions to ordered capability levels."""
+        text = str(label or "").lower()
+        if "variable speed" in text and "gas sensor" in text:
+            return 4
+        if "variable speed" in text and "occupancy" in text:
+            return 3
+        if "two speeds" in text and "occupancy" in text:
+            return 2
+        if "two speeds" in text:
+            return 1
+        if "one speed" in text:
+            return 0
+        return None
+
+    @staticmethod
+    def _float_or_none(value: Any) -> Optional[float]:
+        """Convert a candidate numeric value without accepting invalid data."""
+        try:
+            return float(value)
+        except (TypeError, ValueError):
+            return None
 
     def _calculate_category_score(self, category: str) -> float:
         """Calculate a category score from 0 to 100."""

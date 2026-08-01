@@ -3,9 +3,9 @@ Glossary
 
 .. glossary::
 
-   Automated compliance indicator
+   Automated precheck indicator
       Weighted score based on currently implemented or partial SIA 380/2 checks.
-      It is not a certificate.
+      It is not the global project/reference verdict or a certificate.
 
    Health score
       Model-quality indicator based on completeness, consistency, and critical
@@ -37,4 +37,3 @@ Glossary
    VE Run-button workflow
       End-user workflow where the script is executed directly from the IESVE
       Scripts window without PowerShell.
-
