@@ -1,0 +1,45 @@
+# --------------------------------------------------------------------------
+# Sources normatives volumineuses — VOLONTAIREMENT HORS DÉPÔT
+# --------------------------------------------------------------------------
+# Ces fichiers sont sous licence (SIA / ASHRAE) et pèsent 144 Mo à eux deux.
+# Ils doivent être déposés manuellement à ces emplacements exacts : plusieurs
+# tests et scripts les cherchent là, et se contentent de se SKIPPER quand ils
+# manquent (cf. engine/tests/test_ref_integrity.py, test_scatter_band.py).
+#
+#   SIA_4010_geteilter_Link/   118 Mo — spécifications, classeurs d'évaluation
+#                                       et bâtiment exemple, source officielle SIA
+#   ASHRAE 140_2023_D_86892.pdf 26 Mo — n'est plus nécessaire au Test 1 depuis
+#                                       que EN ISO 52016-1:2017 §7.2 a été lue
+#
+# Le contrôle d'intégrité qui remplace ces classeurs en CI est
+# refs/reference-data/test-1.cells.json (38 Ko, versionné) : voir
+# docs/ADR-001-architecture-MSP.md §7bis.
+SIA_4010_geteilter_Link/
+ASHRAE 140_2023_D_86892.pdf
+
+# Les PDF de refs/ (SIA 380/2, SIA 4010, doc API VEScripts) SONT versionnés :
+# 4,1 Mo au total, et le projet ne peut pas être audité sans eux.
+
+# --------------------------------------------------------------------------
+# Artefacts Python
+# --------------------------------------------------------------------------
+__pycache__/
+*.py[cod]
+.pytest_cache/
+*.egg-info/
+.venv/
+venv/
+
+# --------------------------------------------------------------------------
+# Sauvegardes et fichiers de travail
+# --------------------------------------------------------------------------
+*.bak
+*.bak[0-9]
+*.tmp
+*~
+
+# --------------------------------------------------------------------------
+# Sorties produites par exécution
+# --------------------------------------------------------------------------
+reports/
+outputs/

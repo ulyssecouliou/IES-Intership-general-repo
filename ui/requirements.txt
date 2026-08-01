@@ -1,0 +1,14 @@
+# DEVELOPMENT / CI dependencies of ui/ only.
+#
+# Inside VEScripts, `tkinter`, `win32com` (Pywin32) and `reportlab` are
+# already embedded (docs/ADR-001-architecture-MSP.md §2, VEScripts-API-
+# VE2023.pdf §1.3) -- this file is NOT meant to be shipped or installed in
+# VE. It only lets `ui/tests/` run for real in a plain development
+# environment (as done in this session: reportlab 5.0.0 and pywin32 312,
+# both newer than the versions actually embedded in VE -- reportlab 3.2 /
+# Pywin32 219 per the ADR -- so passing tests here is evidence for the
+# *logic*, not proof of behavioural identity with the VE-embedded versions).
+#
+# tkinter is stdlib, never listed here.
+reportlab
+pywin32

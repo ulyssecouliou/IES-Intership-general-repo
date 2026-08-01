@@ -20,8 +20,16 @@ jobs:
           python-version: "3.11"
 
       - name: Vérifier l'absence d'import iesve dans engine/
+        # Le motif porte sur de VRAIES instructions d'import, ancrées en début de
+        # ligne, et seulement dans les .py. La version précédente cherchait la
+        # simple chaîne "import iesve" : elle matchait les docstrings qui
+        # affirment justement le contraire (« aucun import iesve »), ainsi que
+        # les .pyc, et rendait l'étape rouge sur un arbre pourtant conforme.
+        # Elle laissait par ailleurs passer `from iesve import ...`.
         run: |
-          if grep -rl "import iesve" engine/ 2>/dev/null; then
+          if grep -rnE --include='*.py' \
+               '^[[:space:]]*(import[[:space:]]+iesve|from[[:space:]]+iesve[[:space:]]+import)\b' \
+               engine/; then
             echo "engine/ doit rester du Python pur : import iesve interdit."
             exit 1
           fi

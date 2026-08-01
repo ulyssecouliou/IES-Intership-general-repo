@@ -1,0 +1,14 @@
+# DEVELOPMENT / CI dependencies of the engine.
+#
+# Measured in VE 2025 on 2026-07-31 (ve_adapter/Run_VE_Probe_Runtime.py):
+# the embedded interpreter is Python 3.12.3 and already ships numpy 1.26.4,
+# pandas 2.2.3, scipy 1.14.1, matplotlib 3.10.0, openpyxl 3.1.2, reportlab
+# 4.2.0, jinja2, Pillow, xlsxwriter, xlrd, pywin32 (COM) and tkinter.
+#
+# So the engine may use any of those and still run unchanged inside VEScripts.
+# What it must NOT do is `import iesve`: that is what keeps it testable in CI
+# without a VE licence.
+#
+# openpyxl is pinned here because the tests re-read the frozen SIA evaluation
+# workbooks; inside VE it is available anyway.
+openpyxl

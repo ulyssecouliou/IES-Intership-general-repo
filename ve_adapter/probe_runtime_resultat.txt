@@ -1,0 +1,25 @@
+=== SONDE RUNTIME VESCRIPTS ===
+sys.version      : 3.12.3 (tags/v3.12.3:f6650f9, Apr  9 2024, 14:05:25) [MSC v.1938 64 bit (AMD64)]
+sys.version_info : (3, 12, 3, 'final', 0)
+sys.executable   : C:/Program Files/IES/VE 2025/apps/python/pythonw.exe
+plateforme       : win32
+
+--- bibliotheques ---
+  present  numpy                1.26.4       agregation des series horaires
+  present  pandas               2.2.3        classes de frequence
+  present  scipy                1.14.1       statistiques
+  present  matplotlib           3.10.0       graphiques du PDF
+  present  win32com.client      (version inconnue) PILOTAGE EXCEL PAR COM — remplissage du classeur SIA
+  present  reportlab            4.2.0        PDF client
+  present  xlsxwriter           3.2.0        creation de classeurs
+  present  xlrd                 2.0.1        lecture de classeurs
+  present  openpyxl             3.1.2        lecture/ecriture xlsx (non documente comme fourni)
+  present  jinja2               3.1.5        gabarits de rapport
+  present  PIL                  10.3.0       images
+  present  tkinter              (version inconnue) interface dans VE
+  present  dataclasses          (version inconnue) exige Python 3.7+ — presence = guide VE perime
+  present  iesve                (version inconnue) API VE elle-meme
+
+--- verdict ---
+  Python >= 3.7 : le guide VE 2023 est PERIME sur ce point.
+  Aucune contrainte 3.4 a imposer au code.
