@@ -96,13 +96,32 @@ def resultat_sans_candidat():
 @pytest.fixture
 def app(resultat_fixture):
     """Construit RÉELLEMENT le dialogue (widgets + arborescence complète),
-    le rend au test, puis le détruit -- jamais de `mainloop()` ici."""
-    fenetre = dlg.NavigateurTest1(resultat_fixture)
+    le rend au test, puis le détruit -- jamais de `mainloop()` ici.
+
+    ⚠ La sonde `_affichage_disponible()` ne suffit pas : elle ne s'exécute
+    qu'UNE fois, à l'import. Or sur ce poste, le Python provient du Windows
+    Store et son `init.tcl` se trouve derrière un chemin de paquet qui change
+    d'un appel à l'autre : `tkinter.Tk()` réussit à l'import puis échoue au
+    montage d'un test. Instabilité mesurée par la revue indépendante à ~20 %
+    (5 exécutions : 96/96/96/96 puis 95 + 1 error).
+
+    Une suite qui tombe en ERREUR une fois sur cinq est pire qu'une suite qui
+    saute honnêtement : elle décrédibilise toutes les autres exécutions. On
+    re-sonde donc à chaque montage et on convertit l'échec en `skip`.
+    """
+    try:
+        fenetre = dlg.NavigateurTest1(resultat_fixture)
+    except tk.TclError as erreur:
+        pytest.skip(u'Tk indisponible au montage de ce test (%s) -- '
+                    u'voir la docstring du module.' % erreur)
     try:
         fenetre._racine.update()
         yield fenetre
     finally:
-        fenetre._racine.destroy()
+        try:
+            fenetre._racine.destroy()
+        except tk.TclError:
+            pass  # la fenêtre a déjà disparu : ne pas masquer l'échec du test
 
 
 def test_construction_ne_leve_aucune_exception_avec_plusieurs_classes(app):

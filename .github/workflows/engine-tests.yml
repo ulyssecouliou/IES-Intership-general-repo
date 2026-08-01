@@ -34,14 +34,27 @@ jobs:
             exit 1
           fi
 
-      - name: Installer les dépendances du moteur
+      - name: Installer les dépendances
         run: |
           if [ -f engine/requirements.txt ]; then
             pip install -r engine/requirements.txt
           fi
+          if [ -f ui/requirements.txt ]; then
+            pip install -r ui/requirements.txt
+          fi
           pip install pytest
 
-      - name: Lancer les tests du moteur
-        # pytest sort en code 5 ("no tests collected") si engine/tests/ est
-        # vide : c'est un échec voulu, pas un CI vert par défaut.
-        run: pytest engine/tests/ -q
+      - name: Lancer toute la suite
+        # Portée élargie le 2026-08-01. L'étape ne lançait que `engine/tests/`
+        # et laissait 61 tests sur 121 hors CI : les 22 de `ve_adapter/tests/`
+        # (la couche qui produit les nombres) et les 39 de `ui/tests/`.
+        #
+        # Ce qui se dégrade proprement en CI, sans faire échouer :
+        #   - les tests qui exigent les classeurs SIA (118 Mo, hors dépôt) se
+        #     sautent ; l'empreinte `test-1.cells.json` prend le relais ;
+        #   - `ui/tests/test_export_excel_com.py` se saute (pas d'Excel) ;
+        #   - `ui/tests/test_dialog_tkinter.py` se saute si Tk est absent.
+        #
+        # pytest sort en code 5 ("no tests collected") si rien n'est collecté :
+        # c'est un échec voulu, pas un CI vert par défaut.
+        run: pytest -q
