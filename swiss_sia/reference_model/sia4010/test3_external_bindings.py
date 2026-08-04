@@ -58,12 +58,16 @@ SUPPORTED_AST_OPERATORS = {
 
 
 def _mapping(value: Any, context: str) -> Mapping[str, Any]:
+    """Require and return a JSON mapping for one normalized field."""
+
     if not isinstance(value, Mapping):
         raise ConfigurationError("{} must be a JSON object".format(context))
     return value
 
 
 def _array(value: Any, context: str, *, allow_empty: bool = False) -> Sequence[Any]:
+    """Require and return a JSON array for one normalized field."""
+
     if isinstance(value, (str, bytes)) or not isinstance(value, Sequence):
         raise ConfigurationError("{} must be a JSON array".format(context))
     if not allow_empty and not value:
@@ -72,6 +76,8 @@ def _array(value: Any, context: str, *, allow_empty: bool = False) -> Sequence[A
 
 
 def _text(value: Any, context: str) -> str:
+    """Require non-placeholder text for one normalized source field."""
+
     result = str(value or "").strip()
     if not result:
         raise ConfigurationError("{} must be non-empty text".format(context))
@@ -93,6 +99,8 @@ def _exact_keys(
     *,
     optional: Set[str] = frozenset(),
 ) -> None:
+    """Require the exact allowed key set for one normalized object."""
+
     missing = sorted(required - set(payload))
     unknown = sorted(set(payload) - required - optional)
     if missing or unknown:
@@ -104,6 +112,8 @@ def _exact_keys(
 
 
 def _identifier(value: Any, context: str) -> str:
+    """Validate and return one stable normalized identifier."""
+
     result = _text(value, context)
     if not all(character.isalnum() or character in "_.-" for character in result):
         raise ConfigurationError(
@@ -188,6 +198,8 @@ class NormalizedControlFunction:
     required_runtime_capabilities: Tuple[str, ...]
 
     def to_dict(self) -> Dict[str, Any]:
+        """Serialize the normalized control function as audit data."""
+
         return asdict(self)
 
 
@@ -205,12 +217,16 @@ class NormalizedSia3874Controls:
     source_locator: str
 
     def control(self, control_id: str) -> NormalizedControlFunction:
+        """Return one normalized shading or lighting control by identifier."""
+
         for control in self.shading_controls + self.lighting_controls:
             if control.control_id == control_id:
                 return control
         raise KeyError(control_id)
 
     def to_dict(self) -> Dict[str, Any]:
+        """Serialize the complete normalized control contract for auditing."""
+
         parameters = []
         for parameter in self.parameters:
             row = {
@@ -263,6 +279,8 @@ class NormalizedShadingDevice:
     source_locator: str
 
     def to_dict(self) -> Dict[str, Any]:
+        """Serialize the normalized shading device as audit data."""
+
         return asdict(self)
 
 
@@ -281,6 +299,8 @@ class NormalizedAuthorityDecision:
     source_locator: str
 
     def to_dict(self) -> Dict[str, Any]:
+        """Serialize the normalized authority decision as audit data."""
+
         return asdict(self)
 
 
@@ -295,6 +315,8 @@ class Test3ExternalBindings:
     evidence_sha256: Tuple[Tuple[str, str], ...]
 
     def to_dict(self) -> Dict[str, Any]:
+        """Serialize all exact Test 3 delegated bindings for auditing."""
+
         return {
             "common": self.common.to_dict(),
             "controls": self.controls.to_dict(),
@@ -309,6 +331,8 @@ class Test3ExternalBindings:
 
 
 def _load_signals(payload: Any) -> Tuple[NormalizedControlSignal, ...]:
+    """Load and validate the complete normalized control signal collection."""
+
     signals = []
     for index, raw in enumerate(_array(payload, "signals")):
         context = "signals[{}]".format(index)
@@ -349,6 +373,8 @@ def _load_signals(payload: Any) -> Tuple[NormalizedControlSignal, ...]:
 
 
 def _load_parameters(payload: Any) -> Tuple[NormalizedControlParameter, ...]:
+    """Load and validate the complete normalized control parameter collection."""
+
     parameters = []
     for index, raw in enumerate(_array(payload, "parameters")):
         context = "parameters[{}]".format(index)
@@ -433,6 +459,8 @@ def _validate_ast(
     parameter_ids: Set[str],
     state_ids: Set[str],
 ) -> Mapping[str, Any]:
+    """Validate one source-transcribed control expression syntax tree."""
+
     payload = _mapping(node, context)
     operator = _text(payload.get("op"), context + ".op")
     if operator not in SUPPORTED_AST_OPERATORS:
@@ -552,6 +580,8 @@ def _load_control(
     signal_ids: Set[str],
     parameter_ids: Set[str],
 ) -> NormalizedControlFunction:
+    """Load one normalized control function with strict references."""
+
     item = _mapping(raw, context)
     _exact_keys(
         item,

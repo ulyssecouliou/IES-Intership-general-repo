@@ -1,5 +1,6 @@
 """Fail-closed tests for one-click ApacheSim runtime qualification."""
 
+import hashlib
 import json
 import unittest
 from datetime import datetime, timezone
@@ -16,11 +17,44 @@ ROOT = Path(__file__).resolve().parents[1]
 TEMP_ROOT = ROOT / ".codex_tmp"
 
 
+class _RoomData:
+    def __init__(self, factor=2.0710644309317603):
+        self.factor = factor
+
+    def get_room_conditions(self):
+        return {"furniture_mass_factor": self.factor}
+
+    def get_apache_systems(self):
+        return {
+            "conditioned": True,
+            "heating_capacity_unlimited": True,
+            "cooling_capacity_unlimited": True,
+        }
+
+
+class _Body:
+    def __init__(self, name, factor=2.0710644309317603):
+        self.name = name
+        self.room_data = _RoomData(factor)
+
+    def get_room_data(self):
+        return self.room_data
+
+
+class _Model:
+    def __init__(self, case_id, factor=2.0710644309317603):
+        self.body = _Body("SIA4010_TEST_1_{}_ZONE".format(case_id), factor)
+
+    def get_bodies(self, assigned):
+        return [self.body]
+
+
 class _Project:
     """Minimal saved VE project identity."""
 
-    def __init__(self, path):
+    def __init__(self, path, *, case_id="600", factor=2.0710644309317603):
         self.path = str(path)
+        self.models = [_Model(case_id, factor)]
         self.name = Path(path).name
 
 
@@ -72,6 +106,7 @@ class ApacheSimQualificationTests(unittest.TestCase):
             prior_result.unlink()
         self._write_scenario("600")
         self._write_model_report("600")
+        self._write_runtime_input_report("600")
 
     def _write_scenario(self, case_id):
         payload = ModelBuilderController().build_payload(
@@ -129,9 +164,51 @@ class ApacheSimQualificationTests(unittest.TestCase):
             encoding="utf-8",
         )
 
-    def _run(self, factory):
+    def _write_runtime_input_report(self, case_id):
+        scenario_path = self.project / "sia_model_scenario.json"
+        scenario_payload = json.loads(scenario_path.read_text(encoding="utf-8"))
+        report_path = (
+            self.project
+            / "sia4010_artifacts"
+            / "diagnostics"
+            / "sia4010_test1_runtime_input_qualification_20260729_010203.json"
+        )
+        report_path.parent.mkdir(parents=True, exist_ok=True)
+        factor = 2.0710644309317603
+        report_path.write_text(
+            json.dumps(
+                {
+                    "status": "PROVISIONAL_ENGINE_MAPPING_APPLIED_READY_FOR_SIMULATION",
+                    "project": {"name": self.project.name, "path": str(self.project)},
+                    "scenario": scenario_payload,
+                    "scenario_sha256": hashlib.sha256(
+                        scenario_path.read_bytes()
+                    ).hexdigest(),
+                    "room": {"name": "SIA4010_TEST_1_{}_ZONE".format(case_id)},
+                    "mutation": {
+                        "only_intended_field": "furniture_mass_factor",
+                        "before": 1.0,
+                        "requested": factor,
+                        "verified_after": factor,
+                    },
+                    "mapping": {"furniture_mass_factor": factor},
+                    "capacity_semantics": {
+                        "conditioned": True,
+                        "verified": True,
+                    },
+                    "guardrails": {
+                        "capacity_fields_mutated": False,
+                        "compliance_claim_allowed": False,
+                    },
+                }
+            ),
+            encoding="utf-8",
+        )
+
+
+    def _run(self, factory, *, project=None):
         return run_qualified_apachesim(
-            project=_Project(self.project),
+            project=project or _Project(self.project),
             apachesim_factory=factory,
             repository_root=ROOT,
             now=datetime(2026, 7, 29, 2, 3, 4, tzinfo=timezone.utc),
@@ -191,6 +268,30 @@ class ApacheSimQualificationTests(unittest.TestCase):
             "VE-WEA-001 must PASS",
         ):
             self._run(lambda: _FakeApacheSim(self.project))
+    def test_rejects_missing_runtime_input_qualification(self):
+        report = next(
+            (self.project / "sia4010_artifacts" / "diagnostics").glob(
+                "sia4010_test1_runtime_input_qualification_*.json"
+            )
+        )
+        report.unlink()
+        with self.assertRaisesRegex(
+            ApacheSimQualificationError,
+            "no qualification report was found",
+        ):
+            self._run(lambda: self.fail("ApacheSim must not be constructed"))
+
+    def test_rejects_live_furniture_factor_mismatch(self):
+        with self.assertRaisesRegex(
+            ApacheSimQualificationError,
+            "Live VE furniture factor does not match",
+        ):
+            self._run(
+                lambda: self.fail("ApacheSim must not be constructed"),
+                project=_Project(self.project, factor=1.0),
+            )
+
+
 
     def test_option_readback_mismatch_fails_and_keeps_audit(self):
         with self.assertRaisesRegex(

@@ -132,10 +132,11 @@ class LogoEmbeddingTests(unittest.TestCase):
 class _Alert:
     """Minimal alert double carrying only what the verdict engine reads."""
 
-    def __init__(self, category, severity):
+    def __init__(self, category, severity, rule=""):
         """Record the alert category and severity name."""
         self.category = category
         self.severity = type("Severity", (), {"name": severity})()
+        self.rule = rule
 
 
 class PdfWriterTests(unittest.TestCase):
@@ -211,6 +212,28 @@ class VerdictEngineTests(unittest.TestCase):
         gains = next(d for d in verdict.domains if d.domain == "gains")
         self.assertEqual(gains.status, COMPLIANT)
         self.assertEqual(gains.advisory_count, 2)
+
+    def test_missing_evidence_keeps_domain_and_overall_not_determined(self):
+        """Do not label a domain compliant when its required evidence is missing."""
+
+        verdict = build_compliance_verdict(
+            self._sia3802(
+                alerts=[
+                    _Alert(
+                        "Gains",
+                        "MEDIUM",
+                        rule="SIA3802_LIGHTING_POWER_MISSING",
+                    )
+                ],
+                comparison_status="REVIEWED_RESULT_AVAILABLE",
+            ),
+            {},
+            rooms_analysed=3,
+        )
+        gains = next(d for d in verdict.domains if d.domain == "gains")
+        self.assertEqual(gains.status, NOT_DETERMINED)
+        self.assertEqual(verdict.sia3802_status, NOT_DETERMINED)
+        self.assertEqual(verdict.sia3802_reason, "domain_evidence_incomplete")
 
     def test_sia3802_compliant_only_with_reviewed_comparison_and_no_blocker(self):
         verdict = build_compliance_verdict(

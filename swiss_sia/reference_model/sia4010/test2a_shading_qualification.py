@@ -638,6 +638,8 @@ def qualify_test2a_shading_setters(
         cdb_project = _current_cdb_project(iesve_module)
 
         def mark_mutation_started() -> None:
+            """Persist the mutation boundary before calling the native threshold setters."""
+
             report.update(
                 {
                     "status": "MUTATION_STARTED",
@@ -819,6 +821,8 @@ def qualify_test2a_2e1_optical_setters(
         cdb_project = _current_cdb_project(iesve_module)
 
         def mark_mutation_started() -> None:
+            """Persist the mutation boundary before calling the native optical setters."""
+
             report.update(
                 {
                     "status": "MUTATION_STARTED",

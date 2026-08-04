@@ -270,6 +270,7 @@ class IesVeAssetProvisioner:
         self.project = project
         self.cdb_project = cdb_project
         self._compatibility_warnings: List[Dict[str, Any]] = []
+        self._constant_on_profile_ids: set[str] = set()
 
     def _verify_layer_properties(
         self,
@@ -728,9 +729,28 @@ class IesVeAssetProvisioner:
                 )
             )
 
+    @staticmethod
+    def _is_constant_one_daily_profile(
+        definition: ProfileDefinition,
+        resolved_data: Any,
+    ) -> bool:
+        """Return whether a source-traced daily profile is exactly one."""
+
+        if definition.profile_type != "daily":
+            return False
+        if not isinstance(resolved_data, (list, tuple)) or not resolved_data:
+            return False
+        return all(
+            isinstance(row, (list, tuple))
+            and len(row) >= 2
+            and _values_match(row[1], 1.0)
+            for row in resolved_data
+        )
+
     def _create_profiles(self, manifest: AssetManifest) -> Dict[str, str]:
         """Create or verify profiles in dependency order with exact read-back."""
 
+        self._constant_on_profile_ids = set()
         existing = self._existing_profiles()
         references = [definition.reference for definition in manifest.profiles]
         if len(references) != len(set(references)):
@@ -772,6 +792,10 @@ class IesVeAssetProvisioner:
                         "existing profile {}".format(definition.key),
                     )
                     identifiers[definition.key] = identifier
+                    if self._is_constant_one_daily_profile(
+                        definition, resolved_data
+                    ):
+                        self._constant_on_profile_ids.add(identifier)
                     continue
                 try:
                     profile = self.project.create_profile(
@@ -811,6 +835,12 @@ class IesVeAssetProvisioner:
                         "Profile {} was saved but its persistent ID could not "
                         "be resolved: {}".format(definition.key, exc)
                     ) from exc
+                if self._is_constant_one_daily_profile(
+                    definition, resolved_data
+                ):
+                    self._constant_on_profile_ids.add(
+                        identifiers[definition.key]
+                    )
         return identifiers
 
     def provision_profiles(
@@ -850,7 +880,11 @@ class IesVeAssetProvisioner:
                 )
 
         class _ProfilePlan:
+            """Store the immutable source-traced plan for one VE daily profile."""
+
             def __init__(self, existing_mode: str):
+                """Initialize a VE daily-profile creation plan from validated fields."""
+
                 self.profiles = planned
                 self.on_existing = existing_mode
 
@@ -1261,6 +1295,28 @@ class IesVeAssetProvisioner:
                 "gain_name": str(expected.get("name", "")),
                 "requested_profile": expected_profile,
                 "ve_readback": actual_profile,
+            }
+            if warning not in self._compatibility_warnings:
+                self._compatibility_warnings.append(warning)
+            comparable["variation_profile"] = expected_profile
+        if (
+            expected_profile in self._constant_on_profile_ids
+            and expected_profile != "ON"
+            and str(comparable.get("variation_profile", "") or "") == "ON"
+        ):
+            warning = {
+                "code": "VE-CONSTANT-ONE-PROFILE-CANONICALIZED-ON",
+                "message": (
+                    "VE 2025 returned ON for a source-traced daily profile "
+                    "whose every multiplier is exactly 1.0. ON is "
+                    "mathematically identical for this asset; non-constant "
+                    "profiles remain subject to exact verification."
+                ),
+                "asset_type": "gain",
+                "gain_key": definition.key,
+                "gain_name": str(expected.get("name", "")),
+                "requested_profile": expected_profile,
+                "ve_readback": "ON",
             }
             if warning not in self._compatibility_warnings:
                 self._compatibility_warnings.append(warning)
@@ -1696,6 +1752,28 @@ class IesVeAssetProvisioner:
                 "requested_profile": expected_profile,
                 "ve_readback": actual_profile,
                 "max_flow": 0.0,
+            }
+            if warning not in self._compatibility_warnings:
+                self._compatibility_warnings.append(warning)
+            comparable["variation_profile"] = expected_profile
+        if (
+            expected_profile in self._constant_on_profile_ids
+            and expected_profile != "ON"
+            and str(comparable.get("variation_profile", "") or "") == "ON"
+        ):
+            warning = {
+                "code": "VE-CONSTANT-ONE-PROFILE-CANONICALIZED-ON",
+                "message": (
+                    "VE 2025 returned ON for a source-traced daily profile "
+                    "whose every multiplier is exactly 1.0. ON is "
+                    "mathematically identical for this asset; non-constant "
+                    "profiles remain subject to exact verification."
+                ),
+                "asset_type": "air_exchange",
+                "exchange_key": definition.key,
+                "exchange_name": str(expected.get("name", "")),
+                "requested_profile": expected_profile,
+                "ve_readback": "ON",
             }
             if warning not in self._compatibility_warnings:
                 self._compatibility_warnings.append(warning)

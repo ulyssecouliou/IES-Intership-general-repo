@@ -695,6 +695,12 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
         "fr": "Sonder le runtime éclairage Test 3",
         "it": "Sonda runtime illuminazione Test 3",
     },
+    "btn_probe_hvac_plant_runtime": {
+        "en": "Probe Tests 4-7 HVAC/plant runtime",
+        "de": "HVAC/Anlagen-Laufzeit Tests 4-7 pruefen",
+        "fr": "Sonder le runtime HVAC/energie Tests 4-7",
+        "it": "Sonda runtime HVAC/impianti Test 4-7",
+    },
     "btn_close": {
         "en": "Close",
         "de": "Schliessen",
@@ -1183,6 +1189,30 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
             "Sonda runtime Test 3 {status}: {fields} campi illuminazione, "
             "{sensors} membri sensore - {report}"
         ),
+    },
+    "dlg_hvac_plant_probe_title": {
+        "en": "Tests 4-7 HVAC and plant runtime capability",
+        "de": "HVAC- und Anlagen-Laufzeitfaehigkeit Tests 4-7",
+        "fr": "Capacite runtime HVAC et energie Tests 4-7",
+        "it": "Capacita runtime HVAC e impianti Test 4-7",
+    },
+    "dlg_hvac_plant_probe_unavailable": {
+        "en": "Prepare and select one exact official Test 4, 5A-5D, 6 or 7 case in a saved disposable project.",
+        "de": "Bereiten Sie in einem gespeicherten Wegwerfprojekt einen exakten offiziellen Fall Test 4, 5A-5D, 6 oder 7 vor.",
+        "fr": "Preparez et selectionnez un cas officiel exact Test 4, 5A-5D, 6 ou 7 dans un projet jetable enregistre.",
+        "it": "Prepara e seleziona un caso ufficiale esatto Test 4, 5A-5D, 6 o 7 in un progetto usa e getta salvato.",
+    },
+    "dlg_hvac_plant_probe_complete": {
+        "en": "Read-only Tests 4-7 probe: {status}. Apache collection: {apache}; room read-back: {room}; plant members: {plant}. All 7 exact cases were audited. No VE object was changed. Report: {report}",
+        "de": "Schreibgeschuetzte Tests-4-7-Pruefung: {status}. Apache-Sammlung: {apache}; Raum-Readback: {room}; Anlagenmitglieder: {plant}. Alle 7 exakten Faelle wurden geprueft. Kein VE-Objekt wurde geaendert. Bericht: {report}",
+        "fr": "Sonde Tests 4-7 en lecture seule : {status}. Collection Apache : {apache} ; relecture zone : {room} ; membres energie : {plant}. Les 7 cas exacts ont ete audites. Aucun objet VE n'a ete modifie. Rapport : {report}",
+        "it": "Sonda Test 4-7 in sola lettura: {status}. Collezione Apache: {apache}; lettura zona: {room}; membri impianto: {plant}. Tutti i 7 casi esatti sono stati verificati. Nessun oggetto VE e stato modificato. Rapporto: {report}",
+    },
+    "status_hvac_plant_probe": {
+        "en": "Tests 4-7 runtime probe {status}: Apache={apache}, room={room}, plant members={plant} - {report}",
+        "de": "Tests-4-7-Laufzeitpruefung {status}: Apache={apache}, Raum={room}, Anlagenmitglieder={plant} - {report}",
+        "fr": "Sonde runtime Tests 4-7 {status} : Apache={apache}, zone={room}, membres energie={plant} - {report}",
+        "it": "Sonda runtime Test 4-7 {status}: Apache={apache}, zona={room}, membri impianto={plant} - {report}",
     },
     "status_probing_aps_detail": {
         "en": "Reading room and exact surface-handle APS series.",
@@ -1884,6 +1914,78 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
         "de": "Öffnen nicht möglich",
         "fr": "Ouverture impossible",
         "it": "Apertura non riuscita",
+    },
+    "btn_probe_test1_runtime_inputs": {
+        "en": "Probe Test 1 runtime inputs",
+        "de": "Test-1-Laufzeiteingaben pruefen",
+        "fr": "Sonder les entrees runtime Test 1",
+        "it": "Sonda input runtime Test 1",
+    },
+    "dlg_test1_input_probe_title": {
+        "en": "Test 1 runtime inputs",
+        "de": "Test-1-Laufzeiteingaben",
+        "fr": "Entrees runtime du Test 1",
+        "it": "Input runtime Test 1",
+    },
+    "dlg_test1_input_probe_unavailable": {
+        "en": "Select one official Test 1 case in a saved disposable project.",
+        "de": "Waehlen Sie einen offiziellen Test-1-Fall in einem gespeicherten Wegwerfprojekt.",
+        "fr": "Selectionnez un cas officiel Test 1 dans un projet jetable enregistre.",
+        "it": "Seleziona un caso ufficiale Test 1 in un progetto usa e getta salvato.",
+    },
+    "status_probing_test1_inputs_detail": {
+        "en": "Reading Test 1 furniture and heating/cooling capacity bindings...",
+        "de": "Test-1-Moebel- und Heiz-/Kuehlleistungsbindungen werden gelesen...",
+        "fr": "Lecture des liaisons mobilier et puissances chaud/froid du Test 1...",
+        "it": "Lettura dei binding arredi e potenze caldo/freddo del Test 1...",
+    },
+    "status_test1_input_probe": {
+        "en": "Test 1 read-only input probe: {status} - {report}",
+        "de": "Test-1-Eingabepruefung (nur Lesen): {status} - {report}",
+        "fr": "Sonde des entrees Test 1 en lecture seule : {status} - {report}",
+        "it": "Sonda input Test 1 in sola lettura: {status} - {report}",
+    },
+    "dlg_test1_input_probe_complete": {
+        "en": "Read-only probe status: {status}\n\nReport: {report}\n\nNo VE object was changed.",
+        "de": "Status der schreibgeschuetzten Pruefung: {status}\n\nBericht: {report}\n\nKein VE-Objekt wurde geaendert.",
+        "fr": "Statut de la sonde en lecture seule : {status}\n\nRapport : {report}\n\nAucun objet VE n'a ete modifie.",
+        "it": "Stato della sonda in sola lettura: {status}\n\nRapporto: {report}\n\nNessun oggetto VE e stato modificato.",
+    },
+    "btn_qualify_test1_runtime_inputs": {
+        "en": "Apply Test 1 capacity mapping",
+        "de": "Test-1-Kapazitaetsabbildung anwenden",
+        "fr": "Appliquer la capacite du Test 1",
+        "it": "Applica capacita Test 1",
+    },
+    "dlg_test1_input_qualify_title": {
+        "en": "Test 1 capacity mapping",
+        "de": "Test-1-Kapazitaetsabbildung",
+        "fr": "Capacite interne du Test 1",
+        "it": "Capacita interna Test 1",
+    },
+    "dlg_test1_input_qualify_body": {
+        "en": "Case {case} in {project}: change only furniture_mass_factor, verify read-back, and keep unlimited capacities unchanged? The project will not be saved automatically.",
+        "de": "Fall {case} in {project}: nur furniture_mass_factor aendern, Readback pruefen und unbegrenzte Leistungen unveraendert lassen? Das Projekt wird nicht automatisch gespeichert.",
+        "fr": "Cas {case} dans {project} : modifier uniquement furniture_mass_factor, verifier la relecture et laisser les puissances illimitees inchangees ? Le projet ne sera pas enregistre automatiquement.",
+        "it": "Caso {case} in {project}: modificare solo furniture_mass_factor, verificare la rilettura e lasciare invariate le potenze illimitate? Il progetto non sara salvato automaticamente.",
+    },
+    "status_qualifying_test1_inputs_detail": {
+        "en": "Applying and reading back the guarded Test 1 capacity mapping...",
+        "de": "Kontrollierte Test-1-Kapazitaetsabbildung wird angewendet und zurueckgelesen...",
+        "fr": "Application et relecture controlees de la capacite du Test 1...",
+        "it": "Applicazione e rilettura controllate della capacita Test 1...",
+    },
+    "status_test1_input_qualification": {
+        "en": "Test 1 capacity mapping: {status} - {report}",
+        "de": "Test-1-Kapazitaetsabbildung: {status} - {report}",
+        "fr": "Capacite du Test 1 : {status} - {report}",
+        "it": "Capacita Test 1: {status} - {report}",
+    },
+    "dlg_test1_input_qualify_complete": {
+        "en": "Status: {status}\n\nReport: {report}\n\nReview the provisional engine constant, then save the VE project.",
+        "de": "Status: {status}\n\nBericht: {report}\n\nPruefen Sie die vorlaeufige Motorkonstante und speichern Sie dann das VE-Projekt.",
+        "fr": "Statut : {status}\n\nRapport : {report}\n\nVerifiez la constante moteur provisoire, puis enregistrez le projet VE.",
+        "it": "Stato: {status}\n\nRapporto: {report}\n\nVerifica la costante motore provvisoria, poi salva il progetto VE.",
     },
 }
 

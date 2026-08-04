@@ -10,7 +10,7 @@ import hashlib
 import json
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, Optional, Tuple, Union
+from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
 
 from ..exceptions import ConfigurationError
 from .case_registry import all_case_capabilities, get_case_capability
@@ -21,7 +21,14 @@ from .distribution_reference import (
 )
 from .expected_results import ExpectedResult
 from .qualified_aps import QualifiedApsBindings, Sia4010QualifiedApsExtractor
-from .compliance_comparator import ComparisonStatus
+from .compliance_comparator import (
+    ComparisonStatus,
+    Sia4010ComplianceComparator,
+)
+from .test1_iso_reference import (
+    CATALOG_RELATIVE_PATH,
+    load_test1_iso_reference_results,
+)
 from .test_runner import Sia4010TestEvaluation, Sia4010TestRunner
 
 
@@ -57,6 +64,45 @@ def _write_json(path: Path, payload: Dict[str, Any]) -> None:
         encoding="utf-8",
     )
     temporary.replace(path)
+
+
+def _reference_deviation_diagnostics(
+    comparisons: Iterable[Any],
+) -> List[Dict[str, Any]]:
+    """Return non-normative signed deviations for reference-only results.
+
+    ISO 52016-1 Clause 7.2 publishes comparison values but the supplied pages
+    do not define an acceptance tolerance. These diagnostics therefore help
+    locate modelling differences without turning them into a compliance
+    verdict.
+    """
+
+    diagnostics = []
+    for comparison in comparisons:
+        expected = comparison.expected_value
+        observed = comparison.observed_value
+        if expected is None or observed is None:
+            continue
+        signed = float(observed) - float(expected)
+        diagnostics.append(
+            {
+                "key": comparison.key,
+                "expected_value": float(expected),
+                "observed_value": float(observed),
+                "unit": comparison.unit,
+                "signed_difference": signed,
+                "absolute_difference": abs(signed),
+                "relative_difference_percent": (
+                    None
+                    if float(expected) == 0.0
+                    else 100.0 * signed / abs(float(expected))
+                ),
+                "status": comparison.status.value,
+                "normative_verdict_allowed": False,
+                "source_locator": comparison.source_locator,
+            }
+        )
+    return diagnostics
 
 
 def _test2_case_label(case_id: str) -> str:
@@ -153,6 +199,8 @@ def evaluate_qualified_active_case(
         raise ConfigurationError(
             "Active-case APS evidence does not exist: {}".format(aps)
         )
+    reference_catalog_path = None
+    reference_diagnostics = []
     bindings = QualifiedApsBindings.load(bindings_path)
     runner = Sia4010TestRunner()
     extractor = Sia4010QualifiedApsExtractor(
@@ -191,9 +239,23 @@ def evaluate_qualified_active_case(
         observed = extractor.test1_reference_only_observed(pair[1])
         bundle = runner.loader.load_bundle(bundle_root)
         workbook = runner._evaluation_workbook(bundle, "1")
-        empty_counts = {
+        expected_reference = load_test1_iso_reference_results(
+            Path(bundle_root).parent, pair[1]
+        )
+        reference_catalog_path = (
+            Path(bundle_root).parent / CATALOG_RELATIVE_PATH
+        )
+        reference_comparisons = Sia4010ComplianceComparator().compare_all(
+            expected_reference, observed
+        )
+        reference_diagnostics = _reference_deviation_diagnostics(
+            reference_comparisons
+        )
+        reference_counts = {
             status.value: 0 for status in ComparisonStatus
         }
+        for comparison in reference_comparisons:
+            reference_counts[comparison.status.value] += 1
         required_metric_count = (
             39 if pair[1] in {"600FF", "900FF"} else 88
         )
@@ -206,15 +268,15 @@ def evaluate_qualified_active_case(
             test_id="1",
             bundle=bundle,
             workbook=str(workbook.path),
-            comparisons=(),
-            counts=empty_counts,
+            comparisons=reference_comparisons,
+            counts=reference_counts,
             status=reference_status,
             band_status="NO_ACCEPTANCE_CRITERION",
             variant_statuses={"test_1": reference_status},
             variant_band_statuses={
                 "test_1": "NO_ACCEPTANCE_CRITERION"
             },
-            variant_counts={"test_1": dict(empty_counts)},
+            variant_counts={"test_1": dict(reference_counts)},
         )
     else:
         expected_all = runner.expected_bands(bundle_root, test_id)
@@ -284,17 +346,25 @@ def evaluate_qualified_active_case(
         evaluation=evaluation,
     )
     if artifact is not None:
+        source_evidence = {
+            "aps_path": str(aps),
+            "aps_sha256": _sha256(aps),
+            "bindings_path": str(Path(bindings_path)),
+            "bindings_sha256": _sha256(Path(bindings_path)),
+            "official_bundle": str(Path(bundle_root)),
+        }
+        if reference_catalog_path is not None:
+            source_evidence["iso52016_test1_reference_catalog"] = {
+                "path": str(reference_catalog_path),
+                "sha256": _sha256(reference_catalog_path),
+                "acceptance_tolerance_available": False,
+            }
         payload = {
             "schema_version": "1.0",
             **receipt.to_dict(),
-            "source_evidence": {
-                "aps_path": str(aps),
-                "aps_sha256": _sha256(aps),
-                "bindings_path": str(Path(bindings_path)),
-                "bindings_sha256": _sha256(Path(bindings_path)),
-                "official_bundle": str(Path(bundle_root)),
-            },
+            "source_evidence": source_evidence,
             "observed_results": [item.to_dict() for item in observed],
+            "reference_only_deviation_diagnostics": reference_diagnostics,
             "qualified_series_evidence": series_evidence,
             "claim_guardrail": (
                 "A reference-only result has no compliance verdict when the "

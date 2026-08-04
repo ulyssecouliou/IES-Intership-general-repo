@@ -1,0 +1,172 @@
+{
+  "schema_version": "1.0",
+  "verification_cases_catalog": "config/iso52016_test1_verification_cases.json",
+  "document": {
+    "identifier": "BS EN ISO 52016-1:2017",
+    "title": "Energy performance of buildings - Energy needs for heating and cooling, internal temperatures and sensible and latent heat loads - Part 1: Calculation procedures",
+    "evidence_type": "licensed_user_supplied_screenshots",
+    "redistribution_allowed": false,
+    "local_evidence_directory": "sia4010_evidence/ISO_52016_1_2017",
+    "confirmed_pages": [119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134]
+  },
+  "evidence_sha256": {
+    "cover.png": "0971FDBA6B7A5BEC2E1E368FA207287109266F801238386EAA0D653A46D73C00",
+    "page_119.png": "205D6880FD78089A6F61C691FD983EBAAF16B54A44BF206AA9B257B0E45EBE72",
+    "page_120.png": "4B5F1B930206FD5A47663101CE9BB7AFFEBB947752D6CE3B25308B83D9625346",
+    "page_121.png": "B141D4093FA8FEE8C7F898507E47E8B2B7EAF332D5D46434C7A285F8D95AF2E4",
+    "page_122.png": "7BC2186118CE8CF1005682383BA7B5AFDCC666A277812A7479AC1A8D3304BBF2",
+    "page_123.png": "BDED67608CD19A0723C7328419BA14993955020FFF08AC40C9FD5746878FE9E2",
+    "page_124.png": "61446ACF207A65DA8F4017B988BD93FDBADAEC526F37B5A68FAFDC3F2F4881D4",
+    "page_125.png": "4998C4EB9EAEB53FAFD656A0F1A7BC627C06AB9A1E2CF7D46D4EF0850D2AE8BA",
+    "page_126.png": "F45A888D6142D0DE6C12499A9CF71052B88C50F05A142C8AD81EF4765646144A",
+    "page_127.png": "2446760346B12499B57C2E13D367BFC0509AE2B8EAC577FA389AF18D960561E3",
+    "page_128.png": "968333BE1D62911D5C1CD6B528B17855D1871F37AF9D71993C418E907146AD38",
+    "page_129.png": "E592340E75E6E359747155D0661AFBA539EFFCEC54069CEB525FBE89FCDD4EC9",
+    "page_130.png": "6CBBFE2BA933E9FAC335AC1B9492D63368ED2E697BFA62603A0206B2BCAD8294",
+    "page_131.png": "C9B126485D50987C2E7F37F50B46C319E673612181119F228E42B5630CE5DA7E",
+    "page_132.png": "565BD3DE7989D298E6FE5E3CF17F24CAE33AF70215E377583939044C33632375",
+    "page_133.png": "B4E6D3060EBB14F6BA8A10C05890CF0D5383FED70450B17139E25B4C137A9753",
+    "page_134.png": "4C33B9D672D8E31B05C621B55EB17036DB0076B56989989226E83D402EE7FBF1",
+    "table_A10.png": "19D117369118A520799563C090A6F5DBE142DD24DD5F0ADCD6DEFF9CD05AA4BA",
+    "table_B10.png": "988F4948172CB4B53E1304C5BAADF9F86E3A1AAF3D14E88D9CEBCA21FD34DF78"
+  },
+  "hourly_test_cell": {
+    "source_locator": "Clause 7.2.2.2, Figure 2 and Table 22, page 123",
+    "geometry": {
+      "width_m": 8.0,
+      "depth_m": 6.0,
+      "height_m": 2.7,
+      "floor_area_m2": 48.0,
+      "volume_m3": 129.6,
+      "orientation": "south-facing front facade",
+      "windows": {
+        "count": 2,
+        "width_m": 3.0,
+        "height_m": 2.0,
+        "sill_m": 0.2,
+        "side_margin_m": 0.5,
+        "gap_m": 1.0,
+        "total_area_m2": 12.0
+      },
+      "opaque_areas_m2": {
+        "front_wall": 9.6,
+        "left_wall": 16.2,
+        "right_wall": 16.2,
+        "back_wall": 21.6,
+        "floor": 48.0,
+        "ceiling": 48.0
+      }
+    },
+    "lightweight_opaque": {
+      "source_locator": "Table 23, page 124",
+      "wall_layers_inside_to_outside": [
+        {"material": "plasterboard", "thickness_m": 0.012, "conductivity_w_mk": 0.160, "resistance_m2k_w": 0.075, "areal_heat_capacity_j_m2k": 9576, "density_kg_m3": 950, "specific_heat_j_kgk": 840},
+        {"material": "fiberglass_quilt", "thickness_m": 0.066, "conductivity_w_mk": 0.040, "resistance_m2k_w": 1.650, "areal_heat_capacity_j_m2k": 665, "density_kg_m3": 12, "specific_heat_j_kgk": 840},
+        {"material": "wood_siding", "thickness_m": 0.009, "conductivity_w_mk": 0.140, "resistance_m2k_w": 0.064, "areal_heat_capacity_j_m2k": 4293, "density_kg_m3": 530, "specific_heat_j_kgk": 900}
+      ],
+      "wall_total_layer_resistance_m2k_w": 1.789,
+      "floor_layers_inside_to_outside": [
+        {"material": "timber_flooring", "thickness_m": 0.025, "conductivity_w_mk": 0.140, "resistance_m2k_w": 0.179, "areal_heat_capacity_j_m2k": 19500, "density_kg_m3": 650, "specific_heat_j_kgk": 1200},
+        {"material": "ideal_floor_insulation", "thickness_m": 1.003, "conductivity_w_mk": 0.040, "resistance_m2k_w": 25.075, "areal_heat_capacity_j_m2k": 0, "density_kg_m3": 0, "specific_heat_j_kgk": 0}
+      ],
+      "floor_total_layer_resistance_m2k_w": 25.254,
+      "roof_layers_inside_to_outside": [
+        {"material": "plasterboard", "thickness_m": 0.010, "conductivity_w_mk": 0.160, "resistance_m2k_w": 0.063, "areal_heat_capacity_j_m2k": 7980, "density_kg_m3": 950, "specific_heat_j_kgk": 840},
+        {"material": "fiberglass_quilt", "thickness_m": 0.1118, "conductivity_w_mk": 0.040, "resistance_m2k_w": 2.794, "areal_heat_capacity_j_m2k": 1127, "density_kg_m3": 12, "specific_heat_j_kgk": 840},
+        {"material": "roofdeck", "thickness_m": 0.019, "conductivity_w_mk": 0.140, "resistance_m2k_w": 0.136, "areal_heat_capacity_j_m2k": 9063, "density_kg_m3": 530, "specific_heat_j_kgk": 900}
+      ],
+      "roof_total_layer_resistance_m2k_w": 2.992
+    },
+    "heavyweight_opaque": {
+      "source_locator": "Table 24, page 125",
+      "wall_layers_inside_to_outside": [
+        {"material": "concrete_block", "thickness_m": 0.100, "conductivity_w_mk": 0.510, "resistance_m2k_w": 0.196, "areal_heat_capacity_j_m2k": 140000, "density_kg_m3": 1400, "specific_heat_j_kgk": 1000},
+        {"material": "foam_insulation", "thickness_m": 0.0615, "conductivity_w_mk": 0.040, "resistance_m2k_w": 1.537, "areal_heat_capacity_j_m2k": 861, "density_kg_m3": 10, "specific_heat_j_kgk": 1400},
+        {"material": "wood_siding", "thickness_m": 0.009, "conductivity_w_mk": 0.140, "resistance_m2k_w": 0.064, "areal_heat_capacity_j_m2k": 4293, "density_kg_m3": 530, "specific_heat_j_kgk": 900}
+      ],
+      "wall_total_layer_resistance_m2k_w": 1.797,
+      "floor_layers_inside_to_outside": [
+        {"material": "concrete_slab", "thickness_m": 0.080, "conductivity_w_mk": 1.130, "resistance_m2k_w": 0.071, "areal_heat_capacity_j_m2k": 112000, "density_kg_m3": 1400, "specific_heat_j_kgk": 1000},
+        {"material": "ideal_floor_insulation", "thickness_m": 1.007, "conductivity_w_mk": 0.040, "resistance_m2k_w": 25.175, "areal_heat_capacity_j_m2k": 0, "density_kg_m3": 0, "specific_heat_j_kgk": 0}
+      ],
+      "floor_total_layer_resistance_m2k_w": 25.246,
+      "roof": "same_as_lightweight"
+    },
+    "internal_heat_capacity": {
+      "source_locator": "Clauses 7.2.2.4 and 7.2.2.5, pages 125-126",
+      "hourly_air_and_furniture_areal_capacity_j_m2k": 10000,
+      "monthly_lightweight_areal_capacity_j_m2k": 80000,
+      "monthly_lightweight_total_capacity_mj_k": 3.84,
+      "monthly_heavyweight_areal_capacity_j_m2k": 260000,
+      "monthly_heavyweight_total_capacity_mj_k": 12.48
+    },
+    "glazing": {
+      "source_locator": "Clause 7.2.2.6, page 126",
+      "type": "double_pane",
+      "normal_total_solar_energy_transmittance_glazing": 0.789,
+      "non_scattering_correction_factor": 0.9,
+      "corrected_solar_energy_transmittance": 0.71,
+      "whole_window_u_w_m2k": 2.984,
+      "external_surface_resistance_m2k_w": 0.04,
+      "internal_surface_resistance_m2k_w": 0.13,
+      "frame_fraction": 0.0
+    },
+    "solar_and_boundary_conditions": {
+      "source_locator": "Clauses 7.2.2.7 to 7.2.2.10, pages 126-127",
+      "opaque_solar_absorptance": 0.6,
+      "sky_view_factor_roof": 1.0,
+      "sky_view_factor_walls": 0.5,
+      "solar_reflected_fraction_lost_through_window": 0.0,
+      "convective_fractions": {
+        "internal_gains": 0.40,
+        "solar_gains": 0.10,
+        "heating": 1.0,
+        "cooling": 1.0
+      },
+      "surface_coefficients_w_m2k": {
+        "internal_convective": {"upwards": 5.0, "horizontal": 2.5, "downwards": 0.7},
+        "external_convective": {"upwards": 20.0, "horizontal": 20.0, "downwards": 20.0},
+        "internal_radiative": {"upwards": 5.13, "horizontal": 5.13, "downwards": 5.13},
+        "external_radiative": {"upwards": 4.14, "horizontal": 4.14, "downwards": 4.14}
+      },
+      "combined_surface_coefficients_w_m2k": {
+        "wall_internal_horizontal": 7.63,
+        "roof_internal_upwards": 10.13,
+        "floor_internal_downwards": 5.83,
+        "external_all_directions": 24.14
+      }
+    }
+  },
+  "reporting_requirements": {
+    "source_locator": "Clauses 7.1.2 and 7.1.3, pages 119-121",
+    "hourly_outputs_required": [
+      "outdoor_air_temperature",
+      "global_solar_radiation",
+      "zone_internal_operative_temperature",
+      "zone_heating_load",
+      "zone_cooling_load"
+    ],
+    "monthly_zone_outputs_required": [
+      "mean_indoor_operative_temperature",
+      "mean_indoor_air_temperature",
+      "mean_outdoor_temperature",
+      "mean_horizontal_global_solar_radiation",
+      "transmission_heat_transfer",
+      "ventilation_heat_transfer",
+      "internal_heat_gains",
+      "solar_heat_gains",
+      "heating_energy_need",
+      "cooling_energy_need"
+    ],
+    "annual_building_outputs_required": [
+      "heating_energy_need",
+      "cooling_energy_need"
+    ]
+  },
+  "unresolved_from_current_captures": [
+    "Numerical infrared emittance value, because page 126 states only that a standard emittance is implicitly assumed",
+    "Exact mapping from ISO hourly internal heat capacity to IESVE furniture_mass_factor using the active ApLocate reference air density and heat capacity",
+    "Normative acceptance tolerances or bands for Tables 28 to 34; the captured pages provide reference values but no pass/fail tolerance",
+    "Checksum-qualified binding of the ISO electronic hourly climate insert used by ApacheSim"
+  ]
+}

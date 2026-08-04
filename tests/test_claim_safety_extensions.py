@@ -10,7 +10,7 @@ from swiss_sia.evidence_pack import (
     _should_include_evidence_file,
 )
 from swiss_sia.model_analyzer import ModelAnalyzer, OpeningData, RoomData
-from swiss_sia.rule_engine import Alert, RuleEngine, Severity
+from swiss_sia.rule_engine import Alert, Rule, RuleEngine, Severity
 from swiss_sia.sia380_checker import SIA3802Checker
 from swiss_sia.sia4010_checker import SIA4010Checker
 from swiss_sia.sia4010_prevalidation import _build_stats
@@ -100,6 +100,49 @@ class ClaimSafetyExtensionTests(unittest.TestCase):
 
         self.assertEqual(row["status"], "NOT_CHECKABLE")
         self.assertEqual(row["evaluated_count"], 0)
+
+    def test_rule_exception_is_critical_and_never_counted_as_evaluated(self):
+        """Turn an implementation error into explicit fail-closed evidence."""
+
+        engine = RuleEngine()
+        engine.add_rule(
+            Rule(
+                name="BROKEN_RULE",
+                description="Broken rule used by the regression test.",
+                check=lambda _data: 1 / 0,
+                severity=Severity.LOW,
+                category="Envelope",
+                recommendation="Repair the rule.",
+            )
+        )
+
+        alerts = engine.check_rules(["BROKEN_RULE"], object())
+
+        self.assertEqual(len(alerts), 1)
+        self.assertEqual(alerts[0].severity.name, "CRITICAL")
+        self.assertEqual(alerts[0].rule, "RULE_EXECUTION_ERROR:BROKEN_RULE")
+        self.assertEqual(engine.evaluated_counts.get("BROKEN_RULE", 0), 0)
+        self.assertEqual(engine.evaluation_error_counts["BROKEN_RULE"], 1)
+
+    def test_rule_exception_forces_zero_sia3802_category_score(self):
+        """Prevent a broken compliance rule from producing a 100 percent score."""
+
+        engine = RuleEngine()
+        checker = SIA3802Checker(SimpleNamespace(), engine)
+        engine.add_rule(
+            Rule(
+                name="BROKEN_ENVELOPE_RULE",
+                description="Broken rule used by the regression test.",
+                check=lambda _data: (_ for _ in ()).throw(RuntimeError("broken")),
+                severity=Severity.LOW,
+                category="Envelope",
+                recommendation="Repair the rule.",
+            )
+        )
+
+        engine.check_rules(["BROKEN_ENVELOPE_RULE"], object())
+
+        self.assertEqual(checker._calculate_category_score("Envelope"), 0.0)
 
     def test_reference_input_deviation_is_not_a_compliance_failure(self):
         """Keep reference-project deviations in their dedicated report state."""

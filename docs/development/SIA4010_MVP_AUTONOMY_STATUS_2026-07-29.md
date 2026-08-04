@@ -17,7 +17,7 @@ Périmètre : interface VEScripts, huit classes SIA 4010, 24 variantes et
 | Critères de distributions horaires | Tests 2, 3 et 5 | PASS |
 | Générateurs VE contrôlés | 1/30 (`test_1/600`) | PARTIEL |
 | Générateurs prêts pour qualification VE | 5/30 (`test_1/640`, `600FF`, `900`, `940`, `900FF`) | À EXÉCUTER DANS VE |
-| Cas avec découverte runtime VE en lecture seule | 13/30 (`test_2A/2A` + Test 3A-3L) | IMPLÉMENTÉE |
+| Cas avec découverte runtime VE en lecture seule | 20/30 (`test_2A/2A` + Test 3A-3L + Tests 4, 5A-5D, 6, 7) | IMPLÉMENTÉE |
 | Sonde runtime Test 2A | graphe natif de profils, CDB vitrage/store, ouvertures et sources | LECTURE SEULE, FAIL-CLOSED, À EXÉCUTER DANS VE |
 | Qualification profils Test 2A | daily/weekly/yearly uniquement, après sonde READY | IMPLÉMENTÉE, À EXÉCUTER DANS UN PROJET JETABLE |
 | Qualification setters du store Test 2A | un objet CDB vitré non affecté, actif + seuils 150/150 uniquement | IMPLÉMENTÉE, À EXÉCUTER DANS UN PROJET JETABLE |
@@ -38,10 +38,11 @@ Périmètre : interface VEScripts, huit classes SIA 4010, 24 variantes et
 `FRAMEWORK_COVERAGE_PASS` signifie que le logiciel sait lire et router les
 exigences. Il ne signifie pas que les 30 modèles existent.
 
-Contrôles de régression exécutés le 2026-07-29 :
+Contrôles de régression exécutés le 2026-08-01 :
 
 - compilation Python : PASS ;
-- suite complète : 538 tests, PASS, 11 tests conditionnels ignorés ;
+- suite complète avec le package officiel local monté : 547 tests, PASS, 11 tests conditionnels ignorés ;
+- itération HVAC/énergie : 60 tests ciblés PASS, 7 ignorés ;
 - distributions horaires avec `SIA4010_RUN_HEAVY=1` : 36 tests, PASS ;
 - audit officiel : 8/8 classes, 24/24 variantes et 30/30 préparations, PASS ;
 - contrôle visuel de l’interface : PASS, y compris la sélection `4B/test_7` ;
@@ -371,3 +372,10 @@ seulement lorsque chaque cas exigé par cette classe possède :
 7. un rapport navigateur `READY_FOR_OFFICIAL_REVIEW`.
 
 L’attestation officielle reste une décision externe de l’organisme SIA.
+
+### Sonde HVAC/énergie Tests 4 à 7
+
+- Run_VE_SIA4010_Tests4_7_Runtime_Capability_Probe.py inventorie les collections Apache Systems, les relectures système par zone et les symboles HVAC/plant visibles dans l'installation VE.
+- La sonde couvre exactement test_4/4, test_5A/5A à test_5D/5D, test_6/6 et test_7/7.
+- Elle n'appelle aucun setter, ne sauvegarde pas, ne simule pas et n'autorise aucune revendication de conformité.
+- Le bouton correspondant dans l'interface n'est actif que dans un projet jetable enregistré ayant l'un de ces scénarios officiels sélectionné.

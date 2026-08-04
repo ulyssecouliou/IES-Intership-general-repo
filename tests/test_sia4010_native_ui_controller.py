@@ -127,6 +127,37 @@ class NativeModelBuilderControllerTests(unittest.TestCase):
     def setUp(self):
         self.controller = ModelBuilderController()
 
+    def test_test1_bundle_bootstraps_verified_repository_weather(self):
+        """Copy controlled DRYCOLD inputs before Test 1 preflight."""
+
+        project = ROOT / ".codex_tmp" / "ui_test1_weather_bootstrap"
+        if project.exists():
+            shutil.rmtree(project)
+        project.mkdir(parents=True)
+        try:
+            receipt = self.controller.prepare_case_bundle(
+                project,
+                ROOT,
+                "SIA4010_OFFICIAL",
+                "1A",
+                "test_1",
+                "600",
+            )
+            weather = project / "DRYCOLD_IESVE.epw"
+            verification = (
+                project / "DRYCOLD_IESVE_EPW_DERIVATION.json"
+            )
+            self.assertTrue(weather.is_file())
+            self.assertTrue(verification.is_file())
+            self.assertEqual(receipt.weather_file, weather.resolve())
+            audit = json.loads(receipt.audit_path.read_text(encoding="utf-8"))
+            self.assertNotIn(
+                "denver_drycold_weather_file",
+                audit["evidence_summary"]["unresolved"],
+            )
+        finally:
+            shutil.rmtree(project, ignore_errors=True)
+
     def test_class_filters_variants(self):
         self.assertEqual(
             self.controller.variants_for_class("1A"),

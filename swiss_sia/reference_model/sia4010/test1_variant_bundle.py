@@ -2,8 +2,8 @@
 
 Case 600 is the already exercised MVP baseline.  Cases 640 and 600FF use the
 same lightweight cell, envelope, glazing, infiltration and internal gains.
-Cases 900, 940 and 900FF replace the wall and floor by the public-reference
-high-mass construction while retaining the Case 600 roof. Their control deltas
+Cases 900, 940 and 900FF replace the wall and floor by the source-confirmed
+ISO high-mass construction while retaining the Case 600 roof. Their control deltas
 are prescribed directly by the supplied SIA 4010 Test 1 specification:
 
 * 640: heating setback to 10 degC from 23:00 to 07:00;
@@ -14,9 +14,9 @@ are prescribed directly by the supplied SIA 4010 Test 1 specification:
 
 These bundles deliberately remain ``RUNTIME_QUALIFICATION`` artifacts until a
 fresh disposable VE project completes strict setter/read-back validation.  No
-normative compliance claim is allowed because the ISO 52016-1 Chapter 7
-envelope identity is still represented by explicit public BESTEST/ASHRAE
-sources.
+normative result claim is allowed until VE has persisted and read back every
+source-confirmed input and ApacheSim results have been evaluated against the
+official SIA workbook.
 """
 
 import copy
@@ -488,7 +488,7 @@ def build_test1_runtime_probe_bundle(
             ),
             "sia4010_variant": "test_1",
             "sia4010_case_id": normalized_case,
-            "evidence_tier": "PUBLIC_REFERENCE_RUNTIME_QUALIFICATION",
+            "evidence_tier": "NORMATIVE_INPUT_RUNTIME_QUALIFICATION",
             "compliance_claim_allowed": False,
             "runtime_qualification_required": True,
             "guardrail": (
@@ -614,13 +614,13 @@ def build_test1_runtime_probe_bundle(
         },
         "known_uncertainties": [
             {
-                "id": "ISO_CH7_IDENTITY",
+                "id": "ISO_HOURLY_INTERNAL_CAPACITY_MAPPING",
                 "severity": "WARNING",
                 "detail": (
-                    "Public BESTEST/ASHRAE {} values have not yet been checked "
-                    "line-by-line against ISO 52016-1:2017 Chapter 7.".format(
-                        "high-mass" if is_heavyweight else "lightweight"
-                    )
+                    "The {} ISO fabric is source-confirmed, but the exact "
+                    "IESVE furniture_mass_factor mapping for the ISO hourly "
+                    "air-and-furniture capacity must still be set and read back."
+                    .format("high-mass" if is_heavyweight else "lightweight")
                 ),
             },
             *case_specific_uncertainties,

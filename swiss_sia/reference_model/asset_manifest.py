@@ -561,8 +561,29 @@ class AssetManifest:
             errors.append(
                 "unsupported construction assignment roles: {}".format(extra_assignments)
             )
+        # A manifest may intentionally use only VE's persistent built-in
+        # profiles. Logical ``profile_ref`` values are still checked below and
+        # therefore cannot silently resolve when ``profiles`` is empty. This
+        # avoids manufacturing volatile DAY_* IDs for constant schedules.
         if not self.profiles:
-            errors.append("at least one project profile is required")
+            invalid_builtin_profiles = []
+            for label, records in (
+                ("gain", self.gains),
+                ("air_exchange", self.air_exchanges),
+            ):
+                for record in records:
+                    field = record.properties.get("variation_profile")
+                    if field is None or field.value != "ON":
+                        invalid_builtin_profiles.append(
+                            "{} {}".format(label, record.key)
+                        )
+            if invalid_builtin_profiles:
+                errors.append(
+                    "manifests without project profiles require explicit VE "
+                    "built-in ON variation profiles: {}".format(
+                        sorted(invalid_builtin_profiles)
+                    )
+                )
         if not self.materials:
             errors.append("at least one CDB material is required")
         if not self.constructions:

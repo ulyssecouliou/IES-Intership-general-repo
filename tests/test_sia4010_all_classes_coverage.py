@@ -41,7 +41,7 @@ class Sia4010AllClassesCoverageTests(unittest.TestCase):
         self.assertEqual(summary["preparation_ready_cases"], 30)
         self.assertEqual(summary["deterministic_geometry_artifact_cases"], 23)
         self.assertEqual(summary["runtime_qualification_cases"], 5)
-        self.assertEqual(summary["runtime_discovery_cases"], 13)
+        self.assertEqual(summary["runtime_discovery_cases"], 20)
         self.assertEqual(summary["source_bound_bundle_cases"], 13)
         self.assertEqual(summary["apachesim_qualification_cases"], 6)
         self.assertEqual(summary["qualified_aps_evaluation_cases"], 11)

@@ -1,4 +1,4 @@
-"""IESVE Run-button launcher for the read-only SIA 4010 Test 3 probe."""
+"""IESVE Run-button launcher for the read-only Tests 4-7 runtime probe."""
 
 import json
 import sys
@@ -11,7 +11,7 @@ if str(PROJECT_ROOT) not in sys.path:
 
 
 def run():
-    """Inspect lighting, template and sensor APIs without changing VE."""
+    """Inspect HVAC and plant API evidence without changing VE."""
 
     try:
         import iesve  # type: ignore
@@ -20,8 +20,8 @@ def run():
             "Run this script from the IESVE VEScripts editor."
         ) from exc
 
-    from swiss_sia.reference_model.sia4010.test3_runtime_capability import (
-        write_test3_runtime_capability_report,
+    from swiss_sia.reference_model.sia4010.hvac_plant_runtime_capability import (
+        write_hvac_plant_runtime_capability_report,
     )
 
     project = iesve.VEProject.get_current_project()
@@ -32,14 +32,13 @@ def run():
         raise RuntimeError(
             "Save the disposable VE project before running this probe."
         )
-    report_path = write_test3_runtime_capability_report(
-        iesve,
-        project,
-        PROJECT_ROOT,
+    report_path = write_hvac_plant_runtime_capability_report(
+        iesve, project, PROJECT_ROOT
     )
     payload = json.loads(report_path.read_text(encoding="utf-8"))
+    observed = payload["observed_capabilities"]
     print(
-        "READ-ONLY SIA 4010 TEST 3 RUNTIME CAPABILITY: {}".format(
+        "READ-ONLY SIA 4010 TESTS 4-7 RUNTIME CAPABILITY: {}".format(
             payload["status"]
         )
     )
@@ -51,18 +50,23 @@ def run():
         )
     )
     print(
-        "Lighting fields observed: {}".format(
-            len(payload["observed_lighting_fields"])
+        "Apache system collection observed: {}".format(
+            observed["apache_system_collection"]
         )
     )
     print(
-        "Sensor-related members observed: {}".format(
-            len(payload["sensor_related_members"])
+        "Room system read-back observed: {}".format(
+            observed["room_apache_system_readback"]
         )
     )
     print(
-        "Exact Test 3 variants audited: {}".format(
-            len(payload["variant_capability_matrix"])
+        "Plant-specific members observed: {}".format(
+            len(observed["plant_specific_members"])
+        )
+    )
+    print(
+        "Exact Tests 4-7 cases audited: {}".format(
+            len(payload["case_capability_matrix"])
         )
     )
     print("Report: {}".format(report_path))

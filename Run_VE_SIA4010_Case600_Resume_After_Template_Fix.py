@@ -1,10 +1,9 @@
-"""Resume the existing Case 600 room after the VE template-propagation fix.
+"""Repair and resume an existing Case 600 room without importing geometry.
 
-Run this script only in the disposable ``test`` VE project whose Case 600
-geometry was already imported.  It does not import gbXML again.  It rebuilds
-the source-traced project bundle, reconciles the one equipment gain created by
-the earlier incomplete manifest, then resumes assignments with strict native
-read-back validation.
+Run this only in the disposable VE project whose Case 600 geometry is already
+imported. It replaces non-portable custom DAY_* references with persistent ON,
+rebuilds the source-traced package, verifies the window, and reapplies the
+template content at room level. No gbXML is imported again.
 """
 
 import json
@@ -73,7 +72,7 @@ def run():
     from swiss_sia.reference_model.ve_api import IesVeGateway
     from swiss_sia.reference_model.workflow import ReferenceModelWorkflow
 
-    print("SIA 4010 CASE 600 CONTROLLED RESUME")
+    print("SIA 4010 CASE 600 - PORTABLE PROFILE REPAIR AND RESUME")
     gateway = IesVeGateway()
     project_path = gateway.project_path
     rooms = [
@@ -134,35 +133,42 @@ def run():
             )
         )
 
-    print("Step 2/5 - calibrate and verify the VE whole-window U-value")
-    from Run_VE_Calibrate_External_Glazing_UValue import (
-        run as calibrate_external_glazing,
-    )
-
-    calibrate_external_glazing()
-
-    print("Step 3/5 - reconcile and verify the interrupted equipment gain")
+    print("Step 2/5 - replace every volatile DAY_* asset reference with ON")
     asset_manifest = load_asset_manifest(bundle.asset_manifest_path)
-    repair_receipt = gateway.reconcile_existing_gain(
-        asset_manifest, "equipment_gain"
-    )
+    repaired_gains = {
+        key: gateway.reconcile_existing_gain(asset_manifest, key)
+        for key in ("people_gain", "lighting_gain", "equipment_gain")
+    }
+    repaired_exchanges = {
+        key: gateway.reconcile_existing_air_exchange(asset_manifest, key)
+        for key in ("infiltration", "outdoor_air")
+    }
     repair_path = (
         project_path
         / "sia4010_artifacts"
         / "diagnostics"
-        / "case600_equipment_gain_repair.json"
+        / "case600_portable_profile_repair.json"
     )
     _write_json(
         repair_path,
         {
             "schema_version": "1.0",
             "scenario_id": scenario.scenario_id,
-            "scope": "EXISTING_GLOBAL_EQUIPMENT_GAIN_ONLY",
+            "scope": "GLOBAL_GAINS_AND_AIR_EXCHANGES_TO_BUILTIN_ON",
             "geometry_imported": False,
-            "receipt": repair_receipt,
+            "profiles_created": False,
+            "gain_receipts": repaired_gains,
+            "air_exchange_receipts": repaired_exchanges,
         },
     )
-    print("Gain repair: {}".format(repair_receipt["status"]))
+    print("Portable profile repair: PASS")
+
+    print("Step 3/5 - calibrate and verify the VE whole-window U-value")
+    from Run_VE_Calibrate_External_Glazing_UValue import (
+        run as calibrate_external_glazing,
+    )
+
+    calibrate_external_glazing()
 
     print("Step 4/5 - resume assignments without importing geometry")
     parameters = load_configuration(bundle.config_path).with_overrides(
@@ -190,7 +196,7 @@ def run():
     print("Step 5/5 - report")
     print(outcome.message)
     print("Status: {}".format(outcome.status.value))
-    print("Gain repair report: {}".format(repair_path))
+    print("Portable profile repair report: {}".format(repair_path))
     print("Audit report: {}".format(outcome.artifacts.report_json))
     return outcome
 

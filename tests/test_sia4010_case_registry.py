@@ -69,13 +69,13 @@ class Sia4010CaseRegistryTests(unittest.TestCase):
             "test1_heavyweight_runtime_probe_v1",
         )
 
-    def test_read_only_runtime_discovery_covers_test2a_and_all_test3_cases(self):
+    def test_read_only_runtime_discovery_covers_test2a_test3_and_tests4_to7(self):
         discovery = [
             (item.variant, item.case_id)
             for item in all_case_capabilities()
             if item.runtime_discovery_supported
         ]
-        self.assertEqual(len(discovery), 13)
+        self.assertEqual(len(discovery), 20)
         self.assertIn(("test_2A", "2A"), discovery)
         self.assertEqual(
             {
@@ -88,6 +88,19 @@ class Sia4010CaseRegistryTests(unittest.TestCase):
         self.assertFalse(
             get_case_capability("test_3A", "3A").mutation_supported
         )
+        for variant, case_id in (
+            ("test_4", "4"),
+            ("test_5A", "5A"),
+            ("test_5B", "5B"),
+            ("test_5C", "5C"),
+            ("test_5D", "5D"),
+            ("test_6", "6"),
+            ("test_7", "7"),
+        ):
+            capability = get_case_capability(variant, case_id)
+            self.assertTrue(capability.runtime_discovery_supported)
+            self.assertFalse(capability.mutation_supported)
+
 
     def test_source_bound_bundles_cover_test2a_and_all_test3_cases(self):
         source_bound = [

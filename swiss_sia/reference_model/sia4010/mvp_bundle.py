@@ -25,6 +25,11 @@ PUBLIC_BESTEST_SOURCE = (
     "Simulation Test (BESTEST) and Diagnostic Method, 1995"
 )
 PUBLIC_BESTEST_URL = "https://doi.org/10.2172/90674"
+ISO_52016_SOURCE = "BS EN ISO 52016-1:2017 licensed project evidence"
+ISO_52016_OPAQUE_LOCATOR = (
+    "Figure 2 and Tables 22-25, licensed evidence pages 123-127"
+)
+ISO_52016_GLAZING_LOCATOR = "Clause 7.2.2.6, licensed evidence page 126"
 WEATHER_VERIFICATION_FILENAME = "DRYCOLD_TMY_ISO_SOURCE_VERIFICATION.json"
 EPW_WEATHER_VERIFICATION_FILENAME = "DRYCOLD_IESVE_EPW_DERIVATION.json"
 
@@ -331,12 +336,12 @@ def _build_assets(
         "compliance_scope": "SIA4010_OFFICIAL",
         "sia4010_variant": "test_1",
         "sia4010_case_id": "600",
-        "evidence_tier": "PUBLIC_REFERENCE",
+        "evidence_tier": "NORMATIVE_ISO_WITH_PUBLIC_REFERENCE_REMAINDERS",
         "compliance_claim_allowed": False,
         "guardrail": (
-            "The package is executable for demonstration. Public BESTEST "
-            "inputs require identity confirmation against ISO 52016-1:2017 "
-            "Chapter 7 before a normative SIA 4010 claim."
+            "ISO 52016-1:2017 geometry, opaque fabric, glazing targets and "
+            "boundary coefficients are source-confirmed. Runtime VE read-back "
+            "and the remaining source items still gate any compliance claim."
         ),
         "auxiliary_asset_policy": (
             "The generic provisioning contract still requires internal-wall "
@@ -345,62 +350,53 @@ def _build_assets(
         ),
         "public_source": PUBLIC_BESTEST_SOURCE,
         "public_source_url": PUBLIC_BESTEST_URL,
+        "profile_persistence_policy": (
+            "Case 600 schedules are constant. They are represented by VE's "
+            "persistent built-in ON profile so the saved model does not "
+            "depend on session-local DAY_* identifiers. Zero-valued loads "
+            "remain exactly zero because their magnitudes are zero."
+        ),
     }
 
-    profiles = _by_key(assets["profiles"])
-    constant_profiles = {
-        "occupancy_profile": (0.0, "SIA600_OCCUPANCY_ZERO"),
-        "lighting_profile": (0.0, "SIA600_LIGHTING_ZERO"),
-        "equipment_profile": (1.0, "SIA600_EQUIPMENT_CONSTANT"),
-        "infiltration_profile": (1.0, "SIA600_INFILTRATION_CONSTANT"),
-    }
-    for key, (fraction, reference) in constant_profiles.items():
-        profile = profiles[key]
-        profile["reference"] = reference
-        profile["description"] = "Case 600 constant daily profile."
-        profile["source"] = PUBLIC_BESTEST_SOURCE
-        profile["source_locator"] = "Case 600 schedules"
-        profile["data"] = _field(
-            [[0.0, fraction, ""], [24.0, fraction, ""]],
-            "Constant 24-hour Case 600 multiplier.",
-            "fraction versus hour",
-            "Case 600 schedules",
-            "array",
-        )
+    # VE stores custom daily profiles as non-portable DAY_#### references.
+    # Case 600 only needs constant schedules, so native ON is exact: zero
+    # gains/flows stay zero through their magnitude and non-zero values remain
+    # constant. No project profile therefore needs to be created or persisted.
+    assets["profiles"] = []
 
     materials = _by_key(assets["materials"])
     material_specs = {
         "external_plaster": (
             "SIA600_WOOD_SIDING",
-            "BESTEST wood siding / roof deck.",
+            "ISO 52016-1 lightweight wood siding / roof deck.",
             0.14,
             530.0,
             900.0,
         ),
         "eps_wall": (
             "SIA600_FIBERGLASS_QUILT",
-            "BESTEST lightweight fiberglass quilt.",
+            "ISO 52016-1 lightweight fiberglass quilt.",
             0.04,
             12.0,
             840.0,
         ),
         "internal_plaster": (
             "SIA600_PLASTERBOARD",
-            "BESTEST lightweight plasterboard.",
+            "ISO 52016-1 lightweight plasterboard.",
             0.16,
             950.0,
             840.0,
         ),
         "xps_ground": (
             "SIA600_FLOOR_INSULATION",
-            "BESTEST super-insulated raised-floor layer.",
+            "ISO 52016-1 ideal raised-floor insulation.",
             0.04,
-            10.0,
-            1400.0,
+            0.0,
+            0.0,
         ),
         "linoleum": (
             "SIA600_TIMBER_FLOORING",
-            "BESTEST timber flooring.",
+            "ISO 52016-1 timber flooring.",
             0.14,
             650.0,
             1200.0,
@@ -414,8 +410,15 @@ def _build_assets(
             conductivity=spec[2],
             density=spec[3],
             specific_heat=spec[4],
-            locator="NREL/TP-472-6231 Part I, Case 600 material specification",
+            locator=ISO_52016_OPAQUE_LOCATOR,
         )
+    # ISO Table 23 explicitly specifies zero thermal mass for the artificial
+    # floor-insulation layer. The generic material helper normally rejects
+    # zero values, so this one controlled ideal layer widens only those two
+    # lower bounds. VE must still set and read back the values or report the
+    # minimum non-negative substitute it requires.
+    for field_name in ("density", "specific_heat_capacity"):
+        materials["xps_ground"]["properties"][field_name]["validation_range"]["minimum"] = 0.0
 
     glass = materials["equivalent_glazing_layer"]
     _set_material(
@@ -475,29 +478,72 @@ def _build_assets(
     for key, layers in construction_layers.items():
         construction = constructions[key]
         construction["description"] = (
-            "BESTEST Case 600 {} construction.".format(key.replace("_", " "))
+            "ISO 52016-1 Case 600 {} construction.".format(
+                key.replace("_", " ")
+            )
         )
-        construction["source"] = PUBLIC_BESTEST_SOURCE
-        construction["source_locator"] = (
-            "NREL/TP-472-6231 Part I, Case 600 material specification"
-        )
+        construction["source"] = ISO_52016_SOURCE
+        construction["source_locator"] = ISO_52016_OPAQUE_LOCATOR
         construction["layers"] = [
             _layer(material_key, thickness, construction["source_locator"])
             for material_key, thickness in layers
         ]
 
+    coefficients = envelope["surface_coefficients_w_m2k"]
+    inside_coefficients = {
+        "external_wall": float(coefficients["wall_inside_horizontal"]),
+        "roof": float(coefficients["roof_inside_upwards"]),
+        "ground_floor": float(coefficients["floor_inside_downwards"]),
+    }
+    outside_coefficient = float(coefficients["external_all_directions"])
+    solar_absorptance = float(
+        envelope["opaque_surface_properties"]["outside_solar_absorptance"]
+    )
+    for key in ("external_wall", "roof", "ground_floor"):
+        construction = constructions[key]
+        construction["properties"] = {
+            "inside_surface_resistance": _field(
+                1.0 / inside_coefficients[key],
+                "ISO combined internal radiative-convective resistance.",
+                "m2 K/W",
+                ISO_52016_OPAQUE_LOCATOR,
+                "number",
+                0.0,
+                10.0,
+            ),
+            "outside_surface_resistance": _field(
+                1.0 / outside_coefficient,
+                "ISO combined external radiative-convective resistance.",
+                "m2 K/W",
+                ISO_52016_OPAQUE_LOCATOR,
+                "number",
+                0.0,
+                10.0,
+            ),
+            "inside_surface_solar_absorptivity": _field(
+                solar_absorptance, "ISO opaque solar absorptance.", "fraction",
+                ISO_52016_OPAQUE_LOCATOR, "number", 0.0, 1.0,
+            ),
+            "outside_surface_solar_absorptivity": _field(
+                solar_absorptance, "ISO opaque solar absorptance.", "fraction",
+                ISO_52016_OPAQUE_LOCATOR, "number", 0.0, 1.0,
+            ),
+        }
+        for property_field in construction["properties"].values():
+            property_field["source"] = ISO_52016_SOURCE
+
     external_glazing = constructions["external_glazing"]
     external_glazing.update(
         {
-            "description": "BESTEST Case 600 double-pane clear glazing.",
-            "source": PUBLIC_BESTEST_SOURCE,
-            "source_locator": "NREL/TP-472-6231 Part I, Tables 1-7 and 1-8",
+            "description": "ISO 52016-1 Case 600 double-pane glazing.",
+            "source": ISO_52016_SOURCE,
+            "source_locator": ISO_52016_GLAZING_LOCATOR,
         }
     )
     external_glazing["properties"] = {
         "g_value": _field(
             float(glazing["normal_solar_heat_gain_coefficient"]),
-            "Normal-incidence whole-window solar heat gain coefficient.",
+            "ISO corrected solar energy transmittance after Fw=0.9.",
             "fraction",
             external_glazing["source_locator"],
             "number",
@@ -575,6 +621,16 @@ def _build_assets(
         for prop in gain["properties"].values():
             prop["source"] = PUBLIC_BESTEST_SOURCE
             prop["source_locator"] = "Case 600 internal gains"
+        gain["properties"]["variation_profile"] = _field(
+            "ON",
+            (
+                "VE built-in constant multiplier. Zero-valued Case 600 loads "
+                "remain zero through their explicitly zero magnitudes."
+            ),
+            "VE built-in profile ID",
+            "Case 600 constant schedules; portable VE ON representation",
+            "string",
+        )
     gains["people_gain"]["properties"]["max_sensible_gain"]["value"] = 0.0
     gains["people_gain"]["properties"]["max_latent_gain"]["value"] = 0.0
     gains["lighting_gain"]["properties"]["max_power_consumption"]["value"] = 0.0
@@ -608,30 +664,48 @@ def _build_assets(
         0.0,
         1.0,
     )
+    for property_name in (
+        "max_power_consumption", "max_sensible_gain",
+        "max_latent_gain", "radiant_fraction",
+    ):
+        equipment_properties[property_name]["source"] = ISO_52016_SOURCE
+        equipment_properties[property_name]["source_locator"] = "Clause 7.2.2.13, page 129"
 
     exchanges = _by_key(assets["air_exchanges"])
     infiltration = exchanges["infiltration"]
-    infiltration["description"] = "BESTEST Case 600 constant 0.5 ACH infiltration."
-    infiltration["source"] = PUBLIC_BESTEST_SOURCE
-    infiltration["source_locator"] = "Case 600 infiltration specification"
-    infiltration["properties"]["name"]["value"] = "SIA600_INFILTRATION_0P5ACH"
-    infiltration["properties"]["max_flow"]["value"] = 0.375
+    infiltration["description"] = "ISO Test 1 constant 0.41 ACH infiltration."
+    infiltration["source"] = ISO_52016_SOURCE
+    infiltration["source_locator"] = "Clause 7.2.2.14, page 129"
+    infiltration["properties"]["name"]["value"] = "SIA600_INFILTRATION_0P41ACH"
+    infiltration["properties"]["max_flow"]["value"] = 0.3075
     infiltration["properties"]["max_flow"]["description"] = (
-        "0.5 ACH x 129.6 m3 / 3600 x 1000 / 48 m2."
+        "0.41 ACH x 129.6 m3 / 3600 x 1000 / 48 m2; equivalent "
+        "to the published 1.107 m3/(h m2)."
     )
-    infiltration["properties"]["max_flow"]["source"] = PUBLIC_BESTEST_SOURCE
+    infiltration["properties"]["max_flow"]["source"] = ISO_52016_SOURCE
     infiltration["properties"]["max_flow"]["source_locator"] = (
-        "Case 600 infiltration specification and exact unit conversion"
+        "Clause 7.2.2.14, page 129 and exact unit conversion"
     )
     outdoor_air = exchanges["outdoor_air"]
-    outdoor_air["description"] = "No mechanical ventilation in Case 600."
-    outdoor_air["source"] = PUBLIC_BESTEST_SOURCE
-    outdoor_air["source_locator"] = "Case 600 ventilation specification"
+    outdoor_air["description"] = "No mechanical ventilation in ISO Test 1."
+    outdoor_air["source"] = ISO_52016_SOURCE
+    outdoor_air["source_locator"] = "Clause 7.2.2.14, page 129"
     outdoor_air["properties"]["name"]["value"] = "SIA600_OUTDOOR_AIR_ZERO"
     outdoor_air["properties"]["max_flow"]["value"] = 0.0
     for prop in outdoor_air["properties"].values():
         prop["source"] = PUBLIC_BESTEST_SOURCE
         prop["source_locator"] = "Case 600 ventilation specification"
+    for exchange in (infiltration, outdoor_air):
+        exchange["properties"]["variation_profile"] = _field(
+            "ON",
+            (
+                "VE built-in constant multiplier. The zero outdoor-air case "
+                "remains zero through its explicitly zero flow magnitude."
+            ),
+            "VE built-in profile ID",
+            "Case 600 constant schedules; portable VE ON representation",
+            "string",
+        )
 
     template = assets["thermal_template"]
     template.update(
@@ -641,9 +715,9 @@ def _build_assets(
             # tier. VEProject.create_thermal_template only creates ``generic``
             # templates; the SIA/BESTEST status remains in source metadata.
             "standard": "generic",
-            "description": "Ideal-loads thermal template for BESTEST Case 600.",
-            "source": PUBLIC_BESTEST_SOURCE,
-            "source_locator": "Case 600 operating conditions",
+            "description": "ISO Test 1 ideal-loads thermal template for Case 600.",
+            "source": ISO_52016_SOURCE,
+            "source_locator": "Clauses 7.2.2.15 and 7.2.2.16, pages 129-130",
         }
     )
     template["room_conditions"]["heating_setpoint"] = _field(
@@ -664,9 +738,26 @@ def _build_assets(
         0.0,
         50.0,
     )
-    template["system_data"]["conditioned"]["source"] = PUBLIC_BESTEST_SOURCE
+    for setpoint_name in ("heating_setpoint", "cooling_setpoint"):
+        template["room_conditions"][setpoint_name]["source"] = ISO_52016_SOURCE
+        template["room_conditions"][setpoint_name]["source_locator"] = (
+            "Clause 7.2.2.15, pages 129-130"
+        )
+    template["room_conditions"]["solar_reflected_fraction"] = _field(
+        0.0,
+        "ISO assumes no solar radiation is lost by re-reflection through the window.",
+        "fraction",
+        "BS EN ISO 52016-1:2017 clause 7.2.2.9, page 127",
+        "number",
+        0.0,
+        1.0,
+    )
+    template["room_conditions"]["solar_reflected_fraction"]["source"] = (
+        ISO_52016_SOURCE
+    )
+    template["system_data"]["conditioned"]["source"] = ISO_52016_SOURCE
     template["system_data"]["conditioned"]["source_locator"] = (
-        "Case 600 ideal heating and cooling"
+        "Clauses 7.2.2.15 and 7.2.2.16, pages 129-130"
     )
     if assets.get("apache_system"):
         assets["apache_system"].update(
@@ -691,16 +782,14 @@ def _build_config(
     config = copy.deepcopy(dict(base))
     config["metadata"] = {
         "purpose": "Executable MVP configuration for SIA 4010 Test 1 Case 600.",
-        "evidence_tier": "PUBLIC_REFERENCE",
+        "evidence_tier": "NORMATIVE_ISO_WITH_PUBLIC_REFERENCE_REMAINDERS",
         "compliance_claim_allowed": False,
         "missing_normative_confirmation": [
-            "ISO 52016-1:2017 Chapter 7 identity of Case 600 envelope",
-            "ISO 52016-1:2017 Chapter 7 identity of glazing",
-            "ISO 52016-1:2017 Chapter 7 identity of infiltration",
+            "Exact IESVE furniture_mass_factor mapping for 10000 J/(m2 K)",
         ],
     }
-    source = PUBLIC_BESTEST_SOURCE
-    locator = "Case 600 input specification"
+    source = ISO_52016_SOURCE
+    locator = "Licensed evidence pages 123-127 and SIA 4010 Test 1 specification"
     values = {
         "model_identifier": "SIA4010_1A_600",
         "building_name": "SIA 4010 Test 1 Case 600 - MVP",
@@ -712,11 +801,11 @@ def _build_config(
         "north_axis_degrees": 0.0,
         "asset_provisioning_mode": "create",
         "asset_manifest_file": str(asset_path),
-        "project_external_wall_u_w_m2k": 0.514,
-        "project_roof_u_w_m2k": 0.318,
-        "project_ground_floor_u_w_m2k": 0.039,
-        "project_window_u_w_m2k": 3.0,
-        "project_glazing_g_value": 0.789,
+        "project_external_wall_u_w_m2k": 0.509743145366237,
+        "project_roof_u_w_m2k": 0.319146628514692,
+        "project_ground_floor_u_w_m2k": 0.0392672371721148,
+        "project_window_u_w_m2k": 2.984,
+        "project_glazing_g_value": 0.71,
         "project_visible_light_transmittance": 0.86156,
         "solar_protection_control_category": "None - Case 600",
         "linear_thermal_bridge_psi_w_mk": 0.0,
@@ -729,11 +818,12 @@ def _build_config(
         "climate_scenario": "SIA 4010 Test 1 / BESTEST DRYCOLD",
         "site_latitude_degrees": 39.74,
         "site_longitude_degrees": -104.99,
-        "infiltration_m3_h_m2": 1.35,
+        "infiltration_m3_h_m2": 1.107,
         "outdoor_air_l_s_person": 0.0,
         "heat_recovery_temperature_efficiency": 0.0,
         "sia2024_use_category": "Not applicable - BESTEST validation cell",
         "occupancy_density_m2_person": 1000.0,
+        "occupancy_profile_id": "ON",
         "people_gain_w_person": 0.0,
         "lighting_gain_w_m2": 0.0,
         "equipment_gain_w_m2": 200.0 / 48.0,
@@ -919,11 +1009,13 @@ def build_case600_mvp_bundle(
         },
         "known_uncertainties": [
             {
-                "id": "ISO_CH7_IDENTITY",
+                "id": "ISO_HOURLY_INTERNAL_CAPACITY_MAPPING",
                 "severity": "WARNING",
                 "detail": (
-                    "Public NREL BESTEST values have not yet been checked "
-                    "line-by-line against ISO 52016-1:2017 Chapter 7."
+                    "ISO requires 10000 J/(m2 K) for air and furniture in the "
+                    "hourly method. IES defines furniture_mass_factor relative "
+                    "to the ApLocate reference air capacity; the exact factor "
+                    "must be calculated and read back before result qualification."
                 ),
             },
             {
@@ -962,11 +1054,11 @@ def build_case600_mvp_bundle(
                     (
                         "A checksum-traced VE runtime cavity calibration was "
                         "preserved; post-mutation read-back must still confirm "
-                        "U=3.0 W/(m2 K) and g=0.789."
+                        "U=2.984 W/(m2 K) and corrected g=0.71."
                     )
                     if calibration_preserved
                     else (
-                        "VE read-back must confirm U=3.0 W/(m2 K) and g=0.789; "
+                        "VE read-back must confirm U=2.984 W/(m2 K) and corrected g=0.71; "
                         "run-time cavity calibration may be required."
                     )
                 ),

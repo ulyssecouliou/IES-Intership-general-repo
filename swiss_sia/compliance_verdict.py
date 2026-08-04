@@ -36,6 +36,13 @@ DOMAINS: Tuple[Tuple[str, str], ...] = (
 )
 
 _BLOCKING_SEVERITIES = {"CRITICAL", "HIGH"}
+_INDETERMINATE_RULE_MARKERS = (
+    "MISSING",
+    "NOT_CHECKABLE",
+    "PLACEHOLDER",
+    "UNAVAILABLE",
+    "RULE_EXECUTION_ERROR",
+)
 
 
 @dataclass(frozen=True)
@@ -113,13 +120,17 @@ def _category(alert: Any) -> str:
 
 
 def _count_by_category(alerts: Sequence[Any]) -> Dict[str, Dict[str, int]]:
-    """Return {category: {'blocking': n, 'advisory': n}} across all alerts."""
+    """Count blocking, advisory and incomplete-evidence alerts by category."""
 
     counts: Dict[str, Dict[str, int]] = {}
     for alert in alerts or ():
         bucket = counts.setdefault(
-            _category(alert), {"blocking": 0, "advisory": 0}
+            _category(alert),
+            {"blocking": 0, "advisory": 0, "indeterminate": 0},
         )
+        rule_name = str(getattr(alert, "rule", "") or "").upper()
+        if any(marker in rule_name for marker in _INDETERMINATE_RULE_MARKERS):
+            bucket["indeterminate"] += 1
         if _severity_name(alert) in _BLOCKING_SEVERITIES:
             bucket["blocking"] += 1
         else:
@@ -148,15 +159,21 @@ def build_compliance_verdict(
     outstanding: List[str] = []
     domains: List[DomainVerdict] = []
     for key, category in DOMAINS:
-        bucket = counts.get(category, {"blocking": 0, "advisory": 0})
+        bucket = counts.get(
+            category, {"blocking": 0, "advisory": 0, "indeterminate": 0}
+        )
         blocking = bucket["blocking"]
         advisory = bucket["advisory"]
+        indeterminate = bucket["indeterminate"]
         if not rooms_analysed or not _domain_evaluated(sia3802, key):
             status = NOT_DETERMINED
             reason = "domain_not_evaluated"
         elif blocking:
             status = NOT_COMPLIANT
             reason = "blocking_findings"
+        elif indeterminate:
+            status = NOT_DETERMINED
+            reason = "evidence_incomplete"
         else:
             status = COMPLIANT
             reason = "no_blocking_finding"
@@ -170,6 +187,9 @@ def build_compliance_verdict(
             )
         )
 
+    domain_evidence_incomplete = any(
+        item.status == NOT_DETERMINED for item in domains
+    )
     blocking_total = sum(item.blocking_count for item in domains)
     advisory_total = sum(item.advisory_count for item in domains)
 
@@ -182,12 +202,19 @@ def build_compliance_verdict(
         sia3802_status, sia3802_reason = NOT_DETERMINED, "no_room_analysed"
     elif blocking_total:
         sia3802_status, sia3802_reason = NOT_COMPLIANT, "blocking_findings"
+    elif domain_evidence_incomplete:
+        sia3802_status, sia3802_reason = (
+            NOT_DETERMINED,
+            "domain_evidence_incomplete",
+        )
     elif not comparison_available:
         sia3802_status, sia3802_reason = NOT_DETERMINED, "global_comparison_missing"
     else:
         sia3802_status, sia3802_reason = COMPLIANT, "comparison_reviewed_no_blocker"
     if not comparison_available:
         outstanding.append("global_reference_comparison")
+    if domain_evidence_incomplete:
+        outstanding.append("sia3802_domain_evidence")
 
     # SIA 4010 reports the toolchain's validation-class state. Official class
     # validation additionally requires SIA sub-commission attestation, so the

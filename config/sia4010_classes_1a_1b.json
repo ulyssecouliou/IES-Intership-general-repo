@@ -300,18 +300,25 @@
       "name": "ISO lightweight envelope",
       "description": "Complete wall, roof and floor layer definitions and surface coefficients for lightweight cases.",
       "units": "structured construction set",
-      "source": "Public IEA BESTEST reference: NREL/TP-472-6231 (Judkoff and Neymark, 1995)",
+      "source": "BS EN ISO 52016-1:2017 licensed project evidence",
       "validation": {"type": "object"},
-      "status": "PUBLIC_REFERENCE",
+      "status": "CONFIRMED_NORMATIVE",
       "value": {
-        "source_locator": "NREL/TP-472-6231, Part I, lightweight Case 600 input specification; exact ISO 52016-1:2017 Chapter 7 identity remains to be confirmed",
-        "surface_coefficients_w_m2k": {"inside": 8.29, "outside": 29.3},
-        "opaque_surface_properties": {
-          "inside_ir_emissivity": 0.9,
-          "outside_ir_emissivity": 0.9,
-          "inside_solar_absorptance": 0.6,
-          "outside_solar_absorptance": 0.6
+        "source_locator": "BS EN ISO 52016-1:2017, Figure 2 and Tables 22-25, licensed evidence pages 123-127; normalized record config/iso52016_chapter7_confirmed_inputs.json",
+        "surface_coefficients_w_m2k": {
+          "inside": 7.63,
+          "outside": 24.14,
+          "wall_inside_horizontal": 7.63,
+          "roof_inside_upwards": 10.13,
+          "floor_inside_downwards": 5.83,
+          "external_all_directions": 24.14
         },
+        "opaque_surface_properties": {
+          "inside_solar_absorptance": 0.6,
+          "outside_solar_absorptance": 0.6,
+          "infrared_emittance_note": "A standard emittance is implicitly assumed by ISO page 126; no unsupported numerical emissivity is asserted."
+        },
+        "hourly_air_and_furniture_areal_capacity_j_m2k": 10000.0,
         "wall_layers_outside_to_inside": [
           {"material": "wood_siding", "thickness_m": 0.009, "conductivity_w_mk": 0.14, "density_kg_m3": 530.0, "specific_heat_j_kgk": 900.0},
           {"material": "fiberglass_quilt", "thickness_m": 0.066, "conductivity_w_mk": 0.04, "density_kg_m3": 12.0, "specific_heat_j_kgk": 840.0},
@@ -323,7 +330,7 @@
           {"material": "plasterboard", "thickness_m": 0.01, "conductivity_w_mk": 0.16, "density_kg_m3": 950.0, "specific_heat_j_kgk": 840.0}
         ],
         "floor_layers_outside_to_inside": [
-          {"material": "floor_insulation", "thickness_m": 1.003, "conductivity_w_mk": 0.04, "density_kg_m3": 10.0, "specific_heat_j_kgk": 1400.0},
+          {"material": "floor_insulation", "thickness_m": 1.003, "conductivity_w_mk": 0.04, "density_kg_m3": 0.0, "specific_heat_j_kgk": 0.0, "runtime_note": "ISO Table 23 prescribes zero density and heat capacity; VE must use its minimum accepted non-negative values only if zero is rejected, and report the substitution."},
           {"material": "timber_flooring", "thickness_m": 0.025, "conductivity_w_mk": 0.14, "density_kg_m3": 650.0, "specific_heat_j_kgk": 1200.0}
         ],
         "boundary_condition": "raised floor exposed to outdoor conditions; ground heat transfer decoupled"
@@ -333,19 +340,25 @@
       "name": "ISO heavyweight envelope",
       "description": "Complete wall, roof and floor layer definitions and surface coefficients for heavyweight cases.",
       "units": "structured construction set",
-      "source": "Public ASHRAE Standard 140-2017 Addendum a / IEA BESTEST reference",
+      "source": "BS EN ISO 52016-1:2017 licensed project evidence",
       "validation": {"type": "object"},
-      "status": "PUBLIC_REFERENCE",
+      "status": "CONFIRMED_NORMATIVE",
       "value": {
-        "source_locator": "Addendum a to ANSI/ASHRAE Standard 140-2017, Table 5-27, High Mass Case; NREL/TP-472-6231; exact ISO 52016-1:2017 Chapter 7 identity remains to be confirmed",
-        "public_source_url": "https://www.ashrae.org/file%20library/technical%20resources/standards%20and%20guidelines/standards%20addenda/140_2017_a_galley_20200812.pdf",
-        "surface_coefficients_w_m2k": {"inside": 8.29, "outside": 29.3},
-        "opaque_surface_properties": {
-          "inside_ir_emissivity": 0.9,
-          "outside_ir_emissivity": 0.9,
-          "inside_solar_absorptance": 0.6,
-          "outside_solar_absorptance": 0.6
+        "source_locator": "BS EN ISO 52016-1:2017, Tables 24-25, licensed evidence pages 125-127; normalized record config/iso52016_chapter7_confirmed_inputs.json",
+        "surface_coefficients_w_m2k": {
+          "inside": 7.63,
+          "outside": 24.14,
+          "wall_inside_horizontal": 7.63,
+          "roof_inside_upwards": 10.13,
+          "floor_inside_downwards": 5.83,
+          "external_all_directions": 24.14
         },
+        "opaque_surface_properties": {
+          "inside_solar_absorptance": 0.6,
+          "outside_solar_absorptance": 0.6,
+          "infrared_emittance_note": "A standard emittance is implicitly assumed by ISO page 126; no unsupported numerical emissivity is asserted."
+        },
+        "hourly_air_and_furniture_areal_capacity_j_m2k": 10000.0,
         "wall_layers_outside_to_inside": [
           {"material": "wood_siding", "thickness_m": 0.009, "conductivity_w_mk": 0.14, "density_kg_m3": 530.0, "specific_heat_j_kgk": 900.0},
           {"material": "foam_insulation", "thickness_m": 0.0615, "conductivity_w_mk": 0.04, "density_kg_m3": 10.0, "specific_heat_j_kgk": 1400.0},
@@ -375,12 +388,13 @@
       "name": "ISO Test 1 glazing",
       "description": "Thermal, solar and optical properties of the Test 1 glazing.",
       "units": "structured glazing system",
-      "source": "Public IEA BESTEST reference NREL/TP-472-6231, cross-checked against LBNL Modelica BESTEST Win600",
+      "source": "BS EN ISO 52016-1:2017 licensed project evidence",
       "validation": {"type": "object"},
-      "status": "PUBLIC_REFERENCE",
+      "status": "CONFIRMED_NORMATIVE",
       "value": {
-        "source_locator": "NREL/TP-472-6231 Part I Tables 1-7 and 1-8; ISO 52016-1:2017 Chapter 7 identity remains to be confirmed",
+        "source_locator": "BS EN ISO 52016-1:2017 clause 7.2.2.6, licensed evidence page 126; normalized record config/iso52016_chapter7_confirmed_inputs.json",
         "panes": 2,
+        "implementation_layer_model_source": "NREL/TP-472-6231 equivalent double-pane realization; normative VE read-back targets below take precedence",
         "pane_thickness_m": 0.003175,
         "air_gap_thickness_m": 0.013,
         "air_gap_conductance_w_m2k": 6.297,
@@ -389,8 +403,11 @@
         "glass_specific_heat_j_kgk": 750.0,
         "glass_ir_emissivity": 0.9,
         "normal_single_pane_solar_transmittance": 0.86156,
-        "whole_window_u_w_m2k": 3.0,
-        "normal_solar_heat_gain_coefficient": 0.789,
+        "whole_window_u_w_m2k": 2.984,
+        "normal_total_solar_energy_transmittance_glazing": 0.789,
+        "non_scattering_correction_factor": 0.9,
+        "corrected_solar_energy_transmittance": 0.71,
+        "normal_solar_heat_gain_coefficient": 0.71,
         "normal_shading_coefficient": 0.907,
         "frame_fraction": 0.0,
         "shading": "none"
@@ -400,14 +417,20 @@
       "name": "ISO Test 1 infiltration",
       "description": "Infiltration rate and convention for Test 1 cases.",
       "units": "structured air exchange",
-      "source": "Public IEA BESTEST reference: NREL/TP-472-6231 (Judkoff and Neymark, 1995)",
+      "source": "BS EN ISO 52016-1:2017 supplied licensed evidence",
       "validation": {"type": "object"},
-      "status": "PUBLIC_REFERENCE",
+      "status": "CONFIRMED_NORMATIVE",
       "value": {
-        "source_locator": "NREL/TP-472-6231, Case 600 input specification; ISO 52016-1:2017 Chapter 7 identity remains to be confirmed",
-        "air_changes_per_hour": 0.5,
+        "source_locator": "Clause 7.2.2.14, page 129",
+        "air_changes_per_hour": 0.41,
+        "calculated_zone_air_flow_m3_s": 0.01476,
+        "reported_rounded_zone_air_flow_m3_s": 0.0148,
+        "zone_air_flow_m3_h": 53.136,
+        "floor_area_specific_flow_l_s_m2": 0.3075,
+        "altitude_mass_flow_adjustment_factor": 0.822,
+        "weather_station_altitude_m": 1609,
         "schedule": "constant_24h",
-        "outdoor_air_basis": "outdoor dry air",
+        "dependencies": "independent_of_wind_speed_and_indoor_outdoor_temperature_difference",
         "mechanical_ventilation": "none"
       }
     },

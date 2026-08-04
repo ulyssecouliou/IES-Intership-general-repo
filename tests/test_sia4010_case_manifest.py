@@ -31,11 +31,11 @@ class Sia4010CaseManifestTests(unittest.TestCase):
         readiness = self.manifest.variant_readiness("test_1")
         self.assertEqual(readiness.status, "BLOCKED_MISSING_INPUTS")
         self.assertIn("denver_drycold_weather_file", readiness.missing_parameters)
-        self.assertIn(
+        self.assertNotIn(
             "iso_lightweight_construction", readiness.provisional_parameters
         )
-        self.assertIn("iso_test1_glazing", readiness.provisional_parameters)
-        self.assertIn("iso_test1_infiltration", readiness.provisional_parameters)
+        self.assertNotIn("iso_test1_glazing", readiness.provisional_parameters)
+        self.assertNotIn("iso_test1_infiltration", readiness.provisional_parameters)
 
     def test_test1_readiness_is_case_specific(self):
         case_600 = self.manifest.case_readiness("test_1", "600")
@@ -44,7 +44,7 @@ class Sia4010CaseManifestTests(unittest.TestCase):
         self.assertEqual(
             case_600.missing_parameters, ("denver_drycold_weather_file",)
         )
-        self.assertIn(
+        self.assertNotIn(
             "iso_lightweight_construction", case_600.provisional_parameters
         )
         self.assertNotIn(
@@ -61,13 +61,19 @@ class Sia4010CaseManifestTests(unittest.TestCase):
         self.assertEqual(self.manifest.value("cell_width_m"), 8.0)
         self.assertEqual(self.manifest.value("shading_activation_w_m2"), 150.0)
 
-    def test_public_reference_values_are_available_but_marked_provisional(self):
+    def test_iso_values_are_normative(self):
         envelope = self.manifest.value("iso_lightweight_construction")
         self.assertIn("raised floor", envelope["boundary_condition"])
-        readiness = self.manifest.case_readiness("test_1", "600")
-        self.assertIn(
-            "iso_lightweight_construction", readiness.provisional_parameters
+        self.assertEqual(
+            envelope["floor_layers_outside_to_inside"][0]["density_kg_m3"], 0.0
         )
+        glazing = self.manifest.value("iso_test1_glazing")
+        self.assertEqual(glazing["whole_window_u_w_m2k"], 2.984)
+        self.assertEqual(glazing["corrected_solar_energy_transmittance"], 0.71)
+        readiness = self.manifest.case_readiness("test_1", "600")
+        self.assertEqual(readiness.provisional_parameters, ())
+        infiltration = self.manifest.value("iso_test1_infiltration")
+        self.assertEqual(infiltration["air_changes_per_hour"], 0.41)
 
     def test_placeholder_values_cannot_be_read_as_model_inputs(self):
         with self.assertRaises(ConfigurationError):

@@ -44,6 +44,8 @@ AUTHORITY_MAPPING_BLOCKER = (
 
 
 def _sha256(path: Path) -> str:
+    """Return the SHA-256 digest of one source-bound artifact."""
+
     digest = hashlib.sha256()
     with path.open("rb") as handle:
         for block in iter(lambda: handle.read(1024 * 1024), b""):
@@ -52,6 +54,8 @@ def _sha256(path: Path) -> str:
 
 
 def _write_json(path: Path, payload: Mapping[str, Any]) -> None:
+    """Write one source-binding JSON artifact atomically."""
+
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_suffix(path.suffix + ".tmp")
     temporary.write_text(
@@ -78,6 +82,8 @@ class Test3SourceBundleReceipt:
     mutation_supported: bool = False
 
     def to_dict(self) -> Dict[str, Any]:
+        """Serialize the source bundle receipt with portable path values."""
+
         payload = asdict(self)
         for key in (
             "generator_input_path",
@@ -94,6 +100,8 @@ def _geometry_consistency_checks(
     manifest: Sia4010CaseManifest,
     bindings: Test3ExternalBindings,
 ) -> Dict[str, Dict[str, Any]]:
+    """Verify identical geometry values across specification and normalized inputs."""
+
     expected = {
         "cell_width_m": bindings.common.iso_cell.width_m,
         "cell_depth_m": bindings.common.iso_cell.depth_m,
@@ -136,6 +144,8 @@ def _selected_annual_band(
     workbook_path: Path,
     case_id: str,
 ) -> Dict[str, Any]:
+    """Select exactly one official annual reference band for the case."""
+
     expected_label = "Test 3 {}".format(case_id[-1])
     matches = [
         item
@@ -155,6 +165,8 @@ def _selected_annual_band(
 
 
 def _distribution_contract() -> Dict[str, Any]:
+    """Build the official Test 3 hourly distribution comparison contract."""
+
     contract = DISTRIBUTION_CRITERIA["3"]
     return {
         "case_ids": list(contract["case_ids"]),

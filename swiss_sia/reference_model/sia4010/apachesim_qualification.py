@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 import re
 import time
 from dataclasses import asdict, dataclass
@@ -39,6 +40,12 @@ SIMULATION_QUALIFICATION_CASES: Tuple[str, ...] = (
 TEST1_SIMULATION_SOURCE = "SIA 4010 Test 1 specification, pages 1-2"
 MODEL_REPORT_RELATIVE_PATH = Path(
     "reference_model_artifacts/reports/reference_model_report.json"
+)
+RUNTIME_INPUT_REPORT_GLOB = (
+    "sia4010_test1_runtime_input_qualification_*.json"
+)
+RUNTIME_INPUT_READY_STATUS = (
+    "PROVISIONAL_ENGINE_MAPPING_APPLIED_READY_FOR_SIMULATION"
 )
 
 
@@ -66,6 +73,8 @@ class ApacheSimQualificationReceipt:
     results_size_bytes: int
     audit_path: str
     compliance_claim_allowed: bool = False
+    runtime_input_report_path: str = ""
+    runtime_input_report_sha256: str = ""
     aps_evaluation_required: bool = True
     runtime_qualification_required: bool = True
 
@@ -133,13 +142,189 @@ def _validation_statuses(report: Mapping[str, Any]) -> Dict[str, str]:
     return statuses
 
 
+def _sequence(value: Any) -> list:
+    """Normalize VE collection proxies without assuming a concrete type."""
+
+    if value is None:
+        return []
+    if isinstance(value, (list, tuple)):
+        return list(value)
+    try:
+        return list(value)
+    except TypeError:
+        return [value]
+
+
+def _latest_runtime_input_report(project_path: Path) -> Path:
+    """Return the newest Test 1 runtime-input qualification artifact."""
+
+    diagnostic_dir = project_path / "sia4010_artifacts" / "diagnostics"
+    candidates = sorted(
+        diagnostic_dir.glob(RUNTIME_INPUT_REPORT_GLOB),
+        key=lambda path: (path.stat().st_mtime_ns, path.name),
+        reverse=True,
+    )
+    if not candidates:
+        raise ApacheSimQualificationError(
+            "Run the controlled Test 1 runtime-input qualification before "
+            "ApacheSim; no qualification report was found"
+        )
+    return candidates[0]
+
+
+def _validate_runtime_input_evidence(
+    *,
+    project: Any,
+    project_path: Path,
+    scenario: ModelScenario,
+    scenario_path: Path,
+) -> Tuple[Path, Dict[str, Any]]:
+    """Verify the qualification artifact and the live VE room read-back."""
+
+    report_path = _latest_runtime_input_report(project_path)
+    report = _load_json(report_path, "Test 1 runtime-input qualification")
+    if report.get("status") != RUNTIME_INPUT_READY_STATUS:
+        raise ApacheSimQualificationError(
+            "Test 1 runtime-input qualification is not simulation-ready: {!r}".format(
+                report.get("status")
+            )
+        )
+    report_project = report.get("project") or {}
+    try:
+        reported_project_path = Path(str(report_project.get("path") or "")).resolve()
+    except (OSError, RuntimeError) as exc:
+        raise ApacheSimQualificationError(
+            "Runtime-input qualification contains an invalid project path"
+        ) from exc
+    if reported_project_path != project_path.resolve():
+        raise ApacheSimQualificationError(
+            "Runtime-input qualification belongs to another VE project: {}".format(
+                reported_project_path
+            )
+        )
+    report_scenario = report.get("scenario") or {}
+    selection = report_scenario.get("selection") or {}
+    actual_pair = (
+        str(selection.get("variant") or ""),
+        str(selection.get("case_id") or ""),
+    )
+    expected_pair = (scenario.variant, scenario.case_id)
+    if actual_pair != expected_pair:
+        raise ApacheSimQualificationError(
+            "Runtime-input qualification belongs to {}/{} instead of {}/{}".format(
+                actual_pair[0] or "<unknown>",
+                actual_pair[1] or "<unknown>",
+                expected_pair[0],
+                expected_pair[1],
+            )
+        )
+    if str(report.get("scenario_sha256") or "").upper() != _sha256(
+        scenario_path
+    ):
+        raise ApacheSimQualificationError(
+            "Runtime-input qualification is stale: scenario checksum mismatch"
+        )
+
+    mutation = report.get("mutation") or {}
+    mapping = report.get("mapping") or {}
+    capacity = report.get("capacity_semantics") or {}
+    guardrails = report.get("guardrails") or {}
+    if mutation.get("only_intended_field") != "furniture_mass_factor":
+        raise ApacheSimQualificationError(
+            "Runtime-input qualification does not prove the intended single-field mutation"
+        )
+    try:
+        requested_factor = float(mutation.get("requested"))
+        verified_factor = float(mutation.get("verified_after"))
+        mapped_factor = float(mapping.get("furniture_mass_factor"))
+    except (TypeError, ValueError) as exc:
+        raise ApacheSimQualificationError(
+            "Runtime-input qualification contains a non-numeric furniture factor"
+        ) from exc
+    factors = (requested_factor, verified_factor, mapped_factor)
+    if not all(math.isfinite(value) for value in factors) or not (
+        math.isclose(requested_factor, verified_factor, rel_tol=0.0, abs_tol=1.0e-6)
+        and math.isclose(requested_factor, mapped_factor, rel_tol=0.0, abs_tol=1.0e-6)
+    ):
+        raise ApacheSimQualificationError(
+            "Runtime-input qualification furniture-factor evidence is inconsistent"
+        )
+    if capacity.get("verified") is not True:
+        raise ApacheSimQualificationError(
+            "Runtime-input qualification does not verify capacity semantics"
+        )
+    if guardrails.get("capacity_fields_mutated") is not False:
+        raise ApacheSimQualificationError(
+            "Runtime-input qualification does not prove unchanged capacity fields"
+        )
+    if guardrails.get("compliance_claim_allowed") is not False:
+        raise ApacheSimQualificationError(
+            "Runtime-input qualification has an unsafe compliance-claim flag"
+        )
+
+    expected_room_name = "SIA4010_TEST_1_{}_ZONE".format(scenario.case_id)
+    if str((report.get("room") or {}).get("name") or "") != expected_room_name:
+        raise ApacheSimQualificationError(
+            "Runtime-input qualification references the wrong VE room"
+        )
+    models = _sequence(getattr(project, "models", []))
+    if not models:
+        raise ApacheSimQualificationError(
+            "The active VE project exposes no model for runtime-input read-back"
+        )
+    bodies = [
+        body
+        for body in _sequence(models[0].get_bodies(False))
+        if hasattr(body, "get_room_data")
+        and str(getattr(body, "name", "")) == expected_room_name
+    ]
+    if len(bodies) != 1:
+        raise ApacheSimQualificationError(
+            "Expected exactly one live VE room named {!r}; found {}".format(
+                expected_room_name, len(bodies)
+            )
+        )
+    room_data = bodies[0].get_room_data()
+    live_conditions = dict(room_data.get_room_conditions())
+    try:
+        live_factor = float(live_conditions.get("furniture_mass_factor"))
+    except (TypeError, ValueError) as exc:
+        raise ApacheSimQualificationError(
+            "Live VE furniture_mass_factor is unavailable"
+        ) from exc
+    if not math.isclose(
+        live_factor, verified_factor, rel_tol=0.0, abs_tol=1.0e-6
+    ):
+        raise ApacheSimQualificationError(
+            "Live VE furniture factor does not match the qualification report: "
+            "live={}, qualified={}. Save/reapply the controlled qualification.".format(
+                live_factor, verified_factor
+            )
+        )
+    live_system = dict(room_data.get_apache_systems())
+    conditioned = bool(capacity.get("conditioned"))
+    if bool(live_system.get("conditioned")) != conditioned:
+        raise ApacheSimQualificationError(
+            "Live VE conditioned state differs from the qualification report"
+        )
+    if conditioned and not (
+        bool(live_system.get("heating_capacity_unlimited"))
+        and bool(live_system.get("cooling_capacity_unlimited"))
+    ):
+        raise ApacheSimQualificationError(
+            "Live VE conditioned room no longer has unlimited heating and cooling capacity"
+        )
+    return report_path, report
+
+
 def _validate_model_evidence(
     report: Mapping[str, Any],
     *,
+    project_path: Path,
     variant: str,
     case_id: str,
 ) -> None:
-    """Require a completed exact-case model mutation and readable weather."""
+    """Require an exact-case, checksum-traced mutation and readable weather."""
 
     overall = str(report.get("overall_status") or "")
     if overall not in {"PASS", "WARNING"}:
@@ -158,15 +343,40 @@ def _validate_model_evidence(
     asset_manifest = (
         report.get("additional_data", {}).get("asset_manifest") or {}
     )
-    metadata = asset_manifest.get("metadata") if isinstance(
-        asset_manifest, Mapping
-    ) else {}
+    if not isinstance(asset_manifest, Mapping):
+        asset_manifest = {}
+    metadata = asset_manifest.get("metadata") or {}
     if not isinstance(metadata, Mapping):
         metadata = {}
     actual_pair = (
         str(metadata.get("sia4010_variant") or ""),
         str(metadata.get("sia4010_case_id") or ""),
     )
+    if actual_pair == ("", ""):
+        frozen_checksum = str(asset_manifest.get("source_checksum") or "")
+        generated = report.get("generated_geometry") or {}
+        generated_spaces = generated.get("spaces") if isinstance(
+            generated, Mapping
+        ) else []
+        if not isinstance(generated_spaces, list):
+            generated_spaces = []
+        expected_building = "SIA4010_TEST_1_{}_BUILDING".format(case_id)
+        expected_space = "SIA4010_TEST_1_{}_SPACE".format(case_id)
+        expected_room = "SIA4010_TEST_1_{}_ZONE".format(case_id)
+        matching_spaces = [
+            space
+            for space in generated_spaces
+            if isinstance(space, Mapping)
+            and str(space.get("identifier") or "") == expected_space
+            and str(space.get("name") or "") == expected_room
+        ]
+        frozen_identity_is_exact = (
+            str(generated.get("identifier") or "") == expected_building
+            and len(matching_spaces) == 1
+            and re.fullmatch(r"[0-9A-Fa-f]{64}", frozen_checksum) is not None
+        )
+        if frozen_identity_is_exact:
+            actual_pair = (variant, case_id)
     if actual_pair != (variant, case_id):
         raise ApacheSimQualificationError(
             "Model evidence belongs to {}/{} instead of {}/{}".format(
@@ -299,8 +509,17 @@ def run_qualified_apachesim(
     model_report = _load_json(model_report_path, "reference-model report")
     _validate_model_evidence(
         model_report,
+        project_path=project_path,
         variant=scenario.variant,
         case_id=scenario.case_id,
+    )
+    runtime_input_report_path, runtime_input_report = (
+        _validate_runtime_input_evidence(
+            project=project,
+            project_path=project_path,
+            scenario=scenario,
+            scenario_path=scenario_path,
+        )
     )
 
     current_time = now or datetime.now(timezone.utc)
@@ -345,6 +564,12 @@ def run_qualified_apachesim(
         "source_file": {
             "path": str(specification_path),
             "sha256": _sha256(specification_path),
+        },
+        "runtime_input_qualification": {
+            "path": str(runtime_input_report_path),
+            "sha256": _sha256(runtime_input_report_path),
+            "status": runtime_input_report.get("status"),
+            "compliance_claim_allowed": False,
         },
         "confirmed_contract": {
             "simulation_period": "2011-01-01 through 2011-12-31",
@@ -426,6 +651,8 @@ def run_qualified_apachesim(
         model_report_sha256=_sha256(model_report_path),
         scenario_path=str(scenario_path),
         scenario_sha256=_sha256(scenario_path),
+        runtime_input_report_path=str(runtime_input_report_path),
+        runtime_input_report_sha256=_sha256(runtime_input_report_path),
         requested_options=dict(requested_options),
         options_before=options_before,
         options_after=options_after,
@@ -439,6 +666,9 @@ def run_qualified_apachesim(
         {
             "source": TEST1_SIMULATION_SOURCE,
             "source_file": base_audit["source_file"],
+            "runtime_input_qualification": base_audit[
+                "runtime_input_qualification"
+            ],
             "confirmed_contract": base_audit["confirmed_contract"],
             "deliberately_unset_engine_options": base_audit[
                 "deliberately_unset_engine_options"

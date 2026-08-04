@@ -1269,6 +1269,7 @@ class SIA3802Checker:
         return alert.severity == Severity.CRITICAL and (
             "MODEL_NOT_CHECKABLE" in rule
             or "EXTERNAL_ENVELOPE_MISSING" in rule
+            or "RULE_EXECUTION_ERROR" in rule
         )
 
     @staticmethod

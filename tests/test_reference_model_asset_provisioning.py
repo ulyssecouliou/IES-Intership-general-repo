@@ -748,6 +748,40 @@ class ReferenceModelAssetProvisioningTests(unittest.TestCase):
         self.assertIn("glazing_construction_id", manifest.planned_parameter_names)
         self.assertIn("thermal_template_name", manifest.planned_parameter_names)
 
+    def test_builtin_on_only_manifest_requires_no_project_profile(self):
+        """Accept portable constant schedules without volatile DAY IDs."""
+
+        payload = _valid_manifest_payload()
+        payload["profiles"] = []
+        for record in payload["gains"] + payload["air_exchanges"]:
+            record["properties"]["variation_profile"] = _field("ON", "string")
+        manifest = load_asset_manifest(
+            _write_manifest("builtin_on_only", payload)
+        )
+        project = _Project()
+        receipt = IesVeAssetProvisioner(
+            _iesve_namespace(), project, _CdbProject()
+        ).provision(manifest)
+
+        self.assertEqual(receipt.profile_ids, {})
+        self.assertEqual(project._profiles, {})
+        self.assertTrue(
+            all(
+                record.get()["variation_profile"] == "ON"
+                for record in project._gains
+            )
+        )
+
+    def test_manifest_without_profiles_rejects_non_builtin_references(self):
+        """Keep profile-free manifests fail-closed unless every asset uses ON."""
+
+        payload = _valid_manifest_payload()
+        payload["profiles"] = []
+        with self.assertRaisesRegex(
+            ConfigurationError, "require explicit VE built-in ON"
+        ):
+            load_asset_manifest(_write_manifest("missing_builtin_on", payload))
+
     def test_manifest_rejects_unsupported_and_duplicate_profile_contracts(self):
         """Reject ambiguous references and unknown VE profile kinds."""
 
@@ -1294,10 +1328,14 @@ class ReferenceModelAssetProvisioningTests(unittest.TestCase):
         self.assertEqual(warnings[0]["gain_key"], "people")
 
     def test_nonzero_gain_profile_canonicalized_to_on_is_rejected(self):
-        """Never apply the zero-gain compatibility rule to a non-zero load."""
+        """Never treat ON as equivalent to a genuinely variable profile."""
 
         payload = _valid_manifest_payload()
         payload["on_existing"] = "reuse_verified"
+        payload["profiles"][0]["data"] = _field(
+            [[0.0, 0.0, ""], [12.0, 1.0, ""], [24.0, 0.0, ""]],
+            "array",
+        )
         equipment = next(
             item for item in payload["gains"] if item["key"] == "equipment"
         )
@@ -1327,11 +1365,55 @@ class ReferenceModelAssetProvisioningTests(unittest.TestCase):
         with self.assertRaises(VeMutationError):
             provisioner.provision(manifest)
 
+    def test_nonzero_gain_constant_one_profile_on_is_audited(self):
+        """Accept VE's ON alias only for a proven constant-one profile."""
+
+        payload = _valid_manifest_payload()
+        payload["on_existing"] = "reuse_verified"
+        equipment = next(
+            item for item in payload["gains"] if item["key"] == "equipment"
+        )
+        equipment["properties"]["max_power_consumption"] = _field(
+            4.0, "number", 0.0, 1000.0
+        )
+        equipment["properties"]["max_sensible_gain"] = _field(
+            4.0, "number", 0.0, 1000.0
+        )
+        manifest = load_asset_manifest(
+            _write_manifest("constant_one_gain_profile_on", payload)
+        )
+        project = _Project()
+        cdb = _CdbProject()
+        provisioner = IesVeAssetProvisioner(_iesve_namespace(), project, cdb)
+        provisioner.provision(manifest)
+        gain = next(
+            item
+            for item in project.casual_gains()
+            if item.get()["name"] == "TEST_EQUIPMENT"
+        )
+        gain._data["variation_profile"] = "ON"
+
+        receipt = provisioner.provision(manifest)
+        warnings = [
+            warning
+            for warning in receipt.compatibility_warnings
+            if (
+                warning["code"] == "VE-CONSTANT-ONE-PROFILE-CANONICALIZED-ON"
+                and warning["asset_type"] == "gain"
+            )
+        ]
+        self.assertEqual(len(warnings), 1)
+        self.assertEqual(warnings[0]["gain_key"], "equipment")
+
     def test_controlled_air_exchange_reconciliation_repairs_profile(self):
         """Repair only an explicitly selected exact-name reusable exchange."""
 
         payload = _valid_manifest_payload()
         payload["on_existing"] = "reuse_verified"
+        payload["profiles"][0]["data"] = _field(
+            [[0.0, 0.0, ""], [12.0, 1.0, ""], [24.0, 0.0, ""]],
+            "array",
+        )
         manifest = load_asset_manifest(
             _write_manifest("air_exchange_reconcile", payload)
         )
@@ -1384,10 +1466,14 @@ class ReferenceModelAssetProvisioningTests(unittest.TestCase):
         self.assertEqual(warnings[0]["exchange_key"], "infiltration")
 
     def test_nonzero_exchange_profile_on_remains_rejected(self):
-        """Never apply the zero-flow rule to a non-zero air exchange."""
+        """Never treat ON as equivalent to a genuinely variable profile."""
 
         payload = _valid_manifest_payload()
         payload["on_existing"] = "reuse_verified"
+        payload["profiles"][0]["data"] = _field(
+            [[0.0, 0.0, ""], [12.0, 1.0, ""], [24.0, 0.0, ""]],
+            "array",
+        )
         manifest = load_asset_manifest(
             _write_manifest("nonzero_exchange_profile_on", payload)
         )
@@ -1399,6 +1485,32 @@ class ReferenceModelAssetProvisioningTests(unittest.TestCase):
 
         with self.assertRaises(VeMutationError):
             provisioner.provision(manifest)
+
+    def test_nonzero_exchange_constant_one_profile_on_is_audited(self):
+        """Accept VE's ON alias only for a proven constant-one profile."""
+
+        payload = _valid_manifest_payload()
+        payload["on_existing"] = "reuse_verified"
+        manifest = load_asset_manifest(
+            _write_manifest("constant_one_exchange_profile_on", payload)
+        )
+        project = _Project()
+        cdb = _CdbProject()
+        provisioner = IesVeAssetProvisioner(_iesve_namespace(), project, cdb)
+        provisioner.provision(manifest)
+        project.air_exchanges()[0]._data["variation_profile"] = "ON"
+
+        receipt = provisioner.provision(manifest)
+        warnings = [
+            warning
+            for warning in receipt.compatibility_warnings
+            if (
+                warning["code"] == "VE-CONSTANT-ONE-PROFILE-CANONICALIZED-ON"
+                and warning["asset_type"] == "air_exchange"
+            )
+        ]
+        self.assertEqual(len(warnings), 1)
+        self.assertEqual(warnings[0]["exchange_key"], "infiltration")
 
     def test_unsupported_air_exchange_units_are_rejected(self):
         """Reject an air-exchange unit outside the documented integer layout."""

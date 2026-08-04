@@ -110,6 +110,10 @@ from .test3_runtime_capability import (
     build_test3_runtime_capability_report,
     write_test3_runtime_capability_report,
 )
+from .hvac_plant_runtime_capability import (
+    build_hvac_plant_runtime_capability_report,
+    write_hvac_plant_runtime_capability_report,
+)
 from .test3_external_bindings import (
     NormalizedAuthorityDecision,
     NormalizedControlFunction,
@@ -226,6 +230,8 @@ __all__ = [
     "run_test2a_2e1_optical_workflow",
     "build_test3_runtime_capability_report",
     "write_test3_runtime_capability_report",
+    "build_hvac_plant_runtime_capability_report",
+    "write_hvac_plant_runtime_capability_report",
     "evaluate_qualified_active_case",
     "external_input_readiness",
     "prepare_all_classes",

@@ -50,7 +50,7 @@ class Sia4010CaseCapability:
 
         return (
             (self.variant == "test_2A" and self.case_id == "2A")
-            or self.base_test_id == "3"
+            or self.base_test_id in {"3", "4", "5", "6", "7"}
         )
 
     @property

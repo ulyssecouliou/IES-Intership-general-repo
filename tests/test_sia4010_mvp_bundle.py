@@ -75,15 +75,24 @@ class Sia4010MvpBundleTests(unittest.TestCase):
         probe = controller.prepare_supported_mvp_bundle(
             self.project, ROOT, "SIA4010_OFFICIAL", "test_1", "600FF"
         )
-        self.assertEqual(probe.status, "BLOCKED_WEATHER")
+        self.assertEqual(
+            probe.status,
+            "READY_FOR_PROVISIONAL_RUNTIME_QUALIFICATION",
+        )
         supported = controller.prepare_supported_mvp_bundle(
             self.project, ROOT, "SIA4010_OFFICIAL", "test_1", "600"
         )
-        self.assertEqual(supported.status, "BLOCKED_WEATHER")
+        self.assertEqual(
+            supported.status,
+            "READY_FOR_PROVISIONAL_DEMONSTRATION",
+        )
         heavyweight = controller.prepare_supported_mvp_bundle(
             self.project, ROOT, "SIA4010_OFFICIAL", "test_1", "900"
         )
-        self.assertEqual(heavyweight.status, "BLOCKED_WEATHER")
+        self.assertEqual(
+            heavyweight.status,
+            "READY_FOR_PROVISIONAL_RUNTIME_QUALIFICATION",
+        )
         unsupported = controller.prepare_supported_mvp_bundle(
             self.project, ROOT, "SIA4010_OFFICIAL", "test_1", "1E"
         )
@@ -142,21 +151,33 @@ class Sia4010MvpBundleTests(unittest.TestCase):
         template = assets["thermal_template"]
         self.assertEqual(template["standard"], "generic")
         self.assertEqual(template["name"], "SIA4010_TEST1_CASE600")
-        self.assertIn("BESTEST", template["description"])
-        self.assertIn("NREL", template["source"])
+        self.assertIn("ISO Test 1", template["description"])
+        self.assertIn("ISO 52016-1:2017", template["source"])
 
     def test_case600_internal_gain_is_constant_sensible_200w_with_60_40_split(self):
         receipt = build_case600_mvp_bundle(self.project, ROOT)
         assets = json.loads(
             receipt.asset_manifest_path.read_text(encoding="utf-8")
         )
-        profiles = {item["key"]: item for item in assets["profiles"]}
+        config = json.loads(receipt.config_path.read_text(encoding="utf-8"))
+        self.assertEqual(
+            config["parameters"]["occupancy_profile_id"]["value"], "ON"
+        )
         gains = {item["key"]: item for item in assets["gains"]}
         equipment = gains["equipment_gain"]["properties"]
 
-        self.assertEqual(
-            profiles["equipment_profile"]["data"]["value"],
-            [[0.0, 1.0, ""], [24.0, 1.0, ""]],
+        self.assertEqual(assets["profiles"], [])
+        self.assertTrue(
+            all(
+                gain["properties"]["variation_profile"]["value"] == "ON"
+                for gain in gains.values()
+            )
+        )
+        self.assertTrue(
+            all(
+                exchange["properties"]["variation_profile"]["value"] == "ON"
+                for exchange in assets["air_exchanges"]
+            )
         )
         self.assertAlmostEqual(
             equipment["max_power_consumption"]["value"] * 48.0, 200.0
@@ -166,7 +187,7 @@ class Sia4010MvpBundleTests(unittest.TestCase):
         )
         self.assertEqual(equipment["max_latent_gain"]["value"], 0.0)
         self.assertEqual(equipment["radiant_fraction"]["value"], 0.6)
-        self.assertIn("NREL/TP-472-6231", equipment["radiant_fraction"]["source"])
+        self.assertIn("ISO 52016-1:2017", equipment["radiant_fraction"]["source"])
 
     def test_verified_runtime_glazing_calibration_survives_bundle_rebuild(self):
         receipt = build_case600_mvp_bundle(self.project, ROOT)
@@ -197,8 +218,8 @@ class Sia4010MvpBundleTests(unittest.TestCase):
         }
         assets["metadata"]["external_glazing_runtime_calibration"] = {
             "construction_id": "EXTW",
-            "target_u_w_m2k": 3.0,
-            "verified_u_w_m2k": 3.0001,
+            "target_u_w_m2k": 2.984,
+            "verified_u_w_m2k": 2.9841,
             "cavity_resistance_m2k_w": 0.14933,
             "ve_version": "2025.2.0.0",
             "status": "engineering-equivalent",

@@ -452,3 +452,19 @@ non liées. Elle renvoie `PREPARED_WITH_BLOCKERS` et enregistre notamment :
 - comparaison officielle : `swiss_sia/reference_model/sia4010/test_runner.py` ;
 - navigateur de classe : `swiss_sia/reference_model/sia4010/navigator.py` ;
 - manifeste huit classes : `config/sia4010_all_classes.json`.
+
+## Sonde runtime HVAC et énergie — Tests 4 à 7
+
+Après avoir préparé et sélectionné un cas officiel exact parmi test_4/4,
+test_5A/5A à test_5D/5D, test_6/6 ou test_7/7 dans un projet VE jetable
+enregistré, utiliser le bouton **Sonder le runtime HVAC/énergie Tests 4-7**.
+Le même diagnostic peut être lancé directement avec
+Run_VE_SIA4010_Tests4_7_Runtime_Capability_Probe.py.
+
+Le rapport JSON et son fichier .sha256 sont écrits sous
+sia4010_artifacts/diagnostics. Cette étape est strictement en lecture seule :
+elle identifie les API réellement exposées par la version VE installée et les
+sources externes encore manquantes. Un statut
+READY_FOR_DISPOSABLE_MUTATION_QUALIFICATION autorise uniquement la conception
+du prochain test de setter dans une copie jetable ; il ne signifie ni modèle
+créé, ni simulation validée, ni conformité SIA.

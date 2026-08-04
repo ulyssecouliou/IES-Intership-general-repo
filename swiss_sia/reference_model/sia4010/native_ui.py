@@ -16,7 +16,10 @@ from .model_scenario import (
     build_feature_catalog,
     official_features,
 )
-from .mvp_bundle import build_case600_mvp_bundle
+from .mvp_bundle import (
+    build_case600_mvp_bundle,
+    discover_weather_file,
+)
 from .case_registry import get_case_capability
 from .test1_variant_bundle import build_test1_runtime_probe_bundle
 from .evidence_registry import (
@@ -76,6 +79,59 @@ class ModelBuilderController:
         return tuple(self.catalog["cases"][variant])
 
     @staticmethod
+    def ensure_test1_weather(
+        project_path: Path,
+        repository_root: Path,
+    ) -> Path:
+        """Return project-local verified DRYCOLD weather for Test 1.
+
+        An operator-supplied weather file is preserved when it is the only
+        supported weather file in the saved project. Otherwise the bundled,
+        checksum-verified BESTEST EPW and its adjacent derivation report are
+        copied without ever overwriting different project content.
+        """
+
+        project = Path(project_path)
+        repository = Path(repository_root)
+        existing = discover_weather_file(project)
+        if existing is not None:
+            return existing
+        source_directory = (
+            repository / "references" / "standards" / "bestest"
+        )
+        filenames = (
+            "DRYCOLD_IESVE.epw",
+            "DRYCOLD_IESVE_EPW_DERIVATION.json",
+        )
+
+        def checksum(path: Path) -> str:
+            """Return SHA-256 for collision-safe controlled input copying."""
+
+            return hashlib.sha256(path.read_bytes()).hexdigest()
+
+        for filename in filenames:
+            source = source_directory / filename
+            destination = project / filename
+            if not source.is_file():
+                raise FileNotFoundError(
+                    "Controlled Test 1 weather input is missing: {}".format(
+                        source
+                    )
+                )
+            if destination.exists():
+                if (
+                    not destination.is_file()
+                    or checksum(source) != checksum(destination)
+                ):
+                    raise FileExistsError(
+                        "A different Test 1 weather artifact was not "
+                        "overwritten: {}".format(destination)
+                    )
+            else:
+                shutil.copy2(str(source), str(destination))
+        return project / filenames[0]
+
+    @staticmethod
     def prepare_supported_mvp_bundle(
         project_path: Path,
         repository_root: Path,
@@ -87,13 +143,28 @@ class ModelBuilderController:
 
         if str(profile).upper() != "SIA4010_OFFICIAL" or variant != "test_1":
             return None
+        if case_id not in {
+            "600",
+            "640",
+            "600FF",
+            "900",
+            "940",
+            "900FF",
+        }:
+            return None
+        weather_file = ModelBuilderController.ensure_test1_weather(
+            project_path, repository_root
+        )
         if case_id == "600":
-            return build_case600_mvp_bundle(project_path, repository_root)
+            return build_case600_mvp_bundle(
+                project_path, repository_root, weather_file=weather_file
+            )
         if case_id in {"640", "600FF", "900", "940", "900FF"}:
             return build_test1_runtime_probe_bundle(
                 project_path,
                 repository_root,
                 case_id,
+                weather_file=weather_file,
             )
         return None
 
@@ -383,11 +454,14 @@ class NativeModelBuilderWindow(tk.Frame):
         aps_evaluator: Optional[Callable[[], Any]] = None,
         aps_probe: Optional[Callable[[], Any]] = None,
         apachesim_runner: Optional[Callable[[], Any]] = None,
+        test1_runtime_input_probe: Optional[Callable[[], Any]] = None,
+        test1_runtime_input_qualifier: Optional[Callable[[], Any]] = None,
         test2a_runtime_probe: Optional[Callable[[], Any]] = None,
         test2a_profile_qualifier: Optional[Callable[[], Any]] = None,
         test2a_shading_qualifier: Optional[Callable[[], Any]] = None,
         test2a_optical_qualifier: Optional[Callable[[], Any]] = None,
         test3_runtime_probe: Optional[Callable[[], Any]] = None,
+        hvac_plant_runtime_probe: Optional[Callable[[], Any]] = None,
         language: Optional[str] = None,
     ):
         """Bind the builder frame to its VE project, executor and repository root."""
@@ -404,11 +478,14 @@ class NativeModelBuilderWindow(tk.Frame):
         self.aps_evaluator = aps_evaluator
         self.aps_probe = aps_probe
         self.apachesim_runner = apachesim_runner
+        self.test1_runtime_input_probe = test1_runtime_input_probe
+        self.test1_runtime_input_qualifier = test1_runtime_input_qualifier
         self.test2a_runtime_probe = test2a_runtime_probe
         self.test2a_profile_qualifier = test2a_profile_qualifier
         self.test2a_shading_qualifier = test2a_shading_qualifier
         self.test2a_optical_qualifier = test2a_optical_qualifier
         self.test3_runtime_probe = test3_runtime_probe
+        self.hvac_plant_runtime_probe = hvac_plant_runtime_probe
         self.test2a_profile_qualification_authorized = False
         self.test2a_shading_qualification_authorized = False
         self.test2a_optical_qualification_authorized = False
@@ -528,16 +605,23 @@ class NativeModelBuilderWindow(tk.Frame):
         """Apply the window title, size and resize behaviour."""
 
         self.master.title(self.t("window_title"))
-        if self.compact:
-            self.master.geometry("1000x660")
-            self.master.minsize(880, 600)
-        else:
-            self.master.geometry("1080x780")
-            self.master.minsize(940, 690)
+        requested_width = 1000 if self.compact else 1080
+        requested_height = 660 if self.compact else 780
+        try:
+            available_width = max(640, self.master.winfo_screenwidth() - 80)
+            available_height = max(420, self.master.winfo_screenheight() - 120)
+        except tk.TclError:
+            available_width = requested_width
+            available_height = requested_height
+        width = min(requested_width, available_width)
+        height = min(requested_height, available_height)
+        self.master.geometry("{}x{}".format(width, height))
+        self.master.minsize(min(760, width), min(480, height))
         try:
             self.master.attributes("-topmost", True)
         except tk.TclError:
             pass
+        self.master.resizable(True, True)
         self.master.configure(bg=self.COLORS["paper"])
         self.master.columnconfigure(0, weight=1)
         self.master.rowconfigure(0, weight=1)
@@ -778,12 +862,70 @@ class NativeModelBuilderWindow(tk.Frame):
             row=0, column=0, sticky="sew"
         )
 
-        body = ttk.Frame(self, style="Builder.TFrame")
+        body_host = ttk.Frame(self, style="Builder.TFrame")
         body_pad = self._scaled(18, 11)
-        body.grid(row=1, column=0, sticky="nsew", padx=body_pad, pady=body_pad)
+        body_host.grid(
+            row=1, column=0, sticky="nsew", padx=body_pad, pady=body_pad
+        )
+        body_host.columnconfigure(0, weight=1)
+        body_host.rowconfigure(0, weight=1)
+
+        body_canvas = tk.Canvas(
+            body_host,
+            bg=self.COLORS["paper"],
+            highlightthickness=0,
+            takefocus=True,
+        )
+        body_scrollbar = ttk.Scrollbar(
+            body_host,
+            orient="vertical",
+            command=body_canvas.yview,
+            style="Builder.Vertical.TScrollbar",
+        )
+        body_canvas.configure(yscrollcommand=body_scrollbar.set)
+        body_canvas.grid(row=0, column=0, sticky="nsew")
+        body_scrollbar.grid(
+            row=0,
+            column=1,
+            sticky="ns",
+        )
+
+        body = ttk.Frame(body_canvas, style="Builder.TFrame")
+        body_window = body_canvas.create_window(
+            (0, 0),
+            window=body,
+            anchor="nw",
+        )
         body.columnconfigure(0, weight=6)
         body.columnconfigure(1, weight=5)
         body.rowconfigure(0, weight=1)
+
+        def sync_scroll_region(_event=None):
+            """Keep the canvas range synchronized with the full UI height."""
+
+            body_canvas.configure(scrollregion=body_canvas.bbox("all"))
+
+        def fit_body_width(event):
+            """Make both model-builder columns follow the viewport width."""
+
+            body_canvas.itemconfigure(body_window, width=event.width)
+
+        def scroll_body(event):
+            """Scroll only when the pointer is over the model-builder body."""
+
+            widget = self.master.winfo_containing(event.x_root, event.y_root)
+            while widget is not None:
+                if widget is body:
+                    steps = int(-event.delta / 120) if event.delta else 0
+                    if steps:
+                        body_canvas.yview_scroll(steps, "units")
+                    return "break"
+                widget = getattr(widget, "master", None)
+            return None
+
+        body.bind("<Configure>", sync_scroll_region)
+        body_canvas.bind("<Configure>", fit_body_width)
+        self.master.bind("<MouseWheel>", scroll_body)
 
         panel_pad = self._scaled(20, 13)
         left = ttk.Frame(body, style="Panel.TFrame", padding=panel_pad)
@@ -1168,6 +1310,20 @@ class NativeModelBuilderWindow(tk.Frame):
             padx=(0, 0),
             pady=(8, 0),
         )
+        self.hvac_plant_probe_button = ttk.Button(
+            actions,
+            text=self.t("btn_probe_hvac_plant_runtime"),
+            command=self.probe_hvac_plant_runtime,
+            style="Secondary.TButton",
+        )
+        self.hvac_plant_probe_button.grid(
+            row=8,
+            column=0,
+            columnspan=2,
+            sticky="ew",
+            padx=(0, 0),
+            pady=(8, 0),
+        )
         self.aps_probe_button = ttk.Button(
             actions,
             text=self.t("btn_probe_active_aps"),
@@ -1175,11 +1331,37 @@ class NativeModelBuilderWindow(tk.Frame):
             style="Secondary.TButton",
         )
         self.aps_probe_button.grid(
-            row=8,
+            row=9,
             column=0,
             columnspan=2,
             sticky="ew",
             padx=(0, 0),
+            pady=(8, 0),
+        )
+        self.test1_input_probe_button = ttk.Button(
+            actions,
+            text=self.t("btn_probe_test1_runtime_inputs"),
+            command=self.probe_test1_runtime_inputs,
+            style="Secondary.TButton",
+        )
+        self.test1_input_probe_button.grid(
+            row=10,
+            column=0,
+            sticky="ew",
+            padx=(0, 5),
+            pady=(8, 0),
+        )
+        self.test1_input_qualify_button = ttk.Button(
+            actions,
+            text=self.t("btn_qualify_test1_runtime_inputs"),
+            command=self.qualify_test1_runtime_inputs,
+            style="Danger.TButton",
+        )
+        self.test1_input_qualify_button.grid(
+            row=10,
+            column=1,
+            sticky="ew",
+            padx=(5, 0),
             pady=(8, 0),
         )
         ttk.Button(
@@ -1188,7 +1370,7 @@ class NativeModelBuilderWindow(tk.Frame):
             command=self.master.destroy,
             style="Secondary.TButton",
         ).grid(
-            row=9,
+            row=11,
             column=0,
             columnspan=2,
             sticky="ew",
@@ -1323,6 +1505,25 @@ class NativeModelBuilderWindow(tk.Frame):
         self.aps_probe_button.configure(
             state="normal" if aps_probe_ready else "disabled"
         )
+        test1_input_probe_ready = (
+            profile == "SIA4010_OFFICIAL"
+            and not self.temporary_project
+            and self.test1_runtime_input_probe is not None
+            and self.variant_var.get() == "test_1"
+            and self.case_var.get() in {
+                "600", "640", "900", "940", "600FF", "900FF"
+            }
+        )
+        self.test1_input_probe_button.configure(
+            state="normal" if test1_input_probe_ready else "disabled"
+        )
+        test1_input_qualifier_ready = (
+            test1_input_probe_ready
+            and self.test1_runtime_input_qualifier is not None
+        )
+        self.test1_input_qualify_button.configure(
+            state="normal" if test1_input_qualifier_ready else "disabled"
+        )
         test2a_probe_ready = (
             profile == "SIA4010_OFFICIAL"
             and not self.temporary_project
@@ -1378,6 +1579,26 @@ class NativeModelBuilderWindow(tk.Frame):
         )
         self.test3_probe_button.configure(
             state="normal" if test3_probe_ready else "disabled"
+        )
+        hvac_plant_probe_ready = (
+            profile == "SIA4010_OFFICIAL"
+            and not self.temporary_project
+            and self.hvac_plant_runtime_probe is not None
+            and (
+                (self.variant_var.get(), self.case_var.get())
+                in {
+                    ("test_4", "4"),
+                    ("test_5A", "5A"),
+                    ("test_5B", "5B"),
+                    ("test_5C", "5C"),
+                    ("test_5D", "5D"),
+                    ("test_6", "6"),
+                    ("test_7", "7"),
+                }
+            )
+        )
+        self.hvac_plant_probe_button.configure(
+            state="normal" if hvac_plant_probe_ready else "disabled"
         )
         if profile == "SIA4010_OFFICIAL":
             capability = get_case_capability(
@@ -1728,6 +1949,123 @@ class NativeModelBuilderWindow(tk.Frame):
         self._set_status(level, status, detail)
         self._append_log("{} - {}".format(status, detail))
 
+    def probe_test1_runtime_inputs(self) -> None:
+        """Inspect ISO Test 1 furniture/capacity bindings without mutation."""
+
+        if (
+            self.test1_runtime_input_probe is None
+            or self.temporary_project
+            or self.variant_var.get() != "test_1"
+            or self.case_var.get()
+            not in {"600", "640", "900", "940", "600FF", "900FF"}
+        ):
+            messagebox.showwarning(
+                self.t("dlg_test1_input_probe_title"),
+                self.t("dlg_test1_input_probe_unavailable"),
+                parent=self.master,
+            )
+            return
+        self._set_status(
+            "warning",
+            self.t("status_processing_title"),
+            self.t("status_probing_test1_inputs_detail"),
+        )
+        self.master.update_idletasks()
+        try:
+            report = Path(str(self.test1_runtime_input_probe()))
+            payload = json.loads(report.read_text(encoding="utf-8"))
+            status = str(payload.get("status", "BLOCKED"))
+        except Exception as exc:
+            self._set_status("error", self.t("status_failed_title"), str(exc))
+            self._append_log("FAIL - {}".format(exc))
+            messagebox.showerror(
+                self.t("dlg_test1_input_probe_title"),
+                str(exc),
+                parent=self.master,
+            )
+            return
+        detail = self.t("status_test1_input_probe").format(
+            status=status,
+            report=report,
+        )
+        self._set_status(
+            "ready"
+            if status == "READY_FOR_CONTROLLED_BINDING_REVIEW"
+            else "warning",
+            status,
+            detail,
+        )
+        self._append_log("{} - {}".format(status, detail))
+        messagebox.showinfo(
+            self.t("dlg_test1_input_probe_title"),
+            self.t("dlg_test1_input_probe_complete").format(
+                status=status,
+                report=report,
+            ),
+            parent=self.master,
+        )
+
+    def qualify_test1_runtime_inputs(self) -> None:
+        """Apply the guarded Test 1 furniture-capacity mapping."""
+
+        if (
+            self.test1_runtime_input_qualifier is None
+            or self.temporary_project
+            or self.variant_var.get() != "test_1"
+            or self.case_var.get()
+            not in {"600", "640", "900", "940", "600FF", "900FF"}
+        ):
+            messagebox.showwarning(
+                self.t("dlg_test1_input_qualify_title"),
+                self.t("dlg_test1_input_probe_unavailable"),
+                parent=self.master,
+            )
+            return
+        confirmed = messagebox.askyesno(
+            self.t("dlg_test1_input_qualify_title"),
+            self.t("dlg_test1_input_qualify_body").format(
+                case=self.case_var.get(),
+                project=self.project_name,
+            ),
+            parent=self.master,
+            icon="warning",
+        )
+        if not confirmed:
+            return
+        self._set_status(
+            "warning",
+            self.t("status_processing_title"),
+            self.t("status_qualifying_test1_inputs_detail"),
+        )
+        self.master.update_idletasks()
+        try:
+            report = Path(str(self.test1_runtime_input_qualifier()))
+            payload = json.loads(report.read_text(encoding="utf-8"))
+            status = str(payload.get("status", "BLOCKED"))
+        except Exception as exc:
+            self._set_status("error", self.t("status_failed_title"), str(exc))
+            self._append_log("FAIL - {}".format(exc))
+            messagebox.showerror(
+                self.t("dlg_test1_input_qualify_title"),
+                str(exc),
+                parent=self.master,
+            )
+            return
+        detail = self.t("status_test1_input_qualification").format(
+            status=status,
+            report=report,
+        )
+        self._set_status("warning", status, detail)
+        self._append_log("{} - {}".format(status, detail))
+        messagebox.showinfo(
+            self.t("dlg_test1_input_qualify_title"),
+            self.t("dlg_test1_input_qualify_complete").format(
+                status=status,
+                report=report,
+            ),
+            parent=self.master,
+        )
+
     def probe_active_aps(self) -> None:
         """Inspect the newest APS, including exact surface-handle series."""
 
@@ -2056,6 +2394,87 @@ class NativeModelBuilderWindow(tk.Frame):
             )
             messagebox.showerror(
                 self.t("dlg_test3_probe_title"),
+                str(exc),
+                parent=self.master,
+            )
+
+    def probe_hvac_plant_runtime(self) -> None:
+        """Run the getter-only HVAC/plant inventory for Tests 4 to 7."""
+
+        selection = (self.variant_var.get(), self.case_var.get())
+        supported = {
+            ("test_4", "4"),
+            ("test_5A", "5A"),
+            ("test_5B", "5B"),
+            ("test_5C", "5C"),
+            ("test_5D", "5D"),
+            ("test_6", "6"),
+            ("test_7", "7"),
+        }
+        if self.hvac_plant_runtime_probe is None or selection not in supported:
+            messagebox.showwarning(
+                self.t("dlg_hvac_plant_probe_title"),
+                self.t("dlg_hvac_plant_probe_unavailable"),
+                parent=self.master,
+            )
+            return
+        try:
+            report = Path(str(self.hvac_plant_runtime_probe()))
+            payload = json.loads(report.read_text(encoding="utf-8"))
+            status = str(payload.get("status", "UNKNOWN"))
+            if payload.get("mutation_performed") is not False:
+                raise RuntimeError(
+                    "Tests 4-7 read-only probe reported a mutation"
+                )
+            matrix = payload.get("case_capability_matrix", [])
+            if len(matrix) != 7:
+                raise RuntimeError(
+                    "Tests 4-7 probe did not audit all seven exact cases"
+                )
+            observed = payload.get("observed_capabilities", {})
+            detail = self.t("status_hvac_plant_probe").format(
+                status=status,
+                apache=observed.get("apache_system_collection", False),
+                room=observed.get("room_apache_system_readback", False),
+                plant=len(observed.get("plant_specific_members", [])),
+                report=report,
+            )
+            self._append_log(detail)
+            self._set_status(
+                (
+                    "ready"
+                    if status
+                    == "READY_FOR_DISPOSABLE_MUTATION_QUALIFICATION"
+                    else "warning"
+                ),
+                self.t("dlg_hvac_plant_probe_title"),
+                detail,
+            )
+            messagebox.showinfo(
+                self.t("dlg_hvac_plant_probe_title"),
+                self.t("dlg_hvac_plant_probe_complete").format(
+                    status=status,
+                    apache=observed.get(
+                        "apache_system_collection", False
+                    ),
+                    room=observed.get(
+                        "room_apache_system_readback", False
+                    ),
+                    plant=len(
+                        observed.get("plant_specific_members", [])
+                    ),
+                    report=report,
+                ),
+                parent=self.master,
+            )
+        except Exception as exc:
+            self._set_status(
+                "error",
+                self.t("dlg_hvac_plant_probe_title"),
+                str(exc),
+            )
+            messagebox.showerror(
+                self.t("dlg_hvac_plant_probe_title"),
                 str(exc),
                 parent=self.master,
             )
@@ -2489,11 +2908,14 @@ def launch_native_ui(
     aps_evaluator: Optional[Callable[[], Any]] = None,
     aps_probe: Optional[Callable[[], Any]] = None,
     apachesim_runner: Optional[Callable[[], Any]] = None,
+    test1_runtime_input_probe: Optional[Callable[[], Any]] = None,
+    test1_runtime_input_qualifier: Optional[Callable[[], Any]] = None,
     test2a_runtime_probe: Optional[Callable[[], Any]] = None,
     test2a_profile_qualifier: Optional[Callable[[], Any]] = None,
     test2a_shading_qualifier: Optional[Callable[[], Any]] = None,
     test2a_optical_qualifier: Optional[Callable[[], Any]] = None,
     test3_runtime_probe: Optional[Callable[[], Any]] = None,
+    hvac_plant_runtime_probe: Optional[Callable[[], Any]] = None,
 ) -> None:
     """Create one Tk root and run the native VEScripts interface."""
 
@@ -2507,10 +2929,13 @@ def launch_native_ui(
         aps_evaluator=aps_evaluator,
         aps_probe=aps_probe,
         apachesim_runner=apachesim_runner,
+        test1_runtime_input_probe=test1_runtime_input_probe,
+        test1_runtime_input_qualifier=test1_runtime_input_qualifier,
         test2a_runtime_probe=test2a_runtime_probe,
         test2a_profile_qualifier=test2a_profile_qualifier,
         test2a_shading_qualifier=test2a_shading_qualifier,
         test2a_optical_qualifier=test2a_optical_qualifier,
         test3_runtime_probe=test3_runtime_probe,
+        hvac_plant_runtime_probe=hvac_plant_runtime_probe,
     )
     root.mainloop()

@@ -129,7 +129,11 @@ class ActiveCaseEvaluationTests(unittest.TestCase):
         self.assertEqual(receipt.status, REFERENCE_ONLY_RESULTS_RECORDED)
         self.assertFalse(receipt.acceptance_criterion_available)
         self.assertTrue(receipt.required_output_scope_complete)
-        self.assertEqual(receipt.evaluation.comparisons, ())
+        self.assertEqual(len(receipt.evaluation.comparisons), 64)
+        self.assertTrue(
+            all(item.status.value == "NOT_CHECKABLE"
+                for item in receipt.evaluation.comparisons)
+        )
         self.assertEqual(
             receipt.evaluation.band_status,
             "NO_ACCEPTANCE_CRITERION",

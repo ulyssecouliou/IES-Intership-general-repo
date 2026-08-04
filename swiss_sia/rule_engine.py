@@ -57,6 +57,7 @@ class RuleEngine:
         self._rules_by_name: Dict[str, Rule] = {}
         self.alerts: List[Alert] = []
         self.evaluated_counts: Dict[str, int] = {}
+        self.evaluation_error_counts: Dict[str, int] = {}
 
     def add_rule(self, rule: Rule):
         """Register a single rule."""
@@ -101,6 +102,35 @@ class RuleEngine:
         self.alerts.append(alert)
         return alert
 
+    def _make_execution_error_alert(
+        self,
+        rule: Rule,
+        exc: Exception,
+    ) -> Alert:
+        """Record a failed rule execution as a critical, fail-closed alert."""
+
+        self.evaluation_error_counts[rule.name] = (
+            self.evaluation_error_counts.get(rule.name, 0) + 1
+        )
+        return Alert(
+            rule="RULE_EXECUTION_ERROR:{}".format(rule.name),
+            description=(
+                "Compliance rule {!r} could not be evaluated; no PASS or "
+                "score may be derived from this execution."
+            ).format(rule.name),
+            severity=Severity.CRITICAL,
+            category=rule.category,
+            recommendation=(
+                "Inspect the rule implementation and its normalized input, "
+                "then rerun the complete assessment."
+            ),
+            data={
+                "failed_rule": rule.name,
+                "exception_type": type(exc).__name__,
+                "error": str(exc),
+            },
+        )
+
     def check_all(self, data: Any, reset: bool = False) -> List[Alert]:
         """Apply every registered rule to one data object."""
         if reset:
@@ -109,13 +139,19 @@ class RuleEngine:
         new_alerts: List[Alert] = []
         for rule in self.rules:
             try:
-                self.evaluated_counts[rule.name] = self.evaluated_counts.get(rule.name, 0) + 1
-                if not rule.check(data):
+                passed = bool(rule.check(data))
+                self.evaluated_counts[rule.name] = (
+                    self.evaluated_counts.get(rule.name, 0) + 1
+                )
+                if not passed:
                     alert = self._make_alert(rule, data)
                     self.alerts.append(alert)
                     new_alerts.append(alert)
             except Exception as exc:
-                logger.error("Error while applying rule %s: %s", rule.name, exc)
+                logger.exception("Error while applying rule %s", rule.name)
+                alert = self._make_execution_error_alert(rule, exc)
+                self.alerts.append(alert)
+                new_alerts.append(alert)
         return new_alerts
 
     def check_rules(self, rule_names: List[str], data: Any) -> List[Alert]:
@@ -126,13 +162,19 @@ class RuleEngine:
             if rule is None:
                 continue
             try:
-                self.evaluated_counts[rule.name] = self.evaluated_counts.get(rule.name, 0) + 1
-                if not rule.check(data):
+                passed = bool(rule.check(data))
+                self.evaluated_counts[rule.name] = (
+                    self.evaluated_counts.get(rule.name, 0) + 1
+                )
+                if not passed:
                     alert = self._make_alert(rule, data)
                     self.alerts.append(alert)
                     alerts.append(alert)
             except Exception as exc:
-                logger.error("Error while applying rule %s: %s", rule.name, exc)
+                logger.exception("Error while applying rule %s", rule.name)
+                alert = self._make_execution_error_alert(rule, exc)
+                self.alerts.append(alert)
+                alerts.append(alert)
         return alerts
 
     def check_rule(self, rule_name: str, data: Any) -> Optional[Alert]:
@@ -141,17 +183,26 @@ class RuleEngine:
         if rule is None:
             return None
         try:
-            self.evaluated_counts[rule.name] = self.evaluated_counts.get(rule.name, 0) + 1
-            if not rule.check(data):
-                return self._make_alert(rule, data)
+            passed = bool(rule.check(data))
+            self.evaluated_counts[rule.name] = (
+                self.evaluated_counts.get(rule.name, 0) + 1
+            )
+            if not passed:
+                alert = self._make_alert(rule, data)
+                self.alerts.append(alert)
+                return alert
         except Exception as exc:
-            logger.error("Error while applying rule %s: %s", rule.name, exc)
+            logger.exception("Error while applying rule %s", rule.name)
+            alert = self._make_execution_error_alert(rule, exc)
+            self.alerts.append(alert)
+            return alert
         return None
 
     def clear_alerts(self):
         """Clear collected alerts and rule-evaluation counters."""
         self.alerts = []
         self.evaluated_counts = {}
+        self.evaluation_error_counts = {}
 
     def get_alerts_by_severity(self, severity: Severity) -> List[Alert]:
         """Return collected alerts for one severity level."""

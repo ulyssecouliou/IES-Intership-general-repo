@@ -527,6 +527,8 @@ class Sia4010ExternalInputManifest:
         path: Path,
         entries: Mapping[str, Mapping[str, Any]],
     ):
+        """Initialize a validated manifest from normalized evidence entries."""
+
         self.path = path
         self.entries = dict(entries)
 
