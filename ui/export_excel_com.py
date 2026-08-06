@@ -98,10 +98,14 @@ def _valeur_ligne(vue_test1, cle_periode, tolerance_absence=None):
     return None
 
 
-def remplir_classeur_sia(chemin_source, vue_test1, carte_cellules=None,
-                          chemin_sortie=None, feuille=FEUILLE_DONNEES,
-                          garder_excel_visible=False):
+def remplir_classeur_sia_detaille(chemin_source, vue_test1, carte_cellules=None,
+                                   chemin_sortie=None, feuille=FEUILLE_DONNEES,
+                                   garder_excel_visible=False):
     """Remplit une COPIE du classeur SIA officiel en mode `Handeingabe`.
+
+    Retourne un RAPPORT complet, dont la liste des cellules laissees vides
+    faute de valeur candidate. Voir `remplir_classeur_sia` pour la variante
+    qui ne retourne que le chemin.
 
     `chemin_source` : chemin d'un classeur EXISTANT -- de préférence déjà
     une copie de travail (jamais un fichier de `SIA_4010_geteilter_Link/`,
@@ -181,7 +185,78 @@ def remplir_classeur_sia(chemin_source, vue_test1, carte_cellules=None,
             classeur.Close(SaveChanges=False)  # deja sauvegarde explicitement ci-dessus
         excel.Quit()
 
-    return chemin_sortie
+    return {
+        'chemin_sortie': chemin_sortie,
+        'test_id': vue_test1.get('test_id'),
+        'feuille': feuille,
+        'cellules_ecrites': cellules_ecrites,
+        # Cellules laissees INTACTES faute de valeur candidate. Elles etaient
+        # jusqu'ici comptees puis jetees : un classeur pouvait repartir avec
+        # des cases vides sans que personne ne l'apprenne. C'est exactement
+        # le cas du PV du Test 7.
+        'cellules_ignorees_valeur_absente': cellules_ignorees_valeur_absente,
+        'complet': not cellules_ignorees_valeur_absente,
+    }
+
+
+def remplir_classeur_sia(chemin_source, vue_test1, carte_cellules=None,
+                          chemin_sortie=None, feuille=FEUILLE_DONNEES,
+                          garder_excel_visible=False):
+    """Remplit une copie du classeur SIA et retourne le CHEMIN du resultat.
+
+    Conservee telle quelle pour les appelants existants. Pour connaitre les
+    cellules laissees vides faute de valeur candidate -- information
+    necessaire des qu'un test est partiellement simule -- utiliser
+    `remplir_classeur_sia_detaille`, qui retourne le rapport complet.
+    """
+    return remplir_classeur_sia_detaille(
+        chemin_source, vue_test1, carte_cellules=carte_cellules,
+        chemin_sortie=chemin_sortie, feuille=feuille,
+        garder_excel_visible=garder_excel_visible)['chemin_sortie']
+
+
+def remplir_classeurs_sia(travaux, garder_excel_visible=False):
+    """Remplit UN classeur SIA PAR TEST.
+
+    Chaque test SIA a son propre classeur d'evaluation
+    (`Resultaterfassung_Test1.xlsx`, `Resultaterfassung Test7.xlsx`, ...) :
+    il n'y a pas de classeur unique a remplir pour plusieurs tests. Cette
+    fonction orchestre donc une serie de remplissages independants.
+
+    `travaux` : liste de dicts
+        `{'vue': ..., 'chemin_source': ..., 'carte_cellules': ...}`
+        avec optionnellement `chemin_sortie` et `feuille`.
+
+    Un travail qui echoue N'INTERROMPT PAS les autres : son erreur est
+    consignee et le traitement continue. Rapporter un seul echec en masquant
+    trois succes -- ou l'inverse -- serait pire que tout.
+
+    Retourne `{'rapports': [...], 'echecs': [...], 'complet': bool}`.
+    `complet` n'est vrai que si TOUS les travaux ont reussi ET qu'aucune
+    cellule n'a ete laissee vide.
+    """
+    rapports, echecs = [], []
+    for travail in travaux:
+        vue_test = travail['vue']
+        try:
+            rapports.append(remplir_classeur_sia_detaille(
+                travail['chemin_source'], vue_test,
+                carte_cellules=travail.get('carte_cellules'),
+                chemin_sortie=travail.get('chemin_sortie'),
+                feuille=travail.get('feuille', FEUILLE_DONNEES),
+                garder_excel_visible=garder_excel_visible))
+        except Exception as erreur:
+            echecs.append({
+                'test_id': vue_test.get('test_id'),
+                'chemin_source': travail.get('chemin_source'),
+                'erreur': '%s: %s' % (type(erreur).__name__, erreur),
+            })
+
+    return {
+        'rapports': rapports,
+        'echecs': echecs,
+        'complet': (not echecs) and all(r['complet'] for r in rapports),
+    }
 
 
 def _decouper_extension(chemin):

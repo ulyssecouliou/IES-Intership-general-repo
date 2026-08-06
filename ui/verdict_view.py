@@ -407,6 +407,7 @@ def construire_vue_test1(resultat_test1):
     """
     return {
         'test_id': resultat_test1.get('test_id'),
+        'numero_test': '1',
         'verdict_global': construire_verdict_global(resultat_test1),
         'classes': construire_lignes_classes(resultat_test1),
         'lignes': construire_lignes_test1(resultat_test1),
@@ -588,7 +589,110 @@ def construire_vue_test7(resultat_test7):
     """
     return {
         'test_id': u'Test 7',
+        'numero_test': '7',
         'verdict_global': construire_verdict_global_test7(resultat_test7),
         'classes': construire_lignes_classes_test7(resultat_test7),
         'lignes': construire_lignes_test7(resultat_test7),
     }
+
+
+# ==========================================================================
+# SYNTHÈSE PAR CLASSE DE VALIDATION -- tous tests confondus
+# ==========================================================================
+#
+# C'est la seule vue qui réponde à la question du client : « quelles classes
+# mon logiciel a-t-il ? ». Elle est donc aussi celle où un faux vert coûterait
+# le plus cher.
+#
+# Règle appliquée sans exception : une classe n'est verte que si TOUS les
+# tests que le tableau 63 lui impose sont présents ET verts. Un test absent du
+# dossier rend la classe NON CONCLUANTE, jamais « verte sur ce qu'on a ».
+# --------------------------------------------------------------------------
+
+# SIA 4010:2023, §4.5, tableau 63 -- transcrit mot pour mot depuis
+# refs/SIA-4010-2023.pdf p. 48, et repris dans
+# traceability/classes-de-validation.spec.md §1.
+TESTS_PAR_CLASSE = {
+    '1A': ('1', '2A'),
+    '1B': ('1', '2'),
+    '2A': ('1', '2A', '3A-F'),
+    '2B': ('1', '2', '3'),
+    '3':  ('1', '4', '5', '6'),
+    '4A': ('1', '2A', '3A-F', '4', '5', '6', '7'),
+    '4B': ('1', '2', '3', '4', '5', '6', '7'),
+    '5':  ('7',),
+}
+
+CITATION_TABLEAU_63 = (
+    u'SIA 4010:2023, §4.5, tableau 63 — « Classes de validation ». '
+    u'Colonne « Tests » transcrite verbatim.'
+)
+
+TEXTE_CLASSE_INCOMPLETE = (
+    u'Non concluante — {0} test(s) exigé(s) sur {1} absent(s) du dossier : {2}'
+)
+
+
+def _numero_test(une_vue):
+    """Numéro de test d'une vue, ou `None` si elle ne le déclare pas."""
+    return une_vue.get('numero_test')
+
+
+def construire_synthese_classes(vues):
+    """Une ligne par classe du tableau 63, tous tests confondus.
+
+    `vues` : liste de vues (`construire_vue_test1`, `construire_vue_test7`, ...).
+
+    Une classe est verte UNIQUEMENT si chacun des tests que le tableau 63 lui
+    impose est présent dans `vues` ET conforme. Les tests manquants sont
+    nommés : un lecteur doit pouvoir vérifier lui-même pourquoi une classe
+    n'est pas acquise.
+    """
+    par_numero = {}
+    for une_vue in vues:
+        numero = _numero_test(une_vue)
+        if numero is not None:
+            par_numero[numero] = une_vue
+
+    lignes = []
+    for classe in sorted(TESTS_PAR_CLASSE):
+        exiges = TESTS_PAR_CLASSE[classe]
+        presents = [n for n in exiges if n in par_numero]
+        manquants = [n for n in exiges if n not in par_numero]
+
+        verdicts = [par_numero[n]['verdict_global'] for n in presents]
+        couleurs = [v['couleur'] for v in verdicts]
+
+        if manquants:
+            # Un échec avéré doit rester visible même si d'autres tests
+            # manquent : il est plus grave qu'une absence.
+            conforme = False if COULEUR_NON_CONFORME in couleurs else None
+            texte = TEXTE_CLASSE_INCOMPLETE.format(
+                len(manquants), len(exiges),
+                u', '.join(u'Test ' + n for n in manquants))
+            if conforme is False:
+                texte = TEXTE_NON_CONFORME + u' — ' + texte
+        elif COULEUR_NON_CONFORME in couleurs:
+            conforme = False
+            texte = TEXTE_NON_CONFORME + u' — {0} test(s) en échec'.format(
+                couleurs.count(COULEUR_NON_CONFORME))
+        elif COULEUR_NON_APPLICABLE in couleurs:
+            conforme = None
+            texte = u'Non concluante — {0} test(s) non évalué(s)'.format(
+                couleurs.count(COULEUR_NON_APPLICABLE))
+        else:
+            conforme = True
+            texte = TEXTE_CONFORME + u' — {0}/{0} test(s) exigé(s) conforme(s)'.format(
+                len(exiges))
+
+        lignes.append({
+            'classe': classe,
+            'tests_exiges': list(exiges),
+            'tests_couverts': presents,
+            'tests_manquants': manquants,
+            'conforme': conforme,
+            'couleur': couleur_depuis_conforme(conforme),
+            'texte_verdict': texte,
+            'article': CITATION_TABLEAU_63,
+        })
+    return lignes

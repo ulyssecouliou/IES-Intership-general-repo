@@ -40,6 +40,8 @@ from reportlab.platypus import (
 
 from ui import verdict_view as vue
 
+from ui import verdict_view as vue
+
 
 # Couleurs PDF -- même contrat que `COULEUR_FOND_PAR_VERDICT` de
 # `ui/dialog_tkinter.py`, redondant avec le texte du verdict (jamais
@@ -158,24 +160,99 @@ def _tableau_lignes_par_grandeur_cas(vue_test1, styles):
     return elements
 
 
-def generer_pdf_rapport(vue_test1, chemin_pdf):
-    """Génère le rapport PDF complet à partir de la structure d'affichage
-    déjà construite par `ui/verdict_view.py::construire_vue_test1()`.
+def _synthese_classes(vues, styles):
+    """Page de tête du rapport client : le verdict par CLASSE, tous tests
+    confondus.
+
+    C'est la seule page qui réponde à « quelles classes ce logiciel a-t-il ? ».
+    Elle nomme donc explicitement les tests exigés qui MANQUENT au dossier :
+    une classe dont un test requis est absent n'est jamais verte, et le
+    lecteur doit pouvoir vérifier pourquoi sans nous croire sur parole.
+    """
+    lignes_synthese = vue.construire_synthese_classes(vues)
+
+    elements = [
+        Paragraph(u'Validation SIA 4010 — synthèse par classe', styles['Title']),
+        Spacer(1, 0.3 * cm),
+        Paragraph(
+            u'Tests présents dans ce dossier : ' +
+            u', '.join(str(v.get('test_id') or '?') for v in vues),
+            styles['Normal']),
+        Spacer(1, 0.4 * cm),
+    ]
+
+    donnees = [[u'Classe', u'Tests exigés', u'Couverts', u'Verdict']]
+    couleurs_lignes = []
+    for ligne in lignes_synthese:
+        donnees.append([
+            ligne['classe'],
+            u', '.join(ligne['tests_exiges']),
+            u', '.join(ligne['tests_couverts']) or u'—',
+            Paragraph(ligne['texte_verdict'], styles['BodyText']),
+        ])
+        couleurs_lignes.append(ligne['couleur'])
+
+    tableau = Table(donnees, colWidths=[1.8 * cm, 4.6 * cm, 2.2 * cm, 9.4 * cm],
+                    repeatRows=1)
+    style = [
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#333333')),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+        ('FONTSIZE', (0, 0), (-1, -1), 7),
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+    ]
+    for indice, couleur in enumerate(couleurs_lignes, start=1):
+        style.append(('BACKGROUND', (0, indice), (-1, indice),
+                       _COULEUR_PDF_PAR_VERDICT.get(couleur, colors.white)))
+    tableau.setStyle(TableStyle(style))
+    elements.append(tableau)
+
+    elements.append(Spacer(1, 0.4 * cm))
+    elements.append(Paragraph(u'Article : ' + vue.CITATION_TABLEAU_63,
+                              styles['Normal']))
+    elements.append(Paragraph(
+        u'Une classe n\'est déclarée conforme que si <b>tous</b> les tests que '
+        u'le tableau 63 lui impose sont présents dans ce dossier et conformes. '
+        u'Un test absent rend la classe non concluante — il n\'est jamais '
+        u'ignoré.', styles['Normal']))
+    return elements
+
+
+def generer_pdf_rapport_multi(vues, chemin_pdf):
+    """Rapport PDF couvrant plusieurs tests.
+
+    Page 1 : synthèse par classe, tous tests confondus. Puis une section par
+    test, dans l'ordre reçu.
 
     Exécuté réellement dans cet environnement (voir docstring de module) --
     reste soumis à la réserve de version ReportLab 3.2 (VE) vs 5.0.0 (ici).
     """
+    if not vues:
+        raise ValueError(
+            u'aucune vue fournie : un rapport vide pourrait passer pour un '
+            u'dossier sans anomalie.')
+
     styles = _style_feuille()
     document = SimpleDocTemplate(
         chemin_pdf, pagesize=A4,
         leftMargin=1.5 * cm, rightMargin=1.5 * cm,
         topMargin=1.5 * cm, bottomMargin=1.5 * cm)
 
-    elements = []
-    elements.extend(_entete(vue_test1, styles))
-    elements.extend(_tableau_classes(vue_test1, styles))
-    elements.append(PageBreak())
-    elements.extend(_tableau_lignes_par_grandeur_cas(vue_test1, styles))
+    elements = _synthese_classes(vues, styles)
+    for une_vue in vues:
+        elements.append(PageBreak())
+        elements.extend(_entete(une_vue, styles))
+        elements.extend(_tableau_classes(une_vue, styles))
+        elements.extend(_tableau_lignes_par_grandeur_cas(une_vue, styles))
 
     document.build(elements)
     return chemin_pdf
+
+
+def generer_pdf_rapport(vue_test1, chemin_pdf):
+    """Rapport d'un seul test -- conservé pour les appelants existants.
+
+    Délègue à `generer_pdf_rapport_multi` : le rapport commence donc lui aussi
+    par la synthèse par classe, qui signalera les tests absents du dossier.
+    """
+    return generer_pdf_rapport_multi([vue_test1], chemin_pdf)

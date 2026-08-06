@@ -357,11 +357,29 @@ class NavigateurSIA4010(object):
             filetypes=[('Classeur Excel', '*.xlsx;*.xlsm')])
         if not chemin_source:
             return
+        # Chaque test SIA a SON classeur d'évaluation : on ne remplit donc
+        # qu'un test à la fois depuis ce bouton, celui affiché en premier.
+        # Un bouton unique remplissant plusieurs classeurs demanderait autant
+        # de sélections de fichier -- laissé à `remplir_classeurs_sia`, que
+        # le script appelant peut piloter sans dialogue.
         try:
             from ui import export_excel_com
-            chemin_resultat = export_excel_com.remplir_classeur_sia(
-                chemin_source, self._vue)
-            messagebox.showinfo(u'Export Excel', u'Classeur rempli : ' + chemin_resultat)
+            rapport = export_excel_com.remplir_classeur_sia_detaille(
+                chemin_source, self._vues[0])
+            message = u'Classeur rempli : %s\n%d cellule(s) écrite(s).' % (
+                rapport['chemin_sortie'], len(rapport['cellules_ecrites']))
+            ignorees = rapport['cellules_ignorees_valeur_absente']
+            if ignorees:
+                # Ne jamais annoncer un succès sec quand des cases restent
+                # vides : elles seraient decouvertes par le SIA, pas par nous.
+                message += (u'\n\n⚠ %d cellule(s) laissée(s) VIDE(S), faute de '
+                            u'valeur candidate :\n%s' % (
+                                len(ignorees),
+                                u'\n'.join(u'  %s → %s' % (c, a)
+                                           for c, a in ignorees[:10])))
+                if len(ignorees) > 10:
+                    message += u'\n  … et %d autre(s).' % (len(ignorees) - 10)
+            messagebox.showinfo(u'Export Excel', message)
         except Exception as erreur:  # pragma: no cover -- non exécuté ici
             messagebox.showerror(u'Export Excel', str(erreur))
 
@@ -374,10 +392,17 @@ class NavigateurSIA4010(object):
             filetypes=[('PDF', '*.pdf')])
         if not chemin_pdf:
             return
+        # Le PDF couvre TOUS les tests affichés : sa page de tête est la
+        # synthèse par classe, qui est ce que le client lit en premier.
         try:
             from ui import export_pdf_reportlab
-            export_pdf_reportlab.generer_pdf_rapport(self._vue, chemin_pdf)
-            messagebox.showinfo(u'Export PDF', u'Rapport généré : ' + chemin_pdf)
+            export_pdf_reportlab.generer_pdf_rapport_multi(
+                self._vues, chemin_pdf)
+            messagebox.showinfo(
+                u'Export PDF',
+                u'Rapport généré : %s\n%d test(s) couvert(s) : %s' % (
+                    chemin_pdf, len(self._vues),
+                    u', '.join(str(v.get('test_id') or '?') for v in self._vues)))
         except Exception as erreur:  # pragma: no cover -- non exécuté ici
             messagebox.showerror(u'Export PDF', str(erreur))
 
