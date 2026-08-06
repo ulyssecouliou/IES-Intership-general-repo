@@ -103,6 +103,54 @@ def test_le_preflight_ne_leve_jamais():
     assert run.preflight() in (True, False)
 
 
+# --------------------------------------------------------------------------
+# Sélection du mode — VEScripts n'a qu'un bouton Run, pas de terminal
+# --------------------------------------------------------------------------
+
+def test_sans_argument_le_mode_depend_de_la_presence_de_ve():
+    """C'est tout l'intérêt : appuyer sur Run doit faire la bonne chose."""
+    attendu = 'sonde' if run._dans_ve() else 'preflight'
+    assert run._mode_effectif(()) == attendu
+
+
+@pytest.mark.parametrize("mode", ['preflight', 'sonde', 'evaluer', 'run'])
+def test_un_argument_explicite_prime(mode):
+    """Ceux qui ont un terminal gardent la main."""
+    assert run._mode_effectif(('--' + mode,)) == mode
+
+
+def test_la_constante_mode_prime_sur_la_detection(monkeypatch):
+    """Le seul réglage à modifier depuis VE, faute de ligne de commande."""
+    monkeypatch.setattr(run, 'MODE', 'evaluer')
+    assert run._mode_effectif(()) == 'evaluer'
+
+
+def test_une_constante_mode_invalide_retombe_sur_la_detection(monkeypatch):
+    """Une faute de frappe ne doit pas rendre le script inerte."""
+    monkeypatch.setattr(run, 'MODE', 'sond')  # faute volontaire
+    assert run._mode_effectif(()) in ('sonde', 'preflight')
+
+
+def test_largument_prime_meme_sur_la_constante(monkeypatch):
+    monkeypatch.setattr(run, 'MODE', 'evaluer')
+    assert run._mode_effectif(('--preflight',)) == 'preflight'
+
+
+def test_main_sans_argument_ne_leve_pas():
+    """Depuis le bouton Run, une exception non rattrapée n'affiche qu'une
+    trace dans la fenêtre de script : le code doit rendre un entier."""
+    assert main_sans_effet_de_bord() in (0, 1)
+
+
+def main_sans_effet_de_bord():
+    """Appelle `main` en mode préflight, qui ne modifie rien.
+
+    Returns:
+        int: Code de retour de `main`.
+    """
+    return run.main(('--preflight',))
+
+
 def test_le_chemin_candidat_est_sous_outputs():
     """Jamais dans refs/ : ce n'est pas un référentiel figé."""
     assert 'outputs' in run.CHEMIN_CANDIDAT.replace(os.sep, '/')

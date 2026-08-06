@@ -335,16 +335,75 @@ def evaluer_et_afficher(candidat=None):
     return resultat
 
 
-def main(arguments):
-    u"""Point d'entrée en ligne de commande.
+# --------------------------------------------------------------------------
+# MODE D'EXÉCUTION
+#
+# Le Python Scripts navigator de VE n'offre PAS de terminal : il n'y a qu'un
+# bouton « Run », donc aucun moyen de passer `--sonde`. Le mode est donc
+# déterminé automatiquement :
+#
+#     dans VE   -> SONDE     (la seule action qui apprenne quelque chose)
+#     hors VE   -> PREFLIGHT (contrôle d'installation, sans rien simuler)
+#
+# Pour forcer un mode depuis VE, remplacer 'auto' ci-dessous par 'preflight',
+# 'sonde', 'evaluer' ou 'run', puis appuyer sur Run. C'est le seul réglage à
+# modifier ; aucune autre ligne du fichier n'a besoin d'être touchée.
+# --------------------------------------------------------------------------
+MODE = 'auto'
+
+MODES_CONNUS = ('auto', 'preflight', 'sonde', 'evaluer', 'run')
+
+
+def _mode_effectif(arguments):
+    u"""Détermine le mode à exécuter.
+
+    Les arguments de ligne de commande priment quand il y en a — pour ceux qui
+    disposent d'un terminal. Sinon on retombe sur `MODE`, puis sur la
+    détection automatique.
 
     Args:
         arguments: Arguments de la ligne de commande, sans le nom du script.
 
     Returns:
+        str: Un mode parmi 'preflight', 'sonde', 'evaluer', 'run'.
+    """
+    for nom in ('run', 'sonde', 'evaluer', 'preflight'):
+        if '--' + nom in arguments:
+            return nom
+
+    if MODE in MODES_CONNUS and MODE != 'auto':
+        return MODE
+
+    return 'sonde' if _dans_ve() else 'preflight'
+
+
+def main(arguments=()):
+    u"""Point d'entrée, utilisable au clavier comme au bouton Run.
+
+    Args:
+        arguments: Arguments de la ligne de commande, sans le nom du script.
+            Vide quand le script est lancé depuis le bouton Run de VE.
+
+    Returns:
         int: Code de sortie, 0 si tout s'est bien passé.
     """
-    if '--run' in arguments:
+    mode = _mode_effectif(arguments)
+    print(u'mode : %s%s' % (mode, u'  (détecté automatiquement)'
+                            if not arguments and MODE == 'auto' else u''))
+    print()
+
+    if mode == 'sonde':
+        rapport = sonder()
+        return 0 if rapport['dans_ve'] else 1
+
+    if mode == 'evaluer':
+        evaluer_et_afficher()
+        return 0
+
+    if mode == 'preflight':
+        return 0 if preflight() else 1
+
+    if mode == 'run':
         try:
             candidat = executer()
         except (RuntimeError, NotImplementedError) as erreur:
@@ -356,16 +415,22 @@ def main(arguments):
         evaluer_et_afficher(candidat)
         return 0
 
-    if '--sonde' in arguments:
-        rapport = sonder()
-        return 0 if rapport['dans_ve'] else 1
-
-    if '--evaluer' in arguments:
-        evaluer_et_afficher()
-        return 0
-
-    return 0 if preflight() else 1
+    print(u'mode inconnu : %r — modes valides : %s'
+          % (mode, u', '.join(MODES_CONNUS)))
+    return 1
 
 
 if __name__ == '__main__':
-    sys.exit(main(sys.argv[1:]))
+    # `sys.argv` peut être absent ou réduit quand VEScripts exécute le fichier
+    # depuis son bouton Run : on ne suppose rien.
+    _arguments = tuple(getattr(sys, 'argv', ())[1:])
+    _code = main(_arguments)
+
+    print()
+    print(u'--- terminé (code %d) ---' % _code)
+
+    # `sys.exit` lève SystemExit, que VEScripts remonte comme une erreur dans
+    # sa fenêtre de script. On ne sort donc explicitement que lorsqu'un
+    # terminal est manifestement présent (des arguments ont été passés).
+    if _arguments:
+        sys.exit(_code)
