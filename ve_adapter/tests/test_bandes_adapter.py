@@ -20,18 +20,26 @@ from ve_adapter import bandes_adapter as adaptateur
 class FauxResultsReader(object):
     """Double minimal de `iesve.ResultsReader`.
 
+    CALQUE SUR L'API REELLE, pas sur ce qu'on en supposait. La version
+    precedente de ce double prenait un `niveau` en argument de
+    `get_variables` et rendait des chaines : elle VALIDAIT l'erreur qu'elle
+    aurait du signaler. VE, sur `ZOER_C1.aps` le 2026-08-06, refuse
+    l'argument (`ArgumentError`) et rend des dictionnaires portant
+    `aps_varname`, `display_name` et `model_level`.
+
     Attributes:
         series: `{(varname, niveau): serie}`.
-        variables: `{niveau: [noms]}`.
+        variables: Liste d'entrees, chacune un dict comme l'API en rend.
     """
 
     def __init__(self, series=None, variables=None):
         self.series = series or {}
-        self.variables = variables or {}
+        self.variables = list(variables or [])
         self.ferme = False
 
-    def get_variables(self, niveau):
-        return list(self.variables.get(niveau, []))
+    def get_variables(self):
+        # Aucun argument : c'est le contrat reel de l'API.
+        return list(self.variables)
 
     def get_results(self, varname, niveau):
         cle = (varname, niveau)
@@ -196,14 +204,55 @@ def test_les_grandeurs_non_resolues_restent_absentes(monkeypatch):
 # Decouverte
 # --------------------------------------------------------------------------
 
-def test_la_decouverte_liste_les_variables_du_fichier():
-    lecteur = FauxResultsReader(variables={'z': ['A', 'B_SOLAR', 'C']})
-    assert adaptateur.decouvrir_variables(lecteur, 'z') == ['A', 'B_SOLAR', 'C']
+def _variable(varname, niveau, display=None):
+    """Entree de `get_variables()`, dans la forme reelle de l'API."""
+    return {'aps_varname': varname, 'display_name': display or varname,
+            'model_level': niveau, 'units_type': 'Power'}
+
+
+_VARIABLES = [
+    _variable('A', adaptateur.NIVEAU_LOCAL),
+    _variable('B_SOLAR', adaptateur.NIVEAU_LOCAL, 'Window solar gains'),
+    _variable('C', adaptateur.NIVEAU_SYSTEME),
+]
+
+
+def test_la_decouverte_liste_tout_le_fichier_sans_filtre():
+    lecteur = FauxResultsReader(variables=_VARIABLES)
+    trouvees = adaptateur.decouvrir_variables(lecteur)
+    assert [v['aps_varname'] for v in trouvees] == ['A', 'B_SOLAR', 'C']
+
+
+def test_le_niveau_se_lit_sur_la_variable_pas_sur_lappel():
+    """`get_variables('z')` leve ArgumentError dans VE : le niveau est porte
+    par `model_level`, entree par entree. Le filtrage est fait chez nous."""
+    lecteur = FauxResultsReader(variables=_VARIABLES)
+    trouvees = adaptateur.decouvrir_variables(lecteur, adaptateur.NIVEAU_LOCAL)
+    assert [v['aps_varname'] for v in trouvees] == ['A', 'B_SOLAR']
 
 
 def test_la_decouverte_filtre_sans_tenir_compte_de_la_casse():
-    lecteur = FauxResultsReader(variables={'z': ['A', 'B_SOLAR', 'C']})
-    assert adaptateur.decouvrir_variables(lecteur, 'z', 'solar') == ['B_SOLAR']
+    lecteur = FauxResultsReader(variables=_VARIABLES)
+    trouvees = adaptateur.decouvrir_variables(
+        lecteur, adaptateur.NIVEAU_LOCAL, 'solar')
+    assert [v['aps_varname'] for v in trouvees] == ['B_SOLAR']
+
+
+def test_le_motif_cherche_aussi_dans_le_libelle_daffichage():
+    """« Window solar gains » est le display_name ; l'aps_varname peut etre
+    tout autre. Ne chercher que dans l'un rendrait la decouverte aveugle."""
+    lecteur = FauxResultsReader(variables=_VARIABLES)
+    trouvees = adaptateur.decouvrir_variables(lecteur, motif='window')
+    assert [v['aps_varname'] for v in trouvees] == ['B_SOLAR']
+
+
+def test_la_cle_name_nexiste_pas_dans_lapi():
+    """L'ancienne version filtrait sur `variable.get('name', ...)`. Ce champ
+    n'existe pas : le filtre retombait sur le dict entier, donc matchait
+    a peu pres n'importe quoi."""
+    assert 'name' not in adaptateur.CHAMPS_NOMMANTS
+    lecteur = FauxResultsReader(variables=_VARIABLES)
+    assert adaptateur.decouvrir_variables(lecteur, motif='units_type') == []
 
 
 def test_letat_des_liaisons_nomme_ce_qui_manque():

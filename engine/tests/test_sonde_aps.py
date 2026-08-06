@@ -231,12 +231,24 @@ class FauxLecteur(object):
 
     def __init__(self):
         self.appels = []
+        self.variables = []
+
+    def get_variables(self):
+        self.appels.append(('get_variables', ()))
+        return list(self.variables)
+
+    #: Ce que ZOER_C1.aps a reellement rendu le 2026-08-06. `get_process_
+    #: variables` exige l'un de ces noms : sans argument il leve ArgumentError.
+    PROCESSUS = ['Process Material flow', 'Process Product flow',
+                 'Process Heat input', 'Process Heat output']
 
     def __getattr__(self, nom):
         def methode(*arguments):
             self.appels.append((nom, arguments))
             if nom == 'get_apache_systems':
                 return ['SYS1']
+            if nom == 'get_process_list':
+                return list(self.PROCESSUS)
             return []
         return methode
 
@@ -261,14 +273,39 @@ def _relever_a_blanc():
     return lecteur.appels, etapes
 
 
-def test_les_deux_formes_de_get_variables_sont_relevees():
-    """`swiss_sia` appelle `get_variables()` sans argument, `bandes_adapter`
-    avec un niveau. Les deux ne peuvent pas etre justes et rien ne tranche :
-    la sonde doit relever les deux, pas choisir."""
+def test_la_forme_sans_argument_est_celle_qui_repond():
+    """Tranche par VE le 2026-08-06 sur ZOER_C1.aps : `get_variables()` rend
+    la liste, `get_variables('z')` leve ArgumentError. Le double refuse
+    l'argument comme VE le fait."""
     appels, _ = _relever_a_blanc()
     formes = [args for methode, args in appels if methode == 'get_variables']
-    assert () in formes
-    assert ('z',) in formes and ('v',) in formes and ('w',) in formes
+    assert formes == [()]
+
+
+def test_les_formes_a_argument_restent_tentees():
+    """Si une autre version de VE les acceptait, le rapport le dirait — au
+    lieu de laisser croire au contraire sur la foi d'un seul fichier."""
+    _, etapes = _relever_a_blanc()
+    tentees = [nom for nom, _, _ in etapes if nom.startswith('get_variables(')]
+    for niveau in ('z', 'v', 'w'):
+        assert any(repr(niveau) in nom for nom in tentees), niveau
+
+
+def test_un_echec_sur_les_formes_a_argument_ne_perd_pas_la_liste():
+    """C'est le cas reel : trois etapes en echec, et pourtant le releve
+    complet doit etre dans le rapport."""
+    lecteur = FauxLecteur()
+    lecteur.variables = [{'aps_varname': 'A', 'model_level': 'z'}]
+    rapport = {}
+
+    def etape(nom, fonction):
+        try:
+            return fonction()
+        except Exception:  # noqa: BLE001
+            return None
+
+    sonde._relever(etape, lecteur, rapport)
+    assert rapport['variables'] == [{'aps_varname': 'A', 'model_level': 'z'}]
 
 
 def test_les_portes_dentree_systeme_et_energie_sont_interrogees():
@@ -324,4 +361,58 @@ def test_une_methode_qui_leve_ninterrompt_pas_le_releve():
     assert statuts['get_energy_uses'] == 'ECHEC'
     # Et le releve doit avoir continue au-dela.
     assert statuts['get_units'] == 'OK'
-    assert statuts['get_process_variables'] == 'OK'
+    assert statuts['get_process_list'] == 'OK'
+
+
+def test_get_process_variables_est_appele_avec_un_processus():
+    """Sans argument il leve ArgumentError. La liste des processus vient de
+    `get_process_list`, constate sur ZOER_C1.aps le 2026-08-06."""
+    appels, _ = _relever_a_blanc()
+    passes = [args for methode, args in appels
+              if methode == 'get_process_variables']
+    assert passes, 'get_process_variables jamais appele'
+    assert all(len(args) == 1 for args in passes)
+    assert ('Process Heat input',) in passes
+
+
+def test_la_liste_complete_des_variables_echappe_au_plafond():
+    """Le releve du 2026-08-06 a ete tronque a 500 entrees par le plafond des
+    etapes, et AUCUNE variable de niveau « z » n'y a survecu : un garde-fou
+    de lisibilite avait coupe exactement ce que la sonde existe pour
+    rapporter."""
+    lecteur = FauxLecteur()
+    nombreuses = [{'aps_varname': 'V%04d' % i, 'display_name': 'v',
+                   'model_level': 'z' if i % 2 else 'e'}
+                  for i in range(sonde.LIMITE_ELEMENTS_ETAPE + 250)]
+    lecteur.variables = nombreuses
+    rapport = {}
+
+    def etape(nom, fonction):
+        try:
+            return fonction()
+        except Exception:  # noqa: BLE001
+            return None
+
+    sonde._relever(etape, lecteur, rapport)
+    assert len(rapport['variables']) == len(nombreuses)
+    assert rapport['variables_par_niveau']['z'] > 0
+    assert rapport['variables_par_niveau']['e'] > 0
+
+
+def test_une_variable_est_reduite_a_ce_qui_sert():
+    reduite = sonde._variable_lisible({
+        'aps_varname': 'Window solar gains', 'display_name': 'Solar gain',
+        'model_level': 'z', 'units_type': 'Power', 'inutile': 1})
+    assert reduite['aps_varname'] == 'Window solar gains'
+    assert 'inutile' not in reduite
+
+
+def test_une_variable_de_forme_inattendue_est_signalee_pas_perdue():
+    assert 'forme_inattendue' in sonde._variable_lisible('juste une chaine')
+
+
+def test_les_comptes_par_niveau_sont_lisibles_en_console():
+    comptes = sonde._compter_par_niveau([
+        {'model_level': 'z'}, {'model_level': 'z'}, {'model_level': 'e'}])
+    assert comptes == {'e': 1, 'z': 2}
+    assert sonde._en_clair(comptes) == 'e=1, z=2'

@@ -90,11 +90,24 @@ trois niveaux (local `z`, système `v`, météo `w`), plus les systèmes Apache,
 les postes d'énergie et les unités. Un seul passage suffit à lever les
 20 liaisons.
 
-Il tranche aussi un désaccord interne au dépôt : `swiss_sia` appelle
-`get_variables()` **sans argument** et lit `model_level` sur chaque entrée,
-tandis que `ve_adapter/bandes_adapter.py` appelle `get_variables(niveau)`. Les
-deux ne peuvent pas être justes et aucune documentation ne tranche. La sonde
-relève les deux formes ; le rapport dira laquelle répond.
+### Ce que le premier passage a appris — 2026-08-06, `ZOER_C1.aps`
+
+**Tranché : `get_variables()` ne prend aucun argument.** `get_variables('z')`
+lève `ArgumentError`. Le niveau se lit sur `model_level`, entrée par entrée.
+`swiss_sia` avait raison, `ve_adapter/bandes_adapter.py` avait tort — corrigé.
+Idem pour `get_process_variables`, qui attend un nom issu de
+`get_process_list()`.
+
+**Ce fichier ne peut pas lever les 20 liaisons**, pour deux raisons :
+
+- `get_apache_systems()` rend `[]` : ce modèle n'a **aucun réseau
+  ApacheHVAC**. Les grandeurs des tests 4 à 6 — Lufterwärmer, Luftkühler,
+  WRG, ventilateurs — n'y existent donc pas.
+- la période simulée va du jour **106 au jour 288** de 1994, soit une
+  demi-année. Une somme annuelle n'a pas de sens dessus.
+
+Un second passage est nécessaire, sur un projet **avec système de ventilation
+mécanique** et **année complète**.
 
 Pour l'état courant, en Python :
 

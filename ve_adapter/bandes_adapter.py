@@ -300,31 +300,68 @@ def verifier_api(symboles=None):
     return dict((m, True) for m in METHODES_REQUISES)
 
 
-def decouvrir_variables(results_file, niveau=NIVEAU_LOCAL, motif=None):
+#: Champs d'une entrée de `get_variables()` où chercher un motif. `name`
+#: n'existe pas : c'était une supposition, corrigée le 2026-08-06.
+CHAMPS_NOMMANTS = ('aps_varname', 'display_name')
+
+
+def decouvrir_variables(results_file, niveau=None, motif=None):
     u"""Liste les variables disponibles dans un `.aps`, pour établir les liaisons.
 
     C'est l'outil qui remplace la devinette : on lit ce que le fichier
     contient réellement, puis on renseigne `LIAISONS`.
 
+    CORRIGÉ le 2026-08-06, contre une VE réelle (`ZOER_C1.aps`). Cette
+    fonction appelait `get_variables(niveau)` ; VE répond `ArgumentError`.
+    **`get_variables()` ne prend aucun argument** et rend TOUTES les variables,
+    chacune portant son niveau dans `model_level`. Le filtrage est donc fait
+    ici, pas par l'API.
+
     Args:
         results_file: Objet `ResultsReader` déjà ouvert.
-        niveau: Niveau de résultat, `'z'` local, `'v'` système, `'w'` météo.
-        motif: Sous-chaîne filtrante, insensible à la casse.
+        niveau: Niveau à retenir (`'z'` local, `'v'` système, `'w'` météo).
+            `None` les rend tous.
+        motif: Sous-chaîne filtrante sur le nom, insensible à la casse.
 
     Returns:
         list[dict]: Variables, telles que l'API les décrit.
     """
-    variables = results_file.get_variables(niveau) or []
+    variables = list(results_file.get_variables() or [])
+    if niveau is not None:
+        variables = [v for v in variables if _niveau_de(v) == niveau]
     if not motif:
-        return list(variables)
+        return variables
     cible = motif.lower()
-    retenues = []
-    for variable in variables:
-        texte = u'%s' % (variable if not isinstance(variable, dict)
-                         else variable.get('name', variable))
-        if cible in texte.lower():
-            retenues.append(variable)
-    return retenues
+    return [v for v in variables if cible in _nom_de(v).lower()]
+
+
+def _niveau_de(variable):
+    u"""Niveau de modèle porté par une entrée de `get_variables()`.
+
+    Args:
+        variable: Entrée de l'API.
+
+    Returns:
+        str | None: Valeur de `model_level`, ou `None` si absente.
+    """
+    if not isinstance(variable, dict):
+        return None
+    return variable.get('model_level')
+
+
+def _nom_de(variable):
+    u"""Texte où chercher un motif, pour une entrée de `get_variables()`.
+
+    Args:
+        variable: Entrée de l'API.
+
+    Returns:
+        str: Nom APS et libellé d'affichage concaténés.
+    """
+    if not isinstance(variable, dict):
+        return u'%s' % (variable,)
+    return u' '.join(u'%s' % variable.get(champ, u'')
+                     for champ in CHAMPS_NOMMANTS)
 
 
 def agreger(serie, methode):

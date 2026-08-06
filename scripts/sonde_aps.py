@@ -41,7 +41,13 @@ if _RACINE not in sys.path:
     sys.path.insert(0, _RACINE)
 
 from scripts.run_test1_dans_ve import (  # noqa: E402
-    _dans_ve, _membres, _serialisable, dire)
+    LIMITE_ELEMENTS, _dans_ve, _membres, _serialisable, dire)
+
+#: Plafond que `_serialisable` applique à toute séquence consignée dans une
+#: étape. Il a tronqué le relevé du 2026-08-06 à 500 variables, dont aucune de
+#: niveau « z ». Re-exporté pour que les tests puissent viser ce seuil : c'est
+#: précisément ce que la liste complète doit contourner.
+LIMITE_ELEMENTS_ETAPE = LIMITE_ELEMENTS
 
 CHEMIN_RAPPORT = os.path.join(_RACINE, 'outputs', 'sonde_aps.json')
 
@@ -204,7 +210,7 @@ def sonder(chemin_aps=None):
     }
 
     try:
-        _relever(etape, lecteur)
+        _relever(etape, lecteur, rapport)
     finally:
         etape(u'fermeture', lambda: lecteur.close())
 
@@ -224,30 +230,45 @@ def _sans_aps():
         u'ApacheSim dans VE, puis relancer cette sonde.')
 
 
-def _relever(etape, lecteur):
+def _relever(etape, lecteur, rapport=None):
     u"""Interroge toutes les portes d'entrée utiles du `ResultsReader`.
 
     Args:
         etape: Fonction d'exécution consignée.
         lecteur: `ResultsReader` ouvert.
+        rapport: Rapport où déposer la liste de variables COMPLÈTE, hors du
+            plafond appliqué aux étapes.
     """
     # --- Cadre temporel : sans lui, une somme annuelle n'a pas de sens.
     for nom in ('results_per_day', 'first_day', 'last_day', 'year',
                 'weather_file', 'hvac_file'):
         etape(u'%s' % nom, lambda n=nom: getattr(lecteur, n))
 
-    # --- Variables : le coeur du releve, et un desaccord a trancher.
+    # --- Variables : le coeur du releve.
     #
-    # `swiss_sia/simulation_results.py::get_available_variables` appelle
-    # `get_variables()` SANS argument et lit `model_level` sur chaque entree.
-    # `ve_adapter/bandes_adapter.py::decouvrir_variables` appelle
-    # `get_variables(niveau)`. Les deux ne peuvent pas etre justes ; aucune
-    # documentation ne tranche. On releve les deux formes plutot que de
-    # choisir, et le rapport dira laquelle repond.
-    etape(u'get_variables()  [sans argument]', lambda: lecteur.get_variables())
+    # TRANCHE PAR L EXECUTION, le 2026-08-06 sur ZOER_C1.aps :
+    # `get_variables()` SANS argument repond ; `get_variables('z')` leve
+    # ArgumentError. `swiss_sia` avait raison, `bandes_adapter` avait tort.
+    # Le niveau se lit sur `model_level`, entree par entree.
+    #
+    # Les formes a argument restent relevees : si une version de VE les
+    # acceptait, le rapport le dirait au lieu de laisser croire au contraire.
+    variables = etape(u'get_variables()  [sans argument]',
+                      lambda: lecteur.get_variables())
     for niveau, libelle in NIVEAUX:
         etape(u'get_variables(%r)  [%s]' % (niveau, libelle),
               lambda n=niveau: lecteur.get_variables(n))
+
+    # La liste complete est deposee HORS des etapes : le plafond de 500
+    # elements y avait tronque le releve du 2026-08-06 a 500 entrees, dont
+    # aucune de niveau « z ». Un garde-fou destine a la lisibilite avait ainsi
+    # coupe exactement ce que la sonde existe pour rapporter.
+    if rapport is not None and variables:
+        rapport['variables'] = [_variable_lisible(v) for v in variables]
+        rapport['variables_par_niveau'] = _compter_par_niveau(variables)
+        dire(u'  -> %d variables, par niveau : %s'
+             % (len(variables),
+                _en_clair(rapport['variables_par_niveau'])))
 
     # --- Locaux : les grandeurs de niveau z se lisent par piece.
     etape(u'get_room_list', lambda: lecteur.get_room_list())
@@ -269,14 +290,69 @@ def _relever(etape, lecteur):
 
     # --- Composants HVAC, si un reseau ApacheHVAC existe.
     etape(u'get_component_objects', lambda: lecteur.get_component_objects())
-    etape(u'get_process_list', lambda: lecteur.get_process_list())
-    etape(u'get_process_variables', lambda: lecteur.get_process_variables())
+
+    # `get_process_variables()` sans argument leve ArgumentError : il attend un
+    # processus, que `get_process_list()` fournit. Constate le 2026-08-06.
+    processus = etape(u'get_process_list', lambda: lecteur.get_process_list())
+    for nom_processus in list(processus or [])[:6]:
+        etape(u'get_process_variables(%r)' % nom_processus,
+              lambda p=nom_processus: lecteur.get_process_variables(p))
 
     # --- Unites : sans elles, on ne sait pas si une serie est en W ou en kW.
     etape(u'get_units', lambda: lecteur.get_units())
 
     # --- Surface complete, pour comparaison avec ve_api_surface.json.
     etape(u'attributs du ResultsReader', lambda: _membres(lecteur))
+
+
+#: Champs conservés d'une entrée de `get_variables()`. Tout ce qui sert à
+#: reconnaître une grandeur et à convertir son unité, rien de plus.
+CHAMPS_VARIABLE = ('aps_varname', 'display_name', 'model_level', 'units_type',
+                   'subtype', 'custom_type', 'source')
+
+
+def _variable_lisible(variable):
+    u"""Réduit une entrée de `get_variables()` à ce qui sert.
+
+    Args:
+        variable: Entrée telle que renvoyée par l'API.
+
+    Returns:
+        dict: Champs retenus, ou le `repr` si la forme est inattendue.
+    """
+    if not isinstance(variable, dict):
+        return {'forme_inattendue': repr(variable)[:200]}
+    return dict((champ, variable[champ])
+                for champ in CHAMPS_VARIABLE if champ in variable)
+
+
+def _compter_par_niveau(variables):
+    u"""Compte les variables par `model_level`.
+
+    Args:
+        variables: Liste d'entrées de `get_variables()`.
+
+    Returns:
+        dict: `{niveau: nombre}`, trié par niveau.
+    """
+    comptes = {}
+    for variable in variables:
+        niveau = u'%s' % (variable.get('model_level')
+                          if isinstance(variable, dict) else u'?')
+        comptes[niveau] = comptes.get(niveau, 0) + 1
+    return dict(sorted(comptes.items()))
+
+
+def _en_clair(comptes):
+    u"""Met les comptes par niveau sur une ligne de console.
+
+    Args:
+        comptes: `{niveau: nombre}`.
+
+    Returns:
+        str: Par exemple « e=274, c=184, z=61 ».
+    """
+    return u', '.join(u'%s=%d' % couple for couple in comptes.items())
 
 
 def _apercu_resultats(resultats):

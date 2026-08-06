@@ -718,3 +718,92 @@ toujours sur disque et VE le trouve. La purge rend chaque run sûr, mais ne
 supprime pas la source de confusion, et un futur lanceur qui importerait
 `scripts` sans amorçage retomberait dedans. L'archivage du dépôt A reste à
 décider.
+
+---
+
+## Élément audité n° 4 — Premier relevé APS réel (`ZOER_C1.aps`, 2026-08-06)
+
+Second audit d'**exécution**. `Run_VE_SIA4010_Sonde_APS.py` lancé dans VE sur
+un projet suisse réel. 22 étapes OK, 4 en échec — chacune instructive.
+
+### DÉFAUT n° 8 — BLOQUANT — `decouvrir_variables` appelait une signature inexistante
+
+`ve_adapter/bandes_adapter.py::decouvrir_variables` appelait
+`results_file.get_variables(niveau)`. VE répond `ArgumentError`, pour les
+trois niveaux testés.
+
+**`get_variables()` ne prend aucun argument** et rend TOUTES les variables ;
+le niveau est porté par le champ `model_level` de chaque entrée. C'est
+exactement ce que faisait `swiss_sia/simulation_results.py::
+get_available_variables`, code Codex que la doctrine du dépôt invitait à tenir
+pour suspect. **Il avait raison, et la réécriture avait tort.** La suspicion
+reste la bonne posture, mais elle ne dispense pas de vérifier avant de
+remplacer.
+
+Second défaut au même endroit : le filtrage lisait
+`variable.get('name', variable)`. Le champ `name` **n'existe pas** dans les
+entrées de l'API — les champs nommants sont `aps_varname` et `display_name`.
+Le repli sur `variable` faisait porter la recherche sur le `repr` du
+dictionnaire entier, donc sur les noms de clés et les valeurs d'unités : un
+motif comme `units_type` aurait « trouvé » toutes les variables.
+
+**Le double de test avait validé l'erreur.** `FauxResultsReader.get_variables`
+prenait un `niveau` et rendait des chaînes. Un double écrit d'après ce qu'on
+suppose de l'API confirme ce qu'on suppose. Il est désormais calqué sur la
+forme réelle relevée.
+
+**CORRIGÉ** : signature, filtrage, et le double. 10 tests.
+
+### DÉFAUT n° 9 — MAJEUR — Le plafond de la sonde a tronqué son propre relevé
+
+Le rapport contient exactement **500 variables** — soit `LIMITE_ELEMENTS`,
+le plafond que `_serialisable` applique à toute séquence. La liste réelle est
+plus longue, et sur les 500 conservées, **aucune n'est de niveau `z`** :
+
+| niveau | variables retenues |
+|---|---|
+| `e` (énergie) | 274 |
+| `c` (carbone) | 184 |
+| `l` (charge système) | 27 |
+| `j` | 15 |
+| `z` (local) | **0** |
+
+Un garde-fou destiné à la lisibilité a coupé précisément ce que la sonde
+existe pour rapporter — et le rapport ne le signalait pas : 500 entrées se
+lisent comme une liste complète.
+
+**CORRIGÉ** : la liste complète est déposée sous la clé `variables` du
+rapport, **hors du chemin de `_serialisable`**, réduite aux sept champs
+utiles, avec un décompte par niveau affiché en console.
+
+### DÉFAUT n° 10 — MINEUR — `get_process_variables` appelé sans argument
+
+`ArgumentError`. Il attend un processus, que `get_process_list()` fournit
+(`Process Material flow`, `Process Product flow`, `Process Heat input`,
+`Process Heat output`). **CORRIGÉ**.
+
+### Ce que ce fichier ne peut PAS établir
+
+- `get_apache_systems()` rend `[]` : **aucun réseau ApacheHVAC**. Les
+  grandeurs des tests 4 à 6 (Lufterwärmer, Luftkühler, WRG, ventilateurs)
+  n'existent pas dans ce modèle. Les chercher ici et conclure « absentes de
+  VE » serait une erreur de raisonnement.
+- Période simulée : jour **106 à 288** de 1994, soit une demi-année à pas
+  horaire. Une somme annuelle n'a pas de sens dessus.
+- `get_component_objects()` rend `[]`, cohérent avec l'absence de réseau.
+
+**Les 20 liaisons restent à 0/20.** Un second passage est nécessaire, sur un
+projet avec ventilation mécanique et année complète.
+
+### Ce que ce fichier a CONFIRMÉ
+
+- `get_energy_uses()` expose des postes nommés et utilisés, dont
+  `prm_fans_interior_central` et `prm_fans_interior_local` — piste sérieuse
+  pour « Energiebedarf Ventilatoren », **non liée** faute d'avoir confronté
+  la définition SIA à celle de VE.
+- `get_units()` rend un catalogue par `units_type` (30 familles), ce qui
+  permettra de convertir sans supposer l'unité d'une série.
+- `get_room_list()` rend `(nom, id, surface, volume)` par local.
+
+**AUDITÉ — 2026-08-06.** _Défauts 8, 9 et 10 corrigés. Non signé : aucune
+liaison établie._
