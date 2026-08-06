@@ -471,10 +471,13 @@ def creer_constructions_cas(cdb_project, masse):
     `masse` : 'legere' ou 'lourde' (cle de `MASSE_PAR_CAS`).
     Retourne un dict {'mur': construction, 'toit': ..., 'plancher': ...}.
 
-    ⚠ A VERIFIER API : orthographe exacte des membres `element_categories`
-    ('wall'/'roof'/'ground_floor' presumes par coherence de nommage anglais,
-    JAMAIS confirmes contre une VE reelle -- cf. `_resoudre_membre_enum` qui
-    echouera fort si l'orthographe est fausse plutot que de deviner en silence.
+    ORTHOGRAPHES CONFIRMEES le 2026-08-06 contre une VE 2025 reelle, et figees
+    dans `refs/reference-data/iesve-enums-ve2025.json` : element_categories
+    wall=2, roof=0, ground_floor=4 ; construction_class opaque=0. La reserve
+    « presumes par coherence de nommage anglais » qui figurait ici est levee.
+
+    `cdb_project` est un `VECdbProject`, PAS un `VECdbDatabase` : c'est le
+    projet qui porte `create_construction`. La sonde s'y etait trompee.
     """
     materiaux = MATERIAUX_PAR_MASSE[masse]
     constructions = {}

@@ -15,10 +15,19 @@ REFERENCE SHAPE consumed here, produced by `scripts/build_sia_reference.py`:
 
 CRITERION. Identical to every other SIA 4010 test: the candidate must fall
 inside `mean +/- MAX(ABS(program - mean))` over the CONTRIBUTING programs,
-bounds inclusive. It is marked INFERE, because only Test 1 states its criteria
-in its own specification; everywhere else SIA 4010 clause 4.4 delegates the
-comparison to the evaluation workbook, and confirmation by the sub-commission
-remains outstanding (clause 4.6.2).
+bounds inclusive.
+
+Its STATUS differs from test to test, and this was corrected on 2026-08-07.
+We had believed only Test 1 stated its criteria; re-reading the official
+specifications showed that tests 2, 3 and 5 each carry a `Testkriterien`
+section stating that very formula, word for word. For those three the criterion
+is ENONCE_DANS_LA_SPEC, not inferred. Tests 4 and 6 have no such section, so
+SIA 4010 clause 4.4 delegates to the workbook and the status stays INFERE,
+pending the sub-commission (clause 4.6.2). See `CRITERE_PAR_TEST`.
+
+Tests 2, 3 and 5 also carry a SECOND criterion — the hourly frequency
+distribution — handled by `engine/sia_distributions_engine.py`. A verdict from
+this module alone covers only half of what those tests require.
 
 THE TRAP THIS ENGINE MUST NOT FALL INTO. In tests 2 and 3 the workbook columns
 are program VARIANTS, not programs -- IDA_ICE appears three times, as
@@ -49,11 +58,54 @@ TESTS_SUPPORTES = (2, 3, 4, 5, 6)
 
 TOLERANCE_DEFAUT = 1e-6
 
+#: Statut par defaut : le critere n'est pas ecrit dans la specification, il est
+#: retrouve dans les formules du classeur. Vaut pour les tests 4 et 6.
 STATUT_CRITERE = 'INFERE'
 JUSTIFICATION_CRITERE = (
     "La specification de ce test n'enonce aucun critere ; SIA 4010:2023 "
     "clause 4.4 delegue la comparaison au classeur d'evaluation, qui porte "
     "les bandes. A confirmer par la sous-commission (clause 4.6.2).")
+
+STATUT_CRITERE_ENONCE = 'ENONCE_DANS_LA_SPEC'
+
+#: CORRIGE le 2026-08-07, apres relecture des specifications officielles.
+#:
+#: On avait cru que seul le Test 1 enoncait ses criteres. C'est faux : les
+#: specifications des tests 2, 3 et 5 comportent une section « Testkriterien »
+#: qui enonce la bande annuelle MOT POUR MOT, et dans la formule meme que ce
+#: moteur applique. Pour ces trois tests, le critere n'est donc pas infere : il
+#: est ecrit. Continuer a les marquer INFERE affaiblirait a tort trois tests, et
+#: contredirait leur propre matrice de tracabilite.
+#:
+#: Les tests 4 et 6 n'ont, eux, aucune section « Testkriterien » : pour eux le
+#: statut INFERE reste exact.
+CRITERE_PAR_TEST = {
+    2: (STATUT_CRITERE_ENONCE,
+        u'Spezifikation_Test2.pdf, Testkriterien : « Jahressumme der solaren '
+        u'Waermeeintraege oder der total transmittierten Strahlung : '
+        u'Mittelwert der Referenzprogramme +/- maximale Abweichung ». La '
+        u'formule appliquee ici est celle-la.'),
+    3: (STATUT_CRITERE_ENONCE,
+        u'Spezifikation_Test3.pdf, Testkriterien : « Jahressumme : Mittelwert '
+        u'+/- max. Abweichung der Referenzprogramme ».'),
+    5: (STATUT_CRITERE_ENONCE,
+        u'Spezifikation_Test5.pdf, Testkriterien : « Zulaessiger Bereich fuer '
+        u'Jahressummen : Mittelwerte der Referenzprogramme +/- maximale '
+        u'Abweichung ».'),
+}
+
+
+def critere_du_test(numero_test):
+    """Statut et justification du critere de somme annuelle d'un test.
+
+    Args:
+        numero_test: Numero du test SIA.
+
+    Returns:
+        tuple[str, str]: Statut et justification.
+    """
+    return CRITERE_PAR_TEST.get(
+        numero_test, (STATUT_CRITERE, JUSTIFICATION_CRITERE))
 
 
 def chemin_reference(numero_test):
@@ -116,7 +168,8 @@ def _cle(texte):
     return ('%s' % texte).strip().lower()
 
 
-def evaluer_cas(cas, valeur_candidate, tolerance=TOLERANCE_DEFAUT):
+def evaluer_cas(cas, valeur_candidate, tolerance=TOLERANCE_DEFAUT,
+                critere_statut=STATUT_CRITERE):
     """Verdict d'un cas : le candidat tombe-t-il dans la bande ?
 
     Args:
@@ -154,7 +207,7 @@ def evaluer_cas(cas, valeur_candidate, tolerance=TOLERANCE_DEFAUT):
         'conforme': (True if scatter_band.is_passing(statut)
                      else (False if statut == scatter_band.VERDICT_FAIL
                            else None)),
-        'critere_statut': STATUT_CRITERE,
+        'critere_statut': critere_statut,
     }
 
 
@@ -179,6 +232,9 @@ def _index_candidat(candidat):
 def evaluer(reference, candidat=None, tolerance=TOLERANCE_DEFAUT):
     """Evalue un test entier.
 
+    Le statut du critere depend du TEST : enonce dans la specification pour les
+    tests 2, 3 et 5 ; infere des formules du classeur pour les tests 4 et 6.
+
     Args:
         reference: Referentiel charge par `charger_reference`.
         candidat: `{libelle grandeur: {nom de cas: valeur}}`. Une grandeur ou
@@ -190,6 +246,7 @@ def evaluer(reference, candidat=None, tolerance=TOLERANCE_DEFAUT):
     """
     index = _index_candidat(candidat)
     attendues = set()
+    statut_critere, justification_critere = critere_du_test(reference['test'])
 
     grandeurs = []
     for grandeur in reference['grandeurs']:
@@ -198,7 +255,8 @@ def evaluer(reference, candidat=None, tolerance=TOLERANCE_DEFAUT):
         for cas in grandeur['cas']:
             cle = (_cle(libelle), _cle(cas['cas']))
             attendues.add(cle)
-            lignes.append(evaluer_cas(cas, index.get(cle), tolerance))
+            lignes.append(evaluer_cas(cas, index.get(cle), tolerance,
+                                      statut_critere))
         grandeurs.append({
             'libelle': libelle,
             'unite': grandeur.get('unite'),
@@ -231,8 +289,8 @@ def evaluer(reference, candidat=None, tolerance=TOLERANCE_DEFAUT):
         'test': reference['test'],
         'classes_concernees': list(reference.get('classes_concernees', [])),
         'critere': {
-            'statut': STATUT_CRITERE,
-            'justification': JUSTIFICATION_CRITERE,
+            'statut': statut_critere,
+            'justification': justification_critere,
             'formule': reference['critere']['formule'],
         },
         'grandeurs': grandeurs,

@@ -213,3 +213,59 @@ def test_echouer_leve_avec_le_motif():
     échec dit pourquoi."""
     with pytest.raises(RuntimeError, match='motif exact'):
         run._echouer('motif exact')
+
+
+class FauxEnum(object):
+    """Membre d enum a la maniere de iesve.project_types.
+
+    Il s affiche comme une chaine mais n en est pas une : c est exactement ce
+    qui a fait echouer la recherche par cle textuelle.
+    """
+
+    def __init__(self, nom):
+        self.name = nom
+
+    def __str__(self):
+        return self.name
+
+    def __repr__(self):
+        return 'iesve.project_types.%s' % self.name
+
+
+def test_les_cles_de_get_projects_sont_des_enums_pas_des_chaines():
+    """Releve du 2026-08-07 : get_projects() rend
+    {iesve.project_types.project: [...]}. Un table.get('project') echoue
+    en silence et rend une liste vide — ce qui se lit comme « aucun projet »
+    alors qu il y en a un."""
+    projet = FauxProjetCdb()
+    renvoi = {FauxEnum('project'): [projet],
+              FauxEnum('system'): [FauxProjetCdb()],
+              FauxEnum('manufacturer'): [FauxProjetCdb()]}
+    assert renvoi.get('project') is None      # le piege
+    assert run._premier_projet_cdb(renvoi) is projet
+
+
+def test_une_cle_chaine_reste_acceptee():
+    """Si une version de VE indexait par chaines, la sonde doit continuer de
+    fonctionner."""
+    projet = FauxProjetCdb()
+    assert run._premier_projet_cdb({'project': [projet]}) is projet
+
+
+def test_les_bibliotheques_fournies_restent_ecartees_avec_des_enums():
+    assert run._premier_projet_cdb({FauxEnum('system'): [FauxProjetCdb()]}) is None
+
+
+def test_la_recherche_par_cle_textuelle_rend_une_liste_vide_si_absente():
+    assert run._valeur_par_cle_textuelle({FauxEnum('system'): [1]}, 'project') == []
+
+
+def test_la_sonde_passe_le_projet_pas_la_base():
+    """VE repondait « 'VECdbDatabase' object has no attribute
+    'create_construction' » : create_construction est porte par le PROJET.
+    Meme classe d erreur que les enums cherches sur le mauvais conteneur."""
+    import io as _io
+    with _io.open(run.__file__.replace('.pyc', '.py'), encoding='utf-8') as f:
+        source = f.read()
+    assert 'creer_constructions_cas(projet_cdb' in source
+    assert 'creer_constructions_cas(cdb' not in source

@@ -1,0 +1,101 @@
+# Matrice de traçabilité — Test SIA 4010 n° 3
+
+> ## Statut : **NON SIGNÉE**
+>
+> Motif bloquant : **0 liaison(s) sur 1** entre une grandeur du classeur et une variable de résultat VE. Aucune valeur candidate ne peut donc être produite, et aucune ligne de cette matrice ne porte de résultat reproduit.
+>
+> Ce document est **généré** par `scripts/build_traceability_matrix.py` : les grandeurs, les bandes et l'état des liaisons sont lus dans les référentiels figés et dans le code, jamais retapés. Une matrice rédigée à la main se périme au premier changement — et une matrice périmée affirme une couverture qui n'existe plus.
+>
+> **Le script ne signe pas.** La règle 5 demande une signature `qa-auditor` indépendante.
+
+---
+
+## 1. Ancrage normatif
+
+| Élément | Valeur | Source |
+|---|---|---|
+| Classes de validation concernées | 2A, 2B, 4A, 4B | SIA 4010:2023, tableau 63 (p. 48) |
+| Bâtiment / local | Testraum « ASHRAE 140 » selon EN ISO 52016-1:2017, ch. 7 | Spezifikation_Test3.pdf |
+| Climat | SIA 2028 DRY normal, Zürich Kloten | idem |
+| Objet du test | éclairage et régulation en fonction de la lumière du jour, 12 cas (4 protections solaires × régulations) | idem |
+| Classeur d'évaluation | `SIA_4010_geteilter_Link/Test3/Resultaterfassung_Test3.xlsx` | SIA 4010:2023, §4.4 |
+
+## 2. Critères
+
+La spécification énonce **deux** critères, dans sa section *Testkriterien*.
+
+### 2.1 Somme annuelle
+
+- Formule appliquée : `moyenne ± MAX(ABS(programme − moyenne)), bornes incluses`
+- Statut du critère : **ENONCE_DANS_LA_SPEC** — Spezifikation_Test3.pdf, Testkriterien : « Jahressumme : Mittelwert +/- max. Abweichung der Referenzprogramme ».
+- Bandes figées : **12**
+
+### 2.2 Distribution de fréquence
+
+- Énoncé : Häufigkeitsverteilung : « muss im Streubereich der Referenzprogramme liegen » (Spezifikation_Test3.pdf, Testkriterien)
+- Statut du critère : **NON_ETABLI**
+- Motif : Les feuilles « Verteilung » sont des GRAPHIQUES : elles tracent les variantes de référence et le programme testé, sans calculer aucune bande. Aucune cellule du classeur ne définit le Streubereich d'une distribution. Deux lectures restent possibles — enveloppe min/max des programmes, ou moyenne ± écart maximal comme pour les sommes annuelles — et le choix ne peut pas être fait ici sans inventer le critère.
+- Distributions figées : **16**, sur **20** classes
+- Les deux lectures du `Streubereich` sont calculées (`enveloppe_min_max`, `moyenne_plus_ecart_max`) et **aucune n'est retenue** : le moteur ne rend jamais de verdict conforme.
+
+## 3. Grandeurs, bandes et chaîne d'extraction
+
+| Grandeur (libellé du classeur) | Unité | Cas | Chaîne VE |
+|---|---|---|---|
+| `Beleuchtungsenergie` | kWh | 12 | candidat `Total lights energy` (RELEVE), à confirmer |
+
+## 4. Distributions de référence
+
+| Cas | Grandeur | Classes | Programmes de référence |
+|---|---|---|---|
+| Test 3A | `Beleuchtungsleistung` | 20 | 6 |
+| Test 3B | `Beleuchtungsleistung` | 20 | 6 |
+| Test 3C | `Beleuchtungsleistung` | 20 | 6 |
+| Test 3D | `Beleuchtungsleistung` | 20 | 5 |
+| Test 3E | `Beleuchtungsleistung` | 20 | 5 |
+| Test 3F | `Beleuchtungsleistung` | 20 | 6 |
+| Test 3G | `Beleuchtungsleistung` | 20 | 6 |
+| Test 3H | `Beleuchtungsleistung` | 20 | 6 |
+| Test 3I | `Beleuchtungsleistung` | 20 | 7 |
+| Test 3J | `Beleuchtungsleistung` | 20 | 7 |
+| Test 3K | `Beleuchtungsleistung` | 20 | 6 |
+| Test 3L | `Beleuchtungsleistung` | 20 | 6 |
+| Test 3A-F | `Beleuchtungsstärke` | 20 | 5 |
+| Test 3G-H | `Beleuchtungsstärke` | 20 | 6 |
+| Test 3I-J | `Beleuchtungsstärke` | 20 | 6 |
+| Test 3K-L | `Beleuchtungsstärke` | 20 | 6 |
+
+> Totaux horaires observés : 8759, 8760. Plusieurs programmes totalisent moins de 8760 heures. Ce sont des données réelles, reproduites telles quelles : les compléter à 8760 fausserait la dispersion.
+>
+> Les effectifs sont des FAITS relevés cellule par cellule et réconciliés avec la ligne de totaux du classeur. La BANDE, elle, n'est pas établie : voir statut_critere.
+>
+
+## 5. Chaîne logicielle
+
+| Rôle | Fichier | Présent |
+|---|---|---|
+| adaptateur VE | `ve_adapter/bandes_adapter.py` | oui |
+| extraction des distributions | `scripts/build_sia_distribution_reference.py` | oui |
+| extraction des références | `scripts/build_sia_reference.py` | oui |
+| moteur (distribution) | `engine/sia_distributions_engine.py` | oui |
+| moteur (somme annuelle) | `engine/sia_bandes_engine.py` | oui |
+| tests de l'adaptateur | `ve_adapter/tests/test_bandes_adapter.py` | oui |
+| tests des références figées | `engine/tests/test_distributions_ref.py` | oui |
+| tests du moteur (bandes) | `engine/tests/test_sia_bandes_engine.py` | oui |
+| tests du moteur (distributions) | `engine/tests/test_distributions_engine.py` | oui |
+
+## 6. Ce qui n'est PAS établi
+
+1. **Aucune valeur candidate.** 0 liaison(s) sur 1 sont établies. Tant qu'elles ne le sont pas, aucun cas ne peut être évalué et le moteur les traite en `NOT_CHECKABLE` — ce qui est la vérité, mais ne vaut pas conformité.
+2. **Aucune simulation.** Le test n'a jamais été construit ni simulé dans IESVE. Les bandes de référence sont vérifiées ; le comportement de VE face à elles ne l'est pas.
+3. **La bande des distributions n'est pas définie.** Le classeur officiel ne la calcule nulle part. Deux lectures restent défendables et le choix appartient à la sous-commission SIA, pas à cet outil.
+
+---
+
+## Signature
+
+| Rôle | Nom | Date | Verdict |
+|---|---|---|---|
+| Producteur | `build_traceability_matrix.py` (généré) | — | non applicable |
+| Vérificateur indépendant | `qa-auditor` | — | **non signé** |
+

@@ -152,6 +152,15 @@ def _membres(objet):
 #: Clé sous laquelle `VECdbDatabase.get_projects()` range les projets. Les deux
 #: autres (« system », « manufacturer ») sont des bibliothèques fournies, pas le
 #: projet ouvert.
+#:
+#: ATTENTION, ce n'est PAS une chaîne. Les clés sont des membres de
+#: `iesve.project_types`, et le rapport de sonde du 2026-08-07 l'a montré :
+#:
+#:     {iesve.project_types.project: [<VECdbProject>], ...}
+#:
+#: Sérialisées en JSON elles ressortent en « project », ce qui donne
+#: l'illusion d'un dictionnaire à clés textuelles. La comparaison se fait donc
+#: sur la forme textuelle de la clé, pas sur la clé elle-même.
 CLE_PROJET_CDB = 'project'
 
 
@@ -180,7 +189,7 @@ def _premier_projet_cdb(projets):
     if not projets:
         return None
     if isinstance(projets, dict):
-        candidats = projets.get(CLE_PROJET_CDB) or []
+        candidats = _valeur_par_cle_textuelle(projets, CLE_PROJET_CDB)
     else:
         # Forme inattendue : on l'accepte plutôt que d'échouer, mais sans
         # supposer qu'elle contient des projets — le contrôle de type ci-dessous
@@ -192,6 +201,26 @@ def _premier_projet_cdb(projets):
         if not isinstance(candidat, (list, tuple, dict)) and not _est_texte(candidat):
             return candidat
     return None
+
+
+def _valeur_par_cle_textuelle(table, nom):
+    u"""Cherche une entrée par la forme TEXTUELLE de sa clé.
+
+    `get_projects()` indexe par membres de `iesve.project_types`, pas par
+    chaînes. Un `table.get('project')` échoue donc silencieusement et rend une
+    liste vide — ce qui se lit comme « aucun projet » alors qu'il y en a un.
+
+    Args:
+        table: Dictionnaire dont les clés peuvent être des énumérés.
+        nom: Nom cherché, sous sa forme textuelle.
+
+    Returns:
+        list: Valeur associée, ou liste vide si la clé est absente.
+    """
+    for cle, valeur in table.items():
+        if cle == nom or u'%s' % (cle,) == nom or getattr(cle, 'name', None) == nom:
+            return valeur or []
+    return []
 
 
 def _est_texte(valeur):
@@ -503,9 +532,18 @@ def sonder(cas_id='600'):
           lambda: adaptateur.assigner_meteo_drycold(
               os.path.join(DOSSIER_METEO_VE, FICHIER_METEO)))
 
-    # --- L'etape qui echoue, rejouee pour conserver son message exact.
-    etape(u'constructions du cas (attendu en echec)',
-          lambda: adaptateur.creer_constructions_cas(cdb, 'legere'))
+    # --- Creation des constructions.
+    #
+    # CORRIGE le 2026-08-07 : la sonde passait `cdb`, la BASE, alors que
+    # `creer_constructions_cas` attend un `VECdbProject`. VE repondait
+    # « 'VECdbDatabase' object has no attribute 'create_construction' » —
+    # meme classe d erreur que les enums cherches sur le mauvais conteneur.
+    if projet_cdb is not None:
+        etape(u'constructions du cas',
+              lambda: adaptateur.creer_constructions_cas(projet_cdb, 'legere'))
+    else:
+        etape(u'constructions du cas',
+              lambda: _echouer(u'aucun VECdbProject : etape impossible'))
 
     chemin = os.path.join(_RACINE, 'outputs', 'sonde_test1_%s.json' % cas_id)
     if not os.path.isdir(os.path.dirname(chemin)):
