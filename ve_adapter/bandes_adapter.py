@@ -61,6 +61,18 @@ TESTS_COUVERTS = (2, 3, 4, 5, 6)
 NIVEAU_LOCAL = 'z'      # room / zone
 NIVEAU_SYSTEME = 'v'    # apache system
 NIVEAU_METEO = 'w'      # weather
+NIVEAU_ENERGIE = 'e'    # postes de consommation, tous vecteurs
+NIVEAU_SURFACE = 's'    # surface d'enveloppe
+
+#: Niveaux relevés le 2026-08-06 sur `ZOER_C1.aps`, avec leur effectif. Il y en
+#: a DOUZE, pas trois : `c` (carbone), `j`, `l`, `n`, `o`, `r` et `t` existent
+#: aussi. Aucun code ne doit supposer que les constantes ci-dessus épuisent la
+#: liste — c'est en la croyant limitée à z/v/w qu'on a manqué l'éclairage
+#: (niveau `e`) et le solaire incident (niveau `s`).
+NIVEAUX_RELEVES = {
+    'c': 184, 'e': 274, 'j': 15, 'l': 88, 'n': 9, 'o': 6,
+    'r': 15, 's': 22, 't': 6, 'v': 35, 'w': 14, 'z': 151,
+}
 
 
 class LiaisonNonResolue(RuntimeError):
@@ -227,43 +239,178 @@ LIAISONS = {
 #     (`sia4010_aps_probe_20260728_154627.json`, sha256 F3E1338C…) est ABSENT
 #     du dépôt** : la trace ne peut pas être rejouée. Statut : allégation.
 #
-# Seul « Window solar gains » touche un libellé des tests 2 à 6. La sonde
-# marque d'ailleurs `total_transmitted_solar_radiation` comme explicitement
-# NON lié, faute de série de puissance qualifiée — ce qui laisse la seconde
-# grandeur du Test 2 sans piste.
-CANDIDATS_RUNTIME = {
-    2: {
-        u'Jahresenergie solarer Wärmeeintrag': {
-            'aps_varname_candidat': u'Window solar gains',
-            'niveau': NIVEAU_LOCAL,
-            'unite_brute': u'W',
-            'preuve': u'config/sia4010_aps_bindings_ve_runtime.json '
-                      u'-> bindings.total_room_solar_heat_gain_power',
-            'niveau_de_preuve': u'ALLEGATION — rapport de sonde absent du dépôt',
-            'a_confirmer': u'Que « solarer Wärmeeintrag » au sens du classeur '
-                           u'SIA désigne bien le gain solaire transmis par les '
-                           u'vitrages au local, et non le rayonnement incident. '
-                           u'Le Test 2 distingue les deux : sa seconde grandeur '
-                           u'est « total transmittierte Solarstrahlung ».',
-        },
+# DEPUIS LE RELEVÉ DU 2026-08-06 sur `ZOER_C1.aps` (819 variables, cf.
+# `outputs/sonde_aps.json`), la plupart des pistes ci-dessous sont adossées à
+# une variable RÉELLEMENT PRÉSENTE dans un `.aps` — nom, niveau, libellé
+# d'affichage et famille d'unités vérifiés contre le relevé par un test.
+#
+# Ce qui reste à établir n'est donc plus « ce nom existe-t-il » mais
+# « désigne-t-il la grandeur que le classeur SIA désigne ». Cette seconde
+# question ne se tranche pas dans VE : elle exige la définition SIA. C'est
+# pourquoi rien n'est lié.
+#
+#   RELEVE     — la variable existe, confrontée au rapport de sonde.
+#   ALLEGATION — annoncée par un fichier de configuration dont la trace
+#                d'origine est absente du dépôt.
+#
+# Table indexée par GRANDEUR, pas par test : « Wärmezufuhr Lufterwärmer »
+# figure dans les tests 4, 5 et 6 et y désigne la même chose. Indexer par test
+# obligerait à répéter la piste trois fois, donc à la laisser diverger.
+CANDIDATS_PAR_GRANDEUR = {
+    u'Jahresenergie solarer Wärmeeintrag': {
+        'aps_varname_candidat': u'Window solar gains',
+        'display_name': u'Solar gain',
+        'niveau': NIVEAU_LOCAL,
+        'units_type': u'Gain',
+        'preuve': u'outputs/sonde_aps.json, variables[model_level=z] ; '
+                  u'corrobore config/sia4010_aps_bindings_ve_runtime.json '
+                  u'-> bindings.total_room_solar_heat_gain_power',
+        'niveau_de_preuve': u'RELEVE',
+        'a_confirmer': u'Que « solarer Wärmeeintrag » au sens du classeur SIA '
+                       u'désigne le gain solaire transmis par les vitrages au '
+                       u'local, et non le rayonnement incident. Le Test 2 '
+                       u'distingue les deux : sa seconde grandeur est '
+                       u'« total transmittierte Solarstrahlung ».',
     },
+    u'Beleuchtungsenergie': {
+        'aps_varname_candidat': u'Total lights energy',
+        'display_name': u'Total lights energy',
+        'niveau': NIVEAU_ENERGIE,
+        'units_type': u'Power',
+        'preuve': u'outputs/sonde_aps.json, variables[model_level=e]',
+        'niveau_de_preuve': u'RELEVE',
+        'a_confirmer': u'Que le classeur compte l\'énergie FINALE de '
+                       u'l\'éclairage, tous vecteurs confondus. VE expose '
+                       u'aussi « Lights electricity » (électricité seule) et, '
+                       u'au niveau du local, « Lighting gain » — qui est un '
+                       u'APPORT thermique, pas une consommation.',
+    },
+    u'Wärmezufuhr Lufterwärmer': {
+        'aps_varname_candidat': u'Sys Mech vent heating load',
+        'display_name': u'System air heating load',
+        'niveau': NIVEAU_SYSTEME,
+        'units_type': u'Sys Load',
+        'preuve': u'outputs/sonde_aps.json, variables[model_level=v]',
+        'niveau_de_preuve': u'RELEVE',
+        'a_confirmer': u'Que la batterie chaude du classeur corresponde au '
+                       u'poste ApacheSystems « System air », et non à un '
+                       u'composant d\'un réseau ApacheHVAC.',
+    },
+    u'Wärmeabfuhr Luftkühler latent': {
+        'aps_varname_candidat': u'Sys Mech vent dehum load',
+        'display_name': u'System air lat. clg. load',
+        'niveau': NIVEAU_SYSTEME,
+        'units_type': u'Sys Load',
+        'preuve': u'outputs/sonde_aps.json, variables[model_level=v]',
+        'niveau_de_preuve': u'RELEVE',
+        'a_confirmer': u'Que la charge de déshumidification de VE et la part '
+                       u'latente du classeur recouvrent la même grandeur.',
+    },
+    u'Wärmeabfuhr Luftkühler total': {
+        'aps_varname_candidat': None,
+        'display_name': None,
+        'niveau': NIVEAU_SYSTEME,
+        'units_type': u'Sys Load',
+        'preuve': u'outputs/sonde_aps.json, variables[model_level=v]',
+        'niveau_de_preuve': u'RELEVE — mais AUCUNE variable unique',
+        'a_confirmer': u'« total » suppose sensible + latent. VE les sépare en '
+                       u'« Sys Mech vent cooling load » (sensible) et '
+                       u'« Sys Mech vent dehum load » (latent). Une liaison ne '
+                       u'peut donc pas être un simple nom de variable : il '
+                       u'faut une SOMME, que LIAISONS ne sait pas exprimer '
+                       u'aujourd\'hui.',
+    },
+    u'Befeuchtungsenergie': {
+        'aps_varname_candidat': u'Sys Room humidification load',
+        'display_name': u'Room hum. plant load',
+        'niveau': NIVEAU_SYSTEME,
+        'units_type': u'Sys Load',
+        'preuve': u'outputs/sonde_aps.json, variables[model_level=v]',
+        'niveau_de_preuve': u'RELEVE',
+        'a_confirmer': u'VE porte cette charge au LOCAL (« Room hum. plant '
+                       u'load »), pas à la centrale. Si le classeur vise '
+                       u'l\'humidification de l\'air neuf, ce n\'est pas la '
+                       u'même grandeur. « Ideal humidification » existe au '
+                       u'niveau énergie, mais VE le marque [obs].',
+    },
+}
+
+#: Grandeurs pour lesquelles le relevé du 2026-08-06 n'a montré AUCUNE piste.
+#: Les consigner vaut mieux que de laisser croire qu'on n'a pas cherché : le
+#: silence se lit comme « pas encore regardé », ce qui serait faux.
+SANS_CANDIDAT = {
+    u'Jahresenergie total transmittierte Solarstrahlung':
+        u'Au niveau surface, VE expose « Total short wave transmittance » (un '
+        u'COEFFICIENT, sans unité) et « Ext/Int surface incident solar flux » '
+        u'(un rayonnement INCIDENT, pas transmis). Aucune série d\'énergie '
+        u'transmise. Constat identique à celui de '
+        u'config/sia4010_aps_bindings_ve_runtime.json -> explicitly_unbound, '
+        u'atteint ici indépendamment.',
+    u'Energiebedarf Ventilatoren':
+        u'Aucune variable de ventilateurs SEULS. « ApSys aux energy » agrège '
+        u'fans + pumps + ctrls (libellé VE : « Ap Sys fans/pumps/ctrls '
+        u'energy ») ; « Fans energy » relève d\'ApacheHVAC et VE le marque '
+        u'[obs]. Les postes get_energy_uses() prm_fans_interior_central et '
+        u'prm_fans_interior_local sont une piste, mais ce sont des POSTES, pas '
+        u'des variables de série.',
+    u'Wärmezufuhr WRG':
+        u'ApacheSystems n\'expose de la récupération sur l\'air neuf qu\'une '
+        u'TEMPÉRATURE (« Sys Mech vent heat recovery temp »). Les deux '
+        u'variables de récupération en Power du même niveau — « Sys Process '
+        u'heat recovered » et « Sys Process heat recovery heat pump » — '
+        u'portent sur les PROCESS, pas sur la ventilation.',
+    u'Wärmeabfuhr WRG': u'Même motif que « Wärmezufuhr WRG ».',
+    u'Wärmezufuhr WRG latent': u'Même motif que « Wärmezufuhr WRG ».',
+    u'Hilfsenergie WRG':
+        u'« HR & spray pumps energy » (niveau énergie) est la seule piste, '
+        u'mais elle agrège la récupération et les humidificateurs à '
+        u'pulvérisation.',
 }
 
 
 def candidats_a_confirmer(numero_test):
-    u"""Pistes relevées lors d'une sonde antérieure, à vérifier dans VE.
+    u"""Pistes relevées dans un `.aps` réel, à confirmer contre la norme.
 
     Ce ne sont PAS des liaisons. `extraire_candidat` les ignore intégralement.
     Elles n'existent que pour qu'un opérateur devant une VE ouverte sache quoi
-    contrôler en premier, au lieu de reparcourir toutes les variables.
+    contrôler en premier, au lieu de reparcourir 819 variables.
 
     Args:
         numero_test: Numéro du test SIA.
 
     Returns:
-        dict: `{libellé allemand: piste}`, vide si aucune.
+        dict: `{libellé allemand: piste}` pour les grandeurs de ce test,
+            vide si aucune.
     """
-    return dict(CANDIDATS_RUNTIME.get(numero_test, {}))
+    return _projeter(CANDIDATS_PAR_GRANDEUR, numero_test)
+
+
+def sans_candidat(numero_test):
+    u"""Grandeurs de ce test pour lesquelles le relevé n'a montré aucune piste.
+
+    Args:
+        numero_test: Numéro du test SIA.
+
+    Returns:
+        dict: `{libellé allemand: motif}`, vide si aucune.
+    """
+    return _projeter(SANS_CANDIDAT, numero_test)
+
+
+def _projeter(table_par_grandeur, numero_test):
+    u"""Restreint une table indexée par grandeur aux grandeurs d'un test.
+
+    Args:
+        table_par_grandeur: `{libellé: valeur}`.
+        numero_test: Numéro du test SIA.
+
+    Returns:
+        dict: Sous-ensemble correspondant aux grandeurs déclarées du test.
+    """
+    grandeurs = LIAISONS.get(numero_test, {})
+    return dict((libelle, valeur)
+                for libelle, valeur in table_par_grandeur.items()
+                if libelle in grandeurs)
 
 
 def verifier_api(symboles=None):
@@ -518,17 +665,39 @@ def etat_des_liaisons():
         lignes.append(u'  Test %d : %d/%d resolue(s)'
                       % (numero, len(resolues), len(declarees)))
         candidats = candidats_a_confirmer(numero)
+        muettes = sans_candidat(numero)
         for libelle in sorted(set(declarees) - set(resolues)):
-            piste = candidats.get(libelle)
-            if piste:
-                lignes.append(u'      non resolue : %s  [candidat a '
-                              u'confirmer : %s]'
-                              % (libelle, piste['aps_varname_candidat']))
-            else:
-                lignes.append(u'      non resolue : %s' % libelle)
+            lignes.append(u'      non resolue : %s%s'
+                          % (libelle, _mention(libelle, candidats, muettes)))
     lignes.append(u'')
     lignes.append(u'Les noms de variables se relevent sur un .aps reel avec '
                   u'decouvrir_variables(), jamais par supposition.')
     lignes.append(u'Un candidat n est PAS une liaison : il indique quoi '
                   u'controler en premier, rien de plus.')
     return u'\n'.join(lignes)
+
+
+def _mention(libelle, candidats, muettes):
+    u"""Complément de ligne décrivant l'état d'une grandeur non résolue.
+
+    Trois états, distincts et à ne pas confondre : une piste existe ; on a
+    cherché et rien ne correspond ; on n'a pas encore cherché. Le troisième ne
+    doit jamais se lire comme le deuxième.
+
+    Args:
+        libelle: Libellé allemand de la grandeur.
+        candidats: Pistes du test.
+        muettes: Grandeurs du test sans piste, avec leur motif.
+
+    Returns:
+        str: Texte à concaténer, éventuellement vide.
+    """
+    piste = candidats.get(libelle)
+    if piste:
+        nom = piste['aps_varname_candidat']
+        if nom is None:
+            return u'  [pas de variable unique -- cf. a_confirmer]'
+        return u'  [candidat a confirmer : %s]' % nom
+    if libelle in muettes:
+        return u'  [cherche, aucune variable ne correspond]'
+    return u'  [pas encore cherche]'

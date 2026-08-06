@@ -275,63 +275,171 @@ def test_pas_dimport_iesve_au_chargement():
 # Candidats de sonde : des pistes, jamais des liaisons
 # --------------------------------------------------------------------------
 
-def test_un_candidat_ne_resout_aucune_liaison():
+import json as _json  # noqa: E402
+
+_RACINE = os.path.abspath(os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), os.pardir, os.pardir))
+_RAPPORT_SONDE = os.path.join(_RACINE, 'outputs', 'sonde_aps.json')
+
+
+@pytest.fixture(scope='module')
+def variables_relevees():
+    """Variables telles qu'un .aps reel les a rendues, le 2026-08-06.
+
+    Returns:
+        dict: `{(aps_varname, model_level): entree}`.
+    """
+    if not os.path.exists(_RAPPORT_SONDE):
+        pytest.skip(u'rapport de sonde absent : lancer Run_VE_SIA4010_Sonde_APS')
+    with io.open(_RAPPORT_SONDE, encoding='utf-8') as flux:
+        rapport = _json.load(flux)
+    if 'variables' not in rapport:
+        pytest.skip(u'rapport anterieur au releve complet des variables')
+    return dict(((v.get('aps_varname'), v.get('model_level')), v)
+                for v in rapport['variables'])
+
+
+def test_aucun_candidat_ne_resout_de_liaison():
     """Le risque exact que cette separation existe pour ecarter : « Window
-    solar gains » est un nom de variable VE releve pour le Test 1. Le reprendre
-    tel quel pour le Test 2 produirait un nombre plausible et faux."""
+    solar gains » est un nom de variable VE. Le reprendre sans avoir confronte
+    sa definition a celle du classeur produirait un nombre plausible et faux.
+    """
     for numero in adaptateur.TESTS_COUVERTS:
         assert adaptateur.liaisons_resolues(numero) == {}
 
 
 def test_extraire_ignore_integralement_les_candidats():
-    """Meme la ou un candidat existe, l'extraction refuse de tourner."""
     assert adaptateur.candidats_a_confirmer(2)
     with pytest.raises(adaptateur.LiaisonNonResolue):
         adaptateur.extraire_candidat(2, FauxResultsReader(), _ref(2))
 
 
-def test_les_candidats_portent_les_libelles_exacts_du_classeur():
-    """Une cle qui ne correspond a aucune grandeur serait une piste morte."""
-    for numero, pistes in adaptateur.CANDIDATS_RUNTIME.items():
-        libelles = set(adaptateur.LIAISONS[numero])
-        assert set(pistes) <= libelles, numero
+# --- Les noms sont confrontes au releve, pas retapes de memoire ------------
+
+def test_chaque_candidat_existe_vraiment_dans_un_aps(variables_relevees):
+    """Un nom retape de memoire est un nom faux."""
+    for libelle, piste in adaptateur.CANDIDATS_PAR_GRANDEUR.items():
+        nom = piste['aps_varname_candidat']
+        if nom is None:
+            continue  # cas « aucune variable unique », traite plus bas
+        assert (nom, piste['niveau']) in variables_relevees, libelle
 
 
-def test_chaque_candidat_declare_sa_preuve_et_sa_reserve():
+def test_le_libelle_et_lunite_du_candidat_sont_les_bons(variables_relevees):
+    """Le display_name sert a reconnaitre la grandeur dans l'interface de VE :
+    s'il est faux, la verification humaine part sur une mauvaise piste."""
+    for piste in adaptateur.CANDIDATS_PAR_GRANDEUR.values():
+        if piste['aps_varname_candidat'] is None:
+            continue
+        releve = variables_relevees[
+            (piste['aps_varname_candidat'], piste['niveau'])]
+        assert piste['display_name'] == releve.get('display_name')
+        assert piste['units_type'] == releve.get('units_type')
+
+
+def test_les_deux_termes_de_la_somme_existent(variables_relevees):
+    """« Warmeabfuhr Luftkuhler total » n'a pas de variable unique, mais les
+    deux termes de la somme doivent exister, sinon la reserve est vaine."""
+    for nom in ('Sys Mech vent cooling load', 'Sys Mech vent dehum load'):
+        assert (nom, adaptateur.NIVEAU_SYSTEME) in variables_relevees
+
+
+def test_la_recuperation_sur_lair_neuf_nexpose_quune_temperature(
+        variables_relevees):
+    """Constat structurel. Il existe deux variables de recuperation en Power au
+    meme niveau — « Sys Process heat recovered » et « Sys Process heat recovery
+    heat pump » — mais elles portent sur les PROCESS, pas sur l'air neuf. Les
+    confondre donnerait un nombre credible et faux."""
+    ventilation = variables_relevees[
+        ('Sys Mech vent heat recovery temp', adaptateur.NIVEAU_SYSTEME)]
+    assert ventilation['units_type'] == 'Temperature'
+    for nom in ('Sys Process heat recovered',
+                'Sys Process heat recovery heat pump'):
+        assert variables_relevees[
+            (nom, adaptateur.NIVEAU_SYSTEME)]['units_type'] == 'Power'
+    # Si une energie de recuperation sur l'air neuf apparaissait, ce test doit
+    # echouer pour qu'on la lie.
+    ventilation_wrg = sorted(
+        nom for (nom, niveau) in variables_relevees
+        if niveau == adaptateur.NIVEAU_SYSTEME
+        and 'mech vent' in (nom or '').lower()
+        and 'recovery' in (nom or '').lower())
+    assert ventilation_wrg == ['Sys Mech vent heat recovery temp']
+
+
+# --- Coherence des tables --------------------------------------------------
+
+def test_chaque_piste_declare_sa_preuve_et_sa_reserve():
     """Une piste sans provenance ni reserve finit par etre prise pour un
     resultat."""
-    for pistes in adaptateur.CANDIDATS_RUNTIME.values():
-        for piste in pistes.values():
-            assert piste['preuve']
-            assert piste['niveau_de_preuve']
-            assert piste['a_confirmer']
+    for piste in adaptateur.CANDIDATS_PAR_GRANDEUR.values():
+        assert piste['preuve'] and piste['niveau_de_preuve']
+        assert piste['a_confirmer']
 
 
-def test_le_candidat_solaire_est_marque_comme_allegation():
-    """Le rapport de sonde d'origine est absent du depot : la trace ne peut pas
-    etre rejouee. Le dire, plutot que de laisser croire a une confirmation."""
+def test_toutes_les_grandeurs_citees_existent_dans_les_liaisons():
+    """Une cle qui ne correspond a aucune grandeur serait une piste morte."""
+    connues = set()
+    for grandeurs in adaptateur.LIAISONS.values():
+        connues |= set(grandeurs)
+    assert set(adaptateur.CANDIDATS_PAR_GRANDEUR) <= connues
+    assert set(adaptateur.SANS_CANDIDAT) <= connues
+
+
+def test_aucune_grandeur_nest_a_la_fois_pistee_et_muette():
+    communes = (set(adaptateur.CANDIDATS_PAR_GRANDEUR)
+                & set(adaptateur.SANS_CANDIDAT))
+    assert not communes, communes
+
+
+def test_une_grandeur_partagee_porte_la_meme_piste_dans_tous_ses_tests():
+    """« Warmezufuhr Lufterwarmer » figure aux tests 4, 5 et 6. Une table
+    indexee par test aurait laisse ces trois copies diverger."""
+    pistes = [adaptateur.candidats_a_confirmer(n).get(
+        u'Wärmezufuhr Lufterwärmer') for n in (4, 5, 6)]
+    assert all(p is not None for p in pistes)
+    assert pistes[0] == pistes[1] == pistes[2]
+
+
+def test_le_candidat_solaire_est_passe_dallegation_a_releve():
+    """Il n'etait adosse qu'a une metadonnee dont la trace manquait. Le releve
+    du 2026-08-06 a trouve la variable dans un .aps reel, independamment."""
     piste = adaptateur.candidats_a_confirmer(2)[
         u'Jahresenergie solarer Wärmeeintrag']
-    assert 'ALLEGATION' in piste['niveau_de_preuve']
+    assert piste['niveau_de_preuve'] == 'RELEVE'
     assert piste['aps_varname_candidat'] == u'Window solar gains'
 
 
-def test_la_seconde_grandeur_du_test_2_na_pas_de_candidat():
-    """La sonde marque `total_transmitted_solar_radiation` explicitement NON
-    lie. Lui inventer une piste serait pire que de n'en avoir aucune."""
-    assert u'Jahresenergie total transmittierte Solarstrahlung' not in \
-        adaptateur.candidats_a_confirmer(2)
+def test_le_test_6_na_de_piste_que_par_grandeurs_partagees():
+    """Ses six grandeurs sont des postes WRG, ventilateurs, ou la somme du
+    Luftkuhler. Seules celles partagees avec le test 4 ont une piste."""
+    assert set(adaptateur.candidats_a_confirmer(6)) == {
+        u'Wärmezufuhr Lufterwärmer',
+        u'Wärmeabfuhr Luftkühler total'}
 
 
-def test_letat_signale_le_candidat_sans_le_compter_comme_resolu():
+# --- Etat affiche ----------------------------------------------------------
+
+def test_letat_distingue_les_trois_situations():
+    """« pas encore cherche » et « cherche, rien ne correspond » ne doivent
+    jamais se lire pareil."""
     texte = adaptateur.etat_des_liaisons()
-    assert '0/2' in texte
-    assert 'candidat a confirmer' in texte
-    assert 'Window solar gains' in texte
+    assert 'candidat a confirmer : Window solar gains' in texte
+    assert 'cherche, aucune variable ne correspond' in texte
+    assert 'pas de variable unique' in texte
+    assert 'None' not in texte
 
 
-def test_les_tests_de_systeme_nont_aucun_candidat():
-    """Lufterwarmer, Luftkuhler, WRG, Ventilateurs : la sonde n'a releve que du
-    niveau local. Aucune piste, et c'est la verite."""
-    for numero in (4, 5, 6):
-        assert adaptateur.candidats_a_confirmer(numero) == {}
+def test_letat_ne_compte_aucun_candidat_comme_resolu():
+    texte = adaptateur.etat_des_liaisons()
+    for numero, attendu in ((2, '0/2'), (3, '0/1'), (4, '0/3'),
+                            (5, '0/8'), (6, '0/6')):
+        assert 'Test %d : %s' % (numero, attendu) in texte
+
+
+def test_les_niveaux_releves_depassent_les_trois_nommes():
+    """Croire que z/v/w epuisent les niveaux a fait manquer l'eclairage
+    (niveau e) et le solaire incident (niveau s)."""
+    for niveau in (adaptateur.NIVEAU_ENERGIE, adaptateur.NIVEAU_SURFACE):
+        assert niveau in adaptateur.NIVEAUX_RELEVES
+    assert len(adaptateur.NIVEAUX_RELEVES) == 12

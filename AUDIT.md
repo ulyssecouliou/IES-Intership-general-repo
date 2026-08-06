@@ -807,3 +807,102 @@ projet avec ventilation mécanique et année complète.
 
 **AUDITÉ — 2026-08-06.** _Défauts 8, 9 et 10 corrigés. Non signé : aucune
 liaison établie._
+
+---
+
+## Élément audité n° 5 — Relevé APS complet (`ZOER_C1.aps`, 2026-08-06, second passage)
+
+Le premier passage était tronqué (défaut n° 9). Une fois le plafond levé :
+**819 variables**, réparties sur **douze** niveaux de modèle, pas trois.
+
+| niveau | n | ce qu'il porte |
+|---|---|---|
+| `e` | 274 | postes de consommation, tous vecteurs |
+| `c` | 184 | émissions de carbone |
+| `z` | 151 | local / zone |
+| `l` | 88 | charges système |
+| `v` | 35 | **système Apache** |
+| `s` | 22 | surface d'enveloppe |
+| `j`, `r` | 15 chacun | — |
+| `w` | 14 | météo |
+| `n` | 9 | — |
+| `o`, `t` | 6 chacun | — |
+
+**Correction d'une idée reçue portée par notre propre code.** `bandes_adapter`
+ne nommait que `z`, `v` et `w`. C'est en croyant cette liste complète qu'on a
+cherché l'éclairage au niveau du local — où VE n'expose qu'un **apport
+thermique** (`Lighting gain`), pas une consommation — alors que l'énergie
+d'éclairage vit au niveau `e`. Même erreur possible pour le solaire incident,
+qui est au niveau `s`.
+
+### Ce que le relevé établit, grandeur par grandeur
+
+Aucune liaison n'est posée. Ce qui change, c'est que la question n'est plus
+« ce nom existe-t-il » — elle est tranchée — mais « désigne-t-il la grandeur du
+classeur ». Cette seconde question exige la définition SIA et ne se tranche pas
+dans VE.
+
+| Grandeur SIA | État | Variable VE |
+|---|---|---|
+| `Jahresenergie solarer Wärmeeintrag` | piste | `Window solar gains` (z, Gain) |
+| `Beleuchtungsenergie` | piste | `Total lights energy` (e, Power) |
+| `Wärmezufuhr Lufterwärmer` | piste | `Sys Mech vent heating load` (v, Sys Load) |
+| `Wärmeabfuhr Luftkühler latent` | piste | `Sys Mech vent dehum load` (v, Sys Load) |
+| `Befeuchtungsenergie` | piste, réserve forte | `Sys Room humidification load` (v) |
+| `Wärmeabfuhr Luftkühler total` | **pas de variable unique** | somme sensible + latent |
+| `Jahresenergie total transmittierte Solarstrahlung` | cherché, rien | — |
+| `Energiebedarf Ventilatoren` | cherché, rien | — |
+| `Wärmezufuhr WRG`, `Wärmeabfuhr WRG`, `Wärmezufuhr WRG latent` | cherché, rien | — |
+| `Hilfsenergie WRG` | cherché, rien | — |
+
+Le candidat solaire passe d'**ALLÉGATION** à **RELEVÉ** : il n'était adossé
+qu'à une métadonnée dont la trace manquait au dépôt ; la variable est
+maintenant constatée dans un `.aps` réel, indépendamment.
+
+### Trois constats structurels, qui ne se lèveront pas par un autre modèle
+
+1. **`Wärmeabfuhr Luftkühler total` n'a pas de variable unique.** VE sépare
+   `Sys Mech vent cooling load` (sensible) et `Sys Mech vent dehum load`
+   (latent). Une liaison ne peut donc pas être un simple nom : il faut une
+   **somme**, que la structure de `LIAISONS` ne sait pas exprimer aujourd'hui.
+   Prendre l'un des deux termes donnerait un nombre plausible et faux.
+
+2. **Aucune énergie de récupération sur l'air neuf.** ApacheSystems n'expose
+   que `Sys Mech vent heat recovery temp`, une **température**. Il existe bien
+   deux variables de récupération en `Power` au même niveau — `Sys Process heat
+   recovered` et `Sys Process heat recovery heat pump` — mais elles portent sur
+   les **process**, pas sur la ventilation. Les confondre serait exactement le
+   type d'erreur que ce dépôt existe pour empêcher. Les quatre grandeurs WRG
+   des tests 5 et 6 relèvent vraisemblablement d'un réseau **ApacheHVAC**.
+
+3. **Aucune variable de ventilateurs seuls.** `ApSys aux energy` agrège
+   fans + pumps + ctrls (VE l'affiche « Ap Sys fans/pumps/ctrls energy ») ;
+   `Fans energy` relève d'ApacheHVAC et VE le marque `[obs]`. Les postes
+   `prm_fans_interior_central` / `prm_fans_interior_local` de
+   `get_energy_uses()` sont une piste, mais ce sont des **postes**, pas des
+   variables de série.
+
+### Ce que le relevé apporte, hors périmètre des bandes
+
+Le niveau `s` expose **`Ext surface incident solar flux`**, en `Radiation flux`
+et en `Heat flow`, par surface. C'est de l'**irradiance dans le plan d'une
+surface** — donc la grandeur que le verrou PV du Test 7
+(`GRANDEURS_EXIGEANT_IRRADIANCE`) réclame. Cela n'apporte pas les valeurs de
+référence SIA 2028, qui restent à obtenir ; cela établit que l'exigence est
+satisfiable par une simulation une fois le bon fichier météo en place.
+
+Le niveau `w` expose `Direct radiation`, `Diffuse radiation`, `Global
+radiation`, `Solar altitude` et `Solar azimuth`.
+
+### Vérification
+
+Chaque nom candidat est confronté au rapport de sonde par un test — nom,
+niveau, libellé d'affichage et famille d'unités. Un nom retapé de mémoire est
+un nom faux, et c'est précisément par là qu'a commencé le défaut n° 8.
+
+L'état affiché distingue désormais **trois** situations, qu'il confondait :
+piste connue / cherché sans résultat / pas encore cherché. Le silence se lisait
+comme le deuxième alors qu'il valait le troisième.
+
+**AUDITÉ — 2026-08-06.** _Non signé : 0/20 liaisons établies. Trois constats
+structurels demandent un arbitrage normatif, pas un relevé supplémentaire._
