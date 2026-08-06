@@ -101,39 +101,53 @@ SYMBOLE_PAR_VERDICT = {
 }
 
 
-class NavigateurTest1(object):
-    """Fenêtre principale du navigateur SIA 4010 (Test 1 pour l'instant).
+class NavigateurSIA4010(object):
+    """Fenêtre principale du navigateur SIA 4010 -- un ou plusieurs tests.
+
+    Prend une LISTE de vues, chacune produite par `ui/verdict_view.py`
+    (`construire_vue_test1`, `construire_vue_test7`, ...). Toutes respectent
+    le même contrat `{test_id, verdict_global, classes, lignes}`, ce qui
+    permet d'afficher n'importe quelle combinaison de tests dans un seul
+    arbre `Classe -> Test -> Grandeur -> Cas -> Période`.
+
+    Une classe de validation apparaît une seule fois, avec sous elle TOUS les
+    tests qu'elle exige et qui sont présents dans les vues fournies. La
+    couleur d'un nœud de classe est le pire verdict de ses tests : jamais un
+    vert si un test requis n'est pas concluant.
 
     Construction et remplissage de l'arborescence testés réellement (cf.
     `ui/tests/test_dialog_tkinter.py`) ; `.lancer()` (boucle d'événements
     bloquante) et l'exécution depuis VEScripts elle-même restent
-    `# ⚠ À VÉRIFIER` -- non exécutées ici. Utilisation prévue depuis
-    VEScripts :
+    `# ⚠ À VÉRIFIER` -- non exécutées ici.
 
-        from ui.dialog_tkinter import NavigateurTest1
-        app = NavigateurTest1(resultat_test1_json)
-        app.lancer()   # bloque jusqu'à fermeture de la fenêtre
-
-    `resultat_test1_json` : le dict retourné par
-    `engine/test1_engine.py::evaluer_test1(reference, candidat)`, tel que
-    produit par le VEScript appelant (extraction réelle via
-    `ve_adapter/test1_adapter.py`, ou fixture de développement via
-    `ve_adapter/test1_adapter.py::charger_fixture_test1()`).
+        from ui.dialog_tkinter import NavigateurSIA4010
+        from ui import verdict_view as vue
+        app = NavigateurSIA4010([vue.construire_vue_test1(r1),
+                                 vue.construire_vue_test7(r7)])
+        app.lancer()
     """
 
-    def __init__(self, resultat_test1_json):
+    def __init__(self, vues):
         if tk is None:
             raise ImportError(
                 "tkinter indisponible dans cet environnement -- ce dialogue "
                 "doit s'exécuter depuis VEScripts (Python Scripts navigator "
                 "de VE), pas en Python autonome sans affichage.")
-        self._resultat = resultat_test1_json
-        self._vue = vue.construire_vue_test1(resultat_test1_json)
+        if not vues:
+            raise ValueError(
+                u'aucune vue fournie : le navigateur refuse de afficher une '
+                u'fenêtre vide qui pourrait passer pour « rien à signaler ».')
+        self._vues = list(vues)
+        # Compatibilité ascendante : les appelants historiques (et le PDF /
+        # Excel du Test 1) lisent `self._vue`.
+        self._vue = self._vues[0]
+        self._resultat = None
         self._racine = tk.Tk()
-        self._racine.title(u'Navigateur SIA 4010 -- ' +
-                            str(self._vue.get('test_id') or 'Test 1'))
+        self._racine.title(u'Navigateur SIA 4010 -- ' + u', '.join(
+            str(v.get('test_id') or '?') for v in self._vues))
         self._racine.geometry('1100x650')
         self._construire_widgets()
+
 
     # ----------------------------------------------------------------
     # Construction de l'interface
@@ -143,18 +157,24 @@ class NavigateurTest1(object):
         cadre_haut = ttk.Frame(self._racine, padding=8)
         cadre_haut.pack(side='top', fill='x')
 
-        verdict_global = self._vue['verdict_global']
-        libelle_verdict = u'{0}  {1}   --   {2}'.format(
-            SYMBOLE_PAR_VERDICT.get(verdict_global['couleur'], u'?'),
-            self._vue.get('test_id') or 'Test 1',
-            verdict_global['texte'])
-        etiquette_verdict = ttk.Label(
-            cadre_haut, text=libelle_verdict, font=('TkDefaultFont', 12, 'bold'))
-        etiquette_verdict.pack(side='left')
+        # Un bandeau par test : avec plusieurs tests, un verdict agrege unique
+        # masquerait lequel echoue. On les montre tous, cote a cote.
+        cadre_verdicts = ttk.Frame(cadre_haut)
+        cadre_verdicts.pack(side='left')
+        for une_vue in self._vues:
+            verdict_global = une_vue['verdict_global']
+            ttk.Label(
+                cadre_verdicts,
+                text=u'{0}  {1}   --   {2}'.format(
+                    SYMBOLE_PAR_VERDICT.get(verdict_global['couleur'], u'?'),
+                    une_vue.get('test_id') or 'Test',
+                    verdict_global['texte']),
+                font=('TkDefaultFont', 12, 'bold')).pack(side='top', anchor='w')
 
         etiquette_article = ttk.Label(
-            cadre_haut, text=u'Article : ' + verdict_global['article'],
-            wraplength=700, foreground='#555555')
+            cadre_haut,
+            text=u'Article : ' + self._vues[0]['verdict_global']['article'],
+            wraplength=560, foreground='#555555')
         etiquette_article.pack(side='left', padx=16)
 
         cadre_boutons = ttk.Frame(cadre_haut)
@@ -209,79 +229,103 @@ class NavigateurTest1(object):
         Période à partir de `self._vue` (déjà triée/colorée par
         `verdict_view.py`) -- aucune donnée supplémentaire n'est introduite.
         """
-        # Groupement grandeur -> cas -> [lignes de periode], en respectant
-        # l'ordre deja fixe par verdict_view.construire_lignes_test1.
+        # Table de correspondance iid Treeview -> ligne source, RESET a
+        # chaque (re)construction de l'arbre. Necessaire car le meme
+        # (grandeur, cas, periode) est repete sous CHAQUE classe concernee
+        # (un test n'a qu'un seul verdict, partage par toutes ses classes --
+        # cf. `verdict_view.construire_lignes_classes`) : les iids de
+        # Treeview doivent donc etre scopes par classe ET par test pour
+        # rester uniques dans tout l'arbre (piege reel rencontre et corrige
+        # durant le developpement -- cf. `ui/tests/test_dialog_tkinter.py`).
+        self._lignes_par_iid = {}
+
+        # Regroupement par classe : une classe apparait UNE fois, avec sous
+        # elle tous les tests fournis qui la concernent. L'ordre des classes
+        # est alphabetique (1A, 1B, 2A, ... 5) ; celui des tests suit l'ordre
+        # dans lequel les vues ont ete passees.
+        tests_par_classe = {}
+        for une_vue in self._vues:
+            for ligne_classe in une_vue['classes']:
+                tests_par_classe.setdefault(
+                    ligne_classe['classe'], []).append((une_vue, ligne_classe))
+
+        for classe in sorted(tests_par_classe):
+            tests = tests_par_classe[classe]
+            # Couleur de la classe = pire verdict de SES tests : une classe
+            # n'est verte que si tous les tests qu'elle exige le sont.
+            couleur_classe = _pire_couleur(lc['couleur'] for _, lc in tests)
+            noeud_classe = self._arbre.insert(
+                '', 'end',
+                text=u'Classe ' + classe,
+                values=('', '', SYMBOLE_PAR_VERDICT.get(couleur_classe, u'?'),
+                        tests[0][1]['article']),
+                tags=(couleur_classe,), open=False)
+
+            for une_vue, ligne_classe in tests:
+                test_id = str(une_vue.get('test_id') or 'Test')
+                noeud_test = self._arbre.insert(
+                    noeud_classe, 'end',
+                    text=test_id,
+                    values=('', '',
+                            SYMBOLE_PAR_VERDICT.get(ligne_classe['couleur'], u'?'),
+                            une_vue['verdict_global']['article']),
+                    tags=(ligne_classe['couleur'],), open=False)
+                self._remplir_test(noeud_test, classe, test_id, une_vue)
+
+    def _remplir_test(self, noeud_test, classe, test_id, une_vue):
+        """Remplit un noeud de test : Grandeur -> Cas -> Période.
+
+        L'ordre des grandeurs et des cas est celui deja fixe par
+        `verdict_view` -- pour le Test 7, c'est l'ordre des lignes du
+        classeur SIA, pas un tri de notre invention.
+        """
         lignes_par_grandeur_cas = {}
         ordre_grandeur_cas = []
-        for ligne in self._vue['lignes']:
+        for ligne in une_vue['lignes']:
             cle = (ligne['grandeur'], ligne['cas'])
             if cle not in lignes_par_grandeur_cas:
                 lignes_par_grandeur_cas[cle] = []
                 ordre_grandeur_cas.append(cle)
             lignes_par_grandeur_cas[cle].append(ligne)
 
-        # Table de correspondance iid Treeview -> ligne source, RESET a
-        # chaque (re)construction de l'arbre. Necessaire car le meme
-        # (grandeur, cas, periode) est repete sous CHAQUE classe concernee
-        # (le Test 1 n'a qu'un seul verdict, partage par toutes ses
-        # classes -- cf. `verdict_view.construire_lignes_classes`) : les
-        # iids de Treeview doivent donc etre scopes par classe pour rester
-        # uniques dans tout l'arbre (piege reel rencontre et corrige durant
-        # le developpement -- cf. `ui/tests/test_dialog_tkinter.py`).
-        self._lignes_par_iid = {}
+        prefixe = 'classe::' + classe + '::test::' + test_id
 
-        for ligne_classe in self._vue['classes']:
-            classe = ligne_classe['classe']
-            noeud_classe = self._arbre.insert(
-                '', 'end',
-                text=u'Classe ' + classe,
-                values=('', '', SYMBOLE_PAR_VERDICT.get(ligne_classe['couleur'], u'?'),
-                        ligne_classe['article']),
-                tags=(ligne_classe['couleur'],), open=False)
+        for grandeur, cas in ordre_grandeur_cas:
+            lignes_periodes = lignes_par_grandeur_cas[(grandeur, cas)]
+            # Couleur du noeud "cas" = pire verdict de ses periodes
+            # (rouge > gris > vert), sans jamais inventer une agregation
+            # que le moteur n'a pas produite lui-meme au niveau cas.
+            couleur_cas = _pire_couleur(l['couleur'] for l in lignes_periodes)
 
-            noeud_test = self._arbre.insert(
-                noeud_classe, 'end',
-                text=self._vue.get('test_id') or 'Test 1',
-                values=('', '', SYMBOLE_PAR_VERDICT.get(ligne_classe['couleur'], u'?'),
-                        self._vue['verdict_global']['article']),
-                tags=(ligne_classe['couleur'],), open=False)
+            noeud_grandeur_id = prefixe + '::grandeur::' + grandeur
+            if self._arbre.exists(noeud_grandeur_id):
+                noeud_grandeur = noeud_grandeur_id
+            else:
+                noeud_grandeur = self._arbre.insert(
+                    noeud_test, 'end', iid=noeud_grandeur_id,
+                    text=lignes_periodes[0]['grandeur_libelle'],
+                    values=('', '', '', ''), open=False)
 
-            for grandeur, cas in ordre_grandeur_cas:
-                lignes_periodes = lignes_par_grandeur_cas[(grandeur, cas)]
-                # Couleur du noeud "cas" = pire verdict de ses periodes
-                # (rouge > gris > vert), sans jamais inventer une agregation
-                # que le moteur n'a pas produite lui-meme au niveau cas.
-                couleur_cas = _pire_couleur(l['couleur'] for l in lignes_periodes)
+            noeud_cas = self._arbre.insert(
+                noeud_grandeur, 'end',
+                text=u'Cas ' + cas if cas else u'(ensemble)',
+                values=('', '', SYMBOLE_PAR_VERDICT.get(couleur_cas, u'?'), ''),
+                tags=(couleur_cas,), open=False)
 
-                noeud_grandeur_id = 'classe::' + classe + '::grandeur::' + grandeur
-                if self._arbre.exists(noeud_grandeur_id):
-                    noeud_grandeur = noeud_grandeur_id
-                else:
-                    noeud_grandeur = self._arbre.insert(
-                        noeud_test, 'end', iid=noeud_grandeur_id,
-                        text=lignes_periodes[0]['grandeur_libelle'],
-                        values=('', '', '', ''), open=False)
-
-                noeud_cas = self._arbre.insert(
-                    noeud_grandeur, 'end',
-                    text=u'Cas ' + cas,
-                    values=('', '', SYMBOLE_PAR_VERDICT.get(couleur_cas, u'?'), ''),
-                    tags=(couleur_cas,), open=False)
-
-                for ligne in lignes_periodes:
-                    reference_affichee = _resumer_reference(ligne)
-                    iid_periode = _iid_ligne(classe, ligne)
-                    self._arbre.insert(
-                        noeud_cas, 'end',
-                        text=ligne['periode_libelle'],
-                        values=(ligne['valeur_candidate_affichee'],
-                                reference_affichee,
-                                SYMBOLE_PAR_VERDICT.get(ligne['couleur'], u'?') +
-                                u' ' + ligne['texte_verdict'],
-                                ligne['article']),
-                        tags=(ligne['couleur'],),
-                        iid=iid_periode)
-                    self._lignes_par_iid[iid_periode] = ligne
+            for ligne in lignes_periodes:
+                reference_affichee = _resumer_reference(ligne)
+                iid_periode = _iid_ligne(classe, ligne, test_id)
+                self._arbre.insert(
+                    noeud_cas, 'end',
+                    text=ligne['periode_libelle'],
+                    values=(ligne['valeur_candidate_affichee'],
+                            reference_affichee,
+                            SYMBOLE_PAR_VERDICT.get(ligne['couleur'], u'?') +
+                            u' ' + ligne['texte_verdict'],
+                            ligne['article']),
+                    tags=(ligne['couleur'],),
+                    iid=iid_periode)
+                self._lignes_par_iid[iid_periode] = ligne
 
     # ----------------------------------------------------------------
     # Interactions
@@ -350,6 +394,19 @@ class NavigateurTest1(object):
 _ORDRE_COULEUR_GRAVITE = {'vert': 0, 'gris': 1, 'rouge': 2}
 
 
+class NavigateurTest1(NavigateurSIA4010):
+    """Navigateur restreint au Test 1 -- conservé tel quel pour l'existant.
+
+    `resultat_test1_json` : le dict retourné par
+    `engine/test1_engine.py::evaluer_test1(reference, candidat)`.
+    """
+
+    def __init__(self, resultat_test1_json):
+        NavigateurSIA4010.__init__(
+            self, [vue.construire_vue_test1(resultat_test1_json)])
+        self._resultat = resultat_test1_json
+
+
 def _pire_couleur(couleurs):
     """Pire couleur d'un ensemble (rouge > gris > vert), pour agréger
     visuellement un nœud de regroupement (ex. "cas") sans jamais afficher un
@@ -360,7 +417,7 @@ def _pire_couleur(couleurs):
     return max(couleurs, key=lambda c: _ORDRE_COULEUR_GRAVITE.get(c, 1))
 
 
-def _iid_ligne(classe, ligne):
+def _iid_ligne(classe, ligne, test_id=''):
     """Identifiant Treeview stable pour une ligne de période -- dérivé des
     clés déjà présentes (grandeur/cas/période), jamais d'un compteur global
     qui casserait au moindre réordonnancement.
@@ -373,14 +430,26 @@ def _iid_ligne(classe, ligne):
     de l'arbre échoue dès la deuxième classe (`TclError: Item ... already
     exists`) -- bug réel rencontré et corrigé pendant le développement, cf.
     `ui/tests/test_dialog_tkinter.py::test_construire_widgets_sans_exception_avec_plusieurs_classes`.
+
+    Le `test_id` entre aussi dans la clé depuis l'ajout du Test 7 : les
+    classes 4A et 4B exigent à la fois le Test 1 et le Test 7, et rien
+    n'interdit à deux tests différents de porter un même triplet
+    (grandeur, cas, période). Défaut vide pour rester compatible avec les
+    appelants antérieurs.
     """
-    return ('classe::' + classe + '::periode::' + ligne['grandeur'] + '::' +
-            ligne['cas'] + '::' + ligne['periode'])
+    return ('classe::' + classe + '::test::' + str(test_id) + '::periode::' +
+            ligne['grandeur'] + '::' + ligne['cas'] + '::' + ligne['periode'])
 
 
 def _resumer_reference(ligne):
     """Résumé texte de la référence/plage, sans recalcul : lit uniquement
     les clés déjà produites par le moteur dans `ligne['detail']`."""
+    # Le Test 7 fournit deja son resume de bande (`moyenne (bas … haut) unite`)
+    # depuis `verdict_view.construire_lignes_test7` : on le reprend tel quel
+    # plutot que de le reconstruire ici a partir des bornes.
+    if ligne.get('reference_affichee') is not None:
+        return ligne['reference_affichee']
+
     detail = ligne.get('detail') or {}
     if ligne['type_controle'] == 'critere_pass_fail':
         plage_min = detail.get('plage_min')
@@ -467,6 +536,58 @@ def lancer_depuis_ve(chemin_reference=None, chemin_candidat_fixture=None):
     resultat = moteur.evaluer_test1(reference, candidat)
     app = NavigateurTest1(resultat)
     app.lancer()
+
+
+def construire_vues_disponibles(candidat_test1=None, candidat_test7=None):
+    """Construit les vues de TOUS les tests dont la référence est figée.
+
+    Un test dont le référentiel est absent est SAUTÉ, pas remplacé par un
+    substitut : mieux vaut une classe absente de l'arbre qu'une classe
+    affichée sur des données inventées.
+
+    Retourne `(vues, avertissements)`.
+    """
+    vues, avertissements = [], []
+
+    try:
+        from engine import test1_engine as moteur1
+        reference1 = moteur1.charger_reference()
+        vues.append(vue.construire_vue_test1(
+            moteur1.evaluer_test1(reference1, candidat_test1)))
+    except Exception as erreur:  # référentiel absent ou illisible
+        avertissements.append(u'Test 1 non chargé : %s' % erreur)
+
+    try:
+        from engine import test7_engine as moteur7
+        reference7 = moteur7.charger_reference()
+        vues.append(vue.construire_vue_test7(
+            moteur7.evaluer_test7(reference7, candidat_test7)))
+    except Exception as erreur:
+        avertissements.append(u'Test 7 non chargé : %s' % erreur)
+
+    return vues, avertissements
+
+
+def lancer_navigateur(candidat_test1=None, candidat_test7=None):
+    """Point d'entrée du navigateur complet, depuis le Python Scripts
+    navigator de VE.
+
+    # ⚠ À VÉRIFIER -- NON EXÉCUTÉ hors VE. Les candidats sont produits par
+    `ve_adapter/test1_adapter.py` et `ve_adapter/test7_adapter.py`. Passer
+    `None` affiche l'état « avant première simulation » : tout gris, aucun
+    verdict -- jamais un faux vert par donnée manquante.
+
+        from ui.dialog_tkinter import lancer_navigateur
+        lancer_navigateur(candidat_test1=c1, candidat_test7=c7)
+    """
+    vues, avertissements = construire_vues_disponibles(
+        candidat_test1, candidat_test7)
+    for avertissement in avertissements:
+        print(u'⚠ ' + avertissement)
+    if not vues:
+        raise RuntimeError(
+            u'aucun test chargeable : %s' % u' | '.join(avertissements))
+    NavigateurSIA4010(vues).lancer()
 
 
 if __name__ == '__main__':  # pragma: no cover -- usage manuel hors VE, non teste

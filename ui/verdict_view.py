@@ -411,3 +411,184 @@ def construire_vue_test1(resultat_test1):
         'classes': construire_lignes_classes(resultat_test1),
         'lignes': construire_lignes_test1(resultat_test1),
     }
+
+
+# ==========================================================================
+# TEST 7 -- classe de validation 5
+# ==========================================================================
+#
+# Le Test 7 n'a ni cas ni périodes : c'est une liste plate de 11 grandeurs
+# annuelles. Pour réutiliser l'arborescence du navigateur sans la réécrire, on
+# le projette sur LE MÊME contrat de vue que le Test 1
+# (`{test_id, verdict_global, classes, lignes}`), avec la correspondance :
+#
+#     grandeur  <- le GROUPE du classeur (Testgrössen / Diagnosegrössen)
+#     cas       <- le libellé de la grandeur
+#     periode   <- 'annual'
+#
+# ce qui donne dans l'arbre : Classe 5 -> Test 7 -> Testgrössen -> <grandeur>
+# -> Annuel. Aucune donnée n'est ajoutée : `conforme` est lu tel quel dans le
+# JSON du moteur, jamais recalculé à partir des bornes.
+# --------------------------------------------------------------------------
+
+# Source : SIA 4010:2023 §4.5, tab. 63 -- le Test 7 est exigé par 4A, 4B et 5.
+CITATION_CLASSE_5 = (
+    u'SIA 4010:2023, §4.5, tab. 63 -- la classe de validation 5 '
+    u'(« calcul des besoins en énergie de refroidissement et de chauffage '
+    u'pour les profils de besoins existants ») n\'exige que le Test 7.'
+)
+CITATION_CLASSE_4X = (
+    u'SIA 4010:2023, §4.5, tab. 63 -- le Test 7 est l\'un des tests exigés '
+    u'par cette classe (4A : tests 1, 2A, 3A à F, 4 à 7 ; 4B : tests 1 à 7). '
+    u'Son succès est nécessaire mais NON suffisant : la classe reste non '
+    u'validée tant que ses autres tests ne le sont pas.'
+)
+
+
+def _citation_classe_test7(classe):
+    return CITATION_CLASSE_5 if classe == '5' else CITATION_CLASSE_4X
+
+# Source : engine/test7_engine.py, constantes STATUT_CRITERE et
+# JUSTIFICATION_CRITERE, elles-mêmes appuyées sur SIA 4010:2023 §4.4 et sur
+# l'arbitrage traceability/critere-test4.spec.md.
+CITATION_CRITERE_TEST7 = (
+    u'Critère INFÉRÉ. La spécification du Test 7 n\'énonce aucun critère ; '
+    u'SIA 4010:2023 §4.4 délègue la comparaison au classeur d\'évaluation, '
+    u'qui porte des bandes sur les seules Testgrössen (lignes 8-20) et aucune '
+    u'sur les Diagnosegrössen (21-26). Formule : moyenne ± MAX(ABS(programme '
+    u'− moyenne)), bornes incluses. À confirmer par la sous-commission '
+    u'(SIA 4010 §4.6.2).'
+)
+
+SOURCE_VALEUR_REFERENCE_TEST7 = (
+    u'refs/reference-data/test-7.ref.json, extrait de '
+    u'SIA_4010_geteilter_Link/Test7/Resultaterfassung Test7.xlsx '
+    u'(feuille « Zusammenfassung », colonnes L/M/N). Les 11 bandes sont '
+    u'recalculées par engine/scatter_band.py et confrontées au classeur '
+    u'(scripts/build_test7_reference.py, tolérance 1e-6).'
+)
+
+TEXTE_INFORMATIF_TEST7 = u'Diagnosegrösse -- aucune bande au classeur'
+
+_STATUTS_AVEC_RESERVE = ('PASS_WITH_RESERVATION',)
+
+
+def _texte_verdict_test7(grandeur):
+    """Texte de verdict d'une grandeur du Test 7, statut du moteur lu tel quel."""
+    conforme = grandeur.get('conforme')
+    statut = grandeur.get('statut')
+    if conforme is True:
+        if statut in _STATUTS_AVEC_RESERVE:
+            return (TEXTE_CONFORME + u' -- sous réserve : hors enveloppe '
+                    u'min/max des programmes, lecture concurrente non réfutée')
+        return TEXTE_CONFORME
+    if conforme is False:
+        return TEXTE_NON_CONFORME + u' -- hors bande des programmes de référence'
+    if grandeur.get('candidat') is None:
+        return TEXTE_NON_APPLICABLE_MANQUANT
+    return u'Non évalué -- ' + str(statut)
+
+
+def _resumer_bande_test7(grandeur):
+    """Résumé lisible de la bande : « moyenne (bas … haut) unité »."""
+    unite = grandeur.get('unite') or u''
+    return u'{0} ({1} … {2}) {3}'.format(
+        formater_nombre(grandeur.get('moyenne'), 1),
+        formater_nombre(grandeur.get('borne_basse'), 1),
+        formater_nombre(grandeur.get('borne_haute'), 1),
+        unite).strip()
+
+
+def construire_lignes_test7(resultat_test7):
+    """Une ligne d'affichage par grandeur du Test 7, dans l'ordre du classeur.
+
+    L'ordre est celui de `resultat_test7['grandeurs']`, qui reprend l'ordre des
+    lignes du classeur SIA -- pas un tri de notre invention.
+    """
+    lignes = []
+    for grandeur in resultat_test7.get('grandeurs', []):
+        conforme = grandeur.get('conforme')
+        groupe = grandeur.get('groupe') or u'(groupe absent)'
+        soumise = grandeur.get('borne_haute') is not None
+
+        lignes.append({
+            'grandeur': groupe,
+            'grandeur_libelle': groupe,
+            'cas': grandeur.get('libelle') or u'(sans libellé)',
+            'type_controle': 'critere_pass_fail' if soumise else 'informatif',
+            'periode': 'annual',
+            'periode_libelle': libelle_periode('annual'),
+            'conforme': conforme,
+            'couleur': couleur_depuis_conforme(conforme),
+            'texte_verdict': _texte_verdict_test7(grandeur),
+            'valeur_candidate': grandeur.get('candidat'),
+            'valeur_candidate_affichee': formater_nombre(grandeur.get('candidat'), 1),
+            'reference_affichee': _resumer_bande_test7(grandeur),
+            'article': CITATION_CRITERE_TEST7,
+            'source_valeur_reference': SOURCE_VALEUR_REFERENCE_TEST7,
+            'detail': copy.deepcopy(grandeur),
+        })
+    return lignes
+
+
+def construire_verdict_global_test7(resultat_test7):
+    """Verdict global du Test 7 -- agrégat déjà calculé par le moteur."""
+    verdict = resultat_test7.get('verdict')
+    nb_echecs = resultat_test7.get('nb_echecs', 0)
+    nb_inconnues = resultat_test7.get('nb_non_evaluables', 0)
+    nb_reserves = resultat_test7.get('nb_reserves', 0)
+    soumises = resultat_test7.get('grandeurs_soumises_au_critere', 0)
+
+    if verdict == 'FAIL':
+        conforme = False
+        texte = TEXTE_NON_CONFORME + u' -- {0} grandeur(s) hors bande'.format(nb_echecs)
+    elif verdict in ('PASS', 'PASS_WITH_RESERVATION'):
+        conforme = True
+        texte = TEXTE_CONFORME + u' -- {0}/{0} grandeurs dans la bande'.format(soumises)
+        if nb_reserves:
+            texte += u' ({0} sous réserve)'.format(nb_reserves)
+    else:
+        conforme = None
+        texte = (u'Non évalué -- {0} grandeur(s) non simulée(s) sur {1}'
+                 .format(nb_inconnues, soumises))
+
+    return {
+        'test_id': u'Test 7',
+        'conforme': conforme,
+        'couleur': couleur_depuis_conforme(conforme),
+        'texte': texte,
+        'article': CITATION_CRITERE_TEST7,
+        'detail': copy.deepcopy(resultat_test7.get('critere') or {}),
+    }
+
+
+def construire_lignes_classes_test7(resultat_test7):
+    """Une ligne par classe concernée -- la classe 5 seule."""
+    verdict_global = construire_verdict_global_test7(resultat_test7)
+    lignes = []
+    for classe in resultat_test7.get('classes_concernees', []):
+        lignes.append({
+            'classe': classe,
+            'test_id': u'Test 7',
+            'test_requis': True,
+            'conforme': verdict_global['conforme'],
+            'couleur': verdict_global['couleur'],
+            'texte_verdict': verdict_global['texte'],
+            'article': _citation_classe_test7(classe),
+        })
+    lignes.sort(key=lambda ligne: ligne['classe'])
+    return lignes
+
+
+def construire_vue_test7(resultat_test7):
+    """Assemble la vue du Test 7, au même contrat que `construire_vue_test1`.
+
+    `resultat_test7` : dict retourné par
+    `engine/test7_engine.py::evaluer_test7(reference, candidat)`.
+    """
+    return {
+        'test_id': u'Test 7',
+        'verdict_global': construire_verdict_global_test7(resultat_test7),
+        'classes': construire_lignes_classes_test7(resultat_test7),
+        'lignes': construire_lignes_test7(resultat_test7),
+    }

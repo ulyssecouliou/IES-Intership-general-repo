@@ -200,3 +200,88 @@ def test_pire_couleur_narrive_jamais_a_vert_si_une_periode_nest_pas_verte():
 def test_iid_ligne_est_unique_entre_deux_classes_differentes():
     ligne = {'grandeur': 'g', 'cas': 'c', 'periode': 'p'}
     assert dlg._iid_ligne('1A', ligne) != dlg._iid_ligne('1B', ligne)
+
+
+def test_iid_ligne_est_unique_entre_deux_tests_de_la_meme_classe():
+    """Les classes 4A et 4B exigent Test 1 ET Test 7.
+
+    Sans le `test_id` dans la clé, deux tests portant un même triplet
+    (grandeur, cas, période) provoqueraient `TclError: Item already exists` --
+    exactement le bug déjà rencontré entre classes.
+    """
+    ligne = {'grandeur': 'g', 'cas': 'c', 'periode': 'p'}
+    assert (dlg._iid_ligne('4A', ligne, 'Test 1')
+            != dlg._iid_ligne('4A', ligne, 'Test 7'))
+
+
+# --------------------------------------------------------------------------
+# Navigateur multi-tests (Test 1 + Test 7)
+# --------------------------------------------------------------------------
+
+@pytest.fixture
+def vues_deux_tests(resultat_fixture):
+    """Vue du Test 1 (avec candidat) + vue du Test 7 (sans candidat)."""
+    from ui import verdict_view as vue
+    import os
+    from engine import test7_engine as moteur7
+    if not os.path.exists(moteur7.CHEMIN_REFERENCE_DEFAUT):
+        pytest.skip(u'référence Test 7 absente')
+    resultat7 = moteur7.evaluer_test7(moteur7.charger_reference(), None)
+    return [vue.construire_vue_test1(resultat_fixture),
+            vue.construire_vue_test7(resultat7)]
+
+
+@pytest.fixture
+def app_multi(vues_deux_tests):
+    try:
+        fenetre = dlg.NavigateurSIA4010(vues_deux_tests)
+    except tk.TclError as erreur:
+        pytest.skip(u'Tk indisponible au montage (%s)' % erreur)
+    try:
+        fenetre._racine.update()
+        yield fenetre
+    finally:
+        try:
+            fenetre._racine.destroy()
+        except tk.TclError:
+            pass
+
+
+def test_multi_construit_les_huit_classes(app_multi):
+    """1A, 1B, 2A, 2B, 3, 4A, 4B (Test 1) + 5 (Test 7) = 8 classes."""
+    enfants = app_multi._arbre.get_children()
+    assert len(enfants) == 8
+    libelles = [app_multi._arbre.item(n, 'text') for n in enfants]
+    assert u'Classe 5' in libelles
+
+
+def test_multi_la_classe_5_ne_porte_que_le_test_7(app_multi):
+    for noeud in app_multi._arbre.get_children():
+        if app_multi._arbre.item(noeud, 'text') == u'Classe 5':
+            tests = app_multi._arbre.get_children(noeud)
+            assert len(tests) == 1
+            assert app_multi._arbre.item(tests[0], 'text') == u'Test 7'
+            return
+    pytest.fail(u'Classe 5 absente de l\'arbre')
+
+
+def test_multi_aucune_collision_diid(app_multi, vues_deux_tests):
+    attendu = sum(len(v['lignes']) * len(v['classes']) for v in vues_deux_tests)
+    assert len(app_multi._lignes_par_iid) == attendu
+    for iid in app_multi._lignes_par_iid:
+        assert app_multi._arbre.exists(iid)
+
+
+def test_multi_la_classe_5_reste_grise_sans_candidat_test7(app_multi):
+    """Le Test 7 n'a pas de candidat : sa classe ne doit jamais être verte."""
+    for noeud in app_multi._arbre.get_children():
+        if app_multi._arbre.item(noeud, 'text') == u'Classe 5':
+            assert app_multi._arbre.item(noeud, 'tags') == ('gris',)
+            return
+    pytest.fail(u'Classe 5 absente de l\'arbre')
+
+
+def test_navigateur_refuse_une_liste_de_vues_vide():
+    """Une fenêtre vide pourrait passer pour « rien à signaler »."""
+    with pytest.raises(ValueError):
+        dlg.NavigateurSIA4010([])
