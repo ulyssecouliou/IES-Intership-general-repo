@@ -1,0 +1,94 @@
+{
+  "norme": "SIA 180:2014",
+  "titre": "Protection thermique, protection contre l'humidité et climat intérieur dans les bâtiments",
+  "statut": "FIGÉ — sous réserve des rectificatifs",
+  "date_extraction": "2026-08-04",
+  "source": {
+    "nature": "captures d'écran du document publié",
+    "fournisseur": "Yiqiao Yang, SIA",
+    "date_reception": "2026-08-04",
+    "chiffres": [
+      "2.3.1",
+      "2.3.2 (avec figure 4)"
+    ]
+  },
+  "corrigenda": {
+    "existent": true,
+    "source_declaree": "Yiqiao Yang, SIA, 2026-08-04",
+    "gratuits": true,
+    "ou": "SIA Shop",
+    "controle_effectue": false
+  },
+  "chiffre_2_3_1": {
+    "titre_de": "Anforderungen an Räume, während diese beheizt, gekühlt oder mechanisch belüftet sind — Allgemein",
+    "renvoi": "Ces conditions correspondent pour l'essentiel à la CATÉGORIE B de SN EN ISO 7730, annexe A.",
+    "portee": "À respecter pendant TOUTE la durée d'utilisation (« während der ganzen Nutzungszeit »).",
+    "criteres": [
+      {
+        "grandeur": "PPD",
+        "libelle_de": "erwarteter Anteil mit der thermischen Behaglichkeit unzufriedener Personen",
+        "operateur": "<",
+        "valeur": 10,
+        "unite": "%"
+      },
+      {
+        "grandeur": "PMV",
+        "libelle_de": "erwartete durchschnittliche Bewertung der thermischen Behaglichkeit",
+        "operateur": "dans",
+        "valeur": [
+          -0.5,
+          0.5
+        ],
+        "unite": "-"
+      },
+      {
+        "grandeur": "insatisfaits_courant_dair_ventilation_naturelle",
+        "libelle_de": "prozentualer Anteil zusätzlicher Unzufriedener wegen Zugluft, natürliche Lüftung",
+        "operateur": "<",
+        "valeur": 20,
+        "unite": "%"
+      },
+      {
+        "grandeur": "insatisfaits_courant_dair_ventilation_mecanique",
+        "libelle_de": "prozentualer Anteil zusätzlicher Unzufriedener wegen Zugluft, mechanische Lüftung",
+        "operateur": "<",
+        "valeur": 15,
+        "unite": "%"
+      },
+      {
+        "grandeur": "insatisfaits_gradient_tete_chevilles",
+        "libelle_de": "prozentualer Anteil zusätzlicher Unzufriedener wegen Temperaturdifferenz zwischen Kopf und Knöcheln",
+        "operateur": "<",
+        "valeur": 5,
+        "unite": "%"
+      },
+      {
+        "grandeur": "insatisfaits_temperature_du_sol",
+        "libelle_de": "prozentualer Anteil zusätzlicher Unzufriedener wegen Fussbodentemperatur",
+        "operateur": "<",
+        "valeur": 10,
+        "unite": "%"
+      },
+      {
+        "grandeur": "insatisfaits_asymetrie_de_rayonnement",
+        "libelle_de": "prozentualer Anteil zusätzlicher Unzufriedener wegen Asymmetrie der Strahlungstemperatur",
+        "operateur": "<",
+        "valeur": 5,
+        "unite": "%"
+      }
+    ]
+  },
+  "chiffre_2_3_2_figure_4": {
+    "titre_de": "Zulässiger Bereich der empfundenen Temperatur in Wohn- und Büroräumen, während diese beheizt, gekühlt oder mechanisch belüftet sind, je nach gleitendem Mittelwert der Aussentemperatur",
+    "grandeur_ordonnee": "empfundene Temperatur (température ressentie), °C",
+    "grandeur_abscisse": "gleitender Mittelwert der Aussentemperatur über 48 Stunden, °C",
+    "condition_prealable": "Avec la variation saisonnière de l'habillement selon la figure 2 (§2.3.2).",
+    "domaine_dapplication": "locaux d'habitation et bureaux (Wohn- und Büroräume)",
+    "identite_avec_sia_380_2": {
+      "etablie": true,
+      "citation": "SIA 380/2:2022 §5.2.2.5 : « La limite supérieure et la limite inférieure de la figure 1 découlent des exigences de SIA 180:2014, chiffre 2.3.1. Elles CORRESPONDENT À CELLES DE SIA 180:2014, FIGURE 4, pour les locaux d'habitation et les bureaux. »",
+      "consequence": "Les sommets ci-dessous ne sont PAS lus à l'œil sur la capture : ils sont extraits du dessin VECTORIEL de la figure 1 de refs/SIA-380-2-2022.pdf p. 27 (résidu < 0,001 °C), puis confrontés à la capture de la figure 4. Concordance sur les 8 valeurs.",
+      "fichier": "sia-380-2-2022.figure1.json"
+    }
+  }
+}
