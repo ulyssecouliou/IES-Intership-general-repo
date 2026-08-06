@@ -58,10 +58,26 @@ _DOSSIER_SIA = os.environ.get(
 TOLERANCE = 1e-6
 
 _REFERENCE_CELLULE = re.compile(r'([A-Z]{1,3})(\d{1,5})')
-_PLANCHER = re.compile(r'^=.*MAX\(\s*0\s*,', re.I)
+_PLAGE = re.compile(r'([A-Z]{1,3})(\d{1,5})\s*:\s*([A-Z]{1,3})(\d{1,5})')
+_PLANCHER = re.compile(r'^=\s*MAX\(\s*0\s*,', re.I)
 
 #: Disposition propre à chaque test, LUE sur le classeur et non supposée.
 #: `lignes` borne le balayage ; `meta` nomme les colonnes de contexte.
+#
+# `libelle`, `cas` et `unite` disent OU lire chaque etiquette :
+#     ('ligne', n)   -> colonne n de la ligne de la bande
+#     ('bloc', n)    -> ligne n, dans la 1re colonne du bloc de contributeurs
+#     ('colonne', n) -> ligne n, dans la colonne de la moyenne
+#     ('contributeur', n) -> ligne n, au-dessus du 1er contributeur
+#     ('cellule', (r, c)) -> cellule fixe, quand l etiquette ne suit aucune
+#                            regle relative (Test 3 : unite en H7, libelle F7)
+#     None           -> non applicable
+#
+# Trois semantiques coexistent dans les classeurs officiels, et il faut les
+# distinguer sous peine d etiqueter des bandes n importe comment :
+#   tests 2 et 3 : une grandeur par BLOC, un cas par ligne ;
+#   tests 4 et 6 : une grandeur par LIGNE, pas de cas ;
+#   test 5       : une MATRICE, grandeur en ligne et cas en colonne.
 DISPOSITIONS = {
     2: {
         'fichier': os.path.join('Test2', 'Resultaterfassung_Test2.xlsx'),
@@ -69,9 +85,10 @@ DISPOSITIONS = {
         'lignes': (13, 25),
         'ligne_programmes': 9,
         'ligne_variantes': 10,
-        'ligne_grandeur': 12,
-        'ligne_unite': 13,
-        'meta': {'cas': 1, 'remarque': 2},
+        'libelle': ('bloc', 12),
+        'cas': ('ligne', 1),
+        'unite': ('bloc', 13),
+        'meta': {'remarque': 2},
         'classes': ['1A', '1B', '2A', '2B', '4A', '4B'],
     },
     3: {
@@ -80,10 +97,49 @@ DISPOSITIONS = {
         'lignes': (10, 27),
         'ligne_programmes': 8,
         'ligne_variantes': 10,
-        'ligne_grandeur': 7,
-        'ligne_unite': 7,
-        'meta': {'cas': 1, 'protection_solaire': 2, 'regulation_eclairage': 3},
+        'libelle': ('bloc', 7),
+        'cas': ('ligne', 1),
+        # F7 porte le libelle, H7 l unite : deux colonnes plus loin, sans
+        # regle relative exploitable. On la designe donc explicitement.
+        'unite': ('cellule', (7, 8)),
+        'meta': {'protection_solaire': 2, 'regulation_eclairage': 3},
         'classes': ['2A', '2B', '4A', '4B'],
+    },
+    4: {
+        'fichier': os.path.join('Test4', 'Resultaterfassung Test4.xlsx'),
+        'feuille': u'Zusammenfassung',
+        'lignes': (9, 13),
+        'ligne_programmes': 8,
+        'ligne_variantes': 9,
+        'libelle': ('ligne', 1),
+        'cas': None,
+        'unite': ('ligne', 9),
+        'meta': {},
+        'classes': ['3', '4A', '4B'],
+    },
+    5: {
+        'fichier': os.path.join('Test5', 'Resultaterfassung_Test5.xlsx'),
+        'feuille': u'Zusammenfassung',
+        'lignes': (9, 17),
+        'ligne_programmes': 6,
+        'ligne_variantes': 7,
+        'libelle': ('ligne', 1),
+        'cas': ('contributeur', 8),
+        'unite': ('ligne', 5),
+        'meta': {},
+        'classes': ['3', '4A', '4B'],
+    },
+    6: {
+        'fichier': os.path.join('Test6', 'Resultaterfassung_Test6.xlsx'),
+        'feuille': u'Zusammenfassung',
+        'lignes': (10, 16),
+        'ligne_programmes': 8,
+        'ligne_variantes': 9,
+        'libelle': ('ligne', 2),
+        'cas': None,
+        'unite': ('ligne', 10),
+        'meta': {},
+        'classes': ['3', '4A', '4B'],
     },
 }
 
@@ -123,6 +179,63 @@ def _colonnes_citees(formule):
         return []
     return [m.group(1)
             for m in _REFERENCE_CELLULE.finditer(formule[formule.find('(') + 1:])]
+
+
+def _colonnes_dune_plage(formule):
+    u"""Développe les plages d'une formule en colonnes individuelles.
+
+    `AVERAGE(E10:H10)` cite E et H ; les contributeurs réels sont E, F, G, H.
+    Ne pas développer ferait échouer le contrôle de cohérence sur les tests
+    dont l'AVERAGE porte sur une plage (4 et 6) et non sur une liste (2, 3).
+
+    Args:
+        formule: Formule Excel.
+
+    Returns:
+        list[str] | None: Colonnes développées, `None` si aucune plage.
+    """
+    if not isinstance(formule, str):
+        return None
+    trouvee = _PLAGE.search(formule)
+    if not trouvee:
+        return None
+    debut = column_index_from_string(trouvee.group(1))
+    fin = column_index_from_string(trouvee.group(3))
+    return [get_column_letter(c) for c in range(min(debut, fin), max(debut, fin) + 1)]
+
+
+def _bornes_de_la_moyenne(feuille_formules, ligne, colonne_moyenne):
+    u"""Trouve les colonnes des bornes en lisant les formules de la ligne.
+
+    Les classeurs ne placent PAS les bornes au même décalage : le Test 2 les
+    met en moyenne+1 et +2, le Test 5 en +4 et +8, avec quatre grandeurs
+    entrelacées. Supposer un décalage donnerait des bornes fausses, et pour le
+    Test 5 la « borne haute » serait en réalité la moyenne d'une autre
+    grandeur.
+
+    On repère donc la borne haute à sa formule `<moyenne>+MAX(` et la borne
+    basse à `<moyenne>-MAX(`, plancher compris.
+
+    Args:
+        feuille_formules: Feuille en mode formules.
+        ligne: Ligne de la bande.
+        colonne_moyenne: Indice de colonne de la moyenne.
+
+    Returns:
+        tuple[int | None, int | None]: Colonnes (haute, basse).
+    """
+    reference = '%s%d' % (get_column_letter(colonne_moyenne), ligne)
+    haut = bas = None
+    for cellule in feuille_formules[ligne]:
+        valeur = cellule.value
+        if not isinstance(valeur, str) or 'MAX' not in valeur.upper():
+            continue
+        compact = valeur.replace(' ', '')
+        if reference + '+MAX(' in compact:
+            haut = cellule.column
+        elif reference + '-MAX(' in compact:
+            bas = cellule.column
+    return haut, bas
 
 
 def _bandes_du_classeur(feuille_formules, plage_lignes):
@@ -192,6 +305,41 @@ def _unite_apres(feuille, ligne, col_libelle, col_moyenne):
     return None
 
 
+def _etiquette(feuille, origine, ligne, col_moyenne, col_bloc,
+               col_contributeur=None):
+    u"""Lit une étiquette selon l'origine déclarée par la disposition.
+
+    Args:
+        feuille: Feuille en mode valeurs.
+        origine: Couple `('ligne'|'bloc'|'colonne', n)`, ou `None`.
+        ligne: Ligne de la bande.
+        col_moyenne: Colonne de la moyenne.
+        col_bloc: Première colonne du bloc de contributeurs.
+        col_contributeur: Colonne du premier contributeur. Le Test 5 y porte
+            le nom du cas -- « Test 5A » surmonte la colonne J, et la moyenne
+            correspondante est en Z, huit colonnes plus loin, sans en-tête.
+
+    Returns:
+        str | None: L'étiquette, élaguée, ou `None`.
+    """
+    if not origine:
+        return None
+    genre, indice = origine
+    if genre == 'ligne':
+        valeur = feuille.cell(row=ligne, column=indice).value
+    elif genre == 'bloc':
+        valeur = feuille.cell(row=indice, column=col_bloc).value
+    elif genre == 'colonne':
+        valeur = feuille.cell(row=indice, column=col_moyenne).value
+    elif genre == 'contributeur' and col_contributeur is not None:
+        valeur = feuille.cell(row=indice, column=col_contributeur).value
+    elif genre == 'cellule':
+        valeur = feuille.cell(row=indice[0], column=indice[1]).value
+    else:
+        return None
+    return valeur.strip() if isinstance(valeur, str) else valeur
+
+
 def extraire(numero_test):
     u"""Extrait et vérifie toutes les bandes d'un test.
 
@@ -218,8 +366,24 @@ def extraire(numero_test):
 
     par_bloc = {}
     for ligne, col_moy in _bandes_du_classeur(sf, plan['lignes']):
-        col_haut, col_bas = col_moy + 1, col_moy + 2
-        lettres = _colonnes_citees(sf.cell(row=ligne, column=col_moy).value)
+        col_haut, col_bas = _bornes_de_la_moyenne(sf, ligne, col_moy)
+        if col_haut is None or col_bas is None:
+            raise ExtractionRefusee(
+                u'ligne %d col %s : bornes introuvables -- aucune formule ne '
+                u'reference cette moyenne avec un MAX'
+                % (ligne, get_column_letter(col_moy)))
+
+        formule_moy = sf.cell(row=ligne, column=col_moy).value
+        citees = (_colonnes_dune_plage(formule_moy)
+                  or _colonnes_citees(formule_moy))
+        # Plage OU liste, Excel ignore les cellules non numeriques dans un
+        # AVERAGE -- typiquement une chaine « ='Daten EnergyPlus'!G11 » laissee
+        # la par le SIA pour signaler un programme qui n a pas livre. Les
+        # contributeurs reels sont donc les cellules NUMERIQUES citees, et
+        # c est exactement ce que la liste du MAX enumere de son cote.
+        lettres = [l for l in citees
+                   if _valeur_numerique(
+                       sv, ligne, column_index_from_string(l)) is not None]
         if not lettres:
             raise ExtractionRefusee(
                 u'ligne %d col %s : contributeurs illisibles'
@@ -262,8 +426,19 @@ def extraire(numero_test):
                     u'ligne %d, %s : classeur %.10f, recalcul %.10f'
                     % (ligne, nom, reference, obtenu))
 
+        col_premier = min(column_index_from_string(l) for l in lettres)
+        col_bloc = col_premier - 1
+        libelle = _etiquette(sv, plan['libelle'], ligne, col_moy, col_bloc,
+                             col_premier)
+        nom_cas = _etiquette(sv, plan['cas'], ligne, col_moy, col_bloc,
+                             col_premier)
+        unite = _etiquette(sv, plan['unite'], ligne, col_moy, col_bloc,
+                           col_premier)
+
         entree = {
             'ligne_classeur': ligne,
+            'colonne_moyenne': get_column_letter(col_moy),
+            'cas': nom_cas if nom_cas else u'(ensemble)',
             'contributeurs': lettres,
             'par_colonne': par_colonne,
             'moyenne': bande.mean,
@@ -275,19 +450,17 @@ def extraire(numero_test):
         for nom_meta, colonne_meta in plan['meta'].items():
             valeur = sv.cell(row=ligne, column=colonne_meta).value
             entree[nom_meta] = valeur.strip() if isinstance(valeur, str) else valeur
-        par_bloc.setdefault(col_moy, []).append(entree)
+        par_bloc.setdefault((libelle, unite), []).append(entree)
 
+    # Regroupement par (libellé, unité) : c'est la grandeur, quelle que soit
+    # la façon dont le classeur la présente -- en bloc de colonnes ou en ligne.
     grandeurs = []
-    for col_moy in sorted(par_bloc):
-        entrees = par_bloc[col_moy]
-        col_libelle = min(column_index_from_string(l)
-                          for l in entrees[0]['contributeurs']) - 1
+    for cle in sorted(par_bloc, key=lambda c: (u'%s' % c[0], u'%s' % c[1])):
+        libelle, unite = cle
         grandeurs.append({
-            'colonne_moyenne': get_column_letter(col_moy),
-            'libelle_de': sv.cell(row=plan['ligne_grandeur'],
-                                  column=col_libelle).value,
-            'unite': _unite_apres(sv, plan['ligne_unite'], col_libelle, col_moy),
-            'cas': entrees,
+            'libelle_de': libelle,
+            'unite': unite,
+            'cas': par_bloc[cle],
         })
 
     return {

@@ -578,9 +578,9 @@ def construire_vues_disponibles(candidat_test1=None, candidat_test7=None,
     except Exception as erreur:  # référentiel absent ou illisible
         avertissements.append(u'Test 1 non chargé : %s' % erreur)
 
-    # Tests 2 et 3 : même moteur, leurs références partagent une forme
-    # « grandeur -> cas ». Un test dont la référence manque est SAUTÉ.
-    for numero in (2, 3):
+    # Tests 2 a 6 : meme moteur, leurs references partagent une forme
+    # « grandeur -> cas ». Un test dont la reference manque est SAUTE.
+    for numero in (2, 3, 4, 5, 6):
         try:
             from engine import sia_bandes_engine as moteur_bandes
             reference = moteur_bandes.charger_reference(numero)

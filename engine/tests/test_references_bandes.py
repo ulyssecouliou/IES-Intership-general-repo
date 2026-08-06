@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Tests des références figées des Tests 2 et 3.
+"""Tests des références figées des Tests 2 à 6.
 
 Ces tests tournent SANS les classeurs SIA (118 Mo, hors dépôt) : ils
 confrontent le JSON figé à lui-même, en recalculant chaque bande depuis les
@@ -47,14 +47,15 @@ def _toutes_les_bandes(reference):
             yield grandeur, cas
 
 
-@pytest.mark.parametrize('numero,nb_grandeurs,nb_bandes', [(2, 2, 8), (3, 1, 12)])
+@pytest.mark.parametrize('numero,nb_grandeurs,nb_bandes',
+                         [(2, 2, 8), (3, 1, 12), (4, 3, 3), (5, 8, 16), (6, 6, 6)])
 def test_le_nombre_de_bandes_est_celui_du_classeur(numero, nb_grandeurs, nb_bandes):
     reference = _charger(numero)
     assert len(reference['grandeurs']) == nb_grandeurs
     assert sum(len(g['cas']) for g in reference['grandeurs']) == nb_bandes
 
 
-@pytest.mark.parametrize('numero', [2, 3])
+@pytest.mark.parametrize('numero', [2, 3, 4, 5, 6])
 def test_chaque_bande_se_recalcule_depuis_ses_contributeurs(numero):
     """Preuve que le JSON n'a pas été édité à la main."""
     reference = _charger(numero)
@@ -100,7 +101,7 @@ def test_les_variantes_de_programme_sont_conservees(test2):
     assert any(v for v in variantes.values()), variantes
 
 
-@pytest.mark.parametrize('numero', [2, 3])
+@pytest.mark.parametrize('numero', [2, 3, 4, 5, 6])
 def test_le_critere_est_annonce_comme_infere(numero):
     """Seul le Test 1 énonce ses critères ; ailleurs c'est une inférence."""
     reference = _charger(numero)
@@ -108,14 +109,14 @@ def test_le_critere_est_annonce_comme_infere(numero):
     assert '4.4' in reference['critere']['origine']
 
 
-@pytest.mark.parametrize('numero', [2, 3])
+@pytest.mark.parametrize('numero', [2, 3, 4, 5, 6])
 def test_les_bornes_encadrent_la_moyenne(numero):
     reference = _charger(numero)
     for _, cas in _toutes_les_bandes(reference):
         assert cas['borne_basse'] <= cas['moyenne'] <= cas['borne_haute']
 
 
-@pytest.mark.parametrize('numero', [2, 3])
+@pytest.mark.parametrize('numero', [2, 3, 4, 5, 6])
 def test_chaque_grandeur_porte_un_libelle_et_une_unite(numero):
     """Un libellé « Testprogramm » ou une unité « Mittelwert » signalerait
     qu'on lit la mauvaise cellule -- erreur déjà commise et corrigée."""

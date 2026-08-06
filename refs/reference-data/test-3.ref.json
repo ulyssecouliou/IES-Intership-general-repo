@@ -20,12 +20,13 @@
   "piege_variantes": "Les colonnes sont des VARIANTES de programme, pas des programmes. Le SIA retient une variante par programme, et pas la même d'un programme à l'autre : le jeu contributeur est lu sur la formule.",
   "grandeurs": [
     {
-      "colonne_moyenne": "O",
       "libelle_de": "Beleuchtungsenergie",
       "unite": "kWh",
       "cas": [
         {
           "ligne_classeur": 11,
+          "colonne_moyenne": "O",
+          "cas": "Test 3 A",
           "contributeurs": [
             "G",
             "J",
@@ -53,12 +54,13 @@
           "borne_basse": 652.603571088023,
           "ecart_max": 12.812256840503323,
           "plancher_a_zero": false,
-          "cas": "Test 3 A",
           "protection_solaire": "SoSchu Typ 1",
           "regulation_eclairage": "BelSteu 1"
         },
         {
           "ligne_classeur": 12,
+          "colonne_moyenne": "O",
+          "cas": "Test 3 B",
           "contributeurs": [
             "G",
             "J",
@@ -86,12 +88,13 @@
           "borne_basse": 982.704,
           "ecart_max": 25.48181981333289,
           "plancher_a_zero": false,
-          "cas": "Test 3 B",
           "protection_solaire": "SoSchu Typ 1",
           "regulation_eclairage": "BelSteu 2"
         },
         {
           "ligne_classeur": 13,
+          "colonne_moyenne": "O",
+          "cas": "Test 3 C",
           "contributeurs": [
             "G",
             "J",
@@ -119,12 +122,13 @@
           "borne_basse": 795.8949502209377,
           "ecart_max": 10.240658728557378,
           "plancher_a_zero": false,
-          "cas": "Test 3 C",
           "protection_solaire": "SoSchu Typ 1",
           "regulation_eclairage": "BelSteu 3"
         },
         {
           "ligne_classeur": 14,
+          "colonne_moyenne": "O",
+          "cas": "Test 3 D",
           "contributeurs": [
             "G",
             "J",
@@ -152,12 +156,13 @@
           "borne_basse": 1081.632,
           "ecart_max": 10.308128066666086,
           "plancher_a_zero": false,
-          "cas": "Test 3 D",
           "protection_solaire": "SoSchu Typ 1",
           "regulation_eclairage": "BelSteu 4"
         },
         {
           "ligne_classeur": 15,
+          "colonne_moyenne": "O",
+          "cas": "Test 3 E",
           "contributeurs": [
             "G",
             "J",
@@ -185,12 +190,13 @@
           "borne_basse": 1131.416803489999,
           "ecart_max": 24.054393020001953,
           "plancher_a_zero": false,
-          "cas": "Test 3 E",
           "protection_solaire": "SoSchu Typ 1",
           "regulation_eclairage": "BelSteu 5"
         },
         {
           "ligne_classeur": 16,
+          "colonne_moyenne": "O",
+          "cas": "Test 3 F",
           "contributeurs": [
             "G",
             "J",
@@ -218,12 +224,13 @@
           "borne_basse": 1150.8189728333336,
           "ecart_max": 33.41805433333275,
           "plancher_a_zero": false,
-          "cas": "Test 3 F",
           "protection_solaire": "SoSchu Typ 1",
           "regulation_eclairage": "BelSteu 6"
         },
         {
           "ligne_classeur": 18,
+          "colonne_moyenne": "O",
+          "cas": "Test 3 G",
           "contributeurs": [
             "G",
             "J",
@@ -251,12 +258,13 @@
           "borne_basse": 355.48506065716333,
           "ecart_max": 91.3455719684755,
           "plancher_a_zero": false,
-          "cas": "Test 3 G",
           "protection_solaire": "SoSchu Typ 2",
           "regulation_eclairage": "BelSteu 1"
         },
         {
           "ligne_classeur": 19,
+          "colonne_moyenne": "O",
+          "cas": "Test 3 H",
           "contributeurs": [
             "G",
             "J",
@@ -284,12 +292,13 @@
           "borne_basse": 558.3923924857443,
           "ecart_max": 73.35428559477862,
           "plancher_a_zero": false,
-          "cas": "Test 3 H",
           "protection_solaire": "SoSchu Typ 2",
           "regulation_eclairage": "BelSteu 3"
         },
         {
           "ligne_classeur": 21,
+          "colonne_moyenne": "O",
+          "cas": "Test 3 I",
           "contributeurs": [
             "G",
             "J",
@@ -323,12 +332,13 @@
           "borne_basse": 339.4049576814276,
           "ecart_max": 91.09306401820442,
           "plancher_a_zero": false,
-          "cas": "Test 3 I",
           "protection_solaire": "SoSchu Typ 3",
           "regulation_eclairage": "BelSteu 1"
         },
         {
           "ligne_classeur": 22,
+          "colonne_moyenne": "O",
+          "cas": "Test 3 J",
           "contributeurs": [
             "G",
             "J",
@@ -362,12 +372,13 @@
           "borne_basse": 545.7155902951588,
           "ecart_max": 73.05863913956011,
           "plancher_a_zero": false,
-          "cas": "Test 3 J",
           "protection_solaire": "SoSchu Typ 3",
           "regulation_eclairage": "BelSteu 3"
         },
         {
           "ligne_classeur": 24,
+          "colonne_moyenne": "O",
+          "cas": "Test 3 K",
           "contributeurs": [
             "G",
             "J",
@@ -395,12 +406,13 @@
           "borne_basse": 373.2540421987469,
           "ecart_max": 31.70680701659535,
           "plancher_a_zero": false,
-          "cas": "Test 3 K",
           "protection_solaire": "SoSchu Typ 4",
           "regulation_eclairage": "BelSteu 1"
         },
         {
           "ligne_classeur": 25,
+          "colonne_moyenne": "O",
+          "cas": "Test 3 L",
           "contributeurs": [
             "G",
             "J",
@@ -428,7 +440,6 @@
           "borne_basse": 572.7189807056783,
           "ecart_max": 25.58757213994295,
           "plancher_a_zero": false,
-          "cas": "Test 3 L",
           "protection_solaire": "SoSchu Typ 4",
           "regulation_eclairage": "BelSteu 3"
         }

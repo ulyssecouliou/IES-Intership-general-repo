@@ -115,11 +115,16 @@ def test_la_subsomption_ne_marche_pas_a_lenvers():
     assert lignes['1B']['tests_manquants'] == ['2']
 
 
-def test_cinq_classes_ont_desormais_tous_leurs_tests():
-    """Etat reel du depot : 1A, 1B, 2A, 2B et 5 sont completement couvertes.
-    Elles restent grises faute de simulation, pas faute de tests."""
+def test_les_huit_classes_ont_tous_leurs_tests_couverts():
+    """Etat reel du depot depuis que les sept tests ont leurs references.
+
+    Les huit classes sont completement couvertes ; elles restent GRISES faute
+    de simulation VE, plus faute de tests. C est un changement de nature : le
+    rapport ne dit plus « il manque des tests » mais « il manque des
+    resultats »."""
     from ui import dialog_tkinter as dlg
-    vues, _ = dlg.construire_vues_disponibles()
-    completes = [l['classe'] for l in vue.construire_synthese_classes(vues)
-                 if not l['tests_manquants']]
-    assert completes == ['1A', '1B', '2A', '2B', '5']
+    lignes = vue.construire_synthese_classes(dlg.construire_vues_disponibles()[0])
+    assert [l['classe'] for l in lignes if not l['tests_manquants']] == [
+        '1A', '1B', '2A', '2B', '3', '4A', '4B', '5']
+    # ...et aucune n est verte, faute de candidat.
+    assert all(l['couleur'] == 'gris' for l in lignes)

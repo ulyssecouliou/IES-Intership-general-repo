@@ -1,0 +1,154 @@
+{
+  "test": 4,
+  "classes_concernees": [
+    "3",
+    "4A",
+    "4B"
+  ],
+  "statut": "FIGÉ — bandes recalculées et confrontées au classeur",
+  "date_extraction": "2026-08-06",
+  "source": {
+    "fichier": "SIA_4010_geteilter_Link/Test4/Resultaterfassung Test4.xlsx",
+    "feuille": "Zusammenfassung"
+  },
+  "critere": {
+    "formule": "moyenne ± MAX(ABS(programme − moyenne)), bornes incluses",
+    "statut": "INFERE",
+    "origine": "SIA 4010:2023 §4.4 délègue la comparaison au classeur ; seul le Test 1 énonce ses critères dans sa spécification."
+  },
+  "piege_variantes": "Les colonnes sont des VARIANTES de programme, pas des programmes. Le SIA retient une variante par programme, et pas la même d'un programme à l'autre : le jeu contributeur est lu sur la formule.",
+  "grandeurs": [
+    {
+      "libelle_de": "Energiebedarf Ventilatoren",
+      "unite": "kWh",
+      "cas": [
+        {
+          "ligne_classeur": 10,
+          "colonne_moyenne": "T",
+          "cas": "(ensemble)",
+          "contributeurs": [
+            "E",
+            "F",
+            "G",
+            "H"
+          ],
+          "par_colonne": {
+            "E": {
+              "valeur": 916.8102027009992,
+              "programme": "IDA ICE",
+              "variante": "5 Beta 22"
+            },
+            "F": {
+              "valeur": 812.1964862713943,
+              "programme": "Excel",
+              "variante": "-"
+            },
+            "G": {
+              "valeur": 900.4523358964786,
+              "programme": "Energy+/OperStudio",
+              "variante": "9.1.0"
+            },
+            "H": {
+              "valeur": 688.4581185599953,
+              "programme": "EDSL-Tas",
+              "variante": "-"
+            }
+          },
+          "moyenne": 829.4792858572168,
+          "borne_haute": 970.5004531544383,
+          "borne_basse": 688.4581185599953,
+          "ecart_max": 141.0211672972215,
+          "plancher_a_zero": false
+        }
+      ]
+    },
+    {
+      "libelle_de": "Wärmeabfuhr Luftkühler total",
+      "unite": "kWh",
+      "cas": [
+        {
+          "ligne_classeur": 12,
+          "colonne_moyenne": "T",
+          "cas": "(ensemble)",
+          "contributeurs": [
+            "E",
+            "F",
+            "G",
+            "H"
+          ],
+          "par_colonne": {
+            "E": {
+              "valeur": 1379.495250873919,
+              "programme": "IDA ICE",
+              "variante": "5 Beta 22"
+            },
+            "F": {
+              "valeur": 1322.8908563221523,
+              "programme": "Excel",
+              "variante": "-"
+            },
+            "G": {
+              "valeur": 1287.652,
+              "programme": "Energy+/OperStudio",
+              "variante": "9.1.0"
+            },
+            "H": {
+              "valeur": 1385.2813251999999,
+              "programme": "EDSL-Tas",
+              "variante": "-"
+            }
+          },
+          "moyenne": 1343.8298580990179,
+          "borne_haute": 1400.0077161980357,
+          "borne_basse": 1287.652,
+          "ecart_max": 56.17785809901784,
+          "plancher_a_zero": false
+        }
+      ]
+    },
+    {
+      "libelle_de": "Wärmezufuhr Lufterwärmer",
+      "unite": "kWh",
+      "cas": [
+        {
+          "ligne_classeur": 11,
+          "colonne_moyenne": "T",
+          "cas": "(ensemble)",
+          "contributeurs": [
+            "E",
+            "F",
+            "G",
+            "H"
+          ],
+          "par_colonne": {
+            "E": {
+              "valeur": 3151.539517605067,
+              "programme": "IDA ICE",
+              "variante": "5 Beta 22"
+            },
+            "F": {
+              "valeur": 3142.10484864566,
+              "programme": "Excel",
+              "variante": "-"
+            },
+            "G": {
+              "valeur": 2442.4255267778894,
+              "programme": "Energy+/OperStudio",
+              "variante": "9.1.0"
+            },
+            "H": {
+              "valeur": 2652.9265163999985,
+              "programme": "EDSL-Tas",
+              "variante": "-"
+            }
+          },
+          "moyenne": 2847.249102357154,
+          "borne_haute": 3252.072677936418,
+          "borne_basse": 2442.4255267778894,
+          "ecart_max": 404.82357557926434,
+          "plancher_a_zero": false
+        }
+      ]
+    }
+  ]
+}

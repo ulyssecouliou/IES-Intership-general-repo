@@ -22,12 +22,13 @@
   "piege_variantes": "Les colonnes sont des VARIANTES de programme, pas des programmes. Le SIA retient une variante par programme, et pas la même d'un programme à l'autre : le jeu contributeur est lu sur la formule.",
   "grandeurs": [
     {
-      "colonne_moyenne": "M",
-      "libelle_de": "Jahresenergie solarer Wärmeeintrag ",
+      "libelle_de": "Jahresenergie solarer Wärmeeintrag",
       "unite": "kWh",
       "cas": [
         {
           "ligne_classeur": 14,
+          "colonne_moyenne": "M",
+          "cas": "Test 2 A",
           "contributeurs": [
             "E",
             "H",
@@ -61,11 +62,12 @@
           "borne_basse": 895.5315054430898,
           "ecart_max": 153.3906172090119,
           "plancher_a_zero": false,
-          "cas": "Test 2 A",
           "remarque": "Stoffmarkise"
         },
         {
           "ligne_classeur": 15,
+          "colonne_moyenne": "M",
+          "cas": "Test 2 B",
           "contributeurs": [
             "E",
             "H",
@@ -93,11 +95,12 @@
           "borne_basse": 1167.291979161241,
           "ecart_max": 355.5129105549604,
           "plancher_a_zero": false,
-          "cas": "Test 2 B",
           "remarque": "SoSchu Typ 1"
         },
         {
           "ligne_classeur": 16,
+          "colonne_moyenne": "M",
+          "cas": "Test 2 C",
           "contributeurs": [
             "E",
             "H",
@@ -125,11 +128,12 @@
           "borne_basse": 1228.9588425814982,
           "ecart_max": 342.8489007781934,
           "plancher_a_zero": false,
-          "cas": "Test 2 C",
           "remarque": "SoSchu Typ 2"
         },
         {
           "ligne_classeur": 17,
+          "colonne_moyenne": "M",
+          "cas": "Test 2 D",
           "contributeurs": [
             "E",
             "H",
@@ -157,18 +161,18 @@
           "borne_basse": 1723.0860123440416,
           "ecart_max": 214.96001002472622,
           "plancher_a_zero": false,
-          "cas": "Test 2 D",
           "remarque": "SoSchu Typ 3"
         }
       ]
     },
     {
-      "colonne_moyenne": "Z",
       "libelle_de": "Jahresenergie total transmittierte Solarstrahlung",
       "unite": "kWh",
       "cas": [
         {
           "ligne_classeur": 14,
+          "colonne_moyenne": "Z",
+          "cas": "Test 2 A",
           "contributeurs": [
             "R",
             "U",
@@ -196,11 +200,12 @@
           "borne_basse": 836.3697281812811,
           "ecart_max": 78.227705214303,
           "plancher_a_zero": false,
-          "cas": "Test 2 A",
           "remarque": "Stoffmarkise"
         },
         {
           "ligne_classeur": 15,
+          "colonne_moyenne": "Z",
+          "cas": "Test 2 B",
           "contributeurs": [
             "R",
             "U",
@@ -228,11 +233,12 @@
           "borne_basse": 1088.2344525049311,
           "ecart_max": 187.19037170424667,
           "plancher_a_zero": false,
-          "cas": "Test 2 B",
           "remarque": "SoSchu Typ 1"
         },
         {
           "ligne_classeur": 16,
+          "colonne_moyenne": "Z",
+          "cas": "Test 2 C",
           "contributeurs": [
             "R",
             "U",
@@ -260,11 +266,12 @@
           "borne_basse": 1143.7475361764045,
           "ecart_max": 174.13451437176263,
           "plancher_a_zero": false,
-          "cas": "Test 2 C",
           "remarque": "SoSchu Typ 2"
         },
         {
           "ligne_classeur": 17,
+          "colonne_moyenne": "Z",
+          "cas": "Test 2 D",
           "contributeurs": [
             "R",
             "U",
@@ -292,7 +299,6 @@
           "borne_basse": 1565.1484770537986,
           "ecart_max": 60.75683804052028,
           "plancher_a_zero": false,
-          "cas": "Test 2 D",
           "remarque": "SoSchu Typ 3"
         }
       ]

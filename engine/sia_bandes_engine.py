@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Generic SIA 4010 engine for references shaped as quantity -> case.
 
-Tests 2 and 3 share one reference shape: a handful of quantities, each carrying
+Tests 2 to 6 share one reference shape: a handful of quantities, each carrying
 several cases, each case holding one band. Test 7's references are a flat list
 instead, so it keeps `engine/test7_engine.py` -- normalising the two would mean
 rewriting a module that is already frozen, tested and committed, for no gain.
@@ -41,8 +41,11 @@ from engine import scatter_band
 _ICI = os.path.dirname(os.path.abspath(__file__))
 _RACINE = os.path.abspath(os.path.join(_ICI, os.pardir))
 
-#: Tests dont les references ont cette forme.
-TESTS_SUPPORTES = (2, 3)
+#: Tests dont les references ont cette forme. Les cinq classeurs presentent
+#: pourtant trois dispositions differentes -- grandeur en bloc et cas en
+#: ligne (2, 3), grandeur en ligne sans cas (4, 6), matrice grandeur x cas
+#: (5) -- mais scripts/build_sia_reference.py les normalise a l extraction.
+TESTS_SUPPORTES = (2, 3, 4, 5, 6)
 
 TOLERANCE_DEFAUT = 1e-6
 

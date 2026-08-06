@@ -1,0 +1,280 @@
+{
+  "test": 6,
+  "classes_concernees": [
+    "3",
+    "4A",
+    "4B"
+  ],
+  "statut": "FIGÉ — bandes recalculées et confrontées au classeur",
+  "date_extraction": "2026-08-06",
+  "source": {
+    "fichier": "SIA_4010_geteilter_Link/Test6/Resultaterfassung_Test6.xlsx",
+    "feuille": "Zusammenfassung"
+  },
+  "critere": {
+    "formule": "moyenne ± MAX(ABS(programme − moyenne)), bornes incluses",
+    "statut": "INFERE",
+    "origine": "SIA 4010:2023 §4.4 délègue la comparaison au classeur ; seul le Test 1 énonce ses critères dans sa spécification."
+  },
+  "piege_variantes": "Les colonnes sont des VARIANTES de programme, pas des programmes. Le SIA retient une variante par programme, et pas la même d'un programme à l'autre : le jeu contributeur est lu sur la formule.",
+  "grandeurs": [
+    {
+      "libelle_de": "Energiebedarf Ventilatoren",
+      "unite": "kWh",
+      "cas": [
+        {
+          "ligne_classeur": 10,
+          "colonne_moyenne": "K",
+          "cas": "(ensemble)",
+          "contributeurs": [
+            "F",
+            "G",
+            "H",
+            "I"
+          ],
+          "par_colonne": {
+            "F": {
+              "valeur": 3872.361337081965,
+              "programme": "IDA ICE",
+              "variante": 4.99
+            },
+            "G": {
+              "valeur": 3320.8070975791807,
+              "programme": "Excel",
+              "variante": "-"
+            },
+            "H": {
+              "valeur": 3894.2694697204574,
+              "programme": "Energy+/OpenStudio",
+              "variante": "9.1.0"
+            },
+            "I": {
+              "valeur": 4327.18349200011,
+              "programme": "EDSL Tas",
+              "variante": "9.5.4"
+            }
+          },
+          "moyenne": 3853.6553490954284,
+          "borne_haute": 4386.503600611676,
+          "borne_basse": 3320.8070975791807,
+          "ecart_max": 532.8482515162477,
+          "plancher_a_zero": false
+        }
+      ]
+    },
+    {
+      "libelle_de": "Hilfsenergie WRG",
+      "unite": "kWh",
+      "cas": [
+        {
+          "ligne_classeur": 15,
+          "colonne_moyenne": "K",
+          "cas": "(ensemble)",
+          "contributeurs": [
+            "F",
+            "G",
+            "H",
+            "I"
+          ],
+          "par_colonne": {
+            "F": {
+              "valeur": 190.4322012400168,
+              "programme": "IDA ICE",
+              "variante": 4.99
+            },
+            "G": {
+              "valeur": 178.39509965924697,
+              "programme": "Excel",
+              "variante": "-"
+            },
+            "H": {
+              "valeur": 173.87324833231673,
+              "programme": "Energy+/OpenStudio",
+              "variante": "9.1.0"
+            },
+            "I": {
+              "valeur": 279.16033116999944,
+              "programme": "EDSL Tas",
+              "variante": "9.5.4"
+            }
+          },
+          "moyenne": 205.465220100395,
+          "borne_haute": 279.16033116999944,
+          "borne_basse": 131.77010903079054,
+          "ecart_max": 73.69511106960445,
+          "plancher_a_zero": false
+        }
+      ]
+    },
+    {
+      "libelle_de": "Wärmeabfuhr Luftkühler total",
+      "unite": "kWh",
+      "cas": [
+        {
+          "ligne_classeur": 12,
+          "colonne_moyenne": "K",
+          "cas": "(ensemble)",
+          "contributeurs": [
+            "F",
+            "G",
+            "H",
+            "I"
+          ],
+          "par_colonne": {
+            "F": {
+              "valeur": 3167.0277421594647,
+              "programme": "IDA ICE",
+              "variante": 4.99
+            },
+            "G": {
+              "valeur": 3707.669693678622,
+              "programme": "Excel",
+              "variante": "-"
+            },
+            "H": {
+              "valeur": 2811.342,
+              "programme": "Energy+/OpenStudio",
+              "variante": "9.1.0"
+            },
+            "I": {
+              "valeur": 4790.54179492,
+              "programme": "EDSL Tas",
+              "variante": "9.5.4"
+            }
+          },
+          "moyenne": 3619.145307689522,
+          "borne_haute": 4790.54179492,
+          "borne_basse": 2447.7488204590436,
+          "ecart_max": 1171.3964872304782,
+          "plancher_a_zero": false
+        }
+      ]
+    },
+    {
+      "libelle_de": "Wärmeabfuhr WRG",
+      "unite": "kWh",
+      "cas": [
+        {
+          "ligne_classeur": 14,
+          "colonne_moyenne": "K",
+          "cas": "(ensemble)",
+          "contributeurs": [
+            "F",
+            "G",
+            "H",
+            "I"
+          ],
+          "par_colonne": {
+            "F": {
+              "valeur": -168.14930871699994,
+              "programme": "IDA ICE",
+              "variante": 4.99
+            },
+            "G": {
+              "valeur": -221.76556600670938,
+              "programme": "Excel",
+              "variante": "-"
+            },
+            "H": {
+              "valeur": -166.581,
+              "programme": "Energy+/OpenStudio",
+              "variante": "9.1.0"
+            },
+            "I": {
+              "valeur": -332.37049466196004,
+              "programme": "EDSL Tas",
+              "variante": "9.5.4"
+            }
+          },
+          "moyenne": -222.21659234641734,
+          "borne_haute": -112.06269003087465,
+          "borne_basse": -332.37049466196004,
+          "ecart_max": 110.1539023155427,
+          "plancher_a_zero": false
+        }
+      ]
+    },
+    {
+      "libelle_de": "Wärmezufuhr Lufterwärmer",
+      "unite": "kWh",
+      "cas": [
+        {
+          "ligne_classeur": 11,
+          "colonne_moyenne": "K",
+          "cas": "(ensemble)",
+          "contributeurs": [
+            "F",
+            "G",
+            "I"
+          ],
+          "par_colonne": {
+            "F": {
+              "valeur": 1397.5895575650345,
+              "programme": "IDA ICE",
+              "variante": 4.99
+            },
+            "G": {
+              "valeur": 1879.7830184253917,
+              "programme": "Excel",
+              "variante": "-"
+            },
+            "I": {
+              "valeur": 2089.4294032999987,
+              "programme": "EDSL Tas",
+              "variante": "9.5.4"
+            }
+          },
+          "moyenne": 1788.9339930968083,
+          "borne_haute": 2180.2784286285823,
+          "borne_basse": 1397.5895575650345,
+          "ecart_max": 391.3444355317738,
+          "plancher_a_zero": false
+        }
+      ]
+    },
+    {
+      "libelle_de": "Wärmezufuhr WRG",
+      "unite": "kWh",
+      "cas": [
+        {
+          "ligne_classeur": 13,
+          "colonne_moyenne": "K",
+          "cas": "(ensemble)",
+          "contributeurs": [
+            "F",
+            "G",
+            "H",
+            "I"
+          ],
+          "par_colonne": {
+            "F": {
+              "valeur": 28356.383122322262,
+              "programme": "IDA ICE",
+              "variante": 4.99
+            },
+            "G": {
+              "valeur": 28647.64157430972,
+              "programme": "Excel",
+              "variante": "-"
+            },
+            "H": {
+              "valeur": 27315.566239231084,
+              "programme": "Energy+/OpenStudio",
+              "variante": "9.1.0"
+            },
+            "I": {
+              "valeur": 28925.65031760024,
+              "programme": "EDSL Tas",
+              "variante": "9.5.4"
+            }
+          },
+          "moyenne": 28311.310313365826,
+          "borne_haute": 29307.054387500568,
+          "borne_basse": 27315.566239231084,
+          "ecart_max": 995.7440741347418,
+          "plancher_a_zero": false
+        }
+      ]
+    }
+  ]
+}
