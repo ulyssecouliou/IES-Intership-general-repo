@@ -1072,6 +1072,92 @@ SIA4010_TEST_ALIAS_LABELS = {
     "test_7": "Test 7",
 }
 
+# =============================================================================
+# TEST VARIANTS -- DERIVED, not a second source of truth
+# =============================================================================
+# SIA4010_TEST_ALIAS_TO_BASE_TEST already records which aliases belong to which
+# base test. Restating that mapping by hand would create two places to update
+# and one to forget, so this structure is COMPUTED from it.
+#
+# Reading: SIA 4010:2023, table 63 distinguishes "Test 2A" from "Test 2" and
+# "Tests 3A to 3F" from "Test 3". Those are the variants; every other test has
+# exactly one.
+SIA4010_TEST_VARIANTS = {
+    base_test: tuple(
+        alias
+        for alias in SIA4010_TEST_ALIAS_ORDER
+        if SIA4010_TEST_ALIAS_TO_BASE_TEST[alias] == base_test
+    )
+    for base_test in sorted(set(SIA4010_TEST_ALIAS_TO_BASE_TEST.values()))
+}
+
+# Base tests that actually carry more than one variant. Useful to avoid
+# iterating over the seven tests when only two behave differently.
+SIA4010_TESTS_WITH_VARIANTS = tuple(
+    base_test
+    for base_test, variants in sorted(SIA4010_TEST_VARIANTS.items())
+    if len(variants) > 1
+)
+
+# =============================================================================
+# TOLERANCES -- ONLY WHAT THE STANDARDS ACTUALLY STATE
+# =============================================================================
+# READ THIS BEFORE ADDING A KEY.
+#
+# SIA 4010:2023 defines NO generic numeric acceptance criterion. Searching the
+# seven test specifications for "kriterium|streubereich|abweichung|toleranz"
+# returns hits in Test 1 ONLY, and what Test 1 states is not a fixed tolerance:
+#
+#     "Resultate fuer den Test 1E muessen im Streubereich der enthaltenen
+#      Referenzprogramme liegen"
+#
+# The acceptance band is DERIVED from the reference programs themselves --
+# mean +/- max|program - mean| -- and therefore differs for every quantity.
+# It cannot be expressed as a constant here, and any constant that looked like
+# one (a "max temperature error", say) would be an invented normative value.
+#
+# Keys whose value is None are documented absences, not placeholders to fill.
+SIA4010_TOLERANCES = {
+    # --- Actually stated in the standards -------------------------------
+    # SIA 380/2:2022, 3.2.4.3 -- summer overheating, new buildings.
+    "overheating_hours_cooling_required": 100,
+    "overheating_hours_unit": "h/a",
+    # SIA 380/2:2022, 3.2.4.5 -- same criterion, existing buildings.
+    "overheating_hours_cooling_required_existing": 400,
+    # SIA 380/2:2022, figure 1 -- gap between a setpoint and its comfort
+    # limit, measured on the vector drawing of the published figure (both
+    # sides, 0.700 K). RESERVE: 5.2.2.2 defines this quantity by reference to
+    # SN EN 15316-2:2017, which is not in our possession; we therefore know
+    # what the figure DRAWS, not whether 0.7 K is the general prescription.
+    "delta_theta_ctr_k": 0.7,
+    "delta_theta_ctr_is_verified": False,
+    # --- Documented absences -- do NOT invent values here ----------------
+    # There is no such thing in SIA 4010. The criterion is the reference-
+    # program band, computed per quantity from the official workbook.
+    "max_temperature_error": None,
+    "max_energy_error_percent": None,
+    "max_power_error_percent": None,
+}
+
+# How the real acceptance criterion is obtained, since it is not a constant.
+SIA4010_ACCEPTANCE_CRITERION = {
+    "form": "mean +/- max(abs(program - mean)) over the contributing programs",
+    "bounds_inclusive": True,
+    "source": (
+        "Formulas read verbatim from the official evaluation workbooks "
+        "(Resultaterfassung_TestN.xlsx), columns Mittelwert / Obere Grenze / "
+        "Untere Grenze."
+    ),
+    "authority": (
+        "SIA 4010:2023, 4.4 delegates the comparison with reference results to "
+        "the evaluation workbook. Only Test 1 states its criteria in its own "
+        "specification; for the others the criterion is INFERRED and must be "
+        "confirmed by the sub-commission (SIA 4010, 4.6.2)."
+    ),
+    "contributing_set_varies_per_quantity": True,
+    "zero_floor_is_per_row": True,
+}
+
 SIA4010_PREVALIDATION_STATUSES = {
     "pass": "PDF_PRECHECK_PASS",
     "partial": "PDF_PRECHECK_PARTIAL",

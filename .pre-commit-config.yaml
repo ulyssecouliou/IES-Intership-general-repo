@@ -1,0 +1,49 @@
+# Hooks de pré-commit du navigateur SIA.
+#
+# Portée volontairement limitée à `core/`, `schemas/` et `tests/` : `swiss_sia`
+# est un existant de plusieurs milliers de lignes jamais formaté ni typé, et
+# l'y soumettre d'un coup produirait un diff illisible qui noierait les vraies
+# modifications. Les nouveaux paquets, eux, sont tenus dès le premier jour.
+#
+# Installation :
+#     pip install pre-commit && pre-commit install
+# Passage manuel sur tout le dépôt :
+#     pre-commit run --all-files
+
+repos:
+  - repo: https://github.com/psf/black
+    rev: 23.10.1
+    hooks:
+      - id: black
+        args: ["--line-length=90"]
+        files: ^(core|schemas|tests|examples)/
+
+  - repo: https://github.com/PyCQA/flake8
+    rev: 6.1.0
+    hooks:
+      - id: flake8
+        args: ["--max-line-length=90", "--extend-ignore=E203,W503"]
+        files: ^(core|schemas|tests|examples)/
+
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.5.1
+    hooks:
+      - id: mypy
+        args: ["--strict", "--show-error-codes"]
+        files: ^(core|schemas)/
+        additional_dependencies:
+          - pydantic>=2.5.0
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+        files: ^(core|schemas|tests|examples)/
+      - id: end-of-file-fixer
+        files: ^(core|schemas|tests|examples)/
+      - id: check-yaml
+      - id: check-toml
+      # Les classeurs SIA officiels pèsent jusqu'à 30 Mo et n'ont rien à faire
+      # dans l'historique git : ils sont non redistribuables et font foi.
+      - id: check-added-large-files
+        args: ["--maxkb=2048"]

@@ -256,3 +256,7 @@ VE - Validation for Swiss Building Regs/
 
 # Sorties de simulation a blanc
 outputs/
+
+# Livrables client regeneres a chaque execution : le depot n a pas a les porter.
+reports/*.zip
+reports/*.pdf

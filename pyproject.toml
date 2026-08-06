@@ -1,0 +1,79 @@
+[tool.poetry]
+name = "swiss-sia-navigator"
+version = "0.1.0"
+description = "Validation de la conformité IESVE aux classes SIA 4010 (1A à 5)"
+authors = ["IES — Integrated Environmental Solutions"]
+readme = "README.md"
+packages = [
+    { include = "core" },
+    { include = "schemas" },
+    { include = "swiss_sia" },
+]
+
+# La borne basse vient du Python embarqué de VE 2025, mesuré le 2026-08-06 :
+# 3.12.3. On déclare ^3.10 comme demandé, mais tout code destiné à tourner
+# DANS VE doit rester compatible 3.12 — c'est la seule version qui compte à
+# l'exécution.
+[tool.poetry.dependencies]
+python = "^3.10"
+pydantic = "^2.5.0"
+pandas = "^2.0.0"
+openpyxl = "^3.1.0"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.4.0"
+mypy = "^1.5.0"
+black = "^23.10.0"
+flake8 = "^6.1.0"
+pre-commit = "^3.5.0"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.black]
+line-length = 90
+target-version = ["py310"]
+
+[tool.mypy]
+python_version = "3.10"
+strict = true
+warn_unreachable = true
+show_error_codes = true
+# `swiss_sia` est un existant volumineux (config.py fait ~1780 lignes) qui n'a
+# jamais été typé. Le soumettre à --strict d'un coup produirait des centaines
+# d'erreurs et rendrait mypy inutilisable. Les nouveaux paquets, eux, sont
+# stricts dès le premier jour.
+exclude = ["^swiss_sia/", "^tests/", "^examples/", "^scripts/", "^tmp/"]
+
+[[tool.mypy.overrides]]
+module = ["iesve", "iesve.*"]
+ignore_missing_imports = true
+
+# `exclude` ne suffit pas : mypy SUIT les imports, et `checker_factory` importe
+# les checkers de `swiss_sia`. Sans ce `follow_imports = "skip"`, un contrôle de
+# `core/` remonte 41 erreurs de l'existant non typé et devient inexploitable.
+# Vérifié le 2026-08-06 : avec cette règle, `mypy --strict core schemas` sort
+# à zéro erreur, et les erreurs de `swiss_sia` restent visibles quand on cible
+# explicitement ce paquet.
+[[tool.mypy.overrides]]
+module = ["swiss_sia.*"]
+follow_imports = "skip"
+ignore_errors = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "-q"
+# Nos tests sont des FONCTIONS. Sans cette restriction, pytest tente de
+# collecter les schémas `TestResult` et `TestStatus` — dont le nom commence par
+# « Test » — et émet un PytestCollectionWarning à chaque exécution. Une suite
+# verte qui crache des avertissements finit par ne plus être lue.
+python_classes = ["*TestCase"]
+
+[tool.flake8]
+# flake8 ne lit pas pyproject.toml nativement ; ces valeurs sont reprises dans
+# .flake8 pour être effectives. Conservées ici comme référence unique.
+max-line-length = 90
+extend-ignore = ["E203", "W503"]
+exclude = [".git", "__pycache__", "tmp", "outputs", "reports"]
