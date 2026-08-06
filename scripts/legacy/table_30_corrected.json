@@ -1,0 +1,466 @@
+{
+  "600FF": {
+    "_metadata": {
+      "case_id": "600FF",
+      "table_number": 30,
+      "description": "Free-floating temperature (monthly)",
+      "columns": {
+        "month": "AG",
+        "testprogramm": "AH",
+        "iso_52016_1_2017": "AI",
+        "ida_ice_5_0_beta_23": "AJ",
+        "excel_sia_380_2": "AK",
+        "energyplus_openstudio": "AL",
+        "tas_edsl": "AM"
+      }
+    },
+    "monthly": {
+      "month_01": {
+        "testprogramm_candidate": {
+          "value": null,
+          "unit": "C",
+          "cell": "AH58",
+          "note": "Excel error: #DIV/0!"
+        },
+        "iso_52016_1_2017_reference": {
+          "value": 17.3,
+          "unit": "C",
+          "cell": "AI58"
+        },
+        "ida_ice_5_0_beta_23": {
+          "value": 20.41634001347708,
+          "unit": "C",
+          "cell": "AJ58"
+        },
+        "excel_sia_380_2": {
+          "value": 17.1768849470496,
+          "unit": "C",
+          "cell": "AK58"
+        },
+        "energyplus_openstudio": {
+          "value": 19.278348326925375,
+          "unit": "C",
+          "cell": "AL58"
+        },
+        "tas_edsl": {
+          "value": 17.49634770889488,
+          "unit": "C",
+          "cell": "AM58"
+        }
+      },
+      "month_02": {
+        "testprogramm_candidate": {
+          "value": null,
+          "unit": "C",
+          "cell": "AH59",
+          "note": "Excel error: #DIV/0!"
+        },
+        "iso_52016_1_2017_reference": {
+          "value": 16.7,
+          "unit": "C",
+          "cell": "AI59"
+        },
+        "ida_ice_5_0_beta_23": {
+          "value": 19.564905089552234,
+          "unit": "C",
+          "cell": "AJ59"
+        },
+        "excel_sia_380_2": {
+          "value": 16.820403225697664,
+          "unit": "C",
+          "cell": "AK59"
+        },
+        "energyplus_openstudio": {
+          "value": 18.486744191464535,
+          "unit": "C",
+          "cell": "AL59"
+        },
+        "tas_edsl": {
+          "value": 16.610746268656726,
+          "unit": "C",
+          "cell": "AM59"
+        }
+      },
+      "month_03": {
+        "testprogramm_candidate": {
+          "value": null,
+          "unit": "C",
+          "cell": "AH60",
+          "note": "Excel error: #DIV/0!"
+        },
+        "iso_52016_1_2017_reference": {
+          "value": 22.1,
+          "unit": "C",
+          "cell": "AI60"
+        },
+        "ida_ice_5_0_beta_23": {
+          "value": 23.697406702156368,
+          "unit": "C",
+          "cell": "AJ60"
+        },
+        "excel_sia_380_2": {
+          "value": 22.100438180003867,
+          "unit": "C",
+          "cell": "AK60"
+        },
+        "energyplus_openstudio": {
+          "value": 22.843201807426087,
+          "unit": "C",
+          "cell": "AL60"
+        },
+        "tas_edsl": {
+          "value": 21.172331536388135,
+          "unit": "C",
+          "cell": "AM60"
+        }
+      },
+      "month_04": {
+        "testprogramm_candidate": {
+          "value": null,
+          "unit": "C",
+          "cell": "AH61",
+          "note": "Excel error: #DIV/0!"
+        },
+        "iso_52016_1_2017_reference": {
+          "value": 24.3,
+          "unit": "C",
+          "cell": "AI61"
+        },
+        "ida_ice_5_0_beta_23": {
+          "value": 24.552023955431753,
+          "unit": "C",
+          "cell": "AJ61"
+        },
+        "excel_sia_380_2": {
+          "value": 24.525730103937462,
+          "unit": "C",
+          "cell": "AK61"
+        },
+        "energyplus_openstudio": {
+          "value": 23.77900290682914,
+          "unit": "C",
+          "cell": "AL61"
+        },
+        "tas_edsl": {
+          "value": 23.124373259052888,
+          "unit": "C",
+          "cell": "AM61"
+        }
+      },
+      "month_05": {
+        "testprogramm_candidate": {
+          "value": null,
+          "unit": "C",
+          "cell": "AH62",
+          "note": "Excel error: #DIV/0!"
+        },
+        "iso_52016_1_2017_reference": {
+          "value": 26.7,
+          "unit": "C",
+          "cell": "AI62"
+        },
+        "ida_ice_5_0_beta_23": {
+          "value": 26.77605929919133,
+          "unit": "C",
+          "cell": "AJ62"
+        },
+        "excel_sia_380_2": {
+          "value": 27.19857172094889,
+          "unit": "C",
+          "cell": "AK62"
+        },
+        "energyplus_openstudio": {
+          "value": 26.120929832922055,
+          "unit": "C",
+          "cell": "AL62"
+        },
+        "tas_edsl": {
+          "value": 26.182493261455487,
+          "unit": "C",
+          "cell": "AM62"
+        }
+      },
+      "month_06": {
+        "testprogramm_candidate": {
+          "value": null,
+          "unit": "C",
+          "cell": "AH63",
+          "note": "Excel error: #DIV/0!"
+        },
+        "iso_52016_1_2017_reference": {
+          "value": 29.6,
+          "unit": "C",
+          "cell": "AI63"
+        },
+        "ida_ice_5_0_beta_23": {
+          "value": 29.620318941504177,
+          "unit": "C",
+          "cell": "AJ63"
+        },
+        "excel_sia_380_2": {
+          "value": 30.206729659303544,
+          "unit": "C",
+          "cell": "AK63"
+        },
+        "energyplus_openstudio": {
+          "value": 28.51389743300253,
+          "unit": "C",
+          "cell": "AL63"
+        },
+        "tas_edsl": {
+          "value": 28.790125348189395,
+          "unit": "C",
+          "cell": "AM63"
+        }
+      },
+      "month_07": {
+        "testprogramm_candidate": {
+          "value": null,
+          "unit": "C",
+          "cell": "AH64",
+          "note": "Excel error: #DIV/0!"
+        },
+        "iso_52016_1_2017_reference": {
+          "value": 35,
+          "unit": "C",
+          "cell": "AI64"
+        },
+        "ida_ice_5_0_beta_23": {
+          "value": 34.43314016172506,
+          "unit": "C",
+          "cell": "AJ64"
+        },
+        "excel_sia_380_2": {
+          "value": 35.44908108573119,
+          "unit": "C",
+          "cell": "AK64"
+        },
+        "energyplus_openstudio": {
+          "value": 33.39796104469767,
+          "unit": "C",
+          "cell": "AL64"
+        },
+        "tas_edsl": {
+          "value": 33.72862533692721,
+          "unit": "C",
+          "cell": "AM64"
+        }
+      },
+      "month_08": {
+        "testprogramm_candidate": {
+          "value": null,
+          "unit": "C",
+          "cell": "AH65",
+          "note": "Excel error: #DIV/0!"
+        },
+        "iso_52016_1_2017_reference": {
+          "value": 35.2,
+          "unit": "C",
+          "cell": "AI65"
+        },
+        "ida_ice_5_0_beta_23": {
+          "value": 34.96646900269542,
+          "unit": "C",
+          "cell": "AJ65"
+        },
+        "excel_sia_380_2": {
+          "value": 35.52270071577086,
+          "unit": "C",
+          "cell": "AK65"
+        },
+        "energyplus_openstudio": {
+          "value": 34.291611266752135,
+          "unit": "C",
+          "cell": "AL65"
+        },
+        "tas_edsl": {
+          "value": 34.039204851752004,
+          "unit": "C",
+          "cell": "AM65"
+        }
+      },
+      "month_09": {
+        "testprogramm_candidate": {
+          "value": null,
+          "unit": "C",
+          "cell": "AH66",
+          "note": "Excel error: #DIV/0!"
+        },
+        "iso_52016_1_2017_reference": {
+          "value": 34.6,
+          "unit": "C",
+          "cell": "AI66"
+        },
+        "ida_ice_5_0_beta_23": {
+          "value": 35.37182172701947,
+          "unit": "C",
+          "cell": "AJ66"
+        },
+        "excel_sia_380_2": {
+          "value": 34.58173605817742,
+          "unit": "C",
+          "cell": "AK66"
+        },
+        "energyplus_openstudio": {
+          "value": 33.91837278495549,
+          "unit": "C",
+          "cell": "AL66"
+        },
+        "tas_edsl": {
+          "value": 33.00008356545957,
+          "unit": "C",
+          "cell": "AM66"
+        }
+      },
+      "month_10": {
+        "testprogramm_candidate": {
+          "value": null,
+          "unit": "C",
+          "cell": "AH67",
+          "note": "Excel error: #DIV/0!"
+        },
+        "iso_52016_1_2017_reference": {
+          "value": 29.7,
+          "unit": "C",
+          "cell": "AI67"
+        },
+        "ida_ice_5_0_beta_23": {
+          "value": 31.822252291105144,
+          "unit": "C",
+          "cell": "AJ67"
+        },
+        "excel_sia_380_2": {
+          "value": 29.37162431749886,
+          "unit": "C",
+          "cell": "AK67"
+        },
+        "energyplus_openstudio": {
+          "value": 30.143351555915785,
+          "unit": "C",
+          "cell": "AL67"
+        },
+        "tas_edsl": {
+          "value": 28.803921832884072,
+          "unit": "C",
+          "cell": "AM67"
+        }
+      },
+      "month_11": {
+        "testprogramm_candidate": {
+          "value": null,
+          "unit": "C",
+          "cell": "AH68",
+          "note": "Excel error: #DIV/0!"
+        },
+        "iso_52016_1_2017_reference": {
+          "value": 21.4,
+          "unit": "C",
+          "cell": "AI68"
+        },
+        "ida_ice_5_0_beta_23": {
+          "value": 24.358560348189382,
+          "unit": "C",
+          "cell": "AJ68"
+        },
+        "excel_sia_380_2": {
+          "value": 21.37391040526852,
+          "unit": "C",
+          "cell": "AK68"
+        },
+        "energyplus_openstudio": {
+          "value": 23.18949869330452,
+          "unit": "C",
+          "cell": "AL68"
+        },
+        "tas_edsl": {
+          "value": 21.491573816156,
+          "unit": "C",
+          "cell": "AM68"
+        }
+      },
+      "month_12": {
+        "testprogramm_candidate": {
+          "value": null,
+          "unit": "C",
+          "cell": "AH69",
+          "note": "Excel error: #DIV/0!"
+        },
+        "iso_52016_1_2017_reference": {
+          "value": 17.9,
+          "unit": "C",
+          "cell": "AI69"
+        },
+        "ida_ice_5_0_beta_23": {
+          "value": 21.01176622641509,
+          "unit": "C",
+          "cell": "AJ69"
+        },
+        "excel_sia_380_2": {
+          "value": 17.698815428045776,
+          "unit": "C",
+          "cell": "AK69"
+        },
+        "energyplus_openstudio": {
+          "value": 19.813300929383864,
+          "unit": "C",
+          "cell": "AL69"
+        },
+        "tas_edsl": {
+          "value": 18.11439353099732,
+          "unit": "C",
+          "cell": "AM69"
+        }
+      },
+      "annual": {
+        "testprogramm_candidate": {
+          "value": null,
+          "unit": "C",
+          "cell": "AH70",
+          "note": "Excel error: #DIV/0!"
+        },
+        "iso_52016_1_2017_reference": {
+          "value": 25.875,
+          "unit": "C",
+          "cell": "AI70"
+        },
+        "ida_ice_5_0_beta_23": {
+          "value": 27.21592197987187,
+          "unit": "C",
+          "cell": "AJ70"
+        },
+        "excel_sia_380_2": {
+          "value": 26.002218820619476,
+          "unit": "C",
+          "cell": "AK70"
+        },
+        "energyplus_openstudio": {
+          "value": 26.148018397798268,
+          "unit": "C",
+          "cell": "AL70"
+        },
+        "tas_edsl": {
+          "value": 25.212851693067808,
+          "unit": "C",
+          "cell": "AM70"
+        }
+      }
+    }
+  },
+  "900FF": {
+    "_metadata": {
+      "case_id": "900FF",
+      "table_number": 30,
+      "description": "Free-floating temperature (monthly)",
+      "columns": {
+        "month": "AP",
+        "testprogramm": "AQ",
+        "iso_52016_1_2017": "AR",
+        "ida_ice_5_0_beta_23": "AS",
+        "excel_sia_380_2": "AT",
+        "energyplus_openstudio": "AU",
+        "tas_edsl": "AV"
+      }
+    },
+    "monthly": {}
+  }
+}

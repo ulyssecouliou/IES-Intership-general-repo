@@ -1,0 +1,242 @@
+{
+  "600FF": {
+    "_metadata": {
+      "case_id": "600FF",
+      "table_number": 32,
+      "description": "Annual extremes (Max/Min/Average)",
+      "columns": {
+        "label": "A",
+        "testprogramm": "B",
+        "iso_52016_1_2017": "C",
+        "ida_ice_5_0_beta_23": "D",
+        "excel_sia_380_2": "E",
+        "energyplus_openstudio": "F",
+        "tas_edsl": "G"
+      }
+    },
+    "extremes": {
+      "max": {
+        "label": "Max.",
+        "testprogramm_candidate": {
+          "value": 0,
+          "unit": "C",
+          "cell": "B105",
+          "note": null
+        },
+        "iso_52016_1_2017_reference": {
+          "value": 63.5,
+          "unit": "C",
+          "cell": "C105"
+        },
+        "ida_ice_5_0_beta_23": {
+          "value": 70.95,
+          "unit": "C",
+          "cell": "D105"
+        },
+        "excel_sia_380_2": {
+          "value": 62.317940500454625,
+          "unit": "C",
+          "cell": "E105"
+        },
+        "energyplus_openstudio": {
+          "value": 66.87718451926874,
+          "unit": "C",
+          "cell": "F105"
+        },
+        "tas_edsl": {
+          "value": 65.44,
+          "unit": "C",
+          "cell": "G105"
+        }
+      },
+      "min": {
+        "label": "Min.",
+        "testprogramm_candidate": {
+          "value": 0,
+          "unit": "C",
+          "cell": "B106",
+          "note": null
+        },
+        "iso_52016_1_2017_reference": {
+          "value": -16.9,
+          "unit": "C",
+          "cell": "C106"
+        },
+        "ida_ice_5_0_beta_23": {
+          "value": -16.36,
+          "unit": "C",
+          "cell": "D106"
+        },
+        "excel_sia_380_2": {
+          "value": -18.08987977686063,
+          "unit": "C",
+          "cell": "E106"
+        },
+        "energyplus_openstudio": {
+          "value": -17.435826797198484,
+          "unit": "C",
+          "cell": "F106"
+        },
+        "tas_edsl": {
+          "value": -18.6,
+          "unit": "C",
+          "cell": "G106"
+        }
+      },
+      "average": {
+        "label": "Average",
+        "testprogramm_candidate": {
+          "value": null,
+          "unit": "C",
+          "cell": "B107",
+          "note": "Excel error: #DIV/0!"
+        },
+        "iso_52016_1_2017_reference": {
+          "value": 25.9,
+          "unit": "C",
+          "cell": "C107"
+        },
+        "ida_ice_5_0_beta_23": {
+          "value": 27.253297459246586,
+          "unit": "C",
+          "cell": "D107"
+        },
+        "excel_sia_380_2": {
+          "value": 26.04943609987941,
+          "unit": "C",
+          "cell": "E107"
+        },
+        "energyplus_openstudio": {
+          "value": 26.186759265791316,
+          "unit": "C",
+          "cell": "F107"
+        },
+        "tas_edsl": {
+          "value": 25.25604109589036,
+          "unit": "C",
+          "cell": "G107"
+        }
+      }
+    }
+  },
+  "900FF": {
+    "_metadata": {
+      "case_id": "900FF",
+      "table_number": 32,
+      "description": "Annual extremes (Max/Min/Average)",
+      "columns": {
+        "label": "I",
+        "testprogramm": "J",
+        "iso_52016_1_2017": "K",
+        "ida_ice_5_0_beta_23": "L",
+        "excel_sia_380_2": "M",
+        "energyplus_openstudio": "N",
+        "tas_edsl": "O"
+      }
+    },
+    "extremes": {
+      "max": {
+        "label": "Max.",
+        "testprogramm_candidate": {
+          "value": 0,
+          "unit": "C",
+          "cell": "J105",
+          "note": null
+        },
+        "iso_52016_1_2017_reference": {
+          "value": 44.4,
+          "unit": "C",
+          "cell": "K105"
+        },
+        "ida_ice_5_0_beta_23": {
+          "value": 46.34,
+          "unit": "C",
+          "cell": "L105"
+        },
+        "excel_sia_380_2": {
+          "value": 49.158088374299396,
+          "unit": "C",
+          "cell": "M105"
+        },
+        "energyplus_openstudio": {
+          "value": 43.46916373655551,
+          "unit": "C",
+          "cell": "N105"
+        },
+        "tas_edsl": {
+          "value": 42.93,
+          "unit": "C",
+          "cell": "O105"
+        }
+      },
+      "min": {
+        "label": "Min.",
+        "testprogramm_candidate": {
+          "value": 0,
+          "unit": "C",
+          "cell": "J106",
+          "note": null
+        },
+        "iso_52016_1_2017_reference": {
+          "value": -2.4,
+          "unit": "C",
+          "cell": "K106"
+        },
+        "ida_ice_5_0_beta_23": {
+          "value": -0.9715,
+          "unit": "C",
+          "cell": "L106"
+        },
+        "excel_sia_380_2": {
+          "value": -5.83329198860018,
+          "unit": "C",
+          "cell": "M106"
+        },
+        "energyplus_openstudio": {
+          "value": -2.080431850591758,
+          "unit": "C",
+          "cell": "N106"
+        },
+        "tas_edsl": {
+          "value": -3.87,
+          "unit": "C",
+          "cell": "O106"
+        }
+      },
+      "average": {
+        "label": "Average",
+        "testprogramm_candidate": {
+          "value": null,
+          "unit": "C",
+          "cell": "J107",
+          "note": "Excel error: #DIV/0!"
+        },
+        "iso_52016_1_2017_reference": {
+          "value": 26,
+          "unit": "C",
+          "cell": "K107"
+        },
+        "ida_ice_5_0_beta_23": {
+          "value": 27.47921723972602,
+          "unit": "C",
+          "cell": "L107"
+        },
+        "excel_sia_380_2": {
+          "value": 26.070961599704393,
+          "unit": "C",
+          "cell": "M107"
+        },
+        "energyplus_openstudio": {
+          "value": 26.40910312482948,
+          "unit": "C",
+          "cell": "N107"
+        },
+        "tas_edsl": {
+          "value": 25.331254566210003,
+          "unit": "C",
+          "cell": "O107"
+        }
+      }
+    }
+  }
+}

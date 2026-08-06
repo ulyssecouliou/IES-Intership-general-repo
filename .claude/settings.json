@@ -36,5 +36,19 @@
       "Bash(curl *)",
       "Bash(wget *)"
     ]
-  }
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python \"$CLAUDE_PROJECT_DIR/.claude/hooks/garde_refs.py\""
+          }
+        ]
+      }
+    ]
+  },
+  "$comment": "Permissions du depot swiss_sia + hooks du navigateur SIA 4010. Le hook garde_refs.py bloque toute ecriture directe sous refs/ : ces referentiels sont produits par des scripts qui recalculent et confrontent a la source, les editer a la main romprait la chaine de preuve."
 }

@@ -260,3 +260,12 @@ outputs/
 # Livrables client regeneres a chaque execution : le depot n a pas a les porter.
 reports/*.zip
 reports/*.pdf
+
+# --- repris du depot du navigateur SIA 4010 (fusion 2026-08-06) ---
+ASHRAE 140_2023_D_86892.pdf
+*.py[cod]
+.venv/
+*.bak
+*.bak[0-9]
+*.tmp
+*~

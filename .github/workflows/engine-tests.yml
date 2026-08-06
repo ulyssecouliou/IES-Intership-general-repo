@@ -1,0 +1,60 @@
+name: engine-tests
+
+# Exécute uniquement le moteur de validation pur (engine/), sans IESVE.
+# Doit échouer si engine/tests/ ne contient aucun test collectable, plutôt
+# que de rapporter un CI vert qui masquerait l'absence réelle de tests.
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Vérifier l'absence d'import iesve dans engine/
+        # Le motif porte sur de VRAIES instructions d'import, ancrées en début de
+        # ligne, et seulement dans les .py. La version précédente cherchait la
+        # simple chaîne "import iesve" : elle matchait les docstrings qui
+        # affirment justement le contraire (« aucun import iesve »), ainsi que
+        # les .pyc, et rendait l'étape rouge sur un arbre pourtant conforme.
+        # Elle laissait par ailleurs passer `from iesve import ...`.
+        run: |
+          if grep -rnE --include='*.py' \
+               '^[[:space:]]*(import[[:space:]]+iesve|from[[:space:]]+iesve[[:space:]]+import)\b' \
+               engine/; then
+            echo "engine/ doit rester du Python pur : import iesve interdit."
+            exit 1
+          fi
+
+      - name: Installer les dépendances
+        run: |
+          if [ -f engine/requirements.txt ]; then
+            pip install -r engine/requirements.txt
+          fi
+          if [ -f ui/requirements.txt ]; then
+            pip install -r ui/requirements.txt
+          fi
+          pip install pytest
+
+      - name: Lancer toute la suite
+        # Portée élargie le 2026-08-01. L'étape ne lançait que `engine/tests/`
+        # et laissait 61 tests sur 121 hors CI : les 22 de `ve_adapter/tests/`
+        # (la couche qui produit les nombres) et les 39 de `ui/tests/`.
+        #
+        # Ce qui se dégrade proprement en CI, sans faire échouer :
+        #   - les tests qui exigent les classeurs SIA (118 Mo, hors dépôt) se
+        #     sautent ; l'empreinte `test-1.cells.json` prend le relais ;
+        #   - `ui/tests/test_export_excel_com.py` se saute (pas d'Excel) ;
+        #   - `ui/tests/test_dialog_tkinter.py` se saute si Tk est absent.
+        #
+        # pytest sort en code 5 ("no tests collected") si rien n'est collecté :
+        # c'est un échec voulu, pas un CI vert par défaut.
+        run: pytest -q

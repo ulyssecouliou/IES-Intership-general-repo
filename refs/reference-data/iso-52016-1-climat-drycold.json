@@ -1,0 +1,62 @@
+{
+  "source": {
+    "norme": "EN ISO 52016-1:2017",
+    "element": "données climatiques publiques associées au chapitre 7",
+    "fichier": "ISO_52016_1_BESTEST_ClimData_2016.08.24.xls",
+    "url": "https://standards.iso.org/iso/52016/-1/ed-1/ISO_52016_1_BESTEST_ClimData_2016.08.24.xls",
+    "octets": 1830912,
+    "sha256": "7ffa317609c35cf5b36492aedea9b70e8d9c76a75d7dbb8792446f987360f37e",
+    "telecharge_le": "2026-08-05",
+    "gratuit": true,
+    "auteur_metadonnee_xls": "Thor Endre Lexow, ISO, 2016-08-24",
+    "designee_par": "Spezifikation_Test1.pdf, ligne « Klima »"
+  },
+  "avertissements_du_fichier": [
+    "ATTENTION: The first month is for initialization only; these data are copied from the last month = December",
+    "Climate data: DRYCOLD.TMY (BESTESTS), converted according to draft ISO/FDIS 52010-1, spreadsheet version 2015.09.06"
+  ],
+  "structure": {
+    "lignes_de_donnees": 9504,
+    "heures_initialisation": 744,
+    "heures_annee": 8760,
+    "mois_initialisation": 12,
+    "colonnes": {
+      "0": "hours/calc",
+      "1": "month",
+      "2": "week",
+      "3": "day/week",
+      "4": "hours/week",
+      "5": "theta_e;air [°C]",
+      "6-13": "I_sol [W/m2] sur NV, EV, SV, WV, N45, S45, VOID, H",
+      "14": "v_w [m/s]",
+      "15": "H [g/kg]"
+    }
+  },
+  "agregats_annuels": {
+    "theta_e_air_c": {
+      "min": -24.4,
+      "max": 35.0,
+      "moyenne": 9.7057
+    },
+    "v_w_m_s_moyenne": 4.0042,
+    "irradiation_kwh_m2_an": {
+      "NV": 429.7,
+      "EV": 1150.0,
+      "SV": 1547.1,
+      "WV": 1046.6,
+      "N45": 853.5,
+      "S45": 2239.8,
+      "VOID": 0.0,
+      "H": 1848.5
+    }
+  },
+  "consequence_pour_la_validation": "Le fichier ISO fournit l'irradiance DÉJÀ CALCULÉE sur huit surfaces nommées, sans décomposition global / direct / diffus. Les quatre programmes de référence ont donc été alimentés en irradiance DE SURFACE. Un .epw fournit global / direct / diffus et laisse le modèle de ciel du programme dériver les surfaces : l'entrée n'est pas la même. L'écart de modèle de ciel doit être quantifié AVANT d'interpréter tout écart thermique, sans quoi on attribuerait au moteur thermique de VE une divergence d'origine radiative.",
+  "consequence_initialisation": "Les 744 premières heures sont un mois d'initialisation (décembre recopié). Une simulation VE de 8760 heures partant du 1er janvier ne reproduit donc PAS l'état initial des programmes de référence. L'effet est maximal sur les cas à forte masse (900, 940, 900FF). Le préconditionnement de VE doit être réglé pour refléter ce mois.",
+  "attestation_codex_invalidee": {
+    "fichier": ".codex_tmp/test_checksum_bound_weather_verification_is_preserved/DRYCOLD_TMY_ISO_SOURCE_VERIFICATION.json",
+    "declarait": "{\"status\": \"PASS\", \"source_identity_supported\": true}",
+    "sha256_declare": "95490E30E3CC864D209923DEF3E089F5EF52015742285C79A637340C3F178FDC",
+    "ce_que_cette_empreinte_designe": "un stub de test de 30 octets sur une seule ligne, PAS le fichier réel de 8760 heures (sha256 c33778b4…)",
+    "statut": "ATTESTATION SANS VALEUR — remplacée par le présent fichier"
+  }
+}

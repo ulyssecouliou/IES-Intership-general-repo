@@ -62,7 +62,10 @@ follow_imports = "skip"
 ignore_errors = true
 
 [tool.pytest.ini_options]
-testpaths = ["tests"]
+# Les suites du navigateur SIA 4010 vivent a cote de leur code, pas sous
+# tests/. Sans elles ici, 283 tests ne sont jamais collectes -- et une suite
+# verte qui ignore un tiers du depot est pire qu une suite rouge.
+testpaths = ["tests", "engine/tests", "ve_adapter/tests", "ui/tests"]
 pythonpath = ["."]
 addopts = "-q"
 # Nos tests sont des FONCTIONS. Sans cette restriction, pytest tente de

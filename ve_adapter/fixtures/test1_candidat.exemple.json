@@ -1,0 +1,303 @@
+{
+  "sensible_heating_demand_kwh": {
+    "1E": {
+      "monthly": {
+        "month_01": 541.191,
+        "month_02": 412.311,
+        "month_03": 290.727,
+        "month_04": 209.613,
+        "month_05": 98.146,
+        "month_06": 32.585,
+        "month_07": 13.414,
+        "month_08": 24.458,
+        "month_09": 68.253,
+        "month_10": 186.409,
+        "month_11": 359.69,
+        "month_12": 476.837
+      },
+      "annual": 2713.634
+    },
+    "600": {
+      "monthly": {
+        "month_01": 941.316,
+        "month_02": 807.234,
+        "month_03": 629.477,
+        "month_04": 368.464,
+        "month_05": 174.472,
+        "month_06": 79.446,
+        "month_07": 9.379,
+        "month_08": 18.954,
+        "month_09": 123.882,
+        "month_10": 392.09,
+        "month_11": 608.106,
+        "month_12": 869.204
+      },
+      "annual": 5022.024
+    },
+    "640": {
+      "monthly": {
+        "month_01": 684.463,
+        "month_02": 576.334,
+        "month_03": 380.116,
+        "month_04": 195.12,
+        "month_05": 63.908,
+        "month_06": 27.08,
+        "month_07": 1.059,
+        "month_08": 3.2,
+        "month_09": 44.731,
+        "month_10": 194.476,
+        "month_11": 382.379,
+        "month_12": 611.852
+      },
+      "annual": 3164.719
+    },
+    "900": {
+      "monthly": {
+        "month_01": 441.241,
+        "month_02": 413.208,
+        "month_03": 200.875,
+        "month_04": 109.83,
+        "month_05": 17.362,
+        "month_06": 12.045,
+        "month_07": 0.0,
+        "month_08": 0.0,
+        "month_09": 2.896,
+        "month_10": 52.147,
+        "month_11": 184.834,
+        "month_12": 358.781
+      },
+      "annual": 1793.219
+    },
+    "940": {
+      "monthly": {
+        "month_01": 317.809,
+        "month_02": 293.933,
+        "month_03": 110.778,
+        "month_04": 64.226,
+        "month_05": 4.854,
+        "month_06": 5.995,
+        "month_07": 0.0,
+        "month_08": 0.0,
+        "month_09": 0.38,
+        "month_10": 26.358,
+        "month_11": 108.273,
+        "month_12": 238.515
+      },
+      "annual": 1171.12
+    }
+  },
+  "sensible_cooling_demand_kwh": {
+    "1E": {
+      "monthly": {
+        "month_01": 1.456,
+        "month_02": 5.044,
+        "month_03": 23.93,
+        "month_04": 54.178,
+        "month_05": 101.762,
+        "month_06": 186.461,
+        "month_07": 188.408,
+        "month_08": 195.591,
+        "month_09": 87.275,
+        "month_10": 23.904,
+        "month_11": 8.833,
+        "month_12": 0.751
+      },
+      "annual": 877.594
+    },
+    "600": {
+      "monthly": {
+        "month_01": 640.386,
+        "month_02": 508.962,
+        "month_03": 597.756,
+        "month_04": 443.439,
+        "month_05": 394.188,
+        "month_06": 438.238,
+        "month_07": 671.813,
+        "month_08": 739.493,
+        "month_09": 849.688,
+        "month_10": 886.648,
+        "month_11": 599.936,
+        "month_12": 611.346
+      },
+      "annual": 7381.893
+    },
+    "640": {
+      "monthly": {
+        "month_01": 605.834,
+        "month_02": 478.149,
+        "month_03": 553.91,
+        "month_04": 413.197,
+        "month_05": 372.313,
+        "month_06": 425.844,
+        "month_07": 669.298,
+        "month_08": 734.031,
+        "month_09": 826.625,
+        "month_10": 844.85,
+        "month_11": 565.187,
+        "month_12": 575.87
+      },
+      "annual": 7065.107
+    },
+    "900": {
+      "monthly": {
+        "month_01": 130.777,
+        "month_02": 90.098,
+        "month_03": 139.356,
+        "month_04": 132.34,
+        "month_05": 151.971,
+        "month_06": 260.295,
+        "month_07": 553.659,
+        "month_08": 583.779,
+        "month_09": 572.228,
+        "month_10": 424.791,
+        "month_11": 132.578,
+        "month_12": 98.213
+      },
+      "annual": 3270.085
+    },
+    "940": {
+      "monthly": {
+        "month_01": 102.931,
+        "month_02": 63.519,
+        "month_03": 117.924,
+        "month_04": 124.048,
+        "month_05": 148.793,
+        "month_06": 258.659,
+        "month_07": 553.277,
+        "month_08": 583.41,
+        "month_09": 570.451,
+        "month_10": 416.248,
+        "month_11": 110.828,
+        "month_12": 73.468
+      },
+      "annual": 3123.556
+    }
+  },
+  "operative_temperature_monthly_celsius": {
+    "600": {
+      "monthly": {
+        "month_01": 22.516,
+        "month_02": 22.444,
+        "month_03": 23.17,
+        "month_04": 23.406,
+        "month_05": 24.116,
+        "month_06": 24.917,
+        "month_07": 26.161,
+        "month_08": 25.817,
+        "month_09": 25.018,
+        "month_10": 23.893,
+        "month_11": 22.873,
+        "month_12": 22.586,
+        "annual": 23.91
+      }
+    },
+    "640": {
+      "monthly": {
+        "month_01": 19.667,
+        "month_02": 19.557,
+        "month_03": 20.499,
+        "month_04": 21.457,
+        "month_05": 22.941,
+        "month_06": 24.38,
+        "month_07": 26.102,
+        "month_08": 25.687,
+        "month_09": 24.267,
+        "month_10": 21.854,
+        "month_11": 20.286,
+        "month_12": 19.714,
+        "annual": 22.201
+      }
+    },
+    "900": {
+      "monthly": {
+        "month_01": 22.842,
+        "month_02": 22.612,
+        "month_03": 23.602,
+        "month_04": 24.256,
+        "month_05": 25.087,
+        "month_06": 26.339,
+        "month_07": 27.558,
+        "month_08": 27.584,
+        "month_09": 27.05,
+        "month_10": 25.619,
+        "month_11": 23.454,
+        "month_12": 22.808,
+        "annual": 24.901
+      }
+    },
+    "940": {
+      "monthly": {
+        "month_01": 21.634,
+        "month_02": 21.218,
+        "month_03": 22.712,
+        "month_04": 23.799,
+        "month_05": 24.947,
+        "month_06": 26.291,
+        "month_07": 27.557,
+        "month_08": 27.583,
+        "month_09": 27.036,
+        "month_10": 25.446,
+        "month_11": 22.695,
+        "month_12": 21.617,
+        "annual": 24.378
+      }
+    },
+    "600FF": {
+      "monthly": {
+        "month_01": 18.634,
+        "month_02": 17.937,
+        "month_03": 22.683,
+        "month_04": 24.356,
+        "month_05": 26.896,
+        "month_06": 29.646,
+        "month_07": 34.702,
+        "month_08": 35.104,
+        "month_09": 34.594,
+        "month_10": 30.268,
+        "month_11": 22.663,
+        "month_12": 19.208,
+        "annual": 26.391
+      }
+    },
+    "900FF": {
+      "monthly": {
+        "month_01": 18.988,
+        "month_02": 17.729,
+        "month_03": 22.639,
+        "month_04": 24.763,
+        "month_05": 26.74,
+        "month_06": 29.372,
+        "month_07": 34.666,
+        "month_08": 35.15,
+        "month_09": 34.748,
+        "month_10": 30.919,
+        "month_11": 22.67,
+        "month_12": 19.534,
+        "annual": 26.493
+      }
+    }
+  },
+  "operative_temperature_annual_extremes_celsius": {
+    "600FF": {
+      "extremes": {
+        "max": 65.817,
+        "min": -17.477,
+        "average": 26.129
+      }
+    },
+    "900FF": {
+      "extremes": {
+        "max": 45.259,
+        "min": -3.031,
+        "average": 26.258
+      }
+    }
+  },
+  "_provenance": {
+    "source": "FIXTURE DE DEVELOPPEMENT -- AUCUNE SIMULATION IESVE REELLE",
+    "methode": "moyenne arithmetique des programmes de reference de test-1.ref.json, perturbee (+2% energie, +0.3 degC temperature) pour rester visuellement distincte de la reference",
+    "avertissement": "Ne jamais utiliser ces valeurs pour un verdict de conformite reel. Sert uniquement au developpement UI/moteur sans licence VE (PROJECT_PLAN.md paragraphe 5).",
+    "genere_le": "2026-07-30",
+    "genere_par": "ve-adapter-engineer (mode fixture, sans VE)"
+  }
+}

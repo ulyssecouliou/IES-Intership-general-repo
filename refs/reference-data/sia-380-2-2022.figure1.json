@@ -1,0 +1,187 @@
+{
+  "norme": "SIA 380/2:2022",
+  "element": "figure 1 — Températures ambiantes de consigne pour le chauffage et le refroidissement",
+  "page_imprimee": 27,
+  "statut": "FIGÉ — extrait du dessin vectoriel, résidu < 0,001 °C",
+  "date_extraction": "2026-08-04",
+  "source": {
+    "fichier": "refs/SIA-380-2-2022.pdf",
+    "methode": "PyMuPDF get_drawings(), calibration sur les lignes de grille du cadre (et NON sur les étiquettes de texte, décalées de ~0,8 pt)",
+    "script": "scripts/extract_sia380_2_figure1.py",
+    "residus_max_c": {
+      "limite_inferieure": 0.0008,
+      "limite_superieure": 0.0009,
+      "consigne_chauffage_variable": 0.0009,
+      "consigne_refroidissement_variable": 0.0009,
+      "consigne_chauffage_constante": 0.0009,
+      "consigne_refroidissement_constante": 0.0009
+    }
+  },
+  "axes": {
+    "abscisse": "Température extérieure moyenne glissante sur 48 heures, °C",
+    "abscisse_domaine": [
+      10.0,
+      25.0
+    ],
+    "ordonnee": "Température, °C",
+    "ordonnee_domaine": [
+      20.0,
+      27.0
+    ],
+    "nature_de_la_grandeur": "SIA 380/2 §5.2.2.1 : « Les valeurs de consigne peuvent être fixées pour la température moyenne de l'air intérieur OU pour la température opérative simplifiée. Le choix est à discuter avec le mandant. » → la figure ne tranche pas ; le choix est un paramètre du projet."
+  },
+  "courbes": {
+    "limite_superieure": {
+      "style_dans_la_figure": "trait plein",
+      "sommets": [
+        [
+          10.0,
+          24.5
+        ],
+        [
+          12.0,
+          24.5
+        ],
+        [
+          17.5,
+          26.5
+        ],
+        [
+          25.0,
+          26.5
+        ]
+      ],
+      "pente_segment_croissant": "2,0 K / 5,5 K = 4/11",
+      "origine": "SIA 180:2014 figure 4, courbe supérieure (§5.2.2.5)"
+    },
+    "limite_inferieure": {
+      "style_dans_la_figure": "trait plein",
+      "sommets": [
+        [
+          10.0,
+          20.5
+        ],
+        [
+          19.0,
+          20.5
+        ],
+        [
+          23.5,
+          22.0
+        ],
+        [
+          25.0,
+          22.0
+        ]
+      ],
+      "pente_segment_croissant": "1,5 K / 4,5 K = 1/3",
+      "origine": "SIA 180:2014 figure 4, courbe inférieure (§5.2.2.5)"
+    },
+    "consigne_chauffage_variable": {
+      "symbole": "T_set;H",
+      "style_dans_la_figure": "pointillé",
+      "sommets": [
+        [
+          10.0,
+          21.2
+        ],
+        [
+          12.0,
+          21.2
+        ],
+        [
+          17.5,
+          21.2
+        ],
+        [
+          19.0,
+          21.2
+        ],
+        [
+          23.5,
+          22.7
+        ],
+        [
+          25.0,
+          22.7
+        ]
+      ],
+      "sapplique_si": "régulation AVEC communication (HEAT_EMIS_CTRL_DEF = 3 ou 4 selon SN EN ISO 52120-1:2022 tab. 5) ET l'utilisateur n'a aucune possibilité d'influence — §5.2.2.3"
+    },
+    "consigne_refroidissement_variable": {
+      "symbole": "T_set;C",
+      "style_dans_la_figure": "pointillé",
+      "sommets": [
+        [
+          10.0,
+          23.8
+        ],
+        [
+          12.0,
+          23.8
+        ],
+        [
+          17.5,
+          25.8
+        ],
+        [
+          19.0,
+          25.8
+        ],
+        [
+          23.5,
+          25.8
+        ],
+        [
+          25.0,
+          25.8
+        ]
+      ],
+      "sapplique_si": "idem, CLG_EMIS_CTRL_DEF = 3 ou 4 — §5.2.2.3"
+    },
+    "consigne_chauffage_constante": {
+      "symbole": "T_set;H constante",
+      "style_dans_la_figure": "traits mixtes",
+      "valeur_c": 22.7,
+      "definition_normative": "« valeurs constantes au MAXIMUM de la courbe de la valeur de consigne pour le chauffage » — §5.2.2.3",
+      "sapplique_si": "régulation SANS communication (HEAT_EMIS_CTRL_DEF = 1 ou 2) OU l'utilisateur a une possibilité d'influence — §5.2.2.3"
+    },
+    "consigne_refroidissement_constante": {
+      "symbole": "T_set;C constante",
+      "style_dans_la_figure": "traits mixtes",
+      "valeur_c": 23.8,
+      "definition_normative": "« au MINIMUM de la courbe de la valeur de consigne pour le refroidissement » — §5.2.2.3",
+      "sapplique_si": "CLG_EMIS_CTRL_DEF = 1 ou 2 — §5.2.2.3"
+    }
+  },
+  "ecart_de_regulation": {
+    "symbole": "delta_theta_ctr",
+    "mesure_chauffage_k": 0.7,
+    "mesure_refroidissement_k": 0.7,
+    "definition_normative": "SIA 380/2 §5.2.2.2 : « La différence entre les valeurs de consigne et les limites supérieures et inférieures [...] correspond à l'écart de régulation pour l'émission de chaleur et de froid delta_theta_ctr selon SN EN 15316-2:2017. »",
+    "reserve": "⚠ À VÉRIFIER — 0,7 K est ce que la figure DESSINE. SN EN 15316-2:2017, qui définit la grandeur, n'est pas en notre possession : nous ne savons donc pas si 0,7 K est la valeur générale ou une illustration pour une classe de régulation particulière."
+  },
+  "regle_de_decalage_par_usage": {
+    "citation": "SIA 380/2 §5.2.2.5 : « Sans détermination plus détaillée des conditions de confort, les limites seront décalées suivant la différence entre les valeurs de dimensionnement de l'utilisation correspondante et les utilisations 1.01 à 3.03 selon SIA 2024:2021, tableau 11. »",
+    "forme": "decalage_inferieure_K = theta_h_design(usage) - 21 ; decalage_superieure_K = theta_c_design(usage) - 26",
+    "groupe_de_reference": "1.01 à 3.03, unanimes à 21 °C / 26 °C au tableau 11 — c'est ce qui rend la « différence » scalaire.",
+    "verifie_contre": "les 10 valeurs de décalage énumérées par SIA 4010:2023 §3.1.4 sur 7 usages : 10/10 reproduites (cf. engine/tests/test_setpoint_curves.py)",
+    "la_forme_est_conservee": "« Pour d'autres utilisations, les courbes se déplacent, mais gardent leur forme. » — §5.2.2.5"
+  },
+  "exception_habillement_non_saisonnier": {
+    "citation": "SIA 380/2 §5.2.2.5 et SIA 4010 §3.1.4 : pour les usages où l'habillement ne dépend pas de la température extérieure (salles de gymnastique, salles de fitness, piscines couvertes, vestiaires, douches), les limites sont CONSTANTES — « la courbe [...] prend la forme d'une ligne droite » (SIA 4010 §3.1.4).",
+    "usages_concernes_sia_2024": [
+      "11.01",
+      "11.02",
+      "11.03",
+      "12.08"
+    ],
+    "reserve": "⚠ La correspondance entre les libellés cités et les numéros d'usage est notre lecture ; les normes citent les libellés, pas les numéros. 12.06 « WC, Bad, Dusche » pourrait aussi relever de « douches ». À VÉRIFIER."
+  },
+  "controle_croise_sia_180": {
+    "affirmation_normative": "SIA 380/2 §5.2.2.5 : les limites de la figure 1 « correspondent à celles de SIA 180:2014, figure 4, pour les locaux d'habitation et les bureaux »",
+    "capture_figure_4_recue": "2026-08-04, Yiqiao Yang, SIA",
+    "concordance": "8 valeurs sur 8 — ordonnées 20,5 / 22,0 / 24,5 / 26,5 et ruptures d'abscisse 12 / 17,5 / 19 / 23,5.",
+    "portee": "Deux documents indépendants, accord exact. Les sommets ci-dessus valent donc aussi pour SIA 180:2014 figure 4."
+  }
+}

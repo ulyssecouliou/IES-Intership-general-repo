@@ -160,3 +160,25 @@ The minimum saleable product should add:
 - Cooling EER/SEER and heating SCOP checks by system type and power band.
 - PV evidence and energy balance support.
 - Import/comparison support for official SIA 4010 evaluation workbooks.
+
+## Navigateur de validation SIA 4010
+
+La chaine qui produit les rapports par classe de validation -- l objectif du
+MVP -- vit desormais dans ce depot :
+
+| Couche | Role |
+|---|---|
+| `engine/` | moteurs de validation, Python PUR, sans `iesve` |
+| `ve_adapter/` | extraction depuis IESVE vers JSON normalise |
+| `ui/` | navigateur Tkinter dans VE, exports Excel et PDF |
+| `refs/reference-data/` | valeurs de reference figees, recalculees et confrontees |
+| `traceability/` | matrices clause -> code -> test |
+
+Lancer le controle d installation, hors VE :
+
+```
+python scripts/run_test1_dans_ve.py --preflight
+```
+
+Dans VE, le meme fichier au bouton Run lance la sonde d introspection.
+

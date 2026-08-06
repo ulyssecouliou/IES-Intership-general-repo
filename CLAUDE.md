@@ -31,6 +31,11 @@ Develop a production-quality IESVE/VEScripts workflow for conservative Swiss SIA
 - `swiss_sia/reference_model/`: configuration, geometry, gbXML, VE gateways, asset provisioning, validation, reporting and SIA 4010 hooks.
 - `config/`: source-traced example inputs; examples intentionally fail closed until completed.
 - `schemas/`: machine-readable configuration contracts.
+- `engine/`: SIA 4010 validation engines. PURE Python, no `iesve`, CI-testable.
+- `ve_adapter/`: IESVE extraction into normalised JSON. All `iesve` access lives here.
+- `ui/`: Tkinter navigator inside VE, plus Excel (official SIA workbook) and PDF exports.
+- `refs/reference-data/`: frozen reference values, recomputed and checked against source.
+- `traceability/`: clause -> code -> test matrices, signed by an independent audit.
 - `tests/`: pure-Python regression and API-double tests.
 - `scripts/quality/validate_release.py`: repository release gate.
 - `docs/project/`: architecture, status, risks and handoff records.
@@ -76,3 +81,44 @@ If release validation reports that `pypdf` is missing, use the approved project 
 ## Definition of done
 
 A change is done only when its scoped tests pass, failure paths are conservative, source traceability remains intact, generated artifacts are not misrepresented as certification, documentation is updated when the workflow changes, and remaining real-VE or regulatory-review work is explicit.
+
+## SIA 4010 validation navigator
+
+Merged in on 2026-08-06 from its own repository, with its history. This is the
+MVP deliverable: **reports on the validation classes**. The compliant-model
+builder (`Run_VE_Swiss_Reference_Model.py`) is a bonus, not part of the MVP.
+
+### What the reference data guarantees
+
+Every file under `refs/reference-data/` is produced by a script in `scripts/`
+that extracts, **recomputes and confronts** the values against the official
+source before writing. A `.claude/hooks/garde_refs.py` hook blocks any direct
+write under `refs/`: editing one by hand would break that chain of proof
+without anything signalling it. Fix the extractor, never its output.
+
+### Two facts that trap everyone
+
+- **Only Test 1 states its acceptance criteria.** For every other test the
+  specification is silent; SIA 4010 clause 4.4 delegates the comparison to the
+  evaluation workbook. Those criteria are therefore marked `INFERE` wherever a
+  verdict is produced, and must be confirmed by the sub-commission (4.6.2).
+- **The test climate is not the application climate.** The seven test
+  specifications require `SIA 2028 DRY normal, Zuerich Kloten`. SIA 4010
+  clause 3.1.1 prescribes CH2018 RCP 8.5 "2035" — but for *applying* SIA 380/2
+  in a real project, not for the validation tests. Both live in the same
+  documents.
+
+### Per-test working loop
+
+`norm-analyst` -> `reference-data-engineer` -> `validation-engine-engineer` ->
+`ve-adapter-engineer` -> `ui-engineer` -> `qa-auditor` -> `docs-writer`.
+Nothing is "done" without a traceability matrix signed by `qa-auditor`.
+The `/figer-reference` skill encodes the reference-freezing procedure, with the
+three traps of the SIA workbooks; `/etat-classes` reports class status.
+
+### Style
+
+French for documentation, UI and code comments. English identifiers. German
+**only** for labels that serve as lookup keys against the official SIA
+workbooks -- there it must be verbatim, or the match breaks.
+

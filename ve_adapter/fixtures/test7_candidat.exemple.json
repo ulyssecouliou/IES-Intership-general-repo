@@ -1,0 +1,29 @@
+{
+  "Zugeführte elektrische Energie Kältemaschine": 3968.067,
+  "Total abgeführte Wärme": 24000.315,
+  "Hilfsenergie Kälteerzeugung": 2209.473,
+  "Aus Kälteerzeugung an die Wärmeseite gelieferte W.": 335.106,
+  "Über Rückkühler abgeführte Wärme": 28403.685,
+  "Zugeführte elektrische Energie Wärmepumpe": 8814.9,
+  "Zugeführte Wärme der Wärmeerzeugung, Heizen": 7926.139,
+  "Zugeführte Wärme der Wärmeerzeugung, Warmwasser": 23944.26,
+  "Energie Heizkessel": 44.591,
+  "Hilfsenergie Wärmeerzeugung": 1240.341,
+  "_provenance": {
+    "source": "FIXTURE DE DEVELOPPEMENT -- AUCUNE SIMULATION IESVE REELLE (valeurs = moyenne des programmes de reference test-7.ref.json, perturbee de +1 pourcent)",
+    "grandeurs_extraites": [
+      "Aus Kälteerzeugung an die Wärmeseite gelieferte W.",
+      "Energie Heizkessel",
+      "Hilfsenergie Kälteerzeugung",
+      "Hilfsenergie Wärmeerzeugung",
+      "Total abgeführte Wärme",
+      "Zugeführte Wärme der Wärmeerzeugung, Heizen",
+      "Zugeführte Wärme der Wärmeerzeugung, Warmwasser",
+      "Zugeführte elektrische Energie Kältemaschine",
+      "Zugeführte elektrische Energie Wärmepumpe",
+      "Über Rückkühler abgeführte Wärme"
+    ],
+    "pv_ertrag_disponible": false,
+    "annee_simulation": 2022
+  }
+}
