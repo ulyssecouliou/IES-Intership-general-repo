@@ -653,3 +653,68 @@ La documentation VE 2023 reste donc utilisable pour ces énumérés — le test
 _Défauts 4 et 5 corrigés dans `ve_adapter/test1_adapter.py` ; défaut 6 dans
 `scripts/run_test1_dans_ve.py`. Non signé : la création de constructions doit
 d'abord aboutir dans VE._
+
+---
+
+## DÉFAUT n° 7 — BLOQUANT — Les lanceurs importaient depuis l'ANCIEN dépôt
+
+**Trouvé en usage réel, le 2026-08-06**, au premier lancement de la sonde APS
+dans VE :
+
+```
+ImportError: cannot import name 'sonde_aps' from 'scripts'
+(C:\Users\ulysse.couliou\Documents\SIA_Compliance_Scripts\scripts\__init__.py)
+```
+
+VEScripts garde le **même interpréteur** d'un clic sur Run au suivant :
+`sys.modules` persiste. Le paquet `scripts` de l'ancien dépôt y était en
+cache. `sys.path.insert(0, _RACINE)` n'y change rien — **un module déjà chargé
+n'est jamais rechargé.**
+
+**Le cas visible était le moins grave.** `sonde_aps` n'existe que dans le dépôt
+consolidé, donc l'import a levé. Mais `run_test1_dans_ve` **existe dans les
+deux** : pour `Run_VE_SIA4010_Sonde_Test1.py`, l'import aurait **réussi**, en
+chargeant la version antérieure aux corrections des défauts 4 et 5 — donc en
+rejouant les mêmes échecs d'énumérés, sur du code qu'on croyait corrigé, sans
+le moindre avertissement. C'est le mode de défaillance déjà rencontré au
+défaut n° 6 : rien ne lève, et le résultat paraît valide.
+
+`Run_VE_SIA4010_APS_Probe.py`, écrit avant, connaissait ce piège et purgeait
+`swiss_sia.reference_model`. Cette précaution n'a pas été reprise dans les
+nouveaux lanceurs — elle aurait dû l'être.
+
+**CORRIGÉ** dans les deux lanceurs, en trois temps :
+
+1. purge de `sys.modules` pour `scripts`, `ve_adapter`, `engine`, `ui` et
+   `swiss_sia` — **avant** le premier import du projet, ce qui interdit de
+   placer ce code dans un module du projet (duplication assumée) ;
+2. la racine du dépôt passe **en tête** de `sys.path`, retirée puis
+   réinsérée — `if _RACINE not in sys.path` laissait un autre dépôt devant ;
+3. `scripts/amorcage.py::controler` confronte le `__file__` de chaque module
+   du projet à la racine attendue et **refuse de lancer** (code 2) en nommant
+   le fichier fautif, plutôt que de produire un résultat issu de la mauvaise
+   source.
+
+28 tests dans `engine/tests/test_amorcage.py`, dont la détection du cas
+silencieux et la vérification que la purge précède bien le premier import.
+
+**Portée, mesurée et non supposée.** L'ancien dépôt contient `scripts`,
+`ve_adapter`, `engine` et `ui` — mais **pas** `swiss_sia`. Or les 22 autres
+lanceurs `Run_VE_SIA4010_*.py` n'importent que `swiss_sia`, et le purgent
+déjà. Seuls les deux lanceurs ajoutés le 2026-08-06 importaient les quatre
+paquets en collision :
+
+```
+$ grep -lE "^\s*(from|import) (scripts|ve_adapter|engine|ui)\b" Run_VE_*.py
+Run_VE_SIA4010_Sonde_APS.py
+Run_VE_SIA4010_Sonde_Test1.py
+```
+
+L'exposition était donc limitée à ces deux fichiers, tous deux corrigés. Rien
+à reprendre sur les 22 autres.
+
+**Cause racine non traitée** : l'ancien dépôt `SIA_Compliance_Scripts` est
+toujours sur disque et VE le trouve. La purge rend chaque run sûr, mais ne
+supprime pas la source de confusion, et un futur lanceur qui importerait
+`scripts` sans amorçage retomberait dedans. L'archivage du dépôt A reste à
+décider.

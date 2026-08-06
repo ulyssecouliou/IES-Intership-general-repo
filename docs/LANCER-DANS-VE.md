@@ -31,6 +31,27 @@ La console de VEScripts n'est pas en UTF-8 : les accents y sortent en
 charabia. Les scripts les retirent **à l'affichage seulement**. Les fichiers
 écrits restent en UTF-8 accentué.
 
+## Si un message « ARRET » apparaît
+
+VEScripts garde le **même interpréteur** d'un clic sur Run au suivant :
+`sys.modules` persiste. Un paquet du projet chargé depuis un **autre dépôt**
+y reste en cache et masque celui-ci — même après correction de `sys.path`,
+puisqu'un module déjà chargé n'est jamais rechargé.
+
+C'est arrivé le 2026-08-06 : VE avait en mémoire le `scripts` de l'ancien
+dépôt `SIA_Compliance_Scripts`.
+
+Les deux lanceurs purgent maintenant ce cache avant d'importer quoi que ce
+soit, puis contrôlent la provenance de chaque module du projet. Si un intrus
+subsiste, ils **refusent de tourner** (code 2) et nomment le fichier fautif.
+
+> **Fermer VE et le rouvrir** suffit à purger le cache.
+
+Tant que ce message apparaît, aucun résultat n'est fiable : le code exécuté
+n'est pas celui du dépôt. Le cas dangereux n'est pas celui qui lève — c'est
+celui où le module existe dans les deux dépôts et se charge silencieusement
+dans une version antérieure.
+
 ## Ce qu'il faut me renvoyer
 
 Chaque sonde écrit un rapport sous `outputs/` :
