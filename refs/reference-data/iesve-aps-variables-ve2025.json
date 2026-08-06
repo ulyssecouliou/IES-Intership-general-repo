@@ -1,0 +1,4883 @@
+{
+ "grandeur": "Catalogue des variables de résultats exposées par une VE 2025, relevé dans un .aps réel",
+ "statut": "FIGÉ — introspection runtime, pas une lecture de doc",
+ "source": {
+  "rapport": "sonde_aps.json",
+  "aps": "ZOER_C1.aps",
+  "methode": "Run_VE_SIA4010_Sonde_APS.py, ResultsReader.get_variables() sans argument",
+  "pourquoi": "outputs/ est ignoré par Git : sans ce fichier, les tests qui confrontent chaque nom candidat à la réalité s'ignorent en silence sur un clone neuf."
+ },
+ "nombre": 808,
+ "nombre_brut": 819,
+ "doublons_exacts_ecartes": 11,
+ "par_niveau": {
+  "c": 178,
+  "e": 269,
+  "j": 15,
+  "l": 88,
+  "n": 9,
+  "o": 6,
+  "r": 15,
+  "s": 22,
+  "t": 6,
+  "v": 35,
+  "w": 14,
+  "z": 151
+ },
+ "reserves": [
+  "Catalogue de NOMS, pas de valeurs. Il dit ce que VE sait produire, pas ce que vaut une grandeur.",
+  "Relevé sur UN modèle (ZOER_C1). Un modèle doté d'un réseau ApacheHVAC exposerait vraisemblablement d'autres variables : l'absence d'un nom ici ne prouve pas que VE ne sait pas le produire.",
+  "Plusieurs entrées partagent un même aps_varname avec des display_name ou des units_type différents (ainsi « Ext surface incident solar flux », en Radiation flux et en Heat flow). Le couple (aps_varname, model_level) n'est donc PAS une clé unique.",
+  "Les libellés marqués [obs] sont signalés obsolètes par VE elle-même."
+ ],
+ "variables": [
+  {
+   "aps_varname": "Ideal cooling CE",
+   "display_name": "CoSP rooms cooling CE [obs]",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Ideal dehum. CE",
+   "display_name": "CoSP rooms dehum. CE [obs]",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Ideal heating CE",
+   "display_name": "CoSP rooms heating CE [obs]",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Ideal humid. CE",
+   "display_name": "CoSP rooms humid. CE [obs]",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Ideal mech vent clg CE",
+   "display_name": "CoSP mech vent clg CE [obs]",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Ideal mech vent dehum CE",
+   "display_name": "CoSP mech vent dehum CE [obs]",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Ideal mech vent htg CE",
+   "display_name": "CoSP mech vent htg CE [obs]",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Lights & SP LPG CE",
+   "display_name": "Equip LPG CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Lights & SP Misc. A CE",
+   "display_name": "Equip Misc. A CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Lights & SP Misc. B CE",
+   "display_name": "Equip Misc. B CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Lights & SP Misc. C CE",
+   "display_name": "Equip Misc. C CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Lights & SP Misc. D CE",
+   "display_name": "Equip Misc. D CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Lights & SP Misc. E CE",
+   "display_name": "Equip Misc. E CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Lights & SP Misc. F CE",
+   "display_name": "Equip Misc. F CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Lights & SP Misc. G CE",
+   "display_name": "Equip Misc. G CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Lights & SP Misc. H CE",
+   "display_name": "Equip Misc. H CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Lights & SP Misc. I CE",
+   "display_name": "Equip Misc. I CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Lights & SP Misc. J CE",
+   "display_name": "Equip Misc. J CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Lights & SP Misc. K CE",
+   "display_name": "Equip Misc. K CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Lights & SP Misc. L CE",
+   "display_name": "Equip Misc. L CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Lights & SP Misc. M CE",
+   "display_name": "Equip Misc. M CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Lights & SP Misc. N CE",
+   "display_name": "Equip Misc. N CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Lights & SP Misc. O CE",
+   "display_name": "Equip Misc. O CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Lights & SP Misc. P CE",
+   "display_name": "Equip Misc. P CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Lights & SP Misc. Q CE",
+   "display_name": "Equip Misc. Q CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Lights & SP Misc. R CE",
+   "display_name": "Equip Misc. R CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Lights & SP Misc. S CE",
+   "display_name": "Equip Misc. S CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Lights & SP Misc. T CE",
+   "display_name": "Equip Misc. T CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Lights & SP Misc. U CE",
+   "display_name": "Equip Misc. U CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Lights & SP Misc. V CE",
+   "display_name": "Equip Misc. V CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Lights & SP Misc. W CE",
+   "display_name": "Equip Misc. W CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Lights & SP Misc. X CE",
+   "display_name": "Equip Misc. X CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Lights & SP Misc. Y CE",
+   "display_name": "Equip Misc. Y CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Lights & SP Misc. Z CE",
+   "display_name": "Equip Misc. Z CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Lights & SP Waste heat CE",
+   "display_name": "Equip waste heat CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Lights & SP anthracite CE",
+   "display_name": "Equip anthracite CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Lights & SP biogas CE",
+   "display_name": "Equip biogas CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Lights & SP biomass CE",
+   "display_name": "Equip biomass CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Lights & SP coal CE",
+   "display_name": "Equip coal CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Lights & SP dual CE",
+   "display_name": "Equip dual fuel CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Lights & SP elec. CE",
+   "display_name": "Equip elec. CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Lights & SP grid disp. elec. CE",
+   "display_name": "Equip grid disp. elec. CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Lights & SP nat. gas CE",
+   "display_name": "Equip nat. gas CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Lights & SP oil CE",
+   "display_name": "Equip oil CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Lights & SP smokeless CE",
+   "display_name": "Equip smokeless CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Lights LPG CE",
+   "display_name": "Lights LPG CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Lights Misc. A CE",
+   "display_name": "Lights Misc. A CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Lights Misc. B CE",
+   "display_name": "Lights Misc. B CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Lights Misc. C CE",
+   "display_name": "Lights Misc. C CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Lights Misc. D CE",
+   "display_name": "Lights Misc. D CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Lights Misc. E CE",
+   "display_name": "Lights Misc. E CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Lights Misc. F CE",
+   "display_name": "Lights Misc. F CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Lights Misc. G CE",
+   "display_name": "Lights Misc. G CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Lights Misc. H CE",
+   "display_name": "Lights Misc. H CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Lights Misc. I CE",
+   "display_name": "Lights Misc. I CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Lights Misc. J CE",
+   "display_name": "Lights Misc. J CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Lights Misc. K CE",
+   "display_name": "Lights Misc. K CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Lights Misc. L CE",
+   "display_name": "Lights Misc. L CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Lights Misc. M CE",
+   "display_name": "Lights Misc. M CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Lights Misc. N CE",
+   "display_name": "Lights Misc. N CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Lights Misc. O CE",
+   "display_name": "Lights Misc. O CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Lights Misc. P CE",
+   "display_name": "Lights Misc. P CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Lights Misc. Q CE",
+   "display_name": "Lights Misc. Q CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Lights Misc. R CE",
+   "display_name": "Lights Misc. R CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Lights Misc. S CE",
+   "display_name": "Lights Misc. S CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Lights Misc. T CE",
+   "display_name": "Lights Misc. T CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Lights Misc. U CE",
+   "display_name": "Lights Misc. U CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Lights Misc. V CE",
+   "display_name": "Lights Misc. V CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Lights Misc. W CE",
+   "display_name": "Lights Misc. W CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Lights Misc. X CE",
+   "display_name": "Lights Misc. X CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Lights Misc. Y CE",
+   "display_name": "Lights Misc. Y CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Lights Misc. Z CE",
+   "display_name": "Lights Misc. Z CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Lights Waste heat CE",
+   "display_name": "Lights waste heat CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Lights anthracite CE",
+   "display_name": "Lights anthracite CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Lights biogas CE",
+   "display_name": "Lights biogas CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Lights biomass CE",
+   "display_name": "Lights biomass CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Lights coal CE",
+   "display_name": "Lights coal CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Lights dual CE",
+   "display_name": "Lights dual fuel CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Lights elec. CE",
+   "display_name": "Lights elec. CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Lights grid disp. elec. CE",
+   "display_name": "Lights grid disp. elec. CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Lights nat. gas CE",
+   "display_name": "Lights nat. gas CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Lights oil CE",
+   "display_name": "Lights oil CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Lights smokeless CE",
+   "display_name": "Lights smokeless CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "NCM CH(C)P CE",
+   "display_name": "NCM CH(C)P CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "NCM DHW CE",
+   "display_name": "NCM DHW CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "NCM auxiliary CE",
+   "display_name": "NCM auxiliary CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "NCM cooling CE",
+   "display_name": "NCM cooling CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "NCM heat pump heating CE",
+   "display_name": "NCM heat pump heating CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "NCM heating CE",
+   "display_name": "NCM heating CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "NCM lighting CE",
+   "display_name": "NCM lighting CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "NCM total CE (ex renewables)",
+   "display_name": "NCM total CE [ex renewables]",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "System LPG CE",
+   "display_name": "System LPG CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "System Misc. A CE",
+   "display_name": "System Misc. A CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "System Misc. B CE",
+   "display_name": "System Misc. B CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "System Misc. C CE",
+   "display_name": "System Misc. C CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "System Misc. D CE",
+   "display_name": "System Misc. D CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "System Misc. E CE",
+   "display_name": "System Misc. E CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "System Misc. F CE",
+   "display_name": "System Misc. F CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "System Misc. G CE",
+   "display_name": "System Misc. G CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "System Misc. H CE",
+   "display_name": "System Misc. H CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "System Misc. I CE",
+   "display_name": "System Misc. I CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "System Misc. J CE",
+   "display_name": "System Misc. J CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "System Misc. K CE",
+   "display_name": "System Misc. K CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "System Misc. L CE",
+   "display_name": "System Misc. L CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "System Misc. M CE",
+   "display_name": "System Misc. M CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "System Misc. N CE",
+   "display_name": "System Misc. N CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "System Misc. O CE",
+   "display_name": "System Misc. O CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "System Misc. P CE",
+   "display_name": "System Misc. P CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "System Misc. Q CE",
+   "display_name": "System Misc. Q CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "System Misc. R CE",
+   "display_name": "System Misc. R CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "System Misc. S CE",
+   "display_name": "System Misc. S CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "System Misc. T CE",
+   "display_name": "System Misc. T CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "System Misc. U CE",
+   "display_name": "System Misc. U CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "System Misc. V CE",
+   "display_name": "System Misc. V CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "System Misc. W CE",
+   "display_name": "System Misc. W CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "System Misc. X CE",
+   "display_name": "System Misc. X CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "System Misc. Y CE",
+   "display_name": "System Misc. Y CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "System Misc. Z CE",
+   "display_name": "System Misc. Z CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "System Waste heat CE",
+   "display_name": "System waste heat CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "System anthracite CE",
+   "display_name": "System anthracite CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "System biogas CE",
+   "display_name": "System biogas CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "System biomass CE",
+   "display_name": "System biomass CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "System bivalent heating CE",
+   "display_name": "System bivalent heating CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "System coal CE",
+   "display_name": "System coal CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "System dual CE",
+   "display_name": "System dual fuel CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "System elec. (misc.) CE",
+   "display_name": "System elec. (misc.) CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "System elec. CE",
+   "display_name": "System elec. CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "System grid disp. elec. CE",
+   "display_name": "System grid disp. elec. CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "System grid disp. elec. PV CE",
+   "display_name": "System grid disp. elec. PV CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "System nat. gas CE",
+   "display_name": "System nat. gas CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "System oil CE",
+   "display_name": "System oil CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "System smokeless CE",
+   "display_name": "System smokeless CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Total CE",
+   "display_name": "Total CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Total CE ex equip",
+   "display_name": "Total CE ex equip",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Total LPG CE",
+   "display_name": "Total LPG CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Total Misc. A CE",
+   "display_name": "Total Misc. A CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Total Misc. B CE",
+   "display_name": "Total Misc. B CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Total Misc. C CE",
+   "display_name": "Total Misc. C CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Total Misc. D CE",
+   "display_name": "Total Misc. D CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Total Misc. E CE",
+   "display_name": "Total Misc. E CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Total Misc. F CE",
+   "display_name": "Total Misc. F CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Total Misc. G CE",
+   "display_name": "Total Misc. G CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Total Misc. H CE",
+   "display_name": "Total Misc. H CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Total Misc. I CE",
+   "display_name": "Total Misc. I CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Total Misc. J CE",
+   "display_name": "Total Misc. J CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Total Misc. K CE",
+   "display_name": "Total Misc. K CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Total Misc. L CE",
+   "display_name": "Total Misc. L CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Total Misc. M CE",
+   "display_name": "Total Misc. M CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Total Misc. N CE",
+   "display_name": "Total Misc. N CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Total Misc. O CE",
+   "display_name": "Total Misc. O CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Total Misc. P CE",
+   "display_name": "Total Misc. P CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Total Misc. Q CE",
+   "display_name": "Total Misc. Q CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Total Misc. R CE",
+   "display_name": "Total Misc. R CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Total Misc. S CE",
+   "display_name": "Total Misc. S CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Total Misc. T CE",
+   "display_name": "Total Misc. T CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Total Misc. U CE",
+   "display_name": "Total Misc. U CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Total Misc. V CE",
+   "display_name": "Total Misc. V CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Total Misc. W CE",
+   "display_name": "Total Misc. W CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Total Misc. X CE",
+   "display_name": "Total Misc. X CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Total Misc. Y CE",
+   "display_name": "Total Misc. Y CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Total Misc. Z CE",
+   "display_name": "Total Misc. Z CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Total Waste heat CE",
+   "display_name": "Total waste heat CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Total anthracite CE",
+   "display_name": "Total anthracite CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Total biogas CE",
+   "display_name": "Total biogas CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Total biomass CE",
+   "display_name": "Total biomass CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Total bivalent heating CE",
+   "display_name": "Total bivalent heating CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Total coal CE",
+   "display_name": "Total coal CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Total dual CE",
+   "display_name": "Total dual fuel CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Total elec. (misc.) CE",
+   "display_name": "Total elec. (misc.) CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Total elec. CE",
+   "display_name": "Total elec. CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Total grid disp. elec. CE",
+   "display_name": "Total grid disp. elec. CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Total grid disp. elec. PV CE",
+   "display_name": "Total grid disp. elec. PV CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Total lights & SP CE",
+   "display_name": "Total equip CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Total lights CE",
+   "display_name": "Total lights CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Total nat. gas CE",
+   "display_name": "Total nat. gas CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Total oil CE",
+   "display_name": "Total oil CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Total smokeless CE",
+   "display_name": "Total smokeless CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Total system CE",
+   "display_name": "Total system CE",
+   "model_level": "c",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Ap Sys boilers DHW energy",
+   "display_name": "Ap Sys boilers DHW energy",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Ap Sys boilers absorp chiller energy",
+   "display_name": "Ap Sys boilers abs. chiller energy [obs]",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Ap Sys boilers energy",
+   "display_name": "Ap Sys boilers energy",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Ap Sys boilers non-DHW energy",
+   "display_name": "Ap Sys boilers space htg energy [obs]",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Ap Sys boilers space cond'g energy",
+   "display_name": "Ap Sys boilers space cond'g energy",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Ap Sys chillers energy",
+   "display_name": "Ap Sys chillers energy",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "ApHVAC AAHPs cooling compressor energy",
+   "display_name": "ApHVAC AAHPs cooling compressor energy",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "ApHVAC AAHPs crankcase heater energy",
+   "display_name": "ApHVAC AAHPs crankcase heater energy",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "ApHVAC AAHPs defrost energy",
+   "display_name": "ApHVAC AAHPs defrost energy",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "ApHVAC AAHPs heat acquisition fan energy",
+   "display_name": "ApHVAC AAHPs heat acquisition fan energy",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "ApHVAC AAHPs heat rejection fan energy",
+   "display_name": "ApHVAC AAHPs heat rejection fan energy",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "ApHVAC AAHPs heating compressor energy",
+   "display_name": "ApHVAC AAHPs heating compressor energy",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "ApHVAC AWHPs DHW energy",
+   "display_name": "ApHVAC AWHPs DHW compressor energy",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "ApHVAC AWHPs cooling compressor energy",
+   "display_name": "ApHVAC AWHPs cooling compressor energy",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "ApHVAC AWHPs crankcase heater energy",
+   "display_name": "ApHVAC AWHPs crankcase heater energy",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "ApHVAC AWHPs defrost energy",
+   "display_name": "ApHVAC AWHPs defrost energy",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "ApHVAC AWHPs heat acquisition fan energy",
+   "display_name": "ApHVAC AWHPs heat acquisition fan energy",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "ApHVAC AWHPs heat rejection fan energy",
+   "display_name": "ApHVAC AWHPs heat rejection fan energy",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "ApHVAC AWHPs heating compressor energy",
+   "display_name": "ApHVAC AWHPs heating compressor energy",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "ApHVAC AWHPs space htg energy",
+   "display_name": "ApHVAC AWHPs space htg compressor energy",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "ApHVAC EHC heating energy",
+   "display_name": "ApHVAC electric heating coil energy",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "ApHVAC VRF ER backup HS energy",
+   "display_name": "ApHVAC VRF ER backup HS energy",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "ApHVAC VRF cooling compressor energy",
+   "display_name": "ApHVAC VRF cooling compressor energy",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "ApHVAC VRF crankcase heater energy",
+   "display_name": "ApHVAC VRF crankcase heater energy",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "ApHVAC VRF defrost energy",
+   "display_name": "ApHVAC VRF defrost energy",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "ApHVAC VRF heat acquisition fan energy",
+   "display_name": "ApHVAC VRF heat acquisition fan energy",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "ApHVAC VRF heat rejection fan energy",
+   "display_name": "ApHVAC VRF heat rejection fan energy",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "ApHVAC VRF heating compressor energy",
+   "display_name": "ApHVAC VRF heating compressor energy",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "ApHVAC WAHPs cooling energy",
+   "display_name": "ApHVAC WAHPs cooling energy",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "ApHVAC WAHPs heating energy",
+   "display_name": "ApHVAC WAHPs heating energy",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "ApHVAC WWHPs DHW energy",
+   "display_name": "ApHVAC WWHPs DHW compressor energy",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "ApHVAC WWHPs cooling compressor energy",
+   "display_name": "ApHVAC WWHPs cooling compressor energy",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "ApHVAC WWHPs crankcase heater energy",
+   "display_name": "ApHVAC WWHPs crankcase heater energy",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "ApHVAC WWHPs heating compressor energy",
+   "display_name": "ApHVAC WWHPs heating compressor energy",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "ApHVAC WWHPs space htg energy",
+   "display_name": "ApHVAC WWHPs space htg compressor energy",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "ApHVAC boiler parasitic energy",
+   "display_name": "ApHVAC boilers parasitic energy",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "ApHVAC boilers DHW energy",
+   "display_name": "ApHVAC boilers DHW fuel energy",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "ApHVAC boilers energy",
+   "display_name": "ApHVAC boilers fuel energy",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "ApHVAC boilers space cond'g energy",
+   "display_name": "ApHVAC boilers space cond'g fuel energy",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "ApHVAC chillers energy",
+   "display_name": "ApHVAC chillers compressor energy",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "ApHVAC distr fans energy",
+   "display_name": "ApHVAC distr fans energy",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "ApHVAC distr pumps energy",
+   "display_name": "ApHVAC distr pumps energy",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "ApHVAC generic HPs DHW energy",
+   "display_name": "ApHVAC generic HPs DHW compressor energy",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "ApHVAC generic HPs heating energy",
+   "display_name": "ApHVAC generic HPs heating compressor energy",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "ApHVAC generic HPs space htg energy",
+   "display_name": "ApHVAC generic HPs space htg compressor energy",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "ApHVAC heat acq fans/pumps energy",
+   "display_name": "ApHVAC heat acq fans/pumps energy",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "ApHVAC heat rej fans/pumps energy",
+   "display_name": "ApHVAC heat rej fans/pumps energy",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "ApHVAC other heating plant energy",
+   "display_name": "ApHVAC other htg plant energy",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "ApHVAC other htg plant DHW energy",
+   "display_name": "ApHVAC other htg plant DHW energy",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "ApHVAC other htg plant sp cond energy",
+   "display_name": "ApHVAC other htg plant sp cond energy",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "ApHVAC thermal storage tank heating energy",
+   "display_name": "ApHVAC thermal storage tank heating energy",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "ApSys aux + DHW/solar pumps energy",
+   "display_name": "Ap Sys aux + DHW/solar pumps energy",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "ApSys aux energy",
+   "display_name": "Ap Sys fans/pumps/ctrls energy [obs]",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "ApSys ht rej pumps energy",
+   "display_name": "Ap Sys heat rej fans/pumps energy",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Boilers energy",
+   "display_name": "Boilers energy",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "CHP energy consumption",
+   "display_name": "CHP energy consumption",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "CHP generated electricity",
+   "display_name": "CHP generated electricity",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Central plant pumps energy",
+   "display_name": "ApHVAC pumps energy [obs]",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Chillers energy",
+   "display_name": "Chillers energy",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "DX cooling systems energy",
+   "display_name": "ApHVAC DX cooling systems energy",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Direct-acting coolers energy",
+   "display_name": "ApHVAC direct acting coolers energy",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Direct-acting heaters energy",
+   "display_name": "ApHVAC direct acting heaters energy",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Fans energy",
+   "display_name": "ApHVAC fans energy [obs]",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "GSHP COOLING COP EER",
+   "display_name": "GSHP Cooling COP/EER",
+   "model_level": "e",
+   "units_type": "Ratio"
+  },
+  {
+   "aps_varname": "GSHP COOLING POWER",
+   "display_name": "GSHP Cooling Power",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "GSHP ENTERING FLUID TEMP",
+   "display_name": "GSHP Entering Fluid Temps",
+   "model_level": "e",
+   "units_type": "Temperature"
+  },
+  {
+   "aps_varname": "GSHP EXITING FLUID TEMP",
+   "display_name": "GSHP Exiting Fluid Temps",
+   "model_level": "e",
+   "units_type": "Temperature"
+  },
+  {
+   "aps_varname": "GSHP HEATING COP EER",
+   "display_name": "GSHP Heating COP/EER",
+   "model_level": "e",
+   "units_type": "Ratio"
+  },
+  {
+   "aps_varname": "GSHP HEATING POWER",
+   "display_name": "GSHP Heating Power",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "HR & spray pumps energy",
+   "display_name": "ApHVAC HR & spray pumps energy",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Ideal cooling energy",
+   "display_name": "CoSP rooms cooling energy [obs]",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Ideal dehumidification",
+   "display_name": "CoSP rooms dehum. energy [obs]",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Ideal heating energy",
+   "display_name": "CoSP rooms heating energy [obs]",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Ideal humidification",
+   "display_name": "CoSP rooms humid. energy [obs]",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Ideal mech vent clg energy",
+   "display_name": "CoSP mech vent clg energy [obs]",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Ideal mech vent dehum energy",
+   "display_name": "CoSP mech vent dehum energy [obs]",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Ideal mech vent htg energy",
+   "display_name": "CoSP mech vent htg energy [obs]",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Lights & SP LPG",
+   "display_name": "Equip LPG",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Lights & SP Misc. A fuel",
+   "display_name": "Equip Misc. A",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Lights & SP Misc. B fuel",
+   "display_name": "Equip Misc. B",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Lights & SP Misc. C fuel",
+   "display_name": "Equip Misc. C",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Lights & SP Misc. D fuel",
+   "display_name": "Equip Misc. D",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Lights & SP Misc. E fuel",
+   "display_name": "Equip Misc. E",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Lights & SP Misc. F fuel",
+   "display_name": "Equip Misc. F",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Lights & SP Misc. G fuel",
+   "display_name": "Equip Misc. G",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Lights & SP Misc. H fuel",
+   "display_name": "Equip Misc. H",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Lights & SP Misc. I fuel",
+   "display_name": "Equip Misc. I",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Lights & SP Misc. J fuel",
+   "display_name": "Equip Misc. J",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Lights & SP Misc. K fuel",
+   "display_name": "Equip Misc. K",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Lights & SP Misc. L fuel",
+   "display_name": "Equip Misc. L",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Lights & SP Misc. M fuel",
+   "display_name": "Equip Misc. M",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Lights & SP Misc. N fuel",
+   "display_name": "Equip Misc. N",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Lights & SP Misc. O fuel",
+   "display_name": "Equip Misc. O",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Lights & SP Misc. P fuel",
+   "display_name": "Equip Misc. P",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Lights & SP Misc. Q fuel",
+   "display_name": "Equip Misc. Q",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Lights & SP Misc. R fuel",
+   "display_name": "Equip Misc. R",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Lights & SP Misc. S fuel",
+   "display_name": "Equip Misc. S",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Lights & SP Misc. T fuel",
+   "display_name": "Equip Misc. T",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Lights & SP Misc. U fuel",
+   "display_name": "Equip Misc. U",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Lights & SP Misc. V fuel",
+   "display_name": "Equip Misc. V",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Lights & SP Misc. W fuel",
+   "display_name": "Equip Misc. W",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Lights & SP Misc. X fuel",
+   "display_name": "Equip Misc. X",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Lights & SP Misc. Y fuel",
+   "display_name": "Equip Misc. Y",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Lights & SP Misc. Z fuel",
+   "display_name": "Equip Misc. Z",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Lights & SP anthracite",
+   "display_name": "Equip anthracite",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Lights & SP biogas",
+   "display_name": "Equip biogas",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Lights & SP biomass",
+   "display_name": "Equip biomass",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Lights & SP dual fuel",
+   "display_name": "Equip dual fuel",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Lights & SP electricity",
+   "display_name": "Equip electricity",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Lights & SP gas",
+   "display_name": "Equip nat. gas",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Lights & SP grid disp. elec.",
+   "display_name": "Equip grid disp. elec.",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Lights & SP oil",
+   "display_name": "Equip oil",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Lights & SP smokeless fuel",
+   "display_name": "Equip smokeless",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Lights & SP solid fuel",
+   "display_name": "Equip coal",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Lights & SP waste heat",
+   "display_name": "Equip waste heat",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Lights LPG",
+   "display_name": "Lights LPG",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Lights Misc. A fuel",
+   "display_name": "Lights Misc. A",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Lights Misc. B fuel",
+   "display_name": "Lights Misc. B",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Lights Misc. C fuel",
+   "display_name": "Lights Misc. C",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Lights Misc. D fuel",
+   "display_name": "Lights Misc. D",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Lights Misc. E fuel",
+   "display_name": "Lights Misc. E",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Lights Misc. F fuel",
+   "display_name": "Lights Misc. F",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Lights Misc. G fuel",
+   "display_name": "Lights Misc. G",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Lights Misc. H fuel",
+   "display_name": "Lights Misc. H",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Lights Misc. I fuel",
+   "display_name": "Lights Misc. I",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Lights Misc. J fuel",
+   "display_name": "Lights Misc. J",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Lights Misc. K fuel",
+   "display_name": "Lights Misc. K",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Lights Misc. L fuel",
+   "display_name": "Lights Misc. L",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Lights Misc. M fuel",
+   "display_name": "Lights Misc. M",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Lights Misc. N fuel",
+   "display_name": "Lights Misc. N",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Lights Misc. O fuel",
+   "display_name": "Lights Misc. O",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Lights Misc. P fuel",
+   "display_name": "Lights Misc. P",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Lights Misc. Q fuel",
+   "display_name": "Lights Misc. Q",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Lights Misc. R fuel",
+   "display_name": "Lights Misc. R",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Lights Misc. S fuel",
+   "display_name": "Lights Misc. S",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Lights Misc. T fuel",
+   "display_name": "Lights Misc. T",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Lights Misc. U fuel",
+   "display_name": "Lights Misc. U",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Lights Misc. V fuel",
+   "display_name": "Lights Misc. V",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Lights Misc. W fuel",
+   "display_name": "Lights Misc. W",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Lights Misc. X fuel",
+   "display_name": "Lights Misc. X",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Lights Misc. Y fuel",
+   "display_name": "Lights Misc. Y",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Lights Misc. Z fuel",
+   "display_name": "Lights Misc. Z",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Lights anthracite",
+   "display_name": "Lights anthracite",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Lights biogas",
+   "display_name": "Lights biogas",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Lights biomass",
+   "display_name": "Lights biomass",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Lights dual fuel",
+   "display_name": "Lights dual fuel",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Lights electricity",
+   "display_name": "Lights electricity",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Lights gas",
+   "display_name": "Lights nat. gas",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Lights grid displaced elec.",
+   "display_name": "Lights grid disp. elec.",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Lights oil",
+   "display_name": "Lights oil",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Lights smokeless fuel",
+   "display_name": "Lights smokeless",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Lights solid fuel",
+   "display_name": "Lights coal",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Lights waste heat",
+   "display_name": "Lights waste heat",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "MEC elevators energy",
+   "display_name": "MEC elevators motor energy",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "MEC elevators fan energy",
+   "display_name": "MEC elevators fan energy",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "MEC elevators lighting energy",
+   "display_name": "MEC elevators lighting energy",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "MEC escalators energy",
+   "display_name": "MEC escalators energy",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "MEC ev charging",
+   "display_name": "MEC ev charging",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "MEC lighting energy",
+   "display_name": "MEC lighting energy",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "MEC process fans energy",
+   "display_name": "MEC process fans energy",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "MEC pumps energy",
+   "display_name": "MEC pumps energy",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "MEC refrigeration",
+   "display_name": "MEC refrigeration",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "NCM DHW energy",
+   "display_name": "NCM DHW energy",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "NCM auxiliary energy",
+   "display_name": "NCM auxiliary energy",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "NCM cooling energy",
+   "display_name": "NCM cooling energy",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "NCM heat pump heating energy",
+   "display_name": "NCM heat pump energy",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "NCM heating energy",
+   "display_name": "NCM heating energy",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "NCM lighting energy",
+   "display_name": "NCM lighting energy",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "NCM primary energy",
+   "display_name": "NCM primary energy",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "NCM total energy (ex renewables)",
+   "display_name": "NCM total energy [ex renewables]",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "PRM electricity",
+   "display_name": "PRM electricity",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "PRM electricity generation",
+   "display_name": "PRM electricity generation",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "PRM fossil fuels",
+   "display_name": "PRM fossil fuels",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "PRM net electricity",
+   "display_name": "PRM net electricity",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "PRM other fuels",
+   "display_name": "PRM other fuels",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "PRM system electricity",
+   "display_name": "PRM system electricity",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "PRM system fossil fuels",
+   "display_name": "PRM system fossil fuels",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "PRM system other fuels",
+   "display_name": "PRM system other fuels",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "PV generated electricity",
+   "display_name": "PV generated electricity",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "System LPG",
+   "display_name": "System LPG",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "System Misc. A fuel",
+   "display_name": "System Misc. A",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "System Misc. B fuel",
+   "display_name": "System Misc. B",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "System Misc. C fuel",
+   "display_name": "System Misc. C",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "System Misc. D fuel",
+   "display_name": "System Misc. D",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "System Misc. E fuel",
+   "display_name": "System Misc. E",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "System Misc. F fuel",
+   "display_name": "System Misc. F",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "System Misc. G fuel",
+   "display_name": "System Misc. G",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "System Misc. H fuel",
+   "display_name": "System Misc. H",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "System Misc. I fuel",
+   "display_name": "System Misc. I",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "System Misc. J fuel",
+   "display_name": "System Misc. J",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "System Misc. K fuel",
+   "display_name": "System Misc. K",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "System Misc. L fuel",
+   "display_name": "System Misc. L",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "System Misc. M fuel",
+   "display_name": "System Misc. M",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "System Misc. N fuel",
+   "display_name": "System Misc. N",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "System Misc. O fuel",
+   "display_name": "System Misc. O",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "System Misc. P fuel",
+   "display_name": "System Misc. P",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "System Misc. Q fuel",
+   "display_name": "System Misc. Q",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "System Misc. R fuel",
+   "display_name": "System Misc. R",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "System Misc. S fuel",
+   "display_name": "System Misc. S",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "System Misc. T fuel",
+   "display_name": "System Misc. T",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "System Misc. U fuel",
+   "display_name": "System Misc. U",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "System Misc. V fuel",
+   "display_name": "System Misc. V",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "System Misc. W fuel",
+   "display_name": "System Misc. W",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "System Misc. X fuel",
+   "display_name": "System Misc. X",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "System Misc. Y fuel",
+   "display_name": "System Misc. Y",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "System Misc. Z fuel",
+   "display_name": "System Misc. Z",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "System anthracite",
+   "display_name": "System anthracite",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "System biogas",
+   "display_name": "System biogas",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "System biomass",
+   "display_name": "System biomass",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "System bivalent heating fuel",
+   "display_name": "System bivalent heating fuel",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "System dual fuel",
+   "display_name": "System dual fuel",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "System electricity",
+   "display_name": "System electricity",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "System electricity (misc.)",
+   "display_name": "System electricity (misc.)",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "System gas",
+   "display_name": "System natural gas",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "System grid displaced elec.",
+   "display_name": "System grid disp. elec.",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "System grid displaced elec. PV",
+   "display_name": "System grid displaced elec. PV",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "System oil",
+   "display_name": "System oil",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "System smokeless fuel",
+   "display_name": "System smokeless",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "System solid fuel",
+   "display_name": "System coal",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "System waste heat",
+   "display_name": "System waste heat",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Total Electricity",
+   "display_name": "Transformer Losses",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Total LPG",
+   "display_name": "Total LPG",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Total Misc. A fuel",
+   "display_name": "Total Misc. A",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Total Misc. B fuel",
+   "display_name": "Total Misc. B",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Total Misc. C fuel",
+   "display_name": "Total Misc. C",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Total Misc. D fuel",
+   "display_name": "Total Misc. D",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Total Misc. E fuel",
+   "display_name": "Total Misc. E",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Total Misc. F fuel",
+   "display_name": "Total Misc. F",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Total Misc. G fuel",
+   "display_name": "Total Misc. G",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Total Misc. H fuel",
+   "display_name": "Total Misc. H",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Total Misc. I fuel",
+   "display_name": "Total Misc. I",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Total Misc. J fuel",
+   "display_name": "Total Misc. J",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Total Misc. K fuel",
+   "display_name": "Total Misc. K",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Total Misc. L fuel",
+   "display_name": "Total Misc. L",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Total Misc. M fuel",
+   "display_name": "Total Misc. M",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Total Misc. N fuel",
+   "display_name": "Total Misc. N",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Total Misc. O fuel",
+   "display_name": "Total Misc. O",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Total Misc. P fuel",
+   "display_name": "Total Misc. P",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Total Misc. Q fuel",
+   "display_name": "Total Misc. Q",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Total Misc. R fuel",
+   "display_name": "Total Misc. R",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Total Misc. S fuel",
+   "display_name": "Total Misc. S",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Total Misc. T fuel",
+   "display_name": "Total Misc. T",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Total Misc. U fuel",
+   "display_name": "Total Misc. U",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Total Misc. V fuel",
+   "display_name": "Total Misc. V",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Total Misc. W fuel",
+   "display_name": "Total Misc. W",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Total Misc. X fuel",
+   "display_name": "Total Misc. X",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Total Misc. Y fuel",
+   "display_name": "Total Misc. Y",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Total Misc. Z fuel",
+   "display_name": "Total Misc. Z",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Total anthracite",
+   "display_name": "Total anthracite",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Total biogas",
+   "display_name": "Total biogas",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Total biomass",
+   "display_name": "Total biomass",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Total bivalent heating fuel",
+   "display_name": "Total bivalent heating fuel",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Total dual fuel",
+   "display_name": "Total dual fuel",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Total electricity",
+   "display_name": "Total electricity",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Total electricity (misc.)",
+   "display_name": "Total electricity (misc.)",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Total energy (excl. ideal)",
+   "display_name": "Total energy",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Total gas",
+   "display_name": "Total nat. gas",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Total grid displaced elec.",
+   "display_name": "Total grid disp. elec.",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Total grid displaced elec. PV",
+   "display_name": "Total grid displaced elec. PV",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Total ideal energy",
+   "display_name": "Total CoSP-based energy [obs]",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Total lights & SP energy",
+   "display_name": "Total equip energy",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Total lights energy",
+   "display_name": "Total lights energy",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Total oil",
+   "display_name": "Total oil",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Total smokeless fuel",
+   "display_name": "Total smokeless",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Total solid fuel",
+   "display_name": "Total coal",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Total system energy",
+   "display_name": "Total system energy",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Total waste heat",
+   "display_name": "Total waste heat",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Unitary cooling systems energy",
+   "display_name": "ApHVAC unitary cooling systems energy",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Wind generated electricity",
+   "display_name": "Wind generated electricity",
+   "model_level": "e",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Sys Aux mech vent fan energy",
+   "display_name": "Aux mech vent fan energy [obs]",
+   "model_level": "j",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Sys Boiler DHW energy",
+   "display_name": "Boiler DHW energy",
+   "model_level": "j",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Sys Boiler absorp chiller energy",
+   "display_name": "Boiler space cooling energy",
+   "model_level": "j",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Sys Boiler energy",
+   "display_name": "Boiler energy",
+   "model_level": "j",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Sys Boiler non-DHW energy",
+   "display_name": "Boiler space heating energy",
+   "model_level": "j",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Sys Boiler process energy",
+   "display_name": "Boiler process energy",
+   "model_level": "j",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Sys Boiler pump energy",
+   "display_name": "Boiler pump energy [obs]",
+   "model_level": "j",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Sys Boiler space cond'g energy",
+   "display_name": "Boiler space cond'g energy",
+   "model_level": "j",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Sys Chiller energy",
+   "display_name": "Chiller energy",
+   "model_level": "j",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Sys Chiller process energy",
+   "display_name": "Chiller process energy",
+   "model_level": "j",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Sys Chiller pump & fan energy",
+   "display_name": "Chiller heat rej fans/pumps energy",
+   "model_level": "j",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Sys DHW & solar heating pump energy",
+   "display_name": "DHW & solar heating pump energy",
+   "model_level": "j",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Sys Fans/pumps/controls energy",
+   "display_name": "System auxiliary energy",
+   "model_level": "j",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Sys Lights energy",
+   "display_name": "Lights energy",
+   "model_level": "j",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Sys Mech vent fan energy",
+   "display_name": "System air fan energy [obs]",
+   "model_level": "j",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Ap Sys boilers DHW load",
+   "display_name": "Ap Sys boilers DHW load",
+   "model_level": "l",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "Ap Sys boilers absorp chiller load",
+   "display_name": "Ap Sys boilers space clg load [obs]",
+   "model_level": "l",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "Ap Sys boilers load",
+   "display_name": "Ap Sys boilers load",
+   "model_level": "l",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "Ap Sys boilers non-DHW load",
+   "display_name": "Ap Sys boilers space htg load [obs]",
+   "model_level": "l",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "Ap Sys boilers space cond'g load",
+   "display_name": "Ap Sys boilers space cond'g load",
+   "model_level": "l",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "Ap Sys chillers load",
+   "display_name": "Ap Sys chillers load",
+   "model_level": "l",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "ApHVAC AAHPs cooling load",
+   "display_name": "ApHVAC AAHPs cooling load",
+   "model_level": "l",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "ApHVAC AAHPs heating load",
+   "display_name": "ApHVAC AAHPs heating load",
+   "model_level": "l",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "ApHVAC AWHPs DHW load",
+   "display_name": "ApHVAC AWHPs DHW load",
+   "model_level": "l",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "ApHVAC AWHPs cooling load",
+   "display_name": "ApHVAC AWHPs cooling load",
+   "model_level": "l",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "ApHVAC AWHPs heating load",
+   "display_name": "ApHVAC AWHPs heating load",
+   "model_level": "l",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "ApHVAC AWHPs space htg load",
+   "display_name": "ApHVAC AWHPs space htg load",
+   "model_level": "l",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "ApHVAC DHW system DHW demand load",
+   "display_name": "ApHVAC DHW system DHW demand load",
+   "model_level": "l",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "ApHVAC DHW system load met by htg device",
+   "display_name": "ApHVAC DHW system load met by htg device",
+   "model_level": "l",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "ApHVAC DHW system load on htg device",
+   "display_name": "ApHVAC DHW system load on htg device",
+   "model_level": "l",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "ApHVAC Drain water heat recovered",
+   "display_name": "ApHVAC Drain water heat recovered",
+   "model_level": "l",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "ApHVAC VRF systems cooling load",
+   "display_name": "ApHVAC VRF systems cooling load",
+   "model_level": "l",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "ApHVAC VRF systems heating load",
+   "display_name": "ApHVAC VRF systems heating load",
+   "model_level": "l",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "ApHVAC WAHPs cooling load",
+   "display_name": "ApHVAC WAHPs cooling load",
+   "model_level": "l",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "ApHVAC WAHPs heating load",
+   "display_name": "ApHVAC WAHPs heating load",
+   "model_level": "l",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "ApHVAC WWHPs DHW load",
+   "display_name": "ApHVAC WWHPs DHW load",
+   "model_level": "l",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "ApHVAC WWHPs cooling load",
+   "display_name": "ApHVAC WWHPs cooling load",
+   "model_level": "l",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "ApHVAC WWHPs heating load",
+   "display_name": "ApHVAC WWHPs heating load",
+   "model_level": "l",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "ApHVAC WWHPs space htg load",
+   "display_name": "ApHVAC WWHPs space htg load",
+   "model_level": "l",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "ApHVAC boilers DHW load",
+   "display_name": "ApHVAC boilers DHW load",
+   "model_level": "l",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "ApHVAC boilers load",
+   "display_name": "ApHVAC boilers load",
+   "model_level": "l",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "ApHVAC boilers space cond'g load",
+   "display_name": "ApHVAC boilers space cond'g load",
+   "model_level": "l",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "ApHVAC chilled water loop load",
+   "display_name": "ApHVAC chilled water loop load",
+   "model_level": "l",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "ApHVAC chillers load",
+   "display_name": "ApHVAC chillers load",
+   "model_level": "l",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "ApHVAC cooling coils latent load",
+   "display_name": "ApHVAC cooling coils latent load",
+   "model_level": "l",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "ApHVAC cooling coils sensible load",
+   "display_name": "ApHVAC cooling coils sensible load",
+   "model_level": "l",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "ApHVAC generic HPs DHW load",
+   "display_name": "ApHVAC generic HPs DHW load",
+   "model_level": "l",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "ApHVAC generic HPs heating load",
+   "display_name": "ApHVAC generic HPs heating load",
+   "model_level": "l",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "ApHVAC generic HPs space htg load",
+   "display_name": "ApHVAC generic HPs space htg load",
+   "model_level": "l",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "ApHVAC generic cooling source load",
+   "display_name": "ApHVAC generic cooling source load",
+   "model_level": "l",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "ApHVAC generic heat source DHW load",
+   "display_name": "ApHVAC generic heat source DHW load",
+   "model_level": "l",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "ApHVAC generic heat source load",
+   "display_name": "ApHVAC generic heat source load",
+   "model_level": "l",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "ApHVAC generic heat source sp cond load",
+   "display_name": "ApHVAC generic heat source sp cond load",
+   "model_level": "l",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "ApHVAC heat transfer loop DHW load",
+   "display_name": "ApHVAC heat transfer loop DHW load",
+   "model_level": "l",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "ApHVAC heat transfer loop cooling load",
+   "display_name": "ApHVAC heat transfer loop cooling load",
+   "model_level": "l",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "ApHVAC heat transfer loop heating load",
+   "display_name": "ApHVAC heat transfer loop heating load",
+   "model_level": "l",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "ApHVAC heat transfer loop space htg load",
+   "display_name": "ApHVAC heat transfer loop space htg load",
+   "model_level": "l",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "ApHVAC hot water loop DHW load",
+   "display_name": "ApHVAC hot water loop DHW load",
+   "model_level": "l",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "ApHVAC hot water loop load",
+   "display_name": "ApHVAC hot water loop load",
+   "model_level": "l",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "ApHVAC hot water loop space cond'g load",
+   "display_name": "ApHVAC hot water loop space cond'g load",
+   "model_level": "l",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "ApHVAC other heating plant load",
+   "display_name": "ApHVAC other htg plant load",
+   "model_level": "l",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "ApHVAC other htg plant DHW load",
+   "display_name": "ApHVAC other htg plant DHW load",
+   "model_level": "l",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "ApHVAC other htg plant sp cond load",
+   "display_name": "ApHVAC other htg plant sp cond load",
+   "model_level": "l",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "ApHVAC recovered heat from HTL",
+   "display_name": "ApHVAC recovered heat from heat transfer loop",
+   "model_level": "l",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "ApHVAC thermal storage charge load",
+   "display_name": "ApHVAC thermal storage charge load",
+   "model_level": "l",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "ApHVAC thermal storage cooling load",
+   "display_name": "ApHVAC thermal storage cooling load",
+   "model_level": "l",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "ApHVAC thermal storage discharge load",
+   "display_name": "ApHVAC thermal storage discharge load",
+   "model_level": "l",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "ApHVAC total DHW system solar heat input",
+   "display_name": "ApHVAC total DHW system solar heat input",
+   "model_level": "l",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "ApHVAC total DHW system solar sys. input",
+   "display_name": "ApHVAC total DHW system solar sys. input",
+   "model_level": "l",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "ApHVAC total HTL solar heat input",
+   "display_name": "ApHVAC total HTL solar heat input",
+   "model_level": "l",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "ApHVAC total HTL solar htg loop input",
+   "display_name": "ApHVAC total HTL solar htg loop input",
+   "model_level": "l",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "ApHVAC total HWL solar heat input",
+   "display_name": "ApHVAC total HWL solar heat input",
+   "model_level": "l",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "ApHVAC total HWL solar htg loop input",
+   "display_name": "ApHVAC total HWL solar htg loop input",
+   "model_level": "l",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "Boilers load",
+   "display_name": "Boilers load",
+   "model_level": "l",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "CHP generated heat",
+   "display_name": "CH[C]P generated heat",
+   "model_level": "l",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Chillers load",
+   "display_name": "Chillers load",
+   "model_level": "l",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "Cooling coils load",
+   "display_name": "ApHVAC cooling coils total load",
+   "model_level": "l",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "DHW heating demand",
+   "display_name": "DHW heating demand",
+   "model_level": "l",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "DX cooling systems load",
+   "display_name": "ApHVAC DX cooling systems load",
+   "model_level": "l",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "HIDE Ground reflectance",
+   "display_name": "Ground reflectance",
+   "model_level": "l",
+   "units_type": "Number"
+  },
+  {
+   "aps_varname": "HVAC room units clg load",
+   "display_name": "ApHVAC room units cooling load",
+   "model_level": "l",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "HVAC room units htg load",
+   "display_name": "ApHVAC room units heating load",
+   "model_level": "l",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "Heating coils load",
+   "display_name": "ApHVAC heating coils load",
+   "model_level": "l",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "Mech vent cooling load",
+   "display_name": "Aux vent sens. clg. load",
+   "model_level": "l",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "Mech vent dehum load",
+   "display_name": "Aux vent lat. clg. load",
+   "model_level": "l",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "Mech vent heating load",
+   "display_name": "Aux vent heating load",
+   "model_level": "l",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "Pre-cooling ambient heat rejection load",
+   "display_name": "ApHVAC pre-cooling ambient heat rejection load",
+   "model_level": "l",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "Pre-cooling water source load",
+   "display_name": "ApHVAC pre-cooling water source load",
+   "model_level": "l",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "Recovered chiller heat",
+   "display_name": "ApHVAC recovered chiller heat",
+   "model_level": "l",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "Recovered latent heat",
+   "display_name": "ApHVAC recovered latent heat",
+   "model_level": "l",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "Recovered sensible heat",
+   "display_name": "ApHVAC recovered sensible heat",
+   "model_level": "l",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "Room units clg load",
+   "display_name": "Room cooling plant sens. load",
+   "model_level": "l",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "Room units dehum load",
+   "display_name": "Room dehum. plant load",
+   "model_level": "l",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "Room units heating/cooling",
+   "display_name": "ApHVAC room units htg/clg [obs]",
+   "model_level": "l",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "Room units htg load",
+   "display_name": "Room heating plant sens. load",
+   "model_level": "l",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "Room units hum load",
+   "display_name": "Room hum. plant load",
+   "model_level": "l",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "Sky temperature",
+   "display_name": "Sky temperature",
+   "model_level": "l",
+   "units_type": "Temperature"
+  },
+  {
+   "aps_varname": "Steam humidifiers load",
+   "display_name": "ApHVAC steam humidifiers load",
+   "model_level": "l",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "System air cooling load",
+   "display_name": "System air sens. clg. load",
+   "model_level": "l",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "System air dehumidification load",
+   "display_name": "System air lat. clg. load",
+   "model_level": "l",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "System air heating load",
+   "display_name": "System air heating load",
+   "model_level": "l",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "Unitary cooling systems load",
+   "display_name": "ApHVAC unitary cooling systems load",
+   "model_level": "l",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "Waterside economizers load",
+   "display_name": "ApHVAC waterside economizers load",
+   "model_level": "l",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "CO2 concentration",
+   "display_name": "CO2 concentration",
+   "model_level": "n",
+   "units_type": "CO2 concentration"
+  },
+  {
+   "aps_varname": "Enthalpy",
+   "display_name": "Enthalpy",
+   "model_level": "n",
+   "units_type": "Enthalpy"
+  },
+  {
+   "aps_varname": "Humidity ratio",
+   "display_name": "Moisture content",
+   "model_level": "n",
+   "units_type": "Moisture content"
+  },
+  {
+   "aps_varname": "Mass flow",
+   "display_name": "Mass flow",
+   "model_level": "n",
+   "units_type": "Mass flow"
+  },
+  {
+   "aps_varname": "Relative humidity",
+   "display_name": "Relative humidity",
+   "model_level": "n",
+   "units_type": "Relative humidity"
+  },
+  {
+   "aps_varname": "Temperature",
+   "display_name": "Air temperature",
+   "model_level": "n",
+   "units_type": "Temperature"
+  },
+  {
+   "aps_varname": "Volume flow",
+   "display_name": "Volume flow",
+   "model_level": "n",
+   "units_type": "Volume flow"
+  },
+  {
+   "aps_varname": "Wet-bulb depression",
+   "display_name": "Wet-bulb depression",
+   "model_level": "n",
+   "units_type": "Temperature difference"
+  },
+  {
+   "aps_varname": "Wet-bulb temperature",
+   "display_name": "Wet-bulb temperature",
+   "model_level": "n",
+   "units_type": "Temperature"
+  },
+  {
+   "aps_varname": "Opening degree of opening",
+   "display_name": "Degree of opening",
+   "model_level": "o",
+   "units_type": "Percentage"
+  },
+  {
+   "aps_varname": "Opening mass flow in",
+   "display_name": "Mass flow in",
+   "model_level": "o",
+   "units_type": "Mass flow"
+  },
+  {
+   "aps_varname": "Opening mass flow out",
+   "display_name": "Mass flow out",
+   "model_level": "o",
+   "units_type": "Mass flow"
+  },
+  {
+   "aps_varname": "Opening open area",
+   "display_name": "Eqv area",
+   "model_level": "o",
+   "units_type": "Area"
+  },
+  {
+   "aps_varname": "Opening volume flow in",
+   "display_name": "Volume flow in",
+   "model_level": "o",
+   "units_type": "Volume flow"
+  },
+  {
+   "aps_varname": "Opening volume flow out",
+   "display_name": "Volume flow out",
+   "model_level": "o",
+   "units_type": "Volume flow"
+  },
+  {
+   "aps_varname": "Sys Aux mech vent fan CE",
+   "display_name": "Aux mech vent fan CE [obs]",
+   "model_level": "r",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Sys Boiler CE",
+   "display_name": "Boiler CE",
+   "model_level": "r",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Sys Boiler DHW CE",
+   "display_name": "Boiler DHW CE",
+   "model_level": "r",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Sys Boiler absorp chiller CE",
+   "display_name": "Boiler space cooling CE",
+   "model_level": "r",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Sys Boiler non-DHW CE",
+   "display_name": "Boiler space heating CE",
+   "model_level": "r",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Sys Boiler process CE",
+   "display_name": "Sys Boiler process CE",
+   "model_level": "r",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Sys Boiler pump CE",
+   "display_name": "Boiler pump CE [obs]",
+   "model_level": "r",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Sys Boiler space cond'g CE",
+   "display_name": "Boiler space cond'g CE",
+   "model_level": "r",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Sys Chiller CE",
+   "display_name": "Chiller CE",
+   "model_level": "r",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Sys Chiller process CE",
+   "display_name": "Sys Chiller process CE",
+   "model_level": "r",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Sys Chiller pump & fan CE",
+   "display_name": "Chiller heat rej. pump CE",
+   "model_level": "r",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Sys DHW & solar heating pump CE",
+   "display_name": "DHW & solar heating pump CE",
+   "model_level": "r",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Sys Fans/pumps/controls CE",
+   "display_name": "System auxiliary energy CE",
+   "model_level": "r",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Sys Lights CE",
+   "display_name": "Lights CE",
+   "model_level": "r",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Sys Mech vent fan CE",
+   "display_name": "System air fan CE [obs]",
+   "model_level": "r",
+   "units_type": "Carbon emission"
+  },
+  {
+   "aps_varname": "Conduction gain (bridge) - non-repeating",
+   "display_name": "Conduction gain (bridge) - non-repeating",
+   "model_level": "s",
+   "units_type": "Gain"
+  },
+  {
+   "aps_varname": "Conduction gain (bridge) - random area (perimeter)",
+   "display_name": "Conduction gain (bridge) - random area (perimeter)",
+   "model_level": "s",
+   "units_type": "Gain"
+  },
+  {
+   "aps_varname": "Conduction gain (bridge) - random linear",
+   "display_name": "Conduction gain (bridge) - random linear",
+   "model_level": "s",
+   "units_type": "Gain"
+  },
+  {
+   "aps_varname": "Conduction gain (bridge) - random point",
+   "display_name": "Conduction gain (bridge) - random point",
+   "model_level": "s",
+   "units_type": "Gain"
+  },
+  {
+   "aps_varname": "Ext surface incident solar flux",
+   "display_name": "Ext surface incident solar flux",
+   "model_level": "s",
+   "units_type": "Radiation flux"
+  },
+  {
+   "aps_varname": "Ext surface incident solar flux",
+   "display_name": "Ext surface incident solar power",
+   "model_level": "s",
+   "units_type": "Heat flow"
+  },
+  {
+   "aps_varname": "Ext surface solar incidence angle",
+   "display_name": "Ext surface solar incidence angle",
+   "model_level": "s",
+   "units_type": "Angle"
+  },
+  {
+   "aps_varname": "External conduction gain (clear field)",
+   "display_name": "External conduction gain (clear field)",
+   "model_level": "s",
+   "units_type": "Gain"
+  },
+  {
+   "aps_varname": "External convective surface coefficient",
+   "display_name": "External convective surface coefficient",
+   "model_level": "s",
+   "units_type": "Convective Coefficient"
+  },
+  {
+   "aps_varname": "External shade state",
+   "display_name": "External shade state",
+   "model_level": "s",
+   "units_type": "Number"
+  },
+  {
+   "aps_varname": "HIDE Ext surface temperature",
+   "display_name": "Ext surface temperature",
+   "model_level": "s",
+   "units_type": "Temperature"
+  },
+  {
+   "aps_varname": "Int surface incident solar flux",
+   "display_name": "Int surface incident solar flux",
+   "model_level": "s",
+   "units_type": "Radiation flux"
+  },
+  {
+   "aps_varname": "Int surface incident solar flux",
+   "display_name": "Int surface incident solar power",
+   "model_level": "s",
+   "units_type": "Heat flow"
+  },
+  {
+   "aps_varname": "Int surface solar incidence angle",
+   "display_name": "Int surface solar incidence angle",
+   "model_level": "s",
+   "units_type": "Angle"
+  },
+  {
+   "aps_varname": "Int surface temperature",
+   "display_name": "Int surface temperature",
+   "model_level": "s",
+   "units_type": "Temperature"
+  },
+  {
+   "aps_varname": "Internal convective surface coefficient",
+   "display_name": "Internal convective surface coefficient",
+   "model_level": "s",
+   "units_type": "Convective Coefficient"
+  },
+  {
+   "aps_varname": "Internal shade state",
+   "display_name": "Internal shade state",
+   "model_level": "s",
+   "units_type": "Number"
+  },
+  {
+   "aps_varname": "PCM specific heat capacity",
+   "display_name": "PCM specific heat capacity",
+   "model_level": "s",
+   "units_type": "Specific heat capacity"
+  },
+  {
+   "aps_varname": "PCM state",
+   "display_name": "PCM state",
+   "model_level": "s",
+   "units_type": "Liquid fraction"
+  },
+  {
+   "aps_varname": "PCM temperature",
+   "display_name": "PCM temperature",
+   "model_level": "s",
+   "units_type": "Temperature"
+  },
+  {
+   "aps_varname": "Surface heat flow",
+   "display_name": "Surface heat flow",
+   "model_level": "s",
+   "units_type": "Heat flow"
+  },
+  {
+   "aps_varname": "Total short wave transmittance",
+   "display_name": "Total short wave transmittance",
+   "model_level": "s",
+   "units_type": "No unit"
+  },
+  {
+   "aps_varname": "System Misc. A fuel",
+   "display_name": "Miscellaneous",
+   "model_level": "t",
+   "units_type": "Monetary units"
+  },
+  {
+   "aps_varname": "Total CE",
+   "display_name": "Renewables",
+   "model_level": "t",
+   "units_type": "Monetary units"
+  },
+  {
+   "aps_varname": "Total coal CE",
+   "display_name": "Coal",
+   "model_level": "t",
+   "units_type": "Monetary units"
+  },
+  {
+   "aps_varname": "Total electricity",
+   "display_name": "Electricity",
+   "model_level": "t",
+   "units_type": "Monetary units"
+  },
+  {
+   "aps_varname": "Total gas",
+   "display_name": "Gas",
+   "model_level": "t",
+   "units_type": "Monetary units"
+  },
+  {
+   "aps_varname": "Total oil",
+   "display_name": "Oil",
+   "model_level": "t",
+   "units_type": "Monetary units"
+  },
+  {
+   "aps_varname": "HIDE Sys DHW flow rate",
+   "display_name": "DHW flow rate",
+   "model_level": "v",
+   "units_type": "Volume flow"
+  },
+  {
+   "aps_varname": "HIDE Sys DHW solar htg system flow rate",
+   "display_name": "DHW solar htg system flow rate",
+   "model_level": "v",
+   "units_type": "Volume flow"
+  },
+  {
+   "aps_varname": "HIDE Sys DHW solar htg system panel temp",
+   "display_name": "DHW solar htg system panel temp",
+   "model_level": "v",
+   "units_type": "Temperature"
+  },
+  {
+   "aps_varname": "Sys Aux mech vent cooling load",
+   "display_name": "Aux vent sens. clg. load",
+   "model_level": "v",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "Sys Aux mech vent dehum load",
+   "display_name": "Aux vent lat. clg. load",
+   "model_level": "v",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "Sys Aux mech vent flow rate",
+   "display_name": "Aux vent flow rate",
+   "model_level": "v",
+   "units_type": "Volume flow"
+  },
+  {
+   "aps_varname": "Sys Aux mech vent heating load",
+   "display_name": "Aux vent heating load",
+   "model_level": "v",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "Sys Boiler absorp chiller load",
+   "display_name": "Boiler space cooling load",
+   "model_level": "v",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "Sys Boiler load",
+   "display_name": "Boiler load",
+   "model_level": "v",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "Sys Boiler non-DHW load",
+   "display_name": "Boiler space heating load",
+   "model_level": "v",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "Sys Boiler process load",
+   "display_name": "Boiler process load",
+   "model_level": "v",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "Sys Boiler space cond'g load",
+   "display_name": "Boiler space cond'g load",
+   "model_level": "v",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "Sys CHP heat contribution",
+   "display_name": "CH[C]P heat contribution",
+   "model_level": "v",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "Sys Chiller load",
+   "display_name": "Chiller load",
+   "model_level": "v",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "Sys Chiller process load",
+   "display_name": "Chiller process load",
+   "model_level": "v",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "Sys DHW boiler load",
+   "display_name": "Boiler DHW load",
+   "model_level": "v",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "Sys DHW heating load",
+   "display_name": "DHW heating demand",
+   "model_level": "v",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "Sys DHW solar heat input",
+   "display_name": "DHW solar heat input",
+   "model_level": "v",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "Sys DHW solar heating system input",
+   "display_name": "Solar heating system input",
+   "model_level": "v",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "Sys DHW solar htg system tank temp",
+   "display_name": "Solar htg system tank temp",
+   "model_level": "v",
+   "units_type": "Temperature"
+  },
+  {
+   "aps_varname": "Sys Mech vent cooling load",
+   "display_name": "System air sens. clg. load",
+   "model_level": "v",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "Sys Mech vent dehum load",
+   "display_name": "System air lat. clg. load",
+   "model_level": "v",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "Sys Mech vent flow rate",
+   "display_name": "System air flow rate",
+   "model_level": "v",
+   "units_type": "Volume flow"
+  },
+  {
+   "aps_varname": "Sys Mech vent heat recovery temp",
+   "display_name": "System air heat recovery temp",
+   "model_level": "v",
+   "units_type": "Temperature"
+  },
+  {
+   "aps_varname": "Sys Mech vent heating load",
+   "display_name": "System air heating load",
+   "model_level": "v",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "Sys Mech vent supply moisture content",
+   "display_name": "System air supply moisture content",
+   "model_level": "v",
+   "units_type": "Moisture content"
+  },
+  {
+   "aps_varname": "Sys Mech vent supply temperature",
+   "display_name": "System air supply temperature",
+   "model_level": "v",
+   "units_type": "Temperature"
+  },
+  {
+   "aps_varname": "Sys Process heat available for recovery",
+   "display_name": "Process heat available for recovery",
+   "model_level": "v",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Sys Process heat recovered",
+   "display_name": "Process heat recovered",
+   "model_level": "v",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Sys Process heat recovery heat pump",
+   "display_name": "Process heat recovery heat pump",
+   "model_level": "v",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Sys Process heat removal",
+   "display_name": "Process heat removal",
+   "model_level": "v",
+   "units_type": "Power"
+  },
+  {
+   "aps_varname": "Sys Room cooling load",
+   "display_name": "Room cooling plant sens. load",
+   "model_level": "v",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "Sys Room dehum load",
+   "display_name": "Room dehum. plant load",
+   "model_level": "v",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "Sys Room heating load",
+   "display_name": "Room heating plant sens. load",
+   "model_level": "v",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "Sys Room humidification load",
+   "display_name": "Room hum. plant load",
+   "model_level": "v",
+   "units_type": "Sys Load"
+  },
+  {
+   "aps_varname": "Atmospheric pressure",
+   "display_name": "Atmospheric pressure",
+   "model_level": "w",
+   "units_type": "Pressure"
+  },
+  {
+   "aps_varname": "Cloud cover",
+   "display_name": "Cloud cover",
+   "model_level": "w",
+   "units_type": "Cloud cover"
+  },
+  {
+   "aps_varname": "Diffuse radiation",
+   "display_name": "Diffuse radiation",
+   "model_level": "w",
+   "units_type": "Radiation flux"
+  },
+  {
+   "aps_varname": "Direct radiation",
+   "display_name": "Direct radiation",
+   "model_level": "w",
+   "units_type": "Radiation flux"
+  },
+  {
+   "aps_varname": "Direct radiation&Diffuse radiation&Solar altitude",
+   "display_name": "Global radiation",
+   "model_level": "w",
+   "units_type": "Radiation flux"
+  },
+  {
+   "aps_varname": "Solar altitude",
+   "display_name": "Solar altitude",
+   "model_level": "w",
+   "units_type": "Angle"
+  },
+  {
+   "aps_varname": "Solar azimuth",
+   "display_name": "Solar azimuth",
+   "model_level": "w",
+   "units_type": "Angle"
+  },
+  {
+   "aps_varname": "Temperature",
+   "display_name": "Dry-bulb temperature",
+   "model_level": "w",
+   "units_type": "Temperature"
+  },
+  {
+   "aps_varname": "Temperature&Wet bulb temperature&Atmospheric pressure",
+   "display_name": "External dew-point temp.",
+   "model_level": "w",
+   "units_type": "Temperature"
+  },
+  {
+   "aps_varname": "Temperature&Wet bulb temperature&Atmospheric pressure",
+   "display_name": "External moisture content",
+   "model_level": "w",
+   "units_type": "Moisture content"
+  },
+  {
+   "aps_varname": "Temperature&Wet bulb temperature&Atmospheric pressure",
+   "display_name": "External relative humidity",
+   "model_level": "w",
+   "units_type": "Percentage"
+  },
+  {
+   "aps_varname": "Wet bulb temperature",
+   "display_name": "Wet-bulb temperature",
+   "model_level": "w",
+   "units_type": "Temperature"
+  },
+  {
+   "aps_varname": "Wind direction",
+   "display_name": "Wind direction[E of N]",
+   "model_level": "w",
+   "units_type": "Azimuth"
+  },
+  {
+   "aps_varname": "Wind speed",
+   "display_name": "Wind speed",
+   "model_level": "w",
+   "units_type": "Speed"
+  },
+  {
+   "aps_varname": "Air & furniture dynamics gain",
+   "display_name": "Air & furniture dynamics gain",
+   "model_level": "z",
+   "units_type": "Gain"
+  },
+  {
+   "aps_varname": "Air exch ext vent lat gain",
+   "display_name": "Air exch ext vent lat gain [obs]",
+   "model_level": "z",
+   "units_type": "Gain"
+  },
+  {
+   "aps_varname": "Air exch int vent lat gain",
+   "display_name": "Air exch int vent lat gain [obs]",
+   "model_level": "z",
+   "units_type": "Gain"
+  },
+  {
+   "aps_varname": "Air exchange latent gain",
+   "display_name": "Vent/infiltr. latent gain",
+   "model_level": "z",
+   "units_type": "Gain"
+  },
+  {
+   "aps_varname": "ApHVAC air supply",
+   "display_name": "ApHVAC air supply",
+   "model_level": "z",
+   "units_type": "Volume flow"
+  },
+  {
+   "aps_varname": "ApSys air supply",
+   "display_name": "ApSys air supply",
+   "model_level": "z",
+   "units_type": "Volume flow"
+  },
+  {
+   "aps_varname": "Aux mech vent",
+   "display_name": "Auxiliary vent",
+   "model_level": "z",
+   "units_type": "Volume flow"
+  },
+  {
+   "aps_varname": "Aux mech vent gain",
+   "display_name": "Aux vent gain",
+   "model_level": "z",
+   "units_type": "Gain"
+  },
+  {
+   "aps_varname": "Aux mech vent lat gain",
+   "display_name": "Aux vent lat gain",
+   "model_level": "z",
+   "units_type": "Gain"
+  },
+  {
+   "aps_varname": "Aux mech vent temp",
+   "display_name": "Auxiliary vent temperature",
+   "model_level": "z",
+   "units_type": "Temperature"
+  },
+  {
+   "aps_varname": "CIBSE F1 factor",
+   "display_name": "CIBSE F1 factor",
+   "model_level": "z",
+   "units_type": "Number"
+  },
+  {
+   "aps_varname": "CIBSE F2 factor",
+   "display_name": "CIBSE F2 factor",
+   "model_level": "z",
+   "units_type": "Number"
+  },
+  {
+   "aps_varname": "CIBSE interm. heating correction",
+   "display_name": "CIBSE interm. heating correction",
+   "model_level": "z",
+   "units_type": "Number"
+  },
+  {
+   "aps_varname": "CIBSE interm. plant size",
+   "display_name": "CIBSE interm. plant size",
+   "model_level": "z",
+   "units_type": "power"
+  },
+  {
+   "aps_varname": "CIBSE thermal response",
+   "display_name": "CIBSE thermal response",
+   "model_level": "z",
+   "units_type": "Number"
+  },
+  {
+   "aps_varname": "Casual gains",
+   "display_name": "Internal gain",
+   "model_level": "z",
+   "units_type": "Gain"
+  },
+  {
+   "aps_varname": "Comfort temperature",
+   "display_name": "Dry resultant temperature",
+   "model_level": "z",
+   "units_type": "Temperature"
+  },
+  {
+   "aps_varname": "Conditioned vent lat gain",
+   "display_name": "Conditioned vent lat gain [obs]",
+   "model_level": "z",
+   "units_type": "Gain"
+  },
+  {
+   "aps_varname": "Conditioned ventilation gains",
+   "display_name": "Conditioned vent gain [obs]",
+   "model_level": "z",
+   "units_type": "Gain"
+  },
+  {
+   "aps_varname": "Conditioned ventilation rate",
+   "display_name": "Conditioned vent [obs]",
+   "model_level": "z",
+   "units_type": "Volume flow"
+  },
+  {
+   "aps_varname": "Conduction from ext elements",
+   "display_name": "External conduction gain",
+   "model_level": "z",
+   "units_type": "Gain"
+  },
+  {
+   "aps_varname": "Conduction from int surfaces",
+   "display_name": "Internal conduction gain",
+   "model_level": "z",
+   "units_type": "Gain"
+  },
+  {
+   "aps_varname": "Conduction gain",
+   "display_name": "Conduction gain",
+   "model_level": "z",
+   "units_type": "Gain"
+  },
+  {
+   "aps_varname": "Conduction gain (bridge) - non-repeating",
+   "display_name": "Conduction gain (bridge) - non-repeating",
+   "model_level": "z",
+   "units_type": "Gain"
+  },
+  {
+   "aps_varname": "Conduction gain (bridge) - random area (perimeter)",
+   "display_name": "Conduction gain (bridge) - random area (perimeter)",
+   "model_level": "z",
+   "units_type": "Gain"
+  },
+  {
+   "aps_varname": "Conduction gain (bridge) - random linear",
+   "display_name": "Conduction gain (bridge) - random linear",
+   "model_level": "z",
+   "units_type": "Gain"
+  },
+  {
+   "aps_varname": "Conduction gain (bridge) - random point",
+   "display_name": "Conduction gain (bridge) - random point",
+   "model_level": "z",
+   "units_type": "Gain"
+  },
+  {
+   "aps_varname": "Conduction gain - ceiling",
+   "display_name": "Conduction gain - ceilings",
+   "model_level": "z",
+   "units_type": "Gain"
+  },
+  {
+   "aps_varname": "Conduction gain - external door",
+   "display_name": "Conduction gain - external doors",
+   "model_level": "z",
+   "units_type": "Gain"
+  },
+  {
+   "aps_varname": "Conduction gain - external glazed",
+   "display_name": "Conduction gain - external windows",
+   "model_level": "z",
+   "units_type": "Gain"
+  },
+  {
+   "aps_varname": "Conduction gain - external wall",
+   "display_name": "Conduction gain - external walls",
+   "model_level": "z",
+   "units_type": "Gain"
+  },
+  {
+   "aps_varname": "Conduction gain - floor",
+   "display_name": "Conduction gain - internal floors",
+   "model_level": "z",
+   "units_type": "Gain"
+  },
+  {
+   "aps_varname": "Conduction gain - ground floor",
+   "display_name": "Conduction gain - ground/exposed floors",
+   "model_level": "z",
+   "units_type": "Gain"
+  },
+  {
+   "aps_varname": "Conduction gain - internal door",
+   "display_name": "Conduction gain - internal doors",
+   "model_level": "z",
+   "units_type": "Gain"
+  },
+  {
+   "aps_varname": "Conduction gain - internal glazed",
+   "display_name": "Conduction gain - internal glazing",
+   "model_level": "z",
+   "units_type": "Gain"
+  },
+  {
+   "aps_varname": "Conduction gain - internal wall",
+   "display_name": "Conduction gain - internal walls",
+   "model_level": "z",
+   "units_type": "Gain"
+  },
+  {
+   "aps_varname": "Conduction gain - roof",
+   "display_name": "Conduction gain - roofs",
+   "model_level": "z",
+   "units_type": "Gain"
+  },
+  {
+   "aps_varname": "Conduction gain - rooflight",
+   "display_name": "Conduction gain - rooflights",
+   "model_level": "z",
+   "units_type": "Gain"
+  },
+  {
+   "aps_varname": "Convective equipment gain",
+   "display_name": "Convective equipment gain",
+   "model_level": "z",
+   "units_type": "Gain"
+  },
+  {
+   "aps_varname": "Convective lighting gain",
+   "display_name": "Convective lighting gain",
+   "model_level": "z",
+   "units_type": "Gain"
+  },
+  {
+   "aps_varname": "Convective people gain",
+   "display_name": "Convective people gain",
+   "model_level": "z",
+   "units_type": "Gain"
+  },
+  {
+   "aps_varname": "Convective plant load",
+   "display_name": "Convective room plant load",
+   "model_level": "z",
+   "units_type": "Gain"
+  },
+  {
+   "aps_varname": "Cooling occupied and available",
+   "display_name": "Cooling occupied and available",
+   "model_level": "z",
+   "units_type": "Number"
+  },
+  {
+   "aps_varname": "Cooling set point",
+   "display_name": "Cooling set point",
+   "model_level": "z",
+   "units_type": "Temperature"
+  },
+  {
+   "aps_varname": "Cooling vent",
+   "display_name": "Free cooling vent",
+   "model_level": "z",
+   "units_type": "Volume flow"
+  },
+  {
+   "aps_varname": "Cooling vent gain",
+   "display_name": "Free cooling vent gain",
+   "model_level": "z",
+   "units_type": "Gain"
+  },
+  {
+   "aps_varname": "Cooling vent lat gain",
+   "display_name": "Free cooling vent lat gain",
+   "model_level": "z",
+   "units_type": "Gain"
+  },
+  {
+   "aps_varname": "DHW demand flow",
+   "display_name": "DHW demand flow",
+   "model_level": "z",
+   "units_type": "Fluid flow"
+  },
+  {
+   "aps_varname": "DHW demand load",
+   "display_name": "DHW demand load",
+   "model_level": "z",
+   "units_type": "Load"
+  },
+  {
+   "aps_varname": "DHW supply temperature",
+   "display_name": "DHW supply temperature",
+   "model_level": "z",
+   "units_type": "Temperature"
+  },
+  {
+   "aps_varname": "DHW target supply temperature",
+   "display_name": "DHW target supply temperature",
+   "model_level": "z",
+   "units_type": "Temperature"
+  },
+  {
+   "aps_varname": "Daylight illuminance 1",
+   "display_name": "Daylight illuminance 1",
+   "model_level": "z",
+   "units_type": "Illuminance"
+  },
+  {
+   "aps_varname": "Daylight illuminance 2",
+   "display_name": "Daylight illuminance 2",
+   "model_level": "z",
+   "units_type": "Illuminance"
+  },
+  {
+   "aps_varname": "Duct conduction gain",
+   "display_name": "Duct conduction gain",
+   "model_level": "z",
+   "units_type": "Gain"
+  },
+  {
+   "aps_varname": "Duct leakage inflow",
+   "display_name": "Duct leakage inflow",
+   "model_level": "z",
+   "units_type": "Volume flow"
+  },
+  {
+   "aps_varname": "Duct leakage lat gain",
+   "display_name": "Duct leakage lat gain",
+   "model_level": "z",
+   "units_type": "Gain"
+  },
+  {
+   "aps_varname": "Duct leakage sensible gain",
+   "display_name": "Duct leakage sensible gain",
+   "model_level": "z",
+   "units_type": "Gain"
+  },
+  {
+   "aps_varname": "Environmental temperature",
+   "display_name": "Environmental temperature",
+   "model_level": "z",
+   "units_type": "Temperature"
+  },
+  {
+   "aps_varname": "Equipment gain",
+   "display_name": "Equipment gain",
+   "model_level": "z",
+   "units_type": "Gain"
+  },
+  {
+   "aps_varname": "Equipment latent gain",
+   "display_name": "Equipment latent gain",
+   "model_level": "z",
+   "units_type": "Gain"
+  },
+  {
+   "aps_varname": "External conduction gain (bridge)",
+   "display_name": "External conduction gain (bridge)",
+   "model_level": "z",
+   "units_type": "Gain"
+  },
+  {
+   "aps_varname": "External conduction gain (clear field)",
+   "display_name": "External conduction gain (clear field)",
+   "model_level": "z",
+   "units_type": "Gain"
+  },
+  {
+   "aps_varname": "External ventilation rate",
+   "display_name": "Air exch external vent [obs]",
+   "model_level": "z",
+   "units_type": "Volume flow"
+  },
+  {
+   "aps_varname": "HVAC ventilation rate",
+   "display_name": "System air supply [obs]",
+   "model_level": "z",
+   "units_type": "Volume flow"
+  },
+  {
+   "aps_varname": "HVAC zone cooling setpoint",
+   "display_name": "HVAC zone cooling setpoint",
+   "model_level": "z",
+   "units_type": "Temperature"
+  },
+  {
+   "aps_varname": "HVAC zone heating setpoint",
+   "display_name": "HVAC zone heating setpoint",
+   "model_level": "z",
+   "units_type": "Temperature"
+  },
+  {
+   "aps_varname": "Heating occupied and available",
+   "display_name": "Heating occupied and available",
+   "model_level": "z",
+   "units_type": "Number"
+  },
+  {
+   "aps_varname": "Heating set point",
+   "display_name": "Heating set point",
+   "model_level": "z",
+   "units_type": "Temperature"
+  },
+  {
+   "aps_varname": "Infiltration",
+   "display_name": "Infiltration",
+   "model_level": "z",
+   "units_type": "Volume flow"
+  },
+  {
+   "aps_varname": "Infiltration gain",
+   "display_name": "Infiltration gain",
+   "model_level": "z",
+   "units_type": "Gain"
+  },
+  {
+   "aps_varname": "Infiltration lat gain",
+   "display_name": "Infiltration lat gain",
+   "model_level": "z",
+   "units_type": "Gain"
+  },
+  {
+   "aps_varname": "Internal latent gain",
+   "display_name": "Internal latent gain",
+   "model_level": "z",
+   "units_type": "Gain"
+  },
+  {
+   "aps_varname": "Internal ventilation gains",
+   "display_name": "Air exch int vent gain [obs]",
+   "model_level": "z",
+   "units_type": "Gain"
+  },
+  {
+   "aps_varname": "Internal ventilation rate",
+   "display_name": "Air exch internal vent [obs]",
+   "model_level": "z",
+   "units_type": "Volume flow"
+  },
+  {
+   "aps_varname": "Lighting gain",
+   "display_name": "Lighting gain",
+   "model_level": "z",
+   "units_type": "Gain"
+  },
+  {
+   "aps_varname": "MacroFlo ext vent gain",
+   "display_name": "MacroFlo ext vent gain",
+   "model_level": "z",
+   "units_type": "Gain"
+  },
+  {
+   "aps_varname": "MacroFlo ext vent lat gain",
+   "display_name": "MacroFlo ext vent lat gain",
+   "model_level": "z",
+   "units_type": "Gain"
+  },
+  {
+   "aps_varname": "MacroFlo external vent",
+   "display_name": "MacroFlo external vent",
+   "model_level": "z",
+   "units_type": "Volume flow"
+  },
+  {
+   "aps_varname": "MacroFlo int vent gain",
+   "display_name": "MacroFlo int vent gain",
+   "model_level": "z",
+   "units_type": "Gain"
+  },
+  {
+   "aps_varname": "MacroFlo int vent lat gain",
+   "display_name": "MacroFlo int vent lat gain",
+   "model_level": "z",
+   "units_type": "Gain"
+  },
+  {
+   "aps_varname": "MacroFlo internal vent",
+   "display_name": "MacroFlo internal vent",
+   "model_level": "z",
+   "units_type": "Volume flow"
+  },
+  {
+   "aps_varname": "NCM sensible load",
+   "display_name": "NCM sensible load",
+   "model_level": "z",
+   "units_type": "Gain"
+  },
+  {
+   "aps_varname": "Natural vent",
+   "display_name": "Natural vent",
+   "model_level": "z",
+   "units_type": "Volume flow"
+  },
+  {
+   "aps_varname": "Natural vent gain",
+   "display_name": "Natural vent gain",
+   "model_level": "z",
+   "units_type": "Gain"
+  },
+  {
+   "aps_varname": "Natural vent lat gain",
+   "display_name": "Natural vent lat gain",
+   "model_level": "z",
+   "units_type": "Gain"
+  },
+  {
+   "aps_varname": "Number of people",
+   "display_name": "Number of people",
+   "model_level": "z",
+   "units_type": "Number"
+  },
+  {
+   "aps_varname": "People gain",
+   "display_name": "People gain",
+   "model_level": "z",
+   "units_type": "Gain"
+  },
+  {
+   "aps_varname": "People latent gain",
+   "display_name": "People latent gain",
+   "model_level": "z",
+   "units_type": "Gain"
+  },
+  {
+   "aps_varname": "Plant profile",
+   "display_name": "Plant profile",
+   "model_level": "z",
+   "units_type": "Number"
+  },
+  {
+   "aps_varname": "Process simulation gain",
+   "display_name": "Process simulation sensible gain",
+   "model_level": "z",
+   "units_type": "Gain"
+  },
+  {
+   "aps_varname": "Process simulation lat gain",
+   "display_name": "Process simulation latent gain",
+   "model_level": "z",
+   "units_type": "Gain"
+  },
+  {
+   "aps_varname": "Room CO2 concentration",
+   "display_name": "Room CO2 concentration",
+   "model_level": "z",
+   "units_type": "CO2 concentration"
+  },
+  {
+   "aps_varname": "Room air temperature",
+   "display_name": "Air temperature",
+   "model_level": "z",
+   "units_type": "Temperature"
+  },
+  {
+   "aps_varname": "Room air temperature&Room % saturation&Atmospheric pressure[w]",
+   "display_name": "Dew-point temperature",
+   "model_level": "z",
+   "units_type": "Temperature"
+  },
+  {
+   "aps_varname": "Room air temperature&Room % saturation&Atmospheric pressure[w]",
+   "display_name": "Moisture content",
+   "model_level": "z",
+   "units_type": "Moisture content"
+  },
+  {
+   "aps_varname": "Room air temperature&Room % saturation&Atmospheric pressure[w]",
+   "display_name": "Relative humidity",
+   "model_level": "z",
+   "units_type": "Percentage"
+  },
+  {
+   "aps_varname": "Room air temperature&Room % saturation&Atmospheric pressure[w]",
+   "display_name": "Wet bulb temperature",
+   "model_level": "z",
+   "units_type": "Temperature"
+  },
+  {
+   "aps_varname": "Room air temperature&Room % saturation&Room radiant temperature",
+   "display_name": "CLO",
+   "model_level": "z",
+   "units_type": "Number"
+  },
+  {
+   "aps_varname": "Room air temperature&Room % saturation&Room radiant temperature",
+   "display_name": "CLO  (ASHRAE 55 Adaptive direct-solar)",
+   "model_level": "z",
+   "units_type": "Number"
+  },
+  {
+   "aps_varname": "Room air temperature&Room % saturation&Room radiant temperature",
+   "display_name": "CLO  (ASHRAE 55 Adaptive)",
+   "model_level": "z",
+   "units_type": "Number"
+  },
+  {
+   "aps_varname": "Room air temperature&Room % saturation&Room radiant temperature",
+   "display_name": "CLO  (ASHRAE 55 Analytical direct-solar)",
+   "model_level": "z",
+   "units_type": "Number"
+  },
+  {
+   "aps_varname": "Room air temperature&Room % saturation&Room radiant temperature",
+   "display_name": "CLO  (ASHRAE 55 Analytical)",
+   "model_level": "z",
+   "units_type": "Number"
+  },
+  {
+   "aps_varname": "Room air temperature&Room % saturation&Room radiant temperature",
+   "display_name": "Comfort index",
+   "model_level": "z",
+   "units_type": "Comfort index"
+  },
+  {
+   "aps_varname": "Room air temperature&Room % saturation&Room radiant temperature",
+   "display_name": "MRT  (ASHRAE 55 Adaptive direct-solar)",
+   "model_level": "z",
+   "units_type": "Temperature"
+  },
+  {
+   "aps_varname": "Room air temperature&Room % saturation&Room radiant temperature",
+   "display_name": "MRT  (ASHRAE 55 Analytical direct-solar)",
+   "model_level": "z",
+   "units_type": "Temperature"
+  },
+  {
+   "aps_varname": "Room air temperature&Room % saturation&Room radiant temperature",
+   "display_name": "PMV  (ASHRAE 55 Adaptive direct-solar)",
+   "model_level": "z",
+   "units_type": "Predicted mean vote"
+  },
+  {
+   "aps_varname": "Room air temperature&Room % saturation&Room radiant temperature",
+   "display_name": "PMV  (ASHRAE 55 Adaptive)",
+   "model_level": "z",
+   "units_type": "Predicted mean vote"
+  },
+  {
+   "aps_varname": "Room air temperature&Room % saturation&Room radiant temperature",
+   "display_name": "PMV  (ASHRAE 55 Analytical direct-solar)",
+   "model_level": "z",
+   "units_type": "Predicted mean vote"
+  },
+  {
+   "aps_varname": "Room air temperature&Room % saturation&Room radiant temperature",
+   "display_name": "PMV  (ASHRAE 55 Analytical)",
+   "model_level": "z",
+   "units_type": "Predicted mean vote"
+  },
+  {
+   "aps_varname": "Room air temperature&Room % saturation&Room radiant temperature",
+   "display_name": "PMV(ISO 7730 elevated air speed)",
+   "model_level": "z",
+   "units_type": "Predicted mean vote"
+  },
+  {
+   "aps_varname": "Room air temperature&Room % saturation&Room radiant temperature",
+   "display_name": "PMV(ISO 7730 nom & elev air speed cat A)",
+   "model_level": "z",
+   "units_type": "Predicted mean vote"
+  },
+  {
+   "aps_varname": "Room air temperature&Room % saturation&Room radiant temperature",
+   "display_name": "PMV(ISO 7730 nom & elev air speed cat B)",
+   "model_level": "z",
+   "units_type": "Predicted mean vote"
+  },
+  {
+   "aps_varname": "Room air temperature&Room % saturation&Room radiant temperature",
+   "display_name": "PMV(ISO 7730 nom & elev air speed cat C)",
+   "model_level": "z",
+   "units_type": "Predicted mean vote"
+  },
+  {
+   "aps_varname": "Room air temperature&Room % saturation&Room radiant temperature",
+   "display_name": "PMV(ISO 7730 nominal air speed)",
+   "model_level": "z",
+   "units_type": "Predicted mean vote"
+  },
+  {
+   "aps_varname": "Room air temperature&Room % saturation&Room radiant temperature",
+   "display_name": "PPD  (ASHRAE 55 Adaptive direct-solar)",
+   "model_level": "z",
+   "units_type": "Percentage"
+  },
+  {
+   "aps_varname": "Room air temperature&Room % saturation&Room radiant temperature",
+   "display_name": "PPD  (ASHRAE 55 Adaptive)",
+   "model_level": "z",
+   "units_type": "Percentage"
+  },
+  {
+   "aps_varname": "Room air temperature&Room % saturation&Room radiant temperature",
+   "display_name": "PPD  (ASHRAE 55 Analytical direct-solar)",
+   "model_level": "z",
+   "units_type": "Percentage"
+  },
+  {
+   "aps_varname": "Room air temperature&Room % saturation&Room radiant temperature",
+   "display_name": "PPD  (ASHRAE 55 Analytical)",
+   "model_level": "z",
+   "units_type": "Percentage"
+  },
+  {
+   "aps_varname": "Room air temperature&Room % saturation&Room radiant temperature",
+   "display_name": "PPD(ISO 7730 elevated air speed)",
+   "model_level": "z",
+   "units_type": "Percentage"
+  },
+  {
+   "aps_varname": "Room air temperature&Room % saturation&Room radiant temperature",
+   "display_name": "PPD(ISO 7730 nom & elev air speed cat A)",
+   "model_level": "z",
+   "units_type": "Percentage"
+  },
+  {
+   "aps_varname": "Room air temperature&Room % saturation&Room radiant temperature",
+   "display_name": "PPD(ISO 7730 nom & elev air speed cat B)",
+   "model_level": "z",
+   "units_type": "Percentage"
+  },
+  {
+   "aps_varname": "Room air temperature&Room % saturation&Room radiant temperature",
+   "display_name": "PPD(ISO 7730 nom & elev air speed cat C)",
+   "model_level": "z",
+   "units_type": "Percentage"
+  },
+  {
+   "aps_varname": "Room air temperature&Room % saturation&Room radiant temperature",
+   "display_name": "PPD(ISO 7730 nominal air speed)",
+   "model_level": "z",
+   "units_type": "Percentage"
+  },
+  {
+   "aps_varname": "Room air temperature&Room % saturation&Room radiant temperature",
+   "display_name": "People dissatisfied",
+   "model_level": "z",
+   "units_type": "Percentage"
+  },
+  {
+   "aps_varname": "Room air temperature&Room % saturation&Room radiant temperature",
+   "display_name": "Predicted mean vote",
+   "model_level": "z",
+   "units_type": "Predicted mean vote"
+  },
+  {
+   "aps_varname": "Room air temperature&Room % saturation&Room radiant temperature",
+   "display_name": "Standard effective temperature",
+   "model_level": "z",
+   "units_type": "Temperature"
+  },
+  {
+   "aps_varname": "Room air temperature&Room radiant temperature",
+   "display_name": "Operative temperature (ASHRAE)",
+   "model_level": "z",
+   "units_type": "Temperature"
+  },
+  {
+   "aps_varname": "Room air temperature&Room radiant temperature",
+   "display_name": "Operative temperature (TM 52/CIBSE)",
+   "model_level": "z",
+   "units_type": "Temperature"
+  },
+  {
+   "aps_varname": "Room air temperature&Room radiant temperature",
+   "display_name": "Top  (ASHRAE 55 Adaptive direct-solar)",
+   "model_level": "z",
+   "units_type": "Temperature"
+  },
+  {
+   "aps_varname": "Room air temperature&Room radiant temperature",
+   "display_name": "Top  (ASHRAE 55 Analytical direct-solar)",
+   "model_level": "z",
+   "units_type": "Temperature"
+  },
+  {
+   "aps_varname": "Room air temperature&Temperature[w]",
+   "display_name": "Daily weighted exceedance (TM 52 criterion 2)",
+   "model_level": "z",
+   "units_type": "DegreeHours"
+  },
+  {
+   "aps_varname": "Room air temperature&Temperature[w]",
+   "display_name": "Degrees > Max. adaptive temp. (TM 52 criterion 1)",
+   "model_level": "z",
+   "units_type": "Temperature"
+  },
+  {
+   "aps_varname": "Room cooling load",
+   "display_name": "Room cooling load [obs]",
+   "model_level": "z",
+   "units_type": "Load"
+  },
+  {
+   "aps_varname": "Room dehumidification load",
+   "display_name": "Room dehum load [obs]",
+   "model_level": "z",
+   "units_type": "Load"
+  },
+  {
+   "aps_varname": "Room heating load",
+   "display_name": "Room heating load [obs]",
+   "model_level": "z",
+   "units_type": "Load"
+  },
+  {
+   "aps_varname": "Room humidification load",
+   "display_name": "Room humidification load [obs]",
+   "model_level": "z",
+   "units_type": "Load"
+  },
+  {
+   "aps_varname": "Room latent load",
+   "display_name": "Space conditioning latent",
+   "model_level": "z",
+   "units_type": "Gain"
+  },
+  {
+   "aps_varname": "Room radiant temperature",
+   "display_name": "Mean radiant temperature",
+   "model_level": "z",
+   "units_type": "Temperature"
+  },
+  {
+   "aps_varname": "Room units cooling + dehum load",
+   "display_name": "Cooling + dehum plant load",
+   "model_level": "z",
+   "units_type": "Load"
+  },
+  {
+   "aps_varname": "Room units cooling load",
+   "display_name": "Cooling plant sensible load",
+   "model_level": "z",
+   "units_type": "Load"
+  },
+  {
+   "aps_varname": "Room units dehumidification load",
+   "display_name": "Dehumidification plant load",
+   "model_level": "z",
+   "units_type": "Load"
+  },
+  {
+   "aps_varname": "Room units heating load",
+   "display_name": "Heating plant sensible load",
+   "model_level": "z",
+   "units_type": "Load"
+  },
+  {
+   "aps_varname": "Room units humidification load",
+   "display_name": "Humidification plant load",
+   "model_level": "z",
+   "units_type": "Load"
+  },
+  {
+   "aps_varname": "Room units steady state htg load",
+   "display_name": "Steady state heating plant load",
+   "model_level": "z",
+   "units_type": "Load"
+  },
+  {
+   "aps_varname": "System air gain",
+   "display_name": "Air system input sensible",
+   "model_level": "z",
+   "units_type": "Gain"
+  },
+  {
+   "aps_varname": "System air latent gain",
+   "display_name": "Air system input latent",
+   "model_level": "z",
+   "units_type": "Gain"
+  },
+  {
+   "aps_varname": "System occupied and available",
+   "display_name": "System occupied and available",
+   "model_level": "z",
+   "units_type": "Number"
+  },
+  {
+   "aps_varname": "System operation and available",
+   "display_name": "System operation and available",
+   "model_level": "z",
+   "units_type": "Number"
+  },
+  {
+   "aps_varname": "System plant etc. gains",
+   "display_name": "Space conditioning sensible",
+   "model_level": "z",
+   "units_type": "Gain"
+  },
+  {
+   "aps_varname": "Ventilation gain from ext air",
+   "display_name": "Air exch ext vent gain [obs]",
+   "model_level": "z",
+   "units_type": "Gain"
+  },
+  {
+   "aps_varname": "Window solar gains",
+   "display_name": "Solar gain",
+   "model_level": "z",
+   "units_type": "Gain"
+  }
+ ]
+}

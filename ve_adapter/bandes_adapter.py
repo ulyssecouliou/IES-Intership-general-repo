@@ -64,11 +64,16 @@ NIVEAU_METEO = 'w'      # weather
 NIVEAU_ENERGIE = 'e'    # postes de consommation, tous vecteurs
 NIVEAU_SURFACE = 's'    # surface d'enveloppe
 
-#: Niveaux relevés le 2026-08-06 sur `ZOER_C1.aps`, avec leur effectif. Il y en
-#: a DOUZE, pas trois : `c` (carbone), `j`, `l`, `n`, `o`, `r` et `t` existent
-#: aussi. Aucun code ne doit supposer que les constantes ci-dessus épuisent la
-#: liste — c'est en la croyant limitée à z/v/w qu'on a manqué l'éclairage
-#: (niveau `e`) et le solaire incident (niveau `s`).
+#: Niveaux relevés le 2026-08-06 sur `ZOER_C1.aps`, avec leur effectif BRUT —
+#: tel que `get_variables()` l'a rendu, doublons compris. Le catalogue figé
+#: `refs/reference-data/iesve-aps-variables-ve2025.json` en écarte 11 doublons
+#: exacts et compte donc un peu moins (c=178, e=269) : les deux chiffres sont
+#: justes, ils ne comptent pas la même chose.
+#:
+#: Il y a DOUZE niveaux, pas trois : `c` (carbone), `j`, `l`, `n`, `o`, `r` et
+#: `t` existent aussi. Aucun code ne doit supposer que les constantes ci-dessus
+#: épuisent la liste — c'est en la croyant limitée à z/v/w qu'on a manqué
+#: l'éclairage (niveau `e`) et le solaire incident (niveau `s`).
 NIVEAUX_RELEVES = {
     'c': 184, 'e': 274, 'j': 15, 'l': 88, 'n': 9, 'o': 6,
     'r': 15, 's': 22, 't': 6, 'v': 35, 'w': 14, 'z': 151,

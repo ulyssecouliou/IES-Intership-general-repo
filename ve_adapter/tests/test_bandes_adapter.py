@@ -279,7 +279,12 @@ import json as _json  # noqa: E402
 
 _RACINE = os.path.abspath(os.path.join(
     os.path.dirname(os.path.abspath(__file__)), os.pardir, os.pardir))
-_RAPPORT_SONDE = os.path.join(_RACINE, 'outputs', 'sonde_aps.json')
+#: Catalogue FIGE, versionne. On ne lit PAS `outputs/sonde_aps.json` : ce
+#: dossier est ignore par Git, donc absent d'un clone neuf -- ces tests
+#: s'ignoreraient en silence, laissant croire que les candidats sont verifies
+#: alors que plus rien ne les controlerait.
+_CATALOGUE = os.path.join(_RACINE, 'refs', 'reference-data',
+                          'iesve-aps-variables-ve2025.json')
 
 
 @pytest.fixture(scope='module')
@@ -287,16 +292,33 @@ def variables_relevees():
     """Variables telles qu'un .aps reel les a rendues, le 2026-08-06.
 
     Returns:
-        dict: `{(aps_varname, model_level): entree}`.
+        dict: `{(aps_varname, model_level): entree}`. Un meme couple peut
+            porter plusieurs display_name : on garde le premier, l'ordre du
+            catalogue etant deterministe.
     """
-    if not os.path.exists(_RAPPORT_SONDE):
-        pytest.skip(u'rapport de sonde absent : lancer Run_VE_SIA4010_Sonde_APS')
-    with io.open(_RAPPORT_SONDE, encoding='utf-8') as flux:
-        rapport = _json.load(flux)
-    if 'variables' not in rapport:
-        pytest.skip(u'rapport anterieur au releve complet des variables')
-    return dict(((v.get('aps_varname'), v.get('model_level')), v)
-                for v in rapport['variables'])
+    if not os.path.exists(_CATALOGUE):
+        pytest.skip(u'catalogue absent : scripts/freeze_aps_variables.py')
+    with io.open(_CATALOGUE, encoding='utf-8') as flux:
+        catalogue = _json.load(flux)
+    par_cle = {}
+    for variable in catalogue['variables']:
+        par_cle.setdefault(
+            (variable.get('aps_varname'), variable.get('model_level')),
+            variable)
+    return par_cle
+
+
+def test_le_catalogue_est_versionne():
+    """S'il retombait sous outputs/, tous les tests de cette section
+    s'ignoreraient sans que personne ne le remarque."""
+    assert os.path.exists(_CATALOGUE), _CATALOGUE
+    normalise = _CATALOGUE.replace(os.sep, '/')
+    assert '/refs/reference-data/' in normalise
+
+
+def test_le_catalogue_couvre_les_douze_niveaux(variables_relevees):
+    niveaux = set(niveau for (_, niveau) in variables_relevees)
+    assert niveaux == set(adaptateur.NIVEAUX_RELEVES)
 
 
 def test_aucun_candidat_ne_resout_de_liaison():
