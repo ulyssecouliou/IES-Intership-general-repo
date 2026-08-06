@@ -1,0 +1,4516 @@
+{
+ "test": 3,
+ "critere": "Häufigkeitsverteilung : « muss im Streubereich der Referenzprogramme liegen » (Spezifikation_Test3.pdf, Testkriterien)",
+ "statut_critere": "NON_CALCULE_PAR_LE_CLASSEUR",
+ "pourquoi_non_calcule": "Les feuilles « Verteilung » sont des GRAPHIQUES : elles tracent les variantes de référence et le programme testé, sans calculer aucune bande. Aucune cellule du classeur ne définit le Streubereich d'une distribution. Deux lectures restent possibles — enveloppe min/max des programmes, ou moyenne ± écart maximal comme pour les sommes annuelles — et le choix ne peut pas être fait ici sans inventer le critère.",
+ "classes_concernees": [
+  "2A",
+  "2B",
+  "4A",
+  "4B"
+ ],
+ "source": {
+  "fichier": "Test3\\Resultaterfassung_Test3.xlsx",
+  "feuille": "Zusammenfassung",
+  "lignes_de_structure": {
+   "cas": 30,
+   "grandeur": 31,
+   "programmes": 32,
+   "classes": 33
+  }
+ },
+ "nb_distributions": 16,
+ "reserves": [
+  "Totaux horaires observés : 8759, 8760. Plusieurs programmes totalisent moins de 8760 heures. Ce sont des données réelles, reproduites telles quelles : les compléter à 8760 fausserait la dispersion.",
+  "Les effectifs sont des FAITS relevés cellule par cellule et réconciliés avec la ligne de totaux du classeur. La BANDE, elle, n'est pas établie : voir statut_critere."
+ ],
+ "distributions": [
+  {
+   "cas": "Test 3A",
+   "grandeur": "Beleuchtungsleistung",
+   "unite": "W",
+   "colonne_bloc": "A",
+   "nb_classes": 20,
+   "ligne_total": 54,
+   "contributeurs": [
+    {
+     "colonne": "C",
+     "programme": "IDA ICE",
+     "total_heures": 8760
+    },
+    {
+     "colonne": "D",
+     "programme": "IDA ICE",
+     "total_heures": 8760
+    },
+    {
+     "colonne": "E",
+     "programme": "IDA ICE",
+     "total_heures": 8760
+    },
+    {
+     "colonne": "F",
+     "programme": "Excel",
+     "total_heures": 8760
+    },
+    {
+     "colonne": "G",
+     "programme": "Energy+/OpenStudio",
+     "total_heures": 8760
+    },
+    {
+     "colonne": "J",
+     "programme": "EDSL-Tas",
+     "total_heures": 8760
+    }
+   ],
+   "effectifs": [
+    {
+     "ligne_classeur": 34,
+     "borne_superieure": 25,
+     "par_colonne": {
+      "C": 5454,
+      "D": 5456,
+      "E": 5466,
+      "F": 5900,
+      "G": 5740,
+      "J": 5900
+     }
+    },
+    {
+     "ligne_classeur": 35,
+     "borne_superieure": 50,
+     "par_colonne": {
+      "C": 333,
+      "D": 341,
+      "E": 388,
+      "F": 678,
+      "G": 407,
+      "J": 1629
+     }
+    },
+    {
+     "ligne_classeur": 36,
+     "borne_superieure": 75,
+     "par_colonne": {
+      "C": 279,
+      "D": 275,
+      "E": 292,
+      "F": 65,
+      "G": 137,
+      "J": 76
+     }
+    },
+    {
+     "ligne_classeur": 37,
+     "borne_superieure": 100,
+     "par_colonne": {
+      "C": 296,
+      "D": 287,
+      "E": 376,
+      "F": 87,
+      "G": 194,
+      "J": 77
+     }
+    },
+    {
+     "ligne_classeur": 38,
+     "borne_superieure": 125,
+     "par_colonne": {
+      "C": 253,
+      "D": 265,
+      "E": 203,
+      "F": 76,
+      "G": 149,
+      "J": 93
+     }
+    },
+    {
+     "ligne_classeur": 39,
+     "borne_superieure": 150,
+     "par_colonne": {
+      "C": 129,
+      "D": 132,
+      "E": 143,
+      "F": 87,
+      "G": 101,
+      "J": 77
+     }
+    },
+    {
+     "ligne_classeur": 40,
+     "borne_superieure": 175,
+     "par_colonne": {
+      "C": 137,
+      "D": 144,
+      "E": 151,
+      "F": 100,
+      "G": 147,
+      "J": 69
+     }
+    },
+    {
+     "ligne_classeur": 41,
+     "borne_superieure": 200,
+     "par_colonne": {
+      "C": 164,
+      "D": 173,
+      "E": 183,
+      "F": 134,
+      "G": 142,
+      "J": 80
+     }
+    },
+    {
+     "ligne_classeur": 42,
+     "borne_superieure": 225,
+     "par_colonne": {
+      "C": 210,
+      "D": 214,
+      "E": 219,
+      "F": 155,
+      "G": 219,
+      "J": 71
+     }
+    },
+    {
+     "ligne_classeur": 43,
+     "borne_superieure": 250,
+     "par_colonne": {
+      "C": 238,
+      "D": 242,
+      "E": 225,
+      "F": 129,
+      "G": 143,
+      "J": 79
+     }
+    },
+    {
+     "ligne_classeur": 44,
+     "borne_superieure": 275,
+     "par_colonne": {
+      "C": 244,
+      "D": 237,
+      "E": 256,
+      "F": 162,
+      "G": 243,
+      "J": 68
+     }
+    },
+    {
+     "ligne_classeur": 45,
+     "borne_superieure": 300,
+     "par_colonne": {
+      "C": 255,
+      "D": 244,
+      "E": 249,
+      "F": 162,
+      "G": 174,
+      "J": 52
+     }
+    },
+    {
+     "ligne_classeur": 46,
+     "borne_superieure": 325,
+     "par_colonne": {
+      "C": 246,
+      "D": 245,
+      "E": 267,
+      "F": 148,
+      "G": 227,
+      "J": 73
+     }
+    },
+    {
+     "ligne_classeur": 47,
+     "borne_superieure": 350,
+     "par_colonne": {
+      "C": 218,
+      "D": 201,
+      "E": 124,
+      "F": 175,
+      "G": 202,
+      "J": 68
+     }
+    },
+    {
+     "ligne_classeur": 48,
+     "borne_superieure": 375,
+     "par_colonne": {
+      "C": 173,
+      "D": 172,
+      "E": 112,
+      "F": 220,
+      "G": 161,
+      "J": 44
+     }
+    },
+    {
+     "ligne_classeur": 49,
+     "borne_superieure": 400,
+     "par_colonne": {
+      "C": 36,
+      "D": 37,
+      "E": 30,
+      "F": 177,
+      "G": 148,
+      "J": 40
+     }
+    },
+    {
+     "ligne_classeur": 50,
+     "borne_superieure": 425,
+     "par_colonne": {
+      "C": 29,
+      "D": 29,
+      "E": 26,
+      "F": 61,
+      "G": 44,
+      "J": 21
+     }
+    },
+    {
+     "ligne_classeur": 51,
+     "borne_superieure": 450,
+     "par_colonne": {
+      "C": 25,
+      "D": 25,
+      "E": 48,
+      "F": 41,
+      "G": 40,
+      "J": 29
+     }
+    },
+    {
+     "ligne_classeur": 52,
+     "borne_superieure": 475,
+     "par_colonne": {
+      "C": 41,
+      "D": 41,
+      "E": 2,
+      "F": 26,
+      "G": 63,
+      "J": 6
+     }
+    },
+    {
+     "ligne_classeur": 53,
+     "borne_superieure": 500,
+     "par_colonne": {
+      "C": 0,
+      "D": 0,
+      "E": 0,
+      "F": 177,
+      "G": 79,
+      "J": 208
+     }
+    }
+   ]
+  },
+  {
+   "cas": "Test 3B",
+   "grandeur": "Beleuchtungsleistung",
+   "unite": "W",
+   "colonne_bloc": "L",
+   "nb_classes": 20,
+   "ligne_total": 54,
+   "contributeurs": [
+    {
+     "colonne": "N",
+     "programme": "IDA ICE\nFe det Spec",
+     "total_heures": 8760
+    },
+    {
+     "colonne": "O",
+     "programme": "IDA ICE\nFe det noSpec",
+     "total_heures": 8760
+    },
+    {
+     "colonne": "P",
+     "programme": "IDA ICE\nFe einf",
+     "total_heures": 8760
+    },
+    {
+     "colonne": "Q",
+     "programme": "Excel\nSIA 387/4 + 380/2",
+     "total_heures": 8760
+    },
+    {
+     "colonne": "R",
+     "programme": "Energy+/OpenStudio\nFe det Spec",
+     "total_heures": 8760
+    },
+    {
+     "colonne": "U",
+     "programme": "EDSL-Tas\nFe det Spect",
+     "total_heures": 8760
+    }
+   ],
+   "effectifs": [
+    {
+     "ligne_classeur": 34,
+     "borne_superieure": 25,
+     "par_colonne": {
+      "N": 5456,
+      "O": 5457,
+      "P": 5466,
+      "Q": 5900,
+      "R": 5740,
+      "U": 5900
+     }
+    },
+    {
+     "ligne_classeur": 35,
+     "borne_superieure": 50,
+     "par_colonne": {
+      "N": 472,
+      "O": 473,
+      "P": 579,
+      "Q": 903,
+      "R": 572,
+      "U": 1628
+     }
+    },
+    {
+     "ligne_classeur": 36,
+     "borne_superieure": 75,
+     "par_colonne": {
+      "N": 60,
+      "O": 64,
+      "P": 68,
+      "Q": 0,
+      "R": 0,
+      "U": 28
+     }
+    },
+    {
+     "ligne_classeur": 37,
+     "borne_superieure": 100,
+     "par_colonne": {
+      "N": 67,
+      "O": 69,
+      "P": 70,
+      "Q": 0,
+      "R": 160,
+      "U": 45
+     }
+    },
+    {
+     "ligne_classeur": 38,
+     "borne_superieure": 125,
+     "par_colonne": {
+      "N": 449,
+      "O": 439,
+      "P": 425,
+      "Q": 0,
+      "R": 92,
+      "U": 42
+     }
+    },
+    {
+     "ligne_classeur": 39,
+     "borne_superieure": 150,
+     "par_colonne": {
+      "N": 42,
+      "O": 41,
+      "P": 51,
+      "Q": 0,
+      "R": 0,
+      "U": 33
+     }
+    },
+    {
+     "ligne_classeur": 40,
+     "borne_superieure": 175,
+     "par_colonne": {
+      "N": 39,
+      "O": 43,
+      "P": 48,
+      "Q": 0,
+      "R": 0,
+      "U": 44
+     }
+    },
+    {
+     "ligne_classeur": 41,
+     "borne_superieure": 200,
+     "par_colonne": {
+      "N": 45,
+      "O": 44,
+      "P": 56,
+      "Q": 0,
+      "R": 86,
+      "U": 55
+     }
+    },
+    {
+     "ligne_classeur": 42,
+     "borne_superieure": 225,
+     "par_colonne": {
+      "N": 48,
+      "O": 48,
+      "P": 54,
+      "Q": 0,
+      "R": 0,
+      "U": 31
+     }
+    },
+    {
+     "ligne_classeur": 43,
+     "borne_superieure": 250,
+     "par_colonne": {
+      "N": 62,
+      "O": 59,
+      "P": 64,
+      "Q": 0,
+      "R": 0,
+      "U": 44
+     }
+    },
+    {
+     "ligne_classeur": 44,
+     "borne_superieure": 275,
+     "par_colonne": {
+      "N": 47,
+      "O": 51,
+      "P": 48,
+      "Q": 0,
+      "R": 107,
+      "U": 43
+     }
+    },
+    {
+     "ligne_classeur": 45,
+     "borne_superieure": 300,
+     "par_colonne": {
+      "N": 46,
+      "O": 48,
+      "P": 51,
+      "Q": 0,
+      "R": 0,
+      "U": 25
+     }
+    },
+    {
+     "ligne_classeur": 46,
+     "borne_superieure": 325,
+     "par_colonne": {
+      "N": 41,
+      "O": 42,
+      "P": 59,
+      "Q": 0,
+      "R": 0,
+      "U": 34
+     }
+    },
+    {
+     "ligne_classeur": 47,
+     "borne_superieure": 350,
+     "par_colonne": {
+      "N": 54,
+      "O": 54,
+      "P": 60,
+      "Q": 0,
+      "R": 138,
+      "U": 49
+     }
+    },
+    {
+     "ligne_classeur": 48,
+     "borne_superieure": 375,
+     "par_colonne": {
+      "N": 59,
+      "O": 59,
+      "P": 50,
+      "Q": 0,
+      "R": 0,
+      "U": 39
+     }
+    },
+    {
+     "ligne_classeur": 49,
+     "borne_superieure": 400,
+     "par_colonne": {
+      "N": 297,
+      "O": 298,
+      "P": 259,
+      "Q": 0,
+      "R": 115,
+      "U": 31
+     }
+    },
+    {
+     "ligne_classeur": 50,
+     "borne_superieure": 425,
+     "par_colonne": {
+      "N": 32,
+      "O": 29,
+      "P": 34,
+      "Q": 0,
+      "R": 104,
+      "U": 36
+     }
+    },
+    {
+     "ligne_classeur": 51,
+     "borne_superieure": 450,
+     "par_colonne": {
+      "N": 25,
+      "O": 29,
+      "P": 30,
+      "Q": 0,
+      "R": 0,
+      "U": 42
+     }
+    },
+    {
+     "ligne_classeur": 52,
+     "borne_superieure": 475,
+     "par_colonne": {
+      "N": 34,
+      "O": 33,
+      "P": 24,
+      "Q": 0,
+      "R": 0,
+      "U": 31
+     }
+    },
+    {
+     "ligne_classeur": 53,
+     "borne_superieure": 500,
+     "par_colonne": {
+      "N": 1385,
+      "O": 1380,
+      "P": 1264,
+      "Q": 1957,
+      "R": 1646,
+      "U": 580
+     }
+    }
+   ]
+  },
+  {
+   "cas": "Test 3C",
+   "grandeur": "Beleuchtungsleistung",
+   "unite": "W",
+   "colonne_bloc": "W",
+   "nb_classes": 20,
+   "ligne_total": 54,
+   "contributeurs": [
+    {
+     "colonne": "Y",
+     "programme": "IDA ICE\nFe det Spec",
+     "total_heures": 8760
+    },
+    {
+     "colonne": "Z",
+     "programme": "IDA ICE\nFe det noSpec",
+     "total_heures": 8760
+    },
+    {
+     "colonne": "AA",
+     "programme": "IDA ICE\nFe einf",
+     "total_heures": 8760
+    },
+    {
+     "colonne": "AB",
+     "programme": "Excel\nSIA 387/4 + 380/2",
+     "total_heures": 8760
+    },
+    {
+     "colonne": "AC",
+     "programme": "Energy+/OpenStudio\nFe det Spec",
+     "total_heures": 8760
+    },
+    {
+     "colonne": "AF",
+     "programme": "EDSL-Tas\nFe det Spect",
+     "total_heures": 8760
+    }
+   ],
+   "effectifs": [
+    {
+     "ligne_classeur": 34,
+     "borne_superieure": 25,
+     "par_colonne": {
+      "Y": 5380,
+      "Z": 5380,
+      "AA": 5380,
+      "AB": 5900,
+      "AC": 5729,
+      "AF": 5900
+     }
+    },
+    {
+     "ligne_classeur": 35,
+     "borne_superieure": 50,
+     "par_colonne": {
+      "Y": 111,
+      "Z": 112,
+      "AA": 123,
+      "AB": 0,
+      "AC": 19,
+      "AF": 0
+     }
+    },
+    {
+     "ligne_classeur": 36,
+     "borne_superieure": 75,
+     "par_colonne": {
+      "Y": 82,
+      "Z": 81,
+      "AA": 85,
+      "AB": 0,
+      "AC": 38,
+      "AF": 0
+     }
+    },
+    {
+     "ligne_classeur": 37,
+     "borne_superieure": 100,
+     "par_colonne": {
+      "Y": 180,
+      "Z": 183,
+      "AA": 191,
+      "AB": 0,
+      "AC": 114,
+      "AF": 0
+     }
+    },
+    {
+     "ligne_classeur": 38,
+     "borne_superieure": 125,
+     "par_colonne": {
+      "Y": 214,
+      "Z": 214,
+      "AA": 201,
+      "AB": 0,
+      "AC": 63,
+      "AF": 0
+     }
+    },
+    {
+     "ligne_classeur": 39,
+     "borne_superieure": 150,
+     "par_colonne": {
+      "Y": 374,
+      "Z": 377,
+      "AA": 440,
+      "AB": 725,
+      "AC": 407,
+      "AF": 1673
+     }
+    },
+    {
+     "ligne_classeur": 40,
+     "borne_superieure": 175,
+     "par_colonne": {
+      "Y": 177,
+      "Z": 166,
+      "AA": 214,
+      "AB": 101,
+      "AC": 110,
+      "AF": 102
+     }
+    },
+    {
+     "ligne_classeur": 41,
+     "borne_superieure": 200,
+     "par_colonne": {
+      "Y": 168,
+      "Z": 178,
+      "AA": 177,
+      "AB": 103,
+      "AC": 169,
+      "AF": 121
+     }
+    },
+    {
+     "ligne_classeur": 42,
+     "borne_superieure": 225,
+     "par_colonne": {
+      "Y": 156,
+      "Z": 171,
+      "AA": 182,
+      "AB": 106,
+      "AC": 156,
+      "AF": 97
+     }
+    },
+    {
+     "ligne_classeur": 43,
+     "borne_superieure": 250,
+     "par_colonne": {
+      "Y": 193,
+      "Z": 193,
+      "AA": 223,
+      "AB": 142,
+      "AC": 163,
+      "AF": 84
+     }
+    },
+    {
+     "ligne_classeur": 44,
+     "borne_superieure": 275,
+     "par_colonne": {
+      "Y": 251,
+      "Z": 277,
+      "AA": 272,
+      "AB": 198,
+      "AC": 262,
+      "AF": 94
+     }
+    },
+    {
+     "ligne_classeur": 45,
+     "borne_superieure": 300,
+     "par_colonne": {
+      "Y": 313,
+      "Z": 286,
+      "AA": 290,
+      "AB": 171,
+      "AC": 196,
+      "AF": 91
+     }
+    },
+    {
+     "ligne_classeur": 46,
+     "borne_superieure": 325,
+     "par_colonne": {
+      "Y": 305,
+      "Z": 292,
+      "AA": 303,
+      "AB": 202,
+      "AC": 286,
+      "AF": 82
+     }
+    },
+    {
+     "ligne_classeur": 47,
+     "borne_superieure": 350,
+     "par_colonne": {
+      "Y": 300,
+      "Z": 303,
+      "AA": 313,
+      "AB": 192,
+      "AC": 266,
+      "AF": 84
+     }
+    },
+    {
+     "ligne_classeur": 48,
+     "borne_superieure": 375,
+     "par_colonne": {
+      "Y": 348,
+      "Z": 343,
+      "AA": 231,
+      "AB": 212,
+      "AC": 241,
+      "AF": 84
+     }
+    },
+    {
+     "ligne_classeur": 49,
+     "borne_superieure": 400,
+     "par_colonne": {
+      "Y": 86,
+      "Z": 82,
+      "AA": 38,
+      "AB": 279,
+      "AC": 262,
+      "AF": 45
+     }
+    },
+    {
+     "ligne_classeur": 50,
+     "borne_superieure": 425,
+     "par_colonne": {
+      "Y": 38,
+      "Z": 37,
+      "AA": 39,
+      "AB": 147,
+      "AC": 75,
+      "AF": 49
+     }
+    },
+    {
+     "ligne_classeur": 51,
+     "borne_superieure": 450,
+     "par_colonne": {
+      "Y": 36,
+      "Z": 37,
+      "AA": 36,
+      "AB": 64,
+      "AC": 50,
+      "AF": 31
+     }
+    },
+    {
+     "ligne_classeur": 52,
+     "borne_superieure": 475,
+     "par_colonne": {
+      "Y": 48,
+      "Z": 48,
+      "AA": 22,
+      "AB": 38,
+      "AC": 70,
+      "AF": 15
+     }
+    },
+    {
+     "ligne_classeur": 53,
+     "borne_superieure": 500,
+     "par_colonne": {
+      "Y": 0,
+      "Z": 0,
+      "AA": 0,
+      "AB": 180,
+      "AC": 84,
+      "AF": 208
+     }
+    }
+   ]
+  },
+  {
+   "cas": "Test 3D",
+   "grandeur": "Beleuchtungsleistung",
+   "unite": "W",
+   "colonne_bloc": "AH",
+   "nb_classes": 20,
+   "ligne_total": 54,
+   "contributeurs": [
+    {
+     "colonne": "AJ",
+     "programme": "IDA ICE\nFe det Spec",
+     "total_heures": 8760
+    },
+    {
+     "colonne": "AK",
+     "programme": "IDA ICE\nFe det noSpec",
+     "total_heures": 8760
+    },
+    {
+     "colonne": "AM",
+     "programme": "Excel\nSIA 387/4 + 380/2",
+     "total_heures": 8760
+    },
+    {
+     "colonne": "AN",
+     "programme": "Energy+/OpenStudio\nFe det Spec",
+     "total_heures": 8760
+    },
+    {
+     "colonne": "AQ",
+     "programme": "EDSL-Tas\nFe det Spect",
+     "total_heures": 8760
+    }
+   ],
+   "effectifs": [
+    {
+     "ligne_classeur": 34,
+     "borne_superieure": 25,
+     "par_colonne": {
+      "AJ": 5421,
+      "AK": 5421,
+      "AM": 5900,
+      "AN": 5726,
+      "AQ": 5900
+     }
+    },
+    {
+     "ligne_classeur": 35,
+     "borne_superieure": 50,
+     "par_colonne": {
+      "AJ": 289,
+      "AK": 289,
+      "AM": 674,
+      "AN": 362,
+      "AQ": 1606
+     }
+    },
+    {
+     "ligne_classeur": 36,
+     "borne_superieure": 75,
+     "par_colonne": {
+      "AJ": 62,
+      "AK": 61,
+      "AM": 0,
+      "AN": 0,
+      "AQ": 3
+     }
+    },
+    {
+     "ligne_classeur": 37,
+     "borne_superieure": 100,
+     "par_colonne": {
+      "AJ": 73,
+      "AK": 66,
+      "AM": 0,
+      "AN": 174,
+      "AQ": 0
+     }
+    },
+    {
+     "ligne_classeur": 38,
+     "borne_superieure": 125,
+     "par_colonne": {
+      "AJ": 457,
+      "AK": 464,
+      "AM": 0,
+      "AN": 100,
+      "AQ": 1
+     }
+    },
+    {
+     "ligne_classeur": 39,
+     "borne_superieure": 150,
+     "par_colonne": {
+      "AJ": 54,
+      "AK": 51,
+      "AM": 0,
+      "AN": 0,
+      "AQ": 0
+     }
+    },
+    {
+     "ligne_classeur": 40,
+     "borne_superieure": 175,
+     "par_colonne": {
+      "AJ": 33,
+      "AK": 38,
+      "AM": 0,
+      "AN": 0,
+      "AQ": 0
+     }
+    },
+    {
+     "ligne_classeur": 41,
+     "borne_superieure": 200,
+     "par_colonne": {
+      "AJ": 42,
+      "AK": 43,
+      "AM": 0,
+      "AN": 113,
+      "AQ": 0
+     }
+    },
+    {
+     "ligne_classeur": 42,
+     "borne_superieure": 225,
+     "par_colonne": {
+      "AJ": 43,
+      "AK": 36,
+      "AM": 0,
+      "AN": 0,
+      "AQ": 0
+     }
+    },
+    {
+     "ligne_classeur": 43,
+     "borne_superieure": 250,
+     "par_colonne": {
+      "AJ": 64,
+      "AK": 68,
+      "AM": 0,
+      "AN": 0,
+      "AQ": 1
+     }
+    },
+    {
+     "ligne_classeur": 44,
+     "borne_superieure": 275,
+     "par_colonne": {
+      "AJ": 60,
+      "AK": 60,
+      "AM": 0,
+      "AN": 125,
+      "AQ": 0
+     }
+    },
+    {
+     "ligne_classeur": 45,
+     "borne_superieure": 300,
+     "par_colonne": {
+      "AJ": 47,
+      "AK": 43,
+      "AM": 0,
+      "AN": 0,
+      "AQ": 0
+     }
+    },
+    {
+     "ligne_classeur": 46,
+     "borne_superieure": 325,
+     "par_colonne": {
+      "AJ": 49,
+      "AK": 54,
+      "AM": 0,
+      "AN": 0,
+      "AQ": 0
+     }
+    },
+    {
+     "ligne_classeur": 47,
+     "borne_superieure": 350,
+     "par_colonne": {
+      "AJ": 59,
+      "AK": 55,
+      "AM": 0,
+      "AN": 141,
+      "AQ": 0
+     }
+    },
+    {
+     "ligne_classeur": 48,
+     "borne_superieure": 375,
+     "par_colonne": {
+      "AJ": 55,
+      "AK": 55,
+      "AM": 0,
+      "AN": 0,
+      "AQ": 1
+     }
+    },
+    {
+     "ligne_classeur": 49,
+     "borne_superieure": 400,
+     "par_colonne": {
+      "AJ": 330,
+      "AK": 333,
+      "AM": 0,
+      "AN": 154,
+      "AQ": 3
+     }
+    },
+    {
+     "ligne_classeur": 50,
+     "borne_superieure": 425,
+     "par_colonne": {
+      "AJ": 39,
+      "AK": 39,
+      "AM": 0,
+      "AN": 124,
+      "AQ": 1
+     }
+    },
+    {
+     "ligne_classeur": 51,
+     "borne_superieure": 450,
+     "par_colonne": {
+      "AJ": 30,
+      "AK": 28,
+      "AM": 0,
+      "AN": 0,
+      "AQ": 0
+     }
+    },
+    {
+     "ligne_classeur": 52,
+     "borne_superieure": 475,
+     "par_colonne": {
+      "AJ": 37,
+      "AK": 36,
+      "AM": 0,
+      "AN": 0,
+      "AQ": 0
+     }
+    },
+    {
+     "ligne_classeur": 53,
+     "borne_superieure": 500,
+     "par_colonne": {
+      "AJ": 1516,
+      "AK": 1520,
+      "AM": 2186,
+      "AN": 1741,
+      "AQ": 1244
+     }
+    }
+   ]
+  },
+  {
+   "cas": "Test 3E",
+   "grandeur": "Beleuchtungsleistung",
+   "unite": "W",
+   "colonne_bloc": "AS",
+   "nb_classes": 20,
+   "ligne_total": 54,
+   "contributeurs": [
+    {
+     "colonne": "AU",
+     "programme": "IDA ICE\nFe det Spec",
+     "total_heures": 8760
+    },
+    {
+     "colonne": "AV",
+     "programme": "IDA ICE\nFe det noSpec",
+     "total_heures": 8760
+    },
+    {
+     "colonne": "AW",
+     "programme": "IDA ICE\nFe einf",
+     "total_heures": 8760
+    },
+    {
+     "colonne": "AX",
+     "programme": "Excel\nSIA 387/4 + 380/2",
+     "total_heures": 8760
+    },
+    {
+     "colonne": "AY",
+     "programme": "Energy+/OpenStudio\nFe det Spec",
+     "total_heures": 8760
+    }
+   ],
+   "effectifs": [
+    {
+     "ligne_classeur": 34,
+     "borne_superieure": 25,
+     "par_colonne": {
+      "AU": 5406,
+      "AV": 5406,
+      "AW": 5420,
+      "AX": 5900,
+      "AY": 5726
+     }
+    },
+    {
+     "ligne_classeur": 35,
+     "borne_superieure": 50,
+     "par_colonne": {
+      "AU": 188,
+      "AV": 190,
+      "AW": 254,
+      "AX": 528,
+      "AY": 276
+     }
+    },
+    {
+     "ligne_classeur": 36,
+     "borne_superieure": 75,
+     "par_colonne": {
+      "AU": 21,
+      "AV": 26,
+      "AW": 36,
+      "AX": 0,
+      "AY": 0
+     }
+    },
+    {
+     "ligne_classeur": 37,
+     "borne_superieure": 100,
+     "par_colonne": {
+      "AU": 86,
+      "AV": 84,
+      "AW": 81,
+      "AX": 0,
+      "AY": 174
+     }
+    },
+    {
+     "ligne_classeur": 38,
+     "borne_superieure": 125,
+     "par_colonne": {
+      "AU": 449,
+      "AV": 446,
+      "AW": 434,
+      "AX": 0,
+      "AY": 87
+     }
+    },
+    {
+     "ligne_classeur": 39,
+     "borne_superieure": 150,
+     "par_colonne": {
+      "AU": 30,
+      "AV": 30,
+      "AW": 31,
+      "AX": 0,
+      "AY": 0
+     }
+    },
+    {
+     "ligne_classeur": 40,
+     "borne_superieure": 175,
+     "par_colonne": {
+      "AU": 27,
+      "AV": 24,
+      "AW": 24,
+      "AX": 0,
+      "AY": 0
+     }
+    },
+    {
+     "ligne_classeur": 41,
+     "borne_superieure": 200,
+     "par_colonne": {
+      "AU": 30,
+      "AV": 30,
+      "AW": 42,
+      "AX": 0,
+      "AY": 85
+     }
+    },
+    {
+     "ligne_classeur": 42,
+     "borne_superieure": 225,
+     "par_colonne": {
+      "AU": 25,
+      "AV": 24,
+      "AW": 40,
+      "AX": 0,
+      "AY": 0
+     }
+    },
+    {
+     "ligne_classeur": 43,
+     "borne_superieure": 250,
+     "par_colonne": {
+      "AU": 42,
+      "AV": 38,
+      "AW": 51,
+      "AX": 0,
+      "AY": 0
+     }
+    },
+    {
+     "ligne_classeur": 44,
+     "borne_superieure": 275,
+     "par_colonne": {
+      "AU": 37,
+      "AV": 42,
+      "AW": 46,
+      "AX": 0,
+      "AY": 119
+     }
+    },
+    {
+     "ligne_classeur": 45,
+     "borne_superieure": 300,
+     "par_colonne": {
+      "AU": 33,
+      "AV": 29,
+      "AW": 41,
+      "AX": 0,
+      "AY": 0
+     }
+    },
+    {
+     "ligne_classeur": 46,
+     "borne_superieure": 325,
+     "par_colonne": {
+      "AU": 38,
+      "AV": 40,
+      "AW": 56,
+      "AX": 0,
+      "AY": 0
+     }
+    },
+    {
+     "ligne_classeur": 47,
+     "borne_superieure": 350,
+     "par_colonne": {
+      "AU": 54,
+      "AV": 56,
+      "AW": 45,
+      "AX": 0,
+      "AY": 129
+     }
+    },
+    {
+     "ligne_classeur": 48,
+     "borne_superieure": 375,
+     "par_colonne": {
+      "AU": 50,
+      "AV": 46,
+      "AW": 38,
+      "AX": 0,
+      "AY": 0
+     }
+    },
+    {
+     "ligne_classeur": 49,
+     "borne_superieure": 400,
+     "par_colonne": {
+      "AU": 447,
+      "AV": 448,
+      "AW": 412,
+      "AX": 0,
+      "AY": 207
+     }
+    },
+    {
+     "ligne_classeur": 50,
+     "borne_superieure": 425,
+     "par_colonne": {
+      "AU": 45,
+      "AV": 46,
+      "AW": 40,
+      "AX": 0,
+      "AY": 124
+     }
+    },
+    {
+     "ligne_classeur": 51,
+     "borne_superieure": 450,
+     "par_colonne": {
+      "AU": 296,
+      "AV": 309,
+      "AW": 346,
+      "AX": 0,
+      "AY": 0
+     }
+    },
+    {
+     "ligne_classeur": 52,
+     "borne_superieure": 475,
+     "par_colonne": {
+      "AU": 34,
+      "AV": 33,
+      "AW": 38,
+      "AX": 0,
+      "AY": 0
+     }
+    },
+    {
+     "ligne_classeur": 53,
+     "borne_superieure": 500,
+     "par_colonne": {
+      "AU": 1422,
+      "AV": 1413,
+      "AW": 1285,
+      "AX": 2332,
+      "AY": 1833
+     }
+    }
+   ]
+  },
+  {
+   "cas": "Test 3F",
+   "grandeur": "Beleuchtungsleistung",
+   "unite": "W",
+   "colonne_bloc": "BD",
+   "nb_classes": 20,
+   "ligne_total": 54,
+   "contributeurs": [
+    {
+     "colonne": "BF",
+     "programme": "IDA ICE\nFe det Spec",
+     "total_heures": 8760
+    },
+    {
+     "colonne": "BG",
+     "programme": "IDA ICE\nFe det noSpec",
+     "total_heures": 8760
+    },
+    {
+     "colonne": "BH",
+     "programme": "IDA ICE\nFe einf",
+     "total_heures": 8760
+    },
+    {
+     "colonne": "BI",
+     "programme": "Excel\nSIA 387/4 + 380/2",
+     "total_heures": 8760
+    },
+    {
+     "colonne": "BJ",
+     "programme": "Energy+/OpenStudio\nFe det Spec",
+     "total_heures": 8760
+    },
+    {
+     "colonne": "BM",
+     "programme": "EDSL-Tas\nFe det Spect",
+     "total_heures": 8760
+    }
+   ],
+   "effectifs": [
+    {
+     "ligne_classeur": 34,
+     "borne_superieure": 25,
+     "par_colonne": {
+      "BF": 5402,
+      "BG": 5404,
+      "BH": 5422,
+      "BI": 5900,
+      "BJ": 5723,
+      "BM": 5900
+     }
+    },
+    {
+     "ligne_classeur": 35,
+     "borne_superieure": 50,
+     "par_colonne": {
+      "BF": 125,
+      "BG": 125,
+      "BH": 208,
+      "BI": 449,
+      "BJ": 263,
+      "BM": 1007
+     }
+    },
+    {
+     "ligne_classeur": 36,
+     "borne_superieure": 75,
+     "par_colonne": {
+      "BF": 23,
+      "BG": 26,
+      "BH": 41,
+      "BI": 0,
+      "BJ": 0,
+      "BM": 37
+     }
+    },
+    {
+     "ligne_classeur": 37,
+     "borne_superieure": 100,
+     "par_colonne": {
+      "BF": 76,
+      "BG": 71,
+      "BH": 68,
+      "BI": 0,
+      "BJ": 177,
+      "BM": 31
+     }
+    },
+    {
+     "ligne_classeur": 38,
+     "borne_superieure": 125,
+     "par_colonne": {
+      "BF": 465,
+      "BG": 461,
+      "BH": 456,
+      "BI": 0,
+      "BJ": 71,
+      "BM": 26
+     }
+    },
+    {
+     "ligne_classeur": 39,
+     "borne_superieure": 150,
+     "par_colonne": {
+      "BF": 34,
+      "BG": 29,
+      "BH": 29,
+      "BI": 0,
+      "BJ": 0,
+      "BM": 35
+     }
+    },
+    {
+     "ligne_classeur": 40,
+     "borne_superieure": 175,
+     "par_colonne": {
+      "BF": 25,
+      "BG": 23,
+      "BH": 25,
+      "BI": 0,
+      "BJ": 0,
+      "BM": 39
+     }
+    },
+    {
+     "ligne_classeur": 41,
+     "borne_superieure": 200,
+     "par_colonne": {
+      "BF": 24,
+      "BG": 23,
+      "BH": 40,
+      "BI": 0,
+      "BJ": 78,
+      "BM": 30
+     }
+    },
+    {
+     "ligne_classeur": 42,
+     "borne_superieure": 225,
+     "par_colonne": {
+      "BF": 23,
+      "BG": 28,
+      "BH": 38,
+      "BI": 0,
+      "BJ": 0,
+      "BM": 36
+     }
+    },
+    {
+     "ligne_classeur": 43,
+     "borne_superieure": 250,
+     "par_colonne": {
+      "BF": 42,
+      "BG": 35,
+      "BH": 48,
+      "BI": 0,
+      "BJ": 0,
+      "BM": 37
+     }
+    },
+    {
+     "ligne_classeur": 44,
+     "borne_superieure": 275,
+     "par_colonne": {
+      "BF": 37,
+      "BG": 39,
+      "BH": 45,
+      "BI": 0,
+      "BJ": 123,
+      "BM": 36
+     }
+    },
+    {
+     "ligne_classeur": 45,
+     "borne_superieure": 300,
+     "par_colonne": {
+      "BF": 35,
+      "BG": 31,
+      "BH": 40,
+      "BI": 0,
+      "BJ": 0,
+      "BM": 25
+     }
+    },
+    {
+     "ligne_classeur": 46,
+     "borne_superieure": 325,
+     "par_colonne": {
+      "BF": 39,
+      "BG": 39,
+      "BH": 50,
+      "BI": 0,
+      "BJ": 0,
+      "BM": 39
+     }
+    },
+    {
+     "ligne_classeur": 47,
+     "borne_superieure": 350,
+     "par_colonne": {
+      "BF": 53,
+      "BG": 58,
+      "BH": 48,
+      "BI": 0,
+      "BJ": 125,
+      "BM": 32
+     }
+    },
+    {
+     "ligne_classeur": 48,
+     "borne_superieure": 375,
+     "par_colonne": {
+      "BF": 46,
+      "BG": 47,
+      "BH": 32,
+      "BI": 0,
+      "BJ": 0,
+      "BM": 36
+     }
+    },
+    {
+     "ligne_classeur": 49,
+     "borne_superieure": 400,
+     "par_colonne": {
+      "BF": 448,
+      "BG": 441,
+      "BH": 408,
+      "BI": 0,
+      "BJ": 207,
+      "BM": 48
+     }
+    },
+    {
+     "ligne_classeur": 50,
+     "borne_superieure": 425,
+     "par_colonne": {
+      "BF": 36,
+      "BG": 38,
+      "BH": 36,
+      "BI": 0,
+      "BJ": 114,
+      "BM": 42
+     }
+    },
+    {
+     "ligne_classeur": 51,
+     "borne_superieure": 450,
+     "par_colonne": {
+      "BF": 29,
+      "BG": 28,
+      "BH": 25,
+      "BI": 0,
+      "BJ": 0,
+      "BM": 44
+     }
+    },
+    {
+     "ligne_classeur": 52,
+     "borne_superieure": 475,
+     "par_colonne": {
+      "BF": 29,
+      "BG": 28,
+      "BH": 34,
+      "BI": 0,
+      "BJ": 0,
+      "BM": 30
+     }
+    },
+    {
+     "ligne_classeur": 53,
+     "borne_superieure": 500,
+     "par_colonne": {
+      "BF": 1769,
+      "BG": 1786,
+      "BH": 1667,
+      "BI": 2411,
+      "BJ": 1879,
+      "BM": 1250
+     }
+    }
+   ]
+  },
+  {
+   "cas": "Test 3G",
+   "grandeur": "Beleuchtungsleistung",
+   "unite": "W",
+   "colonne_bloc": "BO",
+   "nb_classes": 20,
+   "ligne_total": 54,
+   "contributeurs": [
+    {
+     "colonne": "BQ",
+     "programme": "IDA ICE\nFe det Spec",
+     "total_heures": 8760
+    },
+    {
+     "colonne": "BR",
+     "programme": "IDA ICE\nFe det noSpec",
+     "total_heures": 8760
+    },
+    {
+     "colonne": "BT",
+     "programme": "Excel\nSIA 387/4 + 380/2",
+     "total_heures": 8760
+    },
+    {
+     "colonne": "BU",
+     "programme": "Energy+/OpenStudio\nFe det Spec",
+     "total_heures": 8760
+    },
+    {
+     "colonne": "BV",
+     "programme": "Energy+/OpenStudio\nFe det noSpec",
+     "total_heures": 8760
+    },
+    {
+     "colonne": "BW",
+     "programme": "Energy+/OpenStudio\nFe einf",
+     "total_heures": 8760
+    }
+   ],
+   "effectifs": [
+    {
+     "ligne_classeur": 34,
+     "borne_superieure": 25,
+     "par_colonne": {
+      "BQ": 5458,
+      "BR": 5457,
+      "BT": 5900,
+      "BU": 5740,
+      "BV": 5740,
+      "BW": 5741
+     }
+    },
+    {
+     "ligne_classeur": 35,
+     "borne_superieure": 50,
+     "par_colonne": {
+      "BQ": 1283,
+      "BR": 1302,
+      "BT": 1709,
+      "BU": 662,
+      "BV": 728,
+      "BW": 716
+     }
+    },
+    {
+     "ligne_classeur": 36,
+     "borne_superieure": 75,
+     "par_colonne": {
+      "BQ": 551,
+      "BR": 529,
+      "BT": 83,
+      "BU": 236,
+      "BV": 246,
+      "BW": 239
+     }
+    },
+    {
+     "ligne_classeur": 37,
+     "borne_superieure": 100,
+     "par_colonne": {
+      "BQ": 326,
+      "BR": 329,
+      "BT": 96,
+      "BU": 312,
+      "BV": 308,
+      "BW": 293
+     }
+    },
+    {
+     "ligne_classeur": 38,
+     "borne_superieure": 125,
+     "par_colonne": {
+      "BQ": 238,
+      "BR": 237,
+      "BT": 57,
+      "BU": 157,
+      "BV": 155,
+      "BW": 163
+     }
+    },
+    {
+     "ligne_classeur": 39,
+     "borne_superieure": 150,
+     "par_colonne": {
+      "BQ": 101,
+      "BR": 102,
+      "BT": 53,
+      "BU": 190,
+      "BV": 196,
+      "BW": 184
+     }
+    },
+    {
+     "ligne_classeur": 40,
+     "borne_superieure": 175,
+     "par_colonne": {
+      "BQ": 64,
+      "BR": 64,
+      "BT": 69,
+      "BU": 167,
+      "BV": 168,
+      "BW": 172
+     }
+    },
+    {
+     "ligne_classeur": 41,
+     "borne_superieure": 200,
+     "par_colonne": {
+      "BQ": 62,
+      "BR": 58,
+      "BT": 63,
+      "BU": 181,
+      "BV": 174,
+      "BW": 175
+     }
+    },
+    {
+     "ligne_classeur": 42,
+     "borne_superieure": 225,
+     "par_colonne": {
+      "BQ": 71,
+      "BR": 75,
+      "BT": 73,
+      "BU": 168,
+      "BV": 155,
+      "BW": 168
+     }
+    },
+    {
+     "ligne_classeur": 43,
+     "borne_superieure": 250,
+     "par_colonne": {
+      "BQ": 56,
+      "BR": 57,
+      "BT": 48,
+      "BU": 166,
+      "BV": 150,
+      "BW": 161
+     }
+    },
+    {
+     "ligne_classeur": 44,
+     "borne_superieure": 275,
+     "par_colonne": {
+      "BQ": 64,
+      "BR": 64,
+      "BT": 63,
+      "BU": 110,
+      "BV": 108,
+      "BW": 89
+     }
+    },
+    {
+     "ligne_classeur": 45,
+     "borne_superieure": 300,
+     "par_colonne": {
+      "BQ": 70,
+      "BR": 72,
+      "BT": 43,
+      "BU": 76,
+      "BV": 72,
+      "BW": 79
+     }
+    },
+    {
+     "ligne_classeur": 46,
+     "borne_superieure": 325,
+     "par_colonne": {
+      "BQ": 83,
+      "BR": 83,
+      "BT": 52,
+      "BU": 84,
+      "BV": 72,
+      "BW": 78
+     }
+    },
+    {
+     "ligne_classeur": 47,
+     "borne_superieure": 350,
+     "par_colonne": {
+      "BQ": 71,
+      "BR": 70,
+      "BT": 43,
+      "BU": 77,
+      "BV": 64,
+      "BW": 76
+     }
+    },
+    {
+     "ligne_classeur": 48,
+     "borne_superieure": 375,
+     "par_colonne": {
+      "BQ": 136,
+      "BR": 135,
+      "BT": 53,
+      "BU": 71,
+      "BV": 74,
+      "BW": 70
+     }
+    },
+    {
+     "ligne_classeur": 49,
+     "borne_superieure": 400,
+     "par_colonne": {
+      "BQ": 32,
+      "BR": 31,
+      "BT": 47,
+      "BU": 134,
+      "BV": 127,
+      "BW": 130
+     }
+    },
+    {
+     "ligne_classeur": 50,
+     "borne_superieure": 425,
+     "par_colonne": {
+      "BQ": 29,
+      "BR": 30,
+      "BT": 64,
+      "BU": 45,
+      "BV": 39,
+      "BW": 46
+     }
+    },
+    {
+     "ligne_classeur": 51,
+     "borne_superieure": 450,
+     "par_colonne": {
+      "BQ": 24,
+      "BR": 24,
+      "BT": 41,
+      "BU": 40,
+      "BV": 38,
+      "BW": 38
+     }
+    },
+    {
+     "ligne_classeur": 52,
+     "borne_superieure": 475,
+     "par_colonne": {
+      "BQ": 41,
+      "BR": 41,
+      "BT": 26,
+      "BU": 65,
+      "BV": 68,
+      "BW": 65
+     }
+    },
+    {
+     "ligne_classeur": 53,
+     "borne_superieure": 500,
+     "par_colonne": {
+      "BQ": 0,
+      "BR": 0,
+      "BT": 177,
+      "BU": 79,
+      "BV": 78,
+      "BW": 77
+     }
+    }
+   ]
+  },
+  {
+   "cas": "Test 3H",
+   "grandeur": "Beleuchtungsleistung",
+   "unite": "W",
+   "colonne_bloc": "CB",
+   "nb_classes": 20,
+   "ligne_total": 54,
+   "contributeurs": [
+    {
+     "colonne": "CD",
+     "programme": "IDA ICE\nFe det Spec",
+     "total_heures": 8760
+    },
+    {
+     "colonne": "CE",
+     "programme": "IDA ICE\nFe det noSpec",
+     "total_heures": 8760
+    },
+    {
+     "colonne": "CG",
+     "programme": "Excel\nSIA 387/4 + 380/2",
+     "total_heures": 8760
+    },
+    {
+     "colonne": "CH",
+     "programme": "Energy+/OpenStudio\nFe det Spec",
+     "total_heures": 8760
+    },
+    {
+     "colonne": "CI",
+     "programme": "Energy+/OpenStudio\nFe det noSpec",
+     "total_heures": 8760
+    },
+    {
+     "colonne": "CJ",
+     "programme": "Energy+/OpenStudio\nFe einf",
+     "total_heures": 8760
+    }
+   ],
+   "effectifs": [
+    {
+     "ligne_classeur": 34,
+     "borne_superieure": 25,
+     "par_colonne": {
+      "CD": 5380,
+      "CE": 5380,
+      "CG": 5900,
+      "CH": 5729,
+      "CI": 5732,
+      "CJ": 5733
+     }
+    },
+    {
+     "ligne_classeur": 35,
+     "borne_superieure": 50,
+     "par_colonne": {
+      "CD": 112,
+      "CE": 112,
+      "CG": 0,
+      "CH": 19,
+      "CI": 17,
+      "CJ": 18
+     }
+    },
+    {
+     "ligne_classeur": 36,
+     "borne_superieure": 75,
+     "par_colonne": {
+      "CD": 80,
+      "CE": 81,
+      "CG": 0,
+      "CH": 38,
+      "CI": 37,
+      "CJ": 35
+     }
+    },
+    {
+     "ligne_classeur": 37,
+     "borne_superieure": 100,
+     "par_colonne": {
+      "CD": 183,
+      "CE": 186,
+      "CG": 0,
+      "CH": 114,
+      "CI": 114,
+      "CJ": 114
+     }
+    },
+    {
+     "ligne_classeur": 38,
+     "borne_superieure": 125,
+     "par_colonne": {
+      "CD": 234,
+      "CE": 229,
+      "CG": 0,
+      "CH": 63,
+      "CI": 63,
+      "CJ": 66
+     }
+    },
+    {
+     "ligne_classeur": 39,
+     "borne_superieure": 150,
+     "par_colonne": {
+      "CD": 1596,
+      "CE": 1600,
+      "CG": 1766,
+      "CH": 751,
+      "CI": 816,
+      "CJ": 790
+     }
+    },
+    {
+     "ligne_classeur": 40,
+     "borne_superieure": 175,
+     "par_colonne": {
+      "CD": 198,
+      "CE": 191,
+      "CG": 119,
+      "CH": 235,
+      "CI": 240,
+      "CJ": 235
+     }
+    },
+    {
+     "ligne_classeur": 41,
+     "borne_superieure": 200,
+     "par_colonne": {
+      "CD": 129,
+      "CE": 131,
+      "CG": 74,
+      "CH": 204,
+      "CI": 204,
+      "CJ": 216
+     }
+    },
+    {
+     "ligne_classeur": 42,
+     "borne_superieure": 225,
+     "par_colonne": {
+      "CD": 106,
+      "CE": 108,
+      "CG": 68,
+      "CH": 219,
+      "CI": 234,
+      "CJ": 211
+     }
+    },
+    {
+     "ligne_classeur": 43,
+     "borne_superieure": 250,
+     "par_colonne": {
+      "CD": 61,
+      "CE": 65,
+      "CG": 85,
+      "CH": 226,
+      "CI": 219,
+      "CJ": 219
+     }
+    },
+    {
+     "ligne_classeur": 44,
+     "borne_superieure": 275,
+     "par_colonne": {
+      "CD": 89,
+      "CE": 84,
+      "CG": 88,
+      "CH": 210,
+      "CI": 190,
+      "CJ": 209
+     }
+    },
+    {
+     "ligne_classeur": 45,
+     "borne_superieure": 300,
+     "par_colonne": {
+      "CD": 78,
+      "CE": 77,
+      "CG": 67,
+      "CH": 201,
+      "CI": 180,
+      "CJ": 188
+     }
+    },
+    {
+     "ligne_classeur": 46,
+     "borne_superieure": 325,
+     "par_colonne": {
+      "CD": 94,
+      "CE": 93,
+      "CG": 67,
+      "CH": 123,
+      "CI": 127,
+      "CJ": 117
+     }
+    },
+    {
+     "ligne_classeur": 47,
+     "borne_superieure": 350,
+     "par_colonne": {
+      "CD": 97,
+      "CE": 101,
+      "CG": 64,
+      "CH": 100,
+      "CI": 90,
+      "CJ": 97
+     }
+    },
+    {
+     "ligne_classeur": 48,
+     "borne_superieure": 375,
+     "par_colonne": {
+      "CD": 155,
+      "CE": 152,
+      "CG": 54,
+      "CH": 96,
+      "CI": 81,
+      "CJ": 90
+     }
+    },
+    {
+     "ligne_classeur": 49,
+     "borne_superieure": 400,
+     "par_colonne": {
+      "CD": 49,
+      "CE": 51,
+      "CG": 64,
+      "CH": 154,
+      "CI": 152,
+      "CJ": 155
+     }
+    },
+    {
+     "ligne_classeur": 50,
+     "borne_superieure": 425,
+     "par_colonne": {
+      "CD": 34,
+      "CE": 33,
+      "CG": 60,
+      "CH": 71,
+      "CI": 63,
+      "CJ": 65
+     }
+    },
+    {
+     "ligne_classeur": 51,
+     "borne_superieure": 450,
+     "par_colonne": {
+      "CD": 37,
+      "CE": 38,
+      "CG": 66,
+      "CH": 52,
+      "CI": 41,
+      "CJ": 50
+     }
+    },
+    {
+     "ligne_classeur": 52,
+     "borne_superieure": 475,
+     "par_colonne": {
+      "CD": 48,
+      "CE": 48,
+      "CG": 38,
+      "CH": 71,
+      "CI": 78,
+      "CJ": 71
+     }
+    },
+    {
+     "ligne_classeur": 53,
+     "borne_superieure": 500,
+     "par_colonne": {
+      "CD": 0,
+      "CE": 0,
+      "CG": 180,
+      "CH": 84,
+      "CI": 82,
+      "CJ": 81
+     }
+    }
+   ]
+  },
+  {
+   "cas": "Test 3I",
+   "grandeur": "Beleuchtungsleistung",
+   "unite": "W",
+   "colonne_bloc": "CM",
+   "nb_classes": 20,
+   "ligne_total": 54,
+   "contributeurs": [
+    {
+     "colonne": "CO",
+     "programme": "IDA ICE\nFe det Spec",
+     "total_heures": 8760
+    },
+    {
+     "colonne": "CP",
+     "programme": "IDA ICE\nFe det noSpec",
+     "total_heures": 8760
+    },
+    {
+     "colonne": "CR",
+     "programme": "Excel\nSIA 387/4 + 380/2",
+     "total_heures": 8760
+    },
+    {
+     "colonne": "CS",
+     "programme": "Energy+/OpenStudio\nFe det Spec",
+     "total_heures": 8760
+    },
+    {
+     "colonne": "CT",
+     "programme": "Energy+/OpenStudio\nFe det noSpec",
+     "total_heures": 8760
+    },
+    {
+     "colonne": "CU",
+     "programme": "Energy+/OpenStudio\nFe einf",
+     "total_heures": 8760
+    },
+    {
+     "colonne": "CV",
+     "programme": "EDSL-Tas\nFe det Spect",
+     "total_heures": 8760
+    }
+   ],
+   "effectifs": [
+    {
+     "ligne_classeur": 34,
+     "borne_superieure": 25,
+     "par_colonne": {
+      "CO": 5458,
+      "CP": 5458,
+      "CR": 5900,
+      "CS": 5740,
+      "CT": 5740,
+      "CU": 5741,
+      "CV": 5900
+     }
+    },
+    {
+     "ligne_classeur": 35,
+     "borne_superieure": 50,
+     "par_colonne": {
+      "CO": 1342,
+      "CP": 1342,
+      "CR": 1752,
+      "CS": 717,
+      "CT": 728,
+      "CU": 768,
+      "CV": 1611
+     }
+    },
+    {
+     "ligne_classeur": 36,
+     "borne_superieure": 75,
+     "par_colonne": {
+      "CO": 532,
+      "CP": 532,
+      "CR": 81,
+      "CS": 249,
+      "CT": 246,
+      "CU": 258,
+      "CV": 71
+     }
+    },
+    {
+     "ligne_classeur": 37,
+     "borne_superieure": 100,
+     "par_colonne": {
+      "CO": 316,
+      "CP": 316,
+      "CR": 94,
+      "CS": 312,
+      "CT": 308,
+      "CU": 292,
+      "CV": 86
+     }
+    },
+    {
+     "ligne_classeur": 38,
+     "borne_superieure": 125,
+     "par_colonne": {
+      "CO": 238,
+      "CP": 238,
+      "CR": 51,
+      "CS": 157,
+      "CT": 155,
+      "CU": 159,
+      "CV": 89
+     }
+    },
+    {
+     "ligne_classeur": 39,
+     "borne_superieure": 150,
+     "par_colonne": {
+      "CO": 83,
+      "CP": 83,
+      "CR": 51,
+      "CS": 196,
+      "CT": 196,
+      "CU": 197,
+      "CV": 77
+     }
+    },
+    {
+     "ligne_classeur": 40,
+     "borne_superieure": 175,
+     "par_colonne": {
+      "CO": 63,
+      "CP": 63,
+      "CR": 63,
+      "CS": 170,
+      "CT": 168,
+      "CU": 164,
+      "CV": 80
+     }
+    },
+    {
+     "ligne_classeur": 41,
+     "borne_superieure": 200,
+     "par_colonne": {
+      "CO": 55,
+      "CP": 55,
+      "CR": 57,
+      "CS": 174,
+      "CT": 174,
+      "CU": 167,
+      "CV": 74
+     }
+    },
+    {
+     "ligne_classeur": 42,
+     "borne_superieure": 225,
+     "par_colonne": {
+      "CO": 61,
+      "CP": 61,
+      "CR": 70,
+      "CS": 154,
+      "CT": 155,
+      "CU": 155,
+      "CV": 73
+     }
+    },
+    {
+     "ligne_classeur": 43,
+     "borne_superieure": 250,
+     "par_colonne": {
+      "CO": 69,
+      "CP": 69,
+      "CR": 46,
+      "CS": 149,
+      "CT": 150,
+      "CU": 148,
+      "CV": 79
+     }
+    },
+    {
+     "ligne_classeur": 44,
+     "borne_superieure": 275,
+     "par_colonne": {
+      "CO": 52,
+      "CP": 52,
+      "CR": 61,
+      "CS": 108,
+      "CT": 108,
+      "CU": 93,
+      "CV": 72
+     }
+    },
+    {
+     "ligne_classeur": 45,
+     "borne_superieure": 300,
+     "par_colonne": {
+      "CO": 78,
+      "CP": 78,
+      "CR": 40,
+      "CS": 73,
+      "CT": 72,
+      "CU": 67,
+      "CV": 52
+     }
+    },
+    {
+     "ligne_classeur": 46,
+     "borne_superieure": 325,
+     "par_colonne": {
+      "CO": 76,
+      "CP": 76,
+      "CR": 47,
+      "CS": 72,
+      "CT": 72,
+      "CU": 72,
+      "CV": 78
+     }
+    },
+    {
+     "ligne_classeur": 47,
+     "borne_superieure": 350,
+     "par_colonne": {
+      "CO": 75,
+      "CP": 75,
+      "CR": 43,
+      "CS": 64,
+      "CT": 64,
+      "CU": 60,
+      "CV": 67
+     }
+    },
+    {
+     "ligne_classeur": 48,
+     "borne_superieure": 375,
+     "par_colonne": {
+      "CO": 135,
+      "CP": 135,
+      "CR": 53,
+      "CS": 72,
+      "CT": 74,
+      "CU": 73,
+      "CV": 46
+     }
+    },
+    {
+     "ligne_classeur": 49,
+     "borne_superieure": 400,
+     "par_colonne": {
+      "CO": 31,
+      "CP": 31,
+      "CR": 45,
+      "CS": 130,
+      "CT": 127,
+      "CU": 126,
+      "CV": 41
+     }
+    },
+    {
+     "ligne_classeur": 50,
+     "borne_superieure": 425,
+     "par_colonne": {
+      "CO": 30,
+      "CP": 30,
+      "CR": 62,
+      "CS": 38,
+      "CT": 39,
+      "CU": 38,
+      "CV": 21
+     }
+    },
+    {
+     "ligne_classeur": 51,
+     "borne_superieure": 450,
+     "par_colonne": {
+      "CO": 25,
+      "CP": 25,
+      "CR": 41,
+      "CS": 38,
+      "CT": 38,
+      "CU": 37,
+      "CV": 29
+     }
+    },
+    {
+     "ligne_classeur": 52,
+     "borne_superieure": 475,
+     "par_colonne": {
+      "CO": 41,
+      "CP": 41,
+      "CR": 26,
+      "CS": 67,
+      "CT": 68,
+      "CU": 67,
+      "CV": 6
+     }
+    },
+    {
+     "ligne_classeur": 53,
+     "borne_superieure": 500,
+     "par_colonne": {
+      "CO": 0,
+      "CP": 0,
+      "CR": 177,
+      "CS": 80,
+      "CT": 78,
+      "CU": 78,
+      "CV": 208
+     }
+    }
+   ]
+  },
+  {
+   "cas": "Test 3J",
+   "grandeur": "Beleuchtungsleistung",
+   "unite": "W",
+   "colonne_bloc": "CX",
+   "nb_classes": 20,
+   "ligne_total": 54,
+   "contributeurs": [
+    {
+     "colonne": "CZ",
+     "programme": "IDA ICE\nFe det Spec",
+     "total_heures": 8760
+    },
+    {
+     "colonne": "DA",
+     "programme": "IDA ICE\nFe det noSpec",
+     "total_heures": 8760
+    },
+    {
+     "colonne": "DC",
+     "programme": "Excel\nSIA 387/4 + 380/2",
+     "total_heures": 8760
+    },
+    {
+     "colonne": "DD",
+     "programme": "Energy+/OpenStudio\nFe det Spec",
+     "total_heures": 8760
+    },
+    {
+     "colonne": "DE",
+     "programme": "Energy+/OpenStudio\nFe det noSpec",
+     "total_heures": 8760
+    },
+    {
+     "colonne": "DF",
+     "programme": "Energy+/OpenStudio\nFe einf",
+     "total_heures": 8760
+    },
+    {
+     "colonne": "DG",
+     "programme": "EDSL-Tas\nFe det Spect",
+     "total_heures": 8760
+    }
+   ],
+   "effectifs": [
+    {
+     "ligne_classeur": 34,
+     "borne_superieure": 25,
+     "par_colonne": {
+      "CZ": 5380,
+      "DA": 5380,
+      "DC": 5900,
+      "DD": 5729,
+      "DE": 5732,
+      "DF": 5733,
+      "DG": 5900
+     }
+    },
+    {
+     "ligne_classeur": 35,
+     "borne_superieure": 50,
+     "par_colonne": {
+      "CZ": 112,
+      "DA": 112,
+      "DC": 0,
+      "DD": 19,
+      "DE": 17,
+      "DF": 18,
+      "DG": 0
+     }
+    },
+    {
+     "ligne_classeur": 36,
+     "borne_superieure": 75,
+     "par_colonne": {
+      "CZ": 80,
+      "DA": 80,
+      "DC": 0,
+      "DD": 38,
+      "DE": 37,
+      "DF": 35,
+      "DG": 0
+     }
+    },
+    {
+     "ligne_classeur": 37,
+     "borne_superieure": 100,
+     "par_colonne": {
+      "CZ": 184,
+      "DA": 184,
+      "DC": 0,
+      "DD": 114,
+      "DE": 114,
+      "DF": 114,
+      "DG": 0
+     }
+    },
+    {
+     "ligne_classeur": 38,
+     "borne_superieure": 125,
+     "par_colonne": {
+      "CZ": 231,
+      "DA": 231,
+      "DC": 0,
+      "DD": 63,
+      "DE": 63,
+      "DF": 66,
+      "DG": 0
+     }
+    },
+    {
+     "ligne_classeur": 39,
+     "borne_superieure": 150,
+     "par_colonne": {
+      "CZ": 1636,
+      "DA": 1636,
+      "DC": 1807,
+      "DD": 813,
+      "DE": 816,
+      "DF": 857,
+      "DG": 1655
+     }
+    },
+    {
+     "ligne_classeur": 40,
+     "borne_superieure": 175,
+     "par_colonne": {
+      "CZ": 189,
+      "DA": 189,
+      "DC": 116,
+      "DD": 241,
+      "DE": 240,
+      "DF": 237,
+      "DG": 103
+     }
+    },
+    {
+     "ligne_classeur": 41,
+     "borne_superieure": 200,
+     "par_colonne": {
+      "CZ": 127,
+      "DA": 127,
+      "DC": 68,
+      "DD": 202,
+      "DE": 204,
+      "DF": 213,
+      "DG": 117
+     }
+    },
+    {
+     "ligne_classeur": 42,
+     "borne_superieure": 225,
+     "par_colonne": {
+      "CZ": 92,
+      "DA": 92,
+      "DC": 64,
+      "DD": 236,
+      "DE": 234,
+      "DF": 221,
+      "DG": 104
+     }
+    },
+    {
+     "ligne_classeur": 43,
+     "borne_superieure": 250,
+     "par_colonne": {
+      "CZ": 61,
+      "DA": 61,
+      "DC": 77,
+      "DD": 215,
+      "DE": 219,
+      "DF": 213,
+      "DG": 81
+     }
+    },
+    {
+     "ligne_classeur": 44,
+     "borne_superieure": 275,
+     "par_colonne": {
+      "CZ": 74,
+      "DA": 74,
+      "DC": 84,
+      "DD": 195,
+      "DE": 190,
+      "DF": 191,
+      "DG": 96
+     }
+    },
+    {
+     "ligne_classeur": 45,
+     "borne_superieure": 300,
+     "par_colonne": {
+      "CZ": 79,
+      "DA": 79,
+      "DC": 64,
+      "DD": 181,
+      "DE": 180,
+      "DF": 172,
+      "DG": 94
+     }
+    },
+    {
+     "ligne_classeur": 46,
+     "borne_superieure": 325,
+     "par_colonne": {
+      "CZ": 91,
+      "DA": 91,
+      "DC": 64,
+      "DD": 124,
+      "DE": 127,
+      "DF": 120,
+      "DG": 91
+     }
+    },
+    {
+     "ligne_classeur": 47,
+     "borne_superieure": 350,
+     "par_colonne": {
+      "CZ": 100,
+      "DA": 100,
+      "DC": 59,
+      "DD": 90,
+      "DE": 90,
+      "DF": 83,
+      "DG": 81
+     }
+    },
+    {
+     "ligne_classeur": 48,
+     "borne_superieure": 375,
+     "par_colonne": {
+      "CZ": 154,
+      "DA": 154,
+      "DC": 53,
+      "DD": 83,
+      "DE": 81,
+      "DF": 76,
+      "DG": 84
+     }
+    },
+    {
+     "ligne_classeur": 49,
+     "borne_superieure": 400,
+     "par_colonne": {
+      "CZ": 48,
+      "DA": 48,
+      "DC": 63,
+      "DD": 150,
+      "DE": 152,
+      "DF": 151,
+      "DG": 50
+     }
+    },
+    {
+     "ligne_classeur": 50,
+     "borne_superieure": 425,
+     "par_colonne": {
+      "CZ": 37,
+      "DA": 37,
+      "DC": 58,
+      "DD": 64,
+      "DE": 63,
+      "DF": 61,
+      "DG": 50
+     }
+    },
+    {
+     "ligne_classeur": 51,
+     "borne_superieure": 450,
+     "par_colonne": {
+      "CZ": 35,
+      "DA": 35,
+      "DC": 65,
+      "DD": 42,
+      "DE": 41,
+      "DF": 43,
+      "DG": 31
+     }
+    },
+    {
+     "ligne_classeur": 52,
+     "borne_superieure": 475,
+     "par_colonne": {
+      "CZ": 50,
+      "DA": 50,
+      "DC": 38,
+      "DD": 74,
+      "DE": 78,
+      "DF": 74,
+      "DG": 15
+     }
+    },
+    {
+     "ligne_classeur": 53,
+     "borne_superieure": 500,
+     "par_colonne": {
+      "CZ": 0,
+      "DA": 0,
+      "DC": 180,
+      "DD": 87,
+      "DE": 82,
+      "DF": 82,
+      "DG": 208
+     }
+    }
+   ]
+  },
+  {
+   "cas": "Test 3K",
+   "grandeur": "Beleuchtungsleistung",
+   "unite": "W",
+   "colonne_bloc": "DI",
+   "nb_classes": 20,
+   "ligne_total": 54,
+   "contributeurs": [
+    {
+     "colonne": "DK",
+     "programme": "IDA ICE\nFe det Spec",
+     "total_heures": 8760
+    },
+    {
+     "colonne": "DL",
+     "programme": "IDA ICE\nFe det noSpec",
+     "total_heures": 8760
+    },
+    {
+     "colonne": "DN",
+     "programme": "Excel\nSIA 387/4 + 380/2",
+     "total_heures": 8760
+    },
+    {
+     "colonne": "DO",
+     "programme": "Energy+/OpenStudio\nFe det Spec",
+     "total_heures": 8760
+    },
+    {
+     "colonne": "DP",
+     "programme": "Energy+/OpenStudio\nFe det noSpec",
+     "total_heures": 8760
+    },
+    {
+     "colonne": "DQ",
+     "programme": "Energy+/OpenStudio\nFe einf",
+     "total_heures": 8760
+    }
+   ],
+   "effectifs": [
+    {
+     "ligne_classeur": 34,
+     "borne_superieure": 25,
+     "par_colonne": {
+      "DK": 5462,
+      "DL": 5463,
+      "DN": 5900,
+      "DO": 5740,
+      "DP": 5740,
+      "DQ": 5741
+     }
+    },
+    {
+     "ligne_classeur": 35,
+     "borne_superieure": 50,
+     "par_colonne": {
+      "DK": 1655,
+      "DL": 1650,
+      "DN": 1835,
+      "DO": 1191,
+      "DP": 1199,
+      "DQ": 1226
+     }
+    },
+    {
+     "ligne_classeur": 36,
+     "borne_superieure": 75,
+     "par_colonne": {
+      "DK": 287,
+      "DL": 289,
+      "DN": 59,
+      "DO": 351,
+      "DP": 348,
+      "DQ": 374
+     }
+    },
+    {
+     "ligne_classeur": 37,
+     "borne_superieure": 100,
+     "par_colonne": {
+      "DK": 269,
+      "DL": 272,
+      "DN": 67,
+      "DO": 354,
+      "DP": 353,
+      "DQ": 324
+     }
+    },
+    {
+     "ligne_classeur": 38,
+     "borne_superieure": 125,
+     "par_colonne": {
+      "DK": 224,
+      "DL": 222,
+      "DN": 42,
+      "DO": 125,
+      "DP": 122,
+      "DQ": 111
+     }
+    },
+    {
+     "ligne_classeur": 39,
+     "borne_superieure": 150,
+     "par_colonne": {
+      "DK": 75,
+      "DL": 77,
+      "DN": 50,
+      "DO": 88,
+      "DP": 88,
+      "DQ": 82
+     }
+    },
+    {
+     "ligne_classeur": 40,
+     "borne_superieure": 175,
+     "par_colonne": {
+      "DK": 63,
+      "DL": 59,
+      "DN": 67,
+      "DO": 59,
+      "DP": 58,
+      "DQ": 64
+     }
+    },
+    {
+     "ligne_classeur": 41,
+     "borne_superieure": 200,
+     "par_colonne": {
+      "DK": 53,
+      "DL": 59,
+      "DN": 50,
+      "DO": 60,
+      "DP": 60,
+      "DQ": 58
+     }
+    },
+    {
+     "ligne_classeur": 42,
+     "borne_superieure": 225,
+     "par_colonne": {
+      "DK": 63,
+      "DL": 59,
+      "DN": 59,
+      "DO": 60,
+      "DP": 61,
+      "DQ": 62
+     }
+    },
+    {
+     "ligne_classeur": 43,
+     "borne_superieure": 250,
+     "par_colonne": {
+      "DK": 64,
+      "DL": 65,
+      "DN": 40,
+      "DO": 55,
+      "DP": 56,
+      "DQ": 58
+     }
+    },
+    {
+     "ligne_classeur": 44,
+     "borne_superieure": 275,
+     "par_colonne": {
+      "DK": 54,
+      "DL": 53,
+      "DN": 57,
+      "DO": 66,
+      "DP": 66,
+      "DQ": 59
+     }
+    },
+    {
+     "ligne_classeur": 45,
+     "borne_superieure": 300,
+     "par_colonne": {
+      "DK": 74,
+      "DL": 76,
+      "DN": 40,
+      "DO": 53,
+      "DP": 52,
+      "DQ": 55
+     }
+    },
+    {
+     "ligne_classeur": 46,
+     "borne_superieure": 325,
+     "par_colonne": {
+      "DK": 80,
+      "DL": 81,
+      "DN": 47,
+      "DO": 71,
+      "DP": 71,
+      "DQ": 69
+     }
+    },
+    {
+     "ligne_classeur": 47,
+     "borne_superieure": 350,
+     "par_colonne": {
+      "DK": 73,
+      "DL": 72,
+      "DN": 43,
+      "DO": 62,
+      "DP": 62,
+      "DQ": 58
+     }
+    },
+    {
+     "ligne_classeur": 48,
+     "borne_superieure": 375,
+     "par_colonne": {
+      "DK": 137,
+      "DL": 136,
+      "DN": 52,
+      "DO": 72,
+      "DP": 74,
+      "DQ": 73
+     }
+    },
+    {
+     "ligne_classeur": 49,
+     "borne_superieure": 400,
+     "par_colonne": {
+      "DK": 31,
+      "DL": 33,
+      "DN": 46,
+      "DO": 130,
+      "DP": 127,
+      "DQ": 126
+     }
+    },
+    {
+     "ligne_classeur": 50,
+     "borne_superieure": 425,
+     "par_colonne": {
+      "DK": 30,
+      "DL": 26,
+      "DN": 62,
+      "DO": 38,
+      "DP": 39,
+      "DQ": 38
+     }
+    },
+    {
+     "ligne_classeur": 51,
+     "borne_superieure": 450,
+     "par_colonne": {
+      "DK": 25,
+      "DL": 27,
+      "DN": 41,
+      "DO": 38,
+      "DP": 38,
+      "DQ": 37
+     }
+    },
+    {
+     "ligne_classeur": 52,
+     "borne_superieure": 475,
+     "par_colonne": {
+      "DK": 41,
+      "DL": 41,
+      "DN": 26,
+      "DO": 67,
+      "DP": 68,
+      "DQ": 67
+     }
+    },
+    {
+     "ligne_classeur": 53,
+     "borne_superieure": 500,
+     "par_colonne": {
+      "DK": 0,
+      "DL": 0,
+      "DN": 177,
+      "DO": 80,
+      "DP": 78,
+      "DQ": 78
+     }
+    }
+   ]
+  },
+  {
+   "cas": "Test 3L",
+   "grandeur": "Beleuchtungsleistung",
+   "unite": "W",
+   "colonne_bloc": "DT",
+   "nb_classes": 20,
+   "ligne_total": 54,
+   "contributeurs": [
+    {
+     "colonne": "DV",
+     "programme": "IDA ICE\nFe det Spec",
+     "total_heures": 8760
+    },
+    {
+     "colonne": "DW",
+     "programme": "IDA ICE\nFe det noSpec",
+     "total_heures": 8760
+    },
+    {
+     "colonne": "DY",
+     "programme": "Excel\nSIA 387/4 + 380/2",
+     "total_heures": 8760
+    },
+    {
+     "colonne": "DZ",
+     "programme": "Energy+/OpenStudio\nFe det Spec",
+     "total_heures": 8760
+    },
+    {
+     "colonne": "EA",
+     "programme": "Energy+/OpenStudio\nFe det noSpec",
+     "total_heures": 8760
+    },
+    {
+     "colonne": "EB",
+     "programme": "Energy+/OpenStudio\nFe einf",
+     "total_heures": 8760
+    }
+   ],
+   "effectifs": [
+    {
+     "ligne_classeur": 34,
+     "borne_superieure": 25,
+     "par_colonne": {
+      "DV": 5380,
+      "DW": 5380,
+      "DY": 5900,
+      "DZ": 5729,
+      "EA": 5732,
+      "EB": 5733
+     }
+    },
+    {
+     "ligne_classeur": 35,
+     "borne_superieure": 50,
+     "par_colonne": {
+      "DV": 116,
+      "DW": 115,
+      "DY": 0,
+      "DZ": 21,
+      "EA": 19,
+      "EB": 20
+     }
+    },
+    {
+     "ligne_classeur": 36,
+     "borne_superieure": 75,
+     "par_colonne": {
+      "DV": 76,
+      "DW": 77,
+      "DY": 0,
+      "DZ": 36,
+      "EA": 35,
+      "EB": 33
+     }
+    },
+    {
+     "ligne_classeur": 37,
+     "borne_superieure": 100,
+     "par_colonne": {
+      "DV": 185,
+      "DW": 183,
+      "DY": 0,
+      "DZ": 114,
+      "EA": 114,
+      "EB": 114
+     }
+    },
+    {
+     "ligne_classeur": 38,
+     "borne_superieure": 125,
+     "par_colonne": {
+      "DV": 291,
+      "DW": 294,
+      "DY": 0,
+      "DZ": 63,
+      "EA": 63,
+      "EB": 66
+     }
+    },
+    {
+     "ligne_classeur": 39,
+     "borne_superieure": 150,
+     "par_colonne": {
+      "DV": 1645,
+      "DW": 1640,
+      "DY": 1875,
+      "DZ": 1335,
+      "EA": 1342,
+      "EB": 1396
+     }
+    },
+    {
+     "ligne_classeur": 40,
+     "borne_superieure": 175,
+     "par_colonne": {
+      "DV": 135,
+      "DW": 139,
+      "DY": 80,
+      "DZ": 336,
+      "EA": 331,
+      "EB": 302
+     }
+    },
+    {
+     "ligne_classeur": 41,
+     "borne_superieure": 200,
+     "par_colonne": {
+      "DV": 119,
+      "DW": 120,
+      "DY": 59,
+      "DZ": 144,
+      "EA": 144,
+      "EB": 138
+     }
+    },
+    {
+     "ligne_classeur": 42,
+     "borne_superieure": 225,
+     "par_colonne": {
+      "DV": 85,
+      "DW": 85,
+      "DY": 69,
+      "DZ": 103,
+      "EA": 101,
+      "EB": 89
+     }
+    },
+    {
+     "ligne_classeur": 43,
+     "borne_superieure": 250,
+     "par_colonne": {
+      "DV": 59,
+      "DW": 57,
+      "DY": 72,
+      "DZ": 76,
+      "EA": 79,
+      "EB": 76
+     }
+    },
+    {
+     "ligne_classeur": 44,
+     "borne_superieure": 275,
+     "par_colonne": {
+      "DV": 76,
+      "DW": 78,
+      "DY": 72,
+      "DZ": 70,
+      "EA": 68,
+      "EB": 75
+     }
+    },
+    {
+     "ligne_classeur": 45,
+     "borne_superieure": 300,
+     "par_colonne": {
+      "DV": 81,
+      "DW": 79,
+      "DY": 56,
+      "DZ": 72,
+      "EA": 71,
+      "EB": 68
+     }
+    },
+    {
+     "ligne_classeur": 46,
+     "borne_superieure": 325,
+     "par_colonne": {
+      "DV": 87,
+      "DW": 90,
+      "DY": 61,
+      "DZ": 85,
+      "EA": 88,
+      "EB": 85
+     }
+    },
+    {
+     "ligne_classeur": 47,
+     "borne_superieure": 350,
+     "par_colonne": {
+      "DV": 101,
+      "DW": 97,
+      "DY": 59,
+      "DZ": 77,
+      "EA": 77,
+      "EB": 80
+     }
+    },
+    {
+     "ligne_classeur": 48,
+     "borne_superieure": 375,
+     "par_colonne": {
+      "DV": 154,
+      "DW": 156,
+      "DY": 53,
+      "DZ": 82,
+      "EA": 80,
+      "EB": 74
+     }
+    },
+    {
+     "ligne_classeur": 49,
+     "borne_superieure": 400,
+     "par_colonne": {
+      "DV": 47,
+      "DW": 47,
+      "DY": 63,
+      "DZ": 150,
+      "EA": 152,
+      "EB": 152
+     }
+    },
+    {
+     "ligne_classeur": 50,
+     "borne_superieure": 425,
+     "par_colonne": {
+      "DV": 38,
+      "DW": 38,
+      "DY": 58,
+      "DZ": 64,
+      "EA": 63,
+      "EB": 60
+     }
+    },
+    {
+     "ligne_classeur": 51,
+     "borne_superieure": 450,
+     "par_colonne": {
+      "DV": 35,
+      "DW": 36,
+      "DY": 65,
+      "DZ": 42,
+      "EA": 41,
+      "EB": 43
+     }
+    },
+    {
+     "ligne_classeur": 52,
+     "borne_superieure": 475,
+     "par_colonne": {
+      "DV": 50,
+      "DW": 49,
+      "DY": 38,
+      "DZ": 74,
+      "EA": 78,
+      "EB": 74
+     }
+    },
+    {
+     "ligne_classeur": 53,
+     "borne_superieure": 500,
+     "par_colonne": {
+      "DV": 0,
+      "DW": 0,
+      "DY": 180,
+      "DZ": 87,
+      "EA": 82,
+      "EB": 82
+     }
+    }
+   ]
+  },
+  {
+   "cas": "Test 3A-F",
+   "grandeur": "Beleuchtungsstärke",
+   "unite": "lux",
+   "colonne_bloc": "EE",
+   "nb_classes": 20,
+   "ligne_total": 54,
+   "contributeurs": [
+    {
+     "colonne": "EG",
+     "programme": "IDA ICE\nFe det Spec",
+     "total_heures": 8760
+    },
+    {
+     "colonne": "EH",
+     "programme": "IDA ICE\nFe det noSpec",
+     "total_heures": 8760
+    },
+    {
+     "colonne": "EI",
+     "programme": "IDA ICE\nFe einf",
+     "total_heures": 8760
+    },
+    {
+     "colonne": "EJ",
+     "programme": "Excel\nSIA 387/4 + 380/2",
+     "total_heures": 8760
+    },
+    {
+     "colonne": "EK",
+     "programme": "Energy+/OpenStudio\nFe det Spec",
+     "total_heures": 8759
+    }
+   ],
+   "effectifs": [
+    {
+     "ligne_classeur": 34,
+     "borne_superieure": 10,
+     "par_colonne": {
+      "EG": 3835,
+      "EH": 3833,
+      "EI": 3790,
+      "EJ": 4374,
+      "EK": 4315
+     }
+    },
+    {
+     "ligne_classeur": 35,
+     "borne_superieure": 100,
+     "par_colonne": {
+      "EG": 880,
+      "EH": 880,
+      "EI": 862,
+      "EJ": 421,
+      "EK": 561
+     }
+    },
+    {
+     "ligne_classeur": 36,
+     "borne_superieure": 200,
+     "par_colonne": {
+      "EG": 901,
+      "EH": 876,
+      "EI": 771,
+      "EJ": 1077,
+      "EK": 835
+     }
+    },
+    {
+     "ligne_classeur": 37,
+     "borne_superieure": 300,
+     "par_colonne": {
+      "EG": 1111,
+      "EH": 1086,
+      "EI": 1089,
+      "EJ": 855,
+      "EK": 864
+     }
+    },
+    {
+     "ligne_classeur": 38,
+     "borne_superieure": 400,
+     "par_colonne": {
+      "EG": 696,
+      "EH": 744,
+      "EI": 753,
+      "EJ": 653,
+      "EK": 666
+     }
+    },
+    {
+     "ligne_classeur": 39,
+     "borne_superieure": 500,
+     "par_colonne": {
+      "EG": 393,
+      "EH": 409,
+      "EI": 418,
+      "EJ": 402,
+      "EK": 438
+     }
+    },
+    {
+     "ligne_classeur": 40,
+     "borne_superieure": 600,
+     "par_colonne": {
+      "EG": 331,
+      "EH": 328,
+      "EI": 308,
+      "EJ": 261,
+      "EK": 248
+     }
+    },
+    {
+     "ligne_classeur": 41,
+     "borne_superieure": 700,
+     "par_colonne": {
+      "EG": 241,
+      "EH": 242,
+      "EI": 286,
+      "EJ": 178,
+      "EK": 213
+     }
+    },
+    {
+     "ligne_classeur": 42,
+     "borne_superieure": 800,
+     "par_colonne": {
+      "EG": 183,
+      "EH": 176,
+      "EI": 196,
+      "EJ": 129,
+      "EK": 187
+     }
+    },
+    {
+     "ligne_classeur": 43,
+     "borne_superieure": 900,
+     "par_colonne": {
+      "EG": 126,
+      "EH": 123,
+      "EI": 143,
+      "EJ": 103,
+      "EK": 128
+     }
+    },
+    {
+     "ligne_classeur": 44,
+     "borne_superieure": 1000,
+     "par_colonne": {
+      "EG": 46,
+      "EH": 44,
+      "EI": 94,
+      "EJ": 111,
+      "EK": 102
+     }
+    },
+    {
+     "ligne_classeur": 45,
+     "borne_superieure": 1100,
+     "par_colonne": {
+      "EG": 8,
+      "EH": 11,
+      "EI": 32,
+      "EJ": 75,
+      "EK": 59
+     }
+    },
+    {
+     "ligne_classeur": 46,
+     "borne_superieure": 1200,
+     "par_colonne": {
+      "EG": 3,
+      "EH": 2,
+      "EI": 10,
+      "EJ": 68,
+      "EK": 70
+     }
+    },
+    {
+     "ligne_classeur": 47,
+     "borne_superieure": 1300,
+     "par_colonne": {
+      "EG": 1,
+      "EH": 1,
+      "EI": 2,
+      "EJ": 50,
+      "EK": 45
+     }
+    },
+    {
+     "ligne_classeur": 48,
+     "borne_superieure": 1400,
+     "par_colonne": {
+      "EG": 4,
+      "EH": 4,
+      "EI": 2,
+      "EJ": 3,
+      "EK": 13
+     }
+    },
+    {
+     "ligne_classeur": 49,
+     "borne_superieure": 1500,
+     "par_colonne": {
+      "EG": 1,
+      "EH": 1,
+      "EI": 4,
+      "EJ": 0,
+      "EK": 9
+     }
+    },
+    {
+     "ligne_classeur": 50,
+     "borne_superieure": 1600,
+     "par_colonne": {
+      "EG": 0,
+      "EH": 0,
+      "EI": 0,
+      "EJ": 0,
+      "EK": 3
+     }
+    },
+    {
+     "ligne_classeur": 51,
+     "borne_superieure": 1700,
+     "par_colonne": {
+      "EG": 0,
+      "EH": 0,
+      "EI": 0,
+      "EJ": 0,
+      "EK": 2
+     }
+    },
+    {
+     "ligne_classeur": 52,
+     "borne_superieure": 1800,
+     "par_colonne": {
+      "EG": 0,
+      "EH": 0,
+      "EI": 0,
+      "EJ": 0,
+      "EK": 0
+     }
+    },
+    {
+     "ligne_classeur": 53,
+     "borne_superieure": 1900,
+     "par_colonne": {
+      "EG": 0,
+      "EH": 0,
+      "EI": 0,
+      "EJ": 0,
+      "EK": 1
+     }
+    }
+   ]
+  },
+  {
+   "cas": "Test 3G-H",
+   "grandeur": "Beleuchtungsstärke",
+   "unite": "lux",
+   "colonne_bloc": "EP",
+   "nb_classes": 20,
+   "ligne_total": 54,
+   "contributeurs": [
+    {
+     "colonne": "ER",
+     "programme": "IDA ICE\nFe det Spec",
+     "total_heures": 8760
+    },
+    {
+     "colonne": "ES",
+     "programme": "IDA ICE\nFe det noSpec",
+     "total_heures": 8760
+    },
+    {
+     "colonne": "EU",
+     "programme": "Excel\nSIA 387/4 + 380/2",
+     "total_heures": 8760
+    },
+    {
+     "colonne": "EV",
+     "programme": "Energy+/OpenStudio\nFe det Spec",
+     "total_heures": 8759
+    },
+    {
+     "colonne": "EW",
+     "programme": "Energy+/OpenStudio\nFe det noSpec",
+     "total_heures": 8759
+    },
+    {
+     "colonne": "EX",
+     "programme": "Energy+/OpenStudio\nFe einf",
+     "total_heures": 8759
+    }
+   ],
+   "effectifs": [
+    {
+     "ligne_classeur": 34,
+     "borne_superieure": 10,
+     "par_colonne": {
+      "ER": 3839,
+      "ES": 3841,
+      "EU": 4374,
+      "EV": 4316,
+      "EW": 4316,
+      "EX": 4316
+     }
+    },
+    {
+     "ligne_classeur": 35,
+     "borne_superieure": 100,
+     "par_colonne": {
+      "ER": 872,
+      "ES": 869,
+      "EU": 420,
+      "EV": 558,
+      "EW": 558,
+      "EX": 552
+     }
+    },
+    {
+     "ligne_classeur": 36,
+     "borne_superieure": 200,
+     "par_colonne": {
+      "ER": 446,
+      "ES": 447,
+      "EU": 392,
+      "EV": 428,
+      "EW": 429,
+      "EX": 411
+     }
+    },
+    {
+     "ligne_classeur": 37,
+     "borne_superieure": 300,
+     "par_colonne": {
+      "ER": 372,
+      "ES": 368,
+      "EU": 415,
+      "EV": 570,
+      "EW": 569,
+      "EX": 539
+     }
+    },
+    {
+     "ligne_classeur": 38,
+     "borne_superieure": 400,
+     "par_colonne": {
+      "ER": 358,
+      "ES": 367,
+      "EU": 392,
+      "EV": 691,
+      "EW": 694,
+      "EX": 696
+     }
+    },
+    {
+     "ligne_classeur": 39,
+     "borne_superieure": 500,
+     "par_colonne": {
+      "ER": 389,
+      "ES": 380,
+      "EU": 414,
+      "EV": 661,
+      "EW": 660,
+      "EX": 648
+     }
+    },
+    {
+     "ligne_classeur": 40,
+     "borne_superieure": 600,
+     "par_colonne": {
+      "ER": 562,
+      "ES": 572,
+      "EU": 489,
+      "EV": 534,
+      "EW": 537,
+      "EX": 538
+     }
+    },
+    {
+     "ligne_classeur": 41,
+     "borne_superieure": 700,
+     "par_colonne": {
+      "ER": 532,
+      "ES": 532,
+      "EU": 407,
+      "EV": 334,
+      "EW": 328,
+      "EX": 350
+     }
+    },
+    {
+     "ligne_classeur": 42,
+     "borne_superieure": 800,
+     "par_colonne": {
+      "ER": 464,
+      "ES": 462,
+      "EU": 461,
+      "EV": 211,
+      "EW": 213,
+      "EX": 229
+     }
+    },
+    {
+     "ligne_classeur": 43,
+     "borne_superieure": 900,
+     "par_colonne": {
+      "ER": 409,
+      "ES": 404,
+      "EU": 390,
+      "EV": 144,
+      "EW": 142,
+      "EX": 152
+     }
+    },
+    {
+     "ligne_classeur": 44,
+     "borne_superieure": 1000,
+     "par_colonne": {
+      "ER": 325,
+      "ES": 327,
+      "EU": 316,
+      "EV": 100,
+      "EW": 100,
+      "EX": 103
+     }
+    },
+    {
+     "ligne_classeur": 45,
+     "borne_superieure": 1100,
+     "par_colonne": {
+      "ER": 160,
+      "ES": 158,
+      "EU": 144,
+      "EV": 69,
+      "EW": 69,
+      "EX": 68
+     }
+    },
+    {
+     "ligne_classeur": 46,
+     "borne_superieure": 1200,
+     "par_colonne": {
+      "ER": 26,
+      "ES": 25,
+      "EU": 79,
+      "EV": 68,
+      "EW": 69,
+      "EX": 69
+     }
+    },
+    {
+     "ligne_classeur": 47,
+     "borne_superieure": 1300,
+     "par_colonne": {
+      "ER": 2,
+      "ES": 4,
+      "EU": 55,
+      "EV": 45,
+      "EW": 44,
+      "EX": 50
+     }
+    },
+    {
+     "ligne_classeur": 48,
+     "borne_superieure": 1400,
+     "par_colonne": {
+      "ER": 3,
+      "ES": 4,
+      "EU": 8,
+      "EV": 14,
+      "EW": 15,
+      "EX": 19
+     }
+    },
+    {
+     "ligne_classeur": 49,
+     "borne_superieure": 1500,
+     "par_colonne": {
+      "ER": 1,
+      "ES": 0,
+      "EU": 2,
+      "EV": 10,
+      "EW": 10,
+      "EX": 13
+     }
+    },
+    {
+     "ligne_classeur": 50,
+     "borne_superieure": 1600,
+     "par_colonne": {
+      "ER": 0,
+      "ES": 0,
+      "EU": 1,
+      "EV": 2,
+      "EW": 2,
+      "EX": 2
+     }
+    },
+    {
+     "ligne_classeur": 51,
+     "borne_superieure": 1700,
+     "par_colonne": {
+      "ER": 0,
+      "ES": 0,
+      "EU": 0,
+      "EV": 3,
+      "EW": 3,
+      "EX": 3
+     }
+    },
+    {
+     "ligne_classeur": 52,
+     "borne_superieure": 1800,
+     "par_colonne": {
+      "ER": 0,
+      "ES": 0,
+      "EU": 0,
+      "EV": 0,
+      "EW": 0,
+      "EX": 0
+     }
+    },
+    {
+     "ligne_classeur": 53,
+     "borne_superieure": 1900,
+     "par_colonne": {
+      "ER": 0,
+      "ES": 0,
+      "EU": 1,
+      "EV": 1,
+      "EW": 1,
+      "EX": 1
+     }
+    }
+   ]
+  },
+  {
+   "cas": "Test 3I-J",
+   "grandeur": "Beleuchtungsstärke",
+   "unite": "lux",
+   "colonne_bloc": "FA",
+   "nb_classes": 20,
+   "ligne_total": 54,
+   "contributeurs": [
+    {
+     "colonne": "FC",
+     "programme": "IDA ICE\nFe det Spec",
+     "total_heures": 8760
+    },
+    {
+     "colonne": "FD",
+     "programme": "IDA ICE\nFe det noSpec",
+     "total_heures": 8760
+    },
+    {
+     "colonne": "FF",
+     "programme": "Excel\nSIA 387/4 + 380/2",
+     "total_heures": 8760
+    },
+    {
+     "colonne": "FG",
+     "programme": "Energy+/OpenStudio\nFe det Spec",
+     "total_heures": 8759
+    },
+    {
+     "colonne": "FH",
+     "programme": "Energy+/OpenStudio\nFe det noSpec",
+     "total_heures": 8759
+    },
+    {
+     "colonne": "FI",
+     "programme": "Energy+/OpenStudio\nFe einf",
+     "total_heures": 8759
+    }
+   ],
+   "effectifs": [
+    {
+     "ligne_classeur": 34,
+     "borne_superieure": 10,
+     "par_colonne": {
+      "FC": 3842,
+      "FD": 3842,
+      "FF": 4374,
+      "FG": 4316,
+      "FH": 4316,
+      "FI": 4316
+     }
+    },
+    {
+     "ligne_classeur": 35,
+     "borne_superieure": 100,
+     "par_colonne": {
+      "FC": 865,
+      "FD": 865,
+      "FF": 417,
+      "FG": 554,
+      "FH": 558,
+      "FI": 548
+     }
+    },
+    {
+     "ligne_classeur": 36,
+     "borne_superieure": 200,
+     "par_colonne": {
+      "FC": 452,
+      "FD": 452,
+      "FF": 388,
+      "FG": 391,
+      "FH": 429,
+      "FI": 376
+     }
+    },
+    {
+     "ligne_classeur": 37,
+     "borne_superieure": 300,
+     "par_colonne": {
+      "FC": 387,
+      "FD": 387,
+      "FF": 393,
+      "FG": 537,
+      "FH": 569,
+      "FI": 510
+     }
+    },
+    {
+     "ligne_classeur": 38,
+     "borne_superieure": 400,
+     "par_colonne": {
+      "FC": 311,
+      "FD": 311,
+      "FF": 367,
+      "FG": 663,
+      "FH": 694,
+      "FI": 669
+     }
+    },
+    {
+     "ligne_classeur": 39,
+     "borne_superieure": 500,
+     "par_colonne": {
+      "FC": 349,
+      "FD": 349,
+      "FF": 400,
+      "FG": 673,
+      "FH": 660,
+      "FI": 649
+     }
+    },
+    {
+     "ligne_classeur": 40,
+     "borne_superieure": 600,
+     "par_colonne": {
+      "FC": 523,
+      "FD": 523,
+      "FF": 490,
+      "FG": 553,
+      "FH": 537,
+      "FI": 561
+     }
+    },
+    {
+     "ligne_classeur": 41,
+     "borne_superieure": 700,
+     "par_colonne": {
+      "FC": 505,
+      "FD": 505,
+      "FF": 402,
+      "FG": 376,
+      "FH": 328,
+      "FI": 388
+     }
+    },
+    {
+     "ligne_classeur": 42,
+     "borne_superieure": 800,
+     "par_colonne": {
+      "FC": 463,
+      "FD": 463,
+      "FF": 472,
+      "FG": 240,
+      "FH": 213,
+      "FI": 259
+     }
+    },
+    {
+     "ligne_classeur": 43,
+     "borne_superieure": 900,
+     "par_colonne": {
+      "FC": 401,
+      "FD": 401,
+      "FF": 416,
+      "FG": 145,
+      "FH": 142,
+      "FI": 155
+     }
+    },
+    {
+     "ligne_classeur": 44,
+     "borne_superieure": 1000,
+     "par_colonne": {
+      "FC": 349,
+      "FD": 349,
+      "FF": 329,
+      "FG": 100,
+      "FH": 100,
+      "FI": 103
+     }
+    },
+    {
+     "ligne_classeur": 45,
+     "borne_superieure": 1100,
+     "par_colonne": {
+      "FC": 199,
+      "FD": 199,
+      "FF": 149,
+      "FG": 67,
+      "FH": 69,
+      "FI": 68
+     }
+    },
+    {
+     "ligne_classeur": 46,
+     "borne_superieure": 1200,
+     "par_colonne": {
+      "FC": 63,
+      "FD": 63,
+      "FF": 81,
+      "FG": 70,
+      "FH": 69,
+      "FI": 71
+     }
+    },
+    {
+     "ligne_classeur": 47,
+     "borne_superieure": 1300,
+     "par_colonne": {
+      "FC": 28,
+      "FD": 28,
+      "FF": 61,
+      "FG": 44,
+      "FH": 44,
+      "FI": 48
+     }
+    },
+    {
+     "ligne_classeur": 48,
+     "borne_superieure": 1400,
+     "par_colonne": {
+      "FC": 13,
+      "FD": 13,
+      "FF": 14,
+      "FG": 14,
+      "FH": 15,
+      "FI": 19
+     }
+    },
+    {
+     "ligne_classeur": 49,
+     "borne_superieure": 1500,
+     "par_colonne": {
+      "FC": 8,
+      "FD": 8,
+      "FF": 5,
+      "FG": 10,
+      "FH": 10,
+      "FI": 13
+     }
+    },
+    {
+     "ligne_classeur": 50,
+     "borne_superieure": 1600,
+     "par_colonne": {
+      "FC": 2,
+      "FD": 2,
+      "FF": 1,
+      "FG": 2,
+      "FH": 2,
+      "FI": 2
+     }
+    },
+    {
+     "ligne_classeur": 51,
+     "borne_superieure": 1700,
+     "par_colonne": {
+      "FC": 0,
+      "FD": 0,
+      "FF": 0,
+      "FG": 3,
+      "FH": 3,
+      "FI": 3
+     }
+    },
+    {
+     "ligne_classeur": 52,
+     "borne_superieure": 1800,
+     "par_colonne": {
+      "FC": 0,
+      "FD": 0,
+      "FF": 0,
+      "FG": 0,
+      "FH": 0,
+      "FI": 0
+     }
+    },
+    {
+     "ligne_classeur": 53,
+     "borne_superieure": 1900,
+     "par_colonne": {
+      "FC": 0,
+      "FD": 0,
+      "FF": 1,
+      "FG": 1,
+      "FH": 1,
+      "FI": 1
+     }
+    }
+   ]
+  },
+  {
+   "cas": "Test 3K-L",
+   "grandeur": "Beleuchtungsstärke",
+   "unite": "lux",
+   "colonne_bloc": "FL",
+   "nb_classes": 20,
+   "ligne_total": 54,
+   "contributeurs": [
+    {
+     "colonne": "FN",
+     "programme": "IDA ICE\nFe det Spec",
+     "total_heures": 8759
+    },
+    {
+     "colonne": "FO",
+     "programme": "IDA ICE\nFe det noSpec",
+     "total_heures": 8759
+    },
+    {
+     "colonne": "FQ",
+     "programme": "Excel\nSIA 387/4 + 380/2",
+     "total_heures": 8759
+    },
+    {
+     "colonne": "FR",
+     "programme": "Energy+/OpenStudio\nFe det Spec",
+     "total_heures": 8759
+    },
+    {
+     "colonne": "FS",
+     "programme": "Energy+/OpenStudio\nFe det noSpec",
+     "total_heures": 8759
+    },
+    {
+     "colonne": "FT",
+     "programme": "Energy+/OpenStudio\nFe einf",
+     "total_heures": 8759
+    }
+   ],
+   "effectifs": [
+    {
+     "ligne_classeur": 34,
+     "borne_superieure": 10,
+     "par_colonne": {
+      "FN": 3840,
+      "FO": 3841,
+      "FQ": 4374,
+      "FR": 4316,
+      "FS": 4316,
+      "FT": 4316
+     }
+    },
+    {
+     "ligne_classeur": 35,
+     "borne_superieure": 100,
+     "par_colonne": {
+      "FN": 871,
+      "FO": 868,
+      "FQ": 417,
+      "FR": 554,
+      "FS": 554,
+      "FT": 548
+     }
+    },
+    {
+     "ligne_classeur": 36,
+     "borne_superieure": 200,
+     "par_colonne": {
+      "FN": 448,
+      "FO": 450,
+      "FQ": 388,
+      "FR": 386,
+      "FS": 386,
+      "FT": 372
+     }
+    },
+    {
+     "ligne_classeur": 37,
+     "borne_superieure": 300,
+     "par_colonne": {
+      "FN": 389,
+      "FO": 391,
+      "FQ": 379,
+      "FR": 338,
+      "FS": 339,
+      "FT": 336
+     }
+    },
+    {
+     "ligne_classeur": 38,
+     "borne_superieure": 400,
+     "par_colonne": {
+      "FN": 302,
+      "FO": 300,
+      "FQ": 344,
+      "FR": 291,
+      "FS": 290,
+      "FT": 290
+     }
+    },
+    {
+     "ligne_classeur": 39,
+     "borne_superieure": 500,
+     "par_colonne": {
+      "FN": 278,
+      "FO": 276,
+      "FQ": 314,
+      "FR": 459,
+      "FS": 460,
+      "FT": 425
+     }
+    },
+    {
+     "ligne_classeur": 40,
+     "borne_superieure": 600,
+     "par_colonne": {
+      "FN": 285,
+      "FO": 285,
+      "FQ": 313,
+      "FR": 485,
+      "FS": 485,
+      "FT": 492
+     }
+    },
+    {
+     "ligne_classeur": 41,
+     "borne_superieure": 700,
+     "par_colonne": {
+      "FN": 312,
+      "FO": 314,
+      "FQ": 399,
+      "FR": 462,
+      "FS": 464,
+      "FT": 452
+     }
+    },
+    {
+     "ligne_classeur": 42,
+     "borne_superieure": 800,
+     "par_colonne": {
+      "FN": 402,
+      "FO": 397,
+      "FQ": 341,
+      "FR": 402,
+      "FS": 401,
+      "FT": 409
+     }
+    },
+    {
+     "ligne_classeur": 43,
+     "borne_superieure": 900,
+     "par_colonne": {
+      "FN": 376,
+      "FO": 381,
+      "FQ": 323,
+      "FR": 360,
+      "FS": 362,
+      "FT": 350
+     }
+    },
+    {
+     "ligne_classeur": 44,
+     "borne_superieure": 1000,
+     "par_colonne": {
+      "FN": 230,
+      "FO": 228,
+      "FQ": 398,
+      "FR": 275,
+      "FS": 271,
+      "FT": 302
+     }
+    },
+    {
+     "ligne_classeur": 45,
+     "borne_superieure": 1100,
+     "par_colonne": {
+      "FN": 176,
+      "FO": 174,
+      "FQ": 297,
+      "FR": 180,
+      "FS": 180,
+      "FT": 186
+     }
+    },
+    {
+     "ligne_classeur": 46,
+     "borne_superieure": 1200,
+     "par_colonne": {
+      "FN": 143,
+      "FO": 148,
+      "FQ": 251,
+      "FR": 138,
+      "FS": 138,
+      "FT": 140
+     }
+    },
+    {
+     "ligne_classeur": 47,
+     "borne_superieure": 1300,
+     "par_colonne": {
+      "FN": 176,
+      "FO": 170,
+      "FQ": 171,
+      "FR": 72,
+      "FS": 71,
+      "FT": 86
+     }
+    },
+    {
+     "ligne_classeur": 48,
+     "borne_superieure": 1400,
+     "par_colonne": {
+      "FN": 175,
+      "FO": 178,
+      "FQ": 33,
+      "FR": 22,
+      "FS": 24,
+      "FT": 31
+     }
+    },
+    {
+     "ligne_classeur": 49,
+     "borne_superieure": 1500,
+     "par_colonne": {
+      "FN": 138,
+      "FO": 138,
+      "FQ": 3,
+      "FR": 13,
+      "FS": 12,
+      "FT": 18
+     }
+    },
+    {
+     "ligne_classeur": 50,
+     "borne_superieure": 1600,
+     "par_colonne": {
+      "FN": 110,
+      "FO": 110,
+      "FQ": 8,
+      "FR": 2,
+      "FS": 2,
+      "FT": 2
+     }
+    },
+    {
+     "ligne_classeur": 51,
+     "borne_superieure": 1700,
+     "par_colonne": {
+      "FN": 71,
+      "FO": 73,
+      "FQ": 5,
+      "FR": 3,
+      "FS": 3,
+      "FT": 3
+     }
+    },
+    {
+     "ligne_classeur": 52,
+     "borne_superieure": 1800,
+     "par_colonne": {
+      "FN": 36,
+      "FO": 36,
+      "FQ": 0,
+      "FR": 0,
+      "FS": 0,
+      "FT": 0
+     }
+    },
+    {
+     "ligne_classeur": 53,
+     "borne_superieure": 1900,
+     "par_colonne": {
+      "FN": 1,
+      "FO": 1,
+      "FQ": 1,
+      "FR": 1,
+      "FS": 1,
+      "FT": 1
+     }
+    }
+   ]
+  }
+ ]
+}
