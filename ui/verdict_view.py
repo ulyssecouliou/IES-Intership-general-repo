@@ -597,6 +597,152 @@ def construire_vue_test7(resultat_test7):
 
 
 # ==========================================================================
+# TESTS 2 ET 3 -- références de forme « grandeur -> cas »
+# ==========================================================================
+#
+# Même contrat de vue que les autres, avec la correspondance :
+#
+#     grandeur  <- le libellé de la grandeur du classeur
+#     cas       <- le nom du cas (« Test 2 A », « Test 3 F »)
+#     periode   <- 'annual'
+#
+# ce qui donne : Classe -> Test 2 -> <grandeur> -> <cas> -> Annuel.
+# --------------------------------------------------------------------------
+
+CITATION_CRITERE_BANDES = (
+    u'Critère INFÉRÉ. La spécification de ce test n\'énonce aucun critère ; '
+    u'SIA 4010:2023 §4.4 délègue la comparaison au classeur d\'évaluation, '
+    u'qui porte les bandes. Formule : moyenne ± MAX(ABS(programme − moyenne)), '
+    u'bornes incluses. À confirmer par la sous-commission (§4.6.2).'
+)
+
+TEXTE_VARIANTES = (
+    u'Les colonnes du classeur sont des VARIANTES de programme, pas des '
+    u'programmes : le SIA retient une variante par programme, et pas la même '
+    u'd\'un programme à l\'autre. Le jeu contributeur est lu sur la formule.'
+)
+
+
+def _source_reference_bandes(numero_test):
+    """Phrase de provenance d'une référence de test à bandes.
+
+    Args:
+        numero_test: Numéro du test SIA.
+
+    Returns:
+        str: Provenance, citée dans chaque ligne.
+    """
+    return (
+        u'refs/reference-data/test-%s.ref.json, extrait de '
+        u'Resultaterfassung_Test%s.xlsx (feuille « Zusammenfassung »). Chaque '
+        u'bande est recalculée par engine/scatter_band.py et confrontée au '
+        u'classeur (scripts/build_sia_reference.py, tolérance 1e-6).'
+        % (numero_test, numero_test))
+
+
+def _texte_verdict_bande(ligne):
+    """Texte de verdict d'un cas, statut du moteur lu tel quel.
+
+    Args:
+        ligne: Ligne de résultat du moteur.
+
+    Returns:
+        str: Texte affichable.
+    """
+    conforme = ligne.get('conforme')
+    if conforme is True:
+        if ligne.get('statut') == 'PASS_WITH_RESERVATION':
+            return (TEXTE_CONFORME + u' -- sous réserve : hors enveloppe '
+                    u'min/max des programmes')
+        return TEXTE_CONFORME
+    if conforme is False:
+        return TEXTE_NON_CONFORME + u' -- hors bande des programmes de référence'
+    return TEXTE_NON_APPLICABLE_MANQUANT
+
+
+def construire_vue_bandes(resultat):
+    """Assemble la vue d'un test à bandes (2 ou 3).
+
+    Args:
+        resultat: Sortie d'`engine.sia_bandes_engine.evaluer`.
+
+    Returns:
+        dict: Vue au contrat commun `{test_id, numero_test, verdict_global,
+        classes, lignes}`.
+    """
+    numero = u'%s' % resultat['test']
+    source = _source_reference_bandes(numero)
+
+    lignes = []
+    for grandeur in resultat['grandeurs']:
+        for cas in grandeur['cas']:
+            conforme = cas.get('conforme')
+            lignes.append({
+                'grandeur': grandeur['libelle'],
+                'grandeur_libelle': grandeur['libelle'],
+                'cas': cas['cas'],
+                'type_controle': 'critere_pass_fail',
+                'periode': 'annual',
+                'periode_libelle': libelle_periode('annual'),
+                'conforme': conforme,
+                'couleur': couleur_depuis_conforme(conforme),
+                'texte_verdict': _texte_verdict_bande(cas),
+                'valeur_candidate': cas['candidat'],
+                'valeur_candidate_affichee': formater_nombre(cas['candidat'], 1),
+                'reference_affichee': u'{0} ({1} … {2}) {3}'.format(
+                    formater_nombre(cas['moyenne'], 1),
+                    formater_nombre(cas['borne_basse'], 1),
+                    formater_nombre(cas['borne_haute'], 1),
+                    grandeur.get('unite') or u'').strip(),
+                'article': CITATION_CRITERE_BANDES,
+                'source_valeur_reference': source,
+                'detail': copy.deepcopy(cas),
+            })
+
+    verdict = resultat['verdict']
+    if verdict == 'FAIL':
+        conforme_global = False
+        texte = TEXTE_NON_CONFORME + u' -- {0} bande(s) dépassée(s)'.format(
+            resultat['nb_echecs'])
+    elif verdict in ('PASS', 'PASS_WITH_RESERVATION'):
+        conforme_global = True
+        texte = TEXTE_CONFORME + u' -- {0}/{0} bandes respectées'.format(
+            resultat['nb_bandes'])
+    else:
+        conforme_global = None
+        texte = u'Non évalué -- {0} bande(s) non simulée(s) sur {1}'.format(
+            resultat['nb_non_evaluables'], resultat['nb_bandes'])
+
+    verdict_global = {
+        'test_id': u'Test ' + numero,
+        'conforme': conforme_global,
+        'couleur': couleur_depuis_conforme(conforme_global),
+        'texte': texte,
+        'article': CITATION_CRITERE_BANDES,
+        'detail': copy.deepcopy(resultat.get('critere') or {}),
+    }
+
+    classes = [{
+        'classe': classe,
+        'test_id': u'Test ' + numero,
+        'test_requis': True,
+        'conforme': conforme_global,
+        'couleur': verdict_global['couleur'],
+        'texte_verdict': texte,
+        'article': CITATION_TABLEAU_63,
+    } for classe in sorted(resultat.get('classes_concernees', []))]
+
+    return {
+        'test_id': u'Test ' + numero,
+        'numero_test': numero,
+        'verdict_global': verdict_global,
+        'classes': classes,
+        'lignes': lignes,
+        'note_variantes': TEXTE_VARIANTES,
+    }
+
+
+# ==========================================================================
 # SYNTHÈSE PAR CLASSE DE VALIDATION -- tous tests confondus
 # ==========================================================================
 #
@@ -633,9 +779,37 @@ TEXTE_CLASSE_INCOMPLETE = (
 )
 
 
+# Un test couvert EN ENTIER couvre aussi ses sous-ensembles. Le tableau 63
+# exige parfois « Test 2A », c'est-à-dire le Test 2 limité au cas 2A, et
+# « Tests 3A à 3F », soit six des douze cas du Test 3. Disposer du test complet
+# satisfait donc ces exigences ; l'ignorer laisserait des classes marquées
+# incomplètes alors que tout ce qu'elles réclament est présent.
+#
+# L'inverse est FAUX et n'est pas encodé : couvrir 2A ne couvre pas le Test 2.
+COUVERTURE_IMPLIQUEE = {
+    '2': ('2A',),
+    '3': ('3A-F',),
+}
+
+
 def _numero_test(une_vue):
     """Numéro de test d'une vue, ou `None` si elle ne le déclare pas."""
     return une_vue.get('numero_test')
+
+
+def _numeros_couverts(numeros):
+    """Étend un ensemble de numéros de test par les sous-ensembles impliqués.
+
+    Args:
+        numeros: Numéros de tests réellement présents.
+
+    Returns:
+        set[str]: Numéros couverts, sous-ensembles compris.
+    """
+    couverts = set(numeros)
+    for numero in numeros:
+        couverts.update(COUVERTURE_IMPLIQUEE.get(numero, ()))
+    return couverts
 
 
 def construire_synthese_classes(vues):
@@ -653,6 +827,11 @@ def construire_synthese_classes(vues):
         numero = _numero_test(une_vue)
         if numero is not None:
             par_numero[numero] = une_vue
+    # Un test complet satisfait aussi les exigences portant sur ses
+    # sous-ensembles : la vue du Test 2 vaut pour « Test 2A ».
+    for numero in list(par_numero):
+        for implique in COUVERTURE_IMPLIQUEE.get(numero, ()):
+            par_numero.setdefault(implique, par_numero[numero])
 
     lignes = []
     for classe in sorted(TESTS_PAR_CLASSE):

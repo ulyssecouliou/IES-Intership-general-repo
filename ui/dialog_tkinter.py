@@ -63,6 +63,7 @@ non encore produite (cf. rapport de fin de tâche, question ouverte).
 
 import os
 
+from ui import design_ies as design
 from ui import verdict_view as vue
 
 # `tkinter` s'est révélé disponible sur cette machine de développement (cf.
@@ -79,26 +80,18 @@ except ImportError:  # pragma: no cover -- attendu hors VE / hors env graphique
     filedialog = None
 
 
-COULEUR_FOND_PAR_VERDICT = {
-    # ⚠ À VÉRIFIER -- non exécuté : le rendu effectif de `tag_configure`
-    # dépend du thème ttk actif sur le poste VE (le thème par défaut de
-    # nombreuses distributions Tk, ex. 'vista'/'xpnative' sous Windows,
-    # ignore parfois `background` sur les lignes de Treeview). À valider à
-    # l'écran ; prévoir un repli par icône/texte si la couleur ne s'affiche
-    # pas (ne jamais dépendre UNIQUEMENT de la couleur pour la lisibilité --
-    # accessibilité, CLAUDE.md "Design ... Accessible").
-    'vert': '#d9f2d9',
-    'rouge': '#f7d6d6',
-    'gris': '#e6e6e6',
-}
+# Couleurs et symboles : lus dans `ui/design_ies.py`, qui les tient de la
+# feuille de style publique d IES. Une seule source pour le navigateur et les
+# rapports -- sinon les deux divergent au premier ajustement.
+#
+# ⚠ À VÉRIFIER -- non exécuté : le rendu effectif de `tag_configure` dépend du
+# thème ttk actif sur le poste VE. Plusieurs thèmes Windows ('vista',
+# 'xpnative') ignorent `background` sur les lignes de Treeview. C est
+# précisément pourquoi le verdict porte AUSSI un symbole et un texte : la
+# couleur ne doit jamais être seule à le dire.
+COULEUR_FOND_PAR_VERDICT = dict(design.FOND_PAR_VERDICT)
 
-SYMBOLE_PAR_VERDICT = {
-    # Redondance délibérée avec la couleur (accessibilité -- ne jamais coder
-    # l'information uniquement par la couleur).
-    'vert': u'✔',
-    'rouge': u'✘',
-    'gris': u'—',
-}
+SYMBOLE_PAR_VERDICT = dict(design.SYMBOLE_PAR_VERDICT)
 
 
 class NavigateurSIA4010(object):
@@ -563,12 +556,15 @@ def lancer_depuis_ve(chemin_reference=None, chemin_candidat_fixture=None):
     app.lancer()
 
 
-def construire_vues_disponibles(candidat_test1=None, candidat_test7=None):
+def construire_vues_disponibles(candidat_test1=None, candidat_test7=None,
+                                 candidats_par_test=None):
     """Construit les vues de TOUS les tests dont la référence est figée.
 
     Un test dont le référentiel est absent est SAUTÉ, pas remplacé par un
     substitut : mieux vaut une classe absente de l'arbre qu'une classe
     affichée sur des données inventées.
+
+    `candidats_par_test` : `{numero: candidat}` pour les tests à bandes (2, 3).
 
     Retourne `(vues, avertissements)`.
     """
@@ -582,6 +578,18 @@ def construire_vues_disponibles(candidat_test1=None, candidat_test7=None):
     except Exception as erreur:  # référentiel absent ou illisible
         avertissements.append(u'Test 1 non chargé : %s' % erreur)
 
+    # Tests 2 et 3 : même moteur, leurs références partagent une forme
+    # « grandeur -> cas ». Un test dont la référence manque est SAUTÉ.
+    for numero in (2, 3):
+        try:
+            from engine import sia_bandes_engine as moteur_bandes
+            reference = moteur_bandes.charger_reference(numero)
+            candidat = (candidats_par_test or {}).get(numero)
+            vues.append(vue.construire_vue_bandes(
+                moteur_bandes.evaluer(reference, candidat)))
+        except Exception as erreur:
+            avertissements.append(u'Test %d non chargé : %s' % (numero, erreur))
+
     try:
         from engine import test7_engine as moteur7
         reference7 = moteur7.charger_reference()
@@ -590,7 +598,26 @@ def construire_vues_disponibles(candidat_test1=None, candidat_test7=None):
     except Exception as erreur:
         avertissements.append(u'Test 7 non chargé : %s' % erreur)
 
+    # Ordre d'affichage : par numéro de test, pas par ordre de chargement.
+    vues.sort(key=lambda v: _rang_test(v.get('numero_test')))
     return vues, avertissements
+
+
+def _rang_test(numero):
+    """Rang de tri d'un numéro de test, pour un ordre d'affichage stable.
+
+    Args:
+        numero: Numéro déclaré par une vue, ex. « 2 » ou `None`.
+
+    Returns:
+        tuple: Clé de tri ; les vues sans numéro passent en fin.
+    """
+    if numero is None:
+        return (1, u'')
+    try:
+        return (0, u'%03d' % int(numero))
+    except (TypeError, ValueError):
+        return (0, u'%s' % numero)
 
 
 def lancer_navigateur(candidat_test1=None, candidat_test7=None):
