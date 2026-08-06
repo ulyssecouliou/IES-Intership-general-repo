@@ -155,3 +155,61 @@ def test_le_chemin_candidat_est_sous_outputs():
     """Jamais dans refs/ : ce n'est pas un référentiel figé."""
     assert 'outputs' in run.CHEMIN_CANDIDAT.replace(os.sep, '/')
     assert 'refs' not in run.CHEMIN_CANDIDAT.replace(os.sep, '/')
+
+
+# --------------------------------------------------------------------------
+# Porte d'entrée de la base de constructions
+# --------------------------------------------------------------------------
+
+class FauxProjetCdb(object):
+    """Tient lieu de `VECdbProject` : ni liste, ni dict, ni chaîne."""
+
+
+def test_get_projects_rend_un_dict_pas_une_liste():
+    """Le défaut relevé dans la sonde v2.
+
+    `projets[0]` sur `{'project': [...], 'system': [...]}` rend la clé
+    « project », une chaîne — et le rapport a présenté les méthodes de `list`
+    comme étant celles de `VECdbProject`. Rien n'avait levé.
+    """
+    projet = FauxProjetCdb()
+    renvoi = {'project': [projet], 'system': [], 'manufacturer': []}
+    assert run._premier_projet_cdb(renvoi) is projet
+
+
+def test_les_bibliotheques_fournies_ne_sont_pas_le_projet():
+    """« system » et « manufacturer » sont des bibliothèques livrées avec VE :
+    les introspecter ne renseigne pas sur le modèle ouvert."""
+    systeme = FauxProjetCdb()
+    assert run._premier_projet_cdb(
+        {'project': [], 'system': [systeme]}) is None
+
+
+def test_une_liste_imbriquee_est_refusee():
+    """Signe qu'on s'est encore trompé de niveau : mieux vaut None qu'un
+    relevé faux."""
+    assert run._premier_projet_cdb({'project': [['a', 'b']]}) is None
+
+
+def test_une_chaine_est_refusee():
+    """Exactement ce que renvoyait `projets[0]` avant la correction."""
+    assert run._premier_projet_cdb(['project', 'system']) is None
+
+
+def test_une_liste_de_projets_reste_acceptee():
+    """Si une autre version de VE renvoyait une liste, la sonde doit continuer
+    de fonctionner."""
+    projet = FauxProjetCdb()
+    assert run._premier_projet_cdb([projet]) is projet
+
+
+@pytest.mark.parametrize('vide', [None, {}, [], {'project': []}])
+def test_labsence_de_projet_donne_none(vide):
+    assert run._premier_projet_cdb(vide) is None
+
+
+def test_echouer_leve_avec_le_motif():
+    """Une étape absente du rapport est une information perdue ; une étape en
+    échec dit pourquoi."""
+    with pytest.raises(RuntimeError, match='motif exact'):
+        run._echouer('motif exact')

@@ -373,9 +373,22 @@ def creer_materiau(cdb_project, definition):
                 "reserves documentees dans test1_adapter.py sur les Tables "
                 "7-2/7-27 ASHRAE 140:2023) -- creation refusee plutot que "
                 "d'inventer une valeur.".format(definition['nom'], cle))
-    categorie_opaque = _resoudre_membre_enum(
-        iesve.VECdbProject, 'material_categories', 'opaque')
-    materiau = cdb_project.create_material(categorie_opaque)
+    # CORRIGE le 2026-08-06, apres la sonde v2 dans une VE reelle.
+    #
+    # Deux erreurs cumulees ici :
+    #   1. l enum vit sur le MODULE `iesve`, pas sur `VECdbProject` -- c est
+    #      ce que la sonde a signale par « Enum ... introuvable » ;
+    #   2. `material_categories` n a AUCUN membre `opaque`. Ses 20 membres
+    #      sont des familles de bibliotheque (concretes, insulating, timber,
+    #      boards...). `opaque` appartient a `construction_class`, pas ici :
+    #      les deux enums avaient ete confondus.
+    #
+    # `other` est un choix de CLASSEMENT en bibliotheque, sans effet sur la
+    # simulation -- les proprietes physiques sont portees par `definition`.
+    # Le declarer ainsi plutot que de laisser croire a un parametre physique.
+    categorie_materiau = _resoudre_membre_enum(
+        iesve, 'material_categories', 'other')
+    materiau = cdb_project.create_material(categorie_materiau)
     proprietes = {
         'description': definition['nom'],
         'conductivity': definition['conductivite'],
@@ -414,10 +427,14 @@ def creer_construction_opaque(cdb_project, categorie_element, classe_constructio
     reprise ici).
     """
     iesve = _iesve()
+    # Les deux enums vivent sur le MODULE `iesve`, verifie par la sonde v2 :
+    # element_categories -> roof=0, ceiling/int_floor=1, wall=2, partition=3,
+    # ground_floor=4, roof_light=5, ext_glazing=6, int_glazing=7, door=8 ;
+    # construction_class -> opaque=0, glazed=1, shade=4, misc=5, none=-1.
     categorie = _resoudre_membre_enum(
-        iesve.VECdbProject, 'element_categories', categorie_element)
+        iesve, 'element_categories', categorie_element)
     classe = _resoudre_membre_enum(
-        iesve.VECdbProject, 'construction_class', classe_construction)
+        iesve, 'construction_class', classe_construction)
     construction = cdb_project.create_construction(categorie)
     construction.set_const_class(classe)
 

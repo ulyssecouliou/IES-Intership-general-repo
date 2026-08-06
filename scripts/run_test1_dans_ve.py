@@ -149,6 +149,82 @@ def _membres(objet):
         return ['<dir() a echoue : %s>' % erreur]
 
 
+#: Clé sous laquelle `VECdbDatabase.get_projects()` range les projets. Les deux
+#: autres (« system », « manufacturer ») sont des bibliothèques fournies, pas le
+#: projet ouvert.
+CLE_PROJET_CDB = 'project'
+
+
+def _premier_projet_cdb(projets):
+    u"""Extrait un `VECdbProject` de ce que renvoie `get_projects()`.
+
+    POURQUOI CETTE FONCTION. La sonde v2 faisait `projets[0]` et a introspecté
+    une **liste** : elle a donc rapporté `['append', 'clear', 'copy', 'count',
+    'extend', 'index', 'insert', 'pop', 'remove', 'reverse', 'sort']` comme
+    étant les attributs de `VECdbProject`. `get_projects()` renvoie en réalité
+    un dictionnaire `{'project': [...], 'system': [...], 'manufacturer':
+    [...]}`.
+
+    Le piège est qu'un dictionnaire est vrai, itérable et indexable : rien
+    n'échoue, et le rapport paraît valide. Seule la lecture des attributs
+    relevés a révélé l'erreur.
+
+    Args:
+        projets: Valeur renvoyée par `get_projects()`, ou `None` si l'étape a
+            échoué.
+
+    Returns:
+        Le premier projet, ou `None` si l'on n'en trouve aucun. Jamais un objet
+        d'un autre type : mieux vaut une étape en échec qu'un relevé faux.
+    """
+    if not projets:
+        return None
+    if isinstance(projets, dict):
+        candidats = projets.get(CLE_PROJET_CDB) or []
+    else:
+        # Forme inattendue : on l'accepte plutôt que d'échouer, mais sans
+        # supposer qu'elle contient des projets — le contrôle de type ci-dessous
+        # tranche.
+        candidats = projets
+    for candidat in candidats:
+        # Une liste ou une chaîne à cette place signale qu'on s'est encore
+        # trompé de niveau : ne pas l'introspecter.
+        if not isinstance(candidat, (list, tuple, dict)) and not _est_texte(candidat):
+            return candidat
+    return None
+
+
+def _est_texte(valeur):
+    u"""Vrai si la valeur est une chaîne, sur Python 2 comme sur Python 3.
+
+    Args:
+        valeur: Valeur à tester.
+
+    Returns:
+        bool: Vrai pour une chaîne de caractères ou d'octets.
+    """
+    try:
+        types_texte = (str, unicode, bytes)  # noqa: F821 -- Python 2
+    except NameError:
+        types_texte = (str, bytes)
+    return isinstance(valeur, types_texte)
+
+
+def _echouer(message):
+    u"""Fait échouer une étape volontairement, avec un message explicite.
+
+    Une étape absente du rapport est une information perdue ; une étape en
+    échec explique pourquoi elle n'a pas pu être faite.
+
+    Args:
+        message: Motif de l'échec.
+
+    Raises:
+        RuntimeError: Toujours.
+    """
+    raise RuntimeError(message)
+
+
 def _enums(objet):
     u"""Membres de type énuméré exposés par un objet, avec leurs valeurs.
 
@@ -409,11 +485,13 @@ def sonder(cas_id='600'):
                 lambda: iesve.VECdbDatabase.get_current_database())
     etape(u'attributs de la base', lambda: _membres(cdb))
     projets_cdb = etape(u'projets de la base', lambda: cdb.get_projects())
-    projet_cdb = None
-    if projets_cdb:
-        projet_cdb = projets_cdb[0]
+    projet_cdb = _premier_projet_cdb(projets_cdb)
+    if projet_cdb is not None:
         etape(u'attributs de VECdbProject', lambda: _membres(projet_cdb))
         etape(u'enums de VECdbProject', lambda: _enums(projet_cdb))
+    else:
+        etape(u'attributs de VECdbProject',
+              lambda: _echouer(u'aucun projet dans %r' % (projets_cdb,)))
 
     # --- Enums du module iesve : c'est la que se trouvent tres probablement
     # --- les categories d'element et classes de construction.

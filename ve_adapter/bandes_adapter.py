@@ -204,6 +204,68 @@ LIAISONS = {
 }
 
 
+# ---------------------------------------------------------------------------
+# Candidats issus d'une sonde APS antérieure — À CONFIRMER, jamais employés
+# ---------------------------------------------------------------------------
+#
+# `config/sia4010_aps_bindings_ve_runtime.json` porte cinq liaisons relevées
+# le 2026-07-28 sur un `.aps` réel (projet « test », 8760 pas horaires). Elles
+# ne sont PAS reprises dans `LIAISONS` : ce sont des noms de variables VE
+# relevés pour le Test 1, et rien n'établit qu'ils portent la grandeur que le
+# classeur SIA désigne. Confondre les deux, c'est exactement produire un
+# nombre plausible et faux.
+#
+# Deux niveaux de preuve, qu'il ne faut pas mélanger :
+#
+#   * `room_air_temperature` et `operative_temperature` sont étayés par
+#     `references/iesve/probes/sia4010_aps_temperature_binding_evidence.json`,
+#     qui contient les séries complètes. Leur authenticité se recoupe : min
+#     19,999998 °C / max 27,000002 °C sur le cas 600, soit exactement les
+#     consignes 20/27 d'ASHRAE 140. Aucun des deux ne sert aux tests 2 à 6.
+#   * les trois autres ne sont adossés qu'à une métadonnée
+#     `RUNTIME_METADATA_CONFIRMED`. **Le rapport de sonde d'origine
+#     (`sia4010_aps_probe_20260728_154627.json`, sha256 F3E1338C…) est ABSENT
+#     du dépôt** : la trace ne peut pas être rejouée. Statut : allégation.
+#
+# Seul « Window solar gains » touche un libellé des tests 2 à 6. La sonde
+# marque d'ailleurs `total_transmitted_solar_radiation` comme explicitement
+# NON lié, faute de série de puissance qualifiée — ce qui laisse la seconde
+# grandeur du Test 2 sans piste.
+CANDIDATS_RUNTIME = {
+    2: {
+        u'Jahresenergie solarer Wärmeeintrag': {
+            'aps_varname_candidat': u'Window solar gains',
+            'niveau': NIVEAU_LOCAL,
+            'unite_brute': u'W',
+            'preuve': u'config/sia4010_aps_bindings_ve_runtime.json '
+                      u'-> bindings.total_room_solar_heat_gain_power',
+            'niveau_de_preuve': u'ALLEGATION — rapport de sonde absent du dépôt',
+            'a_confirmer': u'Que « solarer Wärmeeintrag » au sens du classeur '
+                           u'SIA désigne bien le gain solaire transmis par les '
+                           u'vitrages au local, et non le rayonnement incident. '
+                           u'Le Test 2 distingue les deux : sa seconde grandeur '
+                           u'est « total transmittierte Solarstrahlung ».',
+        },
+    },
+}
+
+
+def candidats_a_confirmer(numero_test):
+    u"""Pistes relevées lors d'une sonde antérieure, à vérifier dans VE.
+
+    Ce ne sont PAS des liaisons. `extraire_candidat` les ignore intégralement.
+    Elles n'existent que pour qu'un opérateur devant une VE ouverte sache quoi
+    contrôler en premier, au lieu de reparcourir toutes les variables.
+
+    Args:
+        numero_test: Numéro du test SIA.
+
+    Returns:
+        dict: `{libellé allemand: piste}`, vide si aucune.
+    """
+    return dict(CANDIDATS_RUNTIME.get(numero_test, {}))
+
+
 def verifier_api(symboles=None):
     u"""Contrôle que l'API `iesve` présente les symboles employés ici.
 
@@ -418,9 +480,18 @@ def etat_des_liaisons():
         resolues = liaisons_resolues(numero)
         lignes.append(u'  Test %d : %d/%d resolue(s)'
                       % (numero, len(resolues), len(declarees)))
+        candidats = candidats_a_confirmer(numero)
         for libelle in sorted(set(declarees) - set(resolues)):
-            lignes.append(u'      non resolue : %s' % libelle)
+            piste = candidats.get(libelle)
+            if piste:
+                lignes.append(u'      non resolue : %s  [candidat a '
+                              u'confirmer : %s]'
+                              % (libelle, piste['aps_varname_candidat']))
+            else:
+                lignes.append(u'      non resolue : %s' % libelle)
     lignes.append(u'')
     lignes.append(u'Les noms de variables se relevent sur un .aps reel avec '
                   u'decouvrir_variables(), jamais par supposition.')
+    lignes.append(u'Un candidat n est PAS une liaison : il indique quoi '
+                  u'controler en premier, rien de plus.')
     return u'\n'.join(lignes)

@@ -220,3 +220,69 @@ def test_pas_dimport_iesve_au_chargement():
             nu = ligne.strip()
             assert not nu.startswith('import iesve'), numero
             assert not nu.startswith('from iesve'), numero
+
+
+# --------------------------------------------------------------------------
+# Candidats de sonde : des pistes, jamais des liaisons
+# --------------------------------------------------------------------------
+
+def test_un_candidat_ne_resout_aucune_liaison():
+    """Le risque exact que cette separation existe pour ecarter : « Window
+    solar gains » est un nom de variable VE releve pour le Test 1. Le reprendre
+    tel quel pour le Test 2 produirait un nombre plausible et faux."""
+    for numero in adaptateur.TESTS_COUVERTS:
+        assert adaptateur.liaisons_resolues(numero) == {}
+
+
+def test_extraire_ignore_integralement_les_candidats():
+    """Meme la ou un candidat existe, l'extraction refuse de tourner."""
+    assert adaptateur.candidats_a_confirmer(2)
+    with pytest.raises(adaptateur.LiaisonNonResolue):
+        adaptateur.extraire_candidat(2, FauxResultsReader(), _ref(2))
+
+
+def test_les_candidats_portent_les_libelles_exacts_du_classeur():
+    """Une cle qui ne correspond a aucune grandeur serait une piste morte."""
+    for numero, pistes in adaptateur.CANDIDATS_RUNTIME.items():
+        libelles = set(adaptateur.LIAISONS[numero])
+        assert set(pistes) <= libelles, numero
+
+
+def test_chaque_candidat_declare_sa_preuve_et_sa_reserve():
+    """Une piste sans provenance ni reserve finit par etre prise pour un
+    resultat."""
+    for pistes in adaptateur.CANDIDATS_RUNTIME.values():
+        for piste in pistes.values():
+            assert piste['preuve']
+            assert piste['niveau_de_preuve']
+            assert piste['a_confirmer']
+
+
+def test_le_candidat_solaire_est_marque_comme_allegation():
+    """Le rapport de sonde d'origine est absent du depot : la trace ne peut pas
+    etre rejouee. Le dire, plutot que de laisser croire a une confirmation."""
+    piste = adaptateur.candidats_a_confirmer(2)[
+        u'Jahresenergie solarer Wärmeeintrag']
+    assert 'ALLEGATION' in piste['niveau_de_preuve']
+    assert piste['aps_varname_candidat'] == u'Window solar gains'
+
+
+def test_la_seconde_grandeur_du_test_2_na_pas_de_candidat():
+    """La sonde marque `total_transmitted_solar_radiation` explicitement NON
+    lie. Lui inventer une piste serait pire que de n'en avoir aucune."""
+    assert u'Jahresenergie total transmittierte Solarstrahlung' not in \
+        adaptateur.candidats_a_confirmer(2)
+
+
+def test_letat_signale_le_candidat_sans_le_compter_comme_resolu():
+    texte = adaptateur.etat_des_liaisons()
+    assert '0/2' in texte
+    assert 'candidat a confirmer' in texte
+    assert 'Window solar gains' in texte
+
+
+def test_les_tests_de_systeme_nont_aucun_candidat():
+    """Lufterwarmer, Luftkuhler, WRG, Ventilateurs : la sonde n'a releve que du
+    niveau local. Aucune piste, et c'est la verite."""
+    for numero in (4, 5, 6):
+        assert adaptateur.candidats_a_confirmer(numero) == {}

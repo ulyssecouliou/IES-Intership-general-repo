@@ -528,3 +528,128 @@ dans la docstring de module.
 réelle — audit statique uniquement, cf. réserve en tête de section).
 
 _Audité par : ve-adapter-engineer._
+
+---
+
+# Élément audité n° 3 — Confrontation de `test1_adapter.py` à une VE réelle (sonde v2)
+
+**Date : 2026-08-06. Nature : audit d'EXÉCUTION**, le premier de ce dépôt. Il
+lève la réserve en tête de l'élément n° 2 (« ⚠ non exécuté contre une VE
+réelle — audit statique uniquement »), mais **pour les seuls symboles
+effectivement atteints par la sonde** : la création de constructions n'a
+toujours pas abouti, elle a seulement échoué plus loin.
+
+Source : `outputs/sonde_test1_600.json`, produit par
+`Run_VE_SIA4010_Sonde_Test1.py` dans une VE 2025 ouverte sur le cas 600.
+11 étapes OK, 1 échec attendu.
+
+## DÉFAUT n° 4 — BLOQUANT — Énumérés cherchés sur la mauvaise classe
+
+`creer_materiau` et `creer_construction_opaque` résolvaient
+`element_categories`, `construction_class` et `material_categories` sur
+`iesve.VECdbProject`. VE répond :
+
+> `Enum 'iesve.<class 'iesve.VECdbProject'>.element_categories' introuvable`
+
+Ces énumérés sont portés par le **module** `iesve`.
+
+**Ce que la synthèse de l'élément n° 2 affirmait** : « Aucun symbole `iesve`
+cité dans ce dépôt n'est absent de `refs/VEScripts-API-VE2023.pdf`. » L'énoncé
+reste exact — et c'est précisément sa limite. **Un symbole présent dans la
+documentation n'est pas un symbole atteignable sur l'objet qu'on interroge.**
+Le contrôle statique portait sur l'existence du nom, pas sur son conteneur.
+
+La documentation a sa part : le titre « 6.1.32.4 Enums Defined Here » range ces
+énumérés sous `VECdbProject`. Mais **la prose de la même section écrit
+`'iesve.construction_class.none'`**, c'est-à-dire le chemin module. L'indice
+contredisait le titre, sur la même page ; il n'a pas été lu.
+
+**CORRIGÉ** : trois sites d'appel dans `ve_adapter/test1_adapter.py` passent de
+`iesve.VECdbProject` à `iesve`. Verrouillé par
+`ve_adapter/tests/test_enums_iesve.py::test_les_enums_vivent_sur_le_module_pas_sur_vecdbproject`.
+
+## DÉFAUT n° 5 — BLOQUANT — `material_categories.opaque` n'existe pas
+
+`creer_materiau` demandait le membre `opaque` à `material_categories`. Cet
+énuméré n'a que **20 familles de bibliothèque** (`all`, `asphalts`, `boards`,
+`bricks`, `carpets`, `concretes`, `gravels`, `insulating`, `metals`, `plaster`,
+`screeds`, `sands`, `titles`, `timber`, `index_glass`, `other`, `floor_finish`,
+`susp_ceiling`, `composite_layer`, `glass`). `opaque` appartient à
+`construction_class`. Les deux énumérés avaient été confondus.
+
+**Ici la documentation était correcte et complète** : §6.1.32.4 liste ces
+20 membres et n'a jamais fait figurer `opaque` parmi eux. L'erreur est
+entièrement de notre fait. L'appel aurait échoué même une fois le conteneur
+corrigé.
+
+**CORRIGÉ** : `'opaque'` → `'other'`, avec la justification en commentaire —
+`material_categories` est un **classement de bibliothèque sans effet sur la
+simulation**, les propriétés physiques étant portées par `definition`. Le dire
+explicitement évite qu'un relecteur le prenne pour un paramètre physique.
+
+## DÉFAUT n° 6 — MINEUR — La sonde a introspecté une liste, pas un projet
+
+`cdb.get_projects()` renvoie un **dictionnaire**
+`{'project': [...], 'system': [...], 'manufacturer': [...]}` — ce que
+§6.1.32.4 documente d'ailleurs sous `project_types`. La sonde faisait
+`projets[0]`, ce qui rend la **clé** `'project'`, une chaîne. Elle a donc
+rapporté `['append', 'clear', 'copy', 'count', 'extend', 'index', 'insert',
+'pop', 'remove', 'reverse', 'sort']` comme étant les attributs de
+`VECdbProject`.
+
+Un dictionnaire est vrai, itérable et indexable : **rien n'a levé, et le
+rapport paraissait valide.** Seule la lecture des attributs relevés l'a
+démasqué. C'est le mode de défaillance le plus dangereux pour ce projet — un
+résultat faux mais crédible.
+
+**CORRIGÉ** : `scripts/run_test1_dans_ve.py::_premier_projet_cdb`, qui indexe
+par type de projet et **refuse** de rendre une liste, un dict ou une chaîne à
+la place d'un projet. Une étape en échec explicite remplace le relevé faux.
+Sept tests dans `engine/tests/test_run_test1_preflight.py`.
+
+## Ce que la sonde a CONFIRMÉ
+
+- `iesve.VEProject.get_current_project()`, `.models`,
+  `iesve.VECdbDatabase.get_current_database()`, `.get_projects()` : présents,
+  signatures conformes.
+- **L'affectation de la météo DRYCOLD fonctionne** (`assigner_meteo_drycold`),
+  ce qui était le point le plus incertain de l'élément n° 2 § A.
+- 149 énumérés relevés sur le module, figés pour les 4 employés dans
+  `refs/reference-data/iesve-enums-ve2025.json` via
+  `scripts/freeze_iesve_enums.py`. **Le fichier est produit par script, jamais
+  saisi à la main** : une première version rédigée affirmait que la valeur 3
+  était absente de `construction_class`, alors que
+  `soft_landscaping = 3`. Le hook `.claude/hooks/garde_refs.py` a bloqué cette
+  écriture directe — il a joué son rôle.
+
+## Dérive d'API VE 2023 → VE 2025, mesurée
+
+Comparaison membre par membre du relevé d'exécution contre §6.1.32.4, par test
+reproductible (`test_les_membres_releves_concordent_avec_la_documentation`) :
+
+| Énuméré | Écart |
+|---|---|
+| `construction_class` (7) | aucun |
+| `material_categories` (20) | aucun |
+| `AirExchange_type` (3) | aucun (documenté § 6.1.2, p. 23 — pas sous `VECdbProject`) |
+| `element_categories` (39) | +`struct_fram` (alias de `struct_frame`, 26) ; +`surface_tile` (37) |
+
+**Aucun membre documenté n'a disparu.** `surface_tile` est le seul ajout réel.
+La documentation VE 2023 reste donc utilisable pour ces énumérés — le test
+échouera si une version future s'en écarte.
+
+## Ce qui reste NON VÉRIFIÉ
+
+- **`create_material` / `create_construction` / `add_layer` / `set_properties`
+  n'ont jamais été exécutés avec succès** : la sonde échouait avant. Le
+  pattern « créer → écrire → relire → vérifier » retenu en § B.2 reste un
+  audit statique.
+- La réserve VE 2025.2 sur la suppression de la couche par défaut d'une
+  construction **vitrée** (§ B.2) n'est ni confirmée ni infirmée.
+- Le coefficient de surface externe (§ E) et les liaisons APS (§ C) sont hors
+  de portée de cette sonde.
+
+**AUDITÉ — 2026-08-06** (exécution réelle, VE 2025, cas 600).
+_Défauts 4 et 5 corrigés dans `ve_adapter/test1_adapter.py` ; défaut 6 dans
+`scripts/run_test1_dans_ve.py`. Non signé : la création de constructions doit
+d'abord aboutir dans VE._
