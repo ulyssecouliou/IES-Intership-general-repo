@@ -706,3 +706,132 @@ def _mention(libelle, candidats, muettes):
     if libelle in muettes:
         return u'  [cherche, aucune variable ne correspond]'
     return u'  [pas encore cherche]'
+
+
+# ---------------------------------------------------------------------------
+# Second critère : la série horaire, et sa distribution
+# ---------------------------------------------------------------------------
+#
+# Les spécifications des tests 2, 3 et 5 exigent des « Jahresdatensätze in
+# stündlicher Auflösung » : le classeur calcule LUI-MÊME la somme annuelle et
+# la distribution à partir des 8760 valeurs. Livrer un agrégat ne satisfait
+# donc que la moitié des critères.
+#
+# LES DEUX CRITÈRES NE NOMMENT PAS LES GRANDEURS PAREIL. Le bloc annuel parle
+# d'ÉNERGIE (« Jahresenergie solarer Wärmeeintrag », kWh) ; le bloc de
+# distribution parle de PUISSANCE (« Solarer Wärmeeintrag gesamt », W). C'est
+# la même grandeur physique à deux stades : le classeur somme la puissance
+# horaire pour obtenir l'énergie annuelle. La correspondance est donc établie
+# ici, explicitement, plutôt que devinée par ressemblance de chaîne.
+#
+# `None` signale une grandeur de DIAGNOSTIC : elle a une distribution dans le
+# classeur mais aucune contrepartie annuelle, et les spécifications la rangent
+# sous « Diagnoseresultate » / « Diagnosegrössen ». Ce n'est pas un critère.
+CORRESPONDANCE_DISTRIBUTIONS = {
+    2: {
+        u'Solarer Wärmeeintrag gesamt':
+            u'Jahresenergie solarer Wärmeeintrag',
+        u'Total transmittierte Solarstrahlung':
+            u'Jahresenergie total transmittierte Solarstrahlung',
+        u'Einstrahlung auf Fensterebene gesamt': None,
+        u'Lamellenwinkel der Storen': None,
+    },
+    3: {
+        u'Beleuchtungsleistung': u'Beleuchtungsenergie',
+        u'Beleuchtungsstärke': None,
+    },
+    5: {
+        u'Leistung Lufterwärmer': u'Wärmezufuhr Lufterwärmer',
+        u'Leistung Luftkühler total': u'Wärmeabfuhr Luftkühler total',
+        u'Leistung Luftkühler latent': u'Wärmeabfuhr Luftkühler latent',
+        u'Leistung WRG': u'Wärmezufuhr WRG',
+        u'Leistung WRG latent': u'Wärmezufuhr WRG latent',
+        u'Leistung Zu- und Abluftventilator': u'Energiebedarf Ventilatoren',
+        u'Zu-/Abluft-Volumenstrom': None,
+        u'Zulufttemperatur im Betrieb': None,
+    },
+}
+
+#: Grandeurs annuelles SANS distribution correspondante. Leur seul critère est
+#: la somme annuelle — non par oubli du classeur, mais parce qu'il ne porte
+#: aucune feuille de distribution pour elles.
+SANS_DISTRIBUTION = {
+    5: (u'Befeuchtungsenergie', u'Hilfsenergie WRG'),
+}
+
+
+def libelle_annuel(numero_test, grandeur_distribution):
+    u"""Grandeur annuelle correspondant à une grandeur de distribution.
+
+    Args:
+        numero_test: Numéro du test SIA.
+        grandeur_distribution: Libellé tel qu'il figure dans le référentiel de
+            distributions.
+
+    Returns:
+        str | None: Libellé de `LIAISONS`, ou `None` si la grandeur est un
+            diagnostic.
+
+    Raises:
+        KeyError: Si la grandeur n'est pas déclarée. Rendre `None` en silence
+            la confondrait avec un diagnostic, et ferait disparaître un
+            critère sans le dire.
+    """
+    correspondance = CORRESPONDANCE_DISTRIBUTIONS.get(numero_test, {})
+    if grandeur_distribution not in correspondance:
+        raise KeyError(
+            u'grandeur de distribution non déclarée pour le test %r : %r. '
+            u'La déclarer dans CORRESPONDANCE_DISTRIBUTIONS, en diagnostic '
+            u'(None) ou en grandeur de LIAISONS.'
+            % (numero_test, grandeur_distribution))
+    return correspondance[grandeur_distribution]
+
+
+def extraire_serie(numero_test, results_file, libelle, room_id=None):
+    u"""Lit la série horaire BRUTE d'une grandeur, sans l'agréger.
+
+    C'est ce que les spécifications exigent : le classeur veut les 8760
+    valeurs et calcule lui-même la somme annuelle et la distribution.
+
+    Args:
+        numero_test: Numéro du test SIA.
+        results_file: `ResultsReader` ouvert.
+        libelle: Libellé allemand de la grandeur, clé de `LIAISONS`.
+        room_id: Local, pour une grandeur de niveau local.
+
+    Returns:
+        list | None: Série horaire, ou `None` si la lecture échoue.
+
+    Raises:
+        LiaisonNonResolue: Si la grandeur n'a pas de nom de variable établi.
+            Rendre une série vide se lirait comme « la grandeur vaut zéro ».
+    """
+    liaison = LIAISONS.get(numero_test, {}).get(libelle)
+    if liaison is None:
+        raise LiaisonNonResolue(
+            u'grandeur inconnue du test %d : %r' % (numero_test, libelle))
+    if not liaison.get('aps_varname'):
+        raise LiaisonNonResolue(
+            u'liaison non résolue pour %r. Les noms de variables se relèvent '
+            u'sur un .aps réel avec `decouvrir_variables()`.' % libelle)
+    return _lire_serie(results_file, liaison, room_id)
+
+
+def _lire_serie(results_file, liaison, room_id):
+    u"""Lit une série, au niveau local ou global selon la liaison.
+
+    Args:
+        results_file: `ResultsReader` ouvert.
+        liaison: Entrée de `LIAISONS` résolue.
+        room_id: Local, si la grandeur est de niveau local.
+
+    Returns:
+        list | None: Série, ou `None` si l'API refuse.
+    """
+    varname, niveau = liaison['aps_varname'], liaison['niveau']
+    try:
+        if room_id is not None and niveau == NIVEAU_LOCAL:
+            return results_file.get_room_results(room_id, varname, niveau)
+        return results_file.get_results(varname, niveau)
+    except Exception:  # noqa: BLE001 -- l'absence est un resultat, pas un plantage
+        return None

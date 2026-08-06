@@ -465,3 +465,144 @@ def test_les_niveaux_releves_depassent_les_trois_nommes():
     for niveau in (adaptateur.NIVEAU_ENERGIE, adaptateur.NIVEAU_SURFACE):
         assert niveau in adaptateur.NIVEAUX_RELEVES
     assert len(adaptateur.NIVEAUX_RELEVES) == 12
+
+
+# --------------------------------------------------------------------------
+# Second critere : la serie horaire, et la correspondance des libelles
+# --------------------------------------------------------------------------
+
+from engine import sia_distributions_engine as moteur_distributions  # noqa: E402
+
+
+def _ref_distributions(numero):
+    try:
+        return moteur_distributions.charger_reference(numero)
+    except moteur_distributions.ReferenceIntrouvable:
+        pytest.skip(u'referentiel de distributions du Test %d absent' % numero)
+
+
+@pytest.mark.parametrize('numero', moteur_distributions.TESTS_SUPPORTES)
+def test_toute_grandeur_de_distribution_est_declaree(numero):
+    """Une grandeur non declaree ferait lever `libelle_annuel`, ce qui est le
+    comportement voulu — mais mieux vaut le savoir ici qu'en pleine
+    extraction."""
+    reference = _ref_distributions(numero)
+    relevees = set(b['grandeur'] for b in reference['distributions'])
+    declarees = set(adaptateur.CORRESPONDANCE_DISTRIBUTIONS[numero])
+    assert relevees == declarees, (numero, relevees ^ declarees)
+
+
+@pytest.mark.parametrize('numero', moteur_distributions.TESTS_SUPPORTES)
+def test_toute_cible_annuelle_existe_dans_les_liaisons(numero):
+    """Une cible mal orthographiee serait introuvable une fois la liaison
+    resolue — le meme piege que les libelles allemands retapes."""
+    for cible in adaptateur.CORRESPONDANCE_DISTRIBUTIONS[numero].values():
+        if cible is not None:
+            assert cible in adaptateur.LIAISONS[numero], (numero, cible)
+
+
+def test_les_diagnostics_sont_declares_comme_tels():
+    """« Einstrahlung auf Fensterebene », « Beleuchtungsstarke »,
+    « Zulufttemperatur » : le classeur en trace la distribution, mais les
+    specifications les rangent sous Diagnoseresultate. Ce ne sont pas des
+    criteres."""
+    assert adaptateur.libelle_annuel(2, u'Einstrahlung auf Fensterebene gesamt') is None
+    assert adaptateur.libelle_annuel(3, u'Beleuchtungsstärke') is None
+    assert adaptateur.libelle_annuel(5, u'Zulufttemperatur im Betrieb') is None
+
+
+def test_une_grandeur_de_puissance_pointe_vers_son_energie_annuelle():
+    """Les deux criteres ne nomment pas les grandeurs pareil : puissance (W)
+    pour la distribution, energie (kWh) pour la somme annuelle. C'est la meme
+    grandeur physique a deux stades."""
+    assert adaptateur.libelle_annuel(3, u'Beleuchtungsleistung') == \
+        u'Beleuchtungsenergie'
+    assert adaptateur.libelle_annuel(5, u'Leistung Lufterwärmer') == \
+        u'Wärmezufuhr Lufterwärmer'
+
+
+def test_une_grandeur_inconnue_leve_au_lieu_de_rendre_none():
+    """Rendre `None` la confondrait avec un diagnostic, et ferait disparaitre
+    un critere sans le dire."""
+    with pytest.raises(KeyError, match='non déclarée'):
+        adaptateur.libelle_annuel(3, u'Grandeur inventee')
+
+
+def test_deux_grandeurs_annuelles_nont_pas_de_distribution():
+    """Befeuchtungsenergie et Hilfsenergie WRG : le classeur ne porte aucune
+    feuille de distribution pour elles. Leur seul critere est la somme
+    annuelle — constat, pas oubli."""
+    cibles = set(v for v in adaptateur.CORRESPONDANCE_DISTRIBUTIONS[5].values()
+                 if v is not None)
+    for libelle in adaptateur.SANS_DISTRIBUTION[5]:
+        assert libelle in adaptateur.LIAISONS[5]
+        assert libelle not in cibles
+
+
+def test_la_couverture_annuelle_est_complete():
+    """Toute grandeur de LIAISONS a soit une distribution, soit une declaration
+    explicite qu'elle n'en a pas. Le silence se lirait comme un oubli."""
+    for numero in moteur_distributions.TESTS_SUPPORTES:
+        cibles = set(v for v in
+                     adaptateur.CORRESPONDANCE_DISTRIBUTIONS[numero].values()
+                     if v is not None)
+        sans = set(adaptateur.SANS_DISTRIBUTION.get(numero, ()))
+        assert set(adaptateur.LIAISONS[numero]) == cibles | sans, numero
+
+
+# --- Lecture de la serie brute --------------------------------------------
+
+def test_la_serie_est_rendue_brute_sans_agregation(monkeypatch):
+    """Le classeur veut les 8760 valeurs et calcule lui-meme la somme et la
+    distribution. Livrer un agregat ne satisfait que la moitie des criteres."""
+    libelle = u'Beleuchtungsenergie'
+    _resoudre(monkeypatch, 3, libelle, 'LIGHT', adaptateur.NIVEAU_LOCAL)
+    serie = [float(i) for i in range(8760)]
+    lecteur = FauxResultsReader(
+        series={('LIGHT', adaptateur.NIVEAU_LOCAL): serie})
+    assert adaptateur.extraire_serie(3, lecteur, libelle) == serie
+
+
+def test_une_liaison_non_resolue_refuse_la_serie():
+    """Rendre une serie vide se lirait comme « la grandeur vaut zero »."""
+    with pytest.raises(adaptateur.LiaisonNonResolue, match='non résolue'):
+        adaptateur.extraire_serie(3, FauxResultsReader(), u'Beleuchtungsenergie')
+
+
+def test_une_grandeur_inconnue_du_test_est_refusee():
+    with pytest.raises(adaptateur.LiaisonNonResolue, match='inconnue'):
+        adaptateur.extraire_serie(3, FauxResultsReader(), u'Inexistante')
+
+
+def test_une_serie_absente_donne_none_pas_une_liste_vide(monkeypatch):
+    _resoudre(monkeypatch, 3, u'Beleuchtungsenergie', 'ABSENT',
+              adaptateur.NIVEAU_LOCAL)
+    assert adaptateur.extraire_serie(
+        3, FauxResultsReader(), u'Beleuchtungsenergie') is None
+
+
+def test_la_serie_brute_se_classe_avec_le_moteur(monkeypatch):
+    """Bout en bout : lire la serie dans VE, la classer avec les bornes du
+    classeur, la confronter aux programmes de reference."""
+    reference = _ref_distributions(3)
+    bloc = reference['distributions'][0]
+    bornes = [e['borne_superieure'] for e in bloc['effectifs']]
+
+    _resoudre(monkeypatch, 3, u'Beleuchtungsenergie', 'LIGHT',
+              adaptateur.NIVEAU_LOCAL)
+    serie = [0.0] * 8760
+    lecteur = FauxResultsReader(
+        series={('LIGHT', adaptateur.NIVEAU_LOCAL): serie})
+
+    brute = adaptateur.extraire_serie(3, lecteur, u'Beleuchtungsenergie')
+    effectifs = moteur_distributions.classer(brute, bornes)
+    assert sum(effectifs) == 8760
+
+    resultat = moteur_distributions.evaluer(
+        reference, {(bloc['cas'], bloc['grandeur']): effectifs})
+    assert resultat['nb_evaluees'] == 1
+    # Toute l annee dans la premiere classe : hors de la dispersion, et
+    # pourtant le verdict reste NON_ETABLI — la bande n est pas definie.
+    assert resultat['distributions'][0]['nb_hors_lecture'][
+        moteur_distributions.LECTURE_ENVELOPPE] > 0
+    assert resultat['verdict'] == moteur_distributions.VERDICT_NON_ETABLI
