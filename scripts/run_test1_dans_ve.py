@@ -70,13 +70,134 @@ TOLERANCE_SOLAIRE_RELATIVE = 0.01
 CHEMIN_CANDIDAT = os.path.join(_RACINE, 'outputs', 'test1_candidat.json')
 
 
+def ascii_sur(texte):
+    u"""Retire les accents pour l'affichage console.
+
+    La fenêtre de script de VEScripts n'est pas en UTF-8 : « détecté » y
+    ressort en « d鐵ct遡 ». Les accents sont donc retirés à
+    l'affichage — et uniquement là. Les fichiers écrits restent en UTF-8
+    accentué.
+
+    Args:
+        texte: Texte à afficher.
+
+    Returns:
+        str: Le même texte, sans caractère non-ASCII.
+    """
+    import unicodedata
+    decompose = unicodedata.normalize('NFKD', u'%s' % texte)
+    return decompose.encode('ascii', 'ignore').decode('ascii')
+
+
+def dire(texte=u''):
+    u"""Affiche une ligne lisible dans la console de VEScripts.
+
+    Args:
+        texte: Texte à afficher.
+    """
+    print(ascii_sur(texte))
+
+
+#: Nombre maximal d'éléments conservés d'une séquence dans le rapport. Assez
+#: haut pour ne rien perdre d'un `dir()` : c'est justement la partie tronquée
+#: qui contient d'ordinaire le nom qu'on cherche.
+LIMITE_ELEMENTS = 500
+
+
+def _serialisable(valeur, profondeur=0):
+    u"""Convertit une valeur quelconque en structure sérialisable en JSON.
+
+    Ne lève jamais : un objet exotique de l'API `iesve` est réduit à son
+    `repr`, jamais escamoté.
+
+    Args:
+        valeur: Valeur à convertir.
+        profondeur: Profondeur de récursion courante.
+
+    Returns:
+        Any: Structure faite de types JSON.
+    """
+    if valeur is None or isinstance(valeur, (bool, int, float)):
+        return valeur
+    if isinstance(valeur, str):
+        return valeur
+    if profondeur >= 3:
+        return repr(valeur)[:400]
+    if isinstance(valeur, (list, tuple, set)):
+        elements = list(valeur)[:LIMITE_ELEMENTS]
+        return [_serialisable(e, profondeur + 1) for e in elements]
+    if isinstance(valeur, dict):
+        return dict(
+            ('%s' % cle, _serialisable(val, profondeur + 1))
+            for cle, val in list(valeur.items())[:LIMITE_ELEMENTS]
+        )
+    return repr(valeur)[:400]
+
+
+def _membres(objet):
+    u"""Noms publics exposés par un objet, liste COMPLÈTE.
+
+    Args:
+        objet: Objet à inspecter.
+
+    Returns:
+        list[str]: Noms triés, sans les membres privés.
+    """
+    try:
+        return sorted(nom for nom in dir(objet) if not nom.startswith('_'))
+    except Exception as erreur:  # noqa: BLE001
+        return ['<dir() a echoue : %s>' % erreur]
+
+
+def _enums(objet):
+    u"""Membres de type énuméré exposés par un objet, avec leurs valeurs.
+
+    Dans l'API `iesve`, les catégories d'élément et classes de construction
+    sont portées par des classes dont les attributs publics sont des entiers.
+    C'est précisément ce que cherche `creer_constructions_cas`, et c'est ce
+    qui a changé de nom depuis VE 2023.
+
+    Args:
+        objet: Objet ou module à inspecter.
+
+    Returns:
+        dict: `{nom de l'enum: {membre: valeur}}`, vide si aucun.
+    """
+    import types
+
+    trouves = {}
+    for nom in _membres(objet):
+        try:
+            candidat = getattr(objet, nom)
+        except Exception:  # noqa: BLE001 -- certains attributs lèvent à la lecture
+            continue
+        # Restreint aux CLASSES et MODULES : sans ce filtre, un simple entier
+        # produit un faux énuméré via ses attributs `numerator`, `real`, etc.,
+        # et le rapport se remplit de bruit qui masque les vrais.
+        if not isinstance(candidat, (type, types.ModuleType)):
+            continue
+        membres = {}
+        for sous_nom in dir(candidat):
+            if sous_nom.startswith('_'):
+                continue
+            try:
+                valeur = getattr(candidat, sous_nom)
+            except Exception:  # noqa: BLE001
+                continue
+            if isinstance(valeur, int) and not isinstance(valeur, bool):
+                membres[sous_nom] = valeur
+        if membres:
+            trouves[nom] = membres
+    return trouves
+
+
 def _ok(libelle, detail=''):
-    print(u'  [OK]   %-42s %s' % (libelle, detail))
+    dire(u'  [OK]   %-42s %s' % (libelle, detail))
     return True
 
 
 def _ko(libelle, detail=''):
-    print(u'  [MANQUE] %-40s %s' % (libelle, detail))
+    dire(u'  [MANQUE] %-40s %s' % (libelle, detail))
     return False
 
 
@@ -86,7 +207,7 @@ def preflight():
     Returns:
         bool: Vrai si un run est possible. Faux si un prérequis manque.
     """
-    print(u'=== PRÉFLIGHT Test 1 ===')
+    dire(u'=== PRÉFLIGHT Test 1 ===')
     controles = []
 
     # 1. Référence figée
@@ -119,7 +240,7 @@ def preflight():
     if dans_ve:
         controles.append(_ok(u'session VEScripts détectée'))
     else:
-        print(u'  [INFO] hors VEScripts — le préflight est complet, '
+        dire(u'  [INFO] hors VEScripts — le préflight est complet, '
               u'mais --run exigera VE.')
 
     # 5. Dossier de sortie
@@ -128,15 +249,15 @@ def preflight():
         os.makedirs(dossier)
     controles.append(_ok(u'dossier de sortie', dossier))
 
-    print()
-    print(u'  cas simulables sous DRYCOLD : %s' % u', '.join(CAS_DRYCOLD))
-    print(u'  cas EXCLUS (climat Kloten absent) : %s' % u', '.join(CAS_KLOTEN))
-    print(u'  ⚠ 1E est le seul cas porteur du critère pass/fail du Test 1.')
-    print(u'    Ce run produit une DÉMONSTRATION chiffrée, pas le verdict SIA.')
-    print()
+    dire()
+    dire(u'  cas simulables sous DRYCOLD : %s' % u', '.join(CAS_DRYCOLD))
+    dire(u'  cas EXCLUS (climat Kloten absent) : %s' % u', '.join(CAS_KLOTEN))
+    dire(u'  ⚠ 1E est le seul cas porteur du critère pass/fail du Test 1.')
+    dire(u'    Ce run produit une DÉMONSTRATION chiffrée, pas le verdict SIA.')
+    dire()
 
     pret = all(controles)
-    print(u'=> %s' % (u'prêt pour --run' if pret
+    dire(u'=> %s' % (u'prêt pour --run' if pret
                       else u'PRÉREQUIS MANQUANT, --run refusé'))
     return pret
 
@@ -239,7 +360,10 @@ def sonder(cas_id='600'):
     }
 
     def etape(nom, fonction):
-        u"""Exécute une étape en capturant son issue.
+        u"""Exécute une étape en capturant son issue INTÉGRALE.
+
+        Le rapport ne tronque rien : c'est précisément la partie coupée d'une
+        liste d'attributs qui contient le nom qu'on cherche.
 
         Args:
             nom: Libellé de l'étape.
@@ -253,35 +377,56 @@ def sonder(cas_id='600'):
         except Exception as erreur:  # noqa: BLE001 -- on consigne, on ne masque pas
             rapport['etapes'].append({
                 'nom': nom, 'statut': 'ECHEC',
-                'erreur': '%s: %s' % (type(erreur).__name__, erreur),
+                'type_erreur': type(erreur).__name__,
+                'erreur': u'%s' % erreur,
             })
-            print(u'  [ECHEC] %-38s %s' % (nom, type(erreur).__name__))
+            dire(u'  [ECHEC] %-38s %s' % (nom, type(erreur).__name__))
             return None
         rapport['etapes'].append({
-            'nom': nom, 'statut': 'OK', 'apercu': repr(valeur)[:300],
+            'nom': nom, 'statut': 'OK',
+            'type': type(valeur).__name__,
+            'valeur': _serialisable(valeur),
         })
-        print(u'  [OK]    %-38s %s' % (nom, repr(valeur)[:60]))
+        dire(u'  [OK]    %-38s %s' % (nom, repr(valeur)[:56]))
         return valeur
 
-    print(u'=== SONDE Test 1, cas %s ===' % cas_id)
+    dire(u'=== SONDE Test 1, cas %s ===' % cas_id)
     if not rapport['dans_ve']:
-        print(u'  hors VEScripts : la sonde ne peut rien apprendre ici.')
+        dire(u'  hors VEScripts : la sonde ne peut rien apprendre ici.')
         return rapport
 
     import iesve
     from ve_adapter import test1_adapter as adaptateur
 
+    # --- Projet et modèle -------------------------------------------------
     projet = etape(u'projet courant', lambda: iesve.VEProject.get_current_project())
-    etape(u'modèles du projet', lambda: projet.models)
-    etape(u'attributs du projet', lambda: sorted(
-        a for a in dir(projet) if not a.startswith('_'))[:40])
-    cdb = etape(u'base de constructions', lambda: iesve.VECdbDatabase.get_current_database())
-    etape(u'attributs de la base', lambda: sorted(
-        a for a in dir(cdb) if not a.startswith('_'))[:40])
-    etape(u'affectation météo DRYCOLD',
+    etape(u'modeles du projet', lambda: projet.models)
+    etape(u'attributs du projet', lambda: _membres(projet))
+
+    # --- Base de constructions : VECdbDatabase n'a que 3 methodes, la vraie
+    # --- porte d'entree est get_projects() -> VECdbProject.
+    cdb = etape(u'base de constructions',
+                lambda: iesve.VECdbDatabase.get_current_database())
+    etape(u'attributs de la base', lambda: _membres(cdb))
+    projets_cdb = etape(u'projets de la base', lambda: cdb.get_projects())
+    projet_cdb = None
+    if projets_cdb:
+        projet_cdb = projets_cdb[0]
+        etape(u'attributs de VECdbProject', lambda: _membres(projet_cdb))
+        etape(u'enums de VECdbProject', lambda: _enums(projet_cdb))
+
+    # --- Enums du module iesve : c'est la que se trouvent tres probablement
+    # --- les categories d'element et classes de construction.
+    etape(u'classes du module iesve', lambda: _membres(iesve))
+    etape(u'enums du module iesve', lambda: _enums(iesve))
+
+    # --- Meteo : deja concluant au premier passage, on le rejoue pour la trace.
+    etape(u'affectation meteo DRYCOLD',
           lambda: adaptateur.assigner_meteo_drycold(
               os.path.join(DOSSIER_METEO_VE, FICHIER_METEO)))
-    etape(u'constructions du cas',
+
+    # --- L'etape qui echoue, rejouee pour conserver son message exact.
+    etape(u'constructions du cas (attendu en echec)',
           lambda: adaptateur.creer_constructions_cas(cdb, 'legere'))
 
     chemin = os.path.join(_RACINE, 'outputs', 'sonde_test1_%s.json' % cas_id)
@@ -289,9 +434,9 @@ def sonder(cas_id='600'):
         os.makedirs(os.path.dirname(chemin))
     with io.open(chemin, 'w', encoding='utf-8') as flux:
         flux.write(json.dumps(rapport, ensure_ascii=False, indent=2))
-    print()
-    print(u'rapport de sonde : %s' % chemin)
-    print(u'-> me renvoyer ce fichier : il contient ce qu\'il me manque pour '
+    dire()
+    dire(u'rapport de sonde : %s' % chemin)
+    dire(u'-> me renvoyer ce fichier : il contient ce qu\'il me manque pour '
           u'câbler l\'enchaînement sans deviner.')
     return rapport
 
@@ -312,24 +457,24 @@ def evaluer_et_afficher(candidat=None):
     if candidat is None and os.path.isfile(CHEMIN_CANDIDAT):
         with io.open(CHEMIN_CANDIDAT, encoding='utf-8') as flux:
             candidat = json.load(flux)
-            print(u'candidat relu : %s' % CHEMIN_CANDIDAT)
+            dire(u'candidat relu : %s' % CHEMIN_CANDIDAT)
 
     if candidat is None:
-        print(u'aucun candidat : état « avant première simulation », tout gris.')
+        dire(u'aucun candidat : état « avant première simulation », tout gris.')
 
     resultat = moteur.evaluer_test1(moteur.charger_reference(), candidat)
     verdict = resultat.get('verdict_test1') or {}
     conforme = verdict.get('conforme')
     libelle = {True: u'CONFORME', False: u'NON CONFORME'}.get(
         conforme, u'NON ÉVALUÉ')
-    print()
-    print(u'verdict Test 1 : %s' % libelle)
+    dire()
+    dire(u'verdict Test 1 : %s' % libelle)
     if verdict.get('motif'):
-        print(u'  motif : %s' % verdict['motif'])
-    print(u'  périodes 1E non évaluées : %s / %s'
+        dire(u'  motif : %s' % verdict['motif'])
+    dire(u'  périodes 1E non évaluées : %s / %s'
           % (verdict.get('nb_periodes_non_evaluees'),
              verdict.get('nb_periodes_totales')))
-    print(u'  rappel : le verdict du Test 1 porte sur le SEUL cas 1E, qui '
+    dire(u'  rappel : le verdict du Test 1 porte sur le SEUL cas 1E, qui '
           u'exige le climat de Kloten. Les six cas DRYCOLD sont comparés à '
           u'titre démonstratif, sans critère de déviation.')
     return resultat
@@ -388,9 +533,9 @@ def main(arguments=()):
         int: Code de sortie, 0 si tout s'est bien passé.
     """
     mode = _mode_effectif(arguments)
-    print(u'mode : %s%s' % (mode, u'  (détecté automatiquement)'
+    dire(u'mode : %s%s' % (mode, u'  (détecté automatiquement)'
                             if not arguments and MODE == 'auto' else u''))
-    print()
+    dire()
 
     if mode == 'sonde':
         rapport = sonder()
@@ -407,15 +552,15 @@ def main(arguments=()):
         try:
             candidat = executer()
         except (RuntimeError, NotImplementedError) as erreur:
-            print(u'RUN IMPOSSIBLE : %s' % erreur)
+            dire(u'RUN IMPOSSIBLE : %s' % erreur)
             return 1
         with io.open(CHEMIN_CANDIDAT, 'w', encoding='utf-8') as flux:
             flux.write(json.dumps(candidat, ensure_ascii=False, indent=2))
-        print(u'candidat écrit : %s' % CHEMIN_CANDIDAT)
+        dire(u'candidat écrit : %s' % CHEMIN_CANDIDAT)
         evaluer_et_afficher(candidat)
         return 0
 
-    print(u'mode inconnu : %r — modes valides : %s'
+    dire(u'mode inconnu : %r — modes valides : %s'
           % (mode, u', '.join(MODES_CONNUS)))
     return 1
 
@@ -426,8 +571,8 @@ if __name__ == '__main__':
     _arguments = tuple(getattr(sys, 'argv', ())[1:])
     _code = main(_arguments)
 
-    print()
-    print(u'--- terminé (code %d) ---' % _code)
+    dire()
+    dire(u'--- terminé (code %d) ---' % _code)
 
     # `sys.exit` lève SystemExit, que VEScripts remonte comme une erreur dans
     # sa fenêtre de script. On ne sort donc explicitement que lorsqu'un
