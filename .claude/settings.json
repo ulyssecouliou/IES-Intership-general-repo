@@ -1,0 +1,25 @@
+{
+  "$comment": [
+    "Réglages PARTAGÉS du projet — versionnés, valables pour tous les agents.",
+    "Les réglages personnels (permissions accordées poste par poste) restent",
+    "dans settings.local.json, qui n'est pas partagé.",
+    "",
+    "Les hooks encodent mécaniquement deux règles de CLAUDE.md que l'on ne peut",
+    "pas garantir par la seule discipline :",
+    "  - règle 2 : les référentiels figés ne s'éditent pas à la main ;",
+    "  - règle 5 : rien ne part en commit avec une suite rouge."
+  ],
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python \"$CLAUDE_PROJECT_DIR/.claude/hooks/garde_refs.py\""
+          }
+        ]
+      }
+    ]
+  }
+}
