@@ -224,13 +224,22 @@ MATERIAUX_LEGERS = {
         {'nom': 'wood_siding', 'conductivite': 0.14, 'epaisseur': 0.009,
          'masse_volumique': 530.0, 'capacite_thermique': 900.0},
     ),
+    # RESERVE LEVEE le 2026-08-07. Les cp du toit etaient marques None parce
+    # que l extraction TEXTE de la table les decalait d une colonne. Ils sont
+    # desormais lus dans une source INDEPENDANTE de cette extraction :
+    # `config/iso52016_chapter7_confirmed_inputs.json`, Table 23 page 124 de
+    # BS EN ISO 52016-1:2017, capturee en images dont le sha256 est consigne.
+    # Deux chemins distincts, memes valeurs -- ce n est plus une supposition.
+    #
+    # Les masses volumiques deja presentes (950, 12, 530) y concordent aussi,
+    # ce qui corrobore l alignement des colonnes.
     'toit': (
         {'nom': 'plasterboard_toit', 'conductivite': 0.16, 'epaisseur': 0.010,
-         'masse_volumique': 950.0, 'capacite_thermique': None},  # ⚠ cf. note
+         'masse_volumique': 950.0, 'capacite_thermique': 840.0},
         {'nom': 'fiberglass_quilt_toit', 'conductivite': 0.04, 'epaisseur': 0.1118,
-         'masse_volumique': 12.0, 'capacite_thermique': None},
+         'masse_volumique': 12.0, 'capacite_thermique': 840.0},
         {'nom': 'roofdeck', 'conductivite': 0.14, 'epaisseur': 0.019,
-         'masse_volumique': 530.0, 'capacite_thermique': None},
+         'masse_volumique': 530.0, 'capacite_thermique': 900.0},
     ),
     'plancher': (
         {'nom': 'timber_flooring', 'conductivite': 0.14, 'epaisseur': 0.025,
@@ -239,16 +248,26 @@ MATERIAUX_LEGERS = {
          'masse_volumique': None, 'capacite_thermique': None},  # (a) cf. note
     ),
 }
-# Note capacite_thermique=None (toit) : traceability/test-1.spec.md §4 --
-# "Les cp du toit sont mal alignes dans l'extraction texte (colonne decalee) --
-# a revalider avant usage." Ne JAMAIS inventer une valeur ici : la construction
-# du cas leger reste bloquee sur la toiture jusqu'a revalidation (norm-analyst).
-# Note masse_volumique/capacite_thermique=None (isolant de plancher) :
-# ASHRAE 140:2023 note (a) -- "minimum density/specific heat le logiciel
-# testé autorise, mais pas < 0". Valeur numerique exacte a fixer avec
-# `ve-adapter-engineer` en fonction de ce qu'IESVE accepte reellement
-# (le depot externe utilise 10 kg/m3 / 1400 J/(kg.K) sans le documenter
-# comme choix delibere -- voir AUDIT.md, verdict CORRIGER).
+# La reserve sur les cp du toit (traceability/test-1.spec.md §4, colonne
+# decalee a l extraction texte) est LEVEE : cf. commentaire au-dessus du bloc
+# 'toit'. Elle ne l a pas ete en relisant la meme extraction, mais en
+# confrontant une capture independante de la Table 23.
+# ISOLANT DE PLANCHER : la reserve TIENT, et pour une raison de fond.
+#
+# ISO 52016-1 Table 23 (p. 124) donne pour `ideal_floor_insulation` une masse
+# volumique de 0, une chaleur massique de 0 et une capacite surfacique de 0 :
+# c est un isolant IDEAL, sans masse. ASHRAE 140:2023 note (a) precise la
+# regle d application : « minimum density/specific heat le logiciel teste
+# autorise, mais pas < 0 ».
+#
+# La valeur est donc DEPENDANTE DU LOGICIEL par construction de la norme
+# elle-meme. Ce n est pas une donnee manquante qu on pourrait aller chercher :
+# c est un minimum a determiner dans VE. Ecrire 0 supposerait que VE l accepte
+# (les autres valeurs relues montrent que VE stocke ces champs en flottant,
+# rien ne dit qu il tolere zero) ; ecrire 10 / 1400 comme le depot externe
+# serait un choix non documente, deja releve dans AUDIT.md.
+#
+# A determiner par un releve dans VE, comme tout le reste cette semaine.
 
 MATERIAUX_LOURDS = {
     'mur': (

@@ -361,3 +361,58 @@ def test_une_relecture_qui_leve_ne_fait_pas_planter():
             raise RuntimeError('indisponible')
 
     assert adaptateur._identifiant_materiau(MateriauCasse()) is None
+
+
+# --------------------------------------------------------------------------
+# Materiaux du toit : reserve levee par une source independante
+# --------------------------------------------------------------------------
+
+_ISO_52016 = os.path.join(_RACINE, 'config',
+                          'iso52016_chapter7_confirmed_inputs.json')
+
+
+def test_les_cp_du_toit_concordent_avec_iso_52016_table_23():
+    """La reserve n a pas ete levee en relisant la meme extraction texte —
+    dont la colonne etait decalee — mais en confrontant une capture
+    INDEPENDANTE de la Table 23, page 124, dont le sha256 est consigne."""
+    if not os.path.exists(_ISO_52016):
+        pytest.skip(u'entrees ISO 52016-1 absentes')
+    from ve_adapter import test1_adapter as adaptateur
+    with io.open(_ISO_52016, encoding='utf-8') as flux:
+        source = json.load(flux)
+    couches = source['hourly_test_cell']['lightweight_opaque'][
+        'roof_layers_inside_to_outside']
+    iso = dict((c['material'], c) for c in couches)
+
+    for couche in adaptateur.MATERIAUX_LEGERS['toit']:
+        reference = iso[couche['nom'].replace('_toit', '')]
+        assert couche['capacite_thermique'] == reference['specific_heat_j_kgk']
+        assert couche['masse_volumique'] == reference['density_kg_m3']
+        assert couche['conductivite'] == reference['conductivity_w_mk']
+        assert couche['epaisseur'] == reference['thickness_m']
+
+
+def test_le_toit_na_plus_aucune_valeur_non_confirmee():
+    from ve_adapter import test1_adapter as adaptateur
+    for masse in adaptateur.MATERIAUX_PAR_MASSE.values():
+        for couche in masse['toit']:
+            assert None not in couche.values(), couche['nom']
+
+
+def test_lisolant_de_plancher_reste_deliberement_non_fixe():
+    """ISO 52016-1 donne 0/0 — un isolant IDEAL sans masse — mais ASHRAE 140
+    note (a) impose « le minimum que le logiciel teste autorise, pas < 0 ».
+    La valeur est donc dependante du logiciel PAR CONSTRUCTION de la norme :
+    ce n est pas une donnee manquante, c est un minimum a relever dans VE."""
+    from ve_adapter import test1_adapter as adaptateur
+    for masse in adaptateur.MATERIAUX_PAR_MASSE.values():
+        isolant = masse['plancher'][-1]
+        assert isolant['masse_volumique'] is None
+        assert isolant['capacite_thermique'] is None
+
+
+def test_le_motif_du_refus_est_documente():
+    """Un None sans motif finit par etre comble au hasard."""
+    source = _source_adaptateur()
+    assert 'DEPENDANTE DU LOGICIEL' in source
+    assert 'note (a)' in source
