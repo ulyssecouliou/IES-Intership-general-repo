@@ -516,7 +516,11 @@ def test_les_corps_du_modele_sont_releves_avec_leurs_surfaces():
 
     releve = run._corps_du_modele(Projet())
     assert releve[0]['nb_corps'] == 1
-    assert releve[0]['corps'][0]['get_areas'] == {'floor': 48.0}
+    # LISTE PLATE et cles APLATIES : imbriquer portait les surfaces au 4e
+    # niveau, ou `_serialisable` les reduit a un repr tronque. Le releve du
+    # 2026-08-07 est ressorti illisible pour cette seule raison.
+    assert releve[1]['get_areas.floor'] == 48.0
+    assert releve[1]['get_room_data.volume'] == 129.6
 
 
 def test_un_modele_vide_est_signale():
@@ -537,3 +541,31 @@ def test_un_get_bodies_casse_ne_fait_pas_planter():
         models = [Modele()]
 
     assert 'get_bodies_a_echoue' in run._corps_du_modele(Projet())[0]
+
+
+def test_les_surfaces_ne_sont_pas_tronquees_par_la_profondeur():
+    """Le defaut du 2026-08-07 : le dictionnaire des surfaces etait au 4e
+    niveau d imbrication, donc reduit a `repr(...)[:400]`. Un releve tronque
+    ne sert a rien — c est justement ce qu on venait y chercher."""
+    class Corps(object):
+        id = 'B1'
+        name = 'x'
+        type = 'room'
+
+        def get_areas(self):
+            return dict(('cle_%02d' % i, float(i)) for i in range(30))
+
+        def get_room_data(self):
+            return {}
+
+    class Modele(object):
+        model_type = 'real'
+
+        def get_bodies(self, _selection):
+            return [Corps()]
+
+    class Projet(object):
+        models = [Modele()]
+
+    detail = run._corps_du_modele(Projet())[1]
+    assert detail['get_areas.cle_29'] == 29.0

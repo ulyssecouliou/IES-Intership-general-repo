@@ -346,29 +346,40 @@ def _corps_du_modele(projet):
     if not modeles:
         return {'aucun_modele': True}
 
+    # LISTE PLATE, volontairement. Imbriquer les corps sous leur modele
+    # portait le dictionnaire des surfaces au QUATRIEME niveau, ou
+    # `_serialisable` le reduit a un repr tronque a 400 caracteres — le releve
+    # du 2026-08-07 est ressorti illisible pour cette seule raison.
     releves = []
     for modele in modeles[:2]:
-        entree = {'model_type': u'%s' % getattr(modele, 'model_type', None)}
+        type_modele = u'%s' % getattr(modele, 'model_type', None)
         try:
             corps = list(modele.get_bodies(False) or [])
         except Exception as erreur:  # noqa: BLE001
-            entree['get_bodies_a_echoue'] = u'%s: %s' % (
-                type(erreur).__name__, erreur)
-            releves.append(entree)
+            releves.append({'model_type': type_modele,
+                            'get_bodies_a_echoue': u'%s: %s'
+                            % (type(erreur).__name__, erreur)})
             continue
-        entree['nb_corps'] = len(corps)
-        entree['corps'] = []
-        for objet in corps[:6]:
-            detail = {'id': u'%s' % getattr(objet, 'id', None),
+        releves.append({'model_type': type_modele, 'nb_corps': len(corps)})
+        for objet in corps[:4]:
+            detail = {'model_type': type_modele,
+                      'id': u'%s' % getattr(objet, 'id', None),
                       'nom': u'%s' % getattr(objet, 'name', None),
                       'type': u'%s' % getattr(objet, 'type', None)}
             for appel in ('get_areas', 'get_room_data'):
                 try:
-                    detail[appel] = _serialisable(getattr(objet, appel)())
+                    valeur = getattr(objet, appel)()
                 except Exception as erreur:  # noqa: BLE001
                     detail[appel] = u'%s: %s' % (type(erreur).__name__, erreur)
-            entree['corps'].append(detail)
-        releves.append(entree)
+                    continue
+                # Aplati en `appel.cle` : les surfaces restent lisibles quel
+                # que soit le plafond de profondeur.
+                if isinstance(valeur, dict):
+                    for cle, contenu in valeur.items():
+                        detail[u'%s.%s' % (appel, cle)] = _serialisable(contenu)
+                else:
+                    detail[appel] = _serialisable(valeur)
+            releves.append(detail)
     return releves
 
 
