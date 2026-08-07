@@ -230,3 +230,85 @@ def test_les_reserves_signalent_le_piege_des_categories(enums):
     texte = u' '.join(enums['reserves'])
     assert 'BIBLIOTH' in texte.upper()
     assert 'construction_class' in texte
+
+
+# --------------------------------------------------------------------------
+# Proprietes de materiau : les cles reelles, relevees le 2026-08-07
+# --------------------------------------------------------------------------
+
+#: Cles rendues par `VECdbMaterial.get_properties()` sur un materiau neuf.
+CLES_MATERIAU = ('id', 'description', 'specific_heat_capacity', 'category',
+                 'conductivity', 'density', 'vapour_resistivity')
+
+
+def _source_adaptateur_test1():
+    with io.open(_ADAPTATEUR, encoding='utf-8') as flux:
+        return flux.read()
+
+
+def test_lepaisseur_nest_plus_ecrite_sur_le_materiau():
+    """`thickness` N EXISTE PAS au niveau materiau : l epaisseur appartient a
+    la COUCHE. Physiquement juste — un meme materiau sert a plusieurs
+    epaisseurs. La docstring du module le notait deja ; le code la
+    contredisait, et VE repondait « could not convert string to float »."""
+    source = _source_adaptateur_test1()
+    debut = source.index('def creer_materiau')
+    corps = source[debut:debut + 4200]
+    assert "'thickness': definition" not in corps
+
+
+def test_la_description_nest_plus_ecrite_par_set_properties():
+    """Elle se LIT mais ne s ECRIT pas : apres ecriture elle vaut toujours
+    « New Python Material ». La passer levait la ValueError."""
+    source = _source_adaptateur_test1()
+    debut = source.index('def creer_materiau')
+    corps = source[debut:debut + 4200]
+    assert "'description': definition" not in corps
+
+
+def test_les_trois_proprietes_physiques_sont_bien_ecrites():
+    source = _source_adaptateur_test1()
+    debut = source.index('def creer_materiau')
+    corps = source[debut:debut + 4200]
+    for cle in ('conductivity', 'density', 'specific_heat_capacity'):
+        assert "'%s':" % cle in corps, cle
+
+
+def test_la_relecture_tolere_le_flottant_32_bits():
+    """VE stocke en float32 : 0,16 ecrit ressort en 0,1599999964237213. Une
+    comparaison exacte echouerait sur une ecriture pourtant correcte."""
+    from ve_adapter import test1_adapter as adaptateur
+
+    class FauxMateriau(object):
+        def get_properties(self):
+            return {'conductivity': 0.1599999964237213}
+
+    adaptateur._verifier_proprietes_ecrites(
+        FauxMateriau(), {'conductivity': 0.16}, 'plasterboard')
+
+
+def test_une_propriete_non_prise_est_signalee():
+    """`set_properties` ne rend rien et ne leve pas toujours : une ecriture
+    ignoree ferait simuler sur des valeurs par defaut, en produisant des
+    nombres credibles."""
+    from ve_adapter import test1_adapter as adaptateur
+
+    class MateriauSourd(object):
+        def get_properties(self):
+            return {'conductivity': 0.0}
+
+    with pytest.raises(RuntimeError, match='non prise'):
+        adaptateur._verifier_proprietes_ecrites(
+            MateriauSourd(), {'conductivity': 0.16}, 'plasterboard')
+
+
+def test_une_propriete_absente_de_la_relecture_est_signalee():
+    from ve_adapter import test1_adapter as adaptateur
+
+    class MateriauMuet(object):
+        def get_properties(self):
+            return {}
+
+    with pytest.raises(RuntimeError, match='absent de la relecture'):
+        adaptateur._verifier_proprietes_ecrites(
+            MateriauMuet(), {'conductivity': 0.16}, 'x')

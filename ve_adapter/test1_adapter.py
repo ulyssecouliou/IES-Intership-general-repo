@@ -389,14 +389,28 @@ def creer_materiau(cdb_project, definition):
     categorie_materiau = _resoudre_membre_enum(
         iesve, 'material_categories', 'other')
     materiau = cdb_project.create_material(categorie_materiau)
+    # CORRIGE le 2026-08-07, contre une VE reelle. `set_properties` convertit
+    # TOUTES les valeurs en flottant : passer une chaine leve
+    # « could not convert string to float: 'plasterboard' ».
+    #
+    # Les cles reellement acceptees, relevees par `get_properties()` sur un
+    # materiau neuf : id, description, specific_heat_capacity, category,
+    # conductivity, density, vapour_resistivity.
+    #
+    #   * `description` s y LIT mais ne s y ECRIT pas — apres ecriture elle
+    #     vaut toujours « New Python Material ». Le nom du materiau doit donc
+    #     etre porte autrement ; il reste ici en commentaire de tracabilite.
+    #   * `thickness` N EXISTE PAS au niveau materiau. L epaisseur appartient
+    #     a la COUCHE (`VECdbLayer`, §6.1.30), ce qui est physiquement juste :
+    #     un meme materiau sert a plusieurs epaisseurs. La docstring de ce
+    #     module le notait deja ; le code la contredisait.
     proprietes = {
-        'description': definition['nom'],
         'conductivity': definition['conductivite'],
-        'thickness': definition['epaisseur'],
         'density': definition['masse_volumique'],
         'specific_heat_capacity': definition['capacite_thermique'],
     }
     materiau.set_properties(proprietes)
+    _verifier_proprietes_ecrites(materiau, proprietes, definition['nom'])
     relu = dict(materiau.get_properties())
     for cle, valeur in proprietes.items():
         valeur_relue = relu.get(cle)
@@ -463,6 +477,49 @@ def creer_construction_opaque(cdb_project, categorie_element, classe_constructio
             "creation -- ne pas continuer avec une construction "
             "incomplete.".format(len(couches), len(couches_finales)))
     return construction, materiaux_crees
+
+
+#: Tolerance relative de relecture. VE stocke en flottant 32 bits : 0,16 ecrit
+#: ressort en 0,1599999964237213. Une comparaison exacte echouerait sur une
+#: ecriture pourtant correcte, et une tolerance trop large laisserait passer
+#: une valeur reellement fausse. 1e-6 relatif separe les deux sans ambiguite.
+TOLERANCE_RELECTURE = 1e-6
+
+
+def _verifier_proprietes_ecrites(materiau, proprietes, nom):
+    """Relit un materiau et confronte ses proprietes a ce qui a ete ecrit.
+
+    POURQUOI RELIRE. `set_properties` ne rend rien et ne leve pas toujours :
+    la reconnaissance du 2026-08-07 a montre que `set_heating()` accepte meme
+    un appel sans argument. Une ecriture ignoree passerait donc inapercue, et
+    la simulation tournerait sur des valeurs par defaut en produisant des
+    nombres credibles.
+
+    Args:
+        materiau: `VECdbMaterial` fraichement ecrit.
+        proprietes: Ce qui vient d'etre demande.
+        nom: Nom du materiau, pour le message.
+
+    Raises:
+        RuntimeError: Si une propriete n'a pas ete prise, ou si la relecture
+            est impossible.
+    """
+    relues = materiau.get_properties()
+    ecarts = []
+    for cle, attendu in proprietes.items():
+        obtenu = relues.get(cle)
+        if obtenu is None:
+            ecarts.append(u'%s : absent de la relecture' % cle)
+            continue
+        reference = abs(attendu) if attendu else 1.0
+        if abs(obtenu - attendu) > TOLERANCE_RELECTURE * reference:
+            ecarts.append(u'%s : ecrit %r, relu %r' % (cle, attendu, obtenu))
+    if ecarts:
+        raise RuntimeError(
+            u'materiau %r : %d propriete(s) non prise(s) par VE -- %s. '
+            u'Cles acceptees par set_properties : conductivity, density, '
+            u'specific_heat_capacity, vapour_resistivity.'
+            % (nom, len(ecarts), u' ; '.join(ecarts)))
 
 
 def creer_constructions_cas(cdb_project, masse):
