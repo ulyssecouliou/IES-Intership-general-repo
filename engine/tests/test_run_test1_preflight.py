@@ -345,3 +345,59 @@ def test_le_releve_ne_conclut_pas_a_la_place_du_lecteur():
     corps = source[debut:debut + 1800]
     assert 'Aucune conclusion' in corps
     assert 'releves.append' in corps
+
+
+# --------------------------------------------------------------------------
+# Les epaisseurs sont-elles reellement posees ?
+# --------------------------------------------------------------------------
+
+def test_la_sonde_relit_les_epaisseurs_des_couches():
+    """`add_layer(materiau_id, False)` n ecrit AUCUNE epaisseur, et
+    l epaisseur n existe pas au niveau materiau. Une construction qui se cree
+    sans lever, avec des epaisseurs par defaut, produirait des U credibles et
+    faux — le mode de defaillance que ce projet doit empecher."""
+    import io as _io
+    with _io.open(run.__file__.replace('.pyc', '.py'), encoding='utf-8') as f:
+        source = f.read()
+    assert 'epaisseurs REELLES' in source
+    assert '_proprietes_des_couches' in source
+
+
+def test_le_releve_des_couches_ne_leve_pas():
+    """Une sonde qui plante ne rapporte rien."""
+    class CoucheMuette(object):
+        def get_properties(self):
+            raise RuntimeError('indisponible')
+
+    class Construction(object):
+        def get_layers(self):
+            return [CoucheMuette()]
+
+    releve = run._proprietes_des_couches(Construction())
+    assert len(releve) == 1
+    assert 'RuntimeError' in releve[0]['proprietes']
+
+
+def test_un_get_layers_casse_est_consigne():
+    class ConstructionCassee(object):
+        def get_layers(self):
+            raise RuntimeError('pas de couches')
+
+    assert 'get_layers_a_echoue' in run._proprietes_des_couches(
+        ConstructionCassee())
+
+
+def test_le_releve_rend_les_proprietes_de_chaque_couche():
+    class Couche(object):
+        def __init__(self, epaisseur):
+            self._e = epaisseur
+
+        def get_properties(self):
+            return {'thickness': self._e}
+
+    class Construction(object):
+        def get_layers(self):
+            return [Couche(0.012), Couche(0.066)]
+
+    releve = run._proprietes_des_couches(Construction())
+    assert [c['proprietes']['thickness'] for c in releve] == [0.012, 0.066]

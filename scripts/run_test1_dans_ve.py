@@ -248,6 +248,36 @@ ECHELLE_MINIMUM = (0.0, 0.001, 0.01, 0.1, 1.0, 10.0)
 TOLERANCE_RELECTURE = 1e-6
 
 
+def _proprietes_des_couches(construction):
+    u"""Relit les couches d'une construction et leurs propriétés.
+
+    Sert à répondre à une question précise : `add_layer` n'écrit aucune
+    épaisseur, et l'épaisseur n'existe pas au niveau matériau. Les couches
+    portent-elles donc les bonnes valeurs, ou celles que VE leur donne par
+    défaut ?
+
+    Args:
+        construction: `VECdbConstruction` construite.
+
+    Returns:
+        list: Une entrée par couche, ou une description de l'échec.
+    """
+    releves = []
+    try:
+        couches = list(construction.get_layers() or [])
+    except Exception as erreur:  # noqa: BLE001
+        return {'get_layers_a_echoue': u'%s: %s' % (type(erreur).__name__,
+                                                    erreur)}
+    for rang, couche in enumerate(couches):
+        entree = {'rang': rang, 'attributs': _membres(couche)}
+        try:
+            entree['proprietes'] = couche.get_properties()
+        except Exception as erreur:  # noqa: BLE001
+            entree['proprietes'] = u'%s: %s' % (type(erreur).__name__, erreur)
+        releves.append(entree)
+    return releves
+
+
 def _echelle_de_minimum(projet_cdb, module_iesve):
     u"""Relève la plus petite masse volumique que VE accepte de conserver.
 
@@ -661,9 +691,24 @@ def sonder(cas_id='600'):
     # `creer_constructions_cas` attend un `VECdbProject`. VE repondait
     # « 'VECdbDatabase' object has no attribute 'create_construction' » —
     # meme classe d erreur que les enums cherches sur le mauvais conteneur.
+    constructions = None
     if projet_cdb is not None:
-        etape(u'constructions du cas',
-              lambda: adaptateur.creer_constructions_cas(projet_cdb, 'legere'))
+        constructions = etape(
+            u'constructions du cas',
+            lambda: adaptateur.creer_constructions_cas(projet_cdb, 'legere'))
+
+    # --- LES EPAISSEURS SONT-ELLES POSEES ?
+    #
+    # `add_layer(materiau_id, False)` cree la couche mais n ecrit AUCUNE
+    # epaisseur — et depuis le 2026-08-07 l epaisseur n est plus sur le
+    # materiau non plus, puisque `thickness` n y existe pas. Les couches
+    # portent donc ce que VE leur donne par defaut.
+    #
+    # Une construction qui se cree sans lever, avec des epaisseurs fausses,
+    # produirait des U credibles et faux. On relit.
+    if constructions:
+        etape(u'couches du mur : epaisseurs REELLES',
+              lambda: _proprietes_des_couches(constructions['mur']))
     else:
         etape(u'constructions du cas',
               lambda: _echouer(u'aucun VECdbProject : etape impossible'))
