@@ -64,7 +64,11 @@ non encore produite (cf. rapport de fin de tâche, question ouverte).
 import os
 
 from ui import design_ies as design
+from ui import selection_classe as selection
 from ui import verdict_view as vue
+
+#: Entree du selecteur qui n applique aucun filtre.
+TOUTES_LES_CLASSES = u'Toutes les classes'
 
 # `tkinter` s'est révélé disponible sur cette machine de développement (cf.
 # note de statut d'exécution ci-dessus) -- ce garde `try/except` reste
@@ -115,6 +119,7 @@ class NavigateurSIA4010(object):
 
         from ui.dialog_tkinter import NavigateurSIA4010
         from ui import verdict_view as vue
+
         app = NavigateurSIA4010([vue.construire_vue_test1(r1),
                                  vue.construire_vue_test7(r7)])
         app.lancer()
@@ -161,6 +166,8 @@ class NavigateurSIA4010(object):
         corps = ttk.Frame(self._racine, style=charte.STYLE_FOND,
                           padding=charte.ECART)
         corps.pack(side='top', fill='both', expand=True)
+
+        self._construire_selecteur(corps, charte)
 
         # Arborescence Classe -> Test -> Grandeur -> Cas -> Période.
         cadre_arbre = ttk.Frame(corps, style=charte.STYLE_CARTE,
@@ -243,7 +250,92 @@ class NavigateurSIA4010(object):
                    text=u'Exporter Excel (SIA officiel)',
                    command=self._exporter_excel).pack(side='left', padx=(0, 6))
         ttk.Button(actions, style=charte.STYLE_BOUTON, text=u'Exporter PDF',
-                   command=self._exporter_pdf).pack(side='left')
+                   command=self._exporter_pdf).pack(side='left', padx=(0, 6))
+        ttk.Button(actions, style=charte.STYLE_BOUTON,
+                   text=u'Diagnostic interne',
+                   command=self._exporter_diagnostic).pack(side='left')
+
+    def _construire_selecteur(self, parent, charte):
+        """Choix de la classe de validation visée.
+
+        Le client choisit sa classe et ne voit plus que ce qui la concerne :
+        une classe 1A n'a que faire des grandeurs du Test 5. Les exports
+        suivent la selection, pas la liste complete — sans quoi le rapport
+        contredirait l'ecran.
+
+        Args:
+            parent: Cadre d'accueil.
+            charte: Module `ui/theme_ies.py`.
+        """
+        barre = ttk.Frame(parent, style=charte.STYLE_CARTE,
+                          padding=charte.PADDING_CARTE)
+        barre.pack(side='top', fill='x', pady=(0, charte.ECART))
+
+        ttk.Label(barre, style=charte.STYLE_SECTION,
+                  text=u'Classe de validation visée').pack(side='left')
+
+        self._classe_choisie = tk.StringVar(value=TOUTES_LES_CLASSES)
+        valeurs = [TOUTES_LES_CLASSES] + [
+            u'%s — %s' % (c, selection.intitule(c))
+            for c in selection.CLASSES]
+        liste = ttk.Combobox(barre, textvariable=self._classe_choisie,
+                             values=valeurs, state='readonly', width=52)
+        liste.pack(side='left', padx=(10, 0))
+        liste.bind('<<ComboboxSelected>>', self._changer_de_classe)
+
+        self._etat_classe = ttk.Label(barre, style=charte.STYLE_ATTENUE,
+                                      text=u'')
+        self._etat_classe.pack(side='left', padx=(14, 0))
+        self._rafraichir_etat_classe()
+
+    def _classe_active(self):
+        """Classe actuellement choisie, ou `None` pour « toutes ».
+
+        Returns:
+            str | None: Identifiant de classe.
+        """
+        valeur = getattr(self, '_classe_choisie', None)
+        if valeur is None:
+            return None
+        texte = valeur.get()
+        if not texte or texte == TOUTES_LES_CLASSES:
+            return None
+        return texte.split(u'—')[0].strip()
+
+    def _vues_affichees(self):
+        """Vues retenues par la classe choisie.
+
+        Returns:
+            list: Sous-ensemble de `self._vues`, ou la liste entiere.
+        """
+        classe = self._classe_active()
+        if classe is None:
+            return list(self._vues)
+        return selection.selectionner(classe, self._vues)['vues']
+
+    def _rafraichir_etat_classe(self):
+        """Met a jour le libelle d'etat a cote du selecteur."""
+        classe = self._classe_active()
+        if classe is None:
+            self._etat_classe.configure(
+                text=u'%d test(s) affiché(s)' % len(self._vues))
+            return
+        choix = selection.selectionner(classe, self._vues)
+        statut = selection.statut_de_la_classe(choix)
+        manquants = choix['numeros_absents']
+        detail = u'%d/%d test(s) présent(s)' % (
+            len(choix['vues']), len(choix['tests_exiges']))
+        if manquants:
+            detail += u' — manquants : %s' % u', '.join(
+                str(n) for n in manquants)
+        self._etat_classe.configure(text=u'%s — %s' % (statut, detail))
+
+    def _changer_de_classe(self, _evenement=None):
+        """Reconstruit l'arbre pour la classe choisie."""
+        self._rafraichir_etat_classe()
+        for iid in self._arbre.get_children(''):
+            self._arbre.delete(iid)
+        self._remplir_arbre()
 
     def _configurer_tags_couleur(self):
         for couleur, fond in COULEUR_FOND_PAR_VERDICT.items():
@@ -270,7 +362,10 @@ class NavigateurSIA4010(object):
         # est alphabetique (1A, 1B, 2A, ... 5) ; celui des tests suit l'ordre
         # dans lequel les vues ont ete passees.
         tests_par_classe = {}
-        for une_vue in self._vues:
+        # `_vues_affichees` applique le filtre de classe : l'arbre montre ce
+        # que le rapport contiendra, sans quoi l'ecran et le PDF diraient deux
+        # choses differentes.
+        for une_vue in self._vues_affichees():
             for ligne_classe in une_vue['classes']:
                 tests_par_classe.setdefault(
                     ligne_classe['classe'], []).append((une_vue, ligne_classe))
@@ -422,15 +517,60 @@ class NavigateurSIA4010(object):
         # synthèse par classe, qui est ce que le client lit en premier.
         try:
             from ui import export_pdf_reportlab
+            vues = self._vues_affichees()
             export_pdf_reportlab.generer_pdf_rapport_multi(
-                self._vues, chemin_pdf)
+                vues, chemin_pdf)
             messagebox.showinfo(
                 u'Export PDF',
                 u'Rapport généré : %s\n%d test(s) couvert(s) : %s' % (
-                    chemin_pdf, len(self._vues),
-                    u', '.join(str(v.get('test_id') or '?') for v in self._vues)))
+                    chemin_pdf, len(vues),
+                    u', '.join(str(v.get('test_id') or '?') for v in vues)))
         except Exception as erreur:  # pragma: no cover -- non exécuté ici
             messagebox.showerror(u'Export PDF', str(erreur))
+
+    def _exporter_diagnostic(self):
+        """Écrit le rapport INTERNE : ce qui bloque, pourquoi, et quoi faire.
+
+        Volontairement plus dur que le rapport client. Le client veut savoir
+        où il en est ; l'équipe veut la cause et l'action. Confondre les deux
+        donnerait soit un rapport client alarmiste, soit un rapport interne
+        inutilisable.
+        """
+        if filedialog is None:
+            return
+        chemin = filedialog.asksaveasfilename(
+            title=u'Enregistrer le diagnostic interne',
+            defaultextension='.md', filetypes=[('Markdown', '*.md')])
+        if not chemin:
+            return
+        try:
+            texte = self._texte_diagnostic()
+            with open(chemin, 'w', encoding='utf-8') as flux:
+                flux.write(texte)
+            messagebox.showinfo(u'Diagnostic interne',
+                                u'Rapport écrit : %s' % chemin)
+        except Exception as erreur:  # pragma: no cover -- non execute ici
+            messagebox.showerror(u'Diagnostic interne', str(erreur))
+
+    def _texte_diagnostic(self):
+        """Compose le diagnostic des classes visées.
+
+        Returns:
+            str: Rapport Markdown.
+        """
+        classe = self._classe_active()
+        classes = [classe] if classe else list(selection.CLASSES)
+        liaisons = _etat_des_liaisons()
+
+        morceaux = [u'# Diagnostic interne — navigateur SIA 4010', u'']
+        for identifiant in classes:
+            diagnostic = selection.diagnostiquer(
+                identifiant, self._vues, etat_liaisons=liaisons)
+            morceaux.append(u'```')
+            morceaux.append(selection.resumer_diagnostic(diagnostic))
+            morceaux.append(u'```')
+            morceaux.append(u'')
+        return u'\n'.join(morceaux)
 
     def lancer(self):
         """Boucle d'événements Tkinter -- bloque jusqu'à fermeture."""
@@ -443,6 +583,27 @@ class NavigateurSIA4010(object):
 # --------------------------------------------------------------------------
 
 _ORDRE_COULEUR_GRAVITE = {'vert': 0, 'gris': 1, 'rouge': 2}
+
+
+def _etat_des_liaisons():
+    """Etat des liaisons grandeur -> variable VE, par test.
+
+    Lu dans l'adaptateur, jamais recopie : c'est lui qui fait foi, et le
+    diagnostic doit dire ce qui EST, pas ce qui etait au moment de sa
+    redaction.
+
+    Returns:
+        dict: `{numero de test: (resolues, declarees)}`, vide si l'adaptateur
+        n'est pas importable.
+    """
+    try:
+        from ve_adapter import bandes_adapter
+    except ImportError:  # pragma: no cover -- adaptateur absent
+        return {}
+    return dict(
+        (numero, (len(bandes_adapter.liaisons_resolues(numero)),
+                  len(bandes_adapter.LIAISONS.get(numero, {}))))
+        for numero in bandes_adapter.TESTS_COUVERTS)
 
 
 class NavigateurTest1(NavigateurSIA4010):
