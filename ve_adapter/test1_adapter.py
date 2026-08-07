@@ -245,29 +245,31 @@ MATERIAUX_LEGERS = {
         {'nom': 'timber_flooring', 'conductivite': 0.14, 'epaisseur': 0.025,
          'masse_volumique': 650.0, 'capacite_thermique': 1200.0},
         {'nom': 'floor_insulation', 'conductivite': 0.04, 'epaisseur': 1.003,
-         'masse_volumique': None, 'capacite_thermique': None},  # (a) cf. note
+         'masse_volumique': 0.0, 'capacite_thermique': 0.0},  # cf. note
     ),
 }
 # La reserve sur les cp du toit (traceability/test-1.spec.md §4, colonne
 # decalee a l extraction texte) est LEVEE : cf. commentaire au-dessus du bloc
 # 'toit'. Elle ne l a pas ete en relisant la meme extraction, mais en
 # confrontant une capture independante de la Table 23.
-# ISOLANT DE PLANCHER : la reserve TIENT, et pour une raison de fond.
+# ISOLANT DE PLANCHER : RESERVE LEVEE le 2026-08-07, par un releve dans VE.
 #
 # ISO 52016-1 Table 23 (p. 124) donne pour `ideal_floor_insulation` une masse
 # volumique de 0, une chaleur massique de 0 et une capacite surfacique de 0 :
 # c est un isolant IDEAL, sans masse. ASHRAE 140:2023 note (a) precise la
 # regle d application : « minimum density/specific heat le logiciel teste
-# autorise, mais pas < 0 ».
+# autorise, mais pas < 0 ». La valeur etait donc DEPENDANTE DU LOGICIEL par
+# construction de la norme, et ne pouvait se lire dans aucun document.
 #
-# La valeur est donc DEPENDANTE DU LOGICIEL par construction de la norme
-# elle-meme. Ce n est pas une donnee manquante qu on pourrait aller chercher :
-# c est un minimum a determiner dans VE. Ecrire 0 supposerait que VE l accepte
-# (les autres valeurs relues montrent que VE stocke ces champs en flottant,
-# rien ne dit qu il tolere zero) ; ecrire 10 / 1400 comme le depot externe
-# serait un choix non documente, deja releve dans AUDIT.md.
+# Elle a ete RELEVEE. `_echelle_de_minimum` a ecrit puis relu 0 / 0.001 / 0.01
+# / 0.1 / 1 / 10 sur un materiau d essai. VE CONSERVE 0,0 EXACTEMENT :
 #
-# A determiner par un releve dans VE, comme tout le reste cette semaine.
+#     {"ecrit": 0.0, "density_relu": 0.0, "cp_relu": 0.0, "conserve": true}
+#
+# Le minimum que VE autorise est donc zero, il n est pas < 0, et il coincide
+# avec la valeur d ISO 52016-1. Les deux normes convergent : aucun compromis
+# n est necessaire, et le 10 kg/m3 / 1400 J/(kg.K) du depot externe (releve
+# dans AUDIT.md comme choix non documente) etait bien de trop.
 
 MATERIAUX_LOURDS = {
     'mur': (
@@ -286,7 +288,7 @@ MATERIAUX_LOURDS = {
         {'nom': 'concrete_slab', 'conductivite': 1.13, 'epaisseur': 0.080,
          'masse_volumique': 1400.0, 'capacite_thermique': 1000.0},
         {'nom': 'floor_insulation_lourd', 'conductivite': 0.04, 'epaisseur': 1.007,
-         'masse_volumique': None, 'capacite_thermique': None},  # (b), idem note ci-dessus
+         'masse_volumique': 0.0, 'capacite_thermique': 0.0},  # idem note ci-dessus
     ),
 }
 

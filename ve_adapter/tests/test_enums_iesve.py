@@ -399,20 +399,45 @@ def test_le_toit_na_plus_aucune_valeur_non_confirmee():
             assert None not in couche.values(), couche['nom']
 
 
-def test_lisolant_de_plancher_reste_deliberement_non_fixe():
-    """ISO 52016-1 donne 0/0 — un isolant IDEAL sans masse — mais ASHRAE 140
-    note (a) impose « le minimum que le logiciel teste autorise, pas < 0 ».
-    La valeur est donc dependante du logiciel PAR CONSTRUCTION de la norme :
-    ce n est pas une donnee manquante, c est un minimum a relever dans VE."""
+def test_lisolant_de_plancher_vaut_zero_comme_le_veut_iso_52016():
+    """RESERVE LEVEE PAR UN RELEVE. ISO 52016-1 donne 0/0 — isolant IDEAL sans
+    masse — et ASHRAE 140 note (a) impose « le minimum que le logiciel teste
+    autorise, pas < 0 ». Le releve du 2026-08-07 montre que VE CONSERVE 0,0
+    exactement. Les deux normes convergent : aucun compromis."""
     from ve_adapter import test1_adapter as adaptateur
     for masse in adaptateur.MATERIAUX_PAR_MASSE.values():
         isolant = masse['plancher'][-1]
-        assert isolant['masse_volumique'] is None
-        assert isolant['capacite_thermique'] is None
+        assert isolant['masse_volumique'] == 0.0
+        assert isolant['capacite_thermique'] == 0.0
 
 
-def test_le_motif_du_refus_est_documente():
-    """Un None sans motif finit par etre comble au hasard."""
+def test_lisolant_concorde_avec_la_table_iso():
+    if not os.path.exists(_ISO_52016):
+        pytest.skip(u'entrees ISO 52016-1 absentes')
+    from ve_adapter import test1_adapter as adaptateur
+    with io.open(_ISO_52016, encoding='utf-8') as flux:
+        source = json.load(flux)
+    for cle, jeu in (('legere', 'lightweight_opaque'),
+                     ('lourde', 'heavyweight_opaque')):
+        iso = source['hourly_test_cell'][jeu][
+            'floor_layers_inside_to_outside'][-1]
+        notre = adaptateur.MATERIAUX_PAR_MASSE[cle]['plancher'][-1]
+        assert notre['masse_volumique'] == iso['density_kg_m3']
+        assert notre['capacite_thermique'] == iso['specific_heat_j_kgk']
+
+
+def test_plus_aucune_valeur_de_materiau_nest_non_confirmee():
+    """Les huit None du depart sont tous leves : trois par une source ISO
+    independante, deux par un releve dans VE."""
+    from ve_adapter import test1_adapter as adaptateur
+    for masse in adaptateur.MATERIAUX_PAR_MASSE.values():
+        for couches in masse.values():
+            for couche in couches:
+                assert None not in couche.values(), couche['nom']
+
+
+def test_le_releve_qui_a_leve_la_reserve_est_cite():
+    """Une valeur posee sans sa provenance redevient une supposition."""
     source = _source_adaptateur()
-    assert 'DEPENDANTE DU LOGICIEL' in source
+    assert 'VE CONSERVE 0,0 EXACTEMENT' in source
     assert 'note (a)' in source
