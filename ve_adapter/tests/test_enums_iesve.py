@@ -441,3 +441,126 @@ def test_le_releve_qui_a_leve_la_reserve_est_cite():
     source = _source_adaptateur()
     assert 'VE CONSERVE 0,0 EXACTEMENT' in source
     assert 'note (a)' in source
+
+
+# --------------------------------------------------------------------------
+# Epaisseurs de couche : le trou que le vert cachait
+# --------------------------------------------------------------------------
+
+def test_lepaisseur_est_posee_sur_la_couche():
+    """`add_layer` n ecrit AUCUNE epaisseur. Sans cet appel, les trois couches
+    du mur ressortaient a 1 mm au lieu de 12, 66 et 9 — la construction se
+    creait sans lever, et ses resistances etaient fausses."""
+    source = _source_adaptateur()
+    assert '_poser_epaisseur_de_couche(construction, definition)' in source
+    assert "set_properties({'thickness'" in source
+
+
+def test_lepaisseur_est_relue_apres_ecriture():
+    from ve_adapter import test1_adapter as adaptateur
+
+    class Couche(object):
+        def __init__(self):
+            self.ecrit = None
+
+        def set_properties(self, proprietes):
+            self.ecrit = proprietes['thickness']
+
+        def get_properties(self):
+            # VE stocke en float32 : la relecture doit tolerer l arrondi.
+            return {'thickness': self.ecrit * (1 + 3e-8)}
+
+    class Construction(object):
+        def __init__(self):
+            self.couche = Couche()
+
+        def get_layers(self):
+            return [self.couche]
+
+    construction = Construction()
+    adaptateur._poser_epaisseur_de_couche(
+        construction, {'nom': 'plasterboard', 'epaisseur': 0.012})
+    assert construction.couche.ecrit == 0.012
+
+
+def test_une_epaisseur_non_prise_est_signalee():
+    """Le mode de defaillance exact : VE garde son 1 mm par defaut."""
+    from ve_adapter import test1_adapter as adaptateur
+
+    class CoucheSourde(object):
+        def set_properties(self, proprietes):
+            pass
+
+        def get_properties(self):
+            return {'thickness': adaptateur.EPAISSEUR_PAR_DEFAUT_VE_M}
+
+    class Construction(object):
+        def get_layers(self):
+            return [CoucheSourde()]
+
+    with pytest.raises(RuntimeError, match='sans rien signaler'):
+        adaptateur._poser_epaisseur_de_couche(
+            Construction(), {'nom': 'plasterboard', 'epaisseur': 0.012})
+
+
+def test_une_couche_introuvable_est_signalee():
+    from ve_adapter import test1_adapter as adaptateur
+
+    class ConstructionVide(object):
+        def get_layers(self):
+            return []
+
+    with pytest.raises(RuntimeError, match='introuvable'):
+        adaptateur._poser_epaisseur_de_couche(
+            ConstructionVide(), {'nom': 'x', 'epaisseur': 0.012})
+
+
+def test_la_resistance_du_mur_reproduit_la_table_iso():
+    """LE controle de bout en bout. Somme des e/lambda de nos trois couches
+    contre `wall_total_layer_resistance_m2k_w` d ISO 52016-1 Table 23. Si une
+    epaisseur ou une conductivite derivait, ce total le dirait."""
+    if not os.path.exists(_ISO_52016):
+        pytest.skip(u'entrees ISO 52016-1 absentes')
+    from ve_adapter import test1_adapter as adaptateur
+    with io.open(_ISO_52016, encoding='utf-8') as flux:
+        source = json.load(flux)
+
+    for cle, jeu, paroi, champ in (
+            ('legere', 'lightweight_opaque', 'mur',
+             'wall_total_layer_resistance_m2k_w'),
+            ('lourde', 'heavyweight_opaque', 'mur',
+             'wall_total_layer_resistance_m2k_w')):
+        attendue = source['hourly_test_cell'][jeu][champ]
+        notre = sum(c['epaisseur'] / c['conductivite']
+                    for c in adaptateur.MATERIAUX_PAR_MASSE[cle][paroi])
+        assert abs(notre - attendue) < 1e-3, (cle, notre, attendue)
+
+
+def test_la_resistance_du_toit_reproduit_la_table_iso():
+    if not os.path.exists(_ISO_52016):
+        pytest.skip(u'entrees ISO 52016-1 absentes')
+    from ve_adapter import test1_adapter as adaptateur
+    with io.open(_ISO_52016, encoding='utf-8') as flux:
+        source = json.load(flux)
+    jeu = source['hourly_test_cell']['lightweight_opaque']
+    attendue = jeu['roof_total_layer_resistance_m2k_w']
+    notre = sum(c['epaisseur'] / c['conductivite']
+                for c in adaptateur.MATERIAUX_LEGERS['toit'])
+
+    # TOLERANCE A 2e-3, ET VOICI POURQUOI. La table ISO est incoherente avec
+    # elle-meme sur le toit : elle annonce un total de 2,992 alors que la
+    # somme de SES PROPRES resistances de couche (0,063 + 2,794 + 0,136) fait
+    # 2,993, et le calcul exact des e/lambda 2,993214. Sa couche d isolant est
+    # notee 2,794 la ou 0,1118 / 0,04 vaut exactement 2,795 — un arrondi par
+    # defaut, pas au plus proche.
+    #
+    # Nos valeurs reproduisent le calcul EXACT. L ecart de 1,2e-3 vient donc
+    # de l arrondi de la table publiee, pas de nos couches. Elargir la
+    # tolerance sans le dire aurait masque cette information.
+    somme_des_couches_annoncees = sum(
+        c['resistance_m2k_w'] for c in jeu['roof_layers_inside_to_outside'])
+    # Seuil a 5e-4 : l ecart vaut 1e-3 en arithmetique exacte, mais
+    # 0,00099999... en flottant. Tester >= 1e-3 echouerait sur l arrondi.
+    assert abs(somme_des_couches_annoncees - attendue) > 5e-4, (
+        u'la table est redevenue coherente : resserrer la tolerance')
+    assert abs(notre - attendue) < 2e-3, (notre, attendue)

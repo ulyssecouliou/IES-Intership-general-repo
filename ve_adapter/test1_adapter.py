@@ -487,6 +487,7 @@ def creer_construction_opaque(cdb_project, categorie_element, classe_constructio
                 "impossible de l'ajouter a la construction.".format(
                     definition['nom']))
         construction.add_layer(materiau_id, False)  # False = pas une cavite
+        _poser_epaisseur_de_couche(construction, definition)
 
     for identifiant in identifiants_par_defaut:
         construction.delete_layer(identifiant)
@@ -505,6 +506,51 @@ def creer_construction_opaque(cdb_project, categorie_element, classe_constructio
 #: ecriture pourtant correcte, et une tolerance trop large laisserait passer
 #: une valeur reellement fausse. 1e-6 relatif separe les deux sans ambiguite.
 TOLERANCE_RELECTURE = 1e-6
+
+
+#: Epaisseur que VE donne par defaut a une couche fraichement ajoutee, en m.
+#: Relevee le 2026-08-07 : `add_layer` n ecrit AUCUNE epaisseur, et les trois
+#: couches du mur ressortaient toutes a 1 mm au lieu de 12, 66 et 9 mm.
+EPAISSEUR_PAR_DEFAUT_VE_M = 0.001
+
+
+def _poser_epaisseur_de_couche(construction, definition):
+    """Ecrit l epaisseur sur la DERNIERE couche ajoutee, et la relit.
+
+    POURQUOI CETTE FONCTION EXISTE. `add_layer(materiau_id, False)` cree la
+    couche mais n ecrit aucune epaisseur, et `thickness` n existe pas au
+    niveau materiau. Sans cet appel, les trois couches du mur ressortaient a
+    1 mm — la construction se creait sans lever, et ses resistances etaient
+    fausses. La sonde etait verte.
+
+    L epaisseur appartient a la COUCHE (`VECdbLayer`, §6.1.30). Les cles
+    acceptees, relevees le 2026-08-07 : thickness, resistance,
+    convection_coefficient.
+
+    Args:
+        construction: `VECdbConstruction` en cours de montage.
+        definition: Couche du referentiel, portant `epaisseur` et `nom`.
+
+    Raises:
+        RuntimeError: Si l epaisseur n est pas prise. Une couche a 1 mm
+            simulerait sans rien signaler.
+    """
+    couches = list(construction.get_layers() or [])
+    if not couches:
+        raise RuntimeError(
+            "Couche '{0}' ajoutee mais introuvable dans get_layers().".format(
+                definition['nom']))
+    couche = couches[-1]
+    attendue = definition['epaisseur']
+    couche.set_properties({'thickness': attendue})
+
+    relue = (couche.get_properties() or {}).get('thickness')
+    if relue is None or abs(relue - attendue) > TOLERANCE_RELECTURE * attendue:
+        raise RuntimeError(
+            "Couche '{0}' : epaisseur ecrite {1} m, relue {2} m. VE donne "
+            "{3} m par defaut -- une couche laissee a cette valeur simulerait "
+            "sans rien signaler.".format(
+                definition['nom'], attendue, relue, EPAISSEUR_PAR_DEFAUT_VE_M))
 
 
 def _identifiant_materiau(materiau):
