@@ -239,6 +239,65 @@ def _est_texte(valeur):
     return isinstance(valeur, types_texte)
 
 
+#: Échelle croissante essayée pour l'isolant idéal. Zéro d'abord, puisque
+#: c'est ce que donne ISO 52016-1 ; puis des valeurs de plus en plus grandes
+#: jusqu'à ce que VE en restitue une à l'identique.
+ECHELLE_MINIMUM = (0.0, 0.001, 0.01, 0.1, 1.0, 10.0)
+
+#: Tolérance de relecture. VE stocke en flottant 32 bits.
+TOLERANCE_RELECTURE = 1e-6
+
+
+def _echelle_de_minimum(projet_cdb, module_iesve):
+    u"""Relève la plus petite masse volumique que VE accepte de conserver.
+
+    Écrit chaque valeur de `ECHELLE_MINIMUM` sur un matériau d'essai, relit, et
+    consigne le couple écrit/relu. Aucune conclusion n'est tirée ici : le
+    rapport donne les couples, et c'est leur lecture qui tranche.
+
+    Args:
+        projet_cdb: `VECdbProject` ouvert.
+        module_iesve: Module `iesve`.
+
+    Returns:
+        list[dict]: Un relevé par valeur essayée.
+    """
+    categorie = _membre_enum(module_iesve, 'material_categories', 'other')
+    releves = []
+    for valeur in ECHELLE_MINIMUM:
+        essai = {'ecrit': valeur}
+        try:
+            materiau = projet_cdb.create_material(categorie)
+            materiau.set_properties({'conductivity': 0.04,
+                                     'density': valeur,
+                                     'specific_heat_capacity': valeur})
+            proprietes = materiau.get_properties() or {}
+            essai['density_relu'] = proprietes.get('density')
+            essai['cp_relu'] = proprietes.get('specific_heat_capacity')
+            essai['conserve'] = _proche(essai['density_relu'], valeur)
+        except Exception as erreur:  # noqa: BLE001 -- un refus est un resultat
+            essai['erreur'] = u'%s: %s' % (type(erreur).__name__, erreur)
+            essai['conserve'] = False
+        releves.append(essai)
+    return releves
+
+
+def _proche(obtenu, attendu):
+    u"""Compare deux flottants avec la tolérance de relecture.
+
+    Args:
+        obtenu: Valeur relue.
+        attendu: Valeur écrite.
+
+    Returns:
+        bool: Vrai si les deux coïncident.
+    """
+    if obtenu is None:
+        return False
+    reference = abs(attendu) if attendu else 1.0
+    return abs(obtenu - attendu) <= TOLERANCE_RELECTURE * reference
+
+
 def _membre_enum(module, nom_enum, nom_membre):
     u"""Membre d'un énuméré du module `iesve`, résolu sans supposer.
 
@@ -582,6 +641,19 @@ def sonder(cas_id='600'):
                       'density': 950.0, 'specific_heat_capacity': 840.0}))
             etape(u'get_properties() apres ecriture',
                   lambda: materiau.get_properties())
+
+    # --- Minimum de masse accepte par VE, pour l isolant IDEAL du plancher.
+    #
+    # ISO 52016-1 Table 23 donne 0 de masse volumique et 0 de chaleur
+    # massique ; ASHRAE 140 note (a) impose « le minimum que le logiciel teste
+    # autorise, mais pas < 0 ». La valeur est donc dependante du logiciel PAR
+    # CONSTRUCTION de la norme : elle se releve, elle ne se choisit pas.
+    #
+    # On ecrit une echelle croissante et on RELIT : la premiere valeur que VE
+    # restitue a l identique est le minimum accepte.
+    if projet_cdb is not None:
+        etape(u'minimum de masse accepte par VE',
+              lambda: _echelle_de_minimum(projet_cdb, iesve))
 
     # --- Creation des constructions.
     #

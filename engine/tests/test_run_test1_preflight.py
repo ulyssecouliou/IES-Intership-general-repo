@@ -306,3 +306,42 @@ def test_la_sonde_releve_les_cles_acceptees_par_set_properties():
     assert 'LES CLES ACCEPTEES' in source
     assert 'get_properties()' in source
     assert 'set_properties sans description' in source
+
+
+# --------------------------------------------------------------------------
+# Minimum de masse accepte par VE
+# --------------------------------------------------------------------------
+
+def test_lechelle_commence_a_zero():
+    """ISO 52016-1 donne 0 pour l isolant ideal : c est la premiere valeur a
+    essayer, pas une que l on ecarte d avance."""
+    assert run.ECHELLE_MINIMUM[0] == 0.0
+    assert list(run.ECHELLE_MINIMUM) == sorted(run.ECHELLE_MINIMUM)
+
+
+def test_lechelle_ne_descend_jamais_sous_zero():
+    """ASHRAE 140 note (a) : « pas < 0 »."""
+    assert all(v >= 0 for v in run.ECHELLE_MINIMUM)
+
+
+def test_la_relecture_tolere_le_flottant_32_bits():
+    assert run._proche(0.1599999964237213, 0.16)
+    assert run._proche(0.0, 0.0)
+
+
+def test_une_valeur_non_conservee_est_detectee():
+    """Si VE ramene 0 a une valeur plancher, la relecture doit le voir."""
+    assert not run._proche(10.0, 0.0)
+    assert not run._proche(None, 0.0)
+
+
+def test_le_releve_ne_conclut_pas_a_la_place_du_lecteur():
+    """Il consigne les couples ecrit/relu ; c est leur lecture qui tranche.
+    Choisir dans le script figerait une valeur sur un seul poste."""
+    import io as _io
+    with _io.open(run.__file__.replace('.pyc', '.py'), encoding='utf-8') as f:
+        source = f.read()
+    debut = source.index('def _echelle_de_minimum')
+    corps = source[debut:debut + 1800]
+    assert 'Aucune conclusion' in corps
+    assert 'releves.append' in corps
