@@ -10,21 +10,31 @@ Il **ne peut pas** être un cas de validation SIA, et trois entrées obligatoire
 manquent au dépôt pour cela (cf. `MANQUANTS`). Aucun résultat issu de ce modèle
 ne doit être présenté comme un candidat SIA.
 
-DEUX TEMPS, ET POURQUOI. L'API expose `VEProject.create_apache_system()` puis
-`set_heating`, `set_cooling`, `set_air_supply`, `set_auxiliary_energy`… mais
-**la signature de ces setters n'est documentée nulle part** et n'a jamais été
-observée. Les deviner reproduirait à l'identique les trois défauts déjà
-rencontrés — bon symbole, mauvais usage, échec silencieux ou tardif.
+CE QUE LA RECONNAISSANCE A ÉTABLI, le 2026-08-07. Les signatures sont
+connues : tous les setters de `VEApacheSystem` prennent un **dictionnaire**,
+dont les clés sont relevées dans `CLES_DES_SETTERS`.
 
-    1. `reconnaitre()` crée un système et relève ce que ses setters attendent
-       réellement : signature, valeurs par défaut, structures acceptées.
-    2. `construire()` applique les valeurs de la spécification. Elle REFUSE de
-       tourner tant que le relevé n'a pas été fait et les paramètres déclarés.
+Et ces clés répondent à une question plus large que la leur. `SFP`, `SEER`,
+`SCoP`, `gen_seasonal_eff`, `CHP_ranking`, `meter_cef` : **ApacheSystems est
+un modèle de rendements saisonniers**, orienté conformité NCM. Ce n'est pas un
+modèle de composants.
 
-Le réseau ApacheHVAC, lui, n'est pas scriptable du tout : `HVACNetwork`
-n'expose que `components`, `systems`, `controllers`, `get_component_by_id`,
-`load_network` et `path` — aucune méthode de création. Un réseau doit être
-construit à la main dans VE, puis son `.asp` chargé par `load_network`.
+Cinq exigences du Test 4 n'y ont donc aucune expression — puissance des
+batteries, bypass du récupérateur, protection antigel, consigne de soufflage
+régulée, débit variable piloté par le CO2 (cf.
+`INEXPRIMABLE_EN_APACHESYSTEMS`). `construire()` refuse pour cette raison, qui
+est un résultat et non un report.
+
+CONSÉQUENCE POUR LE PROJET. Les tests 4, 5 et 6 exigent un réseau
+**ApacheHVAC**. Or `HVACNetwork` n'expose que `components`, `systems`,
+`controllers`, `get_component_by_id`, `load_network` et `path` — aucune
+méthode de création. Le réseau doit être construit **à la main** dans VE, une
+fois, puis son fichier `.asp` versionné et rechargé par `load_network`.
+
+UN PIÈGE DE L'API, relevé au passage. `set_heating()` appelé **sans argument**
+ne lève pas : il rend `None`. Un appel fautif ne se signale donc pas. Toute
+configuration écrite ici devra être **relue** après écriture, comme le fait
+déjà `test1_adapter` pour les matériaux.
 """
 
 from __future__ import print_function
@@ -195,22 +205,39 @@ def reconnaitre():
         return rapport
 
     etape(u'attributs du systeme', lambda: _membres(systeme))
+
+    # CORRIGE le 2026-08-07. `heating`, `cooling`, `air_supply`... sont des
+    # METHODES, pas des attributs : le premier releve n a capture que des
+    # `<bound method ...>` et n a donc jamais obtenu les dictionnaires par
+    # defaut. Ce sont eux qui montrent les types attendus par les setters.
     for nom in PROPRIETES_A_RELEVER:
-        etape(u'%s (valeur par defaut)' % nom,
-              lambda n=nom: getattr(systeme, n))
+        etape(u'%s() (valeur par defaut)' % nom,
+              lambda n=nom: _appeler_si_possible(getattr(systeme, n)))
+
     for nom in SETTERS_A_RELEVER:
         etape(u'%s (signature)' % nom,
               lambda n=nom: _signature(getattr(systeme, n)))
 
-    # Un appel volontairement SANS argument : son message d erreur nomme
-    # d ordinaire les parametres attendus. C est la seule facon d obtenir la
-    # signature d une methode native qui n expose pas d introspection.
-    for nom in ('set_heating', 'set_cooling', 'set_air_supply'):
-        etape(u'%s() sans argument (attendu en echec)' % nom,
-              lambda n=nom: getattr(systeme, n)())
-
     _ecrire(rapport)
     return rapport
+
+
+def _appeler_si_possible(valeur):
+    u"""Rend la valeur, ou le résultat de son appel si c'est une méthode.
+
+    `VEApacheSystem` expose `heating`, `cooling`, `air_supply`… en méthodes et
+    non en attributs. Les relever sans les appeler ne donne qu'un
+    `<bound method …>` — c'est l'erreur du premier relevé.
+
+    Args:
+        valeur: Attribut relevé sur l'objet.
+
+    Returns:
+        Any: Le résultat de l'appel, ou la valeur telle quelle.
+    """
+    if not callable(valeur):
+        return valeur
+    return valeur()
 
 
 def _signature(methode):
@@ -233,6 +260,49 @@ def _signature(methode):
     return releve
 
 
+#: Clés que chaque setter accepte, RELEVÉES dans leur docstring le
+#: 2026-08-07. Elles disent ce qu'ApacheSystems est : un modèle de RENDEMENTS
+#: saisonniers, orienté conformité NCM.
+CLES_DES_SETTERS = {
+    'set_heating': ('fuel', 'gen_seasonal_eff', 'SCoP', 'gen_size',
+                    'HR_effectiveness', 'HR_return_temp', 'used_with_CHP',
+                    'CHP_ranking', 'CHP_heat_output', 'is_heat_pump',
+                    'meter_cef', 'meter_pef'),
+    'set_cooling': ('cool_vent_mechanism', 'has_absorption_chiller', 'fuel',
+                    'SEER', 'del_eff', 'SSEER', 'gen_size',
+                    'pump_and_fan_power_perc', 'nominal_eer', 'free_cooling'),
+    'set_air_supply': ('condition', 'profile', 'OA_max_flow',
+                       'temperature_difference', 'cooling_max_flow'),
+    'set_auxiliary_energy': ('method', 'SFP', 'AEV', 'off_schedule_AEV',
+                             'fan_fraction', 'air_supply_mechanism'),
+    'set_ventilation_ncm': ('air_supply_mechanism', 'heat_recovery_type',
+                            'heat_recovery_efficiency_known',
+                            'heat_recovery_efficiency',
+                            'variable_heat_recovery'),
+}
+
+#: Exigences de la spécification du Test 4 qu'AUCUNE clé ci-dessus ne permet
+#: d'exprimer. C'est la raison pour laquelle ApacheSystems ne convient pas.
+INEXPRIMABLE_EN_APACHESYSTEMS = {
+    u'puissance des batteries':
+        u'Luftkühler 12,8 kW et Lufterhitzer 11,4 kW. `gen_size` dimensionne '
+        u'le GÉNÉRATEUR, pas la batterie de traitement d\'air.',
+    u'bypass du récupérateur':
+        u'« Mit Bypass auf Zulufttemperatur-Sollwert, Kühlfall 100 % Bypass ». '
+        u'`heat_recovery_efficiency` est un rendement constant : il n\'a pas '
+        u'de régulation.',
+    u'protection antigel':
+        u'« Regelung mit Bypass auf Fortlufttemperatur ≥ 0 °C ». Aucune clé.',
+    u'consigne de température de soufflage':
+        u'16–22,5 °C en refroidissement, 22,5–29 °C en chauffage, régulateur '
+        u'PI. `temperature_difference` est un écart fixe, pas une consigne '
+        u'régulée.',
+    u'régulation CO2 du débit variable':
+        u'20–100 % du débit nominal, pilotés par la concentration en CO2. '
+        u'Aucune clé.',
+}
+
+
 def construire(projet=None):
     u"""Applique les paramètres de la spécification à un système.
 
@@ -240,19 +310,31 @@ def construire(projet=None):
         projet: `VEProject`, ou `None` pour le projet courant.
 
     Raises:
-        ConstructionRefusee: Toujours, tant que la reconnaissance n'a pas été
-            faite. Appliquer `set_heating(...)` sans connaître sa signature
-            produirait soit une exception, soit — bien pire — un système
-            configuré de travers qui simulerait sans rien signaler.
+        ConstructionRefusee: Toujours. La raison a CHANGÉ le 2026-08-07, et
+            c'est un résultat, pas un report.
+
+            Les signatures sont désormais connues : tous les setters prennent
+            un dictionnaire, dont les clés sont relevées dans
+            `CLES_DES_SETTERS`. Ces clés montrent qu'ApacheSystems est un
+            modèle de **rendements saisonniers** orienté conformité NCM — SFP,
+            SEER, SCoP, rendement de génération — et non un modèle de
+            composants.
+
+            Cinq exigences de la spécification du Test 4 n'y ont aucune
+            expression (cf. `INEXPRIMABLE_EN_APACHESYSTEMS`). Construire quand
+            même produirait un système qui simule, qui donne des nombres, et
+            qui ne représente pas le test — le pire des trois cas.
     """
     raise ConstructionRefusee(
-        u'construction refusée : la signature des setters de VEApacheSystem '
-        u'n\'est pas établie. Lancer d\'abord '
-        u'`Run_VE_SIA4010_Construire_Test4.py` en mode reconnaissance, me '
-        u'renvoyer `outputs/reconnaissance_test4.json`, puis cette fonction '
-        u'sera câblée sur les %d paramètres de PARAMETRES. Les deviner '
-        u'reproduirait les trois défauts déjà rencontrés : bon symbole, '
-        u'mauvais usage.' % len(PARAMETRES))
+        u'construction refusée : ApacheSystems ne peut pas représenter le '
+        u'Test 4. Les %d setters sont désormais connus (ils prennent des '
+        u'dictionnaires, clés relevées dans CLES_DES_SETTERS), mais aucune de '
+        u'leurs clés n\'exprime : %s. ApacheSystems modélise des RENDEMENTS '
+        u'saisonniers (SFP, SEER, SCoP), pas des composants. Le Test 4 exige '
+        u'un réseau ApacheHVAC, qui doit être construit à la main dans VE puis '
+        u'chargé par `HVACNetwork.load_network` depuis un `.asp`.'
+        % (len(CLES_DES_SETTERS),
+           u', '.join(sorted(INEXPRIMABLE_EN_APACHESYSTEMS))))
 
 
 def _ecrire(rapport):

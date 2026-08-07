@@ -5,8 +5,9 @@ Ce script construit dans VE, donc l'essentiel n'est pas testable ici. Le sont
 les trois choses qui pourraient tromper :
 
 * les **paramètres** doivent tous venir de la spécification, et le dire ;
-* la **construction** doit refuser tant que les signatures de l'API ne sont
-  pas relevées — les deviner a déjà coûté trois défauts ce mois-ci ;
+* la **construction** doit refuser, et pour la bonne raison — depuis le
+  2026-08-07 ce n'est plus « signatures inconnues » mais « ApacheSystems
+  modélise des rendements, pas des composants » ;
 * le script ne doit jamais se présenter comme produisant un cas de validation.
 """
 
@@ -21,28 +22,52 @@ from scripts import construire_test4_dans_ve as construction
 # Le refus de construire sans savoir
 # --------------------------------------------------------------------------
 
-def test_construire_refuse_tant_que_les_signatures_sont_inconnues():
-    """LE test central. `set_heating(...)` appelé au hasard produirait soit une
-    exception, soit — bien pire — un système configuré de travers qui
-    simulerait sans rien signaler."""
-    with pytest.raises(construction.ConstructionRefusee, match='signature'):
+def test_construire_refuse_parce_quapachesystems_ne_convient_pas():
+    """LE test central, et sa raison a CHANGE le 2026-08-07.
+
+    Les signatures sont desormais connues. Ce qui bloque n est plus
+    l ignorance : c est qu ApacheSystems modelise des RENDEMENTS saisonniers,
+    pas des composants. Construire quand meme produirait un systeme qui
+    simule, qui donne des nombres, et qui ne represente pas le test."""
+    with pytest.raises(construction.ConstructionRefusee,
+                       match='ne peut pas représenter'):
         construction.construire()
 
 
-def test_le_refus_dit_quoi_faire():
-    """Un refus sans issue n'aide personne."""
+def test_le_refus_nomme_ce_qui_est_inexprimable():
+    """Un refus sans issue n aide personne : il doit dire quoi faire."""
     with pytest.raises(construction.ConstructionRefusee) as capture:
         construction.construire()
     message = u'%s' % capture.value
-    assert 'reconnaissance' in message
-    assert 'reconnaissance_test4.json' in message
+    assert 'ApacheHVAC' in message
+    assert 'load_network' in message
+    for exigence in construction.INEXPRIMABLE_EN_APACHESYSTEMS:
+        assert exigence in message, exigence
 
 
-def test_le_refus_compte_les_parametres_prets():
-    """Les valeurs sont là ; c'est leur mode d'application qui manque."""
-    with pytest.raises(construction.ConstructionRefusee) as capture:
-        construction.construire()
-    assert str(len(construction.PARAMETRES)) in u'%s' % capture.value
+def test_les_cles_des_setters_viennent_du_releve():
+    """Relevees dans les docstrings d une VE reelle, pas supposees."""
+    assert 'SFP' in construction.CLES_DES_SETTERS['set_auxiliary_energy']
+    assert 'SEER' in construction.CLES_DES_SETTERS['set_cooling']
+    assert 'SCoP' in construction.CLES_DES_SETTERS['set_heating']
+    assert 'heat_recovery_efficiency' in construction.CLES_DES_SETTERS[
+        'set_ventilation_ncm']
+
+
+def test_aucune_cle_nexprime_une_puissance_de_batterie():
+    """`gen_size` dimensionne le GENERATEUR, pas la batterie de traitement
+    d air. La confusion ferait construire un systeme plausible et faux."""
+    toutes = set()
+    for cles in construction.CLES_DES_SETTERS.values():
+        toutes.update(cles)
+    for interdit in ('coil_size', 'coil_capacity', 'heating_coil',
+                     'cooling_coil', 'bypass', 'frost', 'supply_setpoint'):
+        assert interdit not in toutes, interdit
+
+
+def test_chaque_exigence_inexprimable_est_justifiee():
+    for exigence, motif in construction.INEXPRIMABLE_EN_APACHESYSTEMS.items():
+        assert len(motif) > 40, exigence
 
 
 # --------------------------------------------------------------------------
