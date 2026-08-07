@@ -459,7 +459,7 @@ def creer_construction_opaque(cdb_project, categorie_element, classe_constructio
     for definition in couches:
         materiau = creer_materiau(cdb_project, definition)
         materiaux_crees.append(materiau)
-        materiau_id = getattr(materiau, 'id', None)
+        materiau_id = _identifiant_materiau(materiau)
         if materiau_id is None:
             raise RuntimeError(
                 "Materiau '{0}' cree sans identifiant persistant -- "
@@ -484,6 +484,32 @@ def creer_construction_opaque(cdb_project, categorie_element, classe_constructio
 #: ecriture pourtant correcte, et une tolerance trop large laisserait passer
 #: une valeur reellement fausse. 1e-6 relatif separe les deux sans ambiguite.
 TOLERANCE_RELECTURE = 1e-6
+
+
+def _identifiant_materiau(materiau):
+    """Identifiant persistant d'un materiau CDB.
+
+    CORRIGE le 2026-08-07. Le code lisait `materiau.id`, qui n existe pas :
+    `VECdbMaterial` n expose que `get_properties`, `set_properties` et
+    `get_review_summary_string`. L identifiant est une CLE du dictionnaire
+    rendu par `get_properties()` — releve : `{'id': 'PYOP3', ...}`.
+
+    L attribut est tout de meme tente en premier : si une version de VE
+    l ajoutait, autant s en servir.
+
+    Args:
+        materiau: `VECdbMaterial` fraichement cree.
+
+    Returns:
+        str | None: Identifiant, ou `None` s il reste introuvable.
+    """
+    direct = getattr(materiau, 'id', None)
+    if direct is not None:
+        return direct
+    try:
+        return (materiau.get_properties() or {}).get('id')
+    except Exception:  # noqa: BLE001 -- l absence est un resultat, pas un plantage
+        return None
 
 
 def _verifier_proprietes_ecrites(materiau, proprietes, nom):

@@ -312,3 +312,52 @@ def test_une_propriete_absente_de_la_relecture_est_signalee():
     with pytest.raises(RuntimeError, match='absent de la relecture'):
         adaptateur._verifier_proprietes_ecrites(
             MateriauMuet(), {'conductivity': 0.16}, 'x')
+
+
+def test_lidentifiant_du_materiau_est_une_cle_des_proprietes():
+    """`VECdbMaterial` n expose que get_properties, set_properties et
+    get_review_summary_string : `materiau.id` n existe pas. L identifiant est
+    une CLE du dictionnaire — releve : {'id': 'PYOP3', ...}."""
+    from ve_adapter import test1_adapter as adaptateur
+
+    class MateriauReel(object):
+        def get_properties(self):
+            return {'id': 'PYOP3', 'conductivity': 0.16}
+
+    assert adaptateur._identifiant_materiau(MateriauReel()) == 'PYOP3'
+
+
+def test_un_attribut_id_reste_prioritaire():
+    """Si une version de VE l ajoutait, autant s en servir."""
+    from ve_adapter import test1_adapter as adaptateur
+
+    class MateriauAvecAttribut(object):
+        id = 'DIRECT'
+
+        def get_properties(self):
+            return {'id': 'PARPROPRIETES'}
+
+    assert adaptateur._identifiant_materiau(
+        MateriauAvecAttribut()) == 'DIRECT'
+
+
+def test_un_materiau_sans_identifiant_rend_none():
+    """L absence est un resultat : c est l appelant qui leve, avec le nom du
+    materiau dans le message."""
+    from ve_adapter import test1_adapter as adaptateur
+
+    class MateriauMuet(object):
+        def get_properties(self):
+            return {}
+
+    assert adaptateur._identifiant_materiau(MateriauMuet()) is None
+
+
+def test_une_relecture_qui_leve_ne_fait_pas_planter():
+    from ve_adapter import test1_adapter as adaptateur
+
+    class MateriauCasse(object):
+        def get_properties(self):
+            raise RuntimeError('indisponible')
+
+    assert adaptateur._identifiant_materiau(MateriauCasse()) is None
