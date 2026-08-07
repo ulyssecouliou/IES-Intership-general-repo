@@ -278,6 +278,36 @@ def _proprietes_des_couches(construction):
     return releves
 
 
+def _supprimer_materiaux(projet_cdb, identifiants):
+    u"""Supprime les matériaux d'essai créés par la sonde.
+
+    POURQUOI. Chaque passage créait des matériaux et n'en supprimait aucun :
+    sept runs ont laissé **76 matériaux** dans la base de constructions du
+    projet de l'utilisateur. Une sonde en lecture doit rendre le modèle tel
+    qu'elle l'a trouvé ; ceux-ci n'ont aucune raison d'y rester.
+
+    Les matériaux des CONSTRUCTIONS ne sont pas concernés : ils sont
+    légitimement utilisés par les parois créées.
+
+    Args:
+        projet_cdb: `VECdbProject` ouvert.
+        identifiants: Identifiants à supprimer.
+
+    Returns:
+        dict: Ce qui a été supprimé, et ce qui a résisté.
+    """
+    supprimes, echecs = [], {}
+    for identifiant in identifiants:
+        if not identifiant:
+            continue
+        try:
+            projet_cdb.delete_material(identifiant)
+            supprimes.append(identifiant)
+        except Exception as erreur:  # noqa: BLE001 -- un refus est un resultat
+            echecs[identifiant] = u'%s: %s' % (type(erreur).__name__, erreur)
+    return {'supprimes': supprimes, 'echecs': echecs}
+
+
 def _echelle_de_minimum(projet_cdb, module_iesve):
     u"""Relève la plus petite masse volumique que VE accepte de conserver.
 
@@ -305,6 +335,7 @@ def _echelle_de_minimum(projet_cdb, module_iesve):
             essai['density_relu'] = proprietes.get('density')
             essai['cp_relu'] = proprietes.get('specific_heat_capacity')
             essai['conserve'] = _proche(essai['density_relu'], valeur)
+            essai['id'] = proprietes.get('id')
         except Exception as erreur:  # noqa: BLE001 -- un refus est un resultat
             essai['erreur'] = u'%s: %s' % (type(erreur).__name__, erreur)
             essai['conserve'] = False
@@ -618,6 +649,10 @@ def sonder(cas_id='600'):
     import iesve
     from ve_adapter import test1_adapter as adaptateur
 
+    # Identifiants des materiaux D ESSAI, a supprimer en fin de sonde. Ceux
+    # des constructions n en font pas partie : les parois s en servent.
+    jetables = []
+
     # --- Projet et modèle -------------------------------------------------
     projet = etape(u'projet courant', lambda: iesve.VEProject.get_current_project())
     etape(u'modeles du projet', lambda: projet.models)
@@ -660,6 +695,7 @@ def sonder(cas_id='600'):
             lambda: projet_cdb.create_material(
                 _membre_enum(iesve, 'material_categories', 'other')))
         if materiau is not None:
+            jetables.append((materiau.get_properties() or {}).get('id'))
             etape(u'attributs du materiau', lambda: _membres(materiau))
             etape(u'get_properties() : LES CLES ACCEPTEES',
                   lambda: materiau.get_properties())
@@ -682,8 +718,10 @@ def sonder(cas_id='600'):
     # On ecrit une echelle croissante et on RELIT : la premiere valeur que VE
     # restitue a l identique est le minimum accepte.
     if projet_cdb is not None:
-        etape(u'minimum de masse accepte par VE',
-              lambda: _echelle_de_minimum(projet_cdb, iesve))
+        essais = etape(u'minimum de masse accepte par VE',
+                       lambda: _echelle_de_minimum(projet_cdb, iesve))
+        for essai in (essais or []):
+            jetables.append(essai.get('id'))
 
     # --- Creation des constructions.
     #
@@ -709,6 +747,11 @@ def sonder(cas_id='600'):
     if constructions:
         etape(u'couches du mur : epaisseurs REELLES',
               lambda: _proprietes_des_couches(constructions['mur']))
+
+    # --- Menage. Une sonde doit rendre le modele tel qu elle l a trouve.
+    if projet_cdb is not None and jetables:
+        etape(u'suppression des materiaux d essai',
+              lambda: _supprimer_materiaux(projet_cdb, jetables))
     else:
         etape(u'constructions du cas',
               lambda: _echouer(u'aucun VECdbProject : etape impossible'))

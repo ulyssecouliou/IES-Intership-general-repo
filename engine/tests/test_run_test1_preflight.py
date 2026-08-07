@@ -401,3 +401,59 @@ def test_le_releve_rend_les_proprietes_de_chaque_couche():
 
     releve = run._proprietes_des_couches(Construction())
     assert [c['proprietes']['thickness'] for c in releve] == [0.012, 0.066]
+
+
+# --------------------------------------------------------------------------
+# Menage : une sonde doit rendre le modele tel qu elle l a trouve
+# --------------------------------------------------------------------------
+
+def test_les_materiaux_dessai_sont_supprimes():
+    """Sept passages avaient laisse 76 materiaux dans la base de constructions
+    du projet de l utilisateur : les identifiants sont passes de PYOP1 a
+    PYOP76. Une sonde en lecture ne doit rien laisser derriere elle."""
+    class ProjetCdb(object):
+        def __init__(self):
+            self.supprimes = []
+
+        def delete_material(self, identifiant):
+            self.supprimes.append(identifiant)
+
+    projet = ProjetCdb()
+    bilan = run._supprimer_materiaux(projet, ['PYOP1', 'PYOP2'])
+    assert projet.supprimes == ['PYOP1', 'PYOP2']
+    assert bilan['echecs'] == {}
+
+
+def test_un_refus_de_suppression_est_consigne_pas_masque():
+    """Un materiau utilise par une construction ne se supprime pas : c est
+    normal, et ca doit se lire dans le rapport."""
+    class ProjetRecalcitrant(object):
+        def delete_material(self, identifiant):
+            raise RuntimeError('materiau utilise')
+
+    bilan = run._supprimer_materiaux(ProjetRecalcitrant(), ['PYOP1'])
+    assert bilan['supprimes'] == []
+    assert 'materiau utilise' in bilan['echecs']['PYOP1']
+
+
+def test_les_identifiants_vides_sont_ignores():
+    """Un materiau dont l identifiant n a pas pu etre lu ne doit pas faire
+    echouer le menage des autres."""
+    class Projet(object):
+        def __init__(self):
+            self.appels = 0
+
+        def delete_material(self, identifiant):
+            self.appels += 1
+
+    projet = Projet()
+    run._supprimer_materiaux(projet, [None, '', 'PYOP1'])
+    assert projet.appels == 1
+
+
+def test_le_menage_ne_touche_pas_aux_materiaux_des_constructions():
+    """Ceux-la sont legitimement utilises par les parois creees."""
+    import io as _io
+    with _io.open(run.__file__.replace('.pyc', '.py'), encoding='utf-8') as f:
+        source = f.read()
+    assert 'Ceux' in source and 'constructions n en font pas partie' in source
