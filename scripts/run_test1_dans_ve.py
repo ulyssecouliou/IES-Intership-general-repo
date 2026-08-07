@@ -278,6 +278,100 @@ def _proprietes_des_couches(construction):
     return releves
 
 
+def _signature(methode):
+    u"""Décrit une méthode : docstring et signature si elle en expose une.
+
+    Les méthodes natives de `iesve` n'exposent d'ordinaire pas de signature
+    introspectable ; leur docstring, elle, porte la liste des paramètres.
+    C'est ainsi qu'ont été relevés les setters de `VEApacheSystem`.
+
+    Args:
+        methode: Méthode ou fonction.
+
+    Returns:
+        dict: Ce qui a pu être relevé.
+    """
+    import inspect
+    releve = {'doc': (getattr(methode, '__doc__', None) or u'')[:400]}
+    try:
+        releve['signature'] = u'%s' % (inspect.signature(methode),)
+    except (TypeError, ValueError) as erreur:
+        releve['signature'] = u'non exposee (%s)' % type(erreur).__name__
+    return releve
+
+
+def _signature_dimport(module_iesve):
+    u"""Relève ce qu'attend l'importeur gbXML.
+
+    La documentation annonce `Import_file(file_name, heal_geometry, cap_mode,
+    cap_height)` avec un I majuscule ; l'introspection donne `import_file`.
+    Elle s'est donc déjà trompée une fois : on relève la docstring réelle
+    plutôt que de la croire sur le reste.
+
+    Args:
+        module_iesve: Module `iesve`.
+
+    Returns:
+        dict: Ce qui a pu être relevé sur les deux orthographes.
+    """
+    releve = {}
+    importeur = getattr(module_iesve, 'ImportGBXML', None)
+    if importeur is None:
+        return {'ImportGBXML': u'absent du module'}
+    releve['membres'] = _membres(importeur)
+    for orthographe in ('import_file', 'Import_file'):
+        methode = getattr(importeur, orthographe, None)
+        releve[orthographe] = (u'absent' if methode is None
+                               else _signature(methode))
+    return releve
+
+
+def _corps_du_modele(projet):
+    u"""Relève les corps du modèle courant et leurs surfaces.
+
+    C'est à ces surfaces que l'on comparera celles d'un gbXML importé. Sans ce
+    relevé, un import « réussi » ne prouverait rien : c'est exactement le
+    piège des épaisseurs à 1 mm.
+
+    Args:
+        projet: `VEProject` courant.
+
+    Returns:
+        list | dict: Un relevé par corps, ou la description de l'échec.
+    """
+    try:
+        modeles = list(projet.models or [])
+    except Exception as erreur:  # noqa: BLE001
+        return {'models_a_echoue': u'%s: %s' % (type(erreur).__name__, erreur)}
+    if not modeles:
+        return {'aucun_modele': True}
+
+    releves = []
+    for modele in modeles[:2]:
+        entree = {'model_type': u'%s' % getattr(modele, 'model_type', None)}
+        try:
+            corps = list(modele.get_bodies(False) or [])
+        except Exception as erreur:  # noqa: BLE001
+            entree['get_bodies_a_echoue'] = u'%s: %s' % (
+                type(erreur).__name__, erreur)
+            releves.append(entree)
+            continue
+        entree['nb_corps'] = len(corps)
+        entree['corps'] = []
+        for objet in corps[:6]:
+            detail = {'id': u'%s' % getattr(objet, 'id', None),
+                      'nom': u'%s' % getattr(objet, 'name', None),
+                      'type': u'%s' % getattr(objet, 'type', None)}
+            for appel in ('get_areas', 'get_room_data'):
+                try:
+                    detail[appel] = _serialisable(getattr(objet, appel)())
+                except Exception as erreur:  # noqa: BLE001
+                    detail[appel] = u'%s: %s' % (type(erreur).__name__, erreur)
+            entree['corps'].append(detail)
+        releves.append(entree)
+    return releves
+
+
 def _supprimer_materiaux(projet_cdb, identifiants):
     u"""Supprime les matériaux d'essai créés par la sonde.
 
@@ -747,6 +841,22 @@ def sonder(cas_id='600'):
     if constructions:
         etape(u'couches du mur : epaisseurs REELLES',
               lambda: _proprietes_des_couches(constructions['mur']))
+
+    # --- GEOMETRIE : ce que l importeur attend, et ce que le modele contient.
+    #
+    # L API n expose AUCUN constructeur de geometrie : la seule voie est
+    # `ImportGBXML.import_file`. Sa signature n a jamais ete observee. La
+    # documentation annonce `Import_file(file_name, heal_geometry, cap_mode,
+    # cap_height)` — mais elle se trompe deja sur la casse, l introspection
+    # donnant `import_file`. On releve donc avant d ecrire un gbXML contre une
+    # signature supposee.
+    etape(u'ImportGBXML : signature',
+          lambda: _signature_dimport(iesve))
+
+    # Et ce que le modele porte DEJA : s il contient une geometrie, ses
+    # surfaces se lisent, et c est a elles qu on comparera l import.
+    etape(u'corps du modele courant',
+          lambda: _corps_du_modele(projet))
 
     # --- Menage. Une sonde doit rendre le modele tel qu elle l a trouve.
     if projet_cdb is not None and jetables:

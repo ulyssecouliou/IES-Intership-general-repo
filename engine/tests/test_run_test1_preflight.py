@@ -457,3 +457,83 @@ def test_le_menage_ne_touche_pas_aux_materiaux_des_constructions():
     with _io.open(run.__file__.replace('.pyc', '.py'), encoding='utf-8') as f:
         source = f.read()
     assert 'Ceux' in source and 'constructions n en font pas partie' in source
+
+
+# --------------------------------------------------------------------------
+# Geometrie : relever avant d ecrire
+# --------------------------------------------------------------------------
+
+class FauxImporteur(object):
+    @staticmethod
+    def import_file(*args):
+        """import_file(file_name, heal_geometry, cap_mode, cap_height)"""
+
+
+class FauxModuleAvecImport(object):
+    ImportGBXML = FauxImporteur
+
+
+def test_les_deux_orthographes_dimport_sont_relevees():
+    """La documentation ecrit `Import_file` (I majuscule), l introspection
+    donne `import_file`. Elle s est deja trompee une fois : on releve les deux
+    plutot que de la croire sur le reste."""
+    releve = run._signature_dimport(FauxModuleAvecImport)
+    assert 'import_file' in releve
+    assert 'Import_file' in releve
+    assert releve['Import_file'] == 'absent'
+    assert 'file_name' in releve['import_file']['doc']
+
+
+def test_un_importeur_absent_est_signale():
+    class SansImport(object):
+        pass
+
+    assert 'absent du module' in run._signature_dimport(SansImport)['ImportGBXML']
+
+
+def test_les_corps_du_modele_sont_releves_avec_leurs_surfaces():
+    """Sans ce releve, un import « reussi » ne prouverait rien : c est le
+    piege des epaisseurs a 1 mm."""
+    class Corps(object):
+        id = 'B1'
+        name = 'cellule'
+        type = 'room'
+
+        def get_areas(self):
+            return {'floor': 48.0}
+
+        def get_room_data(self):
+            return {'volume': 129.6}
+
+    class Modele(object):
+        model_type = 'real'
+
+        def get_bodies(self, _selection):
+            return [Corps()]
+
+    class Projet(object):
+        models = [Modele()]
+
+    releve = run._corps_du_modele(Projet())
+    assert releve[0]['nb_corps'] == 1
+    assert releve[0]['corps'][0]['get_areas'] == {'floor': 48.0}
+
+
+def test_un_modele_vide_est_signale():
+    class Projet(object):
+        models = []
+
+    assert run._corps_du_modele(Projet()) == {'aucun_modele': True}
+
+
+def test_un_get_bodies_casse_ne_fait_pas_planter():
+    class Modele(object):
+        model_type = 'real'
+
+        def get_bodies(self, _selection):
+            raise RuntimeError('indisponible')
+
+    class Projet(object):
+        models = [Modele()]
+
+    assert 'get_bodies_a_echoue' in run._corps_du_modele(Projet())[0]
