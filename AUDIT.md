@@ -906,3 +906,55 @@ comme le deuxième alors qu'il valait le troisième.
 
 **AUDITÉ — 2026-08-06.** _Non signé : 0/20 liaisons établies. Trois constats
 structurels demandent un arbitrage normatif, pas un relevé supplémentaire._
+
+---
+
+## Élément audité n° 6 — Première concordance VE ↔ référence normative (2026-08-07)
+
+Jusqu'à ce jour, **aucune valeur produite par IESVE n'avait jamais été
+confrontée à une référence de la norme**. Le dépôt vérifiait ses propres
+extractions, ses moteurs, ses vues — jamais VE.
+
+C'est fait, sur un point précis : la résistance thermique du mur léger du
+Test 1.
+
+| Couche | Épaisseur écrite | Résistance rendue par VE |
+|---|---|---|
+| plasterboard | 0,012 m | 0,075000 |
+| fiberglass_quilt | 0,066 m | 1,650000 |
+| wood_siding | 0,009 m | 0,064286 |
+| **Total** | | **1,7893 m²K/W** |
+
+EN ISO 52016-1:2017, Table 23, page 124 :
+`wall_total_layer_resistance_m2k_w = 1,789`.
+
+**Écart : 3·10⁻⁴ m²K/W.** VE reproduit la référence.
+
+### Ce que cela prouve, et ce que cela ne prouve pas
+
+Cela prouve que la chaîne — création de matériaux, écriture des propriétés
+physiques, ajout de couches, pose des épaisseurs — produit dans VE une paroi
+dont la physique est celle de la norme. C'est la première preuve de ce genre
+du projet.
+
+Cela ne prouve **rien** sur les besoins de chauffage ou de refroidissement :
+aucune simulation n'a tourné. La géométrie de la cellule, ApacheSim et
+l'extraction des résultats restent entiers.
+
+### Ce que le chemin a coûté, et ce qu'il a appris
+
+Sept obstacles levés dans la matinée. Six ont été signalés par la sonde, qui
+échouait ; le septième — les épaisseurs à 1 mm, soit un R **47 fois trop
+faible** — ne l'a pas été : la sonde était **verte**.
+
+Il est apparu en relisant le code après le succès, pour vérifier où passait
+l'épaisseur une fois qu'elle avait quitté le matériau. C'est le seul des sept
+qu'aucun test d'exécution n'aurait attrapé, et c'était le plus grave — une
+chaîne verte produisant des U mensongers.
+
+C'est ce qui justifie la discipline « écrire puis relire », désormais
+appliquée aux matériaux **et** aux couches : dans VE, une écriture ignorée ne
+se signale pas.
+
+**AUDITÉ — 2026-08-07.** _Concordance établie sur la seule résistance du mur.
+Non signé : aucune simulation._
