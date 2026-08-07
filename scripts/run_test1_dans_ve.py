@@ -239,6 +239,32 @@ def _est_texte(valeur):
     return isinstance(valeur, types_texte)
 
 
+def _membre_enum(module, nom_enum, nom_membre):
+    u"""Membre d'un énuméré du module `iesve`, résolu sans supposer.
+
+    Args:
+        module: Module `iesve`.
+        nom_enum: Nom de l'énuméré, par exemple `'material_categories'`.
+        nom_membre: Nom du membre, par exemple `'other'`.
+
+    Returns:
+        Le membre.
+
+    Raises:
+        RuntimeError: Si l'énuméré ou le membre manque — auquel cas c'est
+            l'API qui a changé, et le dire vaut mieux que de retomber sur une
+            valeur par défaut.
+    """
+    enum = getattr(module, nom_enum, None)
+    if enum is None:
+        raise RuntimeError(u'enum %r absent du module iesve' % nom_enum)
+    membre = getattr(enum, nom_membre, None)
+    if membre is None:
+        raise RuntimeError(
+            u'membre %r absent de %r' % (nom_membre, nom_enum))
+    return membre
+
+
 def _echouer(message):
     u"""Fait échouer une étape volontairement, avec un message explicite.
 
@@ -531,6 +557,31 @@ def sonder(cas_id='600'):
     etape(u'affectation meteo DRYCOLD',
           lambda: adaptateur.assigner_meteo_drycold(
               os.path.join(DOSSIER_METEO_VE, FICHIER_METEO)))
+
+    # --- Proprietes d un materiau : les CLES acceptees, pas celles supposees.
+    #
+    # Le 2026-08-07, `set_properties({'description': 'plasterboard', ...})` a
+    # repondu « could not convert string to float: 'plasterboard' » : VE tente
+    # de convertir TOUTES les valeurs en flottant, donc `description` n est pas
+    # une cle acceptee — ou pas sous ce nom. En essayer d autres a l aveugle
+    # serait la cinquieme fois qu on devine ; on releve.
+    if projet_cdb is not None:
+        materiau = etape(
+            u'create_material (materiau d essai)',
+            lambda: projet_cdb.create_material(
+                _membre_enum(iesve, 'material_categories', 'other')))
+        if materiau is not None:
+            etape(u'attributs du materiau', lambda: _membres(materiau))
+            etape(u'get_properties() : LES CLES ACCEPTEES',
+                  lambda: materiau.get_properties())
+            # Ecriture des seules valeurs numeriques : si elle passe, la cle
+            # fautive etait bien `description`.
+            etape(u'set_properties sans description (essai)',
+                  lambda: materiau.set_properties({
+                      'conductivity': 0.16, 'thickness': 0.012,
+                      'density': 950.0, 'specific_heat_capacity': 840.0}))
+            etape(u'get_properties() apres ecriture',
+                  lambda: materiau.get_properties())
 
     # --- Creation des constructions.
     #

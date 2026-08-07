@@ -269,3 +269,40 @@ def test_la_sonde_passe_le_projet_pas_la_base():
         source = f.read()
     assert 'creer_constructions_cas(projet_cdb' in source
     assert 'creer_constructions_cas(cdb' not in source
+
+
+class FauxModuleIesve(object):
+    """Module minimal portant un enum."""
+
+    class material_categories(object):
+        other = 15
+
+
+def test_le_membre_denum_est_resolu_sans_supposer():
+    assert run._membre_enum(
+        FauxModuleIesve, 'material_categories', 'other') == 15
+
+
+def test_un_enum_absent_est_signale():
+    """C est l API qui a change : le dire vaut mieux que de retomber sur une
+    valeur par defaut, qui simulerait sans rien signaler."""
+    with pytest.raises(RuntimeError, match='absent du module'):
+        run._membre_enum(FauxModuleIesve, 'inexistant', 'other')
+
+
+def test_un_membre_absent_est_signale():
+    with pytest.raises(RuntimeError, match='absent de'):
+        run._membre_enum(FauxModuleIesve, 'material_categories', 'opaque')
+
+
+def test_la_sonde_releve_les_cles_acceptees_par_set_properties():
+    """Le 2026-08-07, set_properties a repondu « could not convert string to
+    float: 'plasterboard' » : `description` n est pas une cle acceptee. En
+    essayer d autres a l aveugle serait la cinquieme devinette ; la sonde
+    releve get_properties() a la place."""
+    import io as _io
+    with _io.open(run.__file__.replace('.pyc', '.py'), encoding='utf-8') as f:
+        source = f.read()
+    assert 'LES CLES ACCEPTEES' in source
+    assert 'get_properties()' in source
+    assert 'set_properties sans description' in source
