@@ -147,42 +147,30 @@ class NavigateurSIA4010(object):
     # ----------------------------------------------------------------
 
     def _construire_widgets(self):
-        cadre_haut = ttk.Frame(self._racine, padding=8)
-        cadre_haut.pack(side='top', fill='x')
+        # Charte IES appliquee AVANT toute creation de widget : le changement
+        # de theme ttk ne se propage pas retroactivement aux widgets deja
+        # instancies.
+        from ui import theme_ies as charte
+        self._charte = charte
+        charte.appliquer(self._racine)
 
-        # Un bandeau par test : avec plusieurs tests, un verdict agrege unique
-        # masquerait lequel echoue. On les montre tous, cote a cote.
-        cadre_verdicts = ttk.Frame(cadre_haut)
-        cadre_verdicts.pack(side='left')
-        for une_vue in self._vues:
-            verdict_global = une_vue['verdict_global']
-            ttk.Label(
-                cadre_verdicts,
-                text=u'{0}  {1}   --   {2}'.format(
-                    SYMBOLE_PAR_VERDICT.get(verdict_global['couleur'], u'?'),
-                    une_vue.get('test_id') or 'Test',
-                    verdict_global['texte']),
-                font=('TkDefaultFont', 12, 'bold')).pack(side='top', anchor='w')
+        self._construire_bandeau(charte)
 
-        etiquette_article = ttk.Label(
-            cadre_haut,
-            text=u'Article : ' + self._vues[0]['verdict_global']['article'],
-            wraplength=560, foreground='#555555')
-        etiquette_article.pack(side='left', padx=16)
-
-        cadre_boutons = ttk.Frame(cadre_haut)
-        cadre_boutons.pack(side='right')
-        ttk.Button(cadre_boutons, text=u'Exporter Excel (SIA officiel)',
-                   command=self._exporter_excel).pack(side='left', padx=4)
-        ttk.Button(cadre_boutons, text=u'Exporter PDF',
-                   command=self._exporter_pdf).pack(side='left', padx=4)
+        # Corps sur fond gris clair, contenu en cartes blanches : c'est la
+        # composition du site, qui divise par l'espace et non par des traits.
+        corps = ttk.Frame(self._racine, style=charte.STYLE_FOND,
+                          padding=charte.ECART)
+        corps.pack(side='top', fill='both', expand=True)
 
         # Arborescence Classe -> Test -> Grandeur -> Cas -> Période.
-        cadre_arbre = ttk.Frame(self._racine, padding=8)
+        cadre_arbre = ttk.Frame(corps, style=charte.STYLE_CARTE,
+                                padding=charte.PADDING_CARTE)
         cadre_arbre.pack(side='top', fill='both', expand=True)
 
         colonnes = ('valeur', 'reference_ou_plage', 'verdict', 'article')
-        self._arbre = ttk.Treeview(cadre_arbre, columns=colonnes, show='tree headings')
+        self._arbre = ttk.Treeview(cadre_arbre, columns=colonnes,
+                                   show='tree headings',
+                                   style=charte.STYLE_ARBRE)
         self._arbre.heading('#0', text=u'Classe / Test / Grandeur / Cas / Période')
         self._arbre.heading('valeur', text=u'Valeur candidate')
         self._arbre.heading('reference_ou_plage', text=u'Référence / plage')
@@ -203,14 +191,59 @@ class NavigateurSIA4010(object):
         self._configurer_tags_couleur()
         self._remplir_arbre()
 
-        cadre_detail = ttk.LabelFrame(self._racine, text=u'Détail de la période sélectionnée',
-                                       padding=8)
-        cadre_detail.pack(side='bottom', fill='x')
-        self._texte_detail = tk.Text(cadre_detail, height=6, wrap='word')
-        self._texte_detail.pack(fill='x')
+        cadre_detail = ttk.Frame(corps, style=charte.STYLE_CARTE,
+                                 padding=charte.PADDING_CARTE)
+        cadre_detail.pack(side='bottom', fill='x', pady=(charte.ECART, 0))
+        ttk.Label(cadre_detail, style=charte.STYLE_SECTION,
+                  text=u'Détail de la période sélectionnée').pack(anchor='w')
+        self._texte_detail = tk.Text(
+            cadre_detail, height=6, wrap='word', relief='flat',
+            background=design.BLANC, foreground=design.TEXTE,
+            font=(charte.POLICE_UI, charte.TAILLE_TEXTE_UI),
+            highlightthickness=1, highlightbackground=design.GRIS_BORDURE)
+        self._texte_detail.pack(fill='x', pady=(6, 0))
         self._texte_detail.configure(state='disabled')
 
         self._arbre.bind('<<TreeviewSelect>>', self._afficher_detail_selection)
+
+    def _construire_bandeau(self, charte):
+        """Bandeau navy pleine largeur : signature visuelle du site IES.
+
+        Args:
+            charte: Module `ui/theme_ies.py`.
+        """
+        bandeau = ttk.Frame(self._racine, style=charte.STYLE_BANDEAU,
+                            padding=charte.PADDING_BANDEAU)
+        bandeau.pack(side='top', fill='x')
+
+        titres = ttk.Frame(bandeau, style=charte.STYLE_BANDEAU)
+        titres.pack(side='left', anchor='w')
+        ttk.Label(titres, style=charte.STYLE_TITRE,
+                  text=u'Navigateur de validation SIA 4010').pack(anchor='w')
+
+        # Un verdict par test : agrege, il masquerait lequel echoue.
+        for une_vue in self._vues:
+            verdict_global = une_vue['verdict_global']
+            ttk.Label(
+                titres, style=charte.STYLE_SOUS_TITRE,
+                text=charte.libelle_de_verdict(
+                    verdict_global['couleur'],
+                    u'%s — %s' % (une_vue.get('test_id') or u'Test',
+                                  verdict_global['texte']))
+            ).pack(anchor='w', pady=(2, 0))
+
+        ttk.Label(titres, style=charte.STYLE_SOUS_TITRE, wraplength=620,
+                  text=u'Article : '
+                       + self._vues[0]['verdict_global']['article']
+                  ).pack(anchor='w', pady=(6, 0))
+
+        actions = ttk.Frame(bandeau, style=charte.STYLE_BANDEAU)
+        actions.pack(side='right', anchor='e')
+        ttk.Button(actions, style=charte.STYLE_BOUTON_ACCENT,
+                   text=u'Exporter Excel (SIA officiel)',
+                   command=self._exporter_excel).pack(side='left', padx=(0, 6))
+        ttk.Button(actions, style=charte.STYLE_BOUTON, text=u'Exporter PDF',
+                   command=self._exporter_pdf).pack(side='left')
 
     def _configurer_tags_couleur(self):
         for couleur, fond in COULEUR_FOND_PAR_VERDICT.items():
