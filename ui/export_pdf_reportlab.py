@@ -38,7 +38,7 @@ from reportlab.platypus import (
     SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, PageBreak,
 )
 
-from ui import design_ies as design
+from ui import design as design
 from ui import verdict_view as vue
 
 
@@ -46,21 +46,21 @@ from ui import verdict_view as vue
 # `ui/dialog_tkinter.py`, redondant avec le texte du verdict (jamais
 # uniquement la couleur -- accessibilité).
 _COULEUR_PDF_PAR_VERDICT = dict(
-    (couleur, colors.HexColor(design.fond_verdict(couleur)))
+    (couleur, colors.HexColor(design.ground(couleur)))
     for couleur in ('vert', 'rouge', 'gris'))
 
 # ASCII plutot que des glyphes : Helvetica n a pas de coche ni de croix, et
 # ReportLab afficherait un carre noir. Le symbole reste la, ce qui compte
 # c est de ne jamais coder le verdict par la seule couleur.
-_SYMBOLE_PAR_VERDICT = dict(design.SYMBOLE_ASCII_PAR_VERDICT)
+_SYMBOLE_PAR_VERDICT = dict(design.STATUS_SYMBOL_ASCII)
 
 _NAVY = colors.HexColor(design.NAVY)
 _ACCENT = colors.HexColor(design.ACCENT)
-_TEINTE = colors.HexColor(design.TEINTE_BLEUE)
-_GRIS_CLAIR = colors.HexColor(design.GRIS_CLAIR)
-_BORDURE = colors.HexColor(design.GRIS_BORDURE)
-_TEXTE = colors.HexColor(design.TEXTE)
-_TEXTE_ATTENUE = colors.HexColor(design.TEXTE_ATTENUE)
+_TEINTE = colors.HexColor(design.BLUE_TINT)
+_GRIS_CLAIR = colors.HexColor(design.LIGHT_GREY)
+_BORDURE = colors.HexColor(design.BORDER_GREY)
+_TEXTE = colors.HexColor(design.TEXT)
+_TEXTE_ATTENUE = colors.HexColor(design.TEXT_MUTED)
 
 
 def _style_tableau(nb_lignes, couleurs_lignes, largeurs_speciales=None):
@@ -81,12 +81,12 @@ def _style_tableau(nb_lignes, couleurs_lignes, largeurs_speciales=None):
     style = [
         ('BACKGROUND', (0, 0), (-1, 0), _NAVY),
         ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
-        ('FONTNAME', (0, 0), (-1, 0), design.POLICE_TITRE),
-        ('FONTNAME', (0, 1), (-1, -1), design.POLICE_TEXTE),
-        ('FONTSIZE', (0, 0), (-1, -1), design.TAILLE_TABLEAU),
+        ('FONTNAME', (0, 0), (-1, 0), design.REPORT_TITLE_FONT),
+        ('FONTNAME', (0, 1), (-1, -1), design.REPORT_BODY_FONT),
+        ('FONTSIZE', (0, 0), (-1, -1), design.REPORT_SIZE_TABLE),
         ('TEXTCOLOR', (0, 1), (-1, -1), _TEXTE),
-        ('GRID', (0, 0), (-1, -1), design.FILET_PT, _BORDURE),
-        ('LINEBELOW', (0, 0), (-1, 0), design.FILET_ENTETE_PT, _NAVY),
+        ('GRID', (0, 0), (-1, -1), design.RULE_PT, _BORDURE),
+        ('LINEBELOW', (0, 0), (-1, 0), design.HEADER_RULE_PT, _NAVY),
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
         ('TOPPADDING', (0, 0), (-1, -1), 3),
         ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
@@ -112,32 +112,32 @@ def _style_feuille():
         StyleSheet1: Feuille prete a l emploi.
     """
     styles = getSampleStyleSheet()
-    styles['Title'].fontName = design.POLICE_TITRE
-    styles['Title'].fontSize = design.TAILLE_TITRE
+    styles['Title'].fontName = design.REPORT_TITLE_FONT
+    styles['Title'].fontSize = design.REPORT_SIZE_TITLE
     styles['Title'].textColor = _NAVY
     styles['Title'].alignment = 0          # ferre a gauche, comme le site
     styles['Title'].spaceAfter = 4
 
     for nom in ('Heading2', 'Heading3'):
-        styles[nom].fontName = design.POLICE_TITRE
+        styles[nom].fontName = design.REPORT_TITLE_FONT
         styles[nom].textColor = _NAVY
-    styles['Heading2'].fontSize = design.TAILLE_SOUS_TITRE
-    styles['Heading3'].fontSize = design.TAILLE_SECTION
+    styles['Heading2'].fontSize = design.REPORT_SIZE_SUBTITLE
+    styles['Heading3'].fontSize = design.REPORT_SIZE_SECTION
 
     for nom in ('Normal', 'BodyText'):
-        styles[nom].fontName = design.POLICE_TEXTE
-        styles[nom].fontSize = design.TAILLE_TEXTE
-        styles[nom].leading = design.TAILLE_TEXTE * design.INTERLIGNE
+        styles[nom].fontName = design.REPORT_BODY_FONT
+        styles[nom].fontSize = design.REPORT_SIZE_BODY
+        styles[nom].leading = design.REPORT_SIZE_BODY * design.LINE_HEIGHT
         styles[nom].textColor = _TEXTE
 
     styles.add(ParagraphStyle(
         'IESNote', parent=styles['Normal'],
-        fontSize=design.TAILLE_NOTE,
-        leading=design.TAILLE_NOTE * design.INTERLIGNE,
+        fontSize=design.REPORT_SIZE_NOTE,
+        leading=design.REPORT_SIZE_NOTE * design.LINE_HEIGHT,
         textColor=_TEXTE_ATTENUE))
     styles.add(ParagraphStyle(
         'IESSousTitre', parent=styles['Normal'],
-        fontSize=design.TAILLE_SOUS_TITRE, textColor=_ACCENT,
+        fontSize=design.REPORT_SIZE_SUBTITLE, textColor=_ACCENT,
         spaceAfter=10))
     return styles
 
@@ -163,17 +163,17 @@ def _bandeau(canevas, document):
     canevas.rect(0, hauteur - 0.52 * cm, largeur, 0.10 * cm, stroke=0, fill=1)
 
     # Pied : provenance a gauche, pagination a droite.
-    canevas.setFont(design.POLICE_TEXTE, design.TAILLE_NOTE)
+    canevas.setFont(design.REPORT_BODY_FONT, design.REPORT_SIZE_NOTE)
     canevas.setFillColor(_TEXTE_ATTENUE)
     canevas.drawString(
-        design.MARGE_CM * cm, 0.85 * cm,
+        design.MARGIN_CM * cm, 0.85 * cm,
         u'IES — Validation SIA 4010 — document genere, non certifie')
     canevas.drawRightString(
-        largeur - design.MARGE_CM * cm, 0.85 * cm, u'page %d' % document.page)
+        largeur - design.MARGIN_CM * cm, 0.85 * cm, u'page %d' % document.page)
     canevas.setStrokeColor(_BORDURE)
-    canevas.setLineWidth(design.FILET_PT)
-    canevas.line(design.MARGE_CM * cm, 1.15 * cm,
-                 largeur - design.MARGE_CM * cm, 1.15 * cm)
+    canevas.setLineWidth(design.RULE_PT)
+    canevas.line(design.MARGIN_CM * cm, 1.15 * cm,
+                 largeur - design.MARGIN_CM * cm, 1.15 * cm)
     canevas.restoreState()
 
 
@@ -330,7 +330,7 @@ def generer_pdf_rapport_multi(vues, chemin_pdf):
     styles = _style_feuille()
     document = SimpleDocTemplate(
         chemin_pdf, pagesize=A4,
-        leftMargin=design.MARGE_CM * cm, rightMargin=design.MARGE_CM * cm,
+        leftMargin=design.MARGIN_CM * cm, rightMargin=design.MARGIN_CM * cm,
         # Le haut laisse la place au bandeau de marque, le bas au pied.
         topMargin=1.5 * cm, bottomMargin=1.6 * cm,
         title=u'Validation SIA 4010', author=u'IES')

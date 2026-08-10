@@ -118,7 +118,28 @@ three traps of the SIA workbooks; `/etat-classes` reports class status.
 
 ### Style
 
-French for documentation, UI and code comments. English identifiers. German
-**only** for labels that serve as lookup keys against the official SIA
-workbooks -- there it must be verbatim, or the match breaks.
+**Code is English.** Identifiers, comments, docstrings, commit messages, test
+names, log lines -- all English. This changed on 2026-08-10 by the owner's
+decision: the previous rule was French comments, and the repository is being
+converted pass by pass. Two consequences that matter while the conversion is
+in flight:
+
+* a module you touch gets converted whole, not line by line. Half-translated
+  files are the ones nobody can read;
+* renaming a public name means updating its callers in the same commit, with
+  the suite green. A shim that keeps the old French name alive "for now" is
+  how a codebase stays bilingual for years.
+
+**User-facing text is bilingual, French by default.** Every label shown in the
+dialog or printed in a report goes through `ui/i18n.py` -- never a literal in a
+widget. French is the default because the tool serves Swiss practice; English
+exists because the rest of IES works in English. A missing translation is
+loud, never silent: see `i18n.translate`.
+
+**Documentation stays French** (`docs/`, `traceability/`, `AUDIT.md`,
+`PROJECT_PLAN.md`). It is read by the same people who read the SIA standards.
+
+**German only** for labels that serve as lookup keys against the official SIA
+workbooks -- there it must be verbatim, or the match breaks. Never translate
+one of those, not even in a comment that quotes it.
 

@@ -63,7 +63,8 @@ non encore produite (cf. rapport de fin de tâche, question ouverte).
 
 import os
 
-from ui import design_ies as design
+from ui import design as design
+from ui import theme
 from ui import selection_classe as selection
 from ui import verdict_view as vue
 
@@ -84,7 +85,7 @@ except ImportError:  # pragma: no cover -- attendu hors VE / hors env graphique
     filedialog = None
 
 
-# Couleurs et symboles : lus dans `ui/design_ies.py`, qui les tient de la
+# Couleurs et symboles : lus dans `ui/design.py`, qui les tient de la
 # feuille de style publique d IES. Une seule source pour le navigateur et les
 # rapports -- sinon les deux divergent au premier ajustement.
 #
@@ -93,9 +94,9 @@ except ImportError:  # pragma: no cover -- attendu hors VE / hors env graphique
 # 'xpnative') ignorent `background` sur les lignes de Treeview. C est
 # précisément pourquoi le verdict porte AUSSI un symbole et un texte : la
 # couleur ne doit jamais être seule à le dire.
-COULEUR_FOND_PAR_VERDICT = dict(design.FOND_PAR_VERDICT)
+COULEUR_FOND_PAR_VERDICT = dict(design.STATUS_GROUND)
 
-SYMBOLE_PAR_VERDICT = dict(design.SYMBOLE_PAR_VERDICT)
+SYMBOLE_PAR_VERDICT = dict(design.STATUS_SYMBOL)
 
 
 class NavigateurSIA4010(object):
@@ -146,7 +147,6 @@ class NavigateurSIA4010(object):
         self._racine.geometry('1100x650')
         self._construire_widgets()
 
-
     # ----------------------------------------------------------------
     # Construction de l'interface
     # ----------------------------------------------------------------
@@ -155,29 +155,28 @@ class NavigateurSIA4010(object):
         # Charte IES appliquee AVANT toute creation de widget : le changement
         # de theme ttk ne se propage pas retroactivement aux widgets deja
         # instancies.
-        from ui import theme_ies as charte
-        self._charte = charte
-        charte.appliquer(self._racine)
+        self._theme = theme
+        theme.apply(self._racine)
 
-        self._construire_bandeau(charte)
+        self._construire_bandeau()
 
         # Corps sur fond gris clair, contenu en cartes blanches : c'est la
         # composition du site, qui divise par l'espace et non par des traits.
-        corps = ttk.Frame(self._racine, style=charte.STYLE_FOND,
-                          padding=charte.ECART)
+        corps = ttk.Frame(self._racine, style=theme.STYLE_GROUND,
+                          padding=design.SPACE['sm'])
         corps.pack(side='top', fill='both', expand=True)
 
-        self._construire_selecteur(corps, charte)
+        self._construire_selecteur(corps)
 
         # Arborescence Classe -> Test -> Grandeur -> Cas -> Période.
-        cadre_arbre = ttk.Frame(corps, style=charte.STYLE_CARTE,
-                                padding=charte.PADDING_CARTE)
+        cadre_arbre = ttk.Frame(corps, style=theme.STYLE_CARD,
+                                padding=design.PAD_CARD)
         cadre_arbre.pack(side='top', fill='both', expand=True)
 
         colonnes = ('valeur', 'reference_ou_plage', 'verdict', 'article')
         self._arbre = ttk.Treeview(cadre_arbre, columns=colonnes,
                                    show='tree headings',
-                                   style=charte.STYLE_ARBRE)
+                                   style=theme.STYLE_TREE)
         self._arbre.heading('#0', text=u'Classe / Test / Grandeur / Cas / Période')
         self._arbre.heading('valeur', text=u'Valeur candidate')
         self._arbre.heading('reference_ou_plage', text=u'Référence / plage')
@@ -198,64 +197,62 @@ class NavigateurSIA4010(object):
         self._configurer_tags_couleur()
         self._remplir_arbre()
 
-        cadre_detail = ttk.Frame(corps, style=charte.STYLE_CARTE,
-                                 padding=charte.PADDING_CARTE)
-        cadre_detail.pack(side='bottom', fill='x', pady=(charte.ECART, 0))
-        ttk.Label(cadre_detail, style=charte.STYLE_SECTION,
+        cadre_detail = ttk.Frame(corps, style=theme.STYLE_CARD,
+                                 padding=design.PAD_CARD)
+        cadre_detail.pack(side='bottom', fill='x', pady=(design.SPACE['sm'], 0))
+        ttk.Label(cadre_detail, style=theme.STYLE_SECTION,
                   text=u'Détail de la période sélectionnée').pack(anchor='w')
         self._texte_detail = tk.Text(
             cadre_detail, height=6, wrap='word', relief='flat',
-            background=design.BLANC, foreground=design.TEXTE,
-            font=(charte.POLICE_UI, charte.TAILLE_TEXTE_UI),
-            highlightthickness=1, highlightbackground=design.GRIS_BORDURE)
+            background=design.WHITE, foreground=design.TEXT,
+            font=(design.UI_FONT, design.SIZE_BODY),
+            highlightthickness=1, highlightbackground=design.BORDER_GREY)
         self._texte_detail.pack(fill='x', pady=(6, 0))
         self._texte_detail.configure(state='disabled')
 
         self._arbre.bind('<<TreeviewSelect>>', self._afficher_detail_selection)
 
-    def _construire_bandeau(self, charte):
+    def _construire_bandeau(self):
         """Bandeau navy pleine largeur : signature visuelle du site IES.
 
-        Args:
-            charte: Module `ui/theme_ies.py`.
         """
-        bandeau = ttk.Frame(self._racine, style=charte.STYLE_BANDEAU,
-                            padding=charte.PADDING_BANDEAU)
+        bandeau = ttk.Frame(self._racine, style=theme.STYLE_BAND,
+                            padding=design.PAD_BAND)
         bandeau.pack(side='top', fill='x')
 
-        titres = ttk.Frame(bandeau, style=charte.STYLE_BANDEAU)
+        titres = ttk.Frame(bandeau, style=theme.STYLE_BAND)
         titres.pack(side='left', anchor='w')
-        ttk.Label(titres, style=charte.STYLE_TITRE,
+        ttk.Label(titres, style=theme.STYLE_TITLE,
                   text=u'Navigateur de validation SIA 4010').pack(anchor='w')
 
         # Un verdict par test : agrege, il masquerait lequel echoue.
         for une_vue in self._vues:
             verdict_global = une_vue['verdict_global']
             ttk.Label(
-                titres, style=charte.STYLE_SOUS_TITRE,
-                text=charte.libelle_de_verdict(
+                titres, style=theme.STYLE_SUBTITLE,
+                text=theme.verdict_label(
                     verdict_global['couleur'],
                     u'%s — %s' % (une_vue.get('test_id') or u'Test',
                                   verdict_global['texte']))
             ).pack(anchor='w', pady=(2, 0))
 
-        ttk.Label(titres, style=charte.STYLE_SOUS_TITRE, wraplength=620,
+        ttk.Label(titres, style=theme.STYLE_SUBTITLE, wraplength=620,
                   text=u'Article : '
                        + self._vues[0]['verdict_global']['article']
                   ).pack(anchor='w', pady=(6, 0))
 
-        actions = ttk.Frame(bandeau, style=charte.STYLE_BANDEAU)
+        actions = ttk.Frame(bandeau, style=theme.STYLE_BAND)
         actions.pack(side='right', anchor='e')
-        ttk.Button(actions, style=charte.STYLE_BOUTON_ACCENT,
+        ttk.Button(actions, style=theme.STYLE_BUTTON_PRIMARY,
                    text=u'Exporter Excel (SIA officiel)',
                    command=self._exporter_excel).pack(side='left', padx=(0, 6))
-        ttk.Button(actions, style=charte.STYLE_BOUTON, text=u'Exporter PDF',
+        ttk.Button(actions, style=theme.STYLE_BUTTON, text=u'Exporter PDF',
                    command=self._exporter_pdf).pack(side='left', padx=(0, 6))
-        ttk.Button(actions, style=charte.STYLE_BOUTON,
+        ttk.Button(actions, style=theme.STYLE_BUTTON,
                    text=u'Diagnostic interne',
                    command=self._exporter_diagnostic).pack(side='left')
 
-    def _construire_selecteur(self, parent, charte):
+    def _construire_selecteur(self, parent):
         """Choix de la classe de validation visée.
 
         Le client choisit sa classe et ne voit plus que ce qui la concerne :
@@ -265,13 +262,12 @@ class NavigateurSIA4010(object):
 
         Args:
             parent: Cadre d'accueil.
-            charte: Module `ui/theme_ies.py`.
         """
-        barre = ttk.Frame(parent, style=charte.STYLE_CARTE,
-                          padding=charte.PADDING_CARTE)
-        barre.pack(side='top', fill='x', pady=(0, charte.ECART))
+        barre = ttk.Frame(parent, style=theme.STYLE_CARD,
+                          padding=design.PAD_CARD)
+        barre.pack(side='top', fill='x', pady=(0, design.SPACE['sm']))
 
-        ttk.Label(barre, style=charte.STYLE_SECTION,
+        ttk.Label(barre, style=theme.STYLE_SECTION,
                   text=u'Classe de validation visée').pack(side='left')
 
         self._classe_choisie = tk.StringVar(value=TOUTES_LES_CLASSES)
@@ -283,7 +279,7 @@ class NavigateurSIA4010(object):
         liste.pack(side='left', padx=(10, 0))
         liste.bind('<<ComboboxSelected>>', self._changer_de_classe)
 
-        self._etat_classe = ttk.Label(barre, style=charte.STYLE_ATTENUE,
+        self._etat_classe = ttk.Label(barre, style=theme.STYLE_MUTED,
                                       text=u'')
         self._etat_classe.pack(side='left', padx=(14, 0))
         self._rafraichir_etat_classe()
