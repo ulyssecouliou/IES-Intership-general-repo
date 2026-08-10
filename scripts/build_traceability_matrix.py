@@ -386,6 +386,299 @@ def _ce_qui_manque(numero_test, distributions, resolues, declarees):
     return lignes
 
 
+# ---------------------------------------------------------------------------
+# Tests 1 et 7 — moteurs et formes de référence propres
+# ---------------------------------------------------------------------------
+#
+# Ils ne passent pas par `sia_bandes_engine` et leurs résultats n'ont pas la
+# même forme : le Test 1 rend `cas` indexé par « grandeur/cas » et ne porte ni
+# `grandeurs` ni `critere` ; le Test 7 ajoute `source_irradiance` et
+# `grandeurs_verrouillees`. Les forcer dans le gabarit des tests 2 à 6
+# produirait des matrices qui parlent de champs inexistants.
+
+TESTS_DEDIES = (1, 7)
+
+ANCRAGE_DEDIE = {
+    1: {
+        'spec': 'SIA_4010_geteilter_Link/Test1/Spezifikation_Test1.pdf',
+        'batiment': u'Testraum « ASHRAE 140 » selon EN ISO 52016-1:2017, ch. 7',
+        'climat': u'ISO 52016-1 DRYCOLD pour les six cas principaux ; '
+                  u'SIA 2028 DRY Zürich Kloten pour les cas diagnostiques',
+        'objet': u'besoins de chaleur et de froid, températures opératives et '
+                 u'charge de pointe horaire, sur la cellule d\'essai',
+    },
+    7: {
+        'spec': 'SIA_4010_geteilter_Link/Test7/Spezifikation_Test7.pdf',
+        'batiment': u'Bâtiment exemple',
+        'climat': u'SIA 2028 DRY normal, Zürich Kloten',
+        'objet': u'besoins de chaleur et de froid pour profils existants, '
+                 u'production photovoltaïque comprise',
+    },
+}
+
+
+def _tableau_cas_test1(resultat):
+    u"""Lignes du tableau des cas du Test 1.
+
+    La colonne qui compte est `type_controle` : seule une minorité d'entrées
+    porte le critère pass/fail, les autres sont informatives. Une matrice qui
+    les présenterait à égalité laisserait croire que toutes décident du
+    verdict. Leur nombre est COMPTÉ, jamais écrit : la première rédaction
+    annonçait « un seul cas » là où le moteur en rend trois.
+
+    Args:
+        resultat: Ce que rend `evaluer_test1`.
+
+    Returns:
+        list[str]: Lignes Markdown.
+    """
+    lignes = [u'| Grandeur | Cas | Nature du contrôle | Périodes | Évaluées |',
+              u'|---|---|---|---|---|']
+    for cle in sorted(resultat['cas']):
+        entree = resultat['cas'][cle]
+        periodes = entree.get('periodes') or {}
+        evaluees = sum(1 for p in periodes.values()
+                       if p.get('valeur_candidate') is not None)
+        nature = entree.get('type_controle') or u'—'
+        marque = u'**critère pass/fail**' if nature == 'critere_pass_fail' \
+            else u'informatif'
+        lignes.append(u'| `%s` | %s | %s (`%s`) | %d | %d |'
+                      % (entree.get('grandeur'), entree.get('cas'), marque,
+                         nature, len(periodes), evaluees))
+    return lignes
+
+
+def _tableau_grandeurs_test7(resultat):
+    u"""Lignes du tableau des grandeurs du Test 7.
+
+    Args:
+        resultat: Ce que rend `evaluer_test7`.
+
+    Returns:
+        list[str]: Lignes Markdown.
+    """
+    lignes = [u'| Grandeur | Unité | Statut | Candidat |', u'|---|---|---|---|']
+    for grandeur in resultat.get('grandeurs') or []:
+        lignes.append(u'| `%s` | %s | %s | %s |'
+                      % (grandeur.get('libelle') or grandeur.get('libelle_de'),
+                         grandeur.get('unite') or u'—',
+                         grandeur.get('statut') or u'—',
+                         u'—' if grandeur.get('candidat') is None
+                         else grandeur.get('candidat')))
+    return lignes
+
+
+def construire_dedie(numero_test):
+    u"""Construit la matrice d'un test à moteur propre (1 ou 7).
+
+    Args:
+        numero_test: 1 ou 7.
+
+    Returns:
+        str: Document Markdown.
+
+    Raises:
+        ValueError: Si le test n'a pas de moteur dédié.
+    """
+    if numero_test not in TESTS_DEDIES:
+        raise ValueError(
+            u'test %r sans moteur dédié. Concernés : %s. Les tests 2 à 6 '
+            u'passent par `construire`.' % (numero_test, list(TESTS_DEDIES)))
+
+    ancrage = ANCRAGE_DEDIE[numero_test]
+    if numero_test == 1:
+        from engine import test1_engine as moteur
+        resultat = moteur.evaluer_test1(moteur.charger_reference())
+        classes = resultat.get('classes_concernees') or []
+        verdict = resultat.get('verdict_test1') or {}
+        total = verdict.get('nb_periodes_totales', 0)
+        non_evaluees = verdict.get('nb_periodes_non_evaluees', 0)
+        statut_critere = u'ÉNONCÉ DANS LA SPEC'
+        justification = (
+            u'Le Test 1 est le seul dont la spécification énonce ses propres '
+            u'critères ; ils ne sont pas inférés du classeur.')
+    else:
+        from engine import test7_engine as moteur
+        resultat = moteur.evaluer_test7(moteur.charger_reference())
+        classes = resultat.get('classes_concernees') or []
+        total = len(resultat.get('grandeurs') or [])
+        non_evaluees = resultat.get('nb_non_evaluables', 0)
+        critere = resultat.get('critere') or {}
+        statut_critere = critere.get('statut') or u'—'
+        justification = critere.get('justification') or u''
+
+    lignes = [
+        u'# Matrice de traçabilité — Test SIA 4010 n° %d' % numero_test,
+        u'',
+        u'> ## Statut : **NON SIGNÉE**',
+        u'>',
+        u'> **%d contrôle(s) sur %d ne sont pas évalués** : aucune simulation '
+        u'IESVE n\'a produit de valeur candidate. Aucune ligne de cette '
+        u'matrice ne porte donc de résultat reproduit.' % (non_evaluees, total),
+        u'>',
+        u'> Document **généré** par `scripts/build_traceability_matrix.py` : '
+        u'les grandeurs, les cas et leur état sont lus dans le moteur et dans '
+        u'les référentiels figés, jamais retapés. Le script **ne signe pas** — '
+        u'la règle 5 demande une vérification indépendante.',
+        u'',
+        u'---',
+        u'',
+        u'## 1. Ancrage normatif',
+        u'',
+        u'| Élément | Valeur | Source |',
+        u'|---|---|---|',
+        u'| Classes de validation concernées | %s | SIA 4010:2023, tableau 63 '
+        u'(p. 48) |' % u', '.join(classes),
+        u'| Bâtiment / local | %s | %s |'
+        % (ancrage['batiment'], os.path.basename(ancrage['spec'])),
+        u'| Climat | %s | idem |' % ancrage['climat'],
+        u'| Objet du test | %s | idem |' % ancrage['objet'],
+        u'',
+        u'## 2. Critère',
+        u'',
+        u'- Statut : **%s**' % statut_critere,
+        u'- %s' % justification,
+        u'',
+    ]
+
+    if numero_test == 1:
+        lignes.append(u'## 3. Cas et nature du contrôle')
+        lignes.append(u'')
+        # Ce compte était ÉCRIT à la main — et faux : le moteur rend trois
+        # entrées porteuses, pas une. On le calcule, comme tout le reste.
+        porteuses = [entree for entree in resultat['cas'].values()
+                     if entree.get('type_controle') == 'critere_pass_fail']
+        cas_porteurs = sorted(set(e.get('cas') for e in porteuses))
+        lignes.append(
+            u'**%d entrée(s) sur %d portent le critère pass/fail**, sur le(s) '
+            u'cas %s. Les autres sont informatives : les présenter à égalité '
+            u'laisserait croire qu\'elles décident du verdict.'
+            % (len(porteuses), len(resultat['cas']),
+               u', '.join(cas_porteurs) or u'—'))
+        lignes.append(u'')
+        lignes.extend(_tableau_cas_test1(resultat))
+    else:
+        lignes.append(u'## 3. Grandeurs')
+        lignes.append(u'')
+        lignes.extend(_tableau_grandeurs_test7(resultat))
+        verrouillees = resultat.get('grandeurs_verrouillees') or []
+        if verrouillees:
+            lignes.append(u'')
+            lignes.append(u'**Grandeurs verrouillées** : %s. Leur calcul exige '
+                          u'une entrée absente du dépôt.'
+                          % u', '.join(u'`%s`' % g for g in verrouillees))
+        lignes.append(u'')
+        lignes.append(u'- Source d\'irradiance : `%s`'
+                      % (resultat.get('source_irradiance') or u'AUCUNE'))
+
+    lignes.extend([
+        u'',
+        u'## 4. Chaîne logicielle',
+        u'',
+    ])
+    lignes.extend(_tableau_chaine_dediee(numero_test))
+    lignes.extend([
+        u'',
+        u'## 5. Ce qui n\'est PAS établi',
+        u'',
+        u'1. **Aucune valeur candidate.** %d contrôle(s) sur %d restent non '
+        u'évalués faute de simulation.' % (non_evaluees, total),
+        u'2. **Aucune simulation.** Le test n\'a jamais été construit ni '
+        u'simulé dans IESVE.',
+    ])
+    if numero_test == 1:
+        # Quel cas porte le critère est LU dans le moteur : l'écrire ferait
+        # de la matrice une affirmation, non un relevé.
+        lignes.append(
+            u'3. **Les cas diagnostiques 1A à 1E sont hors de portée** : ils '
+            u'exigent le climat de Zürich-Kloten, absent du dépôt. Or le '
+            u'critère pass/fail repose entièrement sur le(s) cas **%s** — '
+            u'sans eux, aucun verdict formel du Test 1 n\'est possible.'
+            % (u', '.join(cas_porteurs) or u'aucun'))
+    else:
+        lignes.append(
+            u'3. **La divergence de mise en forme conditionnelle** du classeur '
+            u'du Test 7 (`[moyenne ; borne haute]` au lieu de '
+            u'`[borne basse ; borne haute]`, seul des six classeurs) est '
+            u'posée à la sous-commission et reste sans réponse.')
+    lignes.extend([
+        u'',
+        u'---',
+        u'',
+        u'## Signature',
+        u'',
+        u'| Rôle | Nom | Date | Verdict |',
+        u'|---|---|---|---|',
+        u'| Producteur | `build_traceability_matrix.py` (généré) | — | non '
+        u'applicable |',
+        u'| Vérificateur indépendant | `qa-auditor` | — | **non signé** |',
+        u'',
+    ])
+    return u'\n'.join(lignes) + u'\n'
+
+
+def _tableau_chaine_dediee(numero_test):
+    u"""Chaîne logicielle d'un test à moteur propre, existence contrôlée.
+
+    Args:
+        numero_test: 1 ou 7.
+
+    Returns:
+        list[str]: Lignes Markdown.
+    """
+    fichiers = {
+        u'moteur': 'engine/test%d_engine.py' % numero_test,
+        u'référence figée': 'refs/reference-data/test-%d.ref.json' % numero_test,
+        u'vue du navigateur': 'ui/verdict_view.py',
+    }
+    if numero_test == 1:
+        fichiers[u'adaptateur VE'] = 've_adapter/test1_adapter.py'
+        fichiers[u'géométrie'] = 've_adapter/geometrie_test1.py'
+        fichiers[u'gbXML'] = 've_adapter/gbxml_test1.py'
+        fichiers[u'import + confrontation'] = (
+            'scripts/importer_geometrie_test1.py')
+
+    lignes = [u'| Rôle | Fichier | Présent |', u'|---|---|---|']
+    for role, chemin in sorted(fichiers.items()):
+        lignes.append(u'| %s | `%s` | %s |'
+                      % (role, chemin, u'oui' if _existe(chemin) else u'**NON**'))
+    return lignes
+
+
+#: Marque qui reconnaît nos propres sorties — et donc ce qu'il est permis
+#: d'écraser. C'est la LIGNE DE SIGNATURE, seule chaîne écrite à l'identique
+#: par `construire` et par `construire_dedie` : la bannière d'en-tête, elle,
+#: est formulée différemment dans les deux, et un marqueur pris là prenait les
+#: tests 2 à 6 pour des rédactions à la main.
+MARQUE_GENEREE = u'| Producteur | `build_traceability_matrix.py` (généré) |'
+
+
+def chemin_de_sortie(numero_test):
+    u"""Où écrire la matrice d'un test, sans jamais écraser une rédaction.
+
+    Le Test 7 porte une matrice RÉDIGÉE à la main : trois cents lignes d'audit
+    indépendant, renvoyées non signées. Un générateur ne sait pas produire ce
+    jugement, et l'écraser le détruirait sans trace. La règle est donc
+    générale : **si le fichier attendu n'a pas été écrit par ce script**, le
+    relevé va dans un fichier voisin et la rédaction reste intacte.
+
+    Args:
+        numero_test: Numéro du test SIA.
+
+    Returns:
+        tuple: `(chemin, une_redaction_existe)`.
+    """
+    attendu = os.path.join(_SORTIE, 'test-%d.matrix.md' % numero_test)
+    if not os.path.exists(attendu):
+        return attendu, False
+    with io.open(attendu, encoding='utf-8') as flux:
+        deja_generee = MARQUE_GENEREE in flux.read()
+    if deja_generee:
+        return attendu, False
+    voisin = os.path.join(_SORTIE, 'test-%d.matrix.releve.md' % numero_test)
+    return voisin, True
+
+
 def main(arguments):
     u"""Point d'entrée en ligne de commande.
 
@@ -396,10 +689,17 @@ def main(arguments):
         int: 0 si tout s'est bien passé.
     """
     demandes = [int(a) for a in arguments if a.isdigit()]
-    for numero in (demandes or list(TESTS)):
-        document = construire(numero)
-        chemin = os.path.join(_SORTIE, 'test-%d.matrix.md' % numero)
+    for numero in (demandes or (list(TESTS) + list(TESTS_DEDIES))):
+        # Les tests 1 et 7 ont leurs propres moteurs et formes de référence :
+        # les forcer dans le gabarit des tests à bandes produirait des
+        # matrices qui parlent de champs inexistants.
+        document = (construire_dedie(numero) if numero in TESTS_DEDIES
+                    else construire(numero))
+        chemin, redigee = chemin_de_sortie(numero)
         print(u'Test %d : %d lignes' % (numero, document.count(u'\n')))
+        if redigee:
+            print(u'    matrice RÉDIGÉE présente : elle est conservée. '
+                  u'Le relevé va à côté.')
         if '--ecrire' in arguments:
             with io.open(chemin, 'w', encoding='utf-8') as flux:
                 flux.write(document)
