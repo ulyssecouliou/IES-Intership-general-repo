@@ -22,7 +22,9 @@
 
 ## 2. Critères
 
-La spécification ne comporte **aucune** section *Testkriterien* : SIA 4010:2023 §4.4 délègue au classeur d'évaluation. Le classeur ne porte ni classes de fréquence ni feuille de distribution — la somme annuelle est donc le seul critère. C'est un constat, pas une lacune.
+La spécification ne comporte **aucune** section *Testkriterien* : SIA 4010:2023 §4.4 délègue au classeur d'évaluation.
+
+> **Corrigé le 2026-08-10.** Cette matrice affirmait que le classeur ne porte ni classes de fréquence ni feuille de distribution. C'est faux : il porte une feuille `Haeufigkeitskassen` (23 lignes) et une section « Stündliche Häufigkeitsverteilung » dans `Zusammenfassung`. L'erreur tenait à une lettre — les tests 2, 3 et 5 écrivent `Haeufigkeitsklassen`. La distribution est donc un critère de ce test aussi ; elle n'est PAS ENCORE extraite, et la matrice ne peut rien en dire tant qu'elle ne l'est pas. Source : `traceability/sia4010-authority-clarification-2026-08-10.json`, décision `SIA4010-TEST4-6-DISTRIBUTION-PRESENCE`.
 
 ### 2.1 Somme annuelle
 

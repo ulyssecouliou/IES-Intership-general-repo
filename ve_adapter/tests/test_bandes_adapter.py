@@ -601,8 +601,14 @@ def test_la_serie_brute_se_classe_avec_le_moteur(monkeypatch):
     resultat = moteur_distributions.evaluer(
         reference, {(bloc['cas'], bloc['grandeur']): effectifs})
     assert resultat['nb_evaluees'] == 1
-    # Toute l annee dans la premiere classe : hors de la dispersion, et
-    # pourtant le verdict reste NON_ETABLI — la bande n est pas definie.
+    # Toute l annee dans la premiere classe : hors de l enveloppe.
     assert resultat['distributions'][0]['nb_hors_lecture'][
         moteur_distributions.LECTURE_ENVELOPPE] > 0
-    assert resultat['verdict'] == moteur_distributions.VERDICT_NON_ETABLI
+    # CE TEST ATTENDAIT NON_ETABLI, et c etait juste jusqu au 2026-08-10 : la
+    # lecture du mot `Streubereich` n etait pas tranchee, donc aucun verdict
+    # ne pouvait etre rendu. La clarification ecrite de l autorite
+    # (traceability/sia4010-authority-clarification-2026-08-10.json, decision
+    # SIA4010-DISTRIBUTION-BAND) retient l enveloppe min/max classe par
+    # classe. Le critere est donc etabli, et une serie hors enveloppe est un
+    # FAIL -- ce qu il fallait justement s interdire de dire avant.
+    assert resultat['verdict'] == moteur_distributions.VERDICT_FAIL

@@ -13,10 +13,32 @@ POURQUOI CE FICHIER EXISTE. Les spécifications des tests 2, 3 et 5 énoncent
 Le second n'avait jamais été extrait. Sans lui, un verdict « conforme » ne
 porterait que sur la moitié des critères du test.
 
-Tests 4 et 6 n'ont ni feuille `Haeufigkeitsklassen` ni feuille de
-distribution, et leurs spécifications ne comportent aucune section
-`Testkriterien` : pour eux la somme annuelle est bien le seul critère. Ils
-sont donc hors de portée de ce script, et c'est un constat, pas un oubli.
+CE PARAGRAPHE AFFIRMAIT LE CONTRAIRE, ET IL ÉTAIT FAUX. Il disait que les
+tests 4 et 6 n'ont ni feuille de classes ni feuille de distribution, « et
+c'est un constat, pas un oubli ». C'était un oubli, et il tenait à une seule
+lettre : leurs classeurs écrivent la feuille `Haeufigkeitskassen`, sans le
+« l » de `Haeufigkeitsklassen` que portent les tests 2, 3 et 5. Une faute de
+frappe dans les fichiers officiels, prise pour une absence.
+
+CE QUI EST VÉRIFIÉ, le 2026-08-10, en ouvrant les classeurs :
+
+  * `Resultaterfassung Test4.xlsx` et `Resultaterfassung_Test6.xlsx` portent
+    tous deux une feuille `Haeufigkeitskassen` de 23 lignes, structurée comme
+    celle du Test 2 : un index de classe, puis une borne par grandeur ;
+  * leur `Zusammenfassung` porte une section
+    « Stündliche Häufigkeitsverteilung » (Test 4 : ligne 19) suivie de blocs
+    par grandeur — nom, unité et programmes, ligne `Klassen`, puis les
+    effectifs de chaque programme de référence. C'est exactement la structure
+    que ce script sait déjà lire.
+
+La clarification de l'autorité du 2026-08-10
+(`traceability/sia4010-authority-clarification-2026-08-10.json`, décision
+`SIA4010-TEST4-6-DISTRIBUTION-PRESENCE`) dit la même chose.
+
+Ces deux tests sont donc À PORTÉE et restent À FAIRE : leur disposition n'est
+pas encore relevée dans `DISPOSITIONS`, et ce script ne devine jamais une
+disposition — voir le commentaire de cette table. `TESTS_AVEC_DISTRIBUTION`
+les exclut encore pour cette raison, et pour cette raison seulement.
 
 CE QUE LE CLASSEUR NE FAIT PAS, ET QUE CE SCRIPT NE FERA DONC PAS NON PLUS.
 Les feuilles « Verteilung » sont des **graphiques**, pas des tableaux : elles
@@ -48,7 +70,17 @@ _DOSSIER_SIA = os.environ.get(
 
 _SORTIE = os.path.join(_RACINE, 'refs', 'reference-data')
 
+#: Tests dont la disposition a été RELEVÉE dans `DISPOSITIONS`. Les tests
+#: 4 et 6 ont bien des distributions (voir la note de module) mais leur
+#: disposition n'est pas encore lue : les ajouter ici sans elle ferait
+#: extraire au hasard.
 TESTS_AVEC_DISTRIBUTION = (2, 3, 5)
+
+#: Tests dont les classeurs portent des distributions, disposition relevée
+#: ou non. Sert à distinguer « pas de distribution » de « pas encore
+#: extraite » — la confusion des deux est ce qui a fait écrire pendant
+#: des semaines que les tests 4 et 6 n'en avaient pas.
+TESTS_PORTANT_DES_DISTRIBUTIONS = (2, 3, 4, 5, 6)
 
 #: Heures d'une année. Le classeur totalise par colonne ; les écarts d'une ou
 #: deux heures observés (8759, 8732) sont RÉELS et conservés tels quels.
@@ -246,7 +278,12 @@ def _contributeurs(feuille, disposition, colonne_bloc, colonne_fin,
         retenus.append({
             'colonne': get_column_letter(colonne),
             'programme': _texte(feuille, ligne_programmes, colonne),
+            # Backward-compatible name: this is the sum of the displayed
+            # classes, not the size of the underlying annual source series.
             'total_heures': total,
+            'heures_dans_classes': total,
+            'heures_hors_classes': max(0, HEURES_ANNEE - total),
+            'heures_source_attendues': HEURES_ANNEE,
         })
     return retenus
 
@@ -308,15 +345,14 @@ def extraire(numero_test):
         u'critere': u'Häufigkeitsverteilung : « muss im Streubereich der '
                     u'Referenzprogramme liegen » (Spezifikation_Test%d.pdf, '
                     u'Testkriterien)' % numero_test,
-        u'statut_critere': u'NON_CALCULE_PAR_LE_CLASSEUR',
+        u'statut_critere': u'CONFIRME_AUTORITE_2026-08-10',
         u'pourquoi_non_calcule':
             u'Les feuilles « Verteilung » sont des GRAPHIQUES : elles tracent '
             u'les variantes de référence et le programme testé, sans calculer '
             u'aucune bande. Aucune cellule du classeur ne définit le '
-            u'Streubereich d\'une distribution. Deux lectures restent '
-            u'possibles — enveloppe min/max des programmes, ou moyenne ± écart '
-            u'maximal comme pour les sommes annuelles — et le choix ne peut '
-            u'pas être fait ici sans inventer le critère.',
+            u'Streubereich d\'une distribution. La clarification écrite du '
+            u'2026-08-10 définit la règle : enveloppe min/max des programmes '
+            u'de référence, classe par classe.',
         u'classes_concernees': disposition['classes_sia'],
         u'source': {
             u'fichier': disposition['fichier'],
@@ -360,32 +396,21 @@ def _reserves(distributions):
 
     totaux = sorted(set(c['total_heures'] for b in distributions
                         for c in b['contributeurs']))
-    incomplets = [t for t in totaux if t < HEURES_ANNEE]
-    if incomplets:
+    hors_classes = [t for t in totaux if t < HEURES_ANNEE]
+    if hors_classes:
         reserves.append(
-            u'Totaux horaires observés : %s. Plusieurs programmes totalisent '
-            u'moins de %d heures. Ce sont des données réelles, reproduites '
-            u'telles quelles : les compléter à %d fausserait la dispersion.'
-            % (u', '.join(str(t) for t in totaux), HEURES_ANNEE, HEURES_ANNEE))
-
-    tres_partiels = sorted(set(
-        c['total_heures'] for b in distributions for c in b['contributeurs']
-        if c['total_heures'] < HEURES_ANNEE // 2))
-    if tres_partiels:
-        grandeurs = sorted(set(
-            b['grandeur'] for b in distributions for c in b['contributeurs']
-            if c['total_heures'] < HEURES_ANNEE // 2))
-        reserves.append(
-            u'Totaux très partiels (%s) sur : %s. Vraisemblablement une '
-            u'grandeur définie seulement pendant le fonctionnement de '
-            u'l\'installation — à confirmer avant tout usage comme critère.'
-            % (u', '.join(str(t) for t in tres_partiels),
-               u' ; '.join(grandeurs)))
+            u'Totaux affichés dans les classes : %s. La SIA a confirmé le '
+            u'2026-08-10 que les écarts à %d ne sont pas des heures manquantes : '
+            u'les autres valeurs sont hors des bornes définies par les classes. '
+            u'Elles sont conservées comme compte hors classes et ne sont pas '
+            u'ajoutées à la dernière classe.'
+            % (u', '.join(str(t) for t in totaux), HEURES_ANNEE))
 
     reserves.append(
         u'Les effectifs sont des FAITS relevés cellule par cellule et '
-        u'réconciliés avec la ligne de totaux du classeur. La BANDE, elle, '
-        u'n\'est pas établie : voir statut_critere.')
+        u'réconciliés avec la ligne de totaux du classeur. La bande '
+        u'd\'acceptation min/max par classe est confirmée par la réponse '
+        u'écrite du 2026-08-10.')
     return reserves
 
 

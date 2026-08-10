@@ -1,0 +1,52 @@
+{
+  "schema": "sia4010-authority-clarification.v1",
+  "received_date": "2026-08-10",
+  "authority": "Prof. Gerhard Zweifel",
+  "medium": "written email reply supplied by the project owner",
+  "decisions": [
+    {
+      "id": "SIA4010-DISTRIBUTION-BAND",
+      "tests": ["2", "3", "5"],
+      "status": "CONFIRMED",
+      "decision": "Use the per-frequency-class minimum-to-maximum envelope of the reference programs.",
+      "implementation": "Acceptance uses inclusive min/max bounds. The former mean-plus-maximum-deviation band is diagnostic only."
+    },
+    {
+      "id": "SIA4010-OUTSIDE-CLASS-VALUES",
+      "tests": ["2", "3", "5"],
+      "status": "CONFIRMED",
+      "decision": "The reference programs do not contain fewer than 8760 hours; apparent short histogram totals are values outside the boundaries defined by the displayed classes.",
+      "implementation": "Keep the complete source series, score only the workbook-declared classes, and report the excluded overflow count separately. Never label these hours missing or merge them into the last class."
+    },
+    {
+      "id": "SIA4010-TEST7-CONDITIONAL-FORMATTING",
+      "tests": ["7"],
+      "status": "CORRECTED_WORKBOOK_RECEIVED_AND_VERIFIED",
+      "decision": "The Test 7 conditional-formatting rule was a mistake and was corrected in the replacement workbook supplied on 2026-08-10.",
+      "implementation": "Use the inclusive lower-to-upper interval. Direct XML inspection confirms formulas $N8 and $M8 for F8:F12, F14:F18 and F20. Corrected SHA-256: 24937d8f421daa74a7f957025bfeb17a42fe2dc807b1a301a6752f4c0e808958; superseded SHA-256: 5eb5b5ba594bd61a2f791a49429eb409c7b4303ad57d1656140dc9c4d0eee0ab."
+    },
+    {
+      "id": "SIA4010-TEST4-6-DISTRIBUTION-PRESENCE",
+      "tests": ["4", "6"],
+      "status": "REQUIRED_OUTPUT_SCOPE_CONFIRMED_ACCEPTANCE_GATE_PENDING",
+      "decision": "The corresponding workbooks contain frequency classes and distribution sheets, and the required results for Tests 4, 6 and 7 are those listed in the Excel sheets.",
+      "implementation": "Use the workbook as the authoritative output contract and require the listed hourly evidence. Keep the exact distribution acceptance-gate scope fail-closed because required delivery does not by itself prove that every plotted diagnostic is a PASS/FAIL criterion.",
+      "corroborated_by": "Written reply from Yiqiao concerning 'zu liefernde Resultate' for Tests 4, 6 and 7."
+    },
+    {
+      "id": "SIA4010-TEST4-6-7-REQUIRED-RESULTS",
+      "tests": ["4", "6", "7"],
+      "status": "CONFIRMED",
+      "decision": "The required results are listed in the corresponding Excel evaluation sheets.",
+      "implementation": "Treat the official evaluation workbook as the machine-readable result-delivery contract. Missing workbook-listed outputs remain NOT_CHECKABLE and are never silently omitted."
+    },
+    {
+      "id": "SIA2024-3.1-OFFICE-STANDARD-VALUES",
+      "tests": ["1 diagnostic", "2", "3"],
+      "status": "CONFIRMED_SOURCE_RECEIVED_AND_NORMALIZED",
+      "decision": "The authority supplied the relevant SIA 2024:2021 data for category 3.1 Einzel-/Gruppenbüro and explicitly confirmed that the third-last value column contains the standard values.",
+      "implementation": "Bind the displayed 24 source-hour bins and numerical standard values to the authority extract SHA-256 c8e801d24b98365226c076e028d6556b01f357baa5233b2ac57a2dd63149177e. The normalized source records 2 rest days/week, 261 use days/year, people annual simultaneity 0.80, 14 m2/person, 11.0 W/m2 equipment and 12.5 W/m2 lighting. Native VE weekly/yearly profile generation remains fail-closed until weekday/date and hour-boundary semantics are explicitly bound and read back."
+    }
+  ],
+  "privacy": "Paraphrased technical decisions only; personal contact details and the full email are not reproduced."
+}

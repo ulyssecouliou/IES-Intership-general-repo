@@ -283,12 +283,34 @@ def construire(numero_test):
         lignes.append(u'La spécification énonce **deux** critères, dans sa '
                       u'section *Testkriterien*.')
     else:
+        # CE TEXTE DISAIT LE CONTRAIRE, ET IL ÉTAIT FAUX. Il affirmait que le
+        # classeur ne porte « ni classes de fréquence ni feuille de
+        # distribution », donc que la somme annuelle est le seul critère,
+        # « un constat, pas une lacune ». Vérifié le 2026-08-10 en ouvrant les
+        # classeurs : les tests 4 et 6 portent une feuille
+        # `Haeufigkeitskassen` — sans le « l » de `Haeufigkeitsklassen », une
+        # faute de frappe des fichiers officiels prise pour une absence — et
+        # une section « Stündliche Häufigkeitsverteilung » dans leur
+        # `Zusammenfassung`. La clarification de l'autorité du même jour dit
+        # de même.
         lignes.append(u'La spécification ne comporte **aucune** section '
                       u'*Testkriterien* : SIA 4010:2023 §4.4 délègue au '
-                      u'classeur d\'évaluation. Le classeur ne porte ni '
-                      u'classes de fréquence ni feuille de distribution — la '
-                      u'somme annuelle est donc le seul critère. C\'est un '
-                      u'constat, pas une lacune.')
+                      u'classeur d\'évaluation.')
+        lignes.append(u'')
+        lignes.append(u'> **Corrigé le 2026-08-10.** Cette matrice affirmait '
+                      u'que le classeur ne porte ni classes de fréquence ni '
+                      u'feuille de distribution. C\'est faux : il porte une '
+                      u'feuille `Haeufigkeitskassen` (23 lignes) et une '
+                      u'section « Stündliche Häufigkeitsverteilung » dans '
+                      u'`Zusammenfassung`. L\'erreur tenait à une lettre — '
+                      u'les tests 2, 3 et 5 écrivent '
+                      u'`Haeufigkeitsklassen`. La distribution est donc un '
+                      u'critère de ce test aussi ; elle n\'est PAS ENCORE '
+                      u'extraite, et la matrice ne peut rien en dire tant '
+                      u'qu\'elle ne l\'est pas. Source : '
+                      u'`traceability/sia4010-authority-clarification-'
+                      u'2026-08-10.json`, décision '
+                      u'`SIA4010-TEST4-6-DISTRIBUTION-PRESENCE`.')
     lignes.append(u'')
     lignes.append(u'### 2.1 Somme annuelle')
     lignes.append(u'')
@@ -609,10 +631,12 @@ def construire_dedie(numero_test):
             % (u', '.join(cas_porteurs) or u'aucun'))
     else:
         lignes.append(
-            u'3. **La divergence de mise en forme conditionnelle** du classeur '
-            u'du Test 7 (`[moyenne ; borne haute]` au lieu de '
-            u'`[borne basse ; borne haute]`, seul des six classeurs) est '
-            u'posée à la sous-commission et reste sans réponse.')
+            u'3. **La divergence de mise en forme conditionnelle est résolue.** '
+            u'Le classeur corrigé reçu le 2026-08-10 utilise `$N8` / `$M8`, '
+            u'soit `[borne basse ; borne haute]`. Son SHA-256 est '
+            u'`24937d8f421daa74a7f957025bfeb17a42fe2dc807b1a301a6752f4c0e808958` ; '
+            u'le contrôle XML et l\'ancienne identité sont consignés dans '
+            u'`traceability/sia4010-authority-clarification-2026-08-10.json`.')
     lignes.extend([
         u'',
         u'---',

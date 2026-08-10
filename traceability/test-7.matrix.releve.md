@@ -19,8 +19,8 @@
 
 ## 2. Critère
 
-- Statut : **INFERE**
-- La specification du Test 7 ne definit aucun critere ; SIA 4010:2023 clause 4.4 delegue la comparaison au classeur d'evaluation, qui porte des bandes sur les seules Testgroessen. Arbitrage : traceability/critere-test4.spec.md. A confirmer par la sous-commission (SIA 4010 clause 4.6.2).
+- Statut : **CLASSEUR_CORRIGE_VERIFIE_2026-08-10**
+- La specification du Test 7 ne definit aucun critere ; SIA 4010:2023 clause 4.4 delegue la comparaison au classeur d'evaluation, qui porte des bandes sur les seules Testgroessen. Le classeur corrige recu le 2026-08-10 a ete controle par checksum et lecture XML : la mise en forme conditionnelle compare bien la borne basse a la borne haute. Cette evaluation logicielle ne remplace pas l'attestation de la sous-commission.
 
 ## 3. Grandeurs
 
@@ -52,7 +52,7 @@
 
 1. **Aucune valeur candidate.** 11 contrôle(s) sur 11 restent non évalués faute de simulation.
 2. **Aucune simulation.** Le test n'a jamais été construit ni simulé dans IESVE.
-3. **La divergence de mise en forme conditionnelle** du classeur du Test 7 (`[moyenne ; borne haute]` au lieu de `[borne basse ; borne haute]`, seul des six classeurs) est posée à la sous-commission et reste sans réponse.
+3. **La divergence de mise en forme conditionnelle est résolue.** Le classeur corrigé reçu le 2026-08-10 utilise `$N8` / `$M8`, soit `[borne basse ; borne haute]`. Son SHA-256 est `24937d8f421daa74a7f957025bfeb17a42fe2dc807b1a301a6752f4c0e808958` ; le contrôle XML et l'ancienne identité sont consignés dans `traceability/sia4010-authority-clarification-2026-08-10.json`.
 
 ---
 

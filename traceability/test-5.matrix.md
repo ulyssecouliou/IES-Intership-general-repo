@@ -33,8 +33,8 @@ La spécification énonce **deux** critères, dans sa section *Testkriterien*.
 ### 2.2 Distribution de fréquence
 
 - Énoncé : Häufigkeitsverteilung : « muss im Streubereich der Referenzprogramme liegen » (Spezifikation_Test5.pdf, Testkriterien)
-- Statut du critère : **NON_ETABLI**
-- Motif : Les feuilles « Verteilung » sont des GRAPHIQUES : elles tracent les variantes de référence et le programme testé, sans calculer aucune bande. Aucune cellule du classeur ne définit le Streubereich d'une distribution. Deux lectures restent possibles — enveloppe min/max des programmes, ou moyenne ± écart maximal comme pour les sommes annuelles — et le choix ne peut pas être fait ici sans inventer le critère.
+- Statut du critère : **CONFIRME_AUTORITE_2026-08-10**
+- Motif : Les feuilles « Verteilung » sont des GRAPHIQUES : elles tracent les variantes de référence et le programme testé, sans calculer aucune bande. Aucune cellule du classeur ne définit le Streubereich d'une distribution. La clarification écrite du 2026-08-10 définit la règle : enveloppe min/max des programmes de référence, classe par classe.
 - Distributions figées : **16**, sur **20** classes
 - Les deux lectures du `Streubereich` sont calculées (`enveloppe_min_max`, `moyenne_plus_ecart_max`) et **aucune n'est retenue** : le moteur ne rend jamais de verdict conforme.
 
@@ -74,11 +74,9 @@ La spécification énonce **deux** critères, dans sa section *Testkriterien*.
 
 > Bloc(s) B : le classeur ne porte AUCUN identifiant de cas sur la ligne prévue. La spécification range ces grandeurs sous un cas précis, mais le classeur ne le dit pas : le champ reste nul plutôt que d'être comblé par déduction.
 >
-> Totaux horaires observés : 3380, 8738, 8739, 8744, 8747, 8751, 8752, 8753, 8758, 8759, 8760. Plusieurs programmes totalisent moins de 8760 heures. Ce sont des données réelles, reproduites telles quelles : les compléter à 8760 fausserait la dispersion.
+> Totaux affichés dans les classes : 3380, 8738, 8739, 8744, 8747, 8751, 8752, 8753, 8758, 8759, 8760. La SIA a confirmé le 2026-08-10 que les écarts à 8760 ne sont pas des heures manquantes : les autres valeurs sont hors des bornes définies par les classes. Elles sont conservées comme compte hors classes et ne sont pas ajoutées à la dernière classe.
 >
-> Totaux très partiels (3380) sur : Zulufttemperatur im Betrieb. Vraisemblablement une grandeur définie seulement pendant le fonctionnement de l'installation — à confirmer avant tout usage comme critère.
->
-> Les effectifs sont des FAITS relevés cellule par cellule et réconciliés avec la ligne de totaux du classeur. La BANDE, elle, n'est pas établie : voir statut_critere.
+> Les effectifs sont des FAITS relevés cellule par cellule et réconciliés avec la ligne de totaux du classeur. La bande d'acceptation min/max par classe est confirmée par la réponse écrite du 2026-08-10.
 >
 
 ## 5. Chaîne logicielle

@@ -1,5 +1,16 @@
 # Matrice de traçabilité — Test SIA 4010 n° 7 (classe de validation 5)
 
+> **MISE À JOUR 2026-08-10 — DIVERGENCE RÉSOLUE.** Cette matrice documente
+> l'audit du classeur désormais archivé. La SIA a confirmé l'erreur et fourni
+> une version corrigée. Contrôle XML direct : la règle de mise en forme
+> conditionnelle utilise maintenant `$N8` / `$M8`, donc borne basse / borne
+> haute. SHA-256 courant :
+> `24937d8f421daa74a7f957025bfeb17a42fe2dc807b1a301a6752f4c0e808958` ;
+> SHA-256 supersédé :
+> `5eb5b5ba594bd61a2f791a49429eb409c7b4303ad57d1656140dc9c4d0eee0ab`.
+> Les constats ci-dessous sur `$L8` / `$M8` sont conservés comme historique de
+> l'ancienne source et ne décrivent plus le classeur actif.
+
 > ## Statut : **RENVOYÉE — NON SIGNÉE**
 >
 > Contrôle indépendant mené le **2026-08-06** par `qa-auditor`, sans réutiliser
@@ -24,7 +35,7 @@
 
 | # | Contrôle | Commande | Résultat réel |
 |---|---|---|---|
-| V1 | Identité du classeur source | `sha256sum "SIA_4010_geteilter_Link/Test7/Resultaterfassung Test7.xlsx"` | `5eb5b5ba594bd61a2f791a49429eb409c7b4303ad57d1656140dc9c4d0eee0ab` — identique à la copie de `IES-Intership-general-repo` |
+| V1 | Identité du classeur source actif | `sha256sum "SIA_4010_geteilter_Link/Test7/Resultaterfassung Test7.xlsx"` | `24937d8f421daa74a7f957025bfeb17a42fe2dc807b1a301a6752f4c0e808958` — version corrigée reçue le 2026-08-10 |
 | V2 | Rejeu de l'extraction | `python scripts/build_test7_reference.py` | 11 grandeurs, concordance annoncée atteinte |
 | V3 | Reproductibilité binaire du JSON figé | `--ecrire` puis `diff` avec la copie antérieure | **identique octet pour octet** |
 | V4 | Suite complète | `python -m pytest -q` | **165 passés, 3 ignorés** + un vidage `Windows fatal exception: code 0x80010108` à la collecte (§6.3) |

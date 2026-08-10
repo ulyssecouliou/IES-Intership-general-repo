@@ -1,6 +1,28 @@
-# Arbitrage normatif — « Streubereich » du critère de distribution de fréquence (Tests SIA 4010 n° 2 à 5)
+# Arbitrage normatif — « Streubereich » du critère de distribution de fréquence (Tests SIA 4010 n° 2 à 6)
 
-> Statut : **ARBITRAGE RENDU — confiance élevée, non certaine.**
+> **DÉCISION ANTÉRIEURE SUPPLANTÉE — 2026-08-10.** Une clarification écrite de
+> Prof. Gerhard Zweifel confirme que le `Streubereich` des distributions est
+> l'enveloppe **minimum à maximum des programmes de référence, classe par
+> classe** (interprétation n° 1). La déduction historique `moyenne ± écart
+> maximal` conservée ci-dessous n'est plus normative ; elle subsiste seulement
+> pour expliquer et reproduire d'anciens audits. Une seconde clarification du
+> 2026-08-10 confirme que les séries ont bien 8 760 heures : les totaux visibles
+> inférieurs correspondent aux seules classes affichées, certaines valeurs se
+> trouvant hors de leurs bornes. Ces heures sont auditées séparément ; elles ne
+> sont ni qualifiées de manquantes, ni ajoutées à la dernière classe.
+>
+> La même réponse signale que les classeurs des Tests 4 et 6 contiennent bien
+> des classes et distributions. Vérification locale : les deux possèdent une
+> feuille `Haeufigkeitskassen`, des tableaux `Stündliche Häufigkeitsverteilung`
+> dans `Zusammenfassung` et de nombreux graphiques dédiés. L'ancienne affirmation
+> contraire est retirée. Une réponse écrite ultérieure de Yiqiao confirme que
+> les résultats à livrer pour les Tests 4, 6 et 7 sont ceux indiqués dans les
+> classeurs Excel : leur **périmètre de sortie est donc confirmé**. Cette réponse
+> ne dit toutefois pas que chaque distribution ou grandeur diagnostique est un
+> critère PASS/FAIL ; la portée exacte du gate d'acceptation 4/6 reste séparément
+> fail-closed.
+
+> Statut historique : **SUPPLANTÉ PAR CLARIFICATION ÉCRITE.**
 > Auteur : `norm-analyst`, 2026-07-30.
 > Portée : uniquement le critère « Häufigkeitsverteilung … im Streubereich der
 > Referenzprogramme liegen » des Tests 2, 3, 5 (Test 4 : voir §6.2).
