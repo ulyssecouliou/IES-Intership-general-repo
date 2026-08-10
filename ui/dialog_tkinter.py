@@ -303,11 +303,11 @@ class NavigateurSIA4010(object):
         valeurs = [TOUTES_LES_CLASSES] + [
             u'%s — %s' % (c, selection.intitule(c))
             for c in selection.CLASSES]
-        liste = ttk.Combobox(barre['left'], textvariable=self._classe_choisie,
-                             values=valeurs, state='readonly', width=34,
-                             style=theme.STYLE_COMBO)
-        liste.pack(side='left', padx=(design.SPACE['md'], 0))
-        liste.bind('<<ComboboxSelected>>', self._changer_de_classe)
+        self._selecteur = ttk.Combobox(
+            barre['left'], textvariable=self._classe_choisie, values=valeurs,
+            state='readonly', width=34, style=theme.STYLE_COMBO)
+        self._selecteur.pack(side='left', padx=(design.SPACE['md'], 0))
+        self._selecteur.bind('<<ComboboxSelected>>', self._changer_de_classe)
 
         # L'état suit le sélecteur : c'est sa conséquence directe, et le
         # séparer à l'autre bout de la barre le déliait de son cause.
@@ -321,6 +321,7 @@ class NavigateurSIA4010(object):
         # deux boutons accentués côte à côte cessent de vouloir dire « c'est
         # ici qu'on agit ».
         actions = barre['right']
+        layout.language_switch(actions, self._changer_de_langue)
         layout.action_button(actions, 'action.export_excel',
                              self._exporter_excel, primary=True)
         layout.action_button(actions, 'action.export_pdf', self._exporter_pdf)
@@ -328,6 +329,34 @@ class NavigateurSIA4010(object):
                    text=u'Diagnostic interne',
                    command=self._exporter_diagnostic).pack(
                        side='left', padx=(design.SPACE['sm'], 0))
+
+    def _changer_de_langue(self, _code):
+        """Reconstruit la fenêtre dans la langue choisie.
+
+        RECONSTRUIRE, ET NON RETRADUIRE. ttk ne réétiquette pas ses widgets en
+        place : il faudrait retenir chaque libellé et sa clé, ce qui revient à
+        tenir une seconde table de traduction — celle qui se désynchronise de
+        la première. Détruire et rebâtir est plus lent et exact.
+
+        La classe sélectionnée est reprise après reconstruction : la perdre
+        renverrait l'utilisateur sur « toutes les classes » sans le dire, et
+        l'export suivant porterait sur un périmètre qu'il n'a pas choisi.
+
+        Args:
+            _code: Code de langue déjà posé par `layout.language_switch`.
+        """
+        classe = self._classe_active()
+        for widget in self._racine.winfo_children():
+            widget.destroy()
+        self._construire_widgets()
+        if classe is None:
+            return
+        for valeur in self._selecteur.cget('values'):
+            texte = u'%s' % valeur
+            if texte.split(u'—')[0].strip() == classe:
+                self._classe_choisie.set(texte)
+                break
+        self._changer_de_classe()
 
     def _classe_active(self):
         """Classe actuellement choisie, ou `None` pour « toutes ».
