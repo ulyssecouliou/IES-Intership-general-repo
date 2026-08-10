@@ -313,3 +313,105 @@ def test_the_module_stays_pure():
             assert not stripped.startswith(
                 ('import iesve', 'from iesve', 'import tkinter',
                  'from tkinter')), number
+
+
+# --------------------------------------------------------------------------
+# The clean bill of health -- the one output that must never be wrong
+# --------------------------------------------------------------------------
+
+def _full_view(test_id, colour, rows=None, text='x'):
+    """A view with rows, so the blocker can say HOW MUCH is unevaluated."""
+    return {'test_id': test_id,
+            'verdict_global': {'couleur': colour, 'texte': text},
+            'lignes': rows if rows is not None else []}
+
+
+def test_a_present_but_unevaluated_test_is_a_blocker():
+    """THE HOLE. `diagnose` only reported a test that was ABSENT. A test that
+    had been assembled and produced nothing yielded no blocker at all: class 5
+    came back "0 blockers, reachable as things stand" with all eleven of
+    Test 7's quantities unsimulated."""
+    found = sel.diagnose('5', [_full_view('Test 7', 'gris')])
+    assert [b['motif'] for b in found['blocages']] == \
+        [sel.REASON_NO_CANDIDATE_VALUE]
+    assert found['atteignable_en_letat'] is False
+
+
+def test_a_failing_test_is_a_blocker():
+    """Worse than the above: a class whose test FAILED also came back with a
+    clean bill of health."""
+    found = sel.diagnose('5', [_full_view('Test 7', 'rouge')])
+    assert [b['motif'] for b in found['blocages']] == \
+        [sel.REASON_OUT_OF_BAND]
+    assert found['atteignable_en_letat'] is False
+
+
+def test_an_unevaluated_test_is_not_called_a_failure():
+    """Nothing was compared, so nothing failed. The cause line has to say so,
+    or a missing input gets read as a wrong answer."""
+    found = sel.diagnose('5', [_full_view('Test 7', 'gris')])
+    cause = found['blocages'][0]['cause']
+    assert 'NOT a failure' in cause
+    assert 'nothing was compared' in cause.lower()
+
+
+def test_a_failure_says_that_something_WAS_measured():
+    """The distinction the whole repository turns on, stated where the reader
+    is deciding what to do next."""
+    found = sel.diagnose('5', [_full_view('Test 7', 'rouge')])
+    assert 'WAS measured' in found['blocages'][0]['cause']
+
+
+def test_the_unevaluated_blocker_counts_the_quantities():
+    """"Test 7 produced nothing" sends the reader to look. "11 of 11" tells
+    them whether they are one binding away or nowhere near."""
+    rows = [{'valeur_candidate': None} for _ in range(11)]
+    found = sel.diagnose('5', [_full_view('Test 7', 'gris', rows)])
+    assert '11 of 11' in found['blocages'][0]['constat']
+
+
+def test_a_partially_simulated_test_says_how_far_along_it_is():
+    rows = [{'valeur_candidate': 1.0}] * 4 + [{'valeur_candidate': None}] * 7
+    found = sel.diagnose('5', [_full_view('Test 7', 'gris', rows)])
+    assert '7 of 11' in found['blocages'][0]['constat']
+
+
+def test_a_green_test_adds_no_blocker():
+    found = sel.diagnose('5', [_full_view('Test 7', 'vert')])
+    assert found['blocages'] == []
+    assert found['atteignable_en_letat'] is True
+
+
+@pytest.mark.parametrize('colour,status', [
+    ('vert', sel.STATUS_PASS),
+    ('rouge', sel.STATUS_FAIL),
+    ('gris', sel.STATUS_NOT_EVALUATED),
+])
+def test_reachable_never_contradicts_the_status(colour, status):
+    """THE INVARIANT. Deriving "reachable" from the blocker list alone let a
+    status of NON_EVALUEE sit beside `True` -- two readings of one state
+    contradicting each other inside the same dictionary."""
+    found = sel.diagnose('5', [_full_view('Test 7', colour)])
+    assert found['statut'] == status
+    assert found['atteignable_en_letat'] == (status == sel.STATUS_PASS)
+    assert found['coherent'] is True
+
+
+def test_the_invariant_holds_for_every_class():
+    """Cheap to state, and it is the check that would have caught this."""
+    views = [_full_view('SIA-4010-Test-1', 'gris'),
+             _full_view('Test 7', 'gris')]
+    for name in sel.CLASSES:
+        found = sel.diagnose(name, views)
+        assert found['coherent'], name
+        if found['statut'] != sel.STATUS_PASS:
+            assert found['blocages'], name
+
+
+def test_every_reason_is_in_the_order_table():
+    """A reason missing from REASON_ORDER raises inside the sort, which would
+    take the whole diagnosis down rather than mis-order one line."""
+    reasons = [value for name, value in sorted(vars(sel).items())
+               if name.startswith('REASON_') and isinstance(value, str)]
+    for reason in reasons:
+        assert reason in sel.REASON_ORDER, reason

@@ -50,12 +50,23 @@ STATUS_NOT_EVALUATED = 'NON_EVALUEE'
 #: Blocking reasons, most blocking first. The order matters: the internal
 #: report leads with what prevents everything else.
 REASON_NO_SIMULATION = 'AUCUNE_SIMULATION'
+REASON_NO_CANDIDATE_VALUE = 'AUCUNE_VALEUR_CANDIDATE'
 REASON_UNRESOLVED_BINDINGS = 'LIAISONS_NON_RESOLUES'
+REASON_OUT_OF_BAND = 'VALEUR_HORS_BANDE'
 REASON_CRITERION_NOT_ESTABLISHED = 'CRITERE_NON_ETABLI'
 REASON_INPUT_MISSING = 'ENTREE_ABSENTE_DU_DEPOT'
 
-REASON_ORDER = (REASON_NO_SIMULATION, REASON_UNRESOLVED_BINDINGS,
+REASON_ORDER = (REASON_NO_SIMULATION, REASON_NO_CANDIDATE_VALUE,
+                REASON_UNRESOLVED_BINDINGS, REASON_OUT_OF_BAND,
                 REASON_CRITERION_NOT_ESTABLISHED, REASON_INPUT_MISSING)
+
+#: Verdict colours a view can carry, in `verdict_view`'s vocabulary. Named
+#: here because `diagnose` has to react to each of them: an unhandled colour
+#: used to mean "no blocker", which is how a failing class came to report a
+#: clean bill of health.
+COLOUR_PASS = 'vert'
+COLOUR_FAIL = 'rouge'
+COLOUR_NOT_EVALUATED = 'gris'
 
 #: The only criterion status that needs no confirmation from the SIA
 #: subcommittee: the specification states the rule itself.
@@ -278,6 +289,46 @@ def diagnose(name, view_list=(), binding_state=None, missing_inputs=None):
                       'these components, then declare the names read.',
         })
 
+    # A TEST THAT IS PRESENT BUT NOT GREEN IS A BLOCKER TOO.
+    #
+    # This was the hole. `diagnose` only reported a test that was ABSENT, so a
+    # test that had been assembled and had produced nothing -- or had produced
+    # a value outside the band -- yielded no blocker at all. Class 5 came back
+    # "0 blockers, reachable as things stand" with all eleven of Test 7's
+    # quantities unsimulated, and a class whose test FAILED came back the same
+    # way. A clean bill of health is the one output this repository can least
+    # afford to get wrong.
+    for view in selection['vues']:
+        colour = (view.get('verdict_global') or {}).get('couleur')
+        number = _view_test_number(view.get('test_id') or '')
+        if colour == COLOUR_NOT_EVALUATED:
+            blockers.append({
+                'motif': REASON_NO_CANDIDATE_VALUE,
+                'test': number,
+                'constat': 'Test %s is assembled but produced no candidate '
+                           'value: %s.' % (number, _unevaluated_detail(view)),
+                'cause': 'The test exists in the repository; no simulation has '
+                         'filled it. This is NOT a failure -- nothing was '
+                         'compared.',
+                'action': 'Run ApacheSim over the full year on a model that '
+                          'carries this test, then read the .aps back.',
+            })
+        elif colour == COLOUR_FAIL:
+            blockers.append({
+                'motif': REASON_OUT_OF_BAND,
+                'test': number,
+                'constat': 'Test %s: %s' % (
+                    number,
+                    (view.get('verdict_global') or {}).get('texte')
+                    or 'at least one value falls outside the reference band.'),
+                'cause': 'A value was compared and disagrees with the '
+                         'reference programmes. Unlike the reasons above, '
+                         'something WAS measured.',
+                'action': 'Compare the model against the specification before '
+                          'touching the engine: a disagreement is a modelling '
+                          'result until proven otherwise.',
+            })
+
     for view in selection['vues']:
         criterion = (view.get('critere') or {}).get('statut')
         if criterion and criterion != CRITERION_STATED_IN_SPEC:
@@ -306,15 +357,46 @@ def diagnose(name, view_list=(), binding_state=None, missing_inputs=None):
     blockers.sort(key=lambda blocker: (
         REASON_ORDER.index(blocker['motif']),
         blocker['test'] if blocker['test'] is not None else NO_TEST_SORT_KEY))
+
+    status = class_status(selection)
+    # THE INVARIANT. "Reachable as things stand" may only be said of a class
+    # that is actually compliant. Deriving it from the blocker list alone let
+    # a status of NON_EVALUEE or NON_CONFORME sit beside `True`, and the two
+    # readings of the same state contradicted each other in the same
+    # dictionary. `coherent` is exposed so a caller -- or a test -- can assert
+    # that they still agree, rather than trusting that they do.
+    reachable = (not blockers) and status == STATUS_PASS
     return {
         'classe': name,
         'intitule': selection['intitule'],
-        'statut': class_status(selection),
+        'statut': status,
         'tests_exiges': selection['tests_exiges'],
         'nb_blocages': len(blockers),
         'blocages': blockers,
-        'atteignable_en_letat': not blockers,
+        'atteignable_en_letat': reachable,
+        'coherent': reachable == (status == STATUS_PASS),
     }
+
+
+def _unevaluated_detail(view):
+    """Say HOW MUCH of a test is unevaluated, not merely that it is.
+
+    "Test 7 produced nothing" sends the reader to look. "11 of 11 quantities"
+    tells them whether they are one binding away or nowhere near.
+
+    Args:
+        view: A view assembled by `verdict_view`.
+
+    Returns:
+        str: A count, or the view's own wording when it carries no rows.
+    """
+    rows = view.get('lignes')
+    if not rows:
+        return ((view.get('verdict_global') or {}).get('texte')
+                or 'no detail available')
+    missing = sum(1 for row in rows if row.get('valeur_candidate') is None)
+    return '%d of %d quantities carry no simulated value' % (missing,
+                                                             len(rows))
 
 
 def summarise_diagnosis(diagnosis):
