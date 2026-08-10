@@ -66,7 +66,7 @@ import os
 from ui import design as design
 from ui import layout
 from ui import theme
-from ui import selection_classe as selection
+from ui import class_selection as selection
 from ui import verdict_view as vue
 
 #: Entree du selecteur qui n applique aucun filtre.
@@ -301,7 +301,7 @@ class NavigateurSIA4010(object):
 
         self._classe_choisie = tk.StringVar(value=TOUTES_LES_CLASSES)
         valeurs = [TOUTES_LES_CLASSES] + [
-            u'%s — %s' % (c, selection.intitule(c))
+            u'%s — %s' % (c, selection.description(c))
             for c in selection.CLASSES]
         self._selecteur = ttk.Combobox(
             barre['left'], textvariable=self._classe_choisie, values=valeurs,
@@ -381,7 +381,7 @@ class NavigateurSIA4010(object):
         classe = self._classe_active()
         if classe is None:
             return list(self._vues)
-        return selection.selectionner(classe, self._vues)['vues']
+        return selection.select(classe, self._vues)['vues']
 
     def _rafraichir_etat_classe(self):
         """Met a jour le libelle d'etat a cote du selecteur."""
@@ -390,8 +390,8 @@ class NavigateurSIA4010(object):
             self._etat_classe.configure(
                 text=u'%d test(s) affiché(s)' % len(self._vues))
             return
-        choix = selection.selectionner(classe, self._vues)
-        statut = selection.statut_de_la_classe(choix)
+        choix = selection.select(classe, self._vues)
+        statut = selection.class_status(choix)
         manquants = choix['numeros_absents']
         detail = u'%d/%d test(s) présent(s)' % (
             len(choix['vues']), len(choix['tests_exiges']))
@@ -634,10 +634,10 @@ class NavigateurSIA4010(object):
 
         morceaux = [u'# Diagnostic interne — navigateur SIA 4010', u'']
         for identifiant in classes:
-            diagnostic = selection.diagnostiquer(
-                identifiant, self._vues, etat_liaisons=liaisons)
+            diagnostic = selection.diagnose(
+                identifiant, self._vues, binding_state=liaisons)
             morceaux.append(u'```')
-            morceaux.append(selection.resumer_diagnostic(diagnostic))
+            morceaux.append(selection.summarise_diagnosis(diagnostic))
             morceaux.append(u'```')
             morceaux.append(u'')
         return u'\n'.join(morceaux)

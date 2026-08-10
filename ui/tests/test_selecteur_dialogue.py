@@ -17,7 +17,7 @@ import os
 import pytest
 
 from ui import dialog_tkinter as dialogue
-from ui import selection_classe as selection
+from ui import class_selection as selection
 
 
 class FauxSelecteur(object):
@@ -59,11 +59,11 @@ def _vue(test_id, couleur='vert'):
 
 def test_sans_selecteur_aucune_classe_nest_active():
     """Avant construction de l'interface, le filtre ne doit pas s'appliquer."""
-    assert NavigateurSansEcran([_vue('1')])._classe_active() is None
+    assert NavigateurSansEcran([_vue('SIA-4010-Test-1')])._classe_active() is None
 
 
 def test_toutes_les_classes_ne_filtre_rien():
-    navigateur = NavigateurSansEcran([_vue('1'), _vue('5')],
+    navigateur = NavigateurSansEcran([_vue('SIA-4010-Test-1'), _vue('5')],
                                      dialogue.TOUTES_LES_CLASSES)
     assert navigateur._classe_active() is None
     assert len(navigateur._vues_affichees()) == 2
@@ -72,12 +72,12 @@ def test_toutes_les_classes_ne_filtre_rien():
 def test_lidentifiant_est_extrait_du_libelle():
     """Le sélecteur affiche « 2A — Besoins de chaleur… » ; seul « 2A » compte."""
     navigateur = NavigateurSansEcran(
-        [], u'2A — %s' % selection.intitule('2A'))
+        [], u'2A — %s' % selection.description('2A'))
     assert navigateur._classe_active() == '2A'
 
 
 def test_un_choix_vide_ne_filtre_pas():
-    assert NavigateurSansEcran([_vue('1')], u'')._classe_active() is None
+    assert NavigateurSansEcran([_vue('SIA-4010-Test-1')], u'')._classe_active() is None
 
 
 # --------------------------------------------------------------------------
@@ -86,15 +86,15 @@ def test_un_choix_vide_ne_filtre_pas():
 
 def test_la_classe_5_ne_retient_que_le_test_7():
     navigateur = NavigateurSansEcran(
-        [_vue('1'), _vue('7')], u'5 — %s' % selection.intitule('5'))
-    assert [v['test_id'] for v in navigateur._vues_affichees()] == ['7']
+        [_vue('SIA-4010-Test-1'), _vue('Test 7')], u'5 — %s' % selection.description('5'))
+    assert [v['test_id'] for v in navigateur._vues_affichees()] == ['Test 7']
 
 
 def test_une_classe_sans_test_present_donne_une_liste_vide():
     """Vide est la vérité : mieux vaut un rapport vide qu'un rapport qui
     couvrirait des tests étrangers à la classe."""
     navigateur = NavigateurSansEcran(
-        [_vue('1')], u'5 — %s' % selection.intitule('5'))
+        [_vue('SIA-4010-Test-1')], u'5 — %s' % selection.description('5'))
     assert navigateur._vues_affichees() == []
 
 
@@ -124,22 +124,22 @@ def test_larbre_est_rempli_depuis_la_selection():
 # --------------------------------------------------------------------------
 
 def test_sans_classe_choisie_le_diagnostic_couvre_les_huit():
-    texte = NavigateurSansEcran([_vue('1')],
+    texte = NavigateurSansEcran([_vue('SIA-4010-Test-1')],
                                 dialogue.TOUTES_LES_CLASSES)._texte_diagnostic()
     for classe in selection.CLASSES:
-        assert u'Classe %s' % classe in texte
+        assert u'Class %s' % classe in texte
 
 
 def test_avec_une_classe_choisie_le_diagnostic_sy_limite():
     texte = NavigateurSansEcran(
-        [_vue('1')], u'1A — x')._texte_diagnostic()
-    assert u'Classe 1A' in texte
-    assert u'Classe 4B' not in texte
+        [_vue('SIA-4010-Test-1')], u'1A — x')._texte_diagnostic()
+    assert u'Class 1A' in texte
+    assert u'Class 4B' not in texte
 
 
 def test_le_diagnostic_nomme_les_liaisons_non_resolues():
     """Il doit dire la CAUSE, pas seulement le symptôme."""
-    texte = NavigateurSansEcran([_vue('1')], u'2A — x')._texte_diagnostic()
+    texte = NavigateurSansEcran([_vue('SIA-4010-Test-1')], u'2A — x')._texte_diagnostic()
     assert 'LIAISONS_NON_RESOLUES' in texte
     assert 'decouvrir_variables' in texte or 'Sonde_APS' in texte
 

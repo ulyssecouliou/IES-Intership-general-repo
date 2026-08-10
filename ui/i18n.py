@@ -140,6 +140,32 @@ STRINGS = {
         u'Document généré. Corriger la source, puis régénérer.',
         u'Generated document. Fix the source, then regenerate.'),
 
+    # -- Validation classes ------------------------------------------------
+    #
+    # RESERVATION, AND IT MATTERS. These eight descriptions RENDER the
+    # "applications" column of SIA 4010:2023 table 63 (p. 48), which is
+    # published in German. They are not quotations, in either language, and
+    # nothing matches on them -- they exist so the selector reads as something
+    # other than eight bare identifiers. If the SIA publishes an official
+    # French or English wording, replace these with it and say so here.
+    'class.1A': (u'Besoins de chaleur, bâtiment sans refroidissement',
+                 u'Heating demand, building without cooling'),
+    'class.1B': (u'Besoins de chaleur, tous bâtiments',
+                 u'Heating demand, all buildings'),
+    'class.2A': (u'Besoins de chaleur et de froid, protection solaire simple',
+                 u'Heating and cooling demand, simple solar shading'),
+    'class.2B': (u'Besoins de chaleur et de froid, protection solaire et '
+                 u'éclairage',
+                 u'Heating and cooling demand, solar shading and lighting'),
+    'class.3': (u'Installations de ventilation et de climatisation',
+                u'Ventilation and air-conditioning systems'),
+    'class.4A': (u'Bâtiment complet, protection solaire simple',
+                 u'Whole building, simple solar shading'),
+    'class.4B': (u'Bâtiment complet, tous équipements',
+                 u'Whole building, all systems'),
+    'class.5': (u'Besoins de chaleur et de froid pour profils existants',
+                u'Heating and cooling demand for existing profiles'),
+
     # -- Language switch ---------------------------------------------------
     'language.label': (u'Langue', u'Language'),
     'language.fr': (u'Français', u'French'),
