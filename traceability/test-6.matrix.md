@@ -17,7 +17,7 @@
 | Classes de validation concernées | 3, 4A, 4B | SIA 4010:2023, tableau 63 (p. 48) |
 | Bâtiment / local | Bâtiment exemple | Spezifikation_Test6.pdf |
 | Climat | SIA 2028 DRY normal, Zürich Kloten | idem |
-| Objet du test | ventilation mécanique, variantes de récupération de chaleur | idem |
+| Objet du test | ventilation mécanique à trois étages, récupération par boucle à eau glycolée (« Kreislaufverbund »), configuration unique | idem |
 | Classeur d'évaluation | `SIA_4010_geteilter_Link/Test6/Resultaterfassung_Test6.xlsx` | SIA 4010:2023, §4.4 |
 
 ## 2. Critères

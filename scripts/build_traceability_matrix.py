@@ -74,15 +74,27 @@ ANCRAGE = {
         'criteres_dans_la_spec': True,
         'batiment': u'Bâtiment exemple',
         'climat': u'SIA 2028 DRY normal, Zürich Kloten',
+        # « contact 5A-5C, vapeur 5D » était écrit ici. L'extraction du PDF
+        # (build_reseau_ventilation_reference) montre que le tableau porte
+        # QUATRE colonnes de variantes pour DEUX cellules fusionnées : le
+        # point de partage n'est pas dans la couche texte. On décrit donc les
+        # deux types sans leur affecter de variantes.
         'objet': u'ventilation mécanique : batteries chaude et froide, '
-                 u'récupération, humidification (contact 5A-5C, vapeur 5D)',
+                 u'récupération rotative, humidification par contact ou par '
+                 u'vapeur selon la variante (répartition 5A-5D à confirmer)',
     },
     6: {
         'spec': 'SIA_4010_geteilter_Link/Test6/Spezifikation_Test6.pdf',
         'criteres_dans_la_spec': False,
         'batiment': u'Bâtiment exemple',
         'climat': u'SIA 2028 DRY normal, Zürich Kloten',
-        'objet': u'ventilation mécanique, variantes de récupération de chaleur',
+        # « variantes de récupération de chaleur » était écrit ici. Le PDF
+        # décrit UNE configuration — boucle à eau glycolée — et le référentiel
+        # figé ne porte qu'un cas, « (ensemble) ». Annoncer des variantes
+        # ferait chercher des cas qui n'existent pas.
+        'objet': u'ventilation mécanique à trois étages, récupération par '
+                 u'boucle à eau glycolée (« Kreislaufverbund »), configuration '
+                 u'unique',
     },
 }
 

@@ -17,7 +17,7 @@
 | Classes de validation concernées | 3, 4A, 4B | SIA 4010:2023, tableau 63 (p. 48) |
 | Bâtiment / local | Bâtiment exemple | Spezifikation_Test5.pdf |
 | Climat | SIA 2028 DRY normal, Zürich Kloten | idem |
-| Objet du test | ventilation mécanique : batteries chaude et froide, récupération, humidification (contact 5A-5C, vapeur 5D) | idem |
+| Objet du test | ventilation mécanique : batteries chaude et froide, récupération rotative, humidification par contact ou par vapeur selon la variante (répartition 5A-5D à confirmer) | idem |
 | Classeur d'évaluation | `SIA_4010_geteilter_Link/Test5/Resultaterfassung_Test5.xlsx` | SIA 4010:2023, §4.4 |
 
 ## 2. Critères
