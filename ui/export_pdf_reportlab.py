@@ -101,7 +101,6 @@ def _style_tableau(nb_lignes, couleurs_lignes, largeurs_speciales=None):
     return style
 
 
-
 def _style_feuille():
     """Feuille de styles aux couleurs IES.
 

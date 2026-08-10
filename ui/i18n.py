@@ -307,6 +307,12 @@ def verdict_key(verdict):
         'NOT_ESTABLISHED': 'verdict.not_checkable',
         'NON_SIGNE': 'verdict.not_signed',
         'NOT_SIGNED': 'verdict.not_signed',
+        # Vocabulaire des STATUTS DE CLASSE (`ui/class_selection.py`), qui
+        # nomme les memes trois etats autrement. Les laisser passer bruts
+        # affichait « NON_EVALUEE » a l ecran -- un identifiant interne.
+        'CONFORME': 'verdict.pass',
+        'NON_CONFORME': 'verdict.fail',
+        'NON_EVALUEE': 'verdict.not_evaluated',
     }
     if verdict not in known:
         raise MissingTranslation(

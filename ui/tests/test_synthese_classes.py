@@ -14,8 +14,6 @@ ici la logique d'agrégation, pas les moteurs, et une vue synthétique permet de
 provoquer des combinaisons qu'aucun jeu de données réel ne produit encore.
 """
 
-import pytest
-
 from ui import verdict_view as vue
 
 

@@ -14,7 +14,6 @@ import os
 
 import pytest
 
-from ui import verdict_view as vue
 
 
 # --------------------------------------------------------------------------

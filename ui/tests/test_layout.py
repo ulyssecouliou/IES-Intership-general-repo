@@ -196,9 +196,19 @@ def test_the_strip_survives_an_empty_list(root):
 # Toolbar, headings, empty state, footer
 # --------------------------------------------------------------------------
 
-def test_the_toolbar_splits_left_and_right(root):
+def test_the_toolbar_splits_left_right_and_caption(root):
     bar = layout.toolbar(root)
-    assert sorted(bar) == ['inner', 'left', 'outer', 'right']
+    assert sorted(bar) == ['caption', 'inner', 'left', 'outer', 'right',
+                           'row']
+
+
+def test_the_caption_row_sits_below_the_controls(root):
+    """A state line packed after the buttons on the SAME row was truncated as
+    soon as they took their width -- and a truncated state hides the list of
+    missing tests, which is exactly what has to be read."""
+    bar = layout.toolbar(root)
+    children = bar['inner'].winfo_children()
+    assert children.index(bar['row']) < children.index(bar['caption'])
 
 
 def test_a_section_heading_can_carry_a_note(root):
@@ -380,7 +390,7 @@ def test_the_toolbar_serves_its_right_cluster_first(root):
     buttons out of the window -- an unreachable action, with nothing to say
     so."""
     bar = layout.toolbar(root)
-    children = bar['inner'].winfo_children()
+    children = bar['row'].winfo_children()
     assert children[0] is bar['right'], \
         'the right cluster must be packed before the expanding left one'
 

@@ -64,6 +64,7 @@ non encore produite (cf. rapport de fin de tâche, question ouverte).
 import os
 
 from ui import design as design
+from ui import i18n
 from ui import layout
 from ui import theme
 from ui import class_selection as selection
@@ -311,9 +312,12 @@ class NavigateurSIA4010(object):
 
         # L'état suit le sélecteur : c'est sa conséquence directe, et le
         # séparer à l'autre bout de la barre le déliait de son cause.
-        self._etat_classe = ttk.Label(barre['left'], style=theme.STYLE_MUTED,
-                                      text=u'')
-        self._etat_classe.pack(side='left', padx=(design.SPACE['lg'], 0))
+        # L etat va sur sa propre ligne, pleine largeur : a la suite du
+        # selecteur il etait tronque des que les boutons prenaient leur
+        # place, et un etat tronque cache la liste des tests manquants.
+        self._etat_classe = ttk.Label(barre['caption'],
+                                      style=theme.STYLE_MUTED, text=u'')
+        self._etat_classe.pack(side='left')
         self._rafraichir_etat_classe()
 
         # Les exports suivent la SÉLECTION, pas la liste complète — sans quoi
@@ -398,7 +402,8 @@ class NavigateurSIA4010(object):
         if manquants:
             detail += u' — manquants : %s' % u', '.join(
                 str(n) for n in manquants)
-        self._etat_classe.configure(text=u'%s — %s' % (statut, detail))
+        self._etat_classe.configure(
+            text=u'%s — %s' % (i18n.t(i18n.verdict_key(statut)), detail))
 
     def _changer_de_classe(self, _evenement=None):
         """Reconstruit l'arbre pour la classe choisie."""

@@ -232,15 +232,28 @@ def toolbar(parent):
     ttk = _ttk()
     outer, inner = card(parent, padding=design.PAD_CONTROL)
     outer.pack(side='top', fill='x', pady=(0, design.SPACE['sm']))
+
+    row = ttk.Frame(inner, style=theme.STYLE_CARD)
+    row.pack(side='top', fill='x')
+
     # DROITE D'ABORD, pour la même raison que dans `header_band` : Tk sert les
     # enfants dans l'ordre d'empaquetage, et un côté gauche en `expand=True`
     # raflait toute la largeur. Les boutons d'export sortaient de la fenêtre
     # — inatteignables, sans aucun signal.
-    right = ttk.Frame(inner, style=theme.STYLE_CARD)
+    right = ttk.Frame(row, style=theme.STYLE_CARD)
     right.pack(side='right')
-    left = ttk.Frame(inner, style=theme.STYLE_CARD)
+    left = ttk.Frame(row, style=theme.STYLE_CARD)
     left.pack(side='left', fill='x', expand=True)
-    return {'outer': outer, 'inner': inner, 'left': left, 'right': right}
+
+    # Ligne d'état, pleine largeur, SOUS les contrôles. Placée à leur suite
+    # sur la même ligne, elle était tronquée dès que les boutons prenaient
+    # leur place — et un état tronqué (« 2/7 test(s) prés… ») cache la liste
+    # des tests manquants, qui est justement ce qu'il faut lire.
+    caption = ttk.Frame(inner, style=theme.STYLE_CARD)
+    caption.pack(side='top', fill='x', pady=(design.SPACE['sm'], 0))
+
+    return {'outer': outer, 'inner': inner, 'row': row, 'left': left,
+            'right': right, 'caption': caption}
 
 
 def section_heading(parent, text_key, note_key=None):
