@@ -482,7 +482,7 @@ test de non-régression croisé — il tient en quinze lignes. **Effort : heures
 
 #### M12 — L'export vers le classeur officiel est impossible, et le mode visé n'est probablement pas le bon
 
-`ui/export_excel_com.py:31-37` (A) refuse explicitement de deviner les adresses de la zone
+`ui/excel_export.py:31-37` (A) refuse explicitement de deviner les adresses de la zone
 `Handeingabe` faute d'un descripteur `refs/reference-data/testN.map.json` — vérifié : aucun fichier
 `*.map.json` n'existe. Le refus est le bon comportement, mais la fonctionnalité est absente.
 
@@ -505,8 +505,8 @@ correspondante. **Effort : heures, après décision.**
 
 | # | Point | Preuve | Effort |
 |---|---|---|---|
-| m1 | L'export Excel COM n'est exécuté par personne | Les 3 seuls tests skippés de (A) sont `ui/tests/test_export_excel_com.py:143/:149/:187` (« Excel indisponible via COM ») ; couverture 20 % | heures |
-| m2 | Suite (A) instable ~20 % | *Vérifié pour cette note* : `Windows fatal exception: code 0x80010108` (RPC_E_DISCONNECTED) imprimé à `test_export_excel_com.py:103`, **à l'import du module pendant la collecte**, parce que le `pytestmark` de niveau module lance Excel en COM. Une occurrence a produit « Interrupted: 5 errors during collection », c'est-à-dire que **les 60 tests du moteur n'ont pas tourné du tout** | heures |
+| m1 | L'export Excel COM n'est exécuté par personne | Les 3 seuls tests skippés de (A) sont `ui/tests/test_excel_export.py:143/:149/:187` (« Excel indisponible via COM ») ; couverture 20 % | heures |
+| m2 | Suite (A) instable ~20 % | *Vérifié pour cette note* : `Windows fatal exception: code 0x80010108` (RPC_E_DISCONNECTED) imprimé à `test_excel_export.py:103`, **à l'import du module pendant la collecte**, parce que le `pytestmark` de niveau module lance Excel en COM. Une occurrence a produit « Interrupted: 5 errors during collection », c'est-à-dire que **les 60 tests du moteur n'ont pas tourné du tout** | heures |
 | m3 | Le meilleur test ne pourra jamais tourner en CI | `test_reproduces_the_tabulated_bands` a besoin de `SIA_4010_geteilter_Link` (118 Mo). Sans classeur il skip proprement → la seule confrontation directe au classeur SIA reste locale **par construction**. À arbitrer (Git LFS ? job manuel ? empreinte étendue ?) | heures |
 | m4 | Le même test a un garde-fou faible | Ses seules bornes sont `assert triplets` et `assert reproduced > 0`, avec 3 `continue` d'échappement. Une régression faisant tomber la localisation de 48 à 1 bande passerait en vert. Un plancher par classeur (≥ 28 / 8 / 12) coûte 3 lignes | minutes |
 | m5 | `WORKBOOKS` ne couvre que les Tests 1, 2 et 5 | `engine/tests/test_scatter_band.py:51-56` (A). Les Tests 3, 4, 6, 7 sont sur disque et non couverts. Ajouter Test 4 verrouillerait la propriété « pas de plancher à zéro » et sécuriserait l'arbitrage de `critere-test4.spec.md` | minutes |

@@ -256,7 +256,7 @@ cause la phrase qui présente le classeur comme la source du critère.
 
 `python -m pytest -q` → **165 passés, 3 ignorés**. Un vidage
 `Windows fatal exception: code 0x80010108` (`RPC_E_DISCONNECTED`) est émis à la
-**collecte** de `ui/tests/test_export_excel_com.py` ligne 103 : du COM Excel
+**collecte** de `ui/tests/test_excel_export.py` ligne 103 : du COM Excel
 s'exécute au **niveau module**. Non fatal, la suite se termine — mais tout
 lecteur du journal CI verra une trace d'exception sur une suite verte. Hors
 périmètre du Test 7, à traiter par `ui-engineer`.
