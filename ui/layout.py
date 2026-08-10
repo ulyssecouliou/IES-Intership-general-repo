@@ -111,10 +111,10 @@ def header_band(parent, title_key='app.title', subtitle_key='app.subtitle'):
     band = ttk.Frame(parent, style=theme.STYLE_BAND, padding=design.PAD_BAND)
     band.pack(side='top', fill='x')
 
-    # ACTIONS D'ABORD. Tk sert les enfants dans l'ordre d'empaquetage : les
-    # titres empaquetés en premier réclamaient toute la largeur et le second
-    # bouton d'export sortait de la fenêtre. Un bouton hors champ n'est pas
-    # une imperfection : l'action est inatteignable et rien ne le signale.
+    # ACTIONS FIRST. Tk serves children in packing order, and titles packed
+    # first claimed the whole width, so the second export button fell outside
+    # the window. A button off screen is not a blemish: the action is
+    # unreachable and nothing says so.
     actions = ttk.Frame(band, style=theme.STYLE_BAND)
     actions.pack(side='right', anchor='ne')
 
@@ -236,19 +236,19 @@ def toolbar(parent):
     row = ttk.Frame(inner, style=theme.STYLE_CARD)
     row.pack(side='top', fill='x')
 
-    # DROITE D'ABORD, pour la même raison que dans `header_band` : Tk sert les
-    # enfants dans l'ordre d'empaquetage, et un côté gauche en `expand=True`
-    # raflait toute la largeur. Les boutons d'export sortaient de la fenêtre
-    # — inatteignables, sans aucun signal.
+    # RIGHT FIRST, for the same reason as in `header_band`: Tk serves children
+    # in packing order, and a left side with `expand=True` claimed the whole
+    # width. The export buttons fell outside the window -- unreachable, with
+    # nothing to say so.
     right = ttk.Frame(row, style=theme.STYLE_CARD)
     right.pack(side='right')
     left = ttk.Frame(row, style=theme.STYLE_CARD)
     left.pack(side='left', fill='x', expand=True)
 
-    # Ligne d'état, pleine largeur, SOUS les contrôles. Placée à leur suite
-    # sur la même ligne, elle était tronquée dès que les boutons prenaient
-    # leur place — et un état tronqué (« 2/7 test(s) prés… ») cache la liste
-    # des tests manquants, qui est justement ce qu'il faut lire.
+    # State line, full width, BELOW the controls. Packed after them on the
+    # same row it was truncated as soon as the buttons took their width -- and
+    # a truncated state ("2/7 test(s) prés...") hides the list of missing
+    # tests, which is precisely what has to be read.
     caption = ttk.Frame(inner, style=theme.STYLE_CARD)
     caption.pack(side='top', fill='x', pady=(design.SPACE['sm'], 0))
 
