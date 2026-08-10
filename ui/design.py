@@ -198,9 +198,11 @@ PAD_CONTROL = (SPACE['md'], SPACE['sm'])
 ROW_HEIGHT = 28
 HEADER_ROW_HEIGHT = 32
 
-#: Window geometry. A minimum stops the results table from collapsing to
-#: unreadable column widths.
-WINDOW_WIDTH = 1180
+#: Window geometry. The minimum stops the results table from collapsing to
+#: unreadable column widths. The default width is set from a MEASUREMENT, not
+#: a guess: at 1180 the composed dialog requested 1189 and the last export
+#: button was clipped -- an unreachable action, with nothing to say so.
+WINDOW_WIDTH = 1240
 WINDOW_HEIGHT = 760
 WINDOW_MIN_WIDTH = 900
 WINDOW_MIN_HEIGHT = 600

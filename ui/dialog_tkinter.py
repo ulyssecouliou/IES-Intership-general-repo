@@ -64,6 +64,7 @@ non encore produite (cf. rapport de fin de tâche, question ouverte).
 import os
 
 from ui import design as design
+from ui import layout
 from ui import theme
 from ui import selection_classe as selection
 from ui import verdict_view as vue
@@ -89,14 +90,27 @@ except ImportError:  # pragma: no cover -- attendu hors VE / hors env graphique
 # feuille de style publique d IES. Une seule source pour le navigateur et les
 # rapports -- sinon les deux divergent au premier ajustement.
 #
+# CES TABLES SONT INDEXÉES PAR LE VOCABULAIRE DE `verdict_view`, pas par les
+# statuts de `design`. La distinction n'est pas cosmétique : une version
+# précédente copiait `design.STATUS_SYMBOL` tel quel, indexé par `pass` /
+# `fail` / ... , alors que `verdict_view` fournit `vert` / `rouge` / `gris`.
+# Chaque recherche échouait donc et retombait sur « ? », et les lignes
+# perdaient leur fond — sans qu'un seul test le voie, parce qu'ils vérifient
+# les tags POSÉS, pas ce que les tags rendent. C'est exactement le défaut
+# vert-mais-faux que ce dépôt collectionne.
+#
 # ⚠ À VÉRIFIER -- non exécuté : le rendu effectif de `tag_configure` dépend du
 # thème ttk actif sur le poste VE. Plusieurs thèmes Windows ('vista',
 # 'xpnative') ignorent `background` sur les lignes de Treeview. C est
 # précisément pourquoi le verdict porte AUSSI un symbole et un texte : la
 # couleur ne doit jamais être seule à le dire.
-COULEUR_FOND_PAR_VERDICT = dict(design.STATUS_GROUND)
+COULEURS_DE_VERDICT = tuple(sorted(design.LEGACY_COLOUR_TO_STATUS))
 
-SYMBOLE_PAR_VERDICT = dict(design.STATUS_SYMBOL)
+COULEUR_FOND_PAR_VERDICT = dict(
+    (couleur, design.ground(couleur)) for couleur in COULEURS_DE_VERDICT)
+
+SYMBOLE_PAR_VERDICT = dict(
+    (couleur, design.symbol(couleur)) for couleur in COULEURS_DE_VERDICT)
 
 
 class NavigateurSIA4010(object):
@@ -144,7 +158,9 @@ class NavigateurSIA4010(object):
         self._racine = tk.Tk()
         self._racine.title(u'Navigateur SIA 4010 -- ' + u', '.join(
             str(v.get('test_id') or '?') for v in self._vues))
-        self._racine.geometry('1100x650')
+        self._racine.geometry('%dx%d' % (design.WINDOW_WIDTH, design.WINDOW_HEIGHT))
+        self._racine.minsize(design.WINDOW_MIN_WIDTH,
+                             design.WINDOW_MIN_HEIGHT)
         self._construire_widgets()
 
     # ----------------------------------------------------------------
@@ -166,91 +182,106 @@ class NavigateurSIA4010(object):
                           padding=design.SPACE['sm'])
         corps.pack(side='top', fill='both', expand=True)
 
+        # ORDRE D'EMPAQUETAGE : LE WIDGET QUI PEUT CÉDER EN DERNIER.
+        #
+        # Le tableau demande à lui seul plus de hauteur que la fenêtre n'en a.
+        # Quand le total demandé dépasse la cavité, Tk sert ses enfants dans
+        # l'ORDRE D'EMPAQUETAGE et les derniers n'obtiennent rien : pas
+        # d'erreur, pas d'avertissement, ils ne sont simplement pas là. (Ce
+        # n'est PAS `expand` qui prive ses frères : `expand` ne répartit que
+        # le reliquat.) Le tableau est le seul à pouvoir céder du terrain — il
+        # défile — donc il passe en dernier.
+        #
+        # C'est arrivé deux fois de suite ici : le pied de page, puis le
+        # panneau de détail. Un rappel « un PASS technique n'est pas une
+        # conformité » réduit à un pixel n'est pas un défaut cosmétique : il
+        # retire de l'écran la phrase qui empêche la confusion, à l'endroit
+        # exact où elle se produit.
         self._construire_selecteur(corps)
+        layout.footer(corps)
+        self._construire_panneau_detail(corps)
+        self._construire_tableau(corps)
 
-        # Arborescence Classe -> Test -> Grandeur -> Cas -> Période.
-        cadre_arbre = ttk.Frame(corps, style=theme.STYLE_CARD,
-                                padding=design.PAD_CARD)
-        cadre_arbre.pack(side='top', fill='both', expand=True)
+        self._arbre.bind('<<TreeviewSelect>>', self._afficher_detail_selection)
 
-        colonnes = ('valeur', 'reference_ou_plage', 'verdict', 'article')
-        self._arbre = ttk.Treeview(cadre_arbre, columns=colonnes,
-                                   show='tree headings',
-                                   style=theme.STYLE_TREE)
-        self._arbre.heading('#0', text=u'Classe / Test / Grandeur / Cas / Période')
-        self._arbre.heading('valeur', text=u'Valeur candidate')
-        self._arbre.heading('reference_ou_plage', text=u'Référence / plage')
-        self._arbre.heading('verdict', text=u'Verdict')
-        self._arbre.heading('article', text=u'Article de norme')
-        self._arbre.column('#0', width=320, stretch=True)
-        self._arbre.column('valeur', width=110, anchor='e')
-        self._arbre.column('reference_ou_plage', width=180, anchor='e')
-        self._arbre.column('verdict', width=110, anchor='center')
-        self._arbre.column('article', width=320, stretch=True)
-        self._arbre.pack(side='left', fill='both', expand=True)
+    def _construire_tableau(self, parent):
+        """Arborescence Classe -> Test -> Grandeur -> Cas -> Période.
 
-        defilement = ttk.Scrollbar(cadre_arbre, orient='vertical',
-                                    command=self._arbre.yview)
-        defilement.pack(side='left', fill='y')
-        self._arbre.configure(yscrollcommand=defilement.set)
+        Les colonnes numériques sont alignées à droite : des chiffres qui ne
+        s'alignent pas sont plus durs à parcourir pour y trouver l'écart, ce
+        qui est pourtant le seul usage de ce tableau.
 
+        Args:
+            parent: Cadre d'accueil. À empaqueter EN DERNIER (cf. note dans
+                `_construire_widgets`) : c'est le seul widget extensible.
+        """
+        tableau = layout.results_table(parent, (
+            ('valeur', 'column.simulated', 120, 'e'),
+            ('reference_ou_plage', 'column.band', 190, 'e'),
+            ('verdict', 'column.verdict', 150, 'center'),
+            ('article', 'column.source', 320, 'w'),
+        ), tree_heading_key='column.quantity')
+        tableau['outer'].pack(side='top', fill='both', expand=True)
+        self._arbre = tableau['tree']
+        self._arbre.heading(
+            '#0', text=u'Classe / Test / Grandeur / Cas / Période')
         self._configurer_tags_couleur()
         self._remplir_arbre()
 
-        cadre_detail = ttk.Frame(corps, style=theme.STYLE_CARD,
-                                 padding=design.PAD_CARD)
-        cadre_detail.pack(side='bottom', fill='x', pady=(design.SPACE['sm'], 0))
-        ttk.Label(cadre_detail, style=theme.STYLE_SECTION,
-                  text=u'Détail de la période sélectionnée').pack(anchor='w')
+    def _construire_panneau_detail(self, parent):
+        """Carte de détail de la période sélectionnée.
+
+        Args:
+            parent: Cadre d'accueil.
+        """
+        exterieur, cadre_detail = layout.card(parent)
+        exterieur.pack(side='bottom', fill='x', pady=(design.SPACE['sm'], 0))
+        layout.section_heading(cadre_detail, 'section.evidence')
+        ttk.Label(cadre_detail, style=theme.STYLE_CAPTION,
+                  text=u'Détail de la période sélectionnée').pack(
+                      anchor='w', pady=(design.SPACE['xs'], 0))
+        # Police monospacée : les valeurs et les bornes se lisent alignées.
         self._texte_detail = tk.Text(
             cadre_detail, height=6, wrap='word', relief='flat',
             background=design.WHITE, foreground=design.TEXT,
-            font=(design.UI_FONT, design.SIZE_BODY),
-            highlightthickness=1, highlightbackground=design.BORDER_GREY)
-        self._texte_detail.pack(fill='x', pady=(6, 0))
+            font=(design.UI_FONT_MONO, design.SIZE_BODY),
+            highlightthickness=1, highlightbackground=design.BORDER_GREY,
+            padx=design.SPACE['md'], pady=design.SPACE['sm'])
+        self._texte_detail.pack(fill='x', pady=(design.SPACE['sm'], 0))
         self._texte_detail.configure(state='disabled')
-
-        self._arbre.bind('<<TreeviewSelect>>', self._afficher_detail_selection)
 
     def _construire_bandeau(self):
         """Bandeau navy pleine largeur : signature visuelle du site IES.
 
+        Composé depuis `ui/layout.py` plutôt que monté ici : le bandeau du
+        wizard SIA 380/2 était une seconde version, légèrement différente, du
+        même objet — deux fenêtres d'un même produit qui ne se ressemblent
+        pas.
         """
-        bandeau = ttk.Frame(self._racine, style=theme.STYLE_BAND,
-                            padding=design.PAD_BAND)
-        bandeau.pack(side='top', fill='x')
+        bandeau = layout.header_band(self._racine)
 
-        titres = ttk.Frame(bandeau, style=theme.STYLE_BAND)
-        titres.pack(side='left', anchor='w')
-        ttk.Label(titres, style=theme.STYLE_TITLE,
-                  text=u'Navigateur de validation SIA 4010').pack(anchor='w')
+        # Un verdict par test. Agrégé, il masquerait LEQUEL échoue, et c'est
+        # la seule chose que cette rangée sert à dire.
+        layout.status_strip(bandeau['titles'], [
+            {'label': une_vue.get('test_id') or u'Test',
+             'status': une_vue['verdict_global']['couleur'],
+             'text': une_vue['verdict_global']['texte']}
+            for une_vue in self._vues])
 
-        # Un verdict par test : agrege, il masquerait lequel echoue.
-        for une_vue in self._vues:
-            verdict_global = une_vue['verdict_global']
-            ttk.Label(
-                titres, style=theme.STYLE_SUBTITLE,
-                text=theme.verdict_label(
-                    verdict_global['couleur'],
-                    u'%s — %s' % (une_vue.get('test_id') or u'Test',
-                                  verdict_global['texte']))
-            ).pack(anchor='w', pady=(2, 0))
-
-        ttk.Label(titres, style=theme.STYLE_SUBTITLE, wraplength=620,
+        # Le repli suit la largeur de la fenetre moins le cluster
+        # d'actions : une valeur en dur depassait des que les boutons
+        # s'allongeaient, ce qui est arrive au premier passage a l'i18n.
+        ttk.Label(bandeau['titles'], style=theme.STYLE_BAND_TEXT,
+                  wraplength=design.WINDOW_MIN_WIDTH - 340,
                   text=u'Article : '
                        + self._vues[0]['verdict_global']['article']
-                  ).pack(anchor='w', pady=(6, 0))
+                  ).pack(anchor='w', pady=(design.SPACE['md'], 0))
 
-        actions = ttk.Frame(bandeau, style=theme.STYLE_BAND)
-        actions.pack(side='right', anchor='e')
-        ttk.Button(actions, style=theme.STYLE_BUTTON_PRIMARY,
-                   text=u'Exporter Excel (SIA officiel)',
-                   command=self._exporter_excel).pack(side='left', padx=(0, 6))
-        ttk.Button(actions, style=theme.STYLE_BUTTON, text=u'Exporter PDF',
-                   command=self._exporter_pdf).pack(side='left', padx=(0, 6))
-        ttk.Button(actions, style=theme.STYLE_BUTTON,
-                   text=u'Diagnostic interne',
-                   command=self._exporter_diagnostic).pack(side='left')
+        # LES EXPORTS NE SONT PLUS DANS LE BANDEAU. Trois boutons y
+        # entraient en concurrence de largeur avec le titre et l'article, et
+        # le troisième sortait de la fenêtre — une action inatteignable, que
+        # rien ne signalait. Ils vivent maintenant dans la barre d'outils,
+        # à côté du sélecteur dont ils suivent la sélection.
 
     def _construire_selecteur(self, parent):
         """Choix de la classe de validation visée.
@@ -263,26 +294,40 @@ class NavigateurSIA4010(object):
         Args:
             parent: Cadre d'accueil.
         """
-        barre = ttk.Frame(parent, style=theme.STYLE_CARD,
-                          padding=design.PAD_CARD)
-        barre.pack(side='top', fill='x', pady=(0, design.SPACE['sm']))
+        barre = layout.toolbar(parent)
 
-        ttk.Label(barre, style=theme.STYLE_SECTION,
+        ttk.Label(barre['left'], style=theme.STYLE_SECTION,
                   text=u'Classe de validation visée').pack(side='left')
 
         self._classe_choisie = tk.StringVar(value=TOUTES_LES_CLASSES)
         valeurs = [TOUTES_LES_CLASSES] + [
             u'%s — %s' % (c, selection.intitule(c))
             for c in selection.CLASSES]
-        liste = ttk.Combobox(barre, textvariable=self._classe_choisie,
-                             values=valeurs, state='readonly', width=52)
-        liste.pack(side='left', padx=(10, 0))
+        liste = ttk.Combobox(barre['left'], textvariable=self._classe_choisie,
+                             values=valeurs, state='readonly', width=34,
+                             style=theme.STYLE_COMBO)
+        liste.pack(side='left', padx=(design.SPACE['md'], 0))
         liste.bind('<<ComboboxSelected>>', self._changer_de_classe)
 
-        self._etat_classe = ttk.Label(barre, style=theme.STYLE_MUTED,
+        # L'état suit le sélecteur : c'est sa conséquence directe, et le
+        # séparer à l'autre bout de la barre le déliait de son cause.
+        self._etat_classe = ttk.Label(barre['left'], style=theme.STYLE_MUTED,
                                       text=u'')
-        self._etat_classe.pack(side='left', padx=(14, 0))
+        self._etat_classe.pack(side='left', padx=(design.SPACE['lg'], 0))
         self._rafraichir_etat_classe()
+
+        # Les exports suivent la SÉLECTION, pas la liste complète — sans quoi
+        # le rapport contredirait l'écran. Une seule action en bleu d'accent :
+        # deux boutons accentués côte à côte cessent de vouloir dire « c'est
+        # ici qu'on agit ».
+        actions = barre['right']
+        layout.action_button(actions, 'action.export_excel',
+                             self._exporter_excel, primary=True)
+        layout.action_button(actions, 'action.export_pdf', self._exporter_pdf)
+        ttk.Button(actions, style=theme.STYLE_BUTTON,
+                   text=u'Diagnostic interne',
+                   command=self._exporter_diagnostic).pack(
+                       side='left', padx=(design.SPACE['sm'], 0))
 
     def _classe_active(self):
         """Classe actuellement choisie, ou `None` pour « toutes ».
