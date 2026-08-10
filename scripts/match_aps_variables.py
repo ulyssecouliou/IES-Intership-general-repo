@@ -322,8 +322,9 @@ def build_sheet(report):
         u'relevé. **À confirmer dans VE**, pas acquis. |'
         % report['effectifs'].get(CANDIDATE_PRESENT, 0),
         u'| `CANDIDATE_WRONG_LEVEL` | %d | Le candidat existe, mais à un '
-        u'AUTRE niveau que celui déclaré. Erreur de déclaration, pas organe '
-        u'manquant — les deux appellent des actions opposées. |'
+        u'AUTRE niveau que celui déclaré. Le niveau décide du PÉRIMÈTRE : '
+        u'ce n\'est pas un organe manquant, et ce n\'est pas non plus une '
+        u'simple faute de frappe. |'
         % report['effectifs'].get(CANDIDATE_WRONG_LEVEL, 0),
         u'| `CANDIDATE_ABSENT` | %d | Un candidat existe mais ne figure PAS '
         u'dans ce relevé : le modèle ne porte probablement pas l\'organe. |'
@@ -431,10 +432,20 @@ def _action_cell(row):
         return u'Confirmer dans VE que cette variable mesure bien : %s' \
             % (row.get('piste') or u'la grandeur attendue')
     if row['etat'] == CANDIDATE_WRONG_LEVEL:
-        return (u'**Le niveau déclaré est faux.** La variable existe, au(x) '
-                u'niveau(x) `%s`. Corriger `niveau` dans l\'adaptateur : '
-                u'aucune simulation ne réglera cela.'
-                % u'`, `'.join(row.get('niveaux_portant_le_candidat') or []))
+        # NE PAS dire « corriger le niveau ». Le niveau d'une variable VE
+        # décide de son PÉRIMÈTRE — local, système, bâtiment. Déplacer la
+        # déclaration pour faire coïncider les deux reviendrait à changer ce
+        # qu'on mesure pour que ça tombe juste, ce qui est l'inverse du
+        # travail. La question est de savoir quel périmètre le classeur
+        # demande, et elle se tranche sur la spécification.
+        return (u'**Incohérence de périmètre.** La variable existe, mais au '
+                u'niveau `%s` et non `%s`. Le niveau décide du périmètre '
+                u'(local / système / bâtiment) : lire la spécification pour '
+                u'savoir lequel le classeur demande, PUIS corriger soit le '
+                u'niveau, soit la variable. Aucune simulation ne réglera '
+                u'cela.'
+                % (u'`, `'.join(row.get('niveaux_portant_le_candidat') or []),
+                   row['niveau']))
     if row['etat'] == CANDIDATE_ABSENT:
         return (u'Le modèle ne porte pas cet organe. Le construire, '
                 u'simuler, re-sonder.')

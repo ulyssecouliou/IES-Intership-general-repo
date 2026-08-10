@@ -10,7 +10,7 @@
 |---|---|---|
 | `BOUND` | 0 | Liaison déjà déclarée. |
 | `CANDIDATE_PRESENT` | 6 | Un candidat existe ET figure dans ce relevé. **À confirmer dans VE**, pas acquis. |
-| `CANDIDATE_WRONG_LEVEL` | 1 | Le candidat existe, mais à un AUTRE niveau que celui déclaré. Erreur de déclaration, pas organe manquant — les deux appellent des actions opposées. |
+| `CANDIDATE_WRONG_LEVEL` | 1 | Le candidat existe, mais à un AUTRE niveau que celui déclaré. Le niveau décide du PÉRIMÈTRE : ce n'est pas un organe manquant, et ce n'est pas non plus une simple faute de frappe. |
 | `CANDIDATE_ABSENT` | 0 | Un candidat existe mais ne figure PAS dans ce relevé : le modèle ne porte probablement pas l'organe. |
 | `CANDIDATE_IMPOSSIBLE` | 3 | Aucun candidat n'est possible, et la raison est écrite. |
 | `NO_CANDIDATE` | 10 | Rien de proposé. Le relevé offre la liste ci-dessous, sans classement — un classement plausible se ferait accepter sans vérification. |
@@ -43,7 +43,7 @@
 
 | Grandeur (libellé du classeur) | Niveau | État | Variable | À faire |
 |---|---|---|---|---|
-| `Beleuchtungsenergie` | `z` (151 var.) | **CANDIDATE_WRONG_LEVEL** | `Total lights energy` (Total lights energy) | **Le niveau déclaré est faux.** La variable existe, au(x) niveau(x) `e`. Corriger `niveau` dans l'adaptateur : aucune simulation ne réglera cela. |
+| `Beleuchtungsenergie` | `z` (151 var.) | **CANDIDATE_WRONG_LEVEL** | `Total lights energy` (Total lights energy) | **Incohérence de périmètre.** La variable existe, mais au niveau `e` et non `z`. Le niveau décide du périmètre (local / système / bâtiment) : lire la spécification pour savoir lequel le classeur demande, PUIS corriger soit le niveau, soit la variable. Aucune simulation ne réglera cela. |
 
 ## Test 4
 
