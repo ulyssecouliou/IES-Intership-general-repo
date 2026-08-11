@@ -690,7 +690,7 @@ nouveaux lanceurs — elle aurait dû l'être.
    placer ce code dans un module du projet (duplication assumée) ;
 2. la racine du dépôt passe **en tête** de `sys.path`, retirée puis
    réinsérée — `if _RACINE not in sys.path` laissait un autre dépôt devant ;
-3. `scripts/amorcage.py::controler` confronte le `__file__` de chaque module
+3. `scripts/bootstrap_check.py::controler` confronte le `__file__` de chaque module
    du projet à la racine attendue et **refuse de lancer** (code 2) en nommant
    le fichier fautif, plutôt que de produire un résultat issu de la mauvaise
    source.

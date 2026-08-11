@@ -78,7 +78,7 @@ def test_the_launchers_it_lists_are_real(manual):
     'scripts.build_traceability_matrix',
     'scripts.match_aps_variables',
     'scripts.build_reseau_ventilation_reference',
-    'scripts.amorcage',
+    'scripts.bootstrap_check',
     'ui.i18n',
     'ui.theme',
     'ui.class_selection',
@@ -182,5 +182,5 @@ def test_it_does_not_reference_modules_that_were_renamed(manual):
     """These four were renamed during the English conversion. A manual is the
     likeliest place for an old name to survive."""
     for gone in ('design_ies', 'theme_ies', 'selection_classe',
-                 'export_excel_com'):
+                 'export_excel_com', 'scripts/amorcage'):
         assert gone not in manual, gone

@@ -186,7 +186,7 @@ Ne pas passer au test suivant tant que le courant n'est pas « done ».
 | `python scripts/build_traceability_matrix.py --ecrire` | régénère les matrices |
 | `python scripts/match_aps_variables.py --write` | confronte un relevé APS aux grandeurs déclarées |
 | `python scripts/build_reseau_ventilation_reference.py` | relit les réseaux 5 et 6 dans les PDF |
-| `python scripts/amorcage.py` | contrôle que VEScripts charge le bon dépôt |
+| `python scripts/bootstrap_check.py` | contrôle que VEScripts charge le bon dépôt |
 
 Depuis **VEScripts** uniquement :
 
@@ -198,7 +198,7 @@ Depuis **VEScripts** uniquement :
 
 > VEScripts garde **un seul interpréteur** d'un clic sur Run au suivant.
 > `sys.modules` persiste : un module d'un autre dépôt reste chargé et sera
-> réutilisé en silence. `scripts/amorcage.py` purge et vérifie. Le cas
+> réutilisé en silence. `scripts/bootstrap_check.py` purge et vérifie. Le cas
 > dangereux est un nom qui existe dans les deux dépôts — il s'importe sans
 > erreur, et on débogue le mauvais fichier.
 
@@ -294,7 +294,7 @@ Dans l'ordre de rendement :
 ## 11. Pièges de l'environnement
 
 - **Deux dépôts se ressemblent.** `SIA_Compliance_Scripts` est l'ancien. Le
-  travail vit dans `IES-Intership-general-repo`. `scripts/amorcage.py` vérifie
+  travail vit dans `IES-Intership-general-repo`. `scripts/bootstrap_check.py` vérifie
   lequel est chargé.
 - **`tkinter.Tk()` échoue par intermittence** sur ce poste (Python du Microsoft
   Store, `init.tcl` introuvable alors que le fichier existe). C'est un artefact

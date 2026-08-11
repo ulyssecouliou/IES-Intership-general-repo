@@ -66,14 +66,14 @@ while _RACINE in sys.path:
     sys.path.remove(_RACINE)
 sys.path.insert(0, _RACINE)
 
-from scripts import amorcage  # noqa: E402
+from scripts import bootstrap_check  # noqa: E402
 from scripts import construire_test4_dans_ve as sonde  # noqa: E402
 
 
 if __name__ == '__main__':
     # No `sys.exit`: it raises SystemExit, which VEScripts reports as an
     # error in its script window even when everything went fine.
-    if amorcage.controler(_RACINE):
+    if bootstrap_check.check(_RACINE):
         _code = sonde.main(tuple(getattr(sys, 'argv', ())[1:]))
     else:
         _code = 2
