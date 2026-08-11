@@ -389,6 +389,18 @@ signer n'existe pas**. Aucun test ne peut donc être déclaré « done » au sen
 **Correctif.** Créer `traceability/matrice-test-1.md` à trois colonnes, l'alimenter depuis les
 citations déjà présentes dans `engine/*.py`, la faire signer. **Effort : heures.**
 
+> **Fait le 2026-08-10, sous un autre nom.** La matrice existe :
+> `traceability/test-1.matrix.md`. Elle n'est pas rédigée mais **générée** par
+> `scripts/build_traceability_matrix.py`, parce qu'une matrice écrite à la main
+> se périme au premier changement du dépôt — et une matrice périmée affirme une
+> couverture qui n'existe plus. Les grandeurs, les cas et leur état y sont lus
+> dans le moteur ; l'existence de chaque fichier cité est contrôlée sur le
+> disque.
+>
+> **Ce qui reste vrai de ce constat** : elle porte « NON SIGNÉE », et la règle
+> n° 5 reste insatisfaite. Le script ne se signe pas lui-même, ce qui serait
+> sans valeur. Il manque le vérificateur indépendant, pas le document.
+
 #### M7 — Le classeur livré ne vérifie pas la conformité SIA 4010
 
 Feuille `COMPLIANCE RESULTS` : « SIA 4010 / Overall score | **0** », test_1 à test_7 tous
