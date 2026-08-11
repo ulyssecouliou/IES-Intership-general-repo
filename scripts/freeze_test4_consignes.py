@@ -1,27 +1,26 @@
 # -*- coding: utf-8 -*-
-u"""Fige la consigne de température du Test 4, lue sur le graphique de la spec.
+u"""Freeze the Test 4 temperature setpoint, read off the specification chart.
 
 POURQUOI CE FICHIER EXISTE. Dans `Spezifikation_Test4.pdf`, la ligne
-« Sollwerte / Raumlufttemperatur » est **vide dans la couche texte**. La
-consigne n'y est pas écrite : elle est dessinée, dans une image occupant le
+"Sollwerte / Raumlufttemperatur" is **empty in the text layer**. The
+setpoint is not written there: it is drawn, in an image occupying the
 rectangle (307, 74)–(581, 182) de la page 2.
 
-Conséquence pratique : toute extraction automatique du PDF — la nôtre y
+The practical consequence: any automatic extraction from the PDF -- ours
 comprise, jusqu'au 2026-08-07 — conclut que le Test 4 n'a pas de consigne de
-température. C'est faux, et ce serait une erreur silencieuse : un modèle
+temperature. That is wrong, and it would be a silent error: a model
 construit sans elle tournerait, produirait des nombres, et serait faux.
 
 CE QUE LE GRAPHIQUE MONTRE. Une consigne GLISSANTE, fonction de la moyenne
-mobile 48 h de la température extérieure — pas une valeur fixe. Quatre points
-d'inflexion sont **annotés en clair sur le tracé** (« 12;23 », « 17;25 »,
-« 19;22 », « 23.5;23.5 ») : ce sont des étiquettes du graphique, pas une
-lecture de pixels au jugé.
+48-hour rolling mean of the outdoor temperature -- not a fixed value. Four
+break points are **annotated in plain text on the plot** ("12;23", "17;25",
+"19;22", "23.5;23.5"): those are chart data labels, not pixels read by eye.
 
-CE QUI RESTE À VÉRIFIER. L'attribution des deux courbes — bleue au
-refroidissement, rouge au chauffage — est déduite de leur position relative
-(la consigne de chauffage est la plus basse) et non d'une légende : le
-graphique n'en porte pas. Le recoupement est cohérent, la bande morte passant
-de 1,0 K à 1,5 K, mais il reste une déduction.
+WHAT REMAINS UNVERIFIED. Which curve is which -- blue for cooling, red for
+heating -- is INFERRED from their relative position (the heating setpoint is
+the lower one), not from a legend: the chart carries none. The cross-check is
+consistent, the dead band widening from 1.0 K to 1.5 K, but it is still an
+inference and is recorded as one.
 
 Usage :
     python scripts/freeze_test4_consignes.py [--ecrire]
@@ -43,13 +42,13 @@ _SORTIE = os.path.join(_RACINE, 'refs', 'reference-data',
 _SPEC = os.path.join('SIA_4010_geteilter_Link', 'Test4',
                      'Spezifikation_Test4.pdf')
 
-#: Rectangle de l'image porteuse, page 2 (index 1). Consigné pour que le
-#: relevé puisse être refait à l'identique.
+#: Bounding box of the image that carries it, page 2 (index 1). Recorded so
+#: the reading can be reproduced exactly.
 _RECTANGLE_IMAGE = {'page': 2, 'x0': 307.35, 'y0': 74.55,
                     'x1': 581.10, 'y1': 182.55}
 
-#: Points d'inflexion, tels qu'ANNOTÉS sur le tracé. Chaque couple est
-#: `(moyenne mobile 48 h de la température extérieure, consigne)`, en °C.
+#: Break points, as ANNOTATED on the plot. Each pair is
+#: `(48-hour rolling mean of outdoor temperature, setpoint)`, in degrees C.
 #: Hors de ces bornes, les deux courbes sont horizontales.
 CONSIGNES = {
     u'chauffage': {
@@ -80,17 +79,19 @@ RESERVES = [
 
 
 def consigne(role, moyenne_48h):
-    u"""Consigne de température pour une moyenne extérieure donnée.
+    """Setpoint temperature for a given outdoor rolling mean.
 
     Args:
         role: `'chauffage'` ou `'refroidissement'`.
-        moyenne_48h: Moyenne mobile 48 h de la température extérieure, en °C.
+        moyenne_48h: 48-hour rolling mean of outdoor temperature, in
+            degrees C.
 
     Returns:
         float: Consigne en °C.
 
     Raises:
-        KeyError: Si le rôle est inconnu.
+        KeyError: If the role is unknown. Returning a default setpoint
+            would put an unmeasured number into a validation chain.
     """
     points = CONSIGNES[role][u'points']
     (x1, y1), (x2, y2) = points[0], points[1]
@@ -102,10 +103,12 @@ def consigne(role, moyenne_48h):
 
 
 def construire():
-    u"""Structure à figer.
+    """The structure to freeze.
 
     Returns:
-        dict: Référentiel prêt à écrire.
+        dict: Reference ready to write. Its French strings are DATA: they
+        are copied into `docs/FICHE-APACHEHVAC-TEST4.md`, a French document,
+        so they stay French exactly as the `ui/i18n.py` table does.
     """
     return {
         u'grandeur': u'Consigne de température de l\'air du local — Test SIA '
@@ -128,13 +131,13 @@ def construire():
 
 
 def main(arguments):
-    u"""Point d'entrée en ligne de commande.
+    """Command-line entry point.
 
     Args:
         arguments: Arguments sans le nom du script.
 
     Returns:
-        int: 0 si tout s'est bien passé.
+        int: 0 when everything went well.
     """
     donnees = construire()
     for role in sorted(donnees[u'consignes']):
@@ -152,7 +155,7 @@ def main(arguments):
             flux.write(json.dumps(donnees, ensure_ascii=False, indent=1))
             flux.write(u'\n')
         print()
-        print(u'écrit : %s' % os.path.relpath(_SORTIE, _RACINE))
+        print(u'written: %s' % os.path.relpath(_SORTIE, _RACINE))
     return 0
 
 

@@ -62,6 +62,9 @@ EXEMPT = {
         'its own accent class is data, not prose',
     'scripts/quality/validate_release.py':
         'carries a list of French words it searches FOR; that list is data',
+    'scripts/freeze_test4_consignes.py':
+        'its French strings are written into a frozen reference and from '
+        'there into a French sheet; prose converted 2026-08-10',
 }
 
 #: Directories excluded from the count, with the reason.
