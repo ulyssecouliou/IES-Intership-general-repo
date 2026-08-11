@@ -1,15 +1,16 @@
 # -*- coding: utf-8 -*-
-u"""Sonde des variables de résultats — à lancer au bouton Run depuis VE.
+u"""Results-variable probe -- run it from the Run button inside VE.
 
-À lancer sur un projet VE **dont au moins une simulation ApacheSim a déjà
-tourné** : la sonde lit un fichier `.aps`, elle n'en produit pas.
+Run it on a VE project where **at least one ApacheSim simulation has already
+finished**: the probe READS a `.aps` file, it does not produce one.
 
-Elle relève les noms de variables disponibles aux niveaux local, système et
-météo, les systèmes Apache, les postes d'énergie et les unités. C'est ce
-relevé qui manque pour lier les 20 grandeurs des tests SIA 2 à 6 — aujourd'hui
-toutes déclarées non résolues.
+It records the variable names available at room, system and weather level, the
+Apache systems, the energy end-uses and the units. That reading is what is
+missing to bind the 20 quantities of SIA tests 2 to 6, all of which are
+declared unresolved today. Those names are not API symbols -- they cannot be
+looked up in documentation, only read off a real file.
 
-Elle ne juge rien et ne modifie rien. Elle écrit `outputs/sonde_aps.json`.
+It judges nothing and changes nothing. It writes `outputs/sonde_aps.json`.
 """
 
 from __future__ import print_function
@@ -20,29 +21,33 @@ import sys
 _RACINE = os.path.dirname(os.path.abspath(__file__))
 
 # ---------------------------------------------------------------------------
-# Amorçage — DOIT précéder tout import du projet
+# Bootstrap -- MUST come before any project import
 # ---------------------------------------------------------------------------
 #
-# VEScripts garde le MÊME interpréteur d'un clic sur Run au suivant :
-# `sys.modules` persiste. Un paquet `scripts` importé depuis un autre dépôt y
-# reste en cache et masque celui-ci, quoi qu'on fasse ensuite à `sys.path` —
-# un module déjà chargé n'est jamais rechargé.
+# VEScripts keeps the SAME interpreter from one click on Run to the next, so
+# `sys.modules` persists. A `scripts` package imported from another repository
+# stays cached there and shadows this one, whatever is done to `sys.path`
+# afterwards: a module already loaded is never reloaded.
 #
-# Vécu le 2026-08-06 :
+# Lived through on 2026-08-06:
 #   ImportError: cannot import name 'sonde_aps' from 'scripts'
 #   (...\SIA_Compliance_Scripts\scripts\__init__.py)
 #
-# Ce code ne peut pas vivre dans un module du projet : il faut qu'il tourne
-# avant qu'un tel module soit importable. D'où la duplication assumée entre
-# les lanceurs.
+# That one at least announced itself. The dangerous case is a name that exists
+# in BOTH repositories: it imports without error, and the wrong file gets
+# debugged.
+#
+# This code cannot live in a project module -- it has to run before such a
+# module is importable. Hence the duplication across launchers, which is
+# deliberate.
 _PAQUETS = ('scripts', 've_adapter', 'engine', 'ui', 'swiss_sia')
 _PREFIXES = _PAQUETS + tuple(_nom + '.' for _nom in _PAQUETS)
 for _nom_module in tuple(sys.modules):
     if _nom_module in _PAQUETS or _nom_module.startswith(_PREFIXES):
         del sys.modules[_nom_module]
 
-# Notre racine passe DEVANT, pas derrière : un autre dépôt peut déjà être sur
-# le chemin.
+# Our root goes FIRST, not last: another repository may already be on the
+# path.
 while _RACINE in sys.path:
     sys.path.remove(_RACINE)
 sys.path.insert(0, _RACINE)
@@ -52,11 +57,11 @@ from scripts import sonde_aps as sonde  # noqa: E402
 
 
 if __name__ == '__main__':
-    # Pas de `sys.exit` : il leve SystemExit, que VEScripts remonte comme une
-    # erreur dans sa fenetre de script alors que tout s est bien passe.
+    # No `sys.exit`: it raises SystemExit, which VEScripts reports as an
+    # error in its script window even when everything went fine.
     if amorcage.controler(_RACINE):
         _code = sonde.main(tuple(getattr(sys, 'argv', ())[1:]))
     else:
         _code = 2
     print()
-    print('--- termine (code %d) ---' % _code)
+    print('--- finished (code %d) ---' % _code)

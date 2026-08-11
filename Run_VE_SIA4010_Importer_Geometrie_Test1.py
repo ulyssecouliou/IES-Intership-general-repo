@@ -1,32 +1,32 @@
 # -*- coding: utf-8 -*-
-u"""Import de la géométrie du Test 1 — bouton Run depuis VE.
+u"""Test 1 geometry import -- Run button inside VE.
 
-ATTENTION : ce script MODIFIE le modèle VE. À lancer sur un projet JETABLE,
-jamais sur un modèle client.
+WARNING: this script MODIFIES the VE model. Run it on a THROWAWAY project,
+never on a client model.
 
-POURQUOI UN SCRIPT SÉPARÉ DE LA SONDE. Un import **modifie le modèle**. La
-sonde du Test 1 est un relevé : elle crée des matériaux d'essai et les
-supprime. Y glisser un import ferait qu'un simple relevé muterait le modèle
-sans qu'on l'ait demandé — exactement le genre d'effet de bord qu'on ne
+WHY THIS IS SEPARATE FROM THE PROBE. An import **modifies the model**. The
+Test 1 probe is a reading: it creates trial materials and deletes them.
+Folding an import into it would make a mere reading mutate the model without
+anyone asking -- exactly the kind of side effect nobody
 remarque qu'une fois le mal fait. Cet import se lance donc **explicitement**,
 sur un projet jetable.
 
 CE QUE FAIT CE SCRIPT, DANS L'ORDRE :
 
-    1. écrit le gbXML depuis `ve_adapter/gbxml_test1.py` — qui refuse déjà
-       d'écrire une géométrie incohérente ;
+    1. writes the gbXML from `ve_adapter/gbxml_test1.py`, which already
+       refuses to write an incoherent geometry;
     2. l'importe par `ImportGBXML.import_file`, dont la signature n'est pas
-       introspectable : plusieurs formes d'appel sont essayées, et celle qui
-       répond est CONSIGNÉE ;
+       introspectable: several call shapes are tried, and the one that
+       answers is RECORDED;
     3. **relit `get_bodies()` puis `get_areas()`** et confronte les surfaces
-       à celles de la source.
+       against those of the source.
 
-L'ÉTAPE 3 EST LA SEULE QUI PROUVE QUELQUE CHOSE. Un import qui ne lève pas ne
-dit rien : les épaisseurs de couche à 1 mm ont été créées sans la moindre
-erreur, et valaient un R quarante-sept fois trop faible. Une géométrie
-importée de travers se comporterait pareil.
+STEP 3 IS THE ONLY ONE THAT PROVES ANYTHING. An import that does not raise
+says nothing: the 1 mm layer thicknesses were created without a single error,
+and were worth a resistance forty-seven times too low. A geometry imported
+crooked would behave the same way.
 
-Il écrit `outputs/import_geometrie_test1.json`.
+It writes `outputs/import_geometrie_test1.json`.
 """
 
 
@@ -38,29 +38,33 @@ import sys
 _RACINE = os.path.dirname(os.path.abspath(__file__))
 
 # ---------------------------------------------------------------------------
-# Amorçage — DOIT précéder tout import du projet
+# Bootstrap -- MUST come before any project import
 # ---------------------------------------------------------------------------
 #
-# VEScripts garde le MÊME interpréteur d'un clic sur Run au suivant :
-# `sys.modules` persiste. Un paquet `scripts` importé depuis un autre dépôt y
-# reste en cache et masque celui-ci, quoi qu'on fasse ensuite à `sys.path` —
-# un module déjà chargé n'est jamais rechargé.
+# VEScripts keeps the SAME interpreter from one click on Run to the next, so
+# `sys.modules` persists. A `scripts` package imported from another repository
+# stays cached there and shadows this one, whatever is done to `sys.path`
+# afterwards: a module already loaded is never reloaded.
 #
-# Vécu le 2026-08-06 :
+# Lived through on 2026-08-06:
 #   ImportError: cannot import name 'sonde_aps' from 'scripts'
 #   (...\SIA_Compliance_Scripts\scripts\__init__.py)
 #
-# Ce code ne peut pas vivre dans un module du projet : il faut qu'il tourne
-# avant qu'un tel module soit importable. D'où la duplication assumée entre
-# les lanceurs.
+# That one at least announced itself. The dangerous case is a name that exists
+# in BOTH repositories: it imports without error, and the wrong file gets
+# debugged.
+#
+# This code cannot live in a project module -- it has to run before such a
+# module is importable. Hence the duplication across launchers, which is
+# deliberate.
 _PAQUETS = ('scripts', 've_adapter', 'engine', 'ui', 'swiss_sia')
 _PREFIXES = _PAQUETS + tuple(_nom + '.' for _nom in _PAQUETS)
 for _nom_module in tuple(sys.modules):
     if _nom_module in _PAQUETS or _nom_module.startswith(_PREFIXES):
         del sys.modules[_nom_module]
 
-# Notre racine passe DEVANT, pas derrière : un autre dépôt peut déjà être sur
-# le chemin.
+# Our root goes FIRST, not last: another repository may already be on the
+# path.
 while _RACINE in sys.path:
     sys.path.remove(_RACINE)
 sys.path.insert(0, _RACINE)
@@ -70,11 +74,11 @@ from scripts import importer_geometrie_test1 as sonde  # noqa: E402
 
 
 if __name__ == '__main__':
-    # Pas de `sys.exit` : il leve SystemExit, que VEScripts remonte comme une
-    # erreur dans sa fenetre de script alors que tout s est bien passe.
+    # No `sys.exit`: it raises SystemExit, which VEScripts reports as an
+    # error in its script window even when everything went fine.
     if amorcage.controler(_RACINE):
         _code = sonde.main(tuple(getattr(sys, 'argv', ())[1:]))
     else:
         _code = 2
     print()
-    print('--- termine (code %d) ---' % _code)
+    print('--- finished (code %d) ---' % _code)

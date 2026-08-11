@@ -226,5 +226,7 @@ def test_le_lanceur_avertit_avant_de_muter():
         pytest.skip(u'lanceur absent')
     with io.open(chemin, encoding='utf-8') as flux:
         source = flux.read()
-    assert 'MODIFIE le mod' in source
-    assert 'JETABLE' in source
+    # Le lanceur est passe a l anglais ; la propriete gardee est la meme :
+    # il doit AVERTIR avant de muter, et nommer le projet jetable.
+    assert 'MODIFIES the VE model' in source
+    assert 'THROWAWAY' in source

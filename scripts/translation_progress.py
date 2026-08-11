@@ -40,8 +40,13 @@ import sys
 _HERE = os.path.dirname(os.path.abspath(__file__))
 _ROOT = os.path.abspath(os.path.join(_HERE, os.pardir))
 
-#: Accented characters that French prose cannot avoid for long.
-_ACCENTS = re.compile(u'[éèêëàâäùûüçôöîï]', re.UNICODE)
+#: Characters that French prose cannot avoid for long, MINUS the German
+#: umlauts. The first version of this class included a-umlaut, o-umlaut
+#: and u-umlaut, so every German workbook label -- `Warmezufuhr
+#: Lufterwarmer` and its kin -- was counted as French, in a module whose
+#: own docstring promises German is not counted. A measuring instrument
+#: that contradicts its own documentation is worse than no measurement.
+_ACCENTS = re.compile(u'[éèêàâùûçôî]', re.UNICODE)
 
 #: Files whose French is the product or a quotation, not a backlog item. Each
 #: entry says WHY, because an unexplained exclusion list becomes a place to
@@ -53,6 +58,10 @@ EXEMPT = {
         'asserts against the French manual; its French is a quotation',
     'engine/tests/test_build_traceability_matrix.py':
         'asserts against French matrices; same reason',
+    'scripts/translation_progress.py':
+        'its own accent class is data, not prose',
+    'scripts/quality/validate_release.py':
+        'carries a list of French words it searches FOR; that list is data',
 }
 
 #: Directories excluded from the count, with the reason.
