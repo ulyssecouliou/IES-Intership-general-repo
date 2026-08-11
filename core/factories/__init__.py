@@ -1,4 +1,4 @@
-"""Fabriques découplant l'appelant des classes concrètes."""
+"""Factories that decouple the caller from concrete classes."""
 
 from core.factories.checker_factory import (
     CheckerFactory,

@@ -1,13 +1,14 @@
-"""Noyau applicatif : accès aux données, fabriques et stratégies de validation.
+"""Application core: data access, factories, validation strategies.
 
-Trois couches, volontairement séparées :
+Three layers, deliberately kept apart:
 
-* ``core.repositories`` — d'où viennent les données (IESVE, fichiers SIA).
-* ``core.factories``   — comment on instancie un checker sans le nommer en dur.
-* ``core.strategies``  — selon quel algorithme on valide (PDF ou officiel).
+* ``core.repositories`` -- where the data comes from (IESVE, SIA files).
+* ``core.factories``    -- how a checker is built without naming it in code.
+* ``core.strategies``   -- which algorithm validates (PDF or official).
 
-Règle transverse : **aucun module de ce paquet n'importe ``iesve`` au niveau
-module**. L'import est différé dans les implémentations qui en ont besoin, de
-sorte que la totalité de ``core`` reste importable en intégration continue,
-sans licence VE.
+ONE RULE ACROSS THE PACKAGE: **no module here imports ``iesve`` at module
+level**. The implementations that need it defer the import, so the whole of
+``core`` stays importable in continuous integration, with no VE licence. Break
+that and the engine stops being testable without a licence, which is rule 4 of
+the project.
 """

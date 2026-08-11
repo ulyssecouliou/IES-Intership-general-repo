@@ -1,4 +1,4 @@
-"""Accès centralisé aux données : modèle IESVE et fichiers officiels SIA."""
+"""One way in to the data: the IESVE model and the official SIA files."""
 
 from core.repositories.iesve_repository import (
     IESVERepository,
