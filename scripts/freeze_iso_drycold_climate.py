@@ -1,23 +1,28 @@
 # -*- coding: utf-8 -*-
-u"""Fige les données climatiques publiques d'EN ISO 52016-1:2017 (cas DRYCOLD).
+u"""Freeze the public climate data of EN ISO 52016-1:2017 (DRYCOLD case).
 
-SOURCE FAISANT FOI, gratuite et publique — c'est la seule que la spécification
-du Test 1 désigne :
+THE AUTHORITATIVE SOURCE, free and public -- the only one the Test 1
+specification names:
 
     Spezifikation_Test1.pdf : « Klima | DRYCOLD.TMY (BESTEST) Denver, CO /
                                 http://standards.iso.org/iso/52016/-1/ed-1 »
 
-Le portail ne contient qu'UN fichier :
-`ISO_52016_1_BESTEST_ClimData_2016.08.24.xls`. Ce n'est PAS un fichier météo
+The portal holds exactly ONE file:
+`ISO_52016_1_BESTEST_ClimData_2016.08.24.xls`. It is NOT a weather file
 brut mais un tableau horaire converti, et il porte deux avertissements en clair
-qui changent la façon de mener le Test 1 — voir `avertissements_du_fichier`.
+that change how Test 1 must be run -- see `avertissements_du_fichier`.
 
-POURQUOI CE SCRIPT EXISTE. Le dépôt Codex portait un fichier
-`DRYCOLD_TMY_ISO_SOURCE_VERIFICATION.json` déclarant
+WHY THIS SCRIPT EXISTS. The Codex repository carried a file
+`DRYCOLD_TMY_ISO_SOURCE_VERIFICATION.json` declaring
 `{"status": "PASS", "source_identity_supported": true}` avec une empreinte
-sha256 qui est celle d'un STUB DE TEST DE 30 OCTETS, pas celle du fichier réel
+sha256 that is the digest of a 30-BYTE TEST STUB, not of the real file
 de 8760 heures. L'attestation ne certifiait rien. On repart donc de la source
-publique, avec son empreinte recalculée ici.
+public source, with its digest recomputed here.
+
+That is the failure this whole repository is built against: a document that
+LOOKS like verification, carrying a real algorithm and a real-looking digest,
+attesting to something that was never checked. Nothing about it reads as
+suspicious until someone recomputes the hash.
 
 Usage :
     python scripts/freeze_iso_drycold_climate.py
@@ -42,12 +47,12 @@ URL = ('https://standards.iso.org/iso/52016/-1/ed-1/'
        'ISO_52016_1_BESTEST_ClimData_2016.08.24.xls')
 
 # Les huit surfaces sur lesquelles le fichier donne l'irradiance, dans l'ordre
-# des colonnes 6 à 13. Libellés lus en ligne 4 de la feuille.
+# of columns 6 to 13. Labels read from row 4 of the sheet.
 SURFACES = ('NV', 'EV', 'SV', 'WV', 'N45', 'S45', 'VOID', 'H')
 
-# Ligne de la première donnée, et nombre d'heures du mois d'initialisation.
+# Row of the first data point, and the length of the warm-up month.
 PREMIERE_LIGNE_DONNEES = 5
-HEURES_INITIALISATION = 744  # décembre dupliqué en tête
+HEURES_INITIALISATION = 744  # December duplicated at the front
 
 CONSEQUENCE = (
     u"Le fichier ISO fournit l'irradiance DÉJÀ CALCULÉE sur huit surfaces "
@@ -70,7 +75,7 @@ INITIALISATION = (
 
 
 def _lignes(feuille):
-    u"""Lignes de données : celles dont la colonne « month » est numérique."""
+    """Data rows: the ones whose `month` column holds a number."""
     lues = []
     for r in range(PREMIERE_LIGNE_DONNEES, feuille.nrows):
         valeur = feuille.cell_value(r, 1)
@@ -159,11 +164,11 @@ def main():
         f.write(u'\n')
 
     source = donnees[u'source']
-    print(u'figé : %s' % os.path.relpath(_XLS, _RACINE))
+    print(u'frozen: %s' % os.path.relpath(_XLS, _RACINE))
     print(u'  %d octets, sha256 %s' % (source[u'octets'], source[u'sha256']))
-    print(u'figé : %s' % os.path.relpath(_SORTIE, _RACINE))
+    print(u'frozen: %s' % os.path.relpath(_SORTIE, _RACINE))
     print()
-    print(u'irradiation annuelle de référence, kWh/m2 :')
+    print(u'reference annual irradiation, kWh/m2:')
     for nom, valeur in donnees[u'agregats_annuels'][u'irradiation_kwh_m2_an'].items():
         print(u'   %-5s %8.1f' % (nom, valeur))
 
