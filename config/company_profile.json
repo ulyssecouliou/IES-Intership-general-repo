@@ -1,0 +1,16 @@
+{
+  "_comment": [
+    "Profil du bureau qui emet le rapport. Copie de company_profile.template.json",
+    "avec le chemin de logo renseigne pour exercer le letterhead.",
+    "Tout champ laisse vide s imprime comme non specifie : rien n est invente.",
+    "A completer par le bureau avant toute remise a un client."
+  ],
+  "name": "",
+  "tagline": "",
+  "address_lines": [],
+  "contact_lines": [],
+  "logo_path": "assets/office_logo.placeholder.png",
+  "author_name": "",
+  "author_role": "",
+  "report_reference": ""
+}

@@ -1855,6 +1855,12 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
         "fr": "comparaison projet/référence vérifiée",
         "it": "confronto progetto/riferimento verificato",
     },
+    "outstanding_sia3802_domain_evidence": {
+        "en": "outstanding SIA 380/2 domain evidence",
+        "de": "fehlende Nachweise zu den Bereichen nach SIA 380/2",
+        "fr": "preuves manquantes par domaine SIA 380/2",
+        "it": "prove mancanti per dominio SIA 380/2",
+    },
     "outstanding_sia4010_official_results": {
         "en": "official SIA 4010 test results",
         "de": "offizielle Testergebnisse nach SIA 4010",
