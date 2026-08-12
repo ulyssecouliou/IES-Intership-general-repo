@@ -90,6 +90,41 @@ def _reload_reference_model_package():
             del sys.modules[module_name]
 
 
+#: The three project files a scenario names, and where ``prepare_case`` reads
+#: them from when a receipt does not carry them.
+_REPOSITORY_SCENARIO_FILES = (
+    ("case_manifest_path", "sia4010_all_classes.json"),
+    ("config_path", "reference_model_config.json"),
+    ("asset_manifest_path", "reference_model_assets.json"),
+)
+
+
+def _resolve_scenario_files(receipt):
+    """Return the three project files, failing closed rather than emitting "".
+
+    ``prepare_case_bundle`` does not return one shape. ``CasePreparationReceipt``
+    carries these three paths, but ``Test3SourceBundleReceipt`` -- returned once
+    the delegated Test 3 inputs are ready -- carries none of them. Reading them
+    with a default of ``""`` would then write a scenario naming no files at all,
+    and the failure would surface much later as a missing manifest. The fallback
+    below is the same repository location ``prepare_case`` itself reads
+    (``preparation_bundle.py``), not a guess, and a missing file stops the run.
+    """
+
+    resolved = []
+    for attribute, filename in _REPOSITORY_SCENARIO_FILES:
+        value = getattr(receipt, attribute, None)
+        path = Path(str(value)) if value else PROJECT_ROOT / "config" / filename
+        if not path.is_file():
+            raise RuntimeError(
+                "Scenario input does not exist: {} ({})".format(
+                    path, attribute
+                )
+            )
+        resolved.append(str(path))
+    return resolved
+
+
 def _resolve_target_class(variant):
     """Return one validation class that really requires this variant."""
 
@@ -220,6 +255,7 @@ def run():
     if audit_path is not None:
         print("Preparation audit: {}".format(audit_path))
 
+    case_manifest, ve_config, ve_assets = _resolve_scenario_files(receipt)
     payload = controller.build_payload(
         "probe_{}".format(case_id.lower()),
         "SIA4010_OFFICIAL",
@@ -227,9 +263,9 @@ def run():
         variant,
         case_id,
         "PREPARE_ONLY",
-        str(getattr(receipt, "case_manifest_path", "")),
-        str(getattr(receipt, "config_path", "")),
-        str(getattr(receipt, "asset_manifest_path", "")),
+        case_manifest,
+        ve_config,
+        ve_assets,
     )
     scenario = controller.write_and_validate(project_path, payload)
     print(

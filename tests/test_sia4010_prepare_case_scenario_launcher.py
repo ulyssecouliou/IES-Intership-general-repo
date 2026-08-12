@@ -126,6 +126,57 @@ class PrepareCaseScenarioLauncherTests(unittest.TestCase):
     def test_replacement_is_gated_off_by_default(self) -> None:
         self.assertFalse(self.launcher.ALLOW_SCENARIO_REPLACEMENT)
 
+    def test_a_receipt_carrying_the_paths_is_used_verbatim(self) -> None:
+        class Receipt:
+            case_manifest_path = ROOT / "config" / "sia4010_all_classes.json"
+            config_path = ROOT / "config" / "reference_model_config.json"
+            asset_manifest_path = ROOT / "config" / "reference_model_assets.json"
+
+        resolved = self.launcher._resolve_scenario_files(Receipt())
+        self.assertEqual(
+            resolved,
+            [
+                str(Receipt.case_manifest_path),
+                str(Receipt.config_path),
+                str(Receipt.asset_manifest_path),
+            ],
+        )
+
+    def test_a_receipt_without_the_paths_falls_back_instead_of_emitting_empty(
+        self,
+    ) -> None:
+        """Test3SourceBundleReceipt carries none of the three.
+
+        Reading them with a default of "" would write a scenario naming no
+        files, and the failure would surface much later as a missing manifest.
+        """
+
+        from swiss_sia.reference_model.sia4010.test3_source_bundle import (
+            Test3SourceBundleReceipt,
+        )
+
+        for attribute, _filename in self.launcher._REPOSITORY_SCENARIO_FILES:
+            with self.subTest(attribute=attribute):
+                self.assertNotIn(
+                    attribute, Test3SourceBundleReceipt.__dataclass_fields__
+                )
+
+        class Bare:
+            pass
+
+        resolved = self.launcher._resolve_scenario_files(Bare())
+        self.assertEqual(len(resolved), 3)
+        for path in resolved:
+            self.assertTrue(Path(path).is_file(), path)
+            self.assertNotEqual(path, "")
+
+    def test_a_missing_scenario_input_stops_the_run(self) -> None:
+        class Wrong:
+            case_manifest_path = ROOT / "no_such_manifest.json"
+
+        with self.assertRaises(RuntimeError):
+            self.launcher._resolve_scenario_files(Wrong())
+
 
 if __name__ == "__main__":
     unittest.main()
