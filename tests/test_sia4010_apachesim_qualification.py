@@ -17,33 +17,96 @@ ROOT = Path(__file__).resolve().parents[1]
 TEMP_ROOT = ROOT / ".codex_tmp"
 
 
+#: ISO 52016-1 clause 7.2.2.14 infiltration expressed in VE ``l/s/m2``
+#: (``units_val == 2``), as written by the source-traced asset manifest.
+ISO_INFILTRATION_L_S_M2 = 0.3075
+
+
+class _AirExchange:
+    """Minimal ``RoomAirExchange`` double (API reference section 11)."""
+
+    def __init__(self, type_val, max_flow, units_val=2, name="SIA600_INFILTRATION_0P41ACH"):
+        self._data = {
+            "name": name,
+            "type_val": type_val,
+            "units_val": units_val,
+            # VE returns room-level flows as a dict indexed by unit selector.
+            "max_flows": {units_val: max_flow},
+            "max_flow_from_template": False,
+            "variation_profile": "ON",
+        }
+
+    def get(self):
+        return dict(self._data)
+
+
 class _RoomData:
-    def __init__(self, factor=2.0710644309317603):
+    def __init__(
+        self,
+        factor=2.0710644309317603,
+        conditioned=True,
+        infiltration_flow=ISO_INFILTRATION_L_S_M2,
+    ):
         self.factor = factor
+        self.conditioned = conditioned
+        self.infiltration_flow = infiltration_flow
+
+    def get_air_exchanges(self):
+        if self.infiltration_flow is None:
+            return []
+        return [_AirExchange(0, self.infiltration_flow)]
 
     def get_room_conditions(self):
-        return {"furniture_mass_factor": self.factor}
+        return {
+            "furniture_mass_factor": self.factor,
+            "heating_profile": "ON" if self.conditioned else "OFF",
+            "cooling_profile": "ON" if self.conditioned else "OFF",
+        }
 
     def get_apache_systems(self):
         return {
-            "conditioned": True,
+            "conditioned": (
+                True
+                if self.conditioned
+                else "iesve.conditioned_flag.no_free_floating"
+            ),
             "heating_capacity_unlimited": True,
             "cooling_capacity_unlimited": True,
+            "heating_plant_radiant_fraction": 0.0,
+            "cooling_plant_radiant_fraction": 0.0,
+            "system_air_minimum_flowrate": 0.0,
         }
 
 
 class _Body:
-    def __init__(self, name, factor=2.0710644309317603):
+    def __init__(
+        self,
+        name,
+        factor=2.0710644309317603,
+        conditioned=True,
+        infiltration_flow=ISO_INFILTRATION_L_S_M2,
+    ):
         self.name = name
-        self.room_data = _RoomData(factor)
+        self.room_data = _RoomData(factor, conditioned, infiltration_flow)
 
     def get_room_data(self):
         return self.room_data
 
 
 class _Model:
-    def __init__(self, case_id, factor=2.0710644309317603):
-        self.body = _Body("SIA4010_TEST_1_{}_ZONE".format(case_id), factor)
+    def __init__(
+        self,
+        case_id,
+        factor=2.0710644309317603,
+        conditioned=True,
+        infiltration_flow=ISO_INFILTRATION_L_S_M2,
+    ):
+        self.body = _Body(
+            "SIA4010_TEST_1_{}_ZONE".format(case_id),
+            factor,
+            conditioned,
+            infiltration_flow,
+        )
 
     def get_bodies(self, assigned):
         return [self.body]
@@ -52,16 +115,31 @@ class _Model:
 class _Project:
     """Minimal saved VE project identity."""
 
-    def __init__(self, path, *, case_id="600", factor=2.0710644309317603):
+    def __init__(
+        self,
+        path,
+        *,
+        case_id="600",
+        factor=2.0710644309317603,
+        conditioned=True,
+        infiltration_flow=ISO_INFILTRATION_L_S_M2,
+    ):
         self.path = str(path)
-        self.models = [_Model(case_id, factor)]
+        self.models = [_Model(case_id, factor, conditioned, infiltration_flow)]
         self.name = Path(path).name
 
 
 class _FakeApacheSim:
     """Deterministic synchronous ApacheSim stand-in."""
 
-    def __init__(self, project_path, *, mismatch=False, run_result=True):
+    def __init__(
+        self,
+        project_path,
+        *,
+        mismatch=False,
+        run_result=True,
+        rfcont=0.5,
+    ):
         self.project_path = Path(project_path)
         self.options = {
             "simulation_timestep": 2,
@@ -70,6 +148,7 @@ class _FakeApacheSim:
         }
         self.mismatch = mismatch
         self.run_result = run_result
+        self.rfcont = rfcont
 
     def get_options(self):
         options = dict(self.options)
@@ -88,6 +167,13 @@ class _FakeApacheSim:
             (vista / self.options["results_filename"]).write_bytes(
                 b"qualified fake APS"
             )
+            if self.rfcont is not None:
+                apache = self.project_path / "apache"
+                apache.mkdir(parents=True, exist_ok=True)
+                (apache / "{}.der".format(self.project_path.name)).write_text(
+                    "VERSION, 8\nRFCONT,  {:.4f},\nEND\n".format(self.rfcont),
+                    encoding="latin-1",
+                )
         return self.run_result
 
 
@@ -97,13 +183,12 @@ class ApacheSimQualificationTests(unittest.TestCase):
     def setUp(self):
         self.project = TEMP_ROOT / self._testMethodName
         self.project.mkdir(parents=True, exist_ok=True)
-        prior_result = (
-            self.project
-            / "Vista"
-            / "SIA4010_test_1_600_20260729_020304.aps"
-        )
-        if prior_result.is_file():
-            prior_result.unlink()
+        vista = self.project / "Vista"
+        if vista.is_dir():
+            for prior_result in vista.glob(
+                "SIA4010_test_1_*_20260729_020304.aps"
+            ):
+                prior_result.unlink()
         self._write_scenario("600")
         self._write_model_report("600")
         self._write_runtime_input_report("600")
@@ -164,7 +249,13 @@ class ApacheSimQualificationTests(unittest.TestCase):
             encoding="utf-8",
         )
 
-    def _write_runtime_input_report(self, case_id):
+    def _write_runtime_input_report(
+        self,
+        case_id,
+        *,
+        conditioned=True,
+        infiltration_receipt=None,
+    ):
         scenario_path = self.project / "sia_model_scenario.json"
         scenario_payload = json.loads(scenario_path.read_text(encoding="utf-8"))
         report_path = (
@@ -186,16 +277,64 @@ class ApacheSimQualificationTests(unittest.TestCase):
                     ).hexdigest(),
                     "room": {"name": "SIA4010_TEST_1_{}_ZONE".format(case_id)},
                     "mutation": {
-                        "only_intended_field": "furniture_mass_factor",
+                        "intended_fields": (
+                            [
+                                "furniture_mass_factor",
+                                "system_air_minimum_flowrate",
+                                "heating_plant_radiant_fraction",
+                                "cooling_plant_radiant_fraction",
+                            ]
+                            if conditioned
+                            else [
+                                "furniture_mass_factor",
+                                "system_air_minimum_flowrate",
+                            ]
+                        ),
                         "before": 1.0,
                         "requested": factor,
                         "verified_after": factor,
+                        "system_verified_after": (
+                            {
+                                "ve_heating_radiant_fraction": 0.0,
+                                "ve_cooling_radiant_fraction": 0.0,
+                                "verified": True,
+                            }
+                            if conditioned
+                            else {"applicable": False, "verified": True}
+                        ),
+                        "mechanical_ventilation_verified_after": {
+                            "ve_system_air_minimum_flowrate": 0.0,
+                            "verified": True,
+                        },
+                        "prescribed_infiltration_verified_after": (
+                            infiltration_receipt
+                            if infiltration_receipt is not None
+                            else {
+                                "ve_infiltration_max_flow": (
+                                    ISO_INFILTRATION_L_S_M2
+                                ),
+                                "ve_infiltration_units_val": 2,
+                                "verified": True,
+                            }
+                        ),
                     },
                     "mapping": {"furniture_mass_factor": factor},
                     "capacity_semantics": {
-                        "conditioned": True,
+                        "conditioned": conditioned,
                         "verified": True,
                     },
+                    "free_floating_controls": (
+                        {"applicable": False, "verified": True}
+                        if conditioned
+                        else {
+                            "applicable": True,
+                            "verified": True,
+                            "verified_after": {
+                                "heating_profile": "OFF",
+                                "cooling_profile": "OFF",
+                            },
+                        }
+                    ),
                     "guardrails": {
                         "capacity_fields_mutated": False,
                         "compliance_claim_allowed": False,
@@ -230,20 +369,53 @@ class ApacheSimQualificationTests(unittest.TestCase):
                 "end_day": 31,
                 "end_month": 12,
                 "reporting_interval": 3,
+                "preconditioning_days": 31,
                 "results_filename": (
                     "SIA4010_test_1_600_20260729_020304.aps"
                 ),
             },
         )
         self.assertEqual(receipt.options_after["simulation_timestep"], 2)
-        self.assertEqual(receipt.options_after["preconditioning_days"], 14)
+        self.assertEqual(receipt.options_after["preconditioning_days"], 31)
         self.assertGreater(receipt.results_size_bytes, 0)
         self.assertTrue(Path(receipt.results_path).is_file())
         audit = json.loads(Path(receipt.audit_path).read_text(encoding="utf-8"))
         self.assertFalse(audit["compliance_claim_allowed"])
         self.assertTrue(audit["aps_evaluation_required"])
         self.assertIn("simulation_timestep", audit["deliberately_unset_engine_options"])
+        self.assertNotIn(
+            "preconditioning_days", audit["deliberately_unset_engine_options"]
+        )
+        self.assertEqual(
+            audit["initialization_source_file"]["initialization_hours"], 744
+        )
         self.assertTrue(audit["source_file"]["sha256"])
+        self.assertEqual(
+            audit["control_temperature_evidence"]["rfcont"], 0.5
+        )
+
+    def test_rejects_air_temperature_control_after_simulation(self):
+        with self.assertRaisesRegex(
+            ApacheSimQualificationError,
+            "RFCONT=0.*requires RFCONT=0.5",
+        ):
+            self._run(lambda: _FakeApacheSim(self.project, rfcont=0.0))
+        audit_path = (
+            self.project
+            / "sia4010_artifacts"
+            / "simulation"
+            / "SIA4010_test_1_600_apachesim_qualification.json"
+        )
+        audit = json.loads(audit_path.read_text(encoding="utf-8"))
+        self.assertEqual(audit["status"], "FAIL")
+        self.assertFalse(audit["compliance_claim_allowed"])
+
+    def test_rejects_missing_engine_control_readback(self):
+        with self.assertRaisesRegex(
+            ApacheSimQualificationError,
+            "expected one generated .der file",
+        ):
+            self._run(lambda: _FakeApacheSim(self.project, rfcont=None))
 
     def test_rejects_model_report_for_another_case_before_calling_engine(self):
         self._write_model_report("640")
@@ -289,6 +461,138 @@ class ApacheSimQualificationTests(unittest.TestCase):
             self._run(
                 lambda: self.fail("ApacheSim must not be constructed"),
                 project=_Project(self.project, factor=1.0),
+            )
+
+    def test_rejects_live_non_zero_mechanical_ventilation(self):
+        """The zero-ventilation correction must be re-proven on the live room.
+
+        A saved project can re-inherit the generic office template's
+        ``10 L/(s person)`` outdoor-air default on reopen. The qualification
+        report would still read zero, so only the live read-back catches it.
+        """
+
+        project = _Project(self.project)
+        project.models[0].body.room_data.get_apache_systems = lambda: {
+            "conditioned": True,
+            "heating_capacity_unlimited": True,
+            "cooling_capacity_unlimited": True,
+            "heating_plant_radiant_fraction": 0.0,
+            "cooling_plant_radiant_fraction": 0.0,
+            "system_air_minimum_flowrate": 10.0,
+        }
+        with self.assertRaisesRegex(
+            ApacheSimQualificationError,
+            "no longer has zero mechanical ventilation",
+        ):
+            self._run(
+                lambda: self.fail("ApacheSim must not be constructed"),
+                project=project,
+            )
+
+    def test_rejects_runtime_qualification_without_infiltration_evidence(self):
+        """A report predating the infiltration read-back is stale, not valid."""
+
+        report = next(
+            (self.project / "sia4010_artifacts" / "diagnostics").glob(
+                "sia4010_test1_runtime_input_qualification_*.json"
+            )
+        )
+        payload = json.loads(report.read_text(encoding="utf-8"))
+        del payload["mutation"]["prescribed_infiltration_verified_after"]
+        report.write_text(json.dumps(payload), encoding="utf-8")
+        with self.assertRaisesRegex(
+            ApacheSimQualificationError,
+            "no prescribed-infiltration read-back evidence",
+        ):
+            self._run(lambda: self.fail("ApacheSim must not be constructed"))
+
+    def test_rejects_live_room_with_infiltration_removed(self):
+        """Zeroing mechanical ventilation must not leave the room airtight."""
+
+        with self.assertRaisesRegex(
+            ApacheSimQualificationError,
+            "no longer retains the prescribed",
+        ):
+            self._run(
+                lambda: self.fail("ApacheSim must not be constructed"),
+                project=_Project(self.project, infiltration_flow=None),
+            )
+
+    def test_rejects_live_infiltration_flow_drift(self):
+        """The live infiltration must match the qualified magnitude."""
+
+        with self.assertRaisesRegex(
+            ApacheSimQualificationError,
+            "infiltration flow does not match",
+        ):
+            self._run(
+                lambda: self.fail("ApacheSim must not be constructed"),
+                project=_Project(self.project, infiltration_flow=0.9),
+            )
+
+    def test_rejects_stale_single_field_runtime_qualification(self):
+        report = next(
+            (self.project / "sia4010_artifacts" / "diagnostics").glob(
+                "sia4010_test1_runtime_input_qualification_*.json"
+            )
+        )
+        payload = json.loads(report.read_text(encoding="utf-8"))
+        payload["mutation"] = {
+            "only_intended_field": "furniture_mass_factor",
+            "requested": 2.0710644309317603,
+            "verified_after": 2.0710644309317603,
+        }
+        report.write_text(json.dumps(payload), encoding="utf-8")
+        with self.assertRaisesRegex(
+            ApacheSimQualificationError,
+            "wrong mutation scope",
+        ):
+            self._run(lambda: self.fail("ApacheSim must not be constructed"))
+
+    def test_free_floating_case_requires_only_furniture_runtime_mutation(self):
+        self._write_scenario("600FF")
+        self._write_model_report("600FF")
+        self._write_runtime_input_report("600FF", conditioned=False)
+        project = _Project(
+            self.project,
+            case_id="600FF",
+            conditioned=False,
+        )
+        receipt = self._run(
+            lambda: _FakeApacheSim(self.project, rfcont=0.0),
+            project=project,
+        )
+        self.assertEqual(receipt.case_id, "600FF")
+        self.assertEqual(
+            receipt.status,
+            "SIMULATION_EXECUTED_AWAITING_APS_QUALIFICATION",
+        )
+        audit = json.loads(Path(receipt.audit_path).read_text(encoding="utf-8"))
+        control = audit["control_temperature_evidence"]
+        self.assertEqual(control["rfcont"], 0.0)
+        self.assertFalse(control["requirement_applicable"])
+        self.assertIsNone(control["required_rfcont"])
+        self.assertEqual(
+            control["verification_status"],
+            "NOT_APPLICABLE_FREE_FLOATING",
+        )
+
+    def test_free_floating_case_rejects_live_on_profiles(self):
+        self._write_scenario("600FF")
+        self._write_model_report("600FF")
+        self._write_runtime_input_report("600FF", conditioned=False)
+        project = _Project(
+            self.project,
+            case_id="600FF",
+            conditioned=True,
+        )
+        with self.assertRaisesRegex(
+            ApacheSimQualificationError,
+            "no longer has OFF heating and cooling profiles",
+        ):
+            self._run(
+                lambda: self.fail("ApacheSim must not be constructed"),
+                project=project,
             )
 
 

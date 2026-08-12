@@ -27,6 +27,11 @@ from typing import Any, Callable, Dict, Mapping, Optional, Tuple
 from .case_registry import get_case_capability
 from .model_scenario import ModelScenario
 from .scenario_preflight import is_temporary_ve_project
+from .test1_runtime_inputs import (
+    is_conditioned_state,
+    is_off_profile,
+    validate_prescribed_infiltration_preserved,
+)
 
 
 SIMULATION_QUALIFICATION_CASES: Tuple[str, ...] = (
@@ -37,6 +42,9 @@ SIMULATION_QUALIFICATION_CASES: Tuple[str, ...] = (
     "940",
     "900FF",
 )
+FREE_FLOATING_CASES = frozenset({"600FF", "900FF"})
+ISO_TEST1_CONTROL_TEMPERATURE_RADIANT_FRACTION = 0.5
+ISO_TEST1_PRECONDITIONING_DAYS = 31
 TEST1_SIMULATION_SOURCE = "SIA 4010 Test 1 specification, pages 1-2"
 MODEL_REPORT_RELATIVE_PATH = Path(
     "reference_model_artifacts/reports/reference_model_report.json"
@@ -110,6 +118,29 @@ def _write_json(path: Path, payload: Mapping[str, Any]) -> None:
         encoding="utf-8",
     )
     temporary.replace(path)
+
+
+def _apache_worker_failure(project_path: Path) -> str:
+    """Return the concrete Apache worker failure when it emitted status.json."""
+
+    status_path = project_path / "apache" / "status.json"
+    if not status_path.is_file():
+        return ""
+    try:
+        payload = json.loads(status_path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return ""
+    if not isinstance(payload, dict) or payload.get("status") != "failed":
+        return ""
+    details = payload.get("details")
+    detail_id = details.get("id") if isinstance(details, dict) else None
+    explanation = payload.get("fallbackExplanation")
+    parts = [str(value) for value in (detail_id, explanation) if value]
+    if not parts:
+        return ""
+    return "Apache worker: {} (status: {})".format(
+        " - ".join(parts), status_path
+    )
 
 
 def _sha256(path: Path) -> str:
@@ -228,10 +259,25 @@ def _validate_runtime_input_evidence(
     mutation = report.get("mutation") or {}
     mapping = report.get("mapping") or {}
     capacity = report.get("capacity_semantics") or {}
+    free_floating_controls = report.get("free_floating_controls") or {}
     guardrails = report.get("guardrails") or {}
-    if mutation.get("only_intended_field") != "furniture_mass_factor":
+    intended_fields = set(mutation.get("intended_fields") or [])
+    conditioned = bool(capacity.get("conditioned"))
+    required_fields = {
+        "furniture_mass_factor",
+        "system_air_minimum_flowrate",
+    }
+    if conditioned:
+        required_fields.update(
+            {
+                "heating_plant_radiant_fraction",
+                "cooling_plant_radiant_fraction",
+            }
+        )
+    if intended_fields != required_fields:
         raise ApacheSimQualificationError(
-            "Runtime-input qualification does not prove the intended single-field mutation"
+            "Runtime-input qualification has the wrong mutation scope for "
+            "this Test 1 conditioned/free-floating state"
         )
     try:
         requested_factor = float(mutation.get("requested"))
@@ -253,6 +299,85 @@ def _validate_runtime_input_evidence(
         raise ApacheSimQualificationError(
             "Runtime-input qualification does not verify capacity semantics"
         )
+    emission = mutation.get("system_verified_after") or {}
+    ventilation = mutation.get("mechanical_ventilation_verified_after") or {}
+    try:
+        qualified_system_air_flow = float(
+            ventilation.get("ve_system_air_minimum_flowrate")
+        )
+    except (TypeError, ValueError) as exc:
+        raise ApacheSimQualificationError(
+            "Runtime-input qualification contains invalid mechanical-ventilation evidence"
+        ) from exc
+    if ventilation.get("verified") is not True or not math.isclose(
+        qualified_system_air_flow, 0.0, rel_tol=0.0, abs_tol=1.0e-9
+    ):
+        raise ApacheSimQualificationError(
+            "Runtime-input qualification does not prove zero Test 1 mechanical ventilation"
+        )
+    # A qualification report written before the infiltration read-back existed
+    # cannot prove clause 7.2.2.14 was retained; it is stale for this guardrail.
+    infiltration = mutation.get("prescribed_infiltration_verified_after") or {}
+    try:
+        qualified_infiltration_flow = float(
+            infiltration.get("ve_infiltration_max_flow")
+        )
+    except (TypeError, ValueError) as exc:
+        raise ApacheSimQualificationError(
+            "Runtime-input qualification contains no prescribed-infiltration "
+            "read-back evidence; re-run the runtime-input qualification"
+        ) from exc
+    if infiltration.get("verified") is not True or not (
+        math.isfinite(qualified_infiltration_flow)
+        and qualified_infiltration_flow > 0.0
+    ):
+        raise ApacheSimQualificationError(
+            "Runtime-input qualification does not prove the prescribed Test 1 "
+            "infiltration is retained"
+        )
+    qualified_heating_radiant = None
+    qualified_cooling_radiant = None
+    if conditioned:
+        try:
+            qualified_heating_radiant = float(
+                emission.get("ve_heating_radiant_fraction")
+            )
+            qualified_cooling_radiant = float(
+                emission.get("ve_cooling_radiant_fraction")
+            )
+        except (TypeError, ValueError) as exc:
+            raise ApacheSimQualificationError(
+                "Runtime-input qualification contains invalid ideal-load emission evidence"
+            ) from exc
+        if emission.get("verified") is not True or not (
+            math.isclose(qualified_heating_radiant, 0.0, abs_tol=1.0e-9)
+            and math.isclose(qualified_cooling_radiant, 0.0, abs_tol=1.0e-9)
+        ):
+            raise ApacheSimQualificationError(
+                "Runtime-input qualification does not prove fully convective ideal loads"
+            )
+    elif not (
+        emission.get("applicable") is False
+        and emission.get("verified") is True
+    ):
+        raise ApacheSimQualificationError(
+            "Free-floating runtime qualification does not prove that ideal-load "
+            "emission is inapplicable"
+        )
+    if not conditioned:
+        verified_profiles = free_floating_controls.get("verified_after") or {}
+        if not (
+            free_floating_controls.get("applicable") is True
+            and free_floating_controls.get("verified") is True
+            and all(
+                is_off_profile(verified_profiles.get(key))
+                for key in ("heating_profile", "cooling_profile")
+            )
+        ):
+            raise ApacheSimQualificationError(
+                "Free-floating runtime qualification does not prove OFF heating "
+                "and cooling availability profiles"
+            )
     if guardrails.get("capacity_fields_mutated") is not False:
         raise ApacheSimQualificationError(
             "Runtime-input qualification does not prove unchanged capacity fields"
@@ -302,10 +427,62 @@ def _validate_runtime_input_evidence(
             )
         )
     live_system = dict(room_data.get_apache_systems())
-    conditioned = bool(capacity.get("conditioned"))
-    if bool(live_system.get("conditioned")) != conditioned:
+    try:
+        live_system_air_flow = float(
+            live_system.get("system_air_minimum_flowrate")
+        )
+    except (TypeError, ValueError) as exc:
         raise ApacheSimQualificationError(
-            "Live VE conditioned state differs from the qualification report"
+            "Live VE Test 1 mechanical-ventilation flow is unavailable"
+        ) from exc
+    if not math.isclose(
+        live_system_air_flow,
+        qualified_system_air_flow,
+        rel_tol=0.0,
+        abs_tol=1.0e-9,
+    ):
+        raise ApacheSimQualificationError(
+            "Live VE Test 1 room no longer has zero mechanical ventilation"
+        )
+    try:
+        live_infiltration = validate_prescribed_infiltration_preserved(
+            room_data.get_air_exchanges()
+        )
+    except Exception as exc:
+        raise ApacheSimQualificationError(
+            "Live VE Test 1 room no longer retains the prescribed "
+            "infiltration: {}".format(exc)
+        ) from exc
+    if not math.isclose(
+        live_infiltration["ve_infiltration_max_flow"],
+        qualified_infiltration_flow,
+        rel_tol=1.0e-7,
+        abs_tol=1.0e-9,
+    ):
+        raise ApacheSimQualificationError(
+            "Live VE Test 1 infiltration flow does not match the qualification "
+            "report: live={}, qualified={}".format(
+                live_infiltration["ve_infiltration_max_flow"],
+                qualified_infiltration_flow,
+            )
+        )
+    if conditioned:
+        try:
+            live_conditioned = is_conditioned_state(live_system.get("conditioned"))
+        except Exception as exc:
+            raise ApacheSimQualificationError(
+                "Live VE conditioned state is unavailable or unknown"
+            ) from exc
+        if not live_conditioned:
+            raise ApacheSimQualificationError(
+                "Live VE conditioned state differs from the qualification report"
+            )
+    elif not all(
+        is_off_profile(live_conditions.get(key))
+        for key in ("heating_profile", "cooling_profile")
+    ):
+        raise ApacheSimQualificationError(
+            "Live VE free-floating room no longer has OFF heating and cooling profiles"
         )
     if conditioned and not (
         bool(live_system.get("heating_capacity_unlimited"))
@@ -314,6 +491,35 @@ def _validate_runtime_input_evidence(
         raise ApacheSimQualificationError(
             "Live VE conditioned room no longer has unlimited heating and cooling capacity"
         )
+    if conditioned:
+        try:
+            live_heating_radiant = float(
+                live_system.get("heating_plant_radiant_fraction")
+            )
+            live_cooling_radiant = float(
+                live_system.get("cooling_plant_radiant_fraction")
+            )
+        except (TypeError, ValueError) as exc:
+            raise ApacheSimQualificationError(
+                "Live VE ideal-load radiant fractions are unavailable"
+            ) from exc
+        if not (
+            math.isclose(
+                live_heating_radiant,
+                qualified_heating_radiant,
+                rel_tol=0.0,
+                abs_tol=1.0e-9,
+            )
+            and math.isclose(
+                live_cooling_radiant,
+                qualified_cooling_radiant,
+                rel_tol=0.0,
+                abs_tol=1.0e-9,
+            )
+        ):
+            raise ApacheSimQualificationError(
+                "Live VE ideal-load emission fractions do not match the qualification report"
+            )
     return report_path, report
 
 
@@ -328,9 +534,18 @@ def _validate_model_evidence(
 
     overall = str(report.get("overall_status") or "")
     if overall not in {"PASS", "WARNING"}:
+        failed_controls = sorted(
+            str(item.get("control_id") or "<without-control-id>")
+            for item in report.get("validation_results", []) or []
+            if isinstance(item, Mapping)
+            and str(item.get("status") or "").upper() in {"FAIL", "FAILED"}
+        )
         raise ApacheSimQualificationError(
-            "Reference-model report is not simulation-ready: overall_status={!r}".format(
-                overall
+            "Reference-model report is not simulation-ready: "
+            "overall_status={!r}, failing_controls={}, report='{}'".format(
+                overall,
+                failed_controls or ["<none-recorded>"],
+                project_path / MODEL_REPORT_RELATIVE_PATH,
             )
         )
     mode = str(report.get("run_metadata", {}).get("mode") or "")
@@ -391,11 +606,23 @@ def _validate_model_evidence(
         raise ApacheSimQualificationError(
             "Reference-model report has no verified VE model snapshot"
         )
-    spaces = snapshot.get("spaces")
-    if not isinstance(spaces, list) or len(spaces) != 1:
+    rooms = snapshot.get("rooms")
+    if rooms is None:
+        rooms = snapshot.get("spaces")
+    if not isinstance(rooms, list) or len(rooms) != 1:
         raise ApacheSimQualificationError(
             "Test 1 simulation requires exactly one verified VE room; report has {}".format(
-                len(spaces) if isinstance(spaces, list) else 0
+                len(rooms) if isinstance(rooms, list) else 0
+            )
+        )
+    expected_room_name = "SIA4010_TEST_1_{}_ZONE".format(case_id)
+    room_name = str(rooms[0].get("name") or "") if isinstance(
+        rooms[0], Mapping
+    ) else ""
+    if room_name and room_name != expected_room_name:
+        raise ApacheSimQualificationError(
+            "Verified VE room is {!r}, expected {!r}".format(
+                room_name, expected_room_name
             )
         )
     statuses = _validation_statuses(report)
@@ -447,6 +674,56 @@ def _wait_for_nonempty_file(path: Path, timeout_seconds: float = 10.0) -> None:
     raise ApacheSimQualificationError(
         "ApacheSim returned without a non-empty APS file at '{}'".format(path)
     )
+
+
+def _control_temperature_evidence(project_path: Path) -> Dict[str, Any]:
+    """Read the Apache input actually used for room-temperature control.
+
+    VE 2025 writes the building-level Control Temperature Radiant Fraction to
+    the generated ``apache/*.der`` input as ``RFCONT``.  The public ApacheSim
+    option mapping does not expose this setting, so the generated engine input
+    is the authoritative runtime read-back.  ISO 52016-1 Test 1 controls on
+    operative (dry-resultant) temperature, represented by RFCONT=0.5.  This
+    control setting is physically applicable only to the four conditioned
+    cases.  Cases 600FF and 900FF have both plant availability profiles OFF;
+    for them RFCONT is retained as engine evidence but cannot affect the
+    free-floating thermal balance.
+    """
+
+    apache_dir = project_path / "apache"
+    preferred = apache_dir / "{}.der".format(project_path.name)
+    candidates = [preferred] if preferred.is_file() else sorted(apache_dir.glob("*.der"))
+    if len(candidates) != 1:
+        raise ApacheSimQualificationError(
+            "Unable to verify Apache Control Temperature Radiant Fraction: "
+            "expected one generated .der file, found {} in '{}'".format(
+                len(candidates), apache_dir
+            )
+        )
+    path = candidates[0]
+    try:
+        text = path.read_text(encoding="latin-1")
+    except OSError as exc:
+        raise ApacheSimQualificationError(
+            "Unable to read generated Apache input '{}': {}".format(path, exc)
+        ) from exc
+    match = re.search(
+        r"(?mi)^\s*RFCONT\s*,\s*([-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[Ee][-+]?\d+)?)\s*,?",
+        text,
+    )
+    if match is None:
+        raise ApacheSimQualificationError(
+            "Generated Apache input has no RFCONT control setting: {}".format(path)
+        )
+    value = float(match.group(1))
+    evidence = {
+        "path": str(path),
+        "sha256": _sha256(path),
+        "rfcont": value,
+        "interpretation": "0.5 = dry-resultant/operative temperature control",
+        "source": "ISO 52016-1:2017 clause 7.2.2.15 and IES VE 2025 Apache Building Settings",
+    }
+    return evidence
 
 
 def run_qualified_apachesim(
@@ -504,6 +781,18 @@ def run_qualified_apachesim(
                 specification_path
             )
         )
+    initialization_source_path = (
+        Path(repository_root)
+        / "references"
+        / "standards"
+        / "iso52016"
+        / "ISO_52016_1_BESTEST_ClimData_2016.08.24.xls"
+    )
+    if not initialization_source_path.is_file():
+        raise ApacheSimQualificationError(
+            "Official ISO Test 1 climate/initialization workbook is missing: "
+            "{}".format(initialization_source_path)
+        )
 
     model_report_path = project_path / MODEL_REPORT_RELATIVE_PATH
     model_report = _load_json(model_report_path, "reference-model report")
@@ -551,6 +840,7 @@ def run_qualified_apachesim(
         "end_day": 31,
         "end_month": 12,
         "reporting_interval": 3,
+        "preconditioning_days": ISO_TEST1_PRECONDITIONING_DAYS,
         "results_filename": results_filename,
     }
     base_audit: Dict[str, Any] = {
@@ -565,6 +855,16 @@ def run_qualified_apachesim(
             "path": str(specification_path),
             "sha256": _sha256(specification_path),
         },
+        "initialization_source_file": {
+            "path": str(initialization_source_path),
+            "sha256": _sha256(initialization_source_path),
+            "initialization_hours": 744,
+            "preconditioning_days": ISO_TEST1_PRECONDITIONING_DAYS,
+            "basis": (
+                "The first month is initialization data copied from December; "
+                "744 hours / 24 = 31 ApacheSim preconditioning days."
+            ),
+        },
         "runtime_input_qualification": {
             "path": str(runtime_input_report_path),
             "sha256": _sha256(runtime_input_report_path),
@@ -574,14 +874,11 @@ def run_qualified_apachesim(
         "confirmed_contract": {
             "simulation_period": "2011-01-01 through 2011-12-31",
             "required_result_frequency": "hourly",
+            "initialization_period": "744 hours (31 days), December repeated",
             "requested_apachesim_options": requested_options,
         },
         "deliberately_unset_engine_options": {
             "simulation_timestep": (
-                "Not prescribed by the supplied Test 1 specification; retained "
-                "from the active VE project and recorded in option snapshots."
-            ),
-            "preconditioning_days": (
                 "Not prescribed by the supplied Test 1 specification; retained "
                 "from the active VE project and recorded in option snapshots."
             ),
@@ -599,6 +896,7 @@ def run_qualified_apachesim(
 
     options_before: Dict[str, Any] = {}
     options_after: Dict[str, Any] = {}
+    control_temperature_evidence: Dict[str, Any] = {}
     try:
         sim = apachesim_factory()
         for method in ("get_options", "set_options", "run_simulation"):
@@ -618,10 +916,57 @@ def run_qualified_apachesim(
         )
         _assert_option_readback(requested_options, options_after)
         if sim.run_simulation(queue_to_tasks=False) is not True:
+            worker_failure = _apache_worker_failure(project_path)
             raise ApacheSimQualificationError(
-                "ApacheSim.run_simulation(queue_to_tasks=False) did not return True"
+                "ApacheSim.run_simulation(queue_to_tasks=False) did not return True{}"
+                .format(". " + worker_failure if worker_failure else "")
             )
         _wait_for_nonempty_file(results_path, file_wait_seconds)
+        control_temperature_evidence = _control_temperature_evidence(project_path)
+        observed_rfcont = float(control_temperature_evidence["rfcont"])
+        control_requirement_applicable = (
+            scenario.case_id not in FREE_FLOATING_CASES
+        )
+        control_temperature_evidence.update(
+            {
+                "requirement_applicable": control_requirement_applicable,
+                "required_rfcont": (
+                    ISO_TEST1_CONTROL_TEMPERATURE_RADIANT_FRACTION
+                    if control_requirement_applicable
+                    else None
+                ),
+                "verification_status": (
+                    "PENDING_COMPARISON"
+                    if control_requirement_applicable
+                    else "NOT_APPLICABLE_FREE_FLOATING"
+                ),
+                "scope_reason": (
+                    "RFCONT controls the ideal heating/cooling thermostat. "
+                    "Both plant availability profiles are verified OFF for "
+                    "this free-floating case; the operative-temperature "
+                    "result is extracted independently from the APS."
+                    if not control_requirement_applicable
+                    else "Conditioned Test 1 cases control heating and cooling "
+                    "against operative (dry-resultant) temperature."
+                ),
+            }
+        )
+        rfcont_matches = math.isclose(
+            observed_rfcont,
+            ISO_TEST1_CONTROL_TEMPERATURE_RADIANT_FRACTION,
+            rel_tol=0.0,
+            abs_tol=1e-6,
+        )
+        if control_requirement_applicable and not rfcont_matches:
+            raise ApacheSimQualificationError(
+                "ApacheSim used RFCONT={:.6g}; ISO 52016-1 Test 1 requires "
+                "RFCONT=0.5 (dry-resultant/operative temperature control). "
+                "In Apache, open Settings > Building, set Control Temperature "
+                "Radiant Fraction to 0.50, save the project, then rerun."
+                .format(observed_rfcont)
+            )
+        if control_requirement_applicable:
+            control_temperature_evidence["verification_status"] = "PASS"
     except Exception as exc:
         error = (
             exc
@@ -635,6 +980,7 @@ def run_qualified_apachesim(
                 "options_before": options_before,
                 "options_after": options_after,
                 "results_path": str(results_path),
+                "control_temperature_evidence": control_temperature_evidence,
             }
         )
         _write_json(audit_path, base_audit)
@@ -666,6 +1012,9 @@ def run_qualified_apachesim(
         {
             "source": TEST1_SIMULATION_SOURCE,
             "source_file": base_audit["source_file"],
+            "initialization_source_file": base_audit[
+                "initialization_source_file"
+            ],
             "runtime_input_qualification": base_audit[
                 "runtime_input_qualification"
             ],
@@ -674,6 +1023,7 @@ def run_qualified_apachesim(
                 "deliberately_unset_engine_options"
             ],
             "required_postconditions": base_audit["required_postconditions"],
+            "control_temperature_evidence": control_temperature_evidence,
             "claim_guardrail": (
                 "A successful ApacheSim call is not a SIA result. The APS must "
                 "pass the complete qualified extraction and comparison path."
