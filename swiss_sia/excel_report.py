@@ -19,10 +19,14 @@ except ImportError:
 
 from ui import design
 from . import report_style
+
+#: The seven formats shared across the workbook, in the IES house style.
+# They lived in config.EXCEL_FORMATS, which put presentation inside the
+# normative configuration module and shipped a blue from no IES palette.
+SHARED_FORMATS = report_style.xw_shared_roles()
 from .config import (
     OUTPUT_DIR,
     EXCEL_REPORT_NAME,
-    EXCEL_FORMATS,
     SIA_DATA_COVERAGE_MATRIX,
     SIA_COMPLIANCE_REQUIREMENT_MATRIX,
     SIA3802_LIMIT_VALUES,
@@ -1127,14 +1131,27 @@ class ExcelReportGenerator:
         worksheet = self.workbook.add_worksheet("PREFLIGHT")
         worksheet.hide_gridlines(2)
 
-        header_format = self.workbook.add_format(EXCEL_FORMATS["header"])
-        subheader_format = self.workbook.add_format(EXCEL_FORMATS["subheader"])
-        cell_format = self.workbook.add_format({"border": 1, "text_wrap": True, "valign": "top", "border_color": "#D7E5E2"})
-        pass_format = self.workbook.add_format({"bg_color": "#E2EFDA", "font_color": "#375623", "border": 1, "bold": True, "align": "center"})
-        warning_format = self.workbook.add_format({"bg_color": "#FFF2CC", "font_color": "#7F6000", "border": 1, "bold": True, "align": "center"})
-        fail_format = self.workbook.add_format({"bg_color": "#FDECEA", "font_color": "#C00000", "border": 1, "bold": True, "align": "center"})
-        info_format = self.workbook.add_format({"bg_color": "#D9EAF7", "font_color": "#1F4E78", "border": 1, "bold": True, "align": "center"})
-        number_format = self.workbook.add_format({"border": 1, "num_format": "#,##0", "border_color": "#D7E5E2"})
+        header_format = self.workbook.add_format(SHARED_FORMATS["header"])
+        subheader_format = self.workbook.add_format(SHARED_FORMATS["subheader"])
+        cell_format = self.workbook.add_format(report_style.xw_format(
+            "ink",
+            text_wrap=True,
+            valign="top",
+        ))
+        # The three verdicts come from the shared roles rather than being
+        # redefined here, so PREFLIGHT cannot drift from the rest of the report.
+        pass_format = self.workbook.add_format(SHARED_FORMATS["pass"])
+        warning_format = self.workbook.add_format(SHARED_FORMATS["warning"])
+        fail_format = self.workbook.add_format(SHARED_FORMATS["fail"])
+        # INFO and NOT_CHECKABLE are not verdicts: absent evidence must never
+        # read as a pass, so they take the not_checkable presentation.
+        info_format = self.workbook.add_format(
+            report_style.xw_status("not_checkable")
+        )
+        number_format = self.workbook.add_format(report_style.xw_format(
+            "ink",
+            num_format="#,##0",
+        ))
 
         checks = preflight_checks or self._fallback_preflight_checks(rooms_data, sia4010_results)
         status_counts = Counter(str(check.get("status", "UNKNOWN")) for check in checks)
@@ -1226,15 +1243,41 @@ class ExcelReportGenerator:
         worksheet = self.workbook.add_worksheet("P1 REMEDIATION")
         worksheet.hide_gridlines(2)
 
-        header_format = self.workbook.add_format(EXCEL_FORMATS["header"])
-        subheader_format = self.workbook.add_format(EXCEL_FORMATS["subheader"])
-        cell_format = self.workbook.add_format({"border": 1, "text_wrap": True, "valign": "top", "border_color": "#D7E5E2"})
-        p1_format = self.workbook.add_format({"bg_color": "#F4CCCC", "font_color": "#9C0006", "border": 1, "bold": True, "align": "center"})
-        number_format = self.workbook.add_format({"border": 1, "num_format": "#,##0", "border_color": "#D7E5E2"})
-        area_format = self.workbook.add_format({"border": 1, "num_format": "#,##0.0", "border_color": "#D7E5E2"})
-        decimal_format = self.workbook.add_format({"border": 1, "num_format": "0.000", "border_color": "#D7E5E2"})
-        gap_format = self.workbook.add_format({"border": 1, "num_format": "+0.000;-0.000;0.000", "border_color": "#D7E5E2"})
-        justified_format = self.workbook.add_format({"bg_color": "#DBEAFE", "font_color": "#1E3A8A", "border": 1, "bold": True, "align": "center", "text_wrap": True})
+        header_format = self.workbook.add_format(SHARED_FORMATS["header"])
+        subheader_format = self.workbook.add_format(SHARED_FORMATS["subheader"])
+        cell_format = self.workbook.add_format(report_style.xw_format(
+            "ink",
+            text_wrap=True,
+            valign="top",
+        ))
+        # P1 is the top severity on this board, so it takes the escalated
+        # presentation: light type on the solid fail colour, not another red.
+        p1_format = self.workbook.add_format(SHARED_FORMATS["critical"])
+        number_format = self.workbook.add_format(report_style.xw_format(
+            "ink",
+            num_format="#,##0",
+        ))
+        area_format = self.workbook.add_format(report_style.xw_format(
+            "ink",
+            num_format="#,##0.0",
+        ))
+        decimal_format = self.workbook.add_format(report_style.xw_format(
+            "ink",
+            num_format="0.000",
+        ))
+        gap_format = self.workbook.add_format(report_style.xw_format(
+            "ink",
+            num_format="+0.000;-0.000;0.000",
+        ))
+        # A justified deviation is neither a pass nor a failure: it is a
+        # documented decision, so it reads in the neutral accent, not in green.
+        justified_format = self.workbook.add_format(report_style.xw_format(
+            "accent",
+            bold=True,
+            background="table_header",
+            align="center",
+            text_wrap=True,
+        ))
 
         p1_groups = [group for group in alert_groups if group.get("priority") == "P1"]
         evidence = sia4010_results.get("evidence", {}) or {}
@@ -1901,8 +1944,8 @@ class ExcelReportGenerator:
         worksheet = self.workbook.add_worksheet("ASSUMPTIONS LIMITS")
         worksheet.hide_gridlines(2)
 
-        header_format = self.workbook.add_format(EXCEL_FORMATS["header"])
-        subheader_format = self.workbook.add_format(EXCEL_FORMATS["subheader"])
+        header_format = self.workbook.add_format(SHARED_FORMATS["header"])
+        subheader_format = self.workbook.add_format(SHARED_FORMATS["subheader"])
         cell_format = self.workbook.add_format({"border": 1, "text_wrap": True, "valign": "top", "border_color": "#D7E5E2"})
         warning_format = self.workbook.add_format({"border": 1, "text_wrap": True, "valign": "top", "bg_color": "#FFF2CC", "font_color": "#7F6000"})
         blocker_format = self.workbook.add_format({"border": 1, "text_wrap": True, "valign": "top", "bg_color": "#FDECEA", "font_color": "#9C0006", "bold": True})
@@ -2012,8 +2055,8 @@ class ExcelReportGenerator:
         worksheet = self.workbook.add_worksheet("AUDIT LOG")
         worksheet.hide_gridlines(2)
 
-        header_format = self.workbook.add_format(EXCEL_FORMATS["header"])
-        subheader_format = self.workbook.add_format(EXCEL_FORMATS["subheader"])
+        header_format = self.workbook.add_format(SHARED_FORMATS["header"])
+        subheader_format = self.workbook.add_format(SHARED_FORMATS["subheader"])
         cell_format = self.workbook.add_format({"border": 1, "text_wrap": True, "valign": "top", "border_color": "#D7E5E2"})
         info_format = self.workbook.add_format({"border": 1, "text_wrap": True, "valign": "top", "bg_color": "#EAF3F8", "border_color": "#9CC2E5"})
         number_format = self.workbook.add_format({"border": 1, "num_format": "#,##0.0", "border_color": "#D7E5E2"})
@@ -2118,9 +2161,9 @@ class ExcelReportGenerator:
         worksheet = self.workbook.add_worksheet("SUMMARY")
 
         # Styles
-        header_format = self.workbook.add_format(EXCEL_FORMATS["header"])
-        subheader_format = self.workbook.add_format(EXCEL_FORMATS["subheader"])
-        score_format = self.workbook.add_format(EXCEL_FORMATS["score"])
+        header_format = self.workbook.add_format(SHARED_FORMATS["header"])
+        subheader_format = self.workbook.add_format(SHARED_FORMATS["subheader"])
+        score_format = self.workbook.add_format(SHARED_FORMATS["score"])
         cell_format = self.workbook.add_format({"border": 1})
 
         # Title
@@ -2161,10 +2204,10 @@ class ExcelReportGenerator:
         worksheet = self.workbook.add_worksheet("COMPLIANCE RESULTS")
 
         # Styles
-        header_format = self.workbook.add_format(EXCEL_FORMATS["header"])
-        pass_format = self.workbook.add_format(EXCEL_FORMATS["pass"])
-        warning_format = self.workbook.add_format(EXCEL_FORMATS["warning"])
-        fail_format = self.workbook.add_format(EXCEL_FORMATS["fail"])
+        header_format = self.workbook.add_format(SHARED_FORMATS["header"])
+        pass_format = self.workbook.add_format(SHARED_FORMATS["pass"])
+        warning_format = self.workbook.add_format(SHARED_FORMATS["warning"])
+        fail_format = self.workbook.add_format(SHARED_FORMATS["fail"])
         cell_format = self.workbook.add_format({"border": 1})
         not_checkable_format = self.workbook.add_format({"bg_color": "#D9EAF7", "font_color": "#1F4E78", "border": 1, "bold": True})
 
@@ -2215,8 +2258,8 @@ class ExcelReportGenerator:
         """
         worksheet = self.workbook.add_worksheet("REFERENCE PROJECT")
 
-        header_format = self.workbook.add_format(EXCEL_FORMATS["header"])
-        subheader_format = self.workbook.add_format(EXCEL_FORMATS["subheader"])
+        header_format = self.workbook.add_format(SHARED_FORMATS["header"])
+        subheader_format = self.workbook.add_format(SHARED_FORMATS["subheader"])
         cell_format = self.workbook.add_format({"border": 1, "text_wrap": True, "valign": "top"})
         note_format = self.workbook.add_format({"border": 1, "text_wrap": True, "valign": "top", "bg_color": "#EAF3F8"})
         number_format = self.workbook.add_format({"border": 1, "num_format": "0.000", "valign": "top"})
@@ -2366,8 +2409,8 @@ class ExcelReportGenerator:
         """Write the auditable SIA requirement matrix used by the checker."""
         worksheet = self.workbook.add_worksheet("SIA REQUIREMENTS")
 
-        header_format = self.workbook.add_format(EXCEL_FORMATS["header"])
-        subheader_format = self.workbook.add_format(EXCEL_FORMATS["subheader"])
+        header_format = self.workbook.add_format(SHARED_FORMATS["header"])
+        subheader_format = self.workbook.add_format(SHARED_FORMATS["subheader"])
         cell_format = self.workbook.add_format({"border": 1, "text_wrap": True, "valign": "top"})
         note_format = self.workbook.add_format({"border": 1, "text_wrap": True, "valign": "top", "bg_color": "#EAF3F8"})
         pass_format = self.workbook.add_format({"bg_color": "#E2EFDA", "font_color": "#375623", "border": 1, "bold": True})
@@ -2469,8 +2512,8 @@ class ExcelReportGenerator:
         """Write the full data coverage matrix for SIA 380/2 and all SIA 4010 classes."""
         worksheet = self.workbook.add_worksheet("SIA DATA COVERAGE")
 
-        header_format = self.workbook.add_format(EXCEL_FORMATS["header"])
-        subheader_format = self.workbook.add_format(EXCEL_FORMATS["subheader"])
+        header_format = self.workbook.add_format(SHARED_FORMATS["header"])
+        subheader_format = self.workbook.add_format(SHARED_FORMATS["subheader"])
         cell_format = self.workbook.add_format({"border": 1, "text_wrap": True, "valign": "top"})
         note_format = self.workbook.add_format({"border": 1, "text_wrap": True, "valign": "top", "bg_color": "#EAF3F8"})
         number_format = self.workbook.add_format({"border": 1, "num_format": "#,##0"})
@@ -2577,8 +2620,8 @@ class ExcelReportGenerator:
         """Write a client/model-reviewer input checklist generated from missing coverage."""
         worksheet = self.workbook.add_worksheet("INPUT REQUEST")
 
-        header_format = self.workbook.add_format(EXCEL_FORMATS["header"])
-        subheader_format = self.workbook.add_format(EXCEL_FORMATS["subheader"])
+        header_format = self.workbook.add_format(SHARED_FORMATS["header"])
+        subheader_format = self.workbook.add_format(SHARED_FORMATS["subheader"])
         cell_format = self.workbook.add_format({"border": 1, "text_wrap": True, "valign": "top"})
         note_format = self.workbook.add_format({"border": 1, "text_wrap": True, "valign": "top", "bg_color": "#EAF3F8"})
         p1_format = self.workbook.add_format({"bg_color": "#FDECEA", "font_color": "#C00000", "border": 1, "bold": True})
@@ -2877,8 +2920,8 @@ class ExcelReportGenerator:
         """Write APS/Vista dynamic result indicators when IESVE exposes them."""
         worksheet = self.workbook.add_worksheet("DYNAMIC RESULTS")
 
-        header_format = self.workbook.add_format(EXCEL_FORMATS["header"])
-        subheader_format = self.workbook.add_format(EXCEL_FORMATS["subheader"])
+        header_format = self.workbook.add_format(SHARED_FORMATS["header"])
+        subheader_format = self.workbook.add_format(SHARED_FORMATS["subheader"])
         cell_format = self.workbook.add_format({"border": 1, "text_wrap": True, "valign": "top"})
         note_format = self.workbook.add_format({"border": 1, "text_wrap": True, "valign": "top", "bg_color": "#EAF3F8"})
         number_format = self.workbook.add_format({"border": 1, "num_format": "#,##0.00"})
@@ -3057,8 +3100,8 @@ class ExcelReportGenerator:
         """Write a SIA 4010 readiness matrix backed by the PDF traceability."""
         worksheet = self.workbook.add_worksheet("SIA4010 READINESS")
 
-        header_format = self.workbook.add_format(EXCEL_FORMATS["header"])
-        subheader_format = self.workbook.add_format(EXCEL_FORMATS["subheader"])
+        header_format = self.workbook.add_format(SHARED_FORMATS["header"])
+        subheader_format = self.workbook.add_format(SHARED_FORMATS["subheader"])
         cell_format = self.workbook.add_format({"border": 1, "text_wrap": True, "valign": "top"})
         note_format = self.workbook.add_format({"border": 1, "text_wrap": True, "valign": "top", "bg_color": "#EAF3F8"})
         percent_format = self.workbook.add_format({"border": 1, "num_format": "0.0%", "valign": "top"})
@@ -3341,8 +3384,8 @@ class ExcelReportGenerator:
         """Write PDF-based SIA 4010 prevalidation tests and classes."""
         worksheet = self.workbook.add_worksheet("SIA4010 PREVALIDATION")
 
-        header_format = self.workbook.add_format(EXCEL_FORMATS["header"])
-        subheader_format = self.workbook.add_format(EXCEL_FORMATS["subheader"])
+        header_format = self.workbook.add_format(SHARED_FORMATS["header"])
+        subheader_format = self.workbook.add_format(SHARED_FORMATS["subheader"])
         cell_format = self.workbook.add_format({"border": 1, "text_wrap": True, "valign": "top"})
         note_format = self.workbook.add_format({"border": 1, "text_wrap": True, "valign": "top", "bg_color": "#EAF3F8"})
         number_format = self.workbook.add_format({"border": 1, "num_format": "#,##0.0", "valign": "top"})
@@ -3476,8 +3519,8 @@ class ExcelReportGenerator:
         """Write the SIA 4010 validation-class matrix for classes 1A to 5."""
         worksheet = self.workbook.add_worksheet("SIA4010 CLASS MATRIX")
 
-        header_format = self.workbook.add_format(EXCEL_FORMATS["header"])
-        subheader_format = self.workbook.add_format(EXCEL_FORMATS["subheader"])
+        header_format = self.workbook.add_format(SHARED_FORMATS["header"])
+        subheader_format = self.workbook.add_format(SHARED_FORMATS["subheader"])
         cell_format = self.workbook.add_format({"border": 1, "text_wrap": True, "valign": "top"})
         note_format = self.workbook.add_format({"border": 1, "text_wrap": True, "valign": "top", "bg_color": "#EAF3F8"})
         percent_format = self.workbook.add_format({"border": 1, "num_format": "0.0%", "valign": "top"})
@@ -3750,8 +3793,8 @@ class ExcelReportGenerator:
         """Write manager-provided SIA 4010 validated-software register guardrails."""
         worksheet = self.workbook.add_worksheet("SIA4010 SOFTWARE REGISTER")
 
-        header_format = self.workbook.add_format(EXCEL_FORMATS["header"])
-        subheader_format = self.workbook.add_format(EXCEL_FORMATS["subheader"])
+        header_format = self.workbook.add_format(SHARED_FORMATS["header"])
+        subheader_format = self.workbook.add_format(SHARED_FORMATS["subheader"])
         cell_format = self.workbook.add_format({"border": 1, "text_wrap": True, "valign": "top"})
         note_format = self.workbook.add_format({"border": 1, "text_wrap": True, "valign": "top", "bg_color": "#EAF3F8"})
         warning_format = self.workbook.add_format({"border": 1, "text_wrap": True, "valign": "top", "bg_color": "#FFF2CC", "font_color": "#7F6000", "bold": True})
@@ -3817,8 +3860,8 @@ class ExcelReportGenerator:
         """Write the manager-provided SIA 380/2 navigator product backlog."""
         worksheet = self.workbook.add_worksheet("NAVIGATOR BACKLOG")
 
-        header_format = self.workbook.add_format(EXCEL_FORMATS["header"])
-        subheader_format = self.workbook.add_format(EXCEL_FORMATS["subheader"])
+        header_format = self.workbook.add_format(SHARED_FORMATS["header"])
+        subheader_format = self.workbook.add_format(SHARED_FORMATS["subheader"])
         cell_format = self.workbook.add_format({"border": 1, "text_wrap": True, "valign": "top"})
         note_format = self.workbook.add_format({"border": 1, "text_wrap": True, "valign": "top", "bg_color": "#EAF3F8"})
         partial_format = self.workbook.add_format({"bg_color": "#FFF2CC", "font_color": "#7F6000", "border": 1, "bold": True, "text_wrap": True, "valign": "top"})
@@ -3872,8 +3915,8 @@ class ExcelReportGenerator:
         """Write a prioritized action plan based on grouped alerts."""
         worksheet = self.workbook.add_worksheet("ACTION PLAN")
 
-        header_format = self.workbook.add_format(EXCEL_FORMATS["header"])
-        subheader_format = self.workbook.add_format(EXCEL_FORMATS["subheader"])
+        header_format = self.workbook.add_format(SHARED_FORMATS["header"])
+        subheader_format = self.workbook.add_format(SHARED_FORMATS["subheader"])
         cell_format = self.workbook.add_format({"border": 1, "text_wrap": True, "valign": "top"})
         p1_format = self.workbook.add_format({"bg_color": "#F4CCCC", "font_color": "#9C0006", "border": 1, "bold": True})
         p2_format = self.workbook.add_format({"bg_color": "#FFF2CC", "font_color": "#7F6000", "border": 1, "bold": True})
@@ -3947,7 +3990,7 @@ class ExcelReportGenerator:
         """Write grouped alerts to reduce repetitive raw alert rows."""
         worksheet = self.workbook.add_worksheet("ALERT SUMMARY")
 
-        header_format = self.workbook.add_format(EXCEL_FORMATS["header"])
+        header_format = self.workbook.add_format(SHARED_FORMATS["header"])
         cell_format = self.workbook.add_format({"border": 1, "text_wrap": True, "valign": "top"})
         number_format = self.workbook.add_format({"border": 1, "num_format": "#,##0"})
         area_format = self.workbook.add_format({"border": 1, "num_format": "#,##0.0"})
@@ -4015,10 +4058,10 @@ class ExcelReportGenerator:
         worksheet = self.workbook.add_worksheet("ALERTS")
 
         # Styles
-        header_format = self.workbook.add_format(EXCEL_FORMATS["header"])
-        critical_format = self.workbook.add_format(EXCEL_FORMATS["critical"])
-        high_format = self.workbook.add_format(EXCEL_FORMATS["fail"])
-        medium_format = self.workbook.add_format(EXCEL_FORMATS["warning"])
+        header_format = self.workbook.add_format(SHARED_FORMATS["header"])
+        critical_format = self.workbook.add_format(SHARED_FORMATS["critical"])
+        high_format = self.workbook.add_format(SHARED_FORMATS["fail"])
+        medium_format = self.workbook.add_format(SHARED_FORMATS["warning"])
         low_format = self.workbook.add_format({"bg_color": "#DEEAF1", "border": 1})
         cell_format = self.workbook.add_format({"border": 1})
 
@@ -4099,11 +4142,11 @@ class ExcelReportGenerator:
         """Write a data-quality and API-coverage summary sheet."""
         worksheet = self.workbook.add_worksheet("DATA QUALITY")
 
-        header_format = self.workbook.add_format(EXCEL_FORMATS["header"])
-        subheader_format = self.workbook.add_format(EXCEL_FORMATS["subheader"])
+        header_format = self.workbook.add_format(SHARED_FORMATS["header"])
+        subheader_format = self.workbook.add_format(SHARED_FORMATS["subheader"])
         cell_format = self.workbook.add_format({"border": 1})
-        warning_format = self.workbook.add_format(EXCEL_FORMATS["warning"])
-        fail_format = self.workbook.add_format(EXCEL_FORMATS["fail"])
+        warning_format = self.workbook.add_format(SHARED_FORMATS["warning"])
+        fail_format = self.workbook.add_format(SHARED_FORMATS["fail"])
         percent_format = self.workbook.add_format({"border": 1, "num_format": "0.0%"})
         uvalue_format = self.workbook.add_format({"border": 1, "num_format": "0.000"})
 
@@ -4195,7 +4238,7 @@ class ExcelReportGenerator:
         worksheet = self.workbook.add_worksheet("DETAILED SCORES")
 
         # Styles
-        header_format = self.workbook.add_format(EXCEL_FORMATS["header"])
+        header_format = self.workbook.add_format(SHARED_FORMATS["header"])
         cell_format = self.workbook.add_format({"border": 1})
 
         # Title
@@ -4221,7 +4264,7 @@ class ExcelReportGenerator:
         worksheet = self.workbook.add_worksheet("ROOMS")
 
         # Styles
-        header_format = self.workbook.add_format(EXCEL_FORMATS["header"])
+        header_format = self.workbook.add_format(SHARED_FORMATS["header"])
         cell_format = self.workbook.add_format({"border": 1})
         number_format = self.workbook.add_format({"border": 1, "num_format": "#,##0.0"})
         percent_format = self.workbook.add_format({"border": 1, "num_format": "0.0%"})

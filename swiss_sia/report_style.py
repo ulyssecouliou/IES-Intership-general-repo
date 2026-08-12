@@ -576,6 +576,50 @@ def xw_status(status: str, *, size: Optional[float] = None) -> Dict[str, Any]:
 #: Tab colour for the two landing sheets. Navy, matching the band.
 XW_TAB_COLOR = xw_hex(design.NAVY)
 
+def xw_shared_roles() -> Dict[str, Dict[str, Any]]:
+    """Return the seven formats the workbook shares across its many sheets.
+
+    These used to live in ``swiss_sia/config.py`` as ``EXCEL_FORMATS``, which
+    put presentation inside the normative configuration module and gave the
+    workbook a blue that belongs to no IES palette. Forty-eight call sites read
+    them, so this is the single highest-leverage conversion in the generator.
+
+    ``critical`` is the inverse of ``fail`` rather than a second red: light type
+    on the solid fail colour, where ``fail`` is dark type on a tint of it. Both
+    mean non-compliant, so inventing another hue would claim a distinction the
+    palette does not make, and inverting reads as an escalation even in
+    greyscale -- which two reds side by side do not.
+    """
+
+    failed = status_presentation("fail")
+    return {
+        "header": xw_format(
+            "on_dark",
+            size=14,
+            bold=True,
+            background="band",
+            valign="top",
+            text_wrap=True,
+        ),
+        "subheader": xw_format(
+            "on_dark",
+            size=12,
+            bold=True,
+            background="band_tint",
+        ),
+        "pass": xw_status("pass"),
+        "warning": xw_status("warning"),
+        "fail": xw_status("fail"),
+        "critical": xw_format(
+            "on_dark",
+            bold=True,
+            background=failed.text,
+            align="center",
+        ),
+        "score": xw_format("band_deep", size=16, bold=True, border=None),
+    }
+
+
 #: Chart series fill for a plain quantity bar or column, in house accent blue.
 XW_CHART_FILL = xw_hex(design.ACCENT)
 

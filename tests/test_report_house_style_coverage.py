@@ -36,11 +36,13 @@ CONVERTED_SHEETS = (
     "MANAGER DASHBOARD",
     "ACTION DASHBOARD",
     "CLIENT SUMMARY",
+    "PREFLIGHT",
+    "P1 REMEDIATION",
 )
 
 #: Literals left in the unconverted sheet builders on 2026-08-12. This number
 #: may only ever go down.
-REMAINING_LITERAL_BUDGET = 212
+REMAINING_LITERAL_BUDGET = 193
 
 
 def _source() -> str:
@@ -151,6 +153,58 @@ class HouseStyleCoverageTests(unittest.TestCase):
 
     def test_a_table_link_is_not_marked_by_colour_alone(self) -> None:
         self.assertTrue(report_style.xw_table_link().get("underline"))
+
+    def test_the_shared_roles_left_the_normative_config(self) -> None:
+        """Presentation does not belong in swiss_sia/config.py."""
+
+        from swiss_sia import config
+
+        self.assertFalse(hasattr(config, "EXCEL_FORMATS"))
+        self.assertEqual(
+            sorted(report_style.xw_shared_roles()),
+            [
+                "critical",
+                "fail",
+                "header",
+                "pass",
+                "score",
+                "subheader",
+                "warning",
+            ],
+        )
+
+    def test_critical_escalates_fail_by_inversion_not_by_a_new_hue(self) -> None:
+        roles = report_style.xw_shared_roles()
+        failed = report_style.status_presentation("fail")
+        self.assertEqual(
+            roles["critical"]["bg_color"], report_style.xw_hex(failed.text)
+        )
+        self.assertNotEqual(
+            roles["critical"]["bg_color"], roles["fail"]["bg_color"]
+        )
+
+    def test_every_shared_role_clears_wcag_aa(self) -> None:
+        """A verdict a reader cannot read is not a verdict."""
+
+        for role, spec in report_style.xw_shared_roles().items():
+            background = spec.get("bg_color")
+            if background is None:
+                continue
+            with self.subTest(role=role):
+                # The emitted values are already #RRGGBB, which the contrast
+                # helpers parse; a token lookup would miss the status grounds,
+                # which live in a dict rather than in module constants.
+                foreground = spec["font_color"]
+                large = float(spec.get("font_size", 0)) >= 14
+                self.assertTrue(
+                    report_style.meets_aa(
+                        foreground, background, large=large
+                    ),
+                    "{} measures {:.2f}:1".format(
+                        role,
+                        report_style.contrast_ratio(foreground, background),
+                    ),
+                )
 
 
 if __name__ == "__main__":

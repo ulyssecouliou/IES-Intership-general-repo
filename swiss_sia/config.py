@@ -2144,47 +2144,12 @@ SIMULATION_PARAMS = {
 # =============================================================================
 # EXCEL REPORT PARAMETERS
 # =============================================================================
-EXCEL_FORMATS = {
-    "header": {
-        "bold": True,
-        "text_wrap": True,
-        "valign": "top",
-        "fg_color": "#1F4E78",
-        "font_color": "white",
-        "font_size": 14,
-        "border": 1,
-    },
-    "subheader": {
-        "bold": True,
-        "fg_color": "#2E75B6",
-        "font_size": 12,
-        "border": 1,
-    },
-    "pass": {
-        "bg_color": "#E2EFDA",
-        "font_color": "#375623",
-        "border": 1,
-    },
-    "warning": {
-        "bg_color": "#FFF2CC",
-        "font_color": "#7F6000",
-        "border": 1,
-    },
-    "fail": {
-        "bg_color": "#FDECEA",
-        "font_color": "#C00000",
-        "border": 1,
-    },
-    "critical": {
-        "bg_color": "#F2C7C7",
-        "font_color": "#9C0006",
-        "border": 1,
-    },
-    "score": {
-        "bold": True,
-        "font_size": 16,
-    },
-}
+# EXCEL_FORMATS used to live here. It was pure presentation -- fills, font
+# colours, sizes -- inside the normative configuration module, and its blue
+# belonged to no IES palette. Its seven roles now come from
+# swiss_sia.report_style.xw_shared_roles(), which resolves them through
+# ui/design.py. It had exactly one consumer, swiss_sia/excel_report.py,
+# updated in the same commit.
 
 # =============================================================================
 # ALERT-TYPE PENALTIES (for Health Score calculation)
