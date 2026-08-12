@@ -86,7 +86,34 @@ Notre position tant que la réponse n'est pas écrite : les distributions sont
 extraites et consignées, mais le moteur ne les transforme pas en verdict. Statut
 `RESULTS_RECORDED_NO_CRITERION`.
 
-### 2.2 Test 7, bloc W : deux unités contradictoires
+### 2.2 Régulation du store : quatre sémantiques non énoncées
+
+C'est **le** blocage du cas 1E, seul cas du Test 1 à porter un critère
+pass/fail. La spécification définit 1E comme « Diagnosefall 1D, jedoch mit
+Stoffmarkisen-Sonnenschutz gemäss Diagnosetest 2 E1 », et le dispositif est
+entièrement documenté : Soltis 92-2048-Alu, seuil 150 W/m², propriétés de la
+fenêtre entière store déployé. Nous avons construit le contrat de contrôle à
+partir de ces valeurs.
+
+Ce qui manque n'est pas le dispositif mais la **dynamique**, et aucun des quatre
+points ne se déduit des documents :
+
+| Point | Ce que disent les sources |
+| --- | --- |
+| Signal d'irradiance exact | « Einstrahlungs-Schwellenwertregelung », sans définir la grandeur mesurée |
+| Opérateur de comparaison | seuil 150 W/m² énoncé, sens de l'inégalité non énoncé |
+| Règle de relâche | aucune |
+| Traitement du pas de temps et de l'état | aucun |
+
+À cela s'ajoute une question d'API : IESVE expose deux seuils distincts,
+`external_shade_radiation_to_lower` et `external_shade_radiation_to_raise`. Nous
+les avons tous deux positionnés à 150 W/m², mais leur équivalence dynamique à la
+règle de la spécification ne se déduit pas de leurs noms.
+
+Tant que ces points ne sont pas écrits, nous laissons 1E bloqué. Deviner la règle
+de relâche déplacerait un verdict réel, sur le seul cas du Test 1 qui en porte un.
+
+### 2.3 Test 7, bloc W : deux unités contradictoires
 
 Fichier `Test7/Resultaterfassung Test7.xlsx`, feuille `Zusammenfassung`.
 Grandeur « Aus Kälteerzeugung an die Wärmeseite gelieferte Wärme », bloc de
@@ -95,9 +122,24 @@ colonnes `W`.
 - la cellule de grandeur porte `kW` ;
 - la ligne d'unité (ligne 33) porte `°C`.
 
-Un seul bloc sur dix-sept est concerné. Nous avons conservé les effectifs, qui
-ne dépendent pas de cette étiquette, et laissé l'unité nulle : trancher
-reviendrait à corriger un défaut du classeur officiel à la place de son auteur.
+Un seul bloc sur dix-sept est concerné. **Vérifié cellule par cellule** le
+2026-08-12 : `W32` = « Aus Kälteerzeugung an die Wärmeseite gelieferte Wärme,
+kW » et `W33` = « °C », alors que tous les autres blocs concordent — `B32`/`B33`
+kW/kW, `AR32`/`AR33` °C/°C, `AK32`/`AK33` sans unité et `-`. Nous avons conservé
+les effectifs, qui ne dépendent pas de cette étiquette, et laissé l'unité nulle :
+trancher reviendrait à corriger un défaut du classeur officiel à la place de son
+auteur.
+
+### 2.4 Ce que nous NE signalons pas, après vérification
+
+Une version antérieure de ce dossier annonçait une contradiction entre la
+spécification Test 2 et la documentation du bâtiment exemple sur le U du
+vitrage : 0,654 contre 0,646. **C'était notre erreur, pas la vôtre.** La
+documentation décrit la même fenêtre sous deux familles de normes et le U y
+diffère — 0,646 en conditions de référence EN ISO 52022-3, 0,654 en conditions
+d'hiver ISO 15099. La spécification reprend la seconde, au chiffre près. Les deux
+documents concordent ; notre comparaison portait sur le mauvais bloc. Rien à
+signaler, donc, et c'est consigné ici pour que ce faux constat ne ressorte pas.
 
 ---
 
@@ -126,7 +168,7 @@ reviendrait à corriger un défaut du classeur officiel à la place de son auteu
 > against each workbook's own totals row: 11 distributions in Test 4, 10 in Test
 > 6 and 17 in Test 7, in addition to the 22, 16 and 16 of Tests 2, 3 and 5.
 >
-> Two points remain open, and I would rather ask than assume.
+> Three points remain open, and I would rather ask than assume.
 >
 > First, the acceptance criterion for Tests 4 and 6. Your clarification of
 > 10 August defined the Streubereich for Tests 2, 3 and 5 as the min/max
@@ -144,15 +186,35 @@ reviendrait à corriger un défaut du classeur officiel à la place de son auteu
 > have this in writing our engine records the distributions but issues no
 > verdict from them.
 >
-> Second, a small defect I would like to report rather than silently resolve. In
+> Second, the fabric-awning control of diagnostic test 2 E1. This is what
+> currently blocks Test 1 case 1E, the only case of Test 1 carrying a pass/fail
+> criterion, since the specification defines it as case 1D with the 2 E1
+> shading. The device itself is fully documented and we have built its control
+> contract from your figures: Soltis 92-2048-Alu, 150 W/m2 threshold, and the
+> deployed-state whole-window properties from the example-building
+> documentation. What we cannot derive is the control dynamics — the exact
+> irradiance signal the threshold is compared against, the direction of the
+> comparison, the release rule, and how the state is carried across a timestep.
+> IESVE exposes two separate thresholds, "radiation to lower" and "radiation to
+> raise"; we have set both to 150 W/m2, but we cannot show from their names that
+> this reproduces the rule you intend. Could you confirm those four points, or
+> tell us where they are specified?
+>
+> Third, a small defect I would like to report rather than silently resolve. In
 > `Resultaterfassung Test7.xlsx`, sheet `Zusammenfassung`, the quantity "Aus
 > Kälteerzeugung an die Wärmeseite gelieferte Wärme" (column block W) carries
-> `kW` in the quantity cell and `°C` on the unit row. One block out of
-> seventeen. We have kept the hourly counts, which do not depend on the label,
-> and left the unit unset.
+> `kW` in the quantity cell and `°C` on the unit row, cells W32 and W33. It is
+> the only one of the seventeen blocks where the two disagree; the others match,
+> for example B32/B33 both kW and AR32/AR33 both °C. We have kept the hourly
+> counts, which do not depend on the label, and left the unit unset.
 >
-> Finally, may I ask about the SIA 2024 usage data you mentioned would follow?
-> It is the remaining external input for our Test 3 preparation.
+> Finally, on the SIA 2024 usage data you mentioned would follow: the category
+> 3.1 extract you sent on 10 August turned out to cover more than we expected —
+> it is exactly the category the Test 2 specification prescribes, and it gives
+> the occupant sensible gain directly, so it has unblocked the whole 1A to 1D
+> diagnostic chain. Thank you for that. What we still lack are the other
+> categories our test matrix needs: the auditorium and example-building
+> profiles, and restaurant 6.2 and kitchen 6.4.
 >
 > To be explicit about what we are and are not claiming: this work is a
 > readiness and evidence exercise on our side. We make no claim that our
