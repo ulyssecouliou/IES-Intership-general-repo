@@ -107,6 +107,50 @@ PARAMETRES_TEST_2 = (
     ('store', 'seuil_activation_w_m2',
      r'Aktivierung\s*→?\s*Schwellenwert\s*' + _NOMBRE + r'\s*W/m2',
      'nombre', u'Sonnenschutz Extern / Aktivierung'),
+    # La fenêtre du maillon 1B. La spécification la chiffre elle-même, ce qui
+    # tranche une question que la documentation du bâtiment exemple laisse
+    # ouverte : celle-ci donne deux g totaux, en conditions d'été (0,545) et de
+    # référence (0,542). La spécification retient 0,545. On relève donc la
+    # spécification, qui définit le cas, et non la documentation.
+    # Le type porte des espaces, comme le store : `\S+` ne relevait que « SGG ».
+    ('vitrage', 'type',
+     r'Verglasung\s*Typ\s*(.+?)\s*Gesamtenergie',
+     None, u'Verglasung / Typ'),
+    ('vitrage', 'g_total',
+     r'durchlassgrad\s*gg\s*:?\s*→?\s*' + _NOMBRE,
+     'nombre', u'Verglasung / Gesamtenergiedurchlassgrad gg'),
+    ('vitrage', 'u_vitrage_w_m2k',
+     r'U-Wert\s*Ug\s*→?\s*' + _NOMBRE + r'\s*W/m2K',
+     'nombre', u'Verglasung / U-Wert Ug'),
+    # Les symboles grecs de ces deux lignes ne sont PAS des caractères Unicode
+    # grecs : l'extraction rend « τv » et « ρv » comme  et , des
+    # glyphes de zone privée de la police Symbol. Un motif écrit avec le vrai
+    # τ ne mordrait jamais, et le champ sortirait en A_CONFIRMER en laissant
+    # croire que la spécification ne donne pas la valeur. D'où le joker.
+    ('vitrage', 'transmission_visible',
+     r'Transmission\s*v\s*\S*:\s*→?\s*' + _NOMBRE,
+     'nombre', u'Verglasung / Transmission v'),
+    ('vitrage', 'reflexion_visible',
+     r'Reflexion\s*v\s*\S*:\s*→?\s*' + _NOMBRE,
+     'nombre', u'Verglasung / Reflexion v'),
+    # Les apports du maillon 1D. Les densités de puissance sont dans la
+    # spécification ; seuls les HORAIRES renvoient à SIA 2024:2021, et pour la
+    # catégorie 3.1 nous détenons l'extrait d'autorité du 2026-08-10.
+    ('apports', 'personnes_m2_par_personne',
+     r'\(' + _NOMBRE + r'\s*m2\s*pro\s*Person\)',
+     'nombre', u'Wärmeeinträge / Personen'),
+    ('apports', 'personnes_activite_met',
+     r'Aktivit[äa]tsgrad\s*→?\s*' + _NOMBRE + r'\s*met',
+     'nombre', u'Wärmeeinträge / Personen / Aktivitätsgrad'),
+    ('apports', 'appareils_w_m2',
+     r'Ger[äa]te\s*W[äa]rmeeintragsleistung\s*→?\s*' + _NOMBRE + r'\s*W/m2',
+     'nombre', u'Wärmeeinträge / Geräte'),
+    ('apports', 'eclairage_w_m2',
+     r'Beleuchtung\s*W[äa]rmeeintragsleistung\s*→?\s*' + _NOMBRE + r'\s*W/m2',
+     'nombre', u'Wärmeeinträge / Beleuchtung'),
+    ('apports', 'eclairage_puissance_installee_w_m2',
+     r'Anschlusswert\s*→?\s*' + _NOMBRE + r'\s*W/m2',
+     'nombre', u'Wärmeeinträge / Beleuchtung / Anschlusswert'),
 )
 
 #: Paramètres relevés dans la documentation du bâtiment exemple.
@@ -327,6 +371,47 @@ def _proprietes_optiques(texte):
     }
 
 
+def _divergences(texte_batiment, parametres):
+    u"""Relève les écarts entre la spécification et la documentation.
+
+    Deux documents officiels donnent le U du vitrage, et ils ne disent pas la
+    même chose. Trancher ici reviendrait à corriger l'un des deux à la place de
+    son auteur ; on consigne l'écart et on nomme celui qui définit le cas.
+
+    Args:
+        texte_batiment: Texte normalisé de la documentation du bâtiment exemple.
+        parametres: Paramètres déjà relevés dans la spécification Test 2.
+
+    Returns:
+        list[dict]: Écarts constatés, vide si les sources concordent.
+    """
+    ecarts = []
+    spec = parametres.get('vitrage', {}).get('u_vitrage_w_m2k', {})
+    if spec.get('statut') != RELEVE:
+        return ecarts
+    trouve = re.search(r'U-value\s*of\s*glazing\s*Ug\s*' + _NOMBRE, texte_batiment)
+    if trouve is None:
+        return ecarts
+    documentation = _nombre(trouve.group(1))
+    if documentation == spec['valeur']:
+        return ecarts
+    ecarts.append({
+        'grandeur': 'u_vitrage_w_m2k',
+        'specification_test_2': spec['valeur'],
+        'documentation_batiment_exemple': documentation,
+        'ecart': round(abs(spec['valeur'] - documentation), 6),
+        'retenu': 'specification_test_2',
+        'pourquoi': (
+            u"La spécification définit le cas de test ; la documentation décrit "
+            u"le bâtiment exemple. En cas d'écart, c'est la spécification qui "
+            u"fait foi pour construire le modèle. L'écart est consigné et non "
+            u"corrigé : le signaler à la sous-commission vaut mieux que de "
+            u"réparer un document officiel à la place de son auteur."
+        ),
+    })
+    return ecarts
+
+
 def construire():
     u"""Assemble le référentiel de la chaîne 1A à 1E.
 
@@ -380,6 +465,8 @@ def construire():
         'parametres': parametres,
         'fenetre_entiere': _proprietes_optiques(
             textes['documentation_batiment_exemple']),
+        'divergences_entre_sources': _divergences(
+            textes['documentation_batiment_exemple'], parametres),
         'reserves': [
             u"Les propriétés relevées sont celles de la FENÊTRE ENTIÈRE "
             u"(EN ISO 52022-3 / EN 410), store rentré et déployé. La "

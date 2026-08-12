@@ -187,6 +187,85 @@ def test_la_reflexion_visible_recoupe_la_specification_test_2(reference):
     assert en_410['reflexion_visible_exterieure_rv']['store_rentre'] == 0.145
 
 
+def test_le_vitrage_du_maillon_1b_est_chiffre_par_la_specification(reference):
+    u"""La spécification tranche ce que la documentation laisse ouvert.
+
+    La documentation du bâtiment exemple donne deux g totaux, en conditions
+    d'été et de référence. La spécification retient une valeur, et c'est elle
+    qui définit le cas de test : choisir soi-même reviendrait à décider d'une
+    donnée normative.
+    """
+    vitrage = reference['parametres']['vitrage']
+    assert vitrage['type']['valeur'] == u'SGG Planitherm XN_4/14/4/14/4'
+    assert vitrage['g_total']['valeur'] == 0.545
+    assert vitrage['u_vitrage_w_m2k']['valeur'] == 0.654
+    assert vitrage['transmission_visible']['valeur'] == 0.742
+    assert vitrage['reflexion_visible']['valeur'] == 0.145
+
+
+def test_les_symboles_grecs_ne_font_pas_echouer_le_releve(reference):
+    u"""Piège d'extraction : « τv » et « ρv » sortent en zone privée.
+
+    La couche texte rend ces symboles comme des glyphes de la police Symbol,
+    pas comme des caractères grecs Unicode. Un motif écrit avec le vrai τ ne
+    mordrait jamais et le champ sortirait en `A_CONFIRMER`, en laissant croire
+    que la spécification ne donne pas la valeur.
+    """
+    vitrage = reference['parametres']['vitrage']
+    assert vitrage['transmission_visible']['statut'] == 'RELEVE'
+    assert vitrage['reflexion_visible']['statut'] == 'RELEVE'
+
+
+def test_le_g_et_la_transmission_concordent_entre_les_deux_sources(reference):
+    u"""Recoupement : les deux documents doivent dire la même chose."""
+    spec = reference['parametres']['vitrage']
+    blocs = reference['fenetre_entiere']['blocs']
+    ete = blocs['en_iso_52022_3_conditions_ete']['grandeurs']['g_total']
+    en_410 = blocs['en_410']['grandeurs']['transmission_visible_tv']
+    assert spec['g_total']['valeur'] == ete['store_rentre']
+    assert spec['transmission_visible']['valeur'] == en_410['store_rentre']
+
+
+def test_la_divergence_sur_le_u_est_consignee_et_non_corrigee(reference):
+    u"""Les deux sources donnent un U différent, et l'écart est isolé.
+
+    0,654 dans la spécification contre 0,646 dans la documentation, alors que
+    g et τv concordent exactement : l'écart ressemble à une coquille dans l'un
+    des deux documents. Le référentiel le consigne, retient la spécification
+    parce qu'elle définit le cas, et ne répare rien à la place de son auteur.
+    """
+    ecarts = {item['grandeur']: item
+              for item in reference['divergences_entre_sources']}
+    assert 'u_vitrage_w_m2k' in ecarts
+    ecart = ecarts['u_vitrage_w_m2k']
+    assert ecart['specification_test_2'] == 0.654
+    assert ecart['documentation_batiment_exemple'] == 0.646
+    assert ecart['retenu'] == 'specification_test_2'
+    assert ecart['pourquoi']
+
+
+def test_les_apports_du_maillon_1d_sont_chiffres(reference):
+    u"""Seuls les HORAIRES renvoient à SIA 2024 ; les puissances sont écrites."""
+    apports = reference['parametres']['apports']
+    assert apports['appareils_w_m2']['valeur'] == 11
+    assert apports['eclairage_w_m2']['valeur'] == 12.5
+    assert apports['eclairage_puissance_installee_w_m2']['valeur'] == 12.5
+    assert apports['personnes_activite_met']['valeur'] == 1.2
+    assert apports['personnes_m2_par_personne']['valeur'] == 14
+
+
+def test_le_nombre_doccupants_est_coherent_avec_la_surface(reference):
+    u"""3,43 personnes pour 48 m² à 14 m²/personne : contrôle arithmétique.
+
+    La spécification donne les deux chiffres séparément. S'ils ne se
+    recoupaient pas, l'un des deux serait mal relevé.
+    """
+    usage = reference['parametres']['usage']['personnes_par_piece']['valeur']
+    par_personne = reference['parametres']['apports'][
+        'personnes_m2_par_personne']['valeur']
+    assert abs(usage * par_personne - 48.0) < 0.1, (usage, par_personne)
+
+
 def test_chaque_source_porte_son_empreinte(reference):
     assert len(reference['sources']) == 3
     for cle, source in reference['sources'].items():

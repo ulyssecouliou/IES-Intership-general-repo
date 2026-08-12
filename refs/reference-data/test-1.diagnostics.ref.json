@@ -118,6 +118,60 @@
         "statut": "RELEVE",
         "source": "2.2.2 Verschattung"
       }
+    },
+    "vitrage": {
+      "type": {
+        "valeur": "SGG Planitherm XN_4/14/4/14/4",
+        "statut": "RELEVE",
+        "source": "Verglasung / Typ"
+      },
+      "g_total": {
+        "valeur": 0.545,
+        "statut": "RELEVE",
+        "source": "Verglasung / Gesamtenergiedurchlassgrad gg"
+      },
+      "u_vitrage_w_m2k": {
+        "valeur": 0.654,
+        "statut": "RELEVE",
+        "source": "Verglasung / U-Wert Ug"
+      },
+      "transmission_visible": {
+        "valeur": 0.742,
+        "statut": "RELEVE",
+        "source": "Verglasung / Transmission v"
+      },
+      "reflexion_visible": {
+        "valeur": 0.145,
+        "statut": "RELEVE",
+        "source": "Verglasung / Reflexion v"
+      }
+    },
+    "apports": {
+      "personnes_m2_par_personne": {
+        "valeur": 14,
+        "statut": "RELEVE",
+        "source": "Wärmeeinträge / Personen"
+      },
+      "personnes_activite_met": {
+        "valeur": 1.2,
+        "statut": "RELEVE",
+        "source": "Wärmeeinträge / Personen / Aktivitätsgrad"
+      },
+      "appareils_w_m2": {
+        "valeur": 11,
+        "statut": "RELEVE",
+        "source": "Wärmeeinträge / Geräte"
+      },
+      "eclairage_w_m2": {
+        "valeur": 12.5,
+        "statut": "RELEVE",
+        "source": "Wärmeeinträge / Beleuchtung"
+      },
+      "eclairage_puissance_installee_w_m2": {
+        "valeur": 12.5,
+        "statut": "RELEVE",
+        "source": "Wärmeeinträge / Beleuchtung / Anschlusswert"
+      }
     }
   },
   "fenetre_entiere": {
@@ -225,6 +279,16 @@
       }
     }
   },
+  "divergences_entre_sources": [
+    {
+      "grandeur": "u_vitrage_w_m2k",
+      "specification_test_2": 0.654,
+      "documentation_batiment_exemple": 0.646,
+      "ecart": 0.008,
+      "retenu": "specification_test_2",
+      "pourquoi": "La spécification définit le cas de test ; la documentation décrit le bâtiment exemple. En cas d'écart, c'est la spécification qui fait foi pour construire le modèle. L'écart est consigné et non corrigé : le signaler à la sous-commission vaut mieux que de réparer un document officiel à la place de son auteur."
+    }
+  ],
   "reserves": [
     "Les propriétés relevées sont celles de la FENÊTRE ENTIÈRE (EN ISO 52022-3 / EN 410), store rentré et déployé. La documentation donne aussi les propriétés couche par couche dans des figures ; elles ne sont PAS relevées ici.",
     "L'usage du maillon 1D renvoie à SIA 2024:2021. Seule la catégorie citée par la spécification est relevée ; les valeurs de la fiche restent à lier depuis l'extrait d'autorité.",
