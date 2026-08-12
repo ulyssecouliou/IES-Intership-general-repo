@@ -157,27 +157,36 @@ class ExcelReportGenerator:
     # =============================================================================
 
     # Ordered section -> (tab colour, member sheets). Drives both the clickable
-    # index grouping and the uniform tab colours applied at finalize.
+    # index grouping and the uniform tab colours applied at finalize. The
+    # colours resolve through report_style so the workbook, the PDF and the
+    # in-VE interface cannot drift into separate visual identities.
     _REPORT_SECTIONS = [
-        ("Executive", "#0F766E", ["MANAGER DASHBOARD", "ACTION DASHBOARD", "CLIENT SUMMARY"]),
-        ("Readiness & priority", "#B45309", ["PREFLIGHT", "P1 REMEDIATION"]),
-        ("Envelope & glazing", "#C2410C", [
-            "FACADE GLAZING REVIEW", "FRAME FRACTION AUDIT",
-            "ENVELOPE U REVIEW", "VE G-VALUES AUDIT",
+        ("Executive", report_style.XW_SECTION_TAB_COLORS["Executive"], [
+            "MANAGER DASHBOARD", "ACTION DASHBOARD", "CLIENT SUMMARY",
         ]),
-        ("SIA 380/2", "#1F4E78", [
+        ("Readiness & priority",
+         report_style.XW_SECTION_TAB_COLORS["Readiness & priority"], [
+             "PREFLIGHT", "P1 REMEDIATION",
+         ]),
+        ("Envelope & glazing",
+         report_style.XW_SECTION_TAB_COLORS["Envelope & glazing"], [
+             "FACADE GLAZING REVIEW", "FRAME FRACTION AUDIT",
+             "ENVELOPE U REVIEW", "VE G-VALUES AUDIT",
+         ]),
+        ("SIA 380/2", report_style.XW_SECTION_TAB_COLORS["SIA 380/2"], [
             "COMPLIANCE RESULTS", "REFERENCE PROJECT", "SIA REQUIREMENTS",
             "SIA DATA COVERAGE", "SIA3802 JUSTIFICATIONS", "ASSUMPTIONS LIMITS",
         ]),
-        ("SIA 4010", "#6D28D9", [
+        ("SIA 4010", report_style.XW_SECTION_TAB_COLORS["SIA 4010"], [
             "SIA4010 READINESS", "SIA4010 PREVALIDATION",
             "SIA4010 CLASS MATRIX", "SIA4010 SOFTWARE REGISTER",
         ]),
-        ("Actions & inputs", "#334155", [
-            "INPUT REQUEST", "OPEN ITEMS BACKLOG", "NAVIGATOR BACKLOG",
-            "AUDIT LOG",
-        ]),
-        ("Data & detail", "#64748B", [
+        ("Actions & inputs",
+         report_style.XW_SECTION_TAB_COLORS["Actions & inputs"], [
+             "INPUT REQUEST", "OPEN ITEMS BACKLOG", "NAVIGATOR BACKLOG",
+             "AUDIT LOG",
+         ]),
+        ("Data & detail", report_style.XW_SECTION_TAB_COLORS["Data & detail"], [
             "DYNAMIC RESULTS", "ALERT SUMMARY", "ALERTS", "DATA QUALITY",
             "DETAILED SCORES", "ROOMS",
         ]),
@@ -225,7 +234,6 @@ class ExcelReportGenerator:
 
         worksheet = self.workbook.add_worksheet("COVER")
         worksheet.hide_gridlines(2)
-        worksheet.set_tab_color(self._COVER_TAB_COLOR)
         worksheet.set_column("A:A", 2)
         worksheet.set_column("B:E", 22)
         worksheet.set_column("F:F", 2)
@@ -309,7 +317,6 @@ class ExcelReportGenerator:
 
         worksheet = self.workbook.add_worksheet("INDEX")
         worksheet.hide_gridlines(2)
-        worksheet.set_tab_color(self._COVER_TAB_COLOR)
         worksheet.set_column("A:A", 2)
         worksheet.set_column("B:B", 40)
         worksheet.set_column("C:C", 60)
@@ -343,7 +350,12 @@ class ExcelReportGenerator:
             row += 1
 
     def _finalize_workbook_xlsxwriter(self):
-        """Apply uniform print setup, tab colours and header/footer to all sheets."""
+        """Apply uniform print setup, tab colours and header/footer to all sheets.
+
+        This is the only place that colours a tab. Fifteen sheet builders used
+        to set their own first, all of them silently overwritten here a moment
+        later, which is how nine off-palette literals survived unnoticed.
+        """
 
         color_by_sheet = {}
         for _section, color, sheets in self._REPORT_SECTIONS:
@@ -388,100 +400,94 @@ class ExcelReportGenerator:
         """Write the executive visual dashboard shown first in the workbook."""
         worksheet = self.workbook.add_worksheet("MANAGER DASHBOARD")
         worksheet.hide_gridlines(2)
-        worksheet.set_tab_color("#0F766E")
 
-        title_format = self.workbook.add_format({
-            "bold": True,
-            "font_size": 20,
-            "font_color": "#FFFFFF",
-            "bg_color": "#0B1F2A",
-            "align": "left",
-            "valign": "vcenter",
-        })
-        subtitle_format = self.workbook.add_format({
-            "font_size": 10,
-            "font_color": "#DCE8E8",
-            "bg_color": "#0B1F2A",
-            "align": "left",
-            "valign": "vcenter",
-        })
-        card_title_format = self.workbook.add_format({
-            "bold": True,
-            "font_size": 9,
-            "font_color": "#335C67",
-            "bg_color": "#F2F7F6",
-            "align": "center",
-            "valign": "vcenter",
-            "border": 1,
-            "border_color": "#C8D8D6",
-        })
-        card_value_format = self.workbook.add_format({
-            "bold": True,
-            "font_size": 18,
-            "font_color": "#0B1F2A",
-            "bg_color": "#FFFFFF",
-            "align": "center",
-            "valign": "vcenter",
-            "border": 1,
-            "border_color": "#C8D8D6",
-        })
-        card_note_format = self.workbook.add_format({
-            "font_size": 8,
-            "font_color": "#4B5563",
-            "bg_color": "#FFFFFF",
-            "align": "center",
-            "valign": "vcenter",
-            "text_wrap": True,
-            "border": 1,
-            "border_color": "#C8D8D6",
-        })
-        section_format = self.workbook.add_format({
-            "bold": True,
-            "font_size": 12,
-            "font_color": "#FFFFFF",
-            "bg_color": "#335C67",
-            "align": "left",
-            "valign": "vcenter",
-        })
-        note_format = self.workbook.add_format({
-            "font_size": 10,
-            "font_color": "#334155",
-            "bg_color": "#FFF7E6",
-            "text_wrap": True,
-            "valign": "top",
-            "border": 1,
-            "border_color": "#E8C66A",
-        })
-        header_format = self.workbook.add_format({
-            "bold": True,
-            "font_color": "#FFFFFF",
-            "bg_color": "#0F766E",
-            "border": 1,
-            "border_color": "#D7E5E2",
-        })
-        cell_format = self.workbook.add_format({
-            "border": 1,
-            "border_color": "#D7E5E2",
-            "text_wrap": True,
-            "valign": "top",
-        })
-        priority_format = self.workbook.add_format({
-            "bold": True,
-            "font_color": "#7F1D1D",
-            "bg_color": "#FEE2E2",
-            "border": 1,
-            "border_color": "#FCA5A5",
-            "align": "center",
-        })
-        number_format = self.workbook.add_format({"border": 1, "border_color": "#D7E5E2", "num_format": "#,##0"})
-        nav_format = self.workbook.add_format({
-            "bold": True,
-            "font_color": "#0F766E",
-            "bg_color": "#EAF7F4",
-            "border": 1,
-            "border_color": "#9CCFC7",
-            "align": "center",
-        })
+        # The dashboard used to carry its own teal-and-slate palette. Every
+        # format below now resolves through report_style, so this sheet reads as
+        # the same document as the cover, the index and the PDF.
+        title_format = self.workbook.add_format(report_style.xw_format(
+            "on_dark",
+            size=20,
+            bold=True,
+            background="band_deep",
+            border=None,
+            align="left",
+            valign="vcenter",
+        ))
+        subtitle_format = self.workbook.add_format(report_style.xw_format(
+            "on_dark",
+            size=10,
+            background="band_deep",
+            border=None,
+            align="left",
+            valign="vcenter",
+        ))
+        card_title_format = self.workbook.add_format(report_style.xw_format(
+            "band",
+            size=9,
+            bold=True,
+            background="table_header",
+            align="center",
+            valign="vcenter",
+        ))
+        card_value_format = self.workbook.add_format(report_style.xw_format(
+            "band_deep",
+            size=18,
+            bold=True,
+            background="white",
+            align="center",
+            valign="vcenter",
+        ))
+        card_note_format = self.workbook.add_format(report_style.xw_format(
+            "muted",
+            size=8,
+            background="white",
+            align="center",
+            valign="vcenter",
+            text_wrap=True,
+        ))
+        section_format = self.workbook.add_format(report_style.xw_format(
+            "on_dark",
+            size=12,
+            bold=True,
+            background="band",
+            border=None,
+            align="left",
+            valign="vcenter",
+        ))
+        # The reading note is an aside, not a warning: the amber box read as an
+        # alert on a sheet whose alerts carry meaning. Panel grey instead.
+        note_format = self.workbook.add_format(report_style.xw_format(
+            "ink",
+            size=10,
+            background="panel",
+            valign="top",
+            text_wrap=True,
+        ))
+        header_format = self.workbook.add_format(report_style.xw_format(
+            "on_dark",
+            bold=True,
+            background="band",
+        ))
+        cell_format = self.workbook.add_format(report_style.xw_format(
+            "ink",
+            text_wrap=True,
+            valign="top",
+        ))
+        # Priority is a fail-severity marker, so it takes the audited status
+        # presentation rather than a locally chosen red.
+        priority_format = self.workbook.add_format(
+            report_style.xw_status("fail")
+        )
+        number_format = self.workbook.add_format(report_style.xw_format(
+            "ink",
+            num_format="#,##0",
+        ))
+        nav_format = self.workbook.add_format(report_style.xw_format(
+            "accent",
+            bold=True,
+            background="table_header",
+            align="center",
+        ))
 
         worksheet.set_column("A:A", 14)
         worksheet.set_column("B:B", 18)
@@ -563,7 +569,7 @@ class ExcelReportGenerator:
             "name": "Score",
             "categories": f"='MANAGER DASHBOARD'!$N$4:$N${score_last_row}",
             "values": f"='MANAGER DASHBOARD'!$O$4:$O${score_last_row}",
-            "fill": {"color": "#0F766E"},
+            "fill": {"color": report_style.XW_CHART_FILL},
             "border": {"none": True},
             "data_labels": {"value": True, "num_format": "0"},
         })
@@ -581,11 +587,11 @@ class ExcelReportGenerator:
             "name": "Alerts",
             "categories": "='MANAGER DASHBOARD'!$Q$5:$Q$8",
             "values": "='MANAGER DASHBOARD'!$R$5:$R$8",
+            # One slice per severity, in the order severity_rows writes them, so
+            # the fills cannot drift out of step with the categories.
             "points": [
-                {"fill": {"color": "#7F1D1D"}},
-                {"fill": {"color": "#DC2626"}},
-                {"fill": {"color": "#F59E0B"}},
-                {"fill": {"color": "#0EA5E9"}},
+                {"fill": {"color": report_style.XW_SEVERITY_FILLS[severity]}}
+                for severity, _ in severity_rows[1:]
             ],
             "data_labels": {"percentage": True},
         })
@@ -601,7 +607,7 @@ class ExcelReportGenerator:
             "name": "Requirements",
             "categories": f"='MANAGER DASHBOARD'!$T$5:$T${req_last_row}",
             "values": f"='MANAGER DASHBOARD'!$U$5:$U${req_last_row}",
-            "fill": {"color": "#335C67"},
+            "fill": {"color": report_style.XW_CHART_FILL_NORMATIVE},
             "border": {"none": True},
             "data_labels": {"value": True},
         })
@@ -641,168 +647,115 @@ class ExcelReportGenerator:
         del sia3802_results  # Scores and alert groups already contain the model-facing details.
         worksheet = self.workbook.add_worksheet("ACTION DASHBOARD")
         worksheet.hide_gridlines(2)
-        worksheet.set_tab_color("#F97316")
         worksheet.set_landscape()
         worksheet.fit_to_pages(1, 0)
         worksheet.freeze_panes(22, 0)
 
-        title_format = self.workbook.add_format({
-            "bold": True,
-            "font_size": 20,
-            "font_color": "#FFFFFF",
-            "bg_color": "#111827",
-            "align": "left",
-            "valign": "vcenter",
-        })
-        subtitle_format = self.workbook.add_format({
-            "font_size": 10,
-            "font_color": "#E5E7EB",
-            "bg_color": "#111827",
-            "align": "left",
-            "valign": "vcenter",
-        })
-        section_format = self.workbook.add_format({
-            "bold": True,
-            "font_color": "#FFFFFF",
-            "bg_color": "#C2410C",
-            "border": 1,
-            "border_color": "#FDBA74",
-            "align": "left",
-            "valign": "vcenter",
-        })
-        header_format = self.workbook.add_format({
-            "bold": True,
-            "font_color": "#FFFFFF",
-            "bg_color": "#9A3412",
-            "border": 1,
-            "border_color": "#FED7AA",
-            "align": "center",
-            "valign": "vcenter",
-            "text_wrap": True,
-        })
-        cell_format = self.workbook.add_format({
-            "border": 1,
-            "border_color": "#FED7AA",
-            "text_wrap": True,
-            "valign": "top",
-        })
-        muted_format = self.workbook.add_format({
-            "border": 1,
-            "border_color": "#E5E7EB",
-            "font_color": "#4B5563",
-            "text_wrap": True,
-            "valign": "top",
-        })
-        card_title_format = self.workbook.add_format({
-            "bold": True,
-            "font_size": 9,
-            "font_color": "#7C2D12",
-            "bg_color": "#FFEDD5",
-            "align": "center",
-            "valign": "vcenter",
-            "border": 1,
-            "border_color": "#FDBA74",
-        })
-        card_value_format = self.workbook.add_format({
-            "bold": True,
-            "font_size": 18,
-            "font_color": "#111827",
-            "bg_color": "#FFFFFF",
-            "align": "center",
-            "valign": "vcenter",
-            "border": 1,
-            "border_color": "#FDBA74",
-        })
-        card_note_format = self.workbook.add_format({
-            "font_size": 8,
-            "font_color": "#4B5563",
-            "bg_color": "#FFFFFF",
-            "align": "center",
-            "valign": "vcenter",
-            "text_wrap": True,
-            "border": 1,
-            "border_color": "#FDBA74",
-        })
-        score_format = self.workbook.add_format({
-            "border": 1,
-            "border_color": "#FED7AA",
-            "num_format": "0",
-            "align": "center",
-            "valign": "vcenter",
-        })
-        number_format = self.workbook.add_format({
-            "border": 1,
-            "border_color": "#FED7AA",
-            "num_format": "#,##0",
-            "align": "center",
-        })
-        decimal_format = self.workbook.add_format({
-            "border": 1,
-            "border_color": "#FED7AA",
-            "num_format": "0.000",
-            "align": "center",
-        })
-        gap_format = self.workbook.add_format({
-            "border": 1,
-            "border_color": "#FED7AA",
-            "num_format": "+0.000;-0.000;0.000",
-            "align": "center",
-        })
-        p1_format = self.workbook.add_format({
-            "bold": True,
-            "font_color": "#7F1D1D",
-            "bg_color": "#FEE2E2",
-            "border": 1,
-            "border_color": "#FCA5A5",
-            "align": "center",
-        })
-        p2_format = self.workbook.add_format({
-            "bold": True,
-            "font_color": "#92400E",
-            "bg_color": "#FEF3C7",
-            "border": 1,
-            "border_color": "#FCD34D",
-            "align": "center",
-        })
-        p3_format = self.workbook.add_format({
-            "bold": True,
-            "font_color": "#075985",
-            "bg_color": "#E0F2FE",
-            "border": 1,
-            "border_color": "#7DD3FC",
-            "align": "center",
-        })
-        link_format = self.workbook.add_format({
-            "font_color": "#2563EB",
-            "underline": True,
-            "border": 1,
-            "border_color": "#FED7AA",
-            "align": "center",
-        })
-        ok_format = self.workbook.add_format({
-            "bold": True,
-            "font_color": "#166534",
-            "bg_color": "#DCFCE7",
-            "border": 1,
-            "border_color": "#86EFAC",
-            "align": "center",
-        })
-        warn_format = self.workbook.add_format({
-            "bold": True,
-            "font_color": "#92400E",
-            "bg_color": "#FEF3C7",
-            "border": 1,
-            "border_color": "#FCD34D",
-            "align": "center",
-        })
-        fail_format = self.workbook.add_format({
-            "bold": True,
-            "font_color": "#7F1D1D",
-            "bg_color": "#FEE2E2",
-            "border": 1,
-            "border_color": "#FCA5A5",
-            "align": "center",
-        })
+        # This sheet used to be entirely orange -- bands, headers, hairlines and
+        # cards -- which made "everything on it is urgent" the first impression
+        # and left its three real severity markers no contrast to work with.
+        # House style now, with urgency carried only by the verdict cells.
+        title_format = self.workbook.add_format(report_style.xw_format(
+            "on_dark",
+            size=20,
+            bold=True,
+            background="band_deep",
+            border=None,
+            align="left",
+            valign="vcenter",
+        ))
+        subtitle_format = self.workbook.add_format(report_style.xw_format(
+            "on_dark",
+            size=10,
+            background="band_deep",
+            border=None,
+            align="left",
+            valign="vcenter",
+        ))
+        section_format = self.workbook.add_format(report_style.xw_format(
+            "on_dark",
+            bold=True,
+            background="band",
+            align="left",
+            valign="vcenter",
+        ))
+        header_format = self.workbook.add_format(report_style.xw_format(
+            "on_dark",
+            bold=True,
+            background="band",
+            align="center",
+            valign="vcenter",
+            text_wrap=True,
+        ))
+        cell_format = self.workbook.add_format(report_style.xw_format(
+            "ink",
+            text_wrap=True,
+            valign="top",
+        ))
+        muted_format = self.workbook.add_format(report_style.xw_format(
+            "muted",
+            text_wrap=True,
+            valign="top",
+        ))
+        card_title_format = self.workbook.add_format(report_style.xw_format(
+            "band",
+            size=9,
+            bold=True,
+            background="table_header",
+            align="center",
+            valign="vcenter",
+        ))
+        card_value_format = self.workbook.add_format(report_style.xw_format(
+            "band_deep",
+            size=18,
+            bold=True,
+            background="white",
+            align="center",
+            valign="vcenter",
+        ))
+        card_note_format = self.workbook.add_format(report_style.xw_format(
+            "muted",
+            size=8,
+            background="white",
+            align="center",
+            valign="vcenter",
+            text_wrap=True,
+        ))
+        score_format = self.workbook.add_format(report_style.xw_format(
+            "ink",
+            num_format="0",
+            align="center",
+            valign="vcenter",
+        ))
+        number_format = self.workbook.add_format(report_style.xw_format(
+            "ink",
+            num_format="#,##0",
+            align="center",
+        ))
+        decimal_format = self.workbook.add_format(report_style.xw_format(
+            "ink",
+            num_format="0.000",
+            align="center",
+        ))
+        gap_format = self.workbook.add_format(report_style.xw_format(
+            "ink",
+            num_format="+0.000;-0.000;0.000",
+            align="center",
+        ))
+        # The three priorities map onto the audited verdict presentations: P1 is
+        # what fails compliance, P2 what carries a reservation, P3 what is not
+        # evaluated yet. Reusing them keeps one severity language in the report.
+        p1_format = self.workbook.add_format(report_style.xw_status("fail"))
+        p2_format = self.workbook.add_format(report_style.xw_status("warning"))
+        p3_format = self.workbook.add_format(
+            report_style.xw_status("not_evaluated")
+        )
+        link_format = self.workbook.add_format(report_style.xw_table_link())
+        ok_format = self.workbook.add_format(report_style.xw_status("pass"))
+        warn_format = self.workbook.add_format(
+            report_style.xw_status("warning")
+        )
+        fail_format = self.workbook.add_format(report_style.xw_status("fail"))
 
         worksheet.set_column("A:A", 11)
         worksheet.set_column("B:B", 13)
@@ -926,8 +879,10 @@ class ExcelReportGenerator:
             worksheet.write(row_index, 2, row_values[2], cell_format)
         if sia3802_rows:
             worksheet.conditional_format(13, 1, 12 + len(sia3802_rows), 1, {
+                # Accent blue, not green: a data bar shows magnitude, and a
+                # green bar behind a score of 20 reads as a pass it is not.
                 "type": "data_bar",
-                "bar_color": "#22C55E",
+                "bar_color": report_style.XW_CHART_FILL,
                 "min_type": "num",
                 "min_value": 0,
                 "max_type": "num",
@@ -943,8 +898,10 @@ class ExcelReportGenerator:
             worksheet.write(row_index, 10, row_values[2], cell_format)
         if sia4010_rows:
             worksheet.conditional_format(13, 9, 12 + len(sia4010_rows), 9, {
+                # Navy, matching the normative series in the dashboard charts:
+                # SIA 4010 readiness is not the same axis as a 380/2 score.
                 "type": "data_bar",
-                "bar_color": "#F97316",
+                "bar_color": report_style.XW_CHART_FILL_NORMATIVE,
                 "min_type": "num",
                 "min_value": 0,
                 "max_type": "num",
@@ -1014,7 +971,7 @@ class ExcelReportGenerator:
         if row > start_row + 1:
             worksheet.conditional_format(start_row + 1, 5, row - 1, 5, {
                 "type": "data_bar",
-                "bar_color": "#F59E0B",
+                "bar_color": report_style.XW_CHART_FILL,
                 "min_type": "num",
                 "min_value": 0,
                 "max_type": "num",
@@ -1052,29 +1009,57 @@ class ExcelReportGenerator:
         """Write a concise client/manager summary with safe claim wording."""
         worksheet = self.workbook.add_worksheet("CLIENT SUMMARY")
         worksheet.hide_gridlines(2)
-        worksheet.set_tab_color("#1F4E78")
 
-        title_format = self.workbook.add_format({
-            "bold": True,
-            "font_size": 18,
-            "font_color": "#FFFFFF",
-            "bg_color": "#1F2937",
-            "align": "left",
-            "valign": "vcenter",
-        })
-        section_format = self.workbook.add_format({
-            "bold": True,
-            "font_color": "#FFFFFF",
-            "bg_color": "#1F4E78",
-            "border": 1,
-            "border_color": "#D7E5E2",
-        })
-        cell_format = self.workbook.add_format({"border": 1, "text_wrap": True, "valign": "top", "border_color": "#D7E5E2"})
-        note_format = self.workbook.add_format({"border": 1, "text_wrap": True, "valign": "top", "bg_color": "#FFF7E6", "border_color": "#E8C66A"})
-        number_format = self.workbook.add_format({"border": 1, "num_format": "#,##0.0", "border_color": "#D7E5E2"})
-        count_format = self.workbook.add_format({"border": 1, "num_format": "#,##0", "border_color": "#D7E5E2"})
-        fail_format = self.workbook.add_format({"border": 1, "text_wrap": True, "valign": "top", "bg_color": "#FDECEA", "font_color": "#9C0006"})
-        pass_format = self.workbook.add_format({"border": 1, "text_wrap": True, "valign": "top", "bg_color": "#E2EFDA", "font_color": "#375623"})
+        title_format = self.workbook.add_format(report_style.xw_format(
+            "on_dark",
+            size=18,
+            bold=True,
+            background="band_deep",
+            border=None,
+            align="left",
+            valign="vcenter",
+        ))
+        section_format = self.workbook.add_format(report_style.xw_format(
+            "on_dark",
+            bold=True,
+            background="band",
+        ))
+        cell_format = self.workbook.add_format(report_style.xw_format(
+            "ink",
+            text_wrap=True,
+            valign="top",
+        ))
+        note_format = self.workbook.add_format(report_style.xw_format(
+            "ink",
+            background="panel",
+            text_wrap=True,
+            valign="top",
+        ))
+        number_format = self.workbook.add_format(report_style.xw_format(
+            "ink",
+            num_format="#,##0.0",
+        ))
+        count_format = self.workbook.add_format(report_style.xw_format(
+            "ink",
+            num_format="#,##0",
+        ))
+        # The decision statement is a wrapped paragraph, not a verdict chip, so
+        # it takes the status colours through xw_format rather than xw_status:
+        # the latter centres its text, which would centre a sentence.
+        _fail = report_style.status_presentation("fail")
+        _pass = report_style.status_presentation("pass")
+        fail_format = self.workbook.add_format(report_style.xw_format(
+            _fail.text,
+            background=_fail.ground,
+            text_wrap=True,
+            valign="top",
+        ))
+        pass_format = self.workbook.add_format(report_style.xw_format(
+            _pass.text,
+            background=_pass.ground,
+            text_wrap=True,
+            valign="top",
+        ))
 
         alerts_count = self._count_alerts_by_severity(score_result.alerts)
         evidence = sia4010_results.get("evidence", {}) or {}
@@ -1141,7 +1126,6 @@ class ExcelReportGenerator:
         """Write execution readiness checks for the VE Run-button workflow."""
         worksheet = self.workbook.add_worksheet("PREFLIGHT")
         worksheet.hide_gridlines(2)
-        worksheet.set_tab_color("#F59E0B")
 
         header_format = self.workbook.add_format(EXCEL_FORMATS["header"])
         subheader_format = self.workbook.add_format(EXCEL_FORMATS["subheader"])
@@ -1241,7 +1225,6 @@ class ExcelReportGenerator:
         """Write an actionable remediation table for manager-critical P1 items."""
         worksheet = self.workbook.add_worksheet("P1 REMEDIATION")
         worksheet.hide_gridlines(2)
-        worksheet.set_tab_color("#C00000")
 
         header_format = self.workbook.add_format(EXCEL_FORMATS["header"])
         subheader_format = self.workbook.add_format(EXCEL_FORMATS["subheader"])
@@ -1354,7 +1337,6 @@ class ExcelReportGenerator:
     ):
         """Write a construction-level facade/glazing action sheet."""
         worksheet = self.workbook.add_worksheet("FACADE GLAZING REVIEW")
-        worksheet.set_tab_color("#EA580C")
         worksheet.hide_gridlines(2)
         worksheet.freeze_panes(8, 0)
         worksheet.set_column("A:A", 18)
@@ -1510,7 +1492,6 @@ class ExcelReportGenerator:
     def _write_frame_fraction_audit_xlsxwriter(self, rooms_data: List[Any]):
         """Write construction-level frame-fraction evidence and actions."""
         worksheet = self.workbook.add_worksheet("FRAME FRACTION AUDIT")
-        worksheet.set_tab_color("#C2410C")
         worksheet.hide_gridlines(2)
         worksheet.freeze_panes(8, 0)
         worksheet.set_column("A:A", 18)
@@ -1622,7 +1603,6 @@ class ExcelReportGenerator:
     def _write_envelope_u_review_xlsxwriter(self, rooms_data: List[Any]):
         """Write envelope U-value remediation rows by construction."""
         worksheet = self.workbook.add_worksheet("ENVELOPE U REVIEW")
-        worksheet.set_tab_color("#7F1D1D")
         worksheet.hide_gridlines(2)
         worksheet.freeze_panes(8, 0)
         worksheet.set_column("A:A", 13)
@@ -1735,7 +1715,6 @@ class ExcelReportGenerator:
     def _write_ve_g_values_audit_xlsxwriter(self, rooms_data: List[Any]):
         """Write a VE/API audit sheet for glazing g-value traceability."""
         worksheet = self.workbook.add_worksheet("VE G-VALUES AUDIT")
-        worksheet.set_tab_color("#0F766E")
         worksheet.hide_gridlines(2)
         worksheet.freeze_panes(8, 0)
         worksheet.set_column("A:A", 18)
@@ -1921,7 +1900,6 @@ class ExcelReportGenerator:
         """Write explicit assumptions and limitations for audit-safe delivery."""
         worksheet = self.workbook.add_worksheet("ASSUMPTIONS LIMITS")
         worksheet.hide_gridlines(2)
-        worksheet.set_tab_color("#7F6000")
 
         header_format = self.workbook.add_format(EXCEL_FORMATS["header"])
         subheader_format = self.workbook.add_format(EXCEL_FORMATS["subheader"])
@@ -2033,7 +2011,6 @@ class ExcelReportGenerator:
         """Write run metadata and evidence traceability for audit review."""
         worksheet = self.workbook.add_worksheet("AUDIT LOG")
         worksheet.hide_gridlines(2)
-        worksheet.set_tab_color("#64748B")
 
         header_format = self.workbook.add_format(EXCEL_FORMATS["header"])
         subheader_format = self.workbook.add_format(EXCEL_FORMATS["subheader"])
@@ -2674,7 +2651,6 @@ class ExcelReportGenerator:
     def _write_sia3802_justifications_xlsxwriter(self, justification_results: Dict[str, Any]):
         """Write reviewer-provided SIA 380/2 justification records."""
         worksheet = self.workbook.add_worksheet("SIA3802 JUSTIFICATIONS")
-        worksheet.set_tab_color("#1D4ED8")
         worksheet.hide_gridlines(2)
         worksheet.freeze_panes(8, 0)
         worksheet.set_column("A:B", 14)
@@ -2796,7 +2772,6 @@ class ExcelReportGenerator:
     ):
         """Write a persistent backlog of current gaps and deferred work."""
         worksheet = self.workbook.add_worksheet("OPEN ITEMS BACKLOG")
-        worksheet.set_tab_color("#334155")
         worksheet.hide_gridlines(2)
         worksheet.freeze_panes(8, 0)
         worksheet.set_column("A:A", 11)

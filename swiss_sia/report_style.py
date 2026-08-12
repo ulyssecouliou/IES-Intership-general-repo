@@ -64,8 +64,13 @@ __all__ = [
     "xw_table_header",
     "xw_disclaimer",
     "xw_link",
+    "xw_table_link",
     "xw_status",
     "XW_TAB_COLOR",
+    "XW_SECTION_TAB_COLORS",
+    "XW_CHART_FILL",
+    "XW_CHART_FILL_NORMATIVE",
+    "XW_SEVERITY_FILLS",
     "REPORT_DISCLAIMER_KEY",
 ]
 
@@ -398,6 +403,7 @@ def xw_format(
     valign: Optional[str] = None,
     num_format: Optional[str] = None,
     text_wrap: bool = False,
+    underline: bool = False,
 ) -> Dict[str, Any]:
     """Return one xlsxwriter format dict in the house style.
 
@@ -414,6 +420,8 @@ def xw_format(
         spec["bold"] = True
     if italic:
         spec["italic"] = True
+    if underline:
+        spec["underline"] = True
     if background is not None:
         spec["bg_color"] = xw_hex(_resolve(background))
     if border is not None:
@@ -531,6 +539,22 @@ def xw_link() -> Dict[str, Any]:
     return xw_format("accent", size=design.SIZE_BODY, border=None)
 
 
+def xw_table_link() -> Dict[str, Any]:
+    """An internal link inside a bordered table cell.
+
+    Underlined, unlike :func:`xw_link`: on the index the link sits alone on a
+    line and its colour is enough, but in a table row a link marked by colour
+    alone is indistinguishable for a reader who cannot separate the two hues,
+    and it would also lose the hairline its neighbours have.
+    """
+
+    return xw_format(
+        "accent",
+        underline=True,
+        align="center",
+    )
+
+
 def xw_status(status: str, *, size: Optional[float] = None) -> Dict[str, Any]:
     """Return the format for a verdict cell.
 
@@ -551,6 +575,55 @@ def xw_status(status: str, *, size: Optional[float] = None) -> Dict[str, Any]:
 
 #: Tab colour for the two landing sheets. Navy, matching the band.
 XW_TAB_COLOR = xw_hex(design.NAVY)
+
+#: Chart series fill for a plain quantity bar or column, in house accent blue.
+XW_CHART_FILL = xw_hex(design.ACCENT)
+
+#: Chart series fill for a normative-coverage series, in the brand navy.
+XW_CHART_FILL_NORMATIVE = xw_hex(design.NAVY)
+
+#: Doughnut slice fill per alert severity, darkest first.
+#
+# The four levels need four distinguishable fills, and the ramp has to read as
+# a severity ordering rather than four unrelated hues. Critical and High take
+# the darkened and plain fail red, Medium the warning amber, and Low the house
+# light blue: informational, deliberately not a warning colour. These are chart
+# areas, not text, so the WCAG text-contrast rule that governs STATUS_TEXT does
+# not apply -- the ordering and the labels carry the meaning.
+XW_SEVERITY_FILLS = {
+    "Critical": xw_hex(design.RED_TEXT),
+    "High": xw_hex(design.RED),
+    "Medium": xw_hex(design.AMBER),
+    "Low": xw_hex(design.LIGHT_BLUE),
+}
+
+#: Tab colour per report section, keyed by the section name the index prints.
+#
+# Thirty-odd tabs need to be told apart at a glance, which is why the workbook
+# had seven colours to begin with. The ones it had -- teal ``#0F766E``, violet
+# ``#6D28D9``, two oranges -- belong to no IES palette; a client opening the
+# file saw a second visual identity. These stay seven distinguishable colours,
+# but every one is a house token, and the choice carries the section's meaning
+# rather than decorating it: the brand navy family for the normative work, the
+# semantic amber where the section is about what to fix first, and the muted
+# slates for supporting data.
+XW_SECTION_TAB_COLORS = {
+    # The brand anchor, for what a manager opens first.
+    "Executive": xw_hex(design.NAVY_DEEP),
+    # Priority is attention, so it takes the semantic amber, darkened for
+    # legibility exactly as AMBER_TEXT is.
+    "Readiness & priority": xw_hex(design.AMBER_TEXT),
+    # Fabric and glazing: the house light blue, distinct from both navies.
+    "Envelope & glazing": xw_hex(design.LIGHT_BLUE),
+    # The primary normative section takes the primary brand colour.
+    "SIA 380/2": xw_hex(design.NAVY),
+    # The second normative section, separated by the accent blue darkened.
+    "SIA 4010": xw_hex(design.ACCENT_DEEP),
+    # Working sheets, in body-text slate.
+    "Actions & inputs": xw_hex(design.TEXT),
+    # Supporting detail, deliberately the quietest tab.
+    "Data & detail": xw_hex(design.TEXT_MUTED),
+}
 
 
 # ---------------------------------------------------------------------------
