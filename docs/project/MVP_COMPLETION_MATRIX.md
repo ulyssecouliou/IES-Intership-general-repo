@@ -58,7 +58,9 @@ Classe(s) concernée(s) : `1A` (cas 2A), `1B` (2B, 2C, 2D), `2A` (2A), `2B` (2B-
 
 ## 3. SIA 4010 — Test 3 (12 cas)
 
-Classe(s) : `2A` (3A-3F), `2B` (3A-3L), `4A` (3A-3F), `4B` (3A-3L). Météo Kloten = bloqué (SIA 2028 solaire).
+Classe(s) : `2A` (3A-3F), `2B` (3A-3L), `4A` (3A-3F), `4B` (3A-3L). ~~Météo Kloten = bloqué (SIA 2028 solaire).~~ **Climat reçu et installé le 2026-08-12** (voir §10).
+
+**Probe runtime exécutée en VE 2025 réel le 2026-08-12** — première exécution de cette probe. Projet `ZOER_32_C1_TEST`, scénario `test_3A/3A` préparé par [Run_VE_SIA4010_Prepare_Case_Scenario.py](Run_VE_SIA4010_Prepare_Case_Scenario.py). Verdict `SOURCE_BINDINGS_REQUIRED` : **20 champs d'éclairage observés**, 4 membres liés aux capteurs, 12 variantes exactes auditées. Rapport `sia4010_artifacts/diagnostics/sia4010_test3_runtime_capability_20260812_170256.json`. Aucune donnée de modèle modifiée. Ce que cela établit : l'API VE expose bien la surface nécessaire ; ce qui manque n'est pas une capacité VE mais les **liaisons de sources externes** (SIA 2024 notamment). Ce n'est ni une validation ni une revendication de conformité.
 
 | Cas | Implémentation Python | Test Python | Générateur VE | APS enregistré | Critère officiel | Statut | Prochain geste minimal |
 |---|---|---|---|---|---|---|---|
@@ -71,6 +73,8 @@ Classe(s) : `2A` (3A-3F), `2B` (3A-3L), `4A` (3A-3F), `4B` (3A-3L). Météo Klot
 ## 4. SIA 4010 — Test 4 (1 cas)
 
 Classe(s) : `3`, `4A`, `4B`. **Pas de section Testkriterien** dans `Spezifikation_Test4.pdf` — question 3 du courriel du 2026-08-07 (brouillon non envoyé) reste ouverte. Météo Kloten = bloqué solaire.
+
+**Probe runtime Tests 4-7 exécutée en VE 2025 réel le 2026-08-12** — première exécution. Projet `ZOER_32_C1_TEST`, scénarios `test_4/4` puis `test_7/7` préparés par [Run_VE_SIA4010_Prepare_Case_Scenario.py](Run_VE_SIA4010_Prepare_Case_Scenario.py). Verdict `SOURCE_BINDINGS_REQUIRED` pour les deux : collection de systèmes Apache observée, read-back système par pièce observé, **29 membres spécifiques aux centrales**, 7 cas exacts audités. Rapports sous `sia4010_artifacts/diagnostics/sia4010_tests4_7_runtime_capability_20260812_170438.json` et `..._170514.json`. Aucune donnée de modèle modifiee. Ce que cela etablit : la surface ApacheHVAC necessaire est presente dans VE ; le blocage restant est la liaison des sources externes et le critere de distribution, pas une capacite VE manquante.
 
 | Cas | Implémentation Python | Test Python | Générateur VE | APS | Critère officiel | Statut | Prochain geste |
 |---|---|---|---|---|---|---|---|
