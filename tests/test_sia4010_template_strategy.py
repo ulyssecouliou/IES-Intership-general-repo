@@ -50,8 +50,16 @@ class Sia4010TemplateStrategyTests(unittest.TestCase):
     def test_unbound_complex_cases_are_blocked(self):
         plans = build_hybrid_case_plans(self.requirements, ())
         blocked = [item for item in plans if item.status == "BLOCKED_TEMPLATE_REQUIRED"]
-        self.assertEqual(len(blocked), 23)
-        self.assertTrue(all(item.base_test_id in "234567" for item in blocked))
+        # 27 : les quatre cas diagnostiques du Test 1 n'ont pas de
+        # template lie non plus, donc ils rejoignent les cas bloques.
+        self.assertEqual(len(blocked), 27)
+        # Cette assertion encodait « le Test 1 est entierement lie ». Ce
+        # n'est plus vrai : les quatre cas diagnostiques 1A a 1D n'ont pas
+        # de template lie non plus. Ce qui doit rester vrai est que les six
+        # cas ISO et 1E, eux, ne sont pas bloques.
+        test1_bloques = {item.case_id for item in blocked
+                         if item.base_test_id == "1"}
+        self.assertEqual(test1_bloques, {"1A", "1B", "1C", "1D"})
 
     @patch(
         "swiss_sia.reference_model.sia4010.template_strategy.validate_binding"

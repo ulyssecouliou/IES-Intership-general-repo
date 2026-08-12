@@ -50,7 +50,9 @@ class Sia4010EvidenceRegistryTests(unittest.TestCase):
         self.test_root.mkdir(parents=True, exist_ok=True)
 
     def test_empty_ledger_contains_every_exact_case_and_no_claim(self):
-        self.assertEqual(len(self.cases), 30)
+        # 34 depuis l'enregistrement des cas diagnostiques 1A a 1D du
+        # Test 1 : 1E existait sans la base que sa definition exige.
+        self.assertEqual(len(self.cases), 34)
         self.assertTrue(
             all(
                 record["model_evidence"]["status"] == "MISSING"
@@ -328,12 +330,13 @@ class Sia4010EvidenceRegistryTests(unittest.TestCase):
         summaries = _base_test_summaries(self.cases)
         self.assertEqual(set(summaries), set("1234567"))
         self.assertEqual(
-            sum(item["exact_cases"] for item in summaries.values()), 30
+            sum(item["exact_cases"] for item in summaries.values()), 34
         )
         self.assertTrue(
             all(item["status"] == "NOT_STARTED" for item in summaries.values())
         )
-        self.assertEqual(summaries["1"]["exact_cases"], 7)
+        # 11 : les six cas ISO, les quatre diagnostiques 1A a 1D et 1E.
+        self.assertEqual(summaries["1"]["exact_cases"], 11)
         self.assertEqual(summaries["3"]["exact_cases"], 12)
 
     def test_register_case_simulation_records_complete_verified_chain(self):
@@ -502,6 +505,58 @@ class Sia4010EvidenceRegistryTests(unittest.TestCase):
         )
         evidence = payload["cases"]["test_1/600"]["result_evidence"]
         self.assertEqual(evidence["simulation_link_status"], "NOT_LINKED")
+
+
+    def test_a_ledger_written_before_a_new_case_is_migrated_not_refused(self):
+        """A ledger predating a case is incomplete, not corrupt.
+
+        Registering the Test 1 diagnostic cases made every existing ledger fail
+        an exact-set check, including the real one holding the recorded APS
+        evidence. That would have broken the next VE run rather than any test.
+        The missing cases are added empty and the recorded evidence is kept.
+        """
+
+        from swiss_sia.reference_model.sia4010.evidence_registry import (
+            load_registry,
+            new_registry_payload,
+        )
+
+        payload = new_registry_payload()
+        payload["cases"]["test_1/600"]["result_evidence"]["status"] = "KEPT"
+        for key in ("test_1/1A", "test_1/1B", "test_1/1C", "test_1/1D"):
+            del payload["cases"][key]
+        path = self.test_root / "legacy_ledger.json"
+        path.write_text(json.dumps(payload), encoding="utf-8")
+
+        migrated = load_registry(path)
+        self.assertEqual(len(migrated["cases"]), 34)
+        self.assertEqual(
+            migrated["cases"]["test_1/600"]["result_evidence"]["status"], "KEPT"
+        )
+        self.assertEqual(
+            migrated["cases"]["test_1/1A"]["result_evidence"]["status"],
+            "NOT_CHECKABLE",
+        )
+
+    def test_a_ledger_holding_an_unknown_case_is_still_refused(self):
+        """Migration must not become a way to accept corruption."""
+
+        from swiss_sia.reference_model.sia4010.evidence_registry import (
+            load_registry,
+            new_registry_payload,
+        )
+
+        payload = new_registry_payload()
+        payload["cases"]["test_1/9Z"] = payload["cases"]["test_1/600"]
+        path = self.test_root / "corrupt_ledger.json"
+        path.write_text(json.dumps(payload), encoding="utf-8")
+
+        from swiss_sia.reference_model.exceptions import (
+            ConfigurationError,
+        )
+
+        with self.assertRaises(ConfigurationError):
+            load_registry(path)
 
 
 if __name__ == "__main__":

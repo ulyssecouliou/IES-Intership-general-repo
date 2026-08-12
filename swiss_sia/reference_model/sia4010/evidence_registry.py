@@ -156,9 +156,22 @@ def load_registry(path: Union[str, Path]) -> Dict[str, Any]:
         _case_key(item.variant, item.case_id)
         for item in all_case_capabilities()
     }
-    if set(payload.get("cases", {})) != expected:
+    recorded = set(payload.get("cases", {}))
+    # An exact-set match used to be required, and registering the Test 1
+    # diagnostic cases on 2026-08-12 made every ledger written before them
+    # unloadable -- including the real one holding the recorded APS evidence.
+    # A ledger predating a case is not corrupt, it is incomplete, and the two
+    # deserve opposite answers.
+    unknown = recorded - expected
+    if unknown:
         raise ConfigurationError(
-            "Evidence registry exact-case set does not match the 30-case contract"
+            "Evidence registry holds cases the registry does not know: "
+            "{}".format(sorted(unknown))
+        )
+    for missing in sorted(expected - recorded):
+        variant, case_id = missing.split("/", 1)
+        payload.setdefault("cases", {})[missing] = _empty_case_record(
+            variant, case_id
         )
     for capability in all_case_capabilities():
         record = payload["cases"][

@@ -40,10 +40,14 @@ class ComplianceHubTests(unittest.TestCase):
     def test_current_sia4010_summary_does_not_overclaim(self) -> None:
         """The UI status must match the explicit case capability registry."""
         summary = build_capability_summary(all_case_capabilities())
-        self.assertEqual(summary["exact_cases"], 30)
+        # 34 depuis l'enregistrement des cas diagnostiques 1A a 1D du
+        # Test 1 : 1E existait sans la base que sa definition exige.
+        self.assertEqual(summary["exact_cases"], 34)
         self.assertEqual(summary["guarded_mutation_cases"], 1)
         self.assertEqual(summary["runtime_qualification_cases"], 5)
-        self.assertEqual(summary["not_implemented_cases"], 24)
+        # 28 : aucun generateur VE ne lie encore les quatre cas
+        # diagnostiques du Test 1, donc ils comptent comme non implementes.
+        self.assertEqual(summary["not_implemented_cases"], 28)
 
     def test_hub_geometry_is_centred_and_kept_on_screen(self) -> None:
         """Small displays must not place the hub outside the visible desktop."""
