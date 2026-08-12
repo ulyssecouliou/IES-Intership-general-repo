@@ -41,10 +41,14 @@ La spécification du Test 1 énonce ses propres critères ([`Spezifikation_Test1
 
 | Cas | Champ d'évaluation APS | Entrées déléguées exigées | Statut |
 |---|---|---|---|
-| **1A** | `UNAVAILABLE` — aucun critère énoncé | cellule ISO + climat Kloten | `NOT_IMPLEMENTED` |
-| **1B** | `UNAVAILABLE` | idem 1A | `NOT_IMPLEMENTED` |
-| **1C** | `UNAVAILABLE` | + SIA 2024 (l'infiltration 0,15 en est tirée) | `NOT_IMPLEMENTED` |
-| **1D** | `UNAVAILABLE` | + SIA 2024 (usage) | `NOT_IMPLEMENTED` |
+| **1A** | `UNAVAILABLE` — aucun critère énoncé | cellule ISO + climat Kloten | bundle `READY_FOR_PROVISIONAL_RUNTIME_QUALIFICATION` |
+| **1B** | `UNAVAILABLE` | idem 1A | idem |
+| **1C** | `UNAVAILABLE` | + SIA 2024 (l'infiltration 0,15 en est tirée) | idem |
+| **1D** | `UNAVAILABLE` | + SIA 2024 (usage) | idem |
+
+**Générateur écrit et atteignable depuis VE (2026-08-13).** [test1_diagnostic_bundle.py](swiss_sia/reference_model/sia4010/test1_diagnostic_bundle.py) applique la chaîne cumulativement, chaque valeur relue dans le référentiel figé — le module ne porte aucune constante normative. `prepare_supported_mvp_bundle` route désormais les cinq cas ; sans ce câblage le générateur existait mais rien ne l'appelait, et préparer 1A produisait le repli générique en silence. Vérifié sur 1D : climat `Zurich-Kloten - SIA 2028 DRY normal`, infiltration 0,15, vitrage g 0,545 / Ug 0,654, appareils 11 W/m², éclairage 12,5 W/m², occupants 68,6 W/personne (4,9 W/m² × 14 m²).
+
+Le fichier météo de Kloten est résolu **hors** du constructeur — projet, puis dossier Weather de VE, puis `generated_weather/KLO/` — parce que sa localisation dépend de la machine et qu'un constructeur dont le résultat en dépend n'est pas testable deux fois de la même façon. Introuvable, il **bloque** ; il ne laisse jamais le climat de Denver en place sous une étiquette Kloten.
 
 **Point normatif à ne pas perdre** : la spécification exige pour 1A-1D des *jeux annuels de puissance horaire* et n'énonce **aucun critère de comparaison** — « Zu liefernde Resultate: Jahresdatensätze mit stündlicher Leistung Heizen und Kühlen ». `test-1.ref.json` ne porte donc aucune bande pour eux, et il ne faut pas en inventer : ce sont des **livrables**, pas des cas jugés. Seul 1E est jugé. Conséquence sur les compteurs : 30 → **34 cas exacts**, 8 classes et **24 variantes inchangées** — ce sont des cas de `test_1`, pas de nouvelles variantes.
 

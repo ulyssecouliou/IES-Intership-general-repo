@@ -93,8 +93,21 @@ class Sia4010MvpBundleTests(unittest.TestCase):
             heavyweight.status,
             "READY_FOR_PROVISIONAL_RUNTIME_QUALIFICATION",
         )
-        unsupported = controller.prepare_supported_mvp_bundle(
+        # 1E n'est plus « non supporté » : le contrôleur route depuis le
+        # 2026-08-13 les cinq cas de la chaîne diagnostique vers
+        # test1_diagnostic_bundle. Il rend donc un reçu, et ce reçu est BLOQUÉ
+        # tant que la dynamique du store n'est pas énoncée — ce qui n'est pas
+        # la même chose que « le cas n'existe pas ».
+        diagnostic = controller.prepare_supported_mvp_bundle(
             self.project, ROOT, "SIA4010_OFFICIAL", "test_1", "1E"
+        )
+        self.assertIsNotNone(diagnostic)
+        self.assertEqual(diagnostic.status, "BLOCKED_DIAGNOSTIC_CHAIN")
+        # Le témoin négatif : un cas qui n'appartient pas au Test 1 doit
+        # toujours être décliné, sinon l'élargissement du garde aurait capturé
+        # plus que la chaîne.
+        unsupported = controller.prepare_supported_mvp_bundle(
+            self.project, ROOT, "SIA4010_OFFICIAL", "test_2A", "2A"
         )
         self.assertIsNone(unsupported)
 

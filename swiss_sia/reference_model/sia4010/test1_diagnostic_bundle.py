@@ -80,6 +80,56 @@ INFILTRATION_M3_H_M2_TO_L_S_M2 = 3.6
 #: The one blocker left, raised instead of inventing a shading device.
 BLOCKER_AWNING = "TEST1_DIAGNOSTIC_FABRIC_AWNING_GENERATOR_NOT_IMPLEMENTED"
 
+#: Names the SIA 2028 DRY normal Kloten file is known under. The first is the
+#: name ``Install_SIA_Weather_Into_VE`` gives it inside VE, the second the one
+#: the converter writes in the repository.
+KLOTEN_WEATHER_FILENAMES = (
+    "CHE_KLO_SIA2028_DRY_NORMAL.epw",
+    "KLO_SIA2028_DRY_NORMAL_IESVE_CANDIDATE.epw",
+)
+
+#: Where IESVE keeps its shared weather files, same default as
+#: ``Install_SIA_Weather_Into_VE`` and ``scripts/run_test1_dans_ve``.
+VE_SHARED_WEATHER_DIR = Path(r"C:\Program Files\IES\Shared Content\Weather")
+
+
+def resolve_kloten_weather(
+    project_root: Union[str, Path],
+    repository_root: Union[str, Path],
+) -> Tuple[Optional[Path], Tuple[str, ...]]:
+    """Find the SIA 2028 DRY normal Kloten file, and say where it looked.
+
+    Deliberately kept out of the bundle builder. Resolution depends on what is
+    installed on the machine, and a builder whose result depends on the machine
+    cannot be tested the same way twice; this belongs at the edge that knows
+    about the machine.
+
+    A file sitting in the project folder wins, because an operator who put one
+    there means it. The searched locations are returned either way, so a failure
+    can name them instead of just saying the file is missing.
+
+    Args:
+        project_root: Saved VE project folder.
+        repository_root: Repository root.
+
+    Returns:
+        tuple: The file if found, and every location searched.
+    """
+
+    folders = (
+        Path(project_root),
+        VE_SHARED_WEATHER_DIR,
+        Path(repository_root) / "generated_weather" / "KLO",
+    )
+    searched = []
+    for folder in folders:
+        for name in KLOTEN_WEATHER_FILENAMES:
+            candidate = folder / name
+            searched.append(str(candidate))
+            if candidate.is_file():
+                return candidate, tuple(searched)
+    return None, tuple(searched)
+
 
 def _chain_index(case_id: str) -> int:
     """Return the position of one diagnostic case in the chain."""

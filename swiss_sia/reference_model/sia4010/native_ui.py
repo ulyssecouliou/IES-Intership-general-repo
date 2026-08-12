@@ -22,6 +22,11 @@ from .mvp_bundle import (
 )
 from .case_registry import get_case_capability
 from .test1_variant_bundle import build_test1_runtime_probe_bundle
+from .test1_diagnostic_bundle import (
+    DIAGNOSTIC_CHAIN,
+    build_test1_diagnostic_bundle,
+    resolve_kloten_weather,
+)
 from .evidence_registry import (
     build_all_class_navigators,
     synchronize_preparation,
@@ -230,7 +235,7 @@ class ModelBuilderController:
             "900",
             "940",
             "900FF",
-        }:
+        } | set(DIAGNOSTIC_CHAIN):
             return None
         weather_file = ModelBuilderController.ensure_test1_weather(
             project_path, repository_root
@@ -245,6 +250,23 @@ class ModelBuilderController:
                 repository_root,
                 case_id,
                 weather_file=weather_file,
+            )
+        if case_id in DIAGNOSTIC_CHAIN:
+            # The diagnostic chain replaces the Test 1 DRYCOLD climate by
+            # Zurich-Kloten, so the file is resolved here rather than inside the
+            # builder: where it sits depends on the machine, and a builder whose
+            # result depends on the machine cannot be tested the same way twice.
+            # Not finding it is reported by the bundle as a blocker, never by
+            # leaving the Denver climate in place under a Kloten label.
+            kloten, _searched = resolve_kloten_weather(
+                project_path, repository_root
+            )
+            return build_test1_diagnostic_bundle(
+                project_path,
+                repository_root,
+                case_id,
+                weather_file=weather_file,
+                kloten_weather_file=kloten,
             )
         return None
 

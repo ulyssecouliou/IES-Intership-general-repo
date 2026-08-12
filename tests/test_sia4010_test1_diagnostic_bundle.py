@@ -16,12 +16,15 @@ import unittest
 from pathlib import Path
 
 from swiss_sia.reference_model.exceptions import ConfigurationError
+from swiss_sia.reference_model.sia4010.native_ui import ModelBuilderController
 from swiss_sia.reference_model.sia4010.test1_diagnostic_bundle import (
     BLOCKER_AWNING,
     DIAGNOSTIC_CHAIN,
     INFILTRATION_M3_H_M2_TO_L_S_M2,
+    KLOTEN_WEATHER_FILENAMES,
     build_test1_diagnostic_bundle,
     load_diagnostics_reference,
+    resolve_kloten_weather,
 )
 
 
@@ -389,6 +392,64 @@ class Test1DiagnosticBundleTests(unittest.TestCase):
                 self.project, self.project, "1A",
                 weather_file=self.weather,
             )
+
+
+class Test1DiagnosticDispatchTests(unittest.TestCase):
+    """The chain must be reachable from VE, not only from a unit test.
+
+    A generator nothing routes to is a generator nobody can run. The controller
+    used to return None for these five cases, so preparing 1A produced the
+    generic fallback bundle instead of the chain, silently.
+    """
+
+    def setUp(self):
+        self.project = TEMP_ROOT / self._testMethodName
+        self.project.mkdir(parents=True, exist_ok=True)
+
+    def _prepare(self, case_id):
+        return ModelBuilderController.prepare_supported_mvp_bundle(
+            self.project, ROOT, "SIA4010_OFFICIAL", "test_1", case_id
+        )
+
+    def test_every_diagnostic_case_is_dispatched(self):
+        for case_id in DIAGNOSTIC_CHAIN:
+            with self.subTest(case=case_id):
+                receipt = self._prepare(case_id)
+                self.assertIsNotNone(receipt, case_id)
+
+    def test_the_six_iso_cases_still_route_to_their_own_builders(self):
+        """Widening the guard must not capture the cases it did not own."""
+
+        for case_id in ("600", "640", "600FF", "900", "940", "900FF"):
+            with self.subTest(case=case_id):
+                receipt = self._prepare(case_id)
+                self.assertIsNotNone(receipt)
+                self.assertNotIn("DIAGNOSTIC", str(receipt.status))
+
+    def test_an_unrelated_case_is_still_declined(self):
+        self.assertIsNone(
+            ModelBuilderController.prepare_supported_mvp_bundle(
+                self.project, ROOT, "SIA4010_OFFICIAL", "test_2A", "2A"
+            )
+        )
+
+    def test_the_kloten_resolver_prefers_the_project_folder(self):
+        """An operator who dropped a file in the project meant it."""
+
+        local = self.project / KLOTEN_WEATHER_FILENAMES[0]
+        local.write_text("operator supplied\n", encoding="utf-8")
+        found, searched = resolve_kloten_weather(self.project, ROOT)
+        self.assertEqual(found, local)
+        self.assertEqual(searched[0], str(local))
+
+    def test_the_resolver_names_where_it_looked(self):
+        """A failure that cannot say where it searched is hard to act on."""
+
+        empty = self.project / "nowhere"
+        empty.mkdir(exist_ok=True)
+        _found, searched = resolve_kloten_weather(empty, empty)
+        self.assertTrue(searched)
+        self.assertTrue(all(isinstance(item, str) for item in searched))
 
 
 if __name__ == "__main__":
