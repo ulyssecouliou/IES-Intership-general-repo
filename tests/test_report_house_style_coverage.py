@@ -29,20 +29,47 @@ GENERATOR = ROOT / "swiss_sia" / "excel_report.py"
 HEX_LITERAL = re.compile(r"#[0-9A-Fa-f]{6}")
 WORKSHEET_CALL = re.compile(r"add_worksheet\(\"([A-Z0-9 /]+)\"\)")
 
-#: Sheets whose builders are fully on the house style. Extend as passes land.
+#: Every sheet the generator writes. The conversion finished on 2026-08-12, so
+#: this is now the full list rather than a growing subset.
 CONVERTED_SHEETS = (
-    "COVER",
-    "INDEX",
-    "MANAGER DASHBOARD",
     "ACTION DASHBOARD",
+    "ACTION PLAN",
+    "ALERT SUMMARY",
+    "ALERTS",
+    "ASSUMPTIONS LIMITS",
+    "AUDIT LOG",
     "CLIENT SUMMARY",
-    "PREFLIGHT",
+    "COMPLIANCE RESULTS",
+    "COVER",
+    "DATA QUALITY",
+    "DETAILED SCORES",
+    "DYNAMIC RESULTS",
+    "ENVELOPE U REVIEW",
+    "FACADE GLAZING REVIEW",
+    "FRAME FRACTION AUDIT",
+    "INDEX",
+    "INPUT REQUEST",
+    "MANAGER DASHBOARD",
+    "NAVIGATOR BACKLOG",
+    "OPEN ITEMS BACKLOG",
     "P1 REMEDIATION",
+    "PREFLIGHT",
+    "REFERENCE PROJECT",
+    "ROOMS",
+    "SIA DATA COVERAGE",
+    "SIA REQUIREMENTS",
+    "SIA3802 JUSTIFICATIONS",
+    "SIA4010 CLASS MATRIX",
+    "SIA4010 PREVALIDATION",
+    "SIA4010 READINESS",
+    "SIA4010 SOFTWARE REGISTER",
+    "SUMMARY",
 )
 
-#: Literals left in the unconverted sheet builders on 2026-08-12. This number
-#: may only ever go down.
-REMAINING_LITERAL_BUDGET = 193
+#: The ratchet reached zero. It stays as an equality rather than being deleted:
+#: the next colour literal added to this file is a regression, not a step in an
+#: unfinished migration.
+REMAINING_LITERAL_BUDGET = 0
 
 
 def _source() -> str:
@@ -87,15 +114,25 @@ class HouseStyleCoverageTests(unittest.TestCase):
             "through swiss_sia.report_style instead: {}".format(offenders),
         )
 
-    def test_the_literal_count_never_grows(self) -> None:
-        remaining = len(HEX_LITERAL.findall(self.source))
-        self.assertLessEqual(
-            remaining,
-            REMAINING_LITERAL_BUDGET,
-            "The workbook gained colour literals ({} > {}). Use "
-            "swiss_sia.report_style for new formats.".format(
-                remaining, REMAINING_LITERAL_BUDGET
-            ),
+    def test_the_generator_holds_no_colour_literal_at_all(self) -> None:
+        found = sorted(set(HEX_LITERAL.findall(self.source)))
+        self.assertEqual(
+            found,
+            [],
+            "The workbook generator gained colour literals: {}. Route them "
+            "through swiss_sia.report_style so the workbook, the PDF and the "
+            "in-VE interface stay one document.".format(found),
+        )
+
+    def test_every_sheet_the_generator_writes_is_covered(self) -> None:
+        """A new sheet must be added to CONVERTED_SHEETS deliberately.
+
+        Otherwise a sheet could be added with its own palette and the
+        per-sheet assertion above would simply never look at it.
+        """
+
+        self.assertEqual(
+            sorted(self.builders), sorted(CONVERTED_SHEETS)
         )
 
     def test_only_finalize_colours_a_tab(self) -> None:

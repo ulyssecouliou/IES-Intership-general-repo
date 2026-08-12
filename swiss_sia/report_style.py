@@ -555,12 +555,21 @@ def xw_table_link() -> Dict[str, Any]:
     )
 
 
-def xw_status(status: str, *, size: Optional[float] = None) -> Dict[str, Any]:
+def xw_status(
+    status: str,
+    *,
+    size: Optional[float] = None,
+    valign: Optional[str] = None,
+) -> Dict[str, Any]:
     """Return the format for a verdict cell.
 
     Colour comes from ``STATUS_TEXT``, so the word clears WCAG AA on its own
     ground. The caller still owes the symbol and the word: see
     :func:`status_presentation`.
+
+    ``valign`` exists because a verdict beside a wrapped multi-line cell reads
+    better top-aligned with its row than floating in the middle of it. Several
+    review sheets were built that way and keep it.
     """
 
     presented = status_presentation(status)
@@ -570,6 +579,7 @@ def xw_status(status: str, *, size: Optional[float] = None) -> Dict[str, Any]:
         bold=True,
         background=presented.ground,
         align="center",
+        valign=valign,
     )
 
 
