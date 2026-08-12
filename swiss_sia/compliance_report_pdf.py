@@ -34,21 +34,36 @@ from .pdf_writer import (
 )
 from .reference_model.sia4010.ui_translations import normalize_language, translate
 
-# Shared palette, aligned with the workbook and the builder interfaces.
-INK = (0.059, 0.118, 0.102)
-MUTED = (0.373, 0.443, 0.408)
-LINE = (0.867, 0.898, 0.878)
-BRAND = (0.071, 0.443, 0.353)
-BRAND_DEEP = (0.055, 0.231, 0.192)
-ACCENT = (0.208, 0.647, 0.514)
-PANEL = (0.973, 0.980, 0.976)
-WHITE = (1.0, 1.0, 1.0)
-OK = (0.082, 0.451, 0.310)
-OK_BG = (0.902, 0.957, 0.925)
-BAD = (0.655, 0.169, 0.157)
-BAD_BG = (0.992, 0.933, 0.925)
-WARN = (0.541, 0.353, 0.0)
-WARN_BG = (0.992, 0.953, 0.855)
+# Palette. Every value below is the IES house style, resolved through
+# ``report_style`` from the tokens in ``ui/design.py``, which reads them from the
+# public IES stylesheet.
+#
+# WHAT CHANGED, AND WHY. These constants used to hold a teal-green identity of
+# their own: BRAND was (0.071, 0.443, 0.353). The token module declares itself
+# the single source for the navigator *and the reports*, so a client-facing
+# report in a second palette was a drift, not a choice. The names are kept so
+# the 625 lines below are untouched; only what they resolve to has moved.
+#
+# The status colours come from STATUS_TEXT, not STATUS_STROKE. The four stroke
+# hues measure 2.15:1 to 4.30:1 on white and would have put verdict words below
+# WCAG AA; the derived text shades clear it on white and on their own ground.
+# ``tests/test_report_style.py`` re-measures rather than trusting this note.
+from .report_style import PDF as _PDF, status_presentation as _status
+
+INK = _PDF.ink
+MUTED = _PDF.muted
+LINE = _PDF.rule
+BRAND = _PDF.band
+BRAND_DEEP = _PDF.band_deep
+ACCENT = _PDF.accent
+PANEL = _PDF.panel
+WHITE = _PDF.white
+OK = _status("pass").pdf_text
+OK_BG = _status("pass").pdf_ground
+BAD = _status("fail").pdf_text
+BAD_BG = _status("fail").pdf_ground
+WARN = _status("warning").pdf_text
+WARN_BG = _status("warning").pdf_ground
 
 MARGIN = 16.0
 CONTENT_WIDTH = A4_MM[0] - 2 * MARGIN

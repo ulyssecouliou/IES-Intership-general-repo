@@ -105,6 +105,47 @@ STATUS_STROKE = {
     NOT_SIGNED: NEUTRAL_GREY,
 }
 
+# ---------------------------------------------------------------------------
+# Status colours for TEXT, derived
+# ---------------------------------------------------------------------------
+#
+# WHY THESE EXIST. The four hues above are stroke colours and none of them is
+# legible as text. Measured against white: GREEN 2.45:1, RED 4.30:1,
+# AMBER 2.15:1, NEUTRAL_GREY 2.93:1 — all below the 4.5:1 that WCAG AA asks of
+# body text. Setting a verdict word in STATUS_STROKE would put the report below
+# the threshold its own accessibility rule implies.
+#
+# Each value below is its base hue scaled uniformly in RGB by the stated
+# factor: a shade, never a new hue, as this module requires. The two ratios are
+# measured, not asserted — on white, and on the STATUS_GROUND the word sits on.
+#
+#   status    base            factor  derived   /white  /ground
+#   PASS      GREEN           0.60    #0a7059   6.04    5.45
+#   FAIL      RED             0.70    #9b2c2c   7.53    6.50
+#   WARNING   AMBER           0.58    #945825   5.70    5.26
+#   neutral   NEUTRAL_GREY    0.72    #646d7a   5.24    4.63
+#
+# One observation, left as such rather than silently changed: TEXT_MUTED
+# reaches 4.37:1 on white, marginally under AA for the 7 pt note size. It is a
+# long-standing token used by the navigator too, so raising it is a decision
+# for the house style, not a side effect of this table.
+
+GREEN_TEXT = '#0a7059'    #: Derived: GREEN x0.60. 6.04:1 on white.
+RED_TEXT = '#9b2c2c'      #: Derived: RED x0.70. 7.53:1 on white.
+AMBER_TEXT = '#945825'    #: Derived: AMBER x0.58. 5.70:1 on white.
+NEUTRAL_TEXT = '#646d7a'  #: Derived: NEUTRAL_GREY x0.72. 5.24:1 on white.
+
+#: Colour for a verdict WORD, or any status-carrying text. Never use
+#: STATUS_STROKE for type.
+STATUS_TEXT = {
+    PASS: GREEN_TEXT,
+    FAIL: RED_TEXT,
+    WARNING: AMBER_TEXT,
+    NOT_CHECKABLE: NEUTRAL_TEXT,
+    NOT_EVALUATED: NEUTRAL_TEXT,
+    NOT_SIGNED: NEUTRAL_TEXT,
+}
+
 #: Deliberate redundancy with colour -- never information by colour alone.
 #: Taken verbatim by the navigator and by the PDF, so they cannot drift.
 STATUS_SYMBOL = {
