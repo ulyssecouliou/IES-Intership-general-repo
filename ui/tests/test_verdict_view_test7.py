@@ -77,12 +77,28 @@ def test_seule_la_classe_5_est_annoncee_comme_suffisante(reference):
         assert u'NON suffisant' in par_classe[classe]
 
 
-def test_larticle_annonce_le_critere_comme_infere(reference):
+def test_larticle_ne_presente_jamais_le_critere_comme_enonce_par_le_test(
+        reference):
+    u"""Le mot « INFÉRÉ » a disparu de l'article, et c'est volontaire.
+
+    Le classeur corrigé reçu le 2026-08-10 a été vérifié (XML et checksum
+    consignés), donc le moteur porte désormais
+    `CLASSEUR_CORRIGE_VERIFIE_2026-08-10` au lieu d'une inférence — statut
+    verrouillé par `engine/tests/test_autotest_chaine.py`. Ce qui ne doit
+    JAMAIS changer est l'aveu affiché : la spécification du Test 7 n'énonce
+    aucun critère, c'est le §4.4 qui délègue la comparaison au classeur. Un
+    article qui laisserait croire que le Test 7 porte son propre critère
+    ferait passer une délégation pour une exigence.
+    """
+
     v = _vue(reference, None)
-    assert u'INFÉRÉ' in v['verdict_global']['article']
-    assert u'4.4' in v['verdict_global']['article']
-    for ligne in v['lignes']:
-        assert u'INFÉRÉ' in ligne['article']
+    articles = [v['verdict_global']['article']]
+    articles.extend(ligne['article'] for ligne in v['lignes'])
+    assert articles
+    for article in articles:
+        assert u'aucun critère' in article
+        assert u'délègue' in article
+        assert u'4.4' in article
 
 
 # --------------------------------------------------------------------------
