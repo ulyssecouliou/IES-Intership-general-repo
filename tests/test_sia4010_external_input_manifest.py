@@ -174,20 +174,34 @@ class Sia4010ExternalInputManifestTests(unittest.TestCase):
             all(item.status == "MISSING" for item in readiness.evidence)
         )
 
-    def test_matrix_accounts_for_all_30_exact_cases(self):
+    def test_matrix_accounts_for_all_34_exact_cases(self):
+        """34 depuis l'enregistrement des cas diagnostiques 1A a 1D du Test 1.
+
+        Ils ne sont pas sans entree deleguee : 1A et 1B exigent la cellule ISO
+        et le climat de Zurich-Kloten, 1C et 1D y ajoutent SIA 2024, dont
+        l'infiltration ajustee de 1C est tiree.
+        """
         matrix = build_external_input_matrix(self.project)
-        self.assertEqual(matrix["exact_case_count"], 30)
+        self.assertEqual(matrix["exact_case_count"], 34)
         self.assertEqual(
             matrix["catalog_input_count"], len(EXTERNAL_INPUT_CATALOG)
         )
+        # NOT_REQUIRED reste exactement 6 : les six cas ISO du Test 1, qui
+        # tournent sur la meteo DRYCOLD fournie. Que ce compte n'ait pas bouge
+        # apres l'ajout de 1A a 1D prouve que les quatre nouveaux cas ont bien
+        # recu leurs exigences, au lieu de tomber en silence dans "rien a
+        # fournir" -- ce qui aurait ete la maniere discrete de se tromper.
         self.assertEqual(matrix["status_counts"]["NOT_REQUIRED"], 6)
-        self.assertEqual(matrix["status_counts"]["MISSING_MANIFEST"], 24)
+        self.assertEqual(matrix["status_counts"]["MISSING_MANIFEST"], 28)
         weather = next(
             item
             for item in matrix["inputs"]
             if item["input_id"] == "sia2028_dry_normal_zurich_kloten"
         )
-        self.assertEqual(len(weather["affected_cases"]), 24)
+        # 28 et non 24 : le climat de Zurich-Kloten est exactement ce que
+        # le maillon 1A ajoute au cas 600, donc les quatre cas
+        # diagnostiques en dependent tous.
+        self.assertEqual(len(weather["affected_cases"]), 28)
 
     def test_example_manifest_has_exact_catalog_and_stays_blocked(self):
         example = Sia4010ExternalInputManifest.load(

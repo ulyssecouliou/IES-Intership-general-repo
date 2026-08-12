@@ -17,6 +17,13 @@ PREPARATION_READY = "PREPARATION_READY"
 GUARDED_MUTATION_READY = "GUARDED_MUTATION_READY"
 RUNTIME_QUALIFICATION_READY = "RUNTIME_QUALIFICATION_READY"
 
+#: Cas diagnostiques de la transition Test 1 → Test 2. La spécification exige
+#: pour eux des jeux annuels de puissance horaire et n'énonce AUCUN critère de
+#: comparaison ; `refs/reference-data/test-1.ref.json` ne porte donc aucune
+#: bande pour eux, et il ne faut pas en inventer. Ce sont des livrables, pas des
+#: cas jugés. Le cas 1E, lui, est jugé : il est traité à part.
+TEST1_DIAGNOSTIC_CASES = ("1A", "1B", "1C", "1D")
+
 
 @dataclass(frozen=True)
 class Sia4010CaseCapability:
@@ -229,6 +236,30 @@ def get_case_capability(variant: str, case_id: str) -> Sia4010CaseCapability:
             generator_id="case600_mvp_v1",
             blocker_code="",
             blocker_detail="",
+            required_source_roles=(
+                "test_specification",
+                "evaluation_workbook",
+            ),
+        )
+    if variant == "test_1" and case_id in TEST1_DIAGNOSTIC_CASES:
+        return Sia4010CaseCapability(
+            variant=variant,
+            case_id=case_id,
+            base_test_id=test_id,
+            preparation_status=PREPARATION_READY,
+            generation_status="NOT_IMPLEMENTED",
+            generator_id="source_traced_preparation_v1",
+            blocker_code="TEST1_DIAGNOSTIC_CHAIN_GENERATOR_NOT_IMPLEMENTED",
+            blocker_detail=(
+                "Diagnostic case of the Test 1 to Test 2 transition. The chain "
+                "and every parameter it adds are frozen in "
+                "refs/reference-data/test-1.diagnostics.ref.json, read from the "
+                "official PDFs; no VE generator binds them yet. The "
+                "specification requires annual data sets with hourly heating "
+                "and cooling power for these cases and states NO comparison "
+                "criterion, so no reference band exists and none may be "
+                "invented: they are deliverables, not judged cases."
+            ),
             required_source_roles=(
                 "test_specification",
                 "evaluation_workbook",

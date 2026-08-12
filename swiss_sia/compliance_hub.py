@@ -101,7 +101,7 @@ ACTIONS: Tuple[HubAction, ...] = (
     HubAction(
         "navigator",
         "10. Etat des classes SIA 4010",
-        "Reconstruit le navigateur de preuves des 8 classes et 30 cas exacts.",
+        "Reconstruit le navigateur de preuves des 8 classes et 34 cas exacts.",
         "Run_VE_SIA4010_Navigator.py",
         "READ-ONLY",
     ),

@@ -12,7 +12,7 @@
     "5": ["test_7"]
   },
   "variants": {
-    "test_1": {"case_ids": ["600", "640", "600FF", "900", "940", "900FF", "1E"], "required_parameters": ["official_test_1_model_inputs"]},
+    "test_1": {"case_ids": ["600", "640", "600FF", "900", "940", "900FF", "1A", "1B", "1C", "1D", "1E"], "required_parameters": ["official_test_1_model_inputs"]},
     "test_2A": {"case_ids": ["2A"], "required_parameters": ["official_test_2_model_inputs"]},
     "test_2B": {"case_ids": ["2B"], "required_parameters": ["official_test_2_model_inputs"]},
     "test_2C": {"case_ids": ["2C"], "required_parameters": ["official_test_2_model_inputs"]},

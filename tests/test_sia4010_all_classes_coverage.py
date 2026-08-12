@@ -37,9 +37,17 @@ class Sia4010AllClassesCoverageTests(unittest.TestCase):
         self.assertEqual(summary["required_exact_variants"], 24)
         self.assertEqual(summary["parsed_exact_variants"], 24)
         self.assertEqual(summary["registered_scenarios"], 24)
-        self.assertEqual(summary["registered_exact_cases"], 30)
-        self.assertEqual(summary["preparation_ready_cases"], 30)
-        self.assertEqual(summary["deterministic_geometry_artifact_cases"], 23)
+        # 34 et non 30 depuis l'enregistrement des cas diagnostiques 1A à 1D
+        # du Test 1 : la spécification définit 1E comme « Diagnosefall 1D,
+        # jedoch mit Stoffmarkisen-Sonnenschutz », donc 1E existait sans sa
+        # base. Le nombre de VARIANTES est inchangé (24) : ce sont des cas de
+        # `test_1`, pas de nouvelles variantes.
+        self.assertEqual(summary["registered_exact_cases"], 34)
+        self.assertEqual(summary["preparation_ready_cases"], 34)
+        # 27 et non 23 : `geometry_artifact_supported` dépend du test de base,
+        # et la géométrie des quatre nouveaux cas est la même cellule ISO 52016
+        # chapitre 7 que le cas 600 dont ils dérivent.
+        self.assertEqual(summary["deterministic_geometry_artifact_cases"], 27)
         self.assertEqual(summary["runtime_qualification_cases"], 5)
         self.assertEqual(summary["runtime_discovery_cases"], 20)
         self.assertEqual(summary["source_bound_bundle_cases"], 13)

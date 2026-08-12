@@ -270,14 +270,20 @@ class Sia4010PreparationBundleTests(unittest.TestCase):
         ), mock.patch(
             "swiss_sia.reference_model.sia4010.preparation_bundle._write_json"
         ) as write_json:
+            # Attention au homonyme : "1A" ici est une CLASSE de validation,
+            # pas le cas diagnostique 1A du Test 1. La classe 1A exige
+            # `test_1` et `test_2A`.
             receipt = prepare_class(ROOT, ROOT, "1A")
             self.assertEqual(receipt.target_class, "1A")
-            self.assertEqual(len(receipt.cases), 8)
+            # 12 et non 8 : `test_1` porte maintenant 11 cas au lieu de 7,
+            # depuis l'enregistrement des cas diagnostiques 1A a 1D, plus le
+            # cas unique de `test_2A`.
+            self.assertEqual(len(receipt.cases), 12)
             self.assertGreater(receipt.blocked_cases, 0)
             payload = write_json.call_args.args[1]
-            self.assertEqual(payload["exact_case_count"], 8)
+            self.assertEqual(payload["exact_case_count"], 12)
             self.assertEqual(payload["status"], "CLASS_PREPARED_WITH_BLOCKERS")
-            self.assertEqual(len(payload["execution_queue"]), 8)
+            self.assertEqual(len(payload["execution_queue"]), 12)
             self.assertEqual(
                 payload["execution_contract"]["project_isolation"],
                 "ONE_DISPOSABLE_VE_PROJECT_PER_EXACT_CASE",
@@ -292,15 +298,22 @@ class Sia4010PreparationBundleTests(unittest.TestCase):
         ):
             receipt = prepare_all_classes(ROOT, ROOT)
         self.assertEqual(len(receipt.classes), 8)
-        self.assertEqual(receipt.unique_exact_cases, 30)
-        self.assertEqual(receipt.unique_geometry_artifact_cases, 23)
+        # 34 depuis l'enregistrement des cas diagnostiques 1A a 1D du
+        # Test 1. Le nombre de classes reste 8 : ce sont des cas, pas
+        # des variantes, et la matrice des classes est inchangee.
+        self.assertEqual(receipt.unique_exact_cases, 34)
+        # 27 : meme cellule ISO 52016 chapitre 7 pour les quatre cas
+        # diagnostiques, qui derivent tous du cas 600.
+        self.assertEqual(receipt.unique_geometry_artifact_cases, 27)
         geometry_paths = {
             item.geometry_artifact_path
             for class_receipt in receipt.classes
             for item in class_receipt.cases
             if item.geometry_artifact_path is not None
         }
-        self.assertEqual(len(geometry_paths), 23)
+        # 27 et non 23 : les quatre cas diagnostiques du Test 1 partagent la
+        # cellule ISO 52016 chapitre 7 du cas 600 dont ils derivent.
+        self.assertEqual(len(geometry_paths), 27)
         self.assertGreater(receipt.exact_case_occurrences, 30)
         self.assertGreater(receipt.blocked_occurrences, 0)
         self.assertEqual(
@@ -309,7 +322,7 @@ class Sia4010PreparationBundleTests(unittest.TestCase):
         )
         payload = write_json.call_args.args[1]
         self.assertEqual(
-            payload["external_input_matrix"]["exact_case_count"], 30
+            payload["external_input_matrix"]["exact_case_count"], 34
         )
         self.assertEqual(
             payload["external_input_matrix"]["catalog_input_count"], 17
