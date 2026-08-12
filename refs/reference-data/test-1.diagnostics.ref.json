@@ -123,6 +123,11 @@
         "valeur": 150,
         "statut": "RELEVE",
         "source": "2.2.2 Verschattung"
+      },
+      "epaisseur_couche_mm": {
+        "valeur": 0.5,
+        "statut": "RELEVE",
+        "source": "Tabelle 3 / Layer 1 Generic screen shade"
       }
     },
     "vitrage": {
@@ -197,6 +202,18 @@
         "valeur": 261,
         "statut": "RELEVE",
         "source": "SIA 2024:2021 fiche 3.1, standard_values.people.use_days_per_year_d"
+      }
+    },
+    "cadre": {
+      "part_pourcent": {
+        "valeur": 15,
+        "statut": "RELEVE",
+        "source": "2.2.3 Fensterrahmen"
+      },
+      "u_w_m2k": {
+        "valeur": 1.3,
+        "statut": "RELEVE",
+        "source": "2.2.3 Fensterrahmen"
       }
     }
   },
@@ -302,19 +319,42 @@
             "statut": "RELEVE"
           }
         }
+      },
+      "iso_15099_conditions_ete": {
+        "statut": "RELEVE",
+        "grandeurs": {
+          "g_total": {
+            "unite": "-",
+            "store_rentre": 0.545,
+            "store_deploye": 0.059,
+            "statut": "RELEVE"
+          }
+        }
+      },
+      "iso_15099_conditions_hiver": {
+        "statut": "RELEVE",
+        "grandeurs": {
+          "u_vitrage_w_m2k": {
+            "unite": "W/(m2 K)",
+            "store_rentre": 0.654,
+            "store_deploye": 0.582,
+            "statut": "RELEVE"
+          }
+        }
       }
     }
   },
-  "divergences_entre_sources": [
-    {
-      "grandeur": "u_vitrage_w_m2k",
-      "specification_test_2": 0.654,
-      "documentation_batiment_exemple": 0.646,
-      "ecart": 0.008,
-      "retenu": "specification_test_2",
-      "pourquoi": "La spécification définit le cas de test ; la documentation décrit le bâtiment exemple. En cas d'écart, c'est la spécification qui fait foi pour construire le modèle. L'écart est consigné et non corrigé : le signaler à la sous-commission vaut mieux que de réparer un document officiel à la place de son auteur."
-    }
-  ],
+  "concordance_du_u_vitrage": {
+    "statut": "RELEVE",
+    "grandeur": "u_vitrage_w_m2k",
+    "valeur": 0.654,
+    "norme_concordante": "iso_15099_conditions_hiver",
+    "autres_valeurs_du_document": {
+      "en_iso_52022_3_conditions_reference": 0.646,
+      "iso_15099_conditions_hiver": 0.654
+    },
+    "commentaire": "La spécification Test 2 reprend le U de ce bloc normatif. La documentation en donne d'autres sous d'autres normes : comparer au mauvais bloc fait passer une différence de norme pour une contradiction entre documents."
+  },
   "reserves": [
     "Les propriétés relevées sont celles de la FENÊTRE ENTIÈRE (EN ISO 52022-3 / EN 410), store rentré et déployé. La documentation donne aussi les propriétés couche par couche dans des figures ; elles ne sont PAS relevées ici.",
     "L'usage du maillon 1D renvoie à SIA 2024:2021. Seule la catégorie citée par la spécification est relevée ; les valeurs de la fiche restent à lier depuis l'extrait d'autorité.",

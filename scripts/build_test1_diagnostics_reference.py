@@ -8,7 +8,7 @@ au bout d'une chaîne 1A → 1B → 1C → 1D. Rien de tout cela n'était figé,
 personne ne pouvait construire 1E sans deviner. Ce producteur relève la chaîne
 et ses paramètres là où ils sont écrits.
 
-TROIS SOURCES, TROIS RÔLES.
+QUATRE SOURCES, QUATRE RÔLES.
 
 * `Spezifikation_Test1.pdf` énonce la chaîne elle-même (Diag 1A à 1D) et la
   définition de 1E. Le texte allemand est relevé **verbatim** : une
@@ -17,7 +17,14 @@ TROIS SOURCES, TROIS RÔLES.
 * `Spezifikation_Test2.pdf` porte ce que chaque maillon ajoute — la fenêtre,
   l'infiltration, l'usage SIA 2024, la régulation du store.
 * `Dokumentation_Beispielgebäude_V5.pdf` porte les propriétés de la fenêtre
-  entière, store déployé et store rentré.
+  entière, store déployé et store rentré — sous DEUX familles de normes, ce qui
+  compte : le U n'y a pas la même valeur selon la norme, et comparer au mauvais
+  bloc fait passer une différence de norme pour une contradiction entre
+  documents. C'est l'erreur qu'une version antérieure de ce producteur a
+  commise, et que `_concordance_du_u` empêche désormais.
+* l'extrait d'autorité SIA 2024 du 2026-08-10, hors du lien partagé : la
+  spécification renvoie à la fiche sans la reproduire, et c'est elle qui donne
+  le gain sensible des occupants.
 
 CE QUI N'EST PAS TROUVÉ N'EST PAS COMBLÉ. Chaque champ sort avec son statut :
 `RELEVE` s'il a été trouvé tel quel dans la couche texte, `A_CONFIRMER` avec la
@@ -183,6 +190,18 @@ PARAMETRES_BATIMENT = (
     ('store', 'seuil_fermeture_w_m2',
      r'bei\s*einer\s*Solarstrahlung\s*von\s*' + _NOMBRE + r'\s*W/m2',
      'nombre', u'2.2.2 Verschattung'),
+    # Épaisseur de la couche de store, première ligne du tableau de couches de
+    # la fenêtre ombragée. En millimètres dans le document.
+    ('store', 'epaisseur_couche_mm',
+     r'1\.\s*Generic\s*screen\s*shade\s*' + _NOMBRE,
+     'nombre', u'Tabelle 3 / Layer 1 Generic screen shade'),
+    # Le cadre, que le maillon 1B porte aussi.
+    ('cadre', 'part_pourcent',
+     r'Rahmenanteil\s*' + _NOMBRE + r'\s*%',
+     'nombre', u'2.2.3 Fensterrahmen'),
+    ('cadre', 'u_w_m2k',
+     r'Rahmenanteil[^,]*,\s*U-Wert\s*=\s*' + _NOMBRE + r'\s*W/\(m2K\)',
+     'nombre', u'2.2.3 Fensterrahmen'),
 )
 
 #: En-tête qui FIXE l'ordre des deux colonnes du tableau optique. Sans lui,
@@ -200,6 +219,19 @@ BLOCS_OPTIQUES = (
      r'EN\s*ISO\s*52022-3\s*\(reference\s*conditions\)\s*:',
      r'EN\s*410\s*:'),
     ('en_410', r'EN\s*410\s*:', r'Layer\s*d\s*\[mm\]'),
+    # La documentation décrit la MÊME fenêtre sous deux familles de normes, dans
+    # deux tableaux successifs : EN ISO 52022-3 avec EN 410 d'abord, ISO 15099
+    # ensuite. Le U n'y est pas le même — 0,646 en conditions de référence
+    # EN ISO 52022-3, 0,654 en conditions d'hiver ISO 15099 — et c'est cette
+    # seconde valeur que la spécification reprend. Omettre ces deux blocs
+    # faisait passer une différence de norme pour une contradiction entre
+    # documents ; voir `_concordance_du_u`.
+    ('iso_15099_conditions_ete',
+     r'ISO\s*15099\s*\(summer\s*conditions\)\s*:',
+     r'ISO\s*15099\s*\(winter\s*conditions\)\s*:'),
+    ('iso_15099_conditions_hiver',
+     r'ISO\s*15099\s*\(winter\s*conditions\)\s*:',
+     r'Tabelle'),
 )
 
 #: Grandeurs cherchées dans chaque bloc optique, par leur symbole imprimé.
@@ -393,45 +425,65 @@ def _proprietes_optiques(texte):
     }
 
 
-def _divergences(texte_batiment, parametres):
-    u"""Relève les écarts entre la spécification et la documentation.
+def _concordance_du_u(parametres, fenetre):
+    u"""Identifie sous QUELLE norme le U de la spécification se retrouve.
 
-    Deux documents officiels donnent le U du vitrage, et ils ne disent pas la
-    même chose. Trancher ici reviendrait à corriger l'un des deux à la place de
-    son auteur ; on consigne l'écart et on nomme celui qui définit le cas.
+    Une version antérieure de ce producteur annonçait une « divergence entre
+    sources » : 0,654 dans la spécification contre 0,646 dans la documentation.
+    C'était faux, et l'erreur était la mienne. La documentation décrit la même
+    fenêtre sous deux familles de normes, et le U n'y a pas la même valeur —
+    0,646 en conditions de référence EN ISO 52022-3, 0,654 en conditions d'hiver
+    ISO 15099. La spécification reprend la seconde, à l'unité près. Les deux
+    documents concordent ; c'est la comparaison qui portait sur le mauvais bloc.
+
+    Le garder sous forme de contrôle plutôt que de le supprimer a une raison :
+    l'erreur avait failli partir dans un courrier à l'auteur de ces documents,
+    comme signalement de coquille.
 
     Args:
-        texte_batiment: Texte normalisé de la documentation du bâtiment exemple.
-        parametres: Paramètres déjà relevés dans la spécification Test 2.
+        parametres: Paramètres relevés dans la spécification Test 2.
+        fenetre: Blocs optiques relevés dans la documentation.
 
     Returns:
-        list[dict]: Écarts constatés, vide si les sources concordent.
+        dict: Norme sous laquelle la valeur concorde, ou l'écart s'il subsiste.
     """
-    ecarts = []
     spec = parametres.get('vitrage', {}).get('u_vitrage_w_m2k', {})
     if spec.get('statut') != RELEVE:
-        return ecarts
-    trouve = re.search(r'U-value\s*of\s*glazing\s*Ug\s*' + _NOMBRE, texte_batiment)
-    if trouve is None:
-        return ecarts
-    documentation = _nombre(trouve.group(1))
-    if documentation == spec['valeur']:
-        return ecarts
-    ecarts.append({
+        return {'statut': A_CONFIRMER,
+                'raison': u'U de la spécification non relevé'}
+    attendu = spec['valeur']
+    trouves = []
+    for cle_bloc, bloc in (fenetre.get('blocs') or {}).items():
+        grandeur = (bloc.get('grandeurs') or {}).get('u_vitrage_w_m2k')
+        if grandeur is None:
+            continue
+        trouves.append((cle_bloc, grandeur['store_rentre']))
+        if grandeur['store_rentre'] == attendu:
+            return {
+                'statut': RELEVE,
+                'grandeur': 'u_vitrage_w_m2k',
+                'valeur': attendu,
+                'norme_concordante': cle_bloc,
+                'autres_valeurs_du_document': dict(trouves),
+                'commentaire': (
+                    u"La spécification Test 2 reprend le U de ce bloc normatif. "
+                    u"La documentation en donne d'autres sous d'autres normes : "
+                    u"comparer au mauvais bloc fait passer une différence de "
+                    u"norme pour une contradiction entre documents."
+                ),
+            }
+    return {
+        'statut': A_CONFIRMER,
         'grandeur': 'u_vitrage_w_m2k',
-        'specification_test_2': spec['valeur'],
-        'documentation_batiment_exemple': documentation,
-        'ecart': round(abs(spec['valeur'] - documentation), 6),
-        'retenu': 'specification_test_2',
-        'pourquoi': (
-            u"La spécification définit le cas de test ; la documentation décrit "
-            u"le bâtiment exemple. En cas d'écart, c'est la spécification qui "
-            u"fait foi pour construire le modèle. L'écart est consigné et non "
-            u"corrigé : le signaler à la sous-commission vaut mieux que de "
-            u"réparer un document officiel à la place de son auteur."
+        'specification_test_2': attendu,
+        'valeurs_du_document': dict(trouves),
+        'raison': (
+            u"Le U de la spécification ne se retrouve dans aucun bloc normatif "
+            u"relevé. À vérifier avant d'en conclure quoi que ce soit : une "
+            u"norme manquante à l'extraction expliquerait l'écart mieux qu'une "
+            u"coquille dans un document officiel."
         ),
-    })
-    return ecarts
+    }
 
 
 def construire():
@@ -509,6 +561,7 @@ def construire():
             parametres.setdefault(bloc, {})[cle] = {
                 'valeur': noeud, 'statut': RELEVE, 'source': localisation}
 
+    fenetre = _proprietes_optiques(textes['documentation_batiment_exemple'])
     return {
         'test': 1,
         'perimetre': u'Cas diagnostiques 1A à 1D et cas 1E du Test 1',
@@ -522,10 +575,8 @@ def construire():
         'sources': sources,
         'chaine': chaine,
         'parametres': parametres,
-        'fenetre_entiere': _proprietes_optiques(
-            textes['documentation_batiment_exemple']),
-        'divergences_entre_sources': _divergences(
-            textes['documentation_batiment_exemple'], parametres),
+        'fenetre_entiere': fenetre,
+        'concordance_du_u_vitrage': _concordance_du_u(parametres, fenetre),
         'reserves': [
             u"Les propriétés relevées sont celles de la FENÊTRE ENTIÈRE "
             u"(EN ISO 52022-3 / EN 410), store rentré et déployé. La "

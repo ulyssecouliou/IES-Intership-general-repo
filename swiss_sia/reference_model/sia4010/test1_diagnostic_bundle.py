@@ -12,14 +12,21 @@ from the official PDFs, and applies it. It contains no normative constant of its
 own, so a value can only be wrong here if it is wrong in the reference, where it
 carries its source locator.
 
-WHAT IS NOT DETERMINED IS NOT APPLIED. One element of the chain still cannot be
-built: the fabric awning. Its delegated input exists in the catalogue as
-``sia_example_building_fabric_awning_detail`` with the schema
-``sia4010.shading_device_definition.v1``, and an example template ships in
-``config/external_input_examples``, but no binding is supplied and no VE shading
-object is generated for Test 1. It comes out as a named blocker, and case 1E is
-reported ``BLOCKED``. Filling it with a plausible number would produce a model
-that runs, compares against a real reference band, and lies.
+WHAT IS NOT DETERMINED IS NOT APPLIED. All five links now build, the awning
+included: its control contract comes from ``test2a_shading_control``, which the
+Test 1 specification prescribes by defining 1E as the diagnostic-test-2-E1
+shading, fed with the deployed-state whole-window properties from the frozen
+reference.
+
+Case 1E is still reported ``BLOCKED``, and for a reason worth stating precisely,
+because it is no longer "no generator exists". The device is settled; the
+DYNAMICS are not. The specification confirms the 150 W/m2 threshold and states
+neither the comparison operator, nor the release rule, nor the exact irradiance
+signal, and VE exposes separate lower and raise thresholds that cannot be shown
+equivalent to that rule from their names. Those reserves are carried through from
+the module that enumerated them rather than resolved by choice: 1E is the only
+pass/fail case of Test 1, so guessing the release rule would move a real
+verdict.
 
 The occupant heat gain was blocked here at first, on the grounds that 1.2 met
 becomes watts only through a body-area convention the specification omits. That
@@ -226,8 +233,10 @@ def _apply_new_window(
     The specification states the whole-window figures directly, which is what
     the case-600 manifest models, so no layer-level derivation is needed. It also
     settles a question the example-building documentation leaves open by giving
-    two total g values; the divergence on the U value is recorded in the
-    reference and the specification governs.
+    two total g values, and the reference records which normative block the
+    specification's U value comes from: it is the ISO 15099 winter figure, not
+    the EN ISO 52022-3 reference one, and the two documents agree once the right
+    block is compared.
     """
 
     g_value = _releve(reference, "vitrage", "g_total")
@@ -319,25 +328,177 @@ def _apply_sia2024_usage(
     return {}
 
 
-def _apply_fabric_awning(reference: Dict[str, Any]) -> Dict[str, Any]:
-    """Link 1E: the awning. Recorded as a blocker, not built."""
+def _deployed(reference: Dict[str, Any], bloc: str, grandeur: str) -> float:
+    """Return one whole-window property with the shade deployed.
 
+    The deployed column is the awning's effect on the window, which is what the
+    documentation publishes -- there is no separate fabric datasheet in the
+    official package. Reading the retracted column here instead would describe a
+    window with no shade at all while still looking like a shaded one.
+    """
+
+    blocs = (reference.get("fenetre_entiere") or {}).get("blocs") or {}
+    grandeurs = (blocs.get(bloc) or {}).get("grandeurs") or {}
+    if grandeur not in grandeurs:
+        raise ConfigurationError(
+            "Frozen diagnostic reference has no {}.{} whole-window "
+            "property".format(bloc, grandeur)
+        )
+    return float(grandeurs[grandeur]["store_deploye"])
+
+
+def _assert_same_device_as_test2a(reference: Dict[str, Any]) -> None:
+    """Check that case 1E's awning really is the Test 2A one.
+
+    The specification says so -- "gemaess Diagnosetest 2 E1" -- and the frozen
+    reference relieved the product and threshold from the Test 2A block of the
+    Test 2 specification, so they are shared by construction today. If a future
+    extraction ever separated them, reusing the Test 2A contract would silently
+    describe the wrong device, and that is worth failing on rather than assuming.
+    """
+
+    definition = next(
+        (item for item in reference.get("chaine", []) if item["cas"] == "1E"),
+        None,
+    )
+    if definition is None or not definition.get("definition_verbatim_de"):
+        raise ConfigurationError(
+            "Frozen diagnostic reference carries no verbatim definition for 1E"
+        )
+    verbatim = definition["definition_verbatim_de"]
+    if "2 E1" not in verbatim.replace(" ", " "):
+        raise ConfigurationError(
+            "Case 1E no longer cites diagnostic test 2 E1, so the Test 2A "
+            "fabric-awning contract may not be reused for it: {!r}".format(
+                verbatim
+            )
+        )
+
+
+def _awning_official_inputs(reference: Dict[str, Any]) -> Dict[str, Any]:
+    """Map the frozen reference onto the Test 2A fabric-awning contract.
+
+    Reusing the Test 2A contract is not a convenience: the Test 1 specification
+    defines case 1E as "Diagnosefall 1D, jedoch mit Stoffmarkisen-Sonnenschutz
+    gemaess Diagnosetest 2 E1", so the device and its control ARE the Test 2A
+    ones. ``_assert_same_device_as_test2a`` checks that the frozen product and
+    threshold really are shared before this mapping is used.
+    """
+
+    ete = "en_iso_52022_3_conditions_ete"
+    ref_conditions = "en_iso_52022_3_conditions_reference"
+    en_410 = "en_410"
+    hiver = "iso_15099_conditions_hiver"
     produit = _releve(reference, "store", "produit")
-    seuil = _releve(reference, "store", "seuil_activation_w_m2")
+    return {
+        "external_shading_activation_w_m2": _releve(
+            reference, "store", "seuil_activation_w_m2"
+        ),
+        "variant_2A_shade": produit["type"],
+        "variant_2A_combined_g_total": _deployed(reference, ete, "g_total"),
+        "variant_2A_convection_factor": _deployed(
+            reference, ete, "facteur_convection_gc"
+        ),
+        "variant_2A_thermal_radiation_factor": _deployed(
+            reference, ete, "facteur_rayonnement_gth"
+        ),
+        "variant_2A_ventilation_factor": _deployed(
+            reference, ete, "facteur_ventilation_gv"
+        ),
+        "variant_2A_secondary_internal_heat_transfer_factor": _deployed(
+            reference, ete, "transfert_secondaire_qi"
+        ),
+        "variant_2A_direct_solar_transmittance": _deployed(
+            reference, en_410, "transmission_solaire_directe_te"
+        ),
+        "variant_2A_outside_solar_reflectance": _deployed(
+            reference, en_410, "reflexion_solaire_exterieure_re"
+        ),
+        "variant_2A_inside_solar_reflectance": _deployed(
+            reference, en_410, "reflexion_solaire_interieure_re_prime"
+        ),
+        "variant_2A_visible_transmittance": _deployed(
+            reference, en_410, "transmission_visible_tv"
+        ),
+        "variant_2A_outside_visible_reflectance": _deployed(
+            reference, en_410, "reflexion_visible_exterieure_rv"
+        ),
+        "variant_2A_inside_visible_reflectance": _deployed(
+            reference, en_410, "reflexion_visible_interieure_rv_prime"
+        ),
+        "variant_2A_uv_transmittance": _deployed(
+            reference, en_410, "transmission_uv_tuv"
+        ),
+        "variant_2A_reference_combined_g_total": _deployed(
+            reference, ref_conditions, "g_total"
+        ),
+        "variant_2A_reference_u_w_m2k": _deployed(
+            reference, ref_conditions, "u_vitrage_w_m2k"
+        ),
+        "variant_2A_iso15099_winter_u_w_m2k": _deployed(
+            reference, hiver, "u_vitrage_w_m2k"
+        ),
+        # Millimetres and centimetres in the documentation, metres in the
+        # contract. Getting either factor wrong would give a shade a thousand
+        # times too thick, which changes nothing visible in the JSON.
+        "variant_2A_peripheral_gap_m": (
+            _releve(reference, "store", "lame_d_air_cm") / 100.0
+        ),
+        "variant_2A_screen_layer_thickness_m": (
+            _releve(reference, "store", "epaisseur_couche_mm") / 1000.0
+        ),
+    }
+
+
+def _apply_fabric_awning(
+    assets: Dict[str, Any], reference: Dict[str, Any]
+) -> Dict[str, Any]:
+    """Link 1E: build the source-traced awning control, and keep its reserves.
+
+    The control contract is built here rather than blocked, because every value
+    it needs is now frozen. What remains unresolved is not the device but the
+    dynamics: the specification confirms the 150 W/m2 threshold and states
+    neither the comparison operator, nor the release rule, nor the exact
+    irradiance signal, and VE exposes separate lower and raise thresholds whose
+    dynamic equivalence cannot be inferred from their names.
+
+    Those reserves come from ``test2a_shading_control``, which enumerated them,
+    and they are carried through instead of being resolved by choice. Case 1E is
+    the only pass/fail case of Test 1, so guessing the release rule would move
+    a real verdict.
+    """
+
+    from .test2a_shading_control import (
+        DYNAMIC_EQUIVALENCE_BLOCKERS,
+        build_test2a_fabric_awning_control,
+    )
+
+    _assert_same_device_as_test2a(reference)
+    control = build_test2a_fabric_awning_control(
+        _awning_official_inputs(reference)
+    )
+    payload = (
+        control.to_dict() if hasattr(control, "to_dict") else dict(vars(control))
+    )
+    assets["metadata"]["diagnostic_fabric_awning_control"] = payload
     return {
         "id": BLOCKER_AWNING,
         "severity": "BLOCKER",
         "detail": (
-            "Link 1E adds the external fabric awning {} by {}, closing at {} "
-            "W/m2 of external solar irradiance. No VE shading object is "
-            "generated for Test 1, and the official documentation gives "
-            "whole-window properties with the shade deployed rather than a "
-            "device to build, so the deployed-state figures cannot be turned "
-            "into a shading generator without a mapping decision. Case 1E "
-            "carries the only pass/fail criterion of Test 1, which makes an "
-            "invented mapping the most dangerous shortcut available here."
-            .format(produit["type"], produit["fabricant"], seuil)
+            "The awning control contract for {} is built and source-traced: "
+            "threshold {} W/m2, deployed-state whole-window properties from the "
+            "official documentation. What blocks case 1E is the dynamics, not "
+            "the device: the specification states neither the comparison "
+            "operator, nor the release rule, nor the exact irradiance signal, "
+            "and VE's separate lower and raise thresholds cannot be shown "
+            "equivalent to it from their names alone. Unresolved reserves: {}."
+            .format(
+                control.device,
+                control.threshold_w_m2,
+                ", ".join(DYNAMIC_EQUIVALENCE_BLOCKERS),
+            )
         ),
+        "unresolved_reserves": list(DYNAMIC_EQUIVALENCE_BLOCKERS),
     }
 
 
@@ -396,7 +557,7 @@ def build_test1_diagnostic_bundle(
     if depth >= 3:
         record("1D", _apply_sia2024_usage(config, assets, reference))
     if depth >= 4:
-        record("1E", _apply_fabric_awning(reference))
+        record("1E", _apply_fabric_awning(assets, reference))
 
     assets["metadata"].update(
         {

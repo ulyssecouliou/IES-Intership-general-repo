@@ -146,23 +146,24 @@ class Test1DiagnosticBundleTests(unittest.TestCase):
             self._value("vitrage", "g_total"),
         )
 
-    def test_the_specification_u_value_wins_over_the_documentation(self):
-        """The two official sources disagree; the spec defines the case."""
+    def test_the_u_value_matches_the_iso15099_winter_block(self):
+        """The two official sources agree; an earlier claim of a typo was wrong.
+
+        The documentation reports the same window under two standard families
+        and the U differs between them. The specification quotes the ISO 15099
+        winter figure. Comparing it against the EN ISO 52022-3 reference block
+        is what made a difference of standard look like a contradiction.
+        """
 
         receipt = self._build("1B")
         parameters = self._read(receipt.config_path)["parameters"]
-        divergence = next(
-            item
-            for item in self.reference["divergences_entre_sources"]
-            if item["grandeur"] == "u_vitrage_w_m2k"
+        concordance = self.reference["concordance_du_u_vitrage"]
+        self.assertEqual(
+            concordance["norme_concordante"], "iso_15099_conditions_hiver"
         )
         self.assertEqual(
             parameters["project_window_u_w_m2k"]["value"],
-            divergence["specification_test_2"],
-        )
-        self.assertNotEqual(
-            parameters["project_window_u_w_m2k"]["value"],
-            divergence["documentation_batiment_exemple"],
+            concordance["valeur"],
         )
 
     # -- link 1C ------------------------------------------------------------
@@ -277,14 +278,68 @@ class Test1DiagnosticBundleTests(unittest.TestCase):
 
     # -- link 1E ------------------------------------------------------------
 
-    def test_the_awning_is_blocked_and_names_the_product(self):
+    def test_the_awning_control_contract_is_built(self):
+        """The device is settled, so the contract is produced, not skipped."""
+
+        receipt = self._build("1E")
+        assets = self._read(receipt.asset_manifest_path)
+        control = assets["metadata"]["diagnostic_fabric_awning_control"]
+        self.assertEqual(control["device"], "Soltis 92-2048-Alu")
+        self.assertEqual(control["threshold_w_m2"], 150.0)
+
+    def test_the_control_uses_the_deployed_state_properties(self):
+        """Reading the retracted column would describe an unshaded window."""
+
+        receipt = self._build("1E")
+        assets = self._read(receipt.asset_manifest_path)
+        control = assets["metadata"]["diagnostic_fabric_awning_control"]
+        blocs = self.reference["fenetre_entiere"]["blocs"]
+        ete = blocs["en_iso_52022_3_conditions_ete"]["grandeurs"]["g_total"]
+        self.assertEqual(control["combined_g_total"], ete["store_deploye"])
+        self.assertNotEqual(control["combined_g_total"], ete["store_rentre"])
+
+    def test_the_unit_conversions_of_the_shade_geometry_are_right(self):
+        """Millimetres and centimetres in the document, metres in the contract.
+
+        A wrong factor gives a shade a thousand times too thick and changes
+        nothing visible in the JSON.
+        """
+
+        receipt = self._build("1E")
+        assets = self._read(receipt.asset_manifest_path)
+        control = assets["metadata"]["diagnostic_fabric_awning_control"]
+        self.assertAlmostEqual(
+            control["peripheral_gap_m"],
+            self._value("store", "lame_d_air_cm") / 100.0,
+            places=9,
+        )
+        self.assertAlmostEqual(
+            control["screen_layer_thickness_m"],
+            self._value("store", "epaisseur_couche_mm") / 1000.0,
+            places=9,
+        )
+
+    def test_1e_is_blocked_on_the_dynamics_not_on_the_device(self):
+        """The blocker must name what is actually unresolved."""
+
         receipt = self._build("1E")
         audit = self._read(receipt.audit_path)
         blocked = {item["id"]: item for item in audit["chain_blocked"]}
         self.assertIn(BLOCKER_AWNING, blocked)
-        detail = blocked[BLOCKER_AWNING]["detail"]
-        self.assertIn("Soltis 92-2048-Alu", detail)
-        self.assertIn("150", detail)
+        reserves = blocked[BLOCKER_AWNING]["unresolved_reserves"]
+        self.assertIn(
+            "SIA4010_TEST2A_THRESHOLD_COMPARISON_OPERATOR_NOT_CONFIRMED",
+            reserves,
+        )
+        self.assertIn("SIA4010_TEST2A_RELEASE_RULE_NOT_CONFIRMED", reserves)
+
+    def test_the_reuse_of_the_test2a_contract_is_guarded(self):
+        """The specification prescribes it; the code checks it still does."""
+
+        definition = next(
+            item for item in self.reference["chaine"] if item["cas"] == "1E"
+        )
+        self.assertIn("2 E1", definition["definition_verbatim_de"])
 
     def test_case_1e_is_never_reported_ready(self):
         """It carries the only pass/fail criterion; readiness must be earned."""

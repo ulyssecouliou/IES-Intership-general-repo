@@ -226,22 +226,41 @@ def test_le_g_et_la_transmission_concordent_entre_les_deux_sources(reference):
     assert spec['transmission_visible']['valeur'] == en_410['store_rentre']
 
 
-def test_la_divergence_sur_le_u_est_consignee_et_non_corrigee(reference):
-    u"""Les deux sources donnent un U différent, et l'écart est isolé.
+def test_le_u_de_la_specification_concorde_avec_une_norme_du_document(reference):
+    u"""Il n'y a PAS de divergence entre les deux documents officiels.
 
-    0,654 dans la spécification contre 0,646 dans la documentation, alors que
-    g et τv concordent exactement : l'écart ressemble à une coquille dans l'un
-    des deux documents. Le référentiel le consigne, retient la spécification
-    parce qu'elle définit le cas, et ne répare rien à la place de son auteur.
+    Une version antérieure de ce référentiel en annonçait une : 0,654 dans la
+    spécification contre 0,646 dans la documentation. L'erreur était la mienne.
+    La documentation décrit la même fenêtre sous deux familles de normes et le U
+    n'y a pas la même valeur — 0,646 en conditions de référence EN ISO 52022-3,
+    0,654 en conditions d'hiver ISO 15099. La spécification reprend la seconde,
+    à l'unité près.
+
+    Ce test existe parce que cette fausse coquille avait failli partir dans un
+    courrier à l'auteur de ces documents.
     """
-    ecarts = {item['grandeur']: item
-              for item in reference['divergences_entre_sources']}
-    assert 'u_vitrage_w_m2k' in ecarts
-    ecart = ecarts['u_vitrage_w_m2k']
-    assert ecart['specification_test_2'] == 0.654
-    assert ecart['documentation_batiment_exemple'] == 0.646
-    assert ecart['retenu'] == 'specification_test_2'
-    assert ecart['pourquoi']
+    concordance = reference['concordance_du_u_vitrage']
+    assert concordance['statut'] == 'RELEVE', concordance
+    assert concordance['norme_concordante'] == 'iso_15099_conditions_hiver'
+    assert concordance['valeur'] == 0.654
+    autres = concordance['autres_valeurs_du_document']
+    assert autres['en_iso_52022_3_conditions_reference'] == 0.646
+
+
+def test_le_u_differe_selon_la_norme_dans_le_meme_document(reference):
+    u"""Le fait qui explique la fausse divergence, verrouillé explicitement."""
+    blocs = reference['fenetre_entiere']['blocs']
+    reference_52022 = blocs['en_iso_52022_3_conditions_reference']['grandeurs']
+    hiver_15099 = blocs['iso_15099_conditions_hiver']['grandeurs']
+    assert (reference_52022['u_vitrage_w_m2k']['store_rentre']
+            != hiver_15099['u_vitrage_w_m2k']['store_rentre'])
+
+
+def test_le_store_deploye_ameliore_le_u(reference):
+    u"""Une couche de plus devant le vitrage ne peut pas dégrader son U."""
+    hiver = reference['fenetre_entiere']['blocs'][
+        'iso_15099_conditions_hiver']['grandeurs']['u_vitrage_w_m2k']
+    assert hiver['store_deploye'] < hiver['store_rentre'], hiver
 
 
 def test_les_apports_du_maillon_1d_sont_chiffres(reference):
