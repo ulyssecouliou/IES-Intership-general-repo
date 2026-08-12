@@ -1,4 +1,4 @@
-"""Every operator-facing Test 1 launcher must purge stale VE-cached modules.
+"""Every operator-facing launcher must purge stale VE-cached modules.
 
 VEScripts keeps one Python interpreter alive across Run-button presses. A
 module imported by an earlier run stays in ``sys.modules`` after its source
@@ -25,11 +25,14 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 
 #: Launchers an operator can press directly in the VE Python navigator.
-OPERATOR_FACING_TEST1_LAUNCHERS = (
+OPERATOR_FACING_LAUNCHERS = (
     "Run_VE_SIA4010_Test1_Fast_Start.py",
     "Run_VE_SIA4010_Test1_Active_Case_One_Click.py",
     "Run_VE_SIA4010_Test1_Qualify_Runtime_Inputs.py",
     "Run_VE_SIA4010_Simulate_Active_Case.py",
+    # Not a Test 1 launcher, but it rebuilds project-local inputs from this
+    # package for Tests 2A/3/4-7, so it carries the identical hazard.
+    "Run_VE_SIA4010_Prepare_Case_Scenario.py",
 )
 
 PACKAGE = "swiss_sia.reference_model"
@@ -125,7 +128,7 @@ class LauncherModulePurgeTests(unittest.TestCase):
 
     def test_every_operator_facing_launcher_purges_cached_package(self) -> None:
         missing = []
-        for name in OPERATOR_FACING_TEST1_LAUNCHERS:
+        for name in OPERATOR_FACING_LAUNCHERS:
             path = ROOT / name
             if not path.is_file():
                 self.skipTest("Launcher missing: {}".format(name))
