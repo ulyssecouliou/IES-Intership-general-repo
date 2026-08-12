@@ -123,8 +123,23 @@ class PrepareCaseScenarioLauncherTests(unittest.TestCase):
             with self.subTest(mode=mode):
                 self.assertNotIn(mode, source)
 
-    def test_replacement_is_gated_off_by_default(self) -> None:
-        self.assertFalse(self.launcher.ALLOW_SCENARIO_REPLACEMENT)
+    def test_the_replacement_gate_exists_and_blocks(self) -> None:
+        """Assert the guard, not the switch position.
+
+        ``CASE`` and ``ALLOW_SCENARIO_REPLACEMENT`` are operator settings that
+        the documented procedure tells the operator to edit. An earlier version
+        of this test asserted the flag currently reads ``False``, which meant
+        following the launcher's own instructions turned the suite red. What
+        must hold is that the flag is consulted and that the false branch
+        refuses instead of overwriting.
+        """
+
+        self.assertIsInstance(
+            self.launcher.ALLOW_SCENARIO_REPLACEMENT, bool
+        )
+        source = LAUNCHER.read_text(encoding="utf-8")
+        self.assertIn("not ALLOW_SCENARIO_REPLACEMENT", source)
+        self.assertIn("BLOCKED", source)
 
     def test_a_receipt_carrying_the_paths_is_used_verbatim(self) -> None:
         class Receipt:
