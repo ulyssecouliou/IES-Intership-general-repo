@@ -20,11 +20,22 @@ _ICI = os.path.dirname(os.path.abspath(__file__))
 _RACINE = os.path.abspath(os.path.join(_ICI, os.pardir, os.pardir))
 _DOSSIER = os.path.join(_RACINE, 'refs', 'reference-data')
 
-TESTS = (2, 3, 5)
+#: Tests dont les effectifs de distribution sont figés. Les tests 4, 6 et 7
+#: ont rejoint la liste le 2026-08-12, quand la disposition de leur classeur a
+#: été relevée. Tous les contrôles d'intégrité de ce fichier s'y appliquent.
+TESTS = (2, 3, 4, 5, 6, 7)
 
-#: Tests dont la spécification ne comporte AUCUNE section « Testkriterien » et
-#: dont le classeur n'a ni classes de fréquence ni feuille de distribution.
-TESTS_SANS_DISTRIBUTION = (4, 6)
+#: Tests dont la spécification ne comporte AUCUNE section « Testkriterien ».
+#: Vérifié le 2026-08-12 sur les trois PDF, après s'être assuré que leur texte
+#: s'extrait bien : zéro occurrence de `Testkriterien`, `Streubereich`,
+#: `Abweichung` ni `Häufigkeitsverteilung`.
+#:
+#: CE N'EST PAS « PAS DE DISTRIBUTION ». Leurs classeurs en portent, et la
+#: confusion des deux est ce qui a fait affirmer le contraire à la SIA le
+#: 2026-08-07. Ces trois tests ont des effectifs figés ; savoir si le critère
+#: de distribution leur est opposable est une question ouverte auprès de la
+#: sous-commission.
+TESTS_SANS_TESTKRITERIEN = (4, 6, 7)
 
 
 def _charger(numero):
@@ -107,12 +118,40 @@ def test_tous_les_blocs_ont_le_meme_nombre_de_classes(reference):
     assert len(nombres) == 1, nombres
 
 
-def test_les_bornes_sont_croissantes(reference):
-    """Des bornes désordonnées signaleraient une colonne mal repérée."""
+#: Borne « sans limite haute », écrite ±9999 par le classeur : `9999` pour une
+#: grandeur positive, `-9999` pour une grandeur négative comme une puissance
+#: évacuée.
+#:
+#: CE N'EST PAS UNE CLASSE VIDE. Un test l'a supposé le 2026-08-12 et les
+#: données l'ont démenti : la première classe ±9999 d'un bloc capte les heures
+#: qui dépassent la dernière borne réelle — 3, 6 ou 7 heures selon les blocs
+#: des tests 4, 5 et 7. Les ±9999 qui la suivent sont, eux, à zéro. La
+#: garantie sur les effectifs reste la réconciliation avec la ligne de totaux
+#: du classeur, pas une hypothèse sur cette borne.
+BORNE_SANS_LIMITE_HAUTE = 9999
+
+
+def test_les_bornes_sont_monotones(reference):
+    """Des bornes désordonnées signaleraient une colonne mal repérée.
+
+    MONOTONES, PAS CROISSANTES. Ce test exigeait des bornes croissantes, ce
+    qui n'est vrai que d'une grandeur positive. Le Test 6 porte
+    « Leistung Wärmeabfuhr WRG », une puissance ÉVACUÉE donc négative, dont
+    les classes descendent : 100, -1000, -2000 ... -10000. Exiger la
+    croissance rejetait une lecture correcte d'un classeur correct.
+
+    Les bornes ±9999 sont écartées du contrôle : elles signifient « sans
+    limite haute » et rompraient la monotonie sans rien signaler. Elles
+    portent de vrais effectifs — voir `BORNE_SANS_LIMITE_HAUTE`.
+    """
     for bloc in reference['distributions']:
         bornes = [e['borne_superieure'] for e in bloc['effectifs']
-                  if e['borne_superieure'] is not None]
-        assert bornes == sorted(bornes), bloc['colonne_bloc']
+                  if e['borne_superieure'] is not None
+                  and abs(e['borne_superieure']) != BORNE_SANS_LIMITE_HAUTE]
+        assert bornes == sorted(bornes) or bornes == sorted(bornes,
+                                                            reverse=True), (
+            u'bloc %s : bornes ni croissantes ni décroissantes : %s'
+            % (bloc['colonne_bloc'], bornes))
 
 
 # --------------------------------------------------------------------------
@@ -158,31 +197,62 @@ def test_la_source_est_tracable(reference):
     source = reference['source']
     assert source['fichier'].endswith('.xlsx')
     assert source['feuille']
-    assert set(source['lignes_de_structure']) == {
-        'cas', 'grandeur', 'programmes', 'classes'}
+    lignes = source['lignes_de_structure']
+    assert {'cas', 'grandeur', 'programmes', 'classes'} <= set(lignes)
+    # `unite` n'est présent que pour les dispositions dont le classeur met
+    # l'unité sur sa propre ligne (tests 4, 6, 7). Son absence signifie
+    # « l'unité suit la virgule », pas « on ne sait pas ».
+    assert set(lignes) <= {
+        'cas', 'grandeur', 'programmes', 'classes', 'unite'}
+    assert all(isinstance(v, int) and v > 0 for v in lignes.values())
 
 
 # --------------------------------------------------------------------------
 # Portée
 # --------------------------------------------------------------------------
 
-@pytest.mark.parametrize('numero', TESTS_SANS_DISTRIBUTION)
-def test_les_tests_4_et_6_nont_pas_de_distribution(numero):
-    """Constat, pas oubli : leurs classeurs n'ont ni feuille
-    « Haeufigkeitsklassen » ni feuille de distribution, et leurs
-    spécifications ne fixent aucun Testkriterium."""
+@pytest.mark.parametrize('numero', TESTS_SANS_TESTKRITERIEN)
+def test_les_tests_sans_testkriterien_ont_bien_des_effectifs(numero):
+    """L'inverse de ce que ce fichier affirmait avant le 2026-08-12.
+
+    Ces trois tests n'énoncent aucun critère dans leur spécification, et
+    leurs classeurs tabulent pourtant des distributions horaires. Figer les
+    effectifs ne dit rien de leur opposabilité ; ne pas les figer disait,
+    à tort, qu'ils n'existaient pas.
+    """
     chemin = os.path.join(_DOSSIER,
                           'test-%d.distributions.ref.json' % numero)
-    assert not os.path.exists(chemin)
+    assert os.path.exists(chemin), (
+        u'produire avec scripts/build_sia_distribution_reference.py %d '
+        u'--ecrire' % numero)
 
 
-def test_lextracteur_refuse_un_test_hors_perimetre():
+def test_lextracteur_refuse_un_test_sans_disposition_relevee():
+    """Le refus porte sur la disposition non lue, jamais sur une absence
+    supposée de distribution."""
     from scripts import build_sia_distribution_reference as extracteur
-    with pytest.raises(extracteur.ExtractionRefusee, match='seul critère'):
-        extracteur.extraire(4)
+    with pytest.raises(extracteur.ExtractionRefusee,
+                       match='aucune disposition relev'):
+        extracteur.extraire(1)
 
 
-@pytest.mark.parametrize('numero,attendu', [(2, 22), (3, 16), (5, 16)])
+def test_le_moteur_ne_gate_pas_ce_qui_est_seulement_extractible():
+    """Un fait figé n'autorise pas un verdict.
+
+    L'extracteur sait lire six tests ; le moteur n'en évalue que trois, ceux
+    dont la spécification énonce le critère. Aligner l'un sur l'autre sans
+    réponse de la sous-commission transformerait une donnée en critère.
+    """
+    from engine import sia_distributions_engine as moteur
+    from scripts import build_sia_distribution_reference as extracteur
+    assert set(moteur.TESTS_SUPPORTES) == {2, 3, 5}
+    assert set(TESTS_SANS_TESTKRITERIEN).isdisjoint(moteur.TESTS_SUPPORTES)
+    assert set(moteur.TESTS_SUPPORTES).issubset(
+        extracteur.TESTS_AVEC_DISTRIBUTION)
+
+
+@pytest.mark.parametrize('numero,attendu',
+                         [(2, 22), (3, 16), (4, 11), (5, 16), (6, 10), (7, 17)])
 def test_le_nombre_de_distributions_est_fige(numero, attendu):
     """54 distributions au total. Si le compte changeait, ce serait soit un
     classeur différent, soit une lecture décalée — les deux méritent un

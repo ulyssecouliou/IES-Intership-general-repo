@@ -70,17 +70,27 @@ _DOSSIER_SIA = os.environ.get(
 
 _SORTIE = os.path.join(_RACINE, 'refs', 'reference-data')
 
-#: Tests dont la disposition a été RELEVÉE dans `DISPOSITIONS`. Les tests
-#: 4 et 6 ont bien des distributions (voir la note de module) mais leur
-#: disposition n'est pas encore lue : les ajouter ici sans elle ferait
-#: extraire au hasard.
-TESTS_AVEC_DISTRIBUTION = (2, 3, 5)
+#: Tests dont la disposition a été RELEVÉE dans `DISPOSITIONS`, et dont les
+#: effectifs sont donc extractibles. Les tests 4, 6 et 7 ont rejoint cette
+#: liste le 2026-08-12, quand leur disposition a été lue.
+#:
+#: EXTRACTIBLE N'EST PAS OPPOSABLE. Cette liste dit d'où l'on sait lire des
+#: effectifs, pas où un critère de distribution s'applique. Les spécifications
+#: des tests 4, 6 et 7 ne comportent aucune section « Testkriterien » — zéro
+#: occurrence de `Testkriterien`, `Streubereich`, `Abweichung` ni
+#: `Häufigkeitsverteilung`, vérifié le 2026-08-12 après s'être assuré que le
+#: texte des trois PDF s'extrait bien. La question de savoir si le critère de
+#: distribution leur est opposable est posée à la sous-commission et n'a pas
+#: de réponse. Le moteur `sia_distributions_engine` garde donc sa propre
+#: liste : figer un fait n'autorise pas à en tirer un verdict.
+TESTS_AVEC_DISTRIBUTION = (2, 3, 4, 5, 6, 7)
 
 #: Tests dont les classeurs portent des distributions, disposition relevée
 #: ou non. Sert à distinguer « pas de distribution » de « pas encore
 #: extraite » — la confusion des deux est ce qui a fait écrire pendant
-#: des semaines que les tests 4 et 6 n'en avaient pas.
-TESTS_PORTANT_DES_DISTRIBUTIONS = (2, 3, 4, 5, 6)
+#: des semaines que les tests 4 et 6 n'en avaient pas, et l'a fait écrire
+#: à la SIA le 2026-08-07, qui l'a relevé.
+TESTS_PORTANT_DES_DISTRIBUTIONS = (2, 3, 4, 5, 6, 7)
 
 #: Heures d'une année. Le classeur totalise par colonne ; les écarts d'une ou
 #: deux heures observés (8759, 8732) sont RÉELS et conservés tels quels.
@@ -92,10 +102,24 @@ HEURES_ANNEE = 8760
 #:
 #:   ligne_cas        : ligne portant l'identifiant de cas, en tête de bloc
 #:   ligne_grandeur   : ligne portant « grandeur, unité »
+#:   ligne_unite      : ligne portant l'unité SEULE, quand le classeur ne la
+#:                      met pas dans la cellule de grandeur. Absente pour les
+#:                      tests 2, 3 et 5, où l'unité suit la virgule.
 #:   ligne_programmes : ligne portant les noms de programmes
 #:   ligne_classes    : ligne portant le mot « Klassen »
 #:   colonne_index    : colonne d'index de classe commune à tous les blocs,
 #:                      ou None si chaque bloc porte ses propres bornes
+#:
+#: TROIS FAMILLES DE DISPOSITION, relevées le 2026-08-12 :
+#:
+#:   tests 2, 3, 5 : « Grandeur, unité » dans UNE cellule, et une ligne de cas
+#:                   portant un identifiant (« Alle », « Test 3 A »...) ;
+#:   tests 4, 6    : grandeur et unité sur DEUX lignes, la ligne d'unité
+#:                   portant aussi les noms de programmes. Aucun identifiant
+#:                   de cas : ces tests n'ont qu'un cas ;
+#:   test 7        : comme 4 et 6, mais la cellule de grandeur répète l'unité
+#:                   après une virgule. Les deux sources sont lues et doivent
+#:                   concorder — un désaccord fait refuser l'extraction.
 DISPOSITIONS = {
     2: {
         'fichier': os.path.join('Test2', 'Resultaterfassung_Test2.xlsx'),
@@ -128,6 +152,43 @@ DISPOSITIONS = {
         # blocs, et la borne dans la 1re colonne de chaque bloc.
         'colonne_index': 1,
         'classes_sia': ['3', '4A', '4B'],
+    },
+    # Relevés le 2026-08-12 en ouvrant les classeurs. La section porte le titre
+    # « Stündliche Häufigkeitsverteilung » en colonne A : Test 4 ligne 19,
+    # Test 6 ligne 22, Test 7 ligne 31. Aucune ligne de cas : ces trois tests
+    # n'ont qu'un cas, et `_reserves` le dira au lieu de le déduire.
+    4: {
+        'fichier': os.path.join('Test4', 'Resultaterfassung Test4.xlsx'),
+        'feuille': u'Zusammenfassung',
+        'ligne_cas': 20,
+        'ligne_grandeur': 21,
+        'ligne_unite': 22,
+        'ligne_programmes': 22,
+        'ligne_classes': 23,
+        'colonne_index': 1,
+        'classes_sia': ['3', '4A', '4B'],
+    },
+    6: {
+        'fichier': os.path.join('Test6', 'Resultaterfassung_Test6.xlsx'),
+        'feuille': u'Zusammenfassung',
+        'ligne_cas': 23,
+        'ligne_grandeur': 24,
+        'ligne_unite': 25,
+        'ligne_programmes': 25,
+        'ligne_classes': 26,
+        'colonne_index': 1,
+        'classes_sia': ['3', '4A', '4B'],
+    },
+    7: {
+        'fichier': os.path.join('Test7', 'Resultaterfassung Test7.xlsx'),
+        'feuille': u'Zusammenfassung',
+        'ligne_cas': 31,
+        'ligne_grandeur': 32,
+        'ligne_unite': 33,
+        'ligne_programmes': 33,
+        'ligne_classes': 34,
+        'colonne_index': 1,
+        'classes_sia': ['4A', '4B', '5'],
     },
 }
 
@@ -318,11 +379,10 @@ def extraire(numero_test):
     """
     if numero_test not in DISPOSITIONS:
         raise ExtractionRefusee(
-            u'test %r sans distribution. Tests concernés : %s. Les tests 4 et '
-            u'6 n\'ont ni classes de fréquence ni feuille de distribution, et '
-            u'leurs spécifications ne fixent aucun Testkriterium : la somme '
-            u'annuelle y est le seul critère.'
-            % (numero_test, list(TESTS_AVEC_DISTRIBUTION)))
+            u'test %r : aucune disposition relevée. Tests dont la disposition '
+            u'est lue : %s. Ne jamais en ajouter un sans avoir ouvert son '
+            u'classeur : une disposition supposée extrait au hasard.'
+            % (numero_test, sorted(DISPOSITIONS)))
 
     disposition = DISPOSITIONS[numero_test]
     chemin = os.path.join(_DOSSIER_SIA, disposition['fichier'])
@@ -357,17 +417,36 @@ def extraire(numero_test):
         u'source': {
             u'fichier': disposition['fichier'],
             u'feuille': disposition['feuille'],
-            u'lignes_de_structure': {
-                u'cas': disposition['ligne_cas'],
-                u'grandeur': disposition['ligne_grandeur'],
-                u'programmes': disposition['ligne_programmes'],
-                u'classes': disposition['ligne_classes'],
-            },
+            u'lignes_de_structure': _lignes_de_structure(disposition),
         },
         u'nb_distributions': len(distributions),
         u'reserves': _reserves(distributions),
         u'distributions': distributions,
     }
+
+
+def _lignes_de_structure(disposition):
+    u"""Consigne les lignes réellement lues, pour que la source soit rejouable.
+
+    `unite` n'apparaît que pour les dispositions qui en ont une : la clé
+    absente signifie « l'unité suit la virgule dans la cellule de grandeur »,
+    pas « on ne sait pas ».
+
+    Args:
+        disposition: Entrée de `DISPOSITIONS`.
+
+    Returns:
+        dict: Numéros de ligne, par rôle.
+    """
+    lignes = {
+        u'cas': disposition['ligne_cas'],
+        u'grandeur': disposition['ligne_grandeur'],
+        u'programmes': disposition['ligne_programmes'],
+        u'classes': disposition['ligne_classes'],
+    }
+    if disposition.get('ligne_unite') is not None:
+        lignes[u'unite'] = disposition['ligne_unite']
+    return lignes
 
 
 def _reserves(distributions):
@@ -393,6 +472,19 @@ def _reserves(distributions):
             u'cas précis, mais le classeur ne le dit pas : le champ reste nul '
             u'plutôt que d\'être comblé par déduction.'
             % u', '.join(sans_cas))
+
+    conflits = [b['conflit_unite'] for b in distributions
+                if b.get('conflit_unite')]
+    for conflit in conflits:
+        reserves.append(
+            u'Bloc %s : le classeur écrit deux unités contradictoires pour la '
+            u'même grandeur — « %s » dans la cellule de grandeur, « %s » sur la '
+            u'ligne d\'unité %d. Les effectifs sont conservés car ils ne '
+            u'dépendent pas de cette étiquette ; l\'unité reste nulle. Trancher '
+            u'ici corrigerait un défaut du classeur officiel à la place de son '
+            u'auteur. À signaler à la sous-commission.'
+            % (conflit['colonne_bloc'], conflit['unite_cellule_grandeur'],
+               conflit['unite_ligne_unite'], conflit['ligne_unite']))
 
     totaux = sorted(set(c['total_heures'] for b in distributions
                         for c in b['contributeurs']))
@@ -438,6 +530,29 @@ def _extraire_bloc(feuille, disposition, colonne_bloc, colonne_fin):
 
     grandeur, unite = _grandeur_et_unite(
         _texte(feuille, disposition['ligne_grandeur'], colonne_bloc))
+    ligne_unite = disposition.get('ligne_unite')
+    conflit_unite = None
+    if ligne_unite is not None:
+        unite_propre = _texte(feuille, ligne_unite, colonne_bloc)
+        if unite is None:
+            # Tests 4 et 6 : la cellule de grandeur ne porte pas l'unité.
+            unite = unite_propre
+        elif unite_propre and unite_propre != unite:
+            # Test 7, bloc W au 2026-08-12 : la cellule de grandeur annonce
+            # « kW » et la ligne d'unité « °C ». Un seul bloc sur dix-sept.
+            #
+            # Les EFFECTIFS ne dépendent pas de cette étiquette : refuser le
+            # bloc perdrait des faits pour un désaccord de métadonnée. Choisir
+            # l'une des deux sources reviendrait à trancher un défaut du
+            # classeur officiel à la place de son auteur. L'unité reste donc
+            # nulle et le conflit remonte en réserve, nommé.
+            conflit_unite = {
+                'colonne_bloc': get_column_letter(colonne_bloc),
+                'unite_cellule_grandeur': unite,
+                'unite_ligne_unite': unite_propre,
+                'ligne_unite': ligne_unite,
+            }
+            unite = None
 
     effectifs = []
     for rang, ligne in enumerate(lignes):
@@ -454,7 +569,7 @@ def _extraire_bloc(feuille, disposition, colonne_bloc, colonne_fin):
 
     _controler_totaux(contributeurs, effectifs, colonne_bloc)
 
-    return {
+    bloc = {
         'cas': _texte(feuille, disposition['ligne_cas'], colonne_bloc),
         'grandeur': grandeur,
         'unite': unite,
@@ -464,6 +579,12 @@ def _extraire_bloc(feuille, disposition, colonne_bloc, colonne_fin):
         'contributeurs': contributeurs,
         'effectifs': effectifs,
     }
+    # Clé ajoutée seulement quand il y a un conflit : les référentiels des
+    # tests 2, 3 et 5 restent ainsi identiques au bit près, aucun n'ayant de
+    # ligne d'unité. Une preuve figée ne se réécrit pas pour une clé nulle.
+    if conflit_unite is not None:
+        bloc['conflit_unite'] = conflit_unite
+    return bloc
 
 
 def _controler_totaux(contributeurs, effectifs, colonne_bloc):

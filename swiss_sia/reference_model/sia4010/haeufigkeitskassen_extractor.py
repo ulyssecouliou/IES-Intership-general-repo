@@ -33,10 +33,17 @@ be reintroduced:
 This module extracts the bins strictly from the observed layout: row 1 = the
 section header ``Klassen``; row 2 = per-column quantity labels (German), row 3
 = units, rows 4..N = one row per class index, column A = class index, columns
-B..end = per-quantity upper bound of the class.  Cells set to the sentinel
-``9999`` are the SIA convention for "this class is not used for this quantity"
-and are preserved separately so downstream engines never mistake them for
-numeric bounds.
+B..end = per-quantity upper bound of the class.
+
+Cells set to ``9999`` are kept apart from the numeric bounds. What that value
+means is an inference, not an authority statement, and it is worth stating
+carefully: in this definition sheet it repeats over many trailing classes of a
+quantity, which reads as "this class is not used here". In the distribution
+tables of the ``Zusammenfassung`` sheets, however, the first such class carries
+real hour counts — it collects whatever exceeds the last real bound. The value
+therefore behaves as "no upper limit", and only the classes after the first one
+are genuinely unused. Downstream code should treat it as a bound it cannot
+compare numerically, never as a measurement, and never assume it is empty.
 
 The extractor is pure Python (openpyxl is the only external dependency, as
 elsewhere in the repository).  It never mutates the workbook and never
