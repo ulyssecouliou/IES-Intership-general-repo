@@ -610,12 +610,46 @@ def construire_vue_test7(resultat_test7):
 # ce qui donne : Classe -> Test 2 -> <grandeur> -> <cas> -> Annuel.
 # --------------------------------------------------------------------------
 
-CITATION_CRITERE_BANDES = (
+#: Formule commune à tous les tests à bandes, quel que soit le statut.
+FORMULE_CRITERE_BANDES = (
+    u'Formule : moyenne ± MAX(ABS(programme − moyenne)), bornes incluses.'
+)
+
+#: Cette constante était une phrase unique annonçant « Critère INFÉRÉ. La
+#: spécification de ce test n'énonce aucun critère », affichée pour TOUS les
+#: tests à bandes. C'est faux pour les tests 2, 3 et 5 : leurs spécifications
+#: comportent une section « Testkriterien » qui énonce la bande annuelle mot
+#: pour mot. L'interface sous-estimait donc notre propre preuve sur trois tests,
+#: ce qui est la même erreur que celle corrigée dans les références figées, mais
+#: du côté visible par l'utilisateur.
+#:
+#: Le texte est désormais construit depuis le statut que le moteur porte pour ce
+#: test précis, avec sa justification sourcée.
+CITATION_CRITERE_INFERE = (
     u'Critère INFÉRÉ. La spécification de ce test n\'énonce aucun critère ; '
     u'SIA 4010:2023 §4.4 délègue la comparaison au classeur d\'évaluation, '
-    u'qui porte les bandes. Formule : moyenne ± MAX(ABS(programme − moyenne)), '
-    u'bornes incluses. À confirmer par la sous-commission (§4.6.2).'
+    u'qui porte les bandes. ' + FORMULE_CRITERE_BANDES +
+    u' À confirmer par la sous-commission (§4.6.2).'
 )
+
+
+def _citation_critere_bandes(critere):
+    """Phrase d'article d'un test à bandes, d'après le statut du moteur.
+
+    Args:
+        critere: Bloc `critere` d'une sortie `sia_bandes_engine.evaluer`.
+
+    Returns:
+        unicode: Article à afficher, jamais plus affirmatif que la source.
+    """
+    statut = (critere or {}).get('statut') or u''
+    justification = (critere or {}).get('justification') or u''
+    if statut == u'ENONCE_DANS_LA_SPEC':
+        return (
+            u'Critère ÉNONCÉ dans la spécification du test. ' + justification
+            + u' ' + FORMULE_CRITERE_BANDES
+        )
+    return CITATION_CRITERE_INFERE
 
 TEXTE_VARIANTES = (
     u'Les colonnes du classeur sont des VARIANTES de programme, pas des '
@@ -673,6 +707,7 @@ def construire_vue_bandes(resultat):
     """
     numero = u'%s' % resultat['test']
     source = _source_reference_bandes(numero)
+    article = _citation_critere_bandes(resultat.get('critere'))
 
     lignes = []
     for grandeur in resultat['grandeurs']:
@@ -695,7 +730,7 @@ def construire_vue_bandes(resultat):
                     formater_nombre(cas['borne_basse'], 1),
                     formater_nombre(cas['borne_haute'], 1),
                     grandeur.get('unite') or u'').strip(),
-                'article': CITATION_CRITERE_BANDES,
+                'article': article,
                 'source_valeur_reference': source,
                 'detail': copy.deepcopy(cas),
             })
@@ -719,7 +754,7 @@ def construire_vue_bandes(resultat):
         'conforme': conforme_global,
         'couleur': couleur_depuis_conforme(conforme_global),
         'texte': texte,
-        'article': CITATION_CRITERE_BANDES,
+        'article': article,
         'detail': copy.deepcopy(resultat.get('critere') or {}),
     }
 

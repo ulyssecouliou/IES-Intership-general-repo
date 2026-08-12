@@ -57,8 +57,25 @@ Soit 38 distributions supplémentaires par rapport à ce que nous pensions avoir
 
 Fait relevé : dans ces trois classeurs, les feuilles `Verteilung` sont des
 graphiques. Elles tracent les variantes de référence et le programme testé,
-**sans calculer aucune bande** ; aucune cellule n'y définit un Streubereich, et
-ces classeurs ne portent pas de section `Testkriterien`.
+**sans calculer aucune bande** ; aucune cellule n'y définit un Streubereich.
+
+L'asymétrie décisive est ailleurs, et elle est dans les **spécifications**, pas
+dans les classeurs. Vérifié par recherche plein texte le 2026-08-12 :
+
+| Spécification | Section `Testkriterien` | Ce qu'elle dit de la distribution |
+| --- | --- | --- |
+| `Spezifikation_Test2.pdf` p. 2/2 | **présente** | « Häufigkeitsverteilung … muss im Streubereich der Referenzprogramme liegen » |
+| `Spezifikation_Test3.pdf` p. 3/3 | **présente** | « Häufigkeitsverteilung innerhalb des Streubereichs der Referenzprogramme » |
+| `Spezifikation_Test5.pdf` p. 5/5 | **présente** | « Die Häufigkeitsverteilungen müssen im Streubereich der Referenzprogramme liegen » |
+| `Spezifikation_Test4.pdf` | **absente** — 0 occurrence | — |
+| `Spezifikation_Test6.pdf` | **absente** — 0 occurrence | — |
+
+Autrement dit : pour les Tests 2, 3 et 5, la spécification **exige** elle-même
+que la distribution tombe dans le Streubereich, et la clarification du
+2026-08-10 en précise la définition. Pour les Tests 4 et 6, aucune phrase
+équivalente n'existe. Note pour éviter un faux argument : aucun des sept
+classeurs ne contient le mot `Testkriterien` — cette section n'appartient qu'aux
+spécifications.
 
 La clarification écrite du 2026-08-10 a défini la règle pour les Tests 2, 3 et
 5 : enveloppe min/max des programmes de référence, classe par classe. La
@@ -111,15 +128,21 @@ reviendrait à corriger un défaut du classeur officiel à la place de son auteu
 >
 > Two points remain open, and I would rather ask than assume.
 >
-> First, the acceptance criterion for Tests 4, 6 and 7. Your clarification of
+> First, the acceptance criterion for Tests 4 and 6. Your clarification of
 > 10 August defined the Streubereich for Tests 2, 3 and 5 as the min/max
-> envelope of the reference programs, class by class. In the Test 4, 6 and 7
-> workbooks the `Verteilung` sheets are charts that plot the reference variants
-> and the tested program without computing any band, and these workbooks carry
-> no `Testkriterien` section. Does the same min/max rule apply to them, or are
-> their distributions recorded without an acceptance criterion pending the
-> sub-commission? Until we have this in writing our engine records the
-> distributions but issues no verdict from them.
+> envelope of the reference programs, class by class. For those three the
+> specification itself requires the distribution to lie in that range —
+> `Spezifikation_Test2.pdf` states "Häufigkeitsverteilung … muss im Streubereich
+> der Referenzprogramme liegen", and Tests 3 and 5 carry the equivalent
+> sentence. The specifications of Tests 4 and 6 contain no `Testkriterien`
+> section at all. In their workbooks the `Verteilung` sheets are charts that
+> plot the reference variants against the tested program without computing any
+> band, so no cell defines a range either.
+>
+> Does the same min/max rule apply to Tests 4 and 6, or are their distributions
+> recorded without an acceptance criterion pending the sub-commission? Until we
+> have this in writing our engine records the distributions but issues no
+> verdict from them.
 >
 > Second, a small defect I would like to report rather than silently resolve. In
 > `Resultaterfassung Test7.xlsx`, sheet `Zusammenfassung`, the quantity "Aus

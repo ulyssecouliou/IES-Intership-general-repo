@@ -28,10 +28,25 @@ CRITERION_SOURCE = (
     "déléguée au classeur d'évaluation officiel du test."
 )
 
-#: Le Test 1 est le SEUL dont la spécification énonce ses critères
-#: (« Testkriterien »). Pour tous les autres, le critère est déduit de la
-#: présence de bandes dans le classeur : il est donc marqué comme inféré.
-TESTS_WITH_WRITTEN_CRITERION = frozenset({"test_1"})
+#: Tests dont la spécification énonce ses critères dans une section
+#: « Testkriterien ». Pour les autres, le critère est déduit de la présence de
+#: bandes dans le classeur : il est marqué comme inféré.
+#:
+#: Ce jeu ne contenait que `test_1`, sur la croyance que le Test 1 était le seul
+#: dans ce cas. C'est faux : la recherche plein texte du 2026-08-12 trouve la
+#: section dans `Spezifikation_Test2.pdf` (p. 2/2), `Test3.pdf` (p. 3/3) et
+#: `Test5.pdf` (p. 5/5), chacune énonçant la bande annuelle et le critère de
+#: distribution. Elle est absente des specs des Tests 4, 6 et 7.
+#:
+#: L'erreur n'était pas cosmétique : ce jeu pilote `criterion_is_inferred` dans
+#: la voie autoritative, donc trois tests annonçaient un critère déduit alors
+#: que la spécification l'écrit — une preuve affaiblie sans raison, exactement
+#: ce qui se défend mal devant la sous-commission. Le statut équivalent côté
+#: moteur est `sia_bandes_engine.CRITERE_PAR_TEST`, tenu indépendamment et
+#: confronté par `engine/tests/test_references_bandes.py`.
+TESTS_WITH_WRITTEN_CRITERION = frozenset(
+    {"test_1", "test_2", "test_3", "test_5"}
+)
 
 
 class OfficialValidationStrategy(ValidationStrategy):

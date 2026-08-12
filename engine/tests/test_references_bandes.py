@@ -101,12 +101,52 @@ def test_les_variantes_de_programme_sont_conservees(test2):
     assert any(v for v in variantes.values()), variantes
 
 
-@pytest.mark.parametrize('numero', [2, 3, 4, 5, 6])
-def test_le_critere_est_annonce_comme_infere(numero):
-    """Seul le Test 1 énonce ses critères ; ailleurs c'est une inférence."""
+@pytest.mark.parametrize('numero', [2, 3, 5])
+def test_le_critere_enonce_dans_la_spec_est_annonce_comme_tel(numero):
+    """Les specs des tests 2, 3 et 5 ont bien une section « Testkriterien ».
+
+    Ce test affirmait l'inverse : « seul le Test 1 énonce ses critères ». C'est
+    faux, et la recherche plein texte dans les PDF officiels le montre — la
+    section existe dans les trois, et elle énonce la bande annuelle dans la
+    formule même que le moteur applique. Marquer ces trois tests INFERE
+    affaiblissait à tort notre propre preuve.
+    """
+    reference = _charger(numero)
+    assert reference['critere']['statut'] == 'ENONCE_DANS_LA_SPEC'
+    origine = reference['critere']['origine']
+    assert 'Testkriterien' in origine
+    assert 'Spezifikation_Test%d.pdf' % numero in origine
+
+
+@pytest.mark.parametrize('numero', [4, 6])
+def test_le_critere_absent_de_la_spec_reste_infere(numero):
+    """Les specs des tests 4 et 6 n'ont aucune section « Testkriterien ».
+
+    Zéro occurrence en recherche plein texte, donc §4.4 délègue et le statut
+    INFERE est exact. Ne pas le confondre avec la réponse d'autorité du
+    2026-08-10, qui définit ce que veut dire « Streubereich » sans créer un
+    critère là où la spécification n'en énonce pas.
+    """
     reference = _charger(numero)
     assert reference['critere']['statut'] == 'INFERE'
     assert '4.4' in reference['critere']['origine']
+
+
+@pytest.mark.parametrize('numero', [2, 3, 4, 5, 6])
+def test_la_reference_et_le_moteur_saccordent_sur_le_critere(numero):
+    """Le garde-fou contre la dérive qui a produit cette incohérence.
+
+    La référence figée et le moteur tiennent chacun leur table du statut du
+    critère, et c'est voulu : la référence est la preuve contre laquelle le
+    moteur est jugé, elle ne peut pas dériver de lui. Le prix de cette
+    indépendance est qu'ils peuvent diverger, comme ils l'ont fait entre le
+    2026-08-07 et aujourd'hui. Ce test rend la divergence impossible à ignorer.
+    """
+    from engine import sia_bandes_engine as moteur
+
+    reference = _charger(numero)
+    statut_moteur, _justification = moteur.critere_du_test(numero)
+    assert reference['critere']['statut'] == statut_moteur
 
 
 @pytest.mark.parametrize('numero', [2, 3, 4, 5, 6])

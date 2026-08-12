@@ -13,8 +13,8 @@
   },
   "critere": {
     "formule": "moyenne ± MAX(ABS(programme − moyenne)), bornes incluses",
-    "statut": "INFERE",
-    "origine": "SIA 4010:2023 §4.4 délègue la comparaison au classeur ; seul le Test 1 énonce ses critères dans sa spécification."
+    "statut": "ENONCE_DANS_LA_SPEC",
+    "origine": "Spezifikation_Test5.pdf page 5/5, section « Testkriterien » : « Zulässiger Bereich für Jahressummen: Mittelwerte der Referenzprogramme +/- maximale Abweichung. Die Häufigkeitsverteilungen müssen im Streubereich der Referenzprogramme liegen. »"
   },
   "piege_variantes": "Les colonnes sont des VARIANTES de programme, pas des programmes. Le SIA retient une variante par programme, et pas la même d'un programme à l'autre : le jeu contributeur est lu sur la formule.",
   "grandeurs": [

@@ -23,8 +23,9 @@ from schemas.test_result_schema import TestResult, TestStatus
 #: elle constate la présence ou l'absence de données, rien de plus.
 CRITERION_SOURCE = (
     "Prévalidation interne — aucun article normatif. SIA 4010:2023 ne définit "
-    "aucun critère numérique générique ; seul le Test 1 énonce le sien, et il "
-    "porte sur la bande des programmes de référence, pas sur un seuil fixe."
+    "aucun critère numérique générique ; les spécifications des Tests 1, 2, 3 "
+    "et 5 énoncent le leur dans une section « Testkriterien », et il porte sur "
+    "la bande des programmes de référence, pas sur un seuil fixe."
 )
 
 

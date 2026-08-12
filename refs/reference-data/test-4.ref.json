@@ -14,7 +14,7 @@
   "critere": {
     "formule": "moyenne ± MAX(ABS(programme − moyenne)), bornes incluses",
     "statut": "INFERE",
-    "origine": "SIA 4010:2023 §4.4 délègue la comparaison au classeur ; seul le Test 1 énonce ses critères dans sa spécification."
+    "origine": "La spécification de ce test ne comporte aucune section « Testkriterien » (recherche plein texte : zéro occurrence). SIA 4010:2023 §4.4 délègue alors la comparaison au classeur d'évaluation, qui porte les bandes. À confirmer par la sous-commission (§4.6.2)."
   },
   "piege_variantes": "Les colonnes sont des VARIANTES de programme, pas des programmes. Le SIA retient une variante par programme, et pas la même d'un programme à l'autre : le jeu contributeur est lu sur la formule.",
   "grandeurs": [

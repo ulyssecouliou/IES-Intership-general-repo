@@ -57,10 +57,26 @@ def test_candidat_au_centre_tout_est_vert():
 
 
 @pytest.mark.parametrize('numero', [2, 3])
-def test_larticle_annonce_le_critere_comme_infere(numero):
+def test_larticle_annonce_le_critere_comme_enonce_dans_la_spec(numero):
+    u"""L'article citait « Critère INFÉRÉ » pour tous les tests à bandes.
+
+    Faux pour les tests 2, 3 et 5 : leurs spécifications comportent une section
+    « Testkriterien » qui énonce la bande annuelle mot pour mot — vérifié dans
+    les PDF officiels. L'interface sous-estimait donc notre propre preuve, et
+    devant la sous-commission une preuve affaiblie sans raison se défend mal.
+
+    Ce qui est testé n'est pas le mot, mais que l'article cite la section de la
+    spécification qui porte le critère.
+    """
     v = _vue(numero)
-    assert u'INFÉRÉ' in v['verdict_global']['article']
-    assert all(u'INFÉRÉ' in l['article'] for l in v['lignes'])
+    articles = [v['verdict_global']['article']]
+    articles.extend(l['article'] for l in v['lignes'])
+    assert articles
+    for article in articles:
+        assert u'ÉNONCÉ' in article
+        assert u'Testkriterien' in article
+        assert u'Spezifikation_Test%d.pdf' % numero in article
+        assert u'INFÉRÉ' not in article
 
 
 def test_la_note_sur_les_variantes_est_portee(numero=2):

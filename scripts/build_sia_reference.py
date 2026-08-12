@@ -340,6 +340,76 @@ def _etiquette(feuille, origine, ligne, col_moyenne, col_bloc,
     return valeur.strip() if isinstance(valeur, str) else valeur
 
 
+#: Statut du critère de somme annuelle, par test, **lu dans la spécification**.
+#
+# Ce bloc portait un `INFERE` uniforme et cette phrase : « seul le Test 1 énonce
+# ses critères dans sa spécification ». C'est faux, et les PDF officiels le
+# disent : les spécifications des tests 2, 3 et 5 comportent une section
+# `Testkriterien` qui énonce la bande annuelle mot pour mot, dans la formule
+# même que le moteur applique. Les spécifications des tests 4 et 6 n'en
+# comportent aucune — vérifié par recherche plein texte, zéro occurrence — donc
+# pour eux `INFERE` reste exact.
+#
+# Cette table est délibérément indépendante de `engine/sia_bandes_engine.py` :
+# la référence figée est la preuve contre laquelle le moteur est jugé, elle ne
+# peut pas dériver de lui. Les deux sont confrontées par
+# `engine/tests/test_references_bandes.py`, qui échoue si elles divergent.
+_CRITERE_ENONCE = u'ENONCE_DANS_LA_SPEC'
+_CRITERE_INFERE = u'INFERE'
+_CRITERE_PAR_TEST = {
+    2: (
+        _CRITERE_ENONCE,
+        u"Spezifikation_Test2.pdf page 2/2, section « Testkriterien » : "
+        u"« Jahressumme der solaren Wärmeeinträge oder der total "
+        u"transmittierten Strahlung: Mittelwert der Referenzprogramme +/- "
+        u"maximale Abweichung ». La même section énonce aussi le critère de "
+        u"distribution : « Häufigkeitsverteilung … muss im Streubereich der "
+        u"Referenzprogramme liegen ».",
+    ),
+    3: (
+        _CRITERE_ENONCE,
+        u"Spezifikation_Test3.pdf page 3/3, section « Testkriterien » : "
+        u"« Jahressumme: Mittelwert +/- max. Abweichung der "
+        u"Referenzprogramme », suivie de « Häufigkeitsverteilung innerhalb des "
+        u"Streubereichs der Referenzprogramme ».",
+    ),
+    5: (
+        _CRITERE_ENONCE,
+        u"Spezifikation_Test5.pdf page 5/5, section « Testkriterien » : "
+        u"« Zulässiger Bereich für Jahressummen: Mittelwerte der "
+        u"Referenzprogramme +/- maximale Abweichung. Die "
+        u"Häufigkeitsverteilungen müssen im Streubereich der "
+        u"Referenzprogramme liegen. »",
+    ),
+}
+_CRITERE_DELEGUE = (
+    u"La spécification de ce test ne comporte aucune section « Testkriterien » "
+    u"(recherche plein texte : zéro occurrence). SIA 4010:2023 §4.4 délègue "
+    u"alors la comparaison au classeur d'évaluation, qui porte les bandes. À "
+    u"confirmer par la sous-commission (§4.6.2)."
+)
+
+
+def _critere_du_test(numero_test):
+    u"""Renvoie le bloc `critere` d'un test, statut et origine compris.
+
+    Args:
+        numero_test: Numéro du test SIA.
+
+    Returns:
+        dict: Formule, statut et origine sourcée.
+    """
+
+    statut, origine = _CRITERE_PAR_TEST.get(
+        numero_test, (_CRITERE_INFERE, _CRITERE_DELEGUE)
+    )
+    return {
+        'formule': u'moyenne ± MAX(ABS(programme − moyenne)), bornes incluses',
+        'statut': statut,
+        'origine': origine,
+    }
+
+
 def extraire(numero_test):
     u"""Extrait et vérifie toutes les bandes d'un test.
 
@@ -472,12 +542,7 @@ def extraire(numero_test):
             'fichier': u'SIA_4010_geteilter_Link/' + plan['fichier'].replace('\\', '/'),
             'feuille': plan['feuille'],
         },
-        'critere': {
-            'formule': u'moyenne ± MAX(ABS(programme − moyenne)), bornes incluses',
-            'statut': u'INFERE',
-            'origine': u"SIA 4010:2023 §4.4 délègue la comparaison au classeur ; "
-                       u"seul le Test 1 énonce ses critères dans sa spécification.",
-        },
+        'critere': _critere_du_test(numero_test),
         'piege_variantes': (
             u"Les colonnes sont des VARIANTES de programme, pas des programmes. "
             u"Le SIA retient une variante par programme, et pas la même d'un "
