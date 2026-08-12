@@ -12,19 +12,20 @@ from the official PDFs, and applies it. It contains no normative constant of its
 own, so a value can only be wrong here if it is wrong in the reference, where it
 carries its source locator.
 
-WHAT IS NOT DETERMINED IS NOT APPLIED. Two elements of the chain cannot be built
-from published data without choosing a convention:
-
-* the occupant heat gain in watts per person. The specification gives an activity
-  level of 1.2 met, and converting that to watts needs a body-area convention it
-  does not state.
-* the fabric awning itself. No VE shading object is generated for Test 1, and the
-  documentation gives whole-window properties with the shade deployed rather than
-  a shading device to build.
-
-Both come out as named blockers on the receipt, and a case that needs one is
-reported ``BLOCKED``. Filling them with a plausible number would produce a model
+WHAT IS NOT DETERMINED IS NOT APPLIED. One element of the chain still cannot be
+built: the fabric awning. Its delegated input exists in the catalogue as
+``sia_example_building_fabric_awning_detail`` with the schema
+``sia4010.shading_device_definition.v1``, and an example template ships in
+``config/external_input_examples``, but no binding is supplied and no VE shading
+object is generated for Test 1. It comes out as a named blocker, and case 1E is
+reported ``BLOCKED``. Filling it with a plausible number would produce a model
 that runs, compares against a real reference band, and lies.
+
+The occupant heat gain was blocked here at first, on the grounds that 1.2 met
+becomes watts only through a body-area convention the specification omits. That
+was true of the specification and wrong as a conclusion: the SIA 2024 authority
+extract we already hold states the sensible gain directly in watts per square
+metre, so no convention is needed and link 1D applies in full.
 
 NO CLAIM. These are preparation artifacts. Cases 1A to 1D carry no acceptance
 criterion at all -- the specification asks for annual hourly heating and cooling
@@ -69,8 +70,7 @@ CHAIN_LOCATOR = (
 #: _the_baseline`` reproduces that check rather than trusting this note.
 INFILTRATION_M3_H_M2_TO_L_S_M2 = 3.6
 
-#: Blockers this module raises instead of inventing a convention.
-BLOCKER_OCCUPANT_WATTS = "TEST1_DIAGNOSTIC_OCCUPANT_WATTS_CONVENTION_UNDEFINED"
+#: The one blocker left, raised instead of inventing a shading device.
 BLOCKER_AWNING = "TEST1_DIAGNOSTIC_FABRIC_AWNING_GENERATOR_NOT_IMPLEMENTED"
 
 
@@ -278,25 +278,30 @@ def _apply_sia2024_usage(
     assets: Dict[str, Any],
     reference: Dict[str, Any],
 ) -> Dict[str, Any]:
-    """Link 1D: the SIA 2024 category 3.1 usage, as far as it is stated.
+    """Link 1D: the SIA 2024 category 3.1 usage.
 
-    Equipment and lighting power densities, and the occupant density, are
-    written in the specification. The occupant heat gain in watts is not: the
-    specification gives 1.2 met and converting that needs a body-area convention
-    it does not state. That one element is returned as a blocker.
+    The equipment and lighting power densities and the occupant density come
+    from the specification. The occupant heat gain does NOT need the met-to-watt
+    conversion this function once refused to make: the SIA 2024 authority
+    extract states the sensible gain directly, in watts per square metre, so the
+    per-person figure is that value times the floor area per person -- an
+    arithmetic step on two stated numbers, not a convention.
     """
 
     equipment = _releve(reference, "apports", "appareils_w_m2")
     lighting = _releve(reference, "apports", "eclairage_w_m2")
-    installed = _releve(reference, "apports", "eclairage_puissance_installee_w_m2")
     density = _releve(reference, "apports", "personnes_m2_par_personne")
-    met = _releve(reference, "apports", "personnes_activite_met")
+    sensible_w_m2 = _releve(
+        reference, "apports", "personnes_gain_sensible_w_m2"
+    )
+    per_person = round(sensible_w_m2 * density, 6)
 
     _set_parameter(config, "equipment_gain_w_m2", equipment, CHAIN_LOCATOR)
     _set_parameter(config, "lighting_gain_w_m2", lighting, CHAIN_LOCATOR)
     _set_parameter(
         config, "occupancy_density_m2_person", density, CHAIN_LOCATOR
     )
+    _set_parameter(config, "people_gain_w_person", per_person, CHAIN_LOCATOR)
 
     for key, value in (
         ("equipment_gain", equipment),
@@ -311,19 +316,7 @@ def _apply_sia2024_usage(
         consumption["value"] = value
         consumption["source_locator"] = CHAIN_LOCATOR
 
-    return {
-        "id": BLOCKER_OCCUPANT_WATTS,
-        "severity": "BLOCKER",
-        "detail": (
-            "Link 1D prescribes an activity level of {} met at {} m2 per "
-            "person, and the installed lighting load is {} W/m2. The occupant "
-            "heat gain in watts per person is NOT stated: converting met to "
-            "watts requires a body-area convention the specification does not "
-            "give. people_gain_w_person is therefore left at the baseline "
-            "value rather than filled with a plausible number."
-            .format(met, density, installed)
-        ),
-    }
+    return {}
 
 
 def _apply_fabric_awning(reference: Dict[str, Any]) -> Dict[str, Any]:

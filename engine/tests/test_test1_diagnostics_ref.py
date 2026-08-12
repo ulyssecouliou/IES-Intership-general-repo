@@ -267,11 +267,35 @@ def test_le_nombre_doccupants_est_coherent_avec_la_surface(reference):
 
 
 def test_chaque_source_porte_son_empreinte(reference):
-    assert len(reference['sources']) == 3
+    u"""Quatre sources : trois PDF officiels et l'extrait d'autorité SIA 2024.
+
+    Ce dernier ne vient pas du lien partagé — la spécification renvoie à SIA
+    2024:2021 sans reproduire la fiche — d'où le chemin différent.
+    """
+    assert len(reference['sources']) == 4
     for cle, source in reference['sources'].items():
         assert len(source['sha256']) == 64, cle
-        assert source['fichier'].startswith('SIA_4010_geteilter_Link/'), cle
         assert source['role'], cle
+        attendu = ('sia4010_evidence/' if cle == 'extrait_autorite_sia_2024'
+                   else 'SIA_4010_geteilter_Link/')
+        assert source['fichier'].startswith(attendu), cle
+
+
+def test_le_gain_sensible_des_occupants_est_releve(reference):
+    u"""Il rend inutile toute conversion met → watts.
+
+    J'avais bloqué le maillon 1D en affirmant qu'il fallait une convention de
+    surface corporelle. C'était vrai de la spécification et faux comme
+    conclusion : la fiche SIA 2024 donne le gain sensible en W/m².
+    """
+    apports = reference['parametres']['apports']
+    assert apports['personnes_gain_sensible_w_m2']['valeur'] == 4.9
+    assert apports['personnes_simultaneite_annuelle']['valeur'] == 0.8
+
+
+def test_lextrait_dautorite_porte_la_bonne_categorie(reference):
+    source = reference['sources']['extrait_autorite_sia_2024']
+    assert '3.1' in source['categorie']
 
 
 def test_aucun_champ_ne_reste_a_confirmer_en_silence(reference):

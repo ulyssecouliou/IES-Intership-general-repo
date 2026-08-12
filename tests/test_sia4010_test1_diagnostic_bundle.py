@@ -18,7 +18,6 @@ from pathlib import Path
 from swiss_sia.reference_model.exceptions import ConfigurationError
 from swiss_sia.reference_model.sia4010.test1_diagnostic_bundle import (
     BLOCKER_AWNING,
-    BLOCKER_OCCUPANT_WATTS,
     DIAGNOSTIC_CHAIN,
     INFILTRATION_M3_H_M2_TO_L_S_M2,
     build_test1_diagnostic_bundle,
@@ -70,9 +69,7 @@ class Test1DiagnosticBundleTests(unittest.TestCase):
         receipt = self._build("1D")
         assets = self._read(receipt.asset_manifest_path)
         applied = assets["metadata"]["diagnostic_chain_applied"]
-        blocked = assets["metadata"]["diagnostic_chain_blocked"]
-        self.assertEqual(applied, ["1A", "1B", "1C"])
-        self.assertEqual(blocked, ["1D"])
+        self.assertEqual(applied, ["1A", "1B", "1C", "1D"])
 
     def test_1a_alone_touches_only_the_climate(self):
         receipt = self._build("1A")
@@ -243,16 +240,40 @@ class Test1DiagnosticBundleTests(unittest.TestCase):
             self._value("apports", "personnes_m2_par_personne"),
         )
 
-    def test_the_occupant_watts_are_blocked_not_invented(self):
-        """1.2 met to watts needs a body-area convention the spec omits."""
+    def test_the_occupant_gain_comes_from_the_authority_extract(self):
+        """No met-to-watt convention is needed, and none is invented.
+
+        This link was blocked at first on the grounds that 1.2 met becomes
+        watts only through a body-area convention the specification omits. True
+        of the specification, wrong as a conclusion: the SIA 2024 authority
+        extract states the sensible gain directly in W/m2, so the per-person
+        figure is arithmetic on two stated numbers.
+        """
 
         receipt = self._build("1D")
-        audit = self._read(receipt.audit_path)
-        blocked = {item["id"]: item for item in audit["chain_blocked"]}
-        self.assertIn(BLOCKER_OCCUPANT_WATTS, blocked)
-        self.assertEqual(receipt.status, "BLOCKED_DIAGNOSTIC_CHAIN")
         parameters = self._read(receipt.config_path)["parameters"]
-        self.assertEqual(parameters["people_gain_w_person"]["value"], 0.0)
+        sensible = self._value("apports", "personnes_gain_sensible_w_m2")
+        density = self._value("apports", "personnes_m2_par_personne")
+        self.assertAlmostEqual(
+            parameters["people_gain_w_person"]["value"],
+            sensible * density,
+            places=6,
+        )
+        self.assertNotEqual(parameters["people_gain_w_person"]["value"], 0.0)
+
+    def test_1d_is_now_fully_applied(self):
+        """Only the awning blocks the chain, so 1D itself is ready."""
+
+        receipt = self._build("1D")
+        assets = self._read(receipt.asset_manifest_path)
+        self.assertEqual(
+            assets["metadata"]["diagnostic_chain_applied"],
+            ["1A", "1B", "1C", "1D"],
+        )
+        self.assertEqual(assets["metadata"]["diagnostic_chain_blocked"], [])
+        self.assertEqual(
+            receipt.status, "READY_FOR_PROVISIONAL_RUNTIME_QUALIFICATION"
+        )
 
     # -- link 1E ------------------------------------------------------------
 

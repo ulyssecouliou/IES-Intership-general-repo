@@ -18,6 +18,12 @@
       "fichier": "SIA_4010_geteilter_Link/Beispielgebäude/Dokumentation_Beispielgebäude_V5.pdf",
       "sha256": "38d231786467b1a117c99f2cfe8d09dd03c921bb894378a061c2f6d9bc14c75d",
       "role": "Porte les propriétés de la fenêtre entière, store déployé et rentré."
+    },
+    "extrait_autorite_sia_2024": {
+      "fichier": "sia4010_evidence/source_audits/sia2024_3_1_authority_20260810/sia2024_office_3_1_standard_profiles.binding.json",
+      "sha256": "ad3a8c236fb31c41e3003d5a58050fc3e15ad3f07bc66cd133070150e38f79f1",
+      "role": "Extrait d'autorité du 2026-08-10 pour la catégorie d'usage 3.1. Donne le gain sensible des occupants en W/m² et les horaires, que la spécification ne reproduit pas.",
+      "categorie": "SIA 2024:2021 3.1 Einzel-/Gruppenbüro"
     }
   },
   "chaine": [
@@ -171,6 +177,26 @@
         "valeur": 12.5,
         "statut": "RELEVE",
         "source": "Wärmeeinträge / Beleuchtung / Anschlusswert"
+      },
+      "personnes_gain_sensible_w_m2": {
+        "valeur": 4.9,
+        "statut": "RELEVE",
+        "source": "SIA 2024:2021 fiche 3.1, standard_values.people.sensible_heat_gain_at_24c_w_m2"
+      },
+      "personnes_simultaneite_annuelle": {
+        "valeur": 0.8,
+        "statut": "RELEVE",
+        "source": "SIA 2024:2021 fiche 3.1, standard_values.people.annual_simultaneity_factor"
+      },
+      "personnes_heures_par_jour": {
+        "valeur": 11.0,
+        "statut": "RELEVE",
+        "source": "SIA 2024:2021 fiche 3.1, standard_values.people.use_hours_per_day_h"
+      },
+      "personnes_jours_par_an": {
+        "valeur": 261,
+        "statut": "RELEVE",
+        "source": "SIA 2024:2021 fiche 3.1, standard_values.people.use_days_per_year_d"
       }
     }
   },

@@ -68,6 +68,28 @@ SOURCES = (
      u"Porte les propriétés de la fenêtre entière, store déployé et rentré."),
 )
 
+#: Quatrième source, hors du lien partagé : l'extrait d'autorité SIA 2024 reçu
+#: le 2026-08-10. La spécification renvoie à SIA 2024:2021 sans reproduire la
+#: fiche ; c'est cet extrait qui donne le gain sensible des occupants et les
+#: horaires. Sans lui, le maillon 1D resterait bloqué sur une conversion
+#: met → watts — or aucune conversion n'est nécessaire, la fiche donne
+#: directement des W/m².
+SOURCE_SIA_2024 = os.path.join(
+    'sia4010_evidence', 'source_audits', 'sia2024_3_1_authority_20260810',
+    'sia2024_office_3_1_standard_profiles.binding.json')
+
+#: Valeurs lues dans l'extrait : `(bloc, clé, chemin dans standard_values)`.
+CHAMPS_SIA_2024 = (
+    ('apports', 'personnes_gain_sensible_w_m2',
+     ('people', 'sensible_heat_gain_at_24c_w_m2')),
+    ('apports', 'personnes_simultaneite_annuelle',
+     ('people', 'annual_simultaneity_factor')),
+    ('apports', 'personnes_heures_par_jour',
+     ('people', 'use_hours_per_day_h')),
+    ('apports', 'personnes_jours_par_an',
+     ('people', 'use_days_per_year_d')),
+)
+
 #: Maillons de la chaîne. Le motif relève la définition allemande verbatim dans
 #: `Spezifikation_Test1.pdf`. `ajoute` nomme, en français, ce que le maillon
 #: ajoute au précédent — c'est un index de lecture, pas une donnée normative :
@@ -442,6 +464,25 @@ def construire():
             'raison': releve.get('raison'),
         })
 
+    # L'extrait d'autorité SIA 2024, s'il est présent. Son absence ne fait pas
+    # échouer la production : les champs concernés sortent en `A_CONFIRMER`,
+    # comme n'importe quelle valeur non trouvée.
+    chemin_sia_2024 = os.path.join(_RACINE, SOURCE_SIA_2024)
+    extrait_sia_2024 = None
+    if os.path.exists(chemin_sia_2024):
+        with io.open(chemin_sia_2024, encoding='utf-8') as flux:
+            extrait_sia_2024 = json.load(flux)
+        sources['extrait_autorite_sia_2024'] = {
+            'fichier': SOURCE_SIA_2024.replace('\\', '/'),
+            'sha256': _empreinte(chemin_sia_2024),
+            'role': (
+                u"Extrait d'autorité du 2026-08-10 pour la catégorie d'usage "
+                u"3.1. Donne le gain sensible des occupants en W/m² et les "
+                u"horaires, que la spécification ne reproduit pas."
+            ),
+            'categorie': extrait_sia_2024.get('use_category'),
+        }
+
     parametres = {}
     for bloc, cle, motif, conversion, source in PARAMETRES_TEST_2:
         parametres.setdefault(bloc, {})[cle] = _chercher(
@@ -449,6 +490,24 @@ def construire():
     for bloc, cle, motif, conversion, source in PARAMETRES_BATIMENT:
         parametres.setdefault(bloc, {})[cle] = _chercher(
             textes['documentation_batiment_exemple'], motif, conversion, source)
+    for bloc, cle, chemin in CHAMPS_SIA_2024:
+        localisation = u"SIA 2024:2021 fiche 3.1, standard_values.%s" % (
+            u'.'.join(chemin))
+        if extrait_sia_2024 is None:
+            parametres.setdefault(bloc, {})[cle] = _champ_absent(
+                localisation,
+                u"extrait d'autorité SIA 2024 absent du dépôt : %s"
+                % SOURCE_SIA_2024.replace('\\', '/'))
+            continue
+        noeud = extrait_sia_2024.get('standard_values', {})
+        for partie in chemin:
+            noeud = (noeud or {}).get(partie) if isinstance(noeud, dict) else None
+        if noeud is None:
+            parametres.setdefault(bloc, {})[cle] = _champ_absent(
+                localisation, u"champ absent de l'extrait d'autorité")
+        else:
+            parametres.setdefault(bloc, {})[cle] = {
+                'valeur': noeud, 'statut': RELEVE, 'source': localisation}
 
     return {
         'test': 1,
