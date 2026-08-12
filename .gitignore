@@ -269,3 +269,8 @@ ASHRAE 140_2023_D_86892.pdf
 *.bak[0-9]
 *.tmp
 *~
+
+# Converted weather candidates. Derived artifacts: regenerable from the
+# official sources under references/standards/ and from the supplied archives.
+# Same convention as reports/, outputs/ and sia4010_evidence/ above.
+generated_weather/
