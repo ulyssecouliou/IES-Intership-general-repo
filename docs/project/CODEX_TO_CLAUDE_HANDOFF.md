@@ -32,14 +32,18 @@ Le logiciel produit actuellement des diagnostics, des contrôles de readiness et
 
 ## 3. État Git à préserver
 
-Au moment de la passation, le worktree contient **168 entrées non propres** :
+> **Mise à jour 2026-08-12.** Cette section décrivait 168 entrées non propres.
+> Ce n'est plus l'état : ce travail a été regroupé en commits sur la branche
+> `sia4010-evidence-hardening-20260812`, et `main` reste intact. La règle qui
+> suit demeure valable pour toute reprise ultérieure — il faut relire
+> `git status --short` au lieu de se fier à un décompte figé dans un document.
 
-- 84 fichiers suivis modifiés ;
-- 84 fichiers non suivis.
-
-Ces changements regroupent plusieurs jours de développement Codex/Claude et appartiennent à l'utilisateur. Ils ne sont pas tous regroupés en commits. Claude doit inspecter `git status --short` et des diffs ciblés avant toute modification, puis conserver tous les changements sans rapport avec sa tâche.
-
-Le diff suivi observé est important : environ 84 fichiers, 15 029 insertions et 9 760 suppressions, notamment parce que le fichier météo EPW contient 8 760 lignes. Ne pas interpréter sa taille comme une invitation à reformater le dépôt.
+Règle permanente : les changements non commités appartiennent à l'utilisateur et
+regroupent plusieurs jours de développement Codex/Claude. Inspecter
+`git status --short` et des diffs ciblés avant toute modification, puis
+conserver tous les changements sans rapport avec la tâche en cours. Un diff
+volumineux n'est pas une invitation à reformater le dépôt : un seul fichier
+météo EPW pèse 8 760 lignes.
 
 ## 4. Ordre de lecture recommandé
 
@@ -132,14 +136,31 @@ La correction n'a pas encore été requalifiée par un nouveau run VE consigné 
 
 ## 7. Prochaine action exacte dans IESVE
 
-Priorité immédiate : **requalifier le cas 600FF ou 640 après la correction de ventilation**, avant d'étendre la campagne.
+> **Mise à jour 2026-08-12 — cette priorité est atteinte pour 600FF.** Le cas a
+> été requalifié après la correction : ventilation mécanique vérifiée à zéro
+> après read-back, infiltration prescrite conservée, ApacheSim exécuté, APS
+> `SIA4010_test_1_600FF_20260812_141823.aps` enregistré au ledger avec son
+> sha256. Reste pour ce cas la seule qualification de l'APS
+> (`SIMULATION_EXECUTED_AWAITING_APS_QUALIFICATION`).
+>
+> **Priorité suivante** : requalifier **640** puis **600**, dont les APS
+> enregistrés datent du 2026-08-11 et du 2026-08-09, donc d'avant la correction
+> `c7e906b` (2026-08-12 12:55) — ce sont des bases de référence, pas des
+> résultats citables. Ensuite seulement 900, 940 et 900FF.
+
+Procédure, inchangée :
 
 1. Ouvrir le projet jetable sauvegardé correspondant dans IESVE 2025.
 2. Exécuter dans VEScripts :
    `Run_VE_SIA4010_Test1_Fast_Start.py`
 3. Vérifier dans la sortie une preuve équivalente à :
    `Mechanical ventilation: 0 L/s/person, verified zero`
-4. Vérifier que l'infiltration reste 0,41 ACH / environ 14,76 L/s.
+4. Vérifier que l'infiltration prescrite est conservée. **À réconcilier** : ce
+   document annonçait 0,41 ACH / environ 14,76 L/s, tandis que le read-back réel
+   du 600FF a relevé `max_flow = 0,3075` avec `units_val = 2`. Les deux chiffres
+   n'ont pas été rapprochés et l'unité derrière `units_val = 2` n'est pas
+   démontrée ici : ne pas trancher, relever la valeur observée et la comparer à
+   la spécification avant d'en faire un critère.
 5. Vérifier que l'ApacheSim qualifié s'exécute et produit un nouvel APS.
 6. Vérifier que le ledger central est mis à jour avec les nouveaux SHA-256.
 7. Seulement après ce run, exécuter successivement les cas 900, 940 et 900FF dans des projets jetables distincts.
@@ -170,6 +191,7 @@ La matrice du produit couvre huit classes et 24 variantes exactes dans `config/s
 
 - routes directes principalement développées pour les six cas ISO du Test 1 ;
 - Test 2A dispose de probes et d'une préparation partielle ;
+- **2026-08-12 — les probes Tests 3 et 4-7 sont débloquées.** Elles refusaient de démarrer sans `sia_model_scenario.json` pour un cas officiel exact, et les deux seuls écrivains scriptés de ce fichier étaient câblés sur le Test 1 ; la voie générique n'existait que dans la fenêtre Tkinter. [`Run_VE_SIA4010_Prepare_Case_Scenario.py`](Run_VE_SIA4010_Prepare_Case_Scenario.py) comble ce trou en `PREPARE_ONLY`. La chaîne a été répétée hors VE avant d'être proposée : `prepare_case_bundle` réussit pour `test_3A`, `test_4` et `test_7` avec le statut `PREPARED_WITH_BLOCKERS`, et les deux probes franchissent alors leur portail de scénario. Attention : préparer un cas dans un projet qui porte déjà le scénario d'un autre cas l'écrase — le launcher refuse par défaut et exige `ALLOW_SCENARIO_REPLACEMENT = True` ;
 - Tests 2 à 7 nécessitent encore des bindings VE réels, des templates qualifiés ou des topologies ApacheHVAC démontrées ;
 - aucun template VE qualifié n'était enregistré dans le dernier statut hybride lu ;
 - Tests 4 à 7 ne peuvent pas être déclarés exécutables de bout en bout tant que les réseaux exacts ne sont ni générés avec des setters vérifiés, ni fournis puis capturés et revus.
