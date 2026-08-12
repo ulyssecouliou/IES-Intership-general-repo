@@ -1,0 +1,319 @@
+"""Tests for the Test 1 diagnostic chain bundles 1A to 1E.
+
+The chain feeds case 1E, the only pass/fail case of Test 1. A wrong value here
+would not crash: it would produce a model that runs, compares against a real
+reference band, and reports a credible false verdict. So these tests spend their
+effort on two things.
+
+First, that every applied value equals the frozen reference rather than a
+constant retyped into the builder. Second, that what the published data does not
+determine is reported as a blocker instead of filled in -- and that a case
+needing one is never described as ready.
+"""
+
+import json
+import unittest
+from pathlib import Path
+
+from swiss_sia.reference_model.exceptions import ConfigurationError
+from swiss_sia.reference_model.sia4010.test1_diagnostic_bundle import (
+    BLOCKER_AWNING,
+    BLOCKER_OCCUPANT_WATTS,
+    DIAGNOSTIC_CHAIN,
+    INFILTRATION_M3_H_M2_TO_L_S_M2,
+    build_test1_diagnostic_bundle,
+    load_diagnostics_reference,
+)
+
+
+ROOT = Path(__file__).resolve().parents[1]
+TEMP_ROOT = ROOT / ".codex_tmp"
+
+
+class Test1DiagnosticBundleTests(unittest.TestCase):
+
+    def setUp(self):
+        self.project = TEMP_ROOT / self._testMethodName
+        self.project.mkdir(parents=True, exist_ok=True)
+        self.weather = self.project / "DRYCOLD.epw"
+        self.weather.write_text("diagnostic chain baseline\n", encoding="utf-8")
+        self.kloten = self.project / "KLOTEN.epw"
+        self.kloten.write_text("SIA 2028 DRY normal Kloten\n", encoding="utf-8")
+        self.reference = load_diagnostics_reference(ROOT)
+
+    def _build(self, case_id, *, with_kloten=True):
+        return build_test1_diagnostic_bundle(
+            self.project,
+            ROOT,
+            case_id,
+            weather_file=self.weather,
+            kloten_weather_file=self.kloten if with_kloten else None,
+        )
+
+    @staticmethod
+    def _read(path):
+        with Path(path).open(encoding="utf-8") as handle:
+            return json.load(handle)
+
+    def _value(self, bloc, cle):
+        return self.reference["parametres"][bloc][cle]["valeur"]
+
+    # -- the chain itself ---------------------------------------------------
+
+    def test_an_unknown_case_is_refused(self):
+        with self.assertRaises(ConfigurationError):
+            self._build("600")
+
+    def test_the_chain_is_cumulative(self):
+        """1D must apply 1A to 1C too, or it is not the case the spec defines."""
+
+        receipt = self._build("1D")
+        assets = self._read(receipt.asset_manifest_path)
+        applied = assets["metadata"]["diagnostic_chain_applied"]
+        blocked = assets["metadata"]["diagnostic_chain_blocked"]
+        self.assertEqual(applied, ["1A", "1B", "1C"])
+        self.assertEqual(blocked, ["1D"])
+
+    def test_1a_alone_touches_only_the_climate(self):
+        receipt = self._build("1A")
+        assets = self._read(receipt.asset_manifest_path)
+        self.assertEqual(
+            assets["metadata"]["diagnostic_chain_applied"], ["1A"]
+        )
+        self.assertEqual(assets["metadata"]["diagnostic_chain_blocked"], [])
+        self.assertEqual(
+            receipt.status, "READY_FOR_PROVISIONAL_RUNTIME_QUALIFICATION"
+        )
+
+    # -- link 1A ------------------------------------------------------------
+
+    def test_the_kloten_climate_replaces_drycold(self):
+        receipt = self._build("1A")
+        parameters = self._read(receipt.config_path)["parameters"]
+        self.assertEqual(parameters["weather_file"]["value"], str(self.kloten))
+        self.assertIn("Kloten", parameters["weather_station"]["value"])
+
+    def test_a_missing_kloten_file_blocks_instead_of_keeping_denver(self):
+        """Silently keeping DRYCOLD would label a Denver result as Kloten."""
+
+        receipt = self._build("1A", with_kloten=False)
+        self.assertEqual(receipt.status, "BLOCKED_DIAGNOSTIC_CHAIN")
+        audit = self._read(receipt.audit_path)
+        blocked = {item["id"] for item in audit["chain_blocked"]}
+        self.assertIn("TEST1_DIAGNOSTIC_KLOTEN_WEATHER_NOT_SUPPLIED", blocked)
+        parameters = self._read(receipt.config_path)["parameters"]
+        self.assertNotIn("Kloten", parameters["weather_station"]["value"])
+
+    def test_a_kloten_path_that_does_not_exist_blocks(self):
+        receipt = build_test1_diagnostic_bundle(
+            self.project,
+            ROOT,
+            "1A",
+            weather_file=self.weather,
+            kloten_weather_file=self.project / "absent.epw",
+        )
+        audit = self._read(receipt.audit_path)
+        blocked = {item["id"] for item in audit["chain_blocked"]}
+        self.assertIn("TEST1_DIAGNOSTIC_KLOTEN_WEATHER_MISSING_FILE", blocked)
+
+    # -- link 1B ------------------------------------------------------------
+
+    def test_the_window_comes_from_the_frozen_reference(self):
+        """Not from a constant retyped here: the values are read back from it."""
+
+        receipt = self._build("1B")
+        parameters = self._read(receipt.config_path)["parameters"]
+        self.assertEqual(
+            parameters["project_glazing_g_value"]["value"],
+            self._value("vitrage", "g_total"),
+        )
+        self.assertEqual(
+            parameters["project_visible_light_transmittance"]["value"],
+            self._value("vitrage", "transmission_visible"),
+        )
+        self.assertEqual(
+            parameters["project_window_u_w_m2k"]["value"],
+            self._value("vitrage", "u_vitrage_w_m2k"),
+        )
+
+    def test_the_window_also_lands_on_the_construction(self):
+        receipt = self._build("1B")
+        assets = self._read(receipt.asset_manifest_path)
+        glazing = next(
+            item
+            for item in assets["constructions"]
+            if item["key"] == "external_glazing"
+        )
+        self.assertEqual(
+            glazing["properties"]["g_value"]["value"],
+            self._value("vitrage", "g_total"),
+        )
+
+    def test_the_specification_u_value_wins_over_the_documentation(self):
+        """The two official sources disagree; the spec defines the case."""
+
+        receipt = self._build("1B")
+        parameters = self._read(receipt.config_path)["parameters"]
+        divergence = next(
+            item
+            for item in self.reference["divergences_entre_sources"]
+            if item["grandeur"] == "u_vitrage_w_m2k"
+        )
+        self.assertEqual(
+            parameters["project_window_u_w_m2k"]["value"],
+            divergence["specification_test_2"],
+        )
+        self.assertNotEqual(
+            parameters["project_window_u_w_m2k"]["value"],
+            divergence["documentation_batiment_exemple"],
+        )
+
+    # -- link 1C ------------------------------------------------------------
+
+    def test_the_conversion_factor_is_proven_by_the_baseline(self):
+        """The unit of the VE flow is derived, not assumed.
+
+        The case-600 baseline carries the same infiltration twice: 1.107
+        m3/(h m2) in the configuration and 0.3075 in the asset manifest. That
+        the ratio is exactly 3.6 is what identifies the VE unit as litres per
+        second per square metre. If this ever stops holding, the 1C conversion
+        is wrong and must not be trusted.
+        """
+
+        baseline = build_test1_diagnostic_bundle(
+            self.project, ROOT, "1A",
+            weather_file=self.weather, kloten_weather_file=self.kloten,
+        )
+        parameters = self._read(baseline.config_path)["parameters"]
+        assets = self._read(baseline.asset_manifest_path)
+        exchange = next(
+            item for item in assets["air_exchanges"]
+            if item["key"] == "infiltration"
+        )
+        m3_h_m2 = parameters["infiltration_m3_h_m2"]["value"]
+        l_s_m2 = exchange["properties"]["max_flow"]["value"]
+        self.assertAlmostEqual(
+            m3_h_m2 / INFILTRATION_M3_H_M2_TO_L_S_M2, l_s_m2, places=6
+        )
+
+    def test_the_adjusted_infiltration_is_converted_not_copied(self):
+        receipt = self._build("1C")
+        parameters = self._read(receipt.config_path)["parameters"]
+        assets = self._read(receipt.asset_manifest_path)
+        expected = self._value("infiltration", "debit_m3_h_m2")
+        self.assertEqual(parameters["infiltration_m3_h_m2"]["value"], expected)
+        exchange = next(
+            item for item in assets["air_exchanges"]
+            if item["key"] == "infiltration"
+        )
+        self.assertAlmostEqual(
+            exchange["properties"]["max_flow"]["value"],
+            expected / INFILTRATION_M3_H_M2_TO_L_S_M2,
+            places=6,
+        )
+
+    def test_the_infiltration_object_is_renamed_with_its_value(self):
+        """A name still saying 0P41ACH beside a new flow invites stale reuse."""
+
+        receipt = self._build("1C")
+        assets = self._read(receipt.asset_manifest_path)
+        exchange = next(
+            item for item in assets["air_exchanges"]
+            if item["key"] == "infiltration"
+        )
+        name = exchange["properties"]["name"]["value"]
+        self.assertNotIn("0P41ACH", name)
+        self.assertIn("0P15", name)
+
+    # -- link 1D ------------------------------------------------------------
+
+    def test_the_stated_gain_densities_are_applied(self):
+        receipt = self._build("1D")
+        parameters = self._read(receipt.config_path)["parameters"]
+        self.assertEqual(
+            parameters["equipment_gain_w_m2"]["value"],
+            self._value("apports", "appareils_w_m2"),
+        )
+        self.assertEqual(
+            parameters["lighting_gain_w_m2"]["value"],
+            self._value("apports", "eclairage_w_m2"),
+        )
+        self.assertEqual(
+            parameters["occupancy_density_m2_person"]["value"],
+            self._value("apports", "personnes_m2_par_personne"),
+        )
+
+    def test_the_occupant_watts_are_blocked_not_invented(self):
+        """1.2 met to watts needs a body-area convention the spec omits."""
+
+        receipt = self._build("1D")
+        audit = self._read(receipt.audit_path)
+        blocked = {item["id"]: item for item in audit["chain_blocked"]}
+        self.assertIn(BLOCKER_OCCUPANT_WATTS, blocked)
+        self.assertEqual(receipt.status, "BLOCKED_DIAGNOSTIC_CHAIN")
+        parameters = self._read(receipt.config_path)["parameters"]
+        self.assertEqual(parameters["people_gain_w_person"]["value"], 0.0)
+
+    # -- link 1E ------------------------------------------------------------
+
+    def test_the_awning_is_blocked_and_names_the_product(self):
+        receipt = self._build("1E")
+        audit = self._read(receipt.audit_path)
+        blocked = {item["id"]: item for item in audit["chain_blocked"]}
+        self.assertIn(BLOCKER_AWNING, blocked)
+        detail = blocked[BLOCKER_AWNING]["detail"]
+        self.assertIn("Soltis 92-2048-Alu", detail)
+        self.assertIn("150", detail)
+
+    def test_case_1e_is_never_reported_ready(self):
+        """It carries the only pass/fail criterion; readiness must be earned."""
+
+        receipt = self._build("1E")
+        self.assertEqual(receipt.status, "BLOCKED_DIAGNOSTIC_CHAIN")
+
+    # -- claims -------------------------------------------------------------
+
+    def test_no_case_claims_compliance(self):
+        for case_id in DIAGNOSTIC_CHAIN:
+            with self.subTest(case=case_id):
+                receipt = self._build(case_id)
+                audit = self._read(receipt.audit_path)
+                self.assertFalse(audit["compliance_claim_allowed"])
+                self.assertTrue(audit["runtime_qualification_required"])
+                assets = self._read(receipt.asset_manifest_path)
+                self.assertFalse(
+                    assets["metadata"]["compliance_claim_allowed"]
+                )
+
+    def test_the_absence_of_a_criterion_is_recorded_for_1a_to_1d(self):
+        for case_id in ("1A", "1B", "1C", "1D"):
+            with self.subTest(case=case_id):
+                audit = self._read(self._build(case_id).audit_path)
+                self.assertEqual(
+                    audit["acceptance_criterion"],
+                    "NONE_STATED_BY_SPECIFICATION",
+                )
+
+    def test_case_1e_declares_its_criterion(self):
+        audit = self._read(self._build("1E").audit_path)
+        self.assertEqual(
+            audit["acceptance_criterion"], "PASS_FAIL_STREUBEREICH"
+        )
+
+    def test_the_audit_pins_the_reference_it_used(self):
+        """A bundle must say which frozen reference produced its values."""
+
+        audit = self._read(self._build("1C").audit_path)
+        self.assertIn("test-1.diagnostics.ref.json", audit["reference"]["path"])
+        self.assertEqual(len(audit["reference"]["sha256"]), 64)
+
+    def test_a_missing_frozen_reference_fails_closed(self):
+        with self.assertRaises(ConfigurationError):
+            build_test1_diagnostic_bundle(
+                self.project, self.project, "1A",
+                weather_file=self.weather,
+            )
+
+
+if __name__ == "__main__":
+    unittest.main()
