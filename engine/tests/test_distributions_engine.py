@@ -1,15 +1,5 @@
 # -*- coding: utf-8 -*-
-u"""Tests du moteur de distributions (second critère des tests 2, 3 et 5).
-
-Ce moteur a une propriété inhabituelle qu'il faut verrouiller : **il ne doit
-jamais conclure**. Le classeur officiel ne calcule aucune bande pour les
-distributions, donc rendre un verdict conforme transformerait une preuve
-manquante en conformité — exactement ce que le projet existe pour empêcher.
-
-La moitié des tests ci-dessous vise ce refus de conclure ; l'autre moitié
-vise le classement d'une série horaire, où une erreur de borne passerait
-inaperçue.
-"""
+u"""Tests du critère de distribution min/max confirmé le 2026-08-10."""
 
 import pytest
 
@@ -30,11 +20,9 @@ def test_les_trois_tests_concernes_ont_un_referentiel(numero):
 
 
 @pytest.mark.parametrize('numero', (4, 6))
-def test_les_tests_sans_distribution_sont_refuses(numero):
-    """Leurs spécifications ne fixent aucun Testkriterium et leurs classeurs
-    n'ont pas de classes de fréquence. Rendre un résultat vide se lirait comme
-    « rien ne passe » au lieu de « ce critère n'existe pas »."""
-    with pytest.raises(ValueError, match='pas de critère de distribution'):
+def test_les_tests_4_6_attendent_encore_un_referentiel_executable(numero):
+    """Les classeurs ont des distributions, mais leur gate exact reste en revue."""
+    with pytest.raises(ValueError, match='gate exact reste en revue'):
         moteur.charger_reference(numero)
 
 
@@ -46,36 +34,32 @@ def test_un_referentiel_absent_est_une_erreur_franche(tmp_path):
 
 
 # --------------------------------------------------------------------------
-# Le refus de conclure
+# Décision d'autorité et verdict
 # --------------------------------------------------------------------------
 
-def test_le_statut_du_critere_est_non_etabli():
-    """Plus faible qu'`INFERE` des sommes annuelles : là une formule existait
-    dans le classeur. Ici il n'y en a aucune."""
-    assert moteur.STATUT_CRITERE == 'NON_ETABLI'
+def test_le_statut_du_critere_est_confirme():
+    assert moteur.STATUT_CRITERE == 'CONFIRME_AUTORITE_2026-08-10'
 
 
-def test_un_candidat_parfait_ne_donne_pas_conforme():
-    """LE test central. Même un candidat au centre de toutes les classes ne
-    doit pas produire de verdict conforme."""
+def test_un_candidat_dans_enveloppe_passe():
     bloc = _bloc([{'A': 10, 'B': 10, 'C': 10}, {'A': 5, 'B': 5, 'C': 5}])
     resultat = moteur.evaluer_bloc(bloc, [10, 5])
-    assert resultat['verdict'] == moteur.VERDICT_NON_ETABLI
-    # ... alors meme qu'aucune classe n'est hors des deux lectures.
+    assert resultat['verdict'] == moteur.VERDICT_PASS
     assert resultat['nb_hors_lecture'] == {
         moteur.LECTURE_ENVELOPPE: 0, moteur.LECTURE_BANDE: 0}
 
 
-def test_le_verdict_densemble_reste_non_etabli():
+def test_le_verdict_densemble_passe_quand_tout_est_evaluable_dedans():
     reference = {'test': 2, 'distributions': [
         _bloc([{'A': 1, 'B': 1}]),
     ], 'critere': 'x'}
     assert moteur.evaluer(reference, {(None, 'G'): [1]})[
-        'verdict'] == moteur.VERDICT_NON_ETABLI
+        'verdict'] == moteur.VERDICT_PASS
 
 
 def test_la_justification_dit_pourquoi():
-    assert 'graphiques' in moteur.JUSTIFICATION_CRITERE
+    assert '2026-08-10' in moteur.JUSTIFICATION_CRITERE
+    assert 'minimum/maximum' in moteur.JUSTIFICATION_CRITERE
 
 
 # --------------------------------------------------------------------------
@@ -132,8 +116,13 @@ def test_les_bornes_sont_superieures_et_incluses():
 def test_la_derniere_classe_absorbe_les_depassements():
     """Sinon des heures disparaîtraient du total, et la réconciliation avec le
     classeur deviendrait ininterprétable."""
-    assert moteur.classer([5, 5000], [10, 100]) == [1, 1]
-    assert sum(moteur.classer([5, 5000], [10, 100])) == 2
+    assert moteur.classer([5, 5000], [10, 100]) == [1, 0]
+    detail = moteur.classer_avec_hors_classes([5, 5000], [10, 100])
+    assert detail == {
+        'effectifs': [1, 0],
+        'hors_classes_superieur': 1,
+        'total_numerique': 2,
+    }
 
 
 def test_les_valeurs_non_numeriques_sont_ecartees():
@@ -179,13 +168,18 @@ def test_une_cle_candidate_inconnue_est_signalee():
     assert resultat['nb_non_evaluables'] == 1
 
 
-def test_les_contributeurs_partiels_sont_signales():
-    """Un programme qui ne totalise que 3380 heures ne couvre pas la même
-    période que les autres : le taire rendrait la dispersion inexplicable."""
+def test_les_heures_hors_classes_sont_signalees():
+    """3380 heures affichées n'impliquent pas une série annuelle incomplète."""
     bloc = _bloc([{'A': 1, 'B': 1}])
-    bloc['contributeurs'][0]['total_heures'] = 3380   # partiel, comme le Test 5
-    bloc['contributeurs'][1]['total_heures'] = 8760   # annee complete
-    assert moteur.evaluer_bloc(bloc, [1])['contributeurs_partiels'] == ['A']
+    bloc['contributeurs'][0]['total_heures'] = 3380
+    bloc['contributeurs'][0]['heures_hors_classes'] = 5380
+    bloc['contributeurs'][1]['total_heures'] = 8760
+    bloc['contributeurs'][1]['heures_hors_classes'] = 0
+    resultat = moteur.evaluer_bloc(bloc, [1])
+    assert resultat['contributeurs_partiels'] == []
+    assert resultat['contributeurs_hors_classes'] == [
+        {'colonne': 'A', 'heures_hors_classes': 5380}
+    ]
 
 
 # --------------------------------------------------------------------------
@@ -201,10 +195,10 @@ def test_sans_candidat_tout_est_non_evaluable(numero):
     resultat = moteur.evaluer(reference)
     assert resultat['nb_evaluees'] == 0
     assert resultat['nb_non_evaluables'] == resultat['nb_distributions']
-    assert resultat['verdict'] == moteur.VERDICT_NON_ETABLI
+    assert resultat['verdict'] == moteur.VERDICT_NON_EVALUABLE
 
 
-def test_un_candidat_reel_reste_non_conclusif():
+def test_un_candidat_reel_passe_son_bloc_mais_pas_les_blocs_absents():
     """Sur le Test 3, en resoumettant la distribution d'un programme de
     référence comme candidat : toutes les classes tombent dans l'enveloppe,
     et le verdict reste malgré tout NON_ETABLI."""
@@ -221,17 +215,18 @@ def test_un_candidat_reel_reste_non_conclusif():
     premier = resultat['distributions'][0]
     assert premier['nb_hors_lecture'][moteur.LECTURE_ENVELOPPE] == 0
     assert premier['total_candidat'] == bloc['contributeurs'][0]['total_heures']
-    assert resultat['verdict'] == moteur.VERDICT_NON_ETABLI
+    assert premier['verdict'] == moteur.VERDICT_PASS
+    assert resultat['verdict'] == moteur.VERDICT_NON_EVALUABLE
 
 
-def test_le_resume_dit_que_rien_nest_conclu():
+def test_le_resume_indique_le_critere_confirme_et_levidence_absente():
     try:
         reference = moteur.charger_reference(2)
     except moteur.ReferenceIntrouvable:
         pytest.skip(u'référentiel absent')
     texte = moteur.resumer(moteur.evaluer(reference))
-    assert 'NON_ETABLI' in texte
-    assert 'aucune bande' in texte
+    assert 'NOT_CHECKABLE' in texte
+    assert 'min/max confirmé' in texte
 
 
 # --------------------------------------------------------------------------

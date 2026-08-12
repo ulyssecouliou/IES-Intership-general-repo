@@ -6,7 +6,7 @@ PDF : génère un VRAI fichier et le relit — ReportLab est installé ici
 3.2 côté VE).
 
 Excel : la partie orchestration est testée SANS Excel. Le remplissage réel
-par COM reste couvert par `ui/tests/test_export_excel_com.py`, qui se saute
+par COM reste couvert par `ui/tests/test_excel_export.py`, qui se saute
 si Excel est absent.
 """
 
@@ -100,13 +100,13 @@ def test_pdf_mono_delegue_au_multi_et_reste_compatible(tmp_path):
 # Excel — orchestration seule, sans COM
 # --------------------------------------------------------------------------
 
-from ui import export_excel_com as xls  # noqa: E402
+from ui import excel_export as xls  # noqa: E402
 
 
 def test_excel_un_travail_en_echec_ninterrompt_pas_les_autres():
-    """Sans carte de cellules, `remplir_classeur_sia_detaille` lève. Les
+    """Sans carte de cellules, `fill_sia_workbook_reporting` lève. Les
     deux travaux doivent être tentés, et les deux échecs consignés."""
-    resultat = xls.remplir_classeurs_sia([
+    resultat = xls.fill_sia_workbooks([
         {'vue': _vue('1'), 'chemin_source': u'inexistant1.xlsx',
          'carte_cellules': None},
         {'vue': _vue('7'), 'chemin_source': u'inexistant7.xlsx',
@@ -117,12 +117,12 @@ def test_excel_un_travail_en_echec_ninterrompt_pas_les_autres():
     assert resultat['complet'] is False
     assert [e['test_id'] for e in resultat['echecs']] == [u'Test 1', u'Test 7']
     for echec in resultat['echecs']:
-        assert 'CarteCellulesManquante' in echec['erreur']
+        assert 'MissingCellMap' in echec['erreur']
 
 
 def test_excel_sans_aucun_travail_nest_pas_complet_par_defaut():
     """Zéro travail ne doit pas se lire comme « tout est rempli »."""
-    resultat = xls.remplir_classeurs_sia([])
+    resultat = xls.fill_sia_workbooks([])
     assert resultat['rapports'] == []
     assert resultat['echecs'] == []
     # `complet` vaut True au sens strict (aucun échec, aucune cellule vide),
@@ -137,7 +137,7 @@ def test_excel_le_rapport_detaille_expose_les_cellules_ignorees():
     classeur pouvait repartir avec des cases vides sans que personne
     l'apprenne. C'est exactement le cas du PV du Test 7."""
     import inspect
-    source = inspect.getsource(xls.remplir_classeur_sia_detaille)
+    source = inspect.getsource(xls.fill_sia_workbook_reporting)
     assert "'cellules_ignorees_valeur_absente'" in source
     assert "'cellules_ecrites'" in source
     assert "'complet'" in source

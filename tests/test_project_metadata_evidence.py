@@ -133,8 +133,8 @@ class ProjectMetadataEvidenceTests(unittest.TestCase):
     def test_global_comparison_requires_complete_reviewed_scope(self) -> None:
         """Accept only a complete project-level result with audit provenance."""
         self.comparison_path.write_text(
-            "project_id,comparison_scope,project_value,reference_value,unit,comparison_result,reviewer,review_date,review_status,source_document,source_reference,notes\n"
-            "Demo_Project,complete_sia3802_project,42.0,45.0,kWh/m2,compliant,Reviewer,2026-07-15,accepted,Calculation workbook,Summary,Reviewed\n",
+            "project_id,comparison_scope,comparison_metric,project_value,reference_value,unit,comparison_result,reviewer,review_date,review_status,source_document,source_reference,notes\n"
+            "Demo_Project,complete_sia3802_project,global_energy_expenditure_index_sia380,42.0,45.0,kWh/m2,compliant,Reviewer,2026-07-15,accepted,Calculation workbook,SIA 380 aggregation and SIA 380/2 7.2.5,Reviewed\n",
             encoding="utf-8",
         )
 
@@ -145,6 +145,20 @@ class ProjectMetadataEvidenceTests(unittest.TestCase):
         self.assertIsNotNone(record)
         self.assertEqual(record["project_value_numeric"], 42.0)
         self.assertEqual(record["reference_value_numeric"], 45.0)
+
+    def test_generic_energy_pair_cannot_pass_as_global_comparison(self) -> None:
+        """Reject heating/cooling figures that are not the SIA 380 global index."""
+
+        self.comparison_path.write_text(
+            "project_id,comparison_scope,comparison_metric,project_value,reference_value,unit,comparison_result,reviewer,review_date,review_status,source_document,source_reference,notes\n"
+            "Demo_Project,complete_sia3802_project,annual_heating_demand,42.0,45.0,kWh/m2,compliant,Reviewer,2026-07-15,accepted,Calculation workbook,Heating summary,Not a global index\n",
+            encoding="utf-8",
+        )
+
+        result = scan_sia3802_global_comparisons(self.project_root, "tests")
+
+        self.assertEqual(result["status"], "PENDING_REVIEW")
+        self.assertIsNone(find_accepted_global_comparison(result, "Demo Project"))
 
 
 if __name__ == "__main__":

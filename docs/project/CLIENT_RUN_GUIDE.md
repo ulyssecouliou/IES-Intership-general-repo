@@ -69,10 +69,13 @@ For the whole-project SIA 380/2 method comparison, fill the generated file:
 SIA3802_global_reference_comparison_<project>.csv
 ```
 
-The accepted row must cover `complete_sia3802_project`, identify the project
-and reference values and unit, show a favourable project/reference result, and
-include reviewer, review date and source traceability. Component checks against
-Tables 2 to 9 remain diagnostics and cannot replace this global comparison.
+The accepted row must cover `complete_sia3802_project`, use
+`comparison_metric = global_energy_expenditure_index_sia380`, identify the
+project and reference values and unit, show a favourable project/reference
+result, and include reviewer, review date and source traceability. This is the
+SIA 380 energy expenditure index required by SIA 380/2 clauses 6.1.4 and 7.2.5;
+heating or cooling energy alone is not an accepted substitute. Component checks
+against Tables 2 to 9 remain diagnostics and cannot replace this comparison.
 
 File detection is a readiness indicator only. The file content, official source
 and comparison validity must still be reviewed by the responsible compliance
@@ -91,22 +94,18 @@ reviewed external source.
 ## How To Run In VE
 
 1. Open the IESVE Scripts window.
-2. If the reviewer CSV files are not prepared yet, select:
-
-```text
-Prepare_SIA4010_Evidence_Folder.py
-```
-
-3. Click `Run`.
-4. Fill or review the generated files in `sia4010_evidence/` when evidence is available.
-5. Select:
+2. Select:
 
 ```text
 Run_VE_Swiss_Compliance.py
 ```
 
-6. Click `Run`.
-7. Wait until the log says the Excel report and evidence-pack ZIP have been generated.
+3. Click `Run`.
+4. The launcher creates any missing project-scoped evidence templates without
+   overwriting completed reviewer files.
+5. Wait until the log says the Excel report and evidence-pack ZIP have been generated.
+6. Fill or review the generated files in `sia4010_evidence/` when external
+   evidence is available, then rerun the same launcher.
 
 ## Report Output
 

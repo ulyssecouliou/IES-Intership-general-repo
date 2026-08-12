@@ -964,7 +964,8 @@ profile.save_data(hide_ui=True)
 # x=time_of_day, y=value (0 if formula), formula=str ('' if no formula)
 
 # Weekly profile data:
-# [day1_profileID, day2_profileID, ..., day7_profileID]
+# [Monday, ..., Sunday, Holiday, Heating-Rm, Cooling-Rm,
+#  Heating-Sys, Cooling-Sys]  # exactly 12 IDs in VE 2025
 
 # Yearly profile data:
 # [[weeklyProfileID, fromDay, toDay], ...]

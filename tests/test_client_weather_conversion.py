@@ -4,6 +4,7 @@ import unittest
 from datetime import datetime
 
 from swiss_sia.reference_model.client_weather_conversion import (
+    _standard_pressure_pa,
     ClientWeatherRecord,
     _combine_records,
     _dew_point_c,
@@ -33,6 +34,11 @@ class ClientWeatherConversionTests(unittest.TestCase):
         dew_point = _dew_point_c(20.0, 50.0)
         self.assertAlmostEqual(dew_point, 9.27, places=1)
         self.assertLessEqual(dew_point, 20.0)
+
+    def test_standard_pressure_uses_station_elevation(self):
+        pressure = _standard_pressure_pa(411.0)
+        self.assertGreater(pressure, 90000.0)
+        self.assertLess(pressure, 101325.0)
 
     def test_epw_record_has_complete_standard_mapping(self):
         fields = _epw_record(self._record())

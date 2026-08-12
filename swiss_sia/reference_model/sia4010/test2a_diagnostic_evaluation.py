@@ -431,6 +431,7 @@ def evaluate_test2a_2e1_diagnostic(
         counts = histogram_counts(
             normalized[TOTAL_GAIN_SERIES_ID],
             reference.total_gain_distribution.upper_edges,
+            include_overflow=reference.total_gain_distribution.include_overflow,
         )
         distribution = compare_distribution(
             counts,

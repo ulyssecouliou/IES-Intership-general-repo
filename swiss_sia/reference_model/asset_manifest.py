@@ -24,6 +24,11 @@ SUPPORTED_PROFILE_TYPES = {
     "compact",
     "freeform",
 }
+# VE 2025 returns and requires 12 daily-profile IDs for every native weekly
+# profile: Monday-Sunday, Holiday, Heating-Rm, Cooling-Rm, Heating-Sys and
+# Cooling-Sys.  This is confirmed by read-only runtime inspection of both
+# modulating and absolute ``iesve.GroupProfile`` objects in VE 2025.
+VE_WEEKLY_PROFILE_SLOT_COUNT = 12
 REQUIRED_CONSTRUCTION_ASSIGNMENTS = {
     "external_wall_construction_id",
     "roof_construction_id",
@@ -625,6 +630,19 @@ class AssetManifest:
                         profile_type, profile.key
                     )
                 )
+            if profile_type == "weekly":
+                weekly_data = profile.data.value
+                if (
+                    not isinstance(weekly_data, (list, tuple))
+                    or len(weekly_data) != VE_WEEKLY_PROFILE_SLOT_COUNT
+                ):
+                    errors.append(
+                        "weekly profile {} must contain exactly {} daily-profile "
+                        "slots for VE 2025".format(
+                            profile.key,
+                            VE_WEEKLY_PROFILE_SLOT_COUNT,
+                        )
+                    )
         for material in self.materials:
             errors.extend(_field_errors("material {}".format(material.key), material.properties))
         for construction in self.constructions:

@@ -1,6 +1,9 @@
 """Fail-closed validation for configuration, geometry, and imported VE state."""
 
+import hashlib
+import json
 from itertools import combinations
+from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple
 
 from .asset_manifest import AssetManifest
@@ -49,6 +52,128 @@ def _duplicates(values: Iterable[str]) -> List[str]:
             duplicate_values.add(value)
         seen.add(value)
     return sorted(duplicate_values)
+
+
+def _sha256(path: Path) -> str:
+    """Return the SHA-256 of one evidence file without changing it."""
+
+    digest = hashlib.sha256()
+    with path.open("rb") as stream:
+        for block in iter(lambda: stream.read(1024 * 1024), b""):
+            digest.update(block)
+    return digest.hexdigest()
+
+
+def _weather_derivation_control(
+    configured_weather: str, project_path: str
+) -> Optional[ValidationResult]:
+    """Qualify a converted EPW candidate's provenance and claim boundary."""
+
+    weather = Path(configured_weather)
+    if not weather.is_absolute():
+        weather = Path(project_path) / weather
+    if not weather.stem.endswith("_IESVE_CANDIDATE"):
+        return None
+    expected_name = (
+        weather.stem.replace("_IESVE_CANDIDATE", "_IESVE_DERIVATION") + ".json"
+    )
+    candidates = [
+        weather.with_name(expected_name),
+        Path(project_path)
+        / "reference_model_artifacts"
+        / "weather"
+        / expected_name,
+    ]
+    audits = []
+    seen = set()
+    for candidate in candidates:
+        resolved = str(candidate.resolve())
+        if candidate.is_file() and resolved not in seen:
+            audits.append(candidate)
+            seen.add(resolved)
+    if not audits:
+        return _result(
+            "VE-WEA-002",
+            "Weather provenance",
+            ValidationStatus.FAIL,
+            "Converted EPW candidate has no unique derivation audit",
+            evidence={
+                "weather": str(weather),
+                "expected_audit": expected_name,
+                "audit_candidates": [str(item) for item in audits],
+            },
+        )
+    if len(audits) > 1:
+        try:
+            audit_hashes = {_sha256(item) for item in audits}
+        except OSError as exc:
+            return _result(
+                "VE-WEA-002",
+                "Weather provenance",
+                ValidationStatus.FAIL,
+                "Converted EPW derivation evidence is unreadable",
+                evidence={
+                    "weather": str(weather),
+                    "audit_candidates": [str(item) for item in audits],
+                    "error": str(exc),
+                },
+            )
+        if len(audit_hashes) != 1:
+            return _result(
+                "VE-WEA-002",
+                "Weather provenance",
+                ValidationStatus.FAIL,
+                "Converted EPW has conflicting derivation audits",
+                evidence={
+                    "weather": str(weather),
+                    "audit_candidates": [str(item) for item in audits],
+                },
+            )
+    audit_path = audits[-1]
+    try:
+        payload = json.loads(audit_path.read_text(encoding="utf-8"))
+        actual_hash = _sha256(weather)
+    except (OSError, ValueError) as exc:
+        return _result(
+            "VE-WEA-002",
+            "Weather provenance",
+            ValidationStatus.FAIL,
+            "Converted EPW derivation evidence is unreadable or invalid",
+            evidence={"weather": str(weather), "audit": str(audit_path), "error": str(exc)},
+        )
+    audited_hash = str(payload.get("weather", {}).get("sha256", "")).casefold()
+    audit_ready = payload.get("status") == "READY_FOR_IESVE_READ_ONLY_PROBE"
+    checksum_matches = bool(audited_hash) and audited_hash == actual_hash.casefold()
+    claim_allowed = payload.get("compliance_claim_allowed") is True
+    official_identity = payload.get("official_sia_weather_identity_confirmed") is True
+    if not audit_ready or not checksum_matches:
+        status = ValidationStatus.FAIL
+        message = "Converted EPW does not match ready derivation evidence"
+    elif claim_allowed and official_identity:
+        status = ValidationStatus.PASS
+        message = "Converted EPW provenance permits the declared compliance use"
+    else:
+        status = ValidationStatus.WARNING
+        message = (
+            "Converted EPW is technically qualified and checksum-bound, but its "
+            "derivation audit does not permit a compliance claim"
+        )
+    return _result(
+        "VE-WEA-002",
+        "Weather provenance",
+        status,
+        message,
+        evidence={
+            "weather": str(weather),
+            "weather_sha256": actual_hash,
+            "derivation_audit": str(audit_path),
+            "audit_status": payload.get("status"),
+            "checksum_matches": checksum_matches,
+            "compliance_claim_allowed": claim_allowed,
+            "official_sia_weather_identity_confirmed": official_identity,
+        },
+        source="Project-local converted-weather derivation audit",
+    )
 
 
 def _aabb_overlap_volume(
@@ -698,6 +823,11 @@ class ReferenceModelValidator:
                 source="IESVE VE 2023 VEScript User Guide, VELocate and WeatherFileReader",
             )
         )
+        weather_derivation = _weather_derivation_control(
+            weather_configured, snapshot.project_path
+        )
+        if weather_derivation is not None:
+            results.append(weather_derivation)
 
         results.extend(self._validate_thermal_properties(construction_by_id, parameters))
 

@@ -226,6 +226,12 @@ class VEDataExtractor:
         key = str(profile_id or "").strip()
         if not key:
             return None
+        # ``ON`` is the documented VE built-in constant profile identifier used
+        # by profile-free gains and exchanges.  It is not returned by
+        # ``VEProject.profiles()``, so resolve its physical 24-hour behaviour
+        # explicitly instead of reporting a missing user profile.
+        if key.upper() == "ON":
+            return 24.0
         if key in self._profile_daily_hours:
             return self._profile_daily_hours[key]
         value = self._resolve_profile_daily_equivalent_hours(key, set())

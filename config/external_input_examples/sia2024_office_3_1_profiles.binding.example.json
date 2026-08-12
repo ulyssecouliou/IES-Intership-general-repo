@@ -61,6 +61,11 @@
           {"profile_ref": "occupancy_daily_source_node"},
           {"profile_ref": "occupancy_daily_source_node"},
           {"profile_ref": "occupancy_daily_source_node"},
+          {"profile_ref": "occupancy_daily_source_node"},
+          {"profile_ref": "occupancy_daily_source_node"},
+          {"profile_ref": "occupancy_daily_source_node"},
+          {"profile_ref": "occupancy_daily_source_node"},
+          {"profile_ref": "occupancy_daily_source_node"},
           {"profile_ref": "occupancy_daily_source_node"}
         ],
         "source_locator": "<EXACT_WEEKLY_SOURCE_MAPPING>"
@@ -98,6 +103,11 @@
           {"profile_ref": "equipment_daily_source_node"},
           {"profile_ref": "equipment_daily_source_node"},
           {"profile_ref": "equipment_daily_source_node"},
+          {"profile_ref": "equipment_daily_source_node"},
+          {"profile_ref": "equipment_daily_source_node"},
+          {"profile_ref": "equipment_daily_source_node"},
+          {"profile_ref": "equipment_daily_source_node"},
+          {"profile_ref": "equipment_daily_source_node"},
           {"profile_ref": "equipment_daily_source_node"}
         ],
         "source_locator": "<EXACT_WEEKLY_SOURCE_MAPPING>"
@@ -129,6 +139,11 @@
         "modulating": true,
         "units": -1,
         "data": [
+          {"profile_ref": "lighting_daily_source_node"},
+          {"profile_ref": "lighting_daily_source_node"},
+          {"profile_ref": "lighting_daily_source_node"},
+          {"profile_ref": "lighting_daily_source_node"},
+          {"profile_ref": "lighting_daily_source_node"},
           {"profile_ref": "lighting_daily_source_node"},
           {"profile_ref": "lighting_daily_source_node"},
           {"profile_ref": "lighting_daily_source_node"},

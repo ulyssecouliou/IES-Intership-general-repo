@@ -93,7 +93,7 @@ def _office_profiles():
                 reference="SIA2A_WEEK",
                 modulating=True,
                 units=-1,
-                data=tuple({"profile_ref": "day"} for _ in range(7)),
+                data=tuple({"profile_ref": "day"} for _ in range(12)),
                 source_locator="authorized week",
             ),
             NormalizedVeProfileNode(

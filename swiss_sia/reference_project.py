@@ -43,9 +43,37 @@ _OPENING_PARAMETERS: Tuple[Tuple[str, str, str], ...] = (
 )
 _OPENING_SOURCE_KEY = "table_2"
 
+# Numerical residues below one square millimetre are topology artefacts, not
+# physical envelope elements.  This is an engineering/API tolerance only; it
+# is not a regulatory threshold and never substitutes a real SIA input.
+_MIN_MEANINGFUL_AREA_M2 = 1.0e-6
+
 SUBSTITUTABLE = "SUBSTITUTABLE"
 PROJECT_VALUE_MISSING = "PROJECT_VALUE_MISSING"
 UNCLASSIFIED = "UNCLASSIFIED"
+
+# Table 2 covers the complete reference-project model.  The current automated
+# specification resolves only the two families below.  Keeping the remaining
+# families explicit prevents a partial envelope plan from being mistaken for a
+# runnable SIA 380/2 reference project.
+IMPLEMENTED_REFERENCE_INPUT_FAMILIES: Tuple[str, ...] = (
+    "opaque_envelope_constructions",
+    "window_u_value_and_frame_fraction",
+)
+MISSING_REFERENCE_INPUT_FAMILIES: Tuple[str, ...] = (
+    "thermal_bridges",
+    "glazing_solar_and_visible_properties",
+    "glazed_area_ratio_solar_protection_and_control",
+    "infiltration",
+    "sia2024_internal_gains_profiles_and_setpoints",
+    "sia3874_lighting_power_and_control",
+    "emission_system_and_unlimited_capacity",
+    "ventilation_system_and_controls",
+    "cooling_generation_and_auxiliaries",
+    "heating_generation",
+    "photovoltaic_generation",
+    "sia380_annual_aggregation_and_weighting",
+)
 
 
 @dataclass(frozen=True)
@@ -86,6 +114,8 @@ class ReferenceProjectSpecification:
     substitutions: Tuple[ReferenceSubstitution, ...]
     blockers: Tuple[str, ...]
     notes: Tuple[str, ...]
+    implemented_input_families: Tuple[str, ...]
+    missing_input_families: Tuple[str, ...]
 
     @property
     def is_complete(self) -> bool:
@@ -101,6 +131,8 @@ class ReferenceProjectSpecification:
             "substitutions": [item.to_dict() for item in self.substitutions],
             "blockers": list(self.blockers),
             "notes": list(self.notes),
+            "implemented_input_families": list(self.implemented_input_families),
+            "missing_input_families": list(self.missing_input_families),
             "is_complete": self.is_complete,
         }
 
@@ -142,6 +174,13 @@ def _normalize_surface_type(model_analyzer: Any, surface: Any) -> str:
     return str(getattr(surface, "surface_type", "") or "").strip().lower()
 
 
+def _is_window_opening(opening: Any) -> bool:
+    """Return whether an external opening is a window/glazed element."""
+
+    opening_type = str(getattr(opening, "opening_type", "") or "").strip().lower()
+    return any(token in opening_type for token in ("window", "glaz", "rooflight"))
+
+
 def _collect_surface_substitutions(
     rooms: Sequence[RoomData], model_analyzer: Any
 ) -> Tuple[List[ReferenceSubstitution], List[str]]:
@@ -154,7 +193,8 @@ def _collect_surface_substitutions(
         for surface in room.surfaces or []:
             if not getattr(surface, "is_external", False):
                 continue
-            if _float_or_none(getattr(surface, "net_area", surface.area)) in (None, 0.0):
+            net_area = _float_or_none(getattr(surface, "net_area", surface.area))
+            if net_area is None or abs(net_area) <= _MIN_MEANINGFUL_AREA_M2:
                 continue
             surface_type = _normalize_surface_type(model_analyzer, surface)
             parameter = _SURFACE_PARAMETERS.get(surface_type)
@@ -234,6 +274,11 @@ def _collect_opening_substitutions(
         for opening in room.openings or []:
             if not getattr(opening, "is_external", False):
                 continue
+            area = _float_or_none(getattr(opening, "area", None))
+            if area is None or abs(area) <= _MIN_MEANINGFUL_AREA_M2:
+                continue
+            if not _is_window_opening(opening):
+                continue
             scope = _construction_scope(
                 getattr(opening, "construction_id", None),
                 getattr(opening, "name", "") or getattr(opening, "id", "") or "unnamed",
@@ -299,6 +344,8 @@ def build_reference_project_specification(
                 "The SIA 380/2 reference-project comparison cannot be prepared "
                 "without an extracted model.",
             ),
+            implemented_input_families=IMPLEMENTED_REFERENCE_INPUT_FAMILIES,
+            missing_input_families=MISSING_REFERENCE_INPUT_FAMILIES,
         )
 
     surface_items, surface_blockers = _collect_surface_substitutions(rooms, model_analyzer)
@@ -322,6 +369,9 @@ def build_reference_project_specification(
         "This specification prepares the reference run. It is not a compliance "
         "conclusion: the reference demand requires a VE/ApacheSim run, and the "
         "project/reference comparison still requires reviewer acceptance.",
+        "Only opaque-envelope constructions and window U-value/frame fraction "
+        "are currently automated. Every other SIA 380/2 Table 2 family remains "
+        "an explicit implementation blocker.",
     ]
     if not substitutions:
         status = "NOT_CHECKABLE"
@@ -331,10 +381,12 @@ def build_reference_project_specification(
     elif blockers:
         status = "BLOCKED_INCOMPLETE_INPUTS"
     else:
-        status = "READY_FOR_REFERENCE_RUN"
+        status = "PARTIAL_REFERENCE_INPUT_SPECIFICATION"
     return ReferenceProjectSpecification(
         status=status,
         substitutions=substitutions,
         blockers=blockers,
         notes=tuple(notes),
+        implemented_input_families=IMPLEMENTED_REFERENCE_INPUT_FAMILIES,
+        missing_input_families=MISSING_REFERENCE_INPUT_FAMILIES,
     )

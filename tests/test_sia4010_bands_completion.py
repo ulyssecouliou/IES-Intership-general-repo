@@ -206,6 +206,33 @@ class AnnualSumBundleWiringTests(unittest.TestCase):
         self.assertEqual(evaluation.counts["PASS"], 0)
         self.assertEqual(evaluation.counts["FAIL"], 0)
 
+    def test_test7_uses_verified_corrected_workbook(self):
+        runner = Sia4010TestRunner()
+        bands = runner.expected_bands(self.bundle, "7")
+        observed = build_observed_results(
+            bands,
+            DictResultSource(
+                {
+                    band.key: (
+                        (band.lower_bound + band.upper_bound) / 2.0,
+                        band.unit,
+                    )
+                    for band in bands
+                }
+            ),
+        )
+        evaluation = runner.evaluate_test(self.bundle, "7", observed)
+        self.assertEqual(evaluation.status, "OFFICIAL_RESULTS_RECORDED")
+        self.assertEqual(
+            evaluation.criterion_status,
+            "CORRECTED_WORKBOOK_VERIFIED_2026-08-10",
+        )
+        self.assertEqual(
+            evaluation.band_status,
+            "OFFICIAL_RESULTS_RECORDED",
+        )
+        self.assertTrue(all(c.status == ComparisonStatus.PASS for c in evaluation.comparisons))
+
 
 if __name__ == "__main__":
     unittest.main()

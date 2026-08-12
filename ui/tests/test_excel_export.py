@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Test d'intégration RÉEL de `ui/export_excel_com.py`.
+"""Test d'intégration RÉEL de `ui/excel_export.py`.
 
 Ce fichier pilote un VRAI processus Excel (Office 16, présent sur cette
 machine de développement -- confirmé par
@@ -10,8 +10,8 @@ Paths\\EXCEL.EXE"`) via `pywin32`, réellement installable ici
 sont ignorés plutôt que de faire échouer toute la collecte `ui/tests/`.
 
 **Portée volontairement limitée** (cf. docstring de
-`ui/export_excel_com.py`) : ce test construit un classeur JETABLE minimal
-(une feuille nommée comme `FEUILLE_DONNEES`), PAS le vrai
+`ui/excel_export.py`) : ce test construit un classeur JETABLE minimal
+(une feuille nommée comme `DATA_SHEET`), PAS le vrai
 `Resultaterfassung_Test1.xlsx` (absent de ce dépôt de développement -- 130
 Mo, ADR-001 §7 bis). Il prouve que le CODE COM (ouverture, écriture,
 relecture, recalcul, sauvegarde, fermeture) fonctionne, pas que la structure
@@ -57,7 +57,7 @@ if _RACINE not in sys.path:
 from engine import test1_engine as moteur  # noqa: E402
 from ve_adapter import test1_adapter as adapter  # noqa: E402
 from ui import verdict_view as vue  # noqa: E402
-from ui import export_excel_com  # noqa: E402
+from ui import excel_export  # noqa: E402
 
 
 def _excel_disponible():
@@ -101,7 +101,7 @@ def _excel_disponible():
 
 pytestmark = pytest.mark.skipif(
     not _excel_disponible(),
-    reason=u'Excel indisponible via COM sur cette machine -- export_excel_com '
+    reason=u'Excel indisponible via COM sur cette machine -- excel_export '
            u'non testable ici (voir docstring du module).')
 
 
@@ -118,7 +118,7 @@ def classeur_jetable(tmp_path):
     """Construit, via COM, un classeur .xlsx minimal reproduisant UNIQUEMENT
     ce qu'ADR-001 §4 confirme (une feuille `Daten_Testprogramm`) -- pas le
     vrai classeur SIA. Fermé avant d'être rendu au test (le test rouvrira sa
-    propre copie via `remplir_classeur_sia`, comme un appelant réel le
+    propre copie via `fill_sia_workbook`, comme un appelant réel le
     ferait)."""
     chemin = str(tmp_path / 'classeur_jetable_test.xlsx')
     excel = win32com_client.Dispatch(u'Excel.Application')
@@ -127,7 +127,7 @@ def classeur_jetable(tmp_path):
     try:
         classeur = excel.Workbooks.Add()
         feuille = classeur.Worksheets(1)
-        feuille.Name = export_excel_com.FEUILLE_DONNEES
+        feuille.Name = excel_export.DATA_SHEET
         # Deux cellules de "colonnes calculees" fictives, pour verifier que
         # CalculateFullRebuild() ne casse rien (formule simple = 2x la
         # cellule Handeingabe).
@@ -140,23 +140,23 @@ def classeur_jetable(tmp_path):
     return chemin
 
 
-def test_remplir_classeur_sia_sans_carte_cellules_leve_une_erreur_precise(
+def test_fill_sia_workbook_sans_carte_cellules_leve_une_erreur_precise(
         classeur_jetable, vue_test1):
-    with pytest.raises(export_excel_com.CarteCellulesManquante):
-        export_excel_com.remplir_classeur_sia(classeur_jetable, vue_test1, None)
+    with pytest.raises(excel_export.MissingCellMap):
+        excel_export.fill_sia_workbook(classeur_jetable, vue_test1, None)
 
 
-def test_remplir_classeur_sia_ecrit_active_handeingabe_et_recalcule(
+def test_fill_sia_workbook_ecrit_active_handeingabe_et_recalcule(
         classeur_jetable, vue_test1, tmp_path):
     cle_periode = ('sensible_heating_demand_kwh', '1E', 'annual')
-    valeur_attendue = export_excel_com._valeur_ligne(vue_test1, cle_periode)
+    valeur_attendue = excel_export._row_value(vue_test1, cle_periode)
     assert valeur_attendue is not None  # verifie l'hypothese du test
 
     carte_cellules = {cle_periode: 'N28'}
     chemin_sortie = str(tmp_path / 'classeur_rempli.xlsx')
 
-    resultat = export_excel_com.remplir_classeur_sia(
-        classeur_jetable, vue_test1, carte_cellules, chemin_sortie=chemin_sortie)
+    resultat = excel_export.fill_sia_workbook(
+        classeur_jetable, vue_test1, carte_cellules, output_path=chemin_sortie)
 
     assert resultat == chemin_sortie
     assert os.path.isfile(chemin_sortie)
@@ -172,9 +172,9 @@ def test_remplir_classeur_sia_ecrit_active_handeingabe_et_recalcule(
     try:
         classeur = excel.Workbooks.Open(chemin_sortie)
         try:
-            feuille = classeur.Worksheets(export_excel_com.FEUILLE_DONNEES)
-            assert feuille.Range(export_excel_com.CELLULE_MODE_SAISIE).Value == \
-                export_excel_com.VALEUR_MODE_HANDEINGABE
+            feuille = classeur.Worksheets(excel_export.DATA_SHEET)
+            assert feuille.Range(excel_export.ENTRY_MODE_CELL).Value == \
+                excel_export.HANDEINGABE_MODE_VALUE
             assert abs(feuille.Range('N28').Value - valeur_attendue) < 1e-6
             # La "colonne calculee" doit refleter le recalcul complet.
             assert abs(feuille.Range('B28').Value - 2 * valeur_attendue) < 1e-6
@@ -184,7 +184,7 @@ def test_remplir_classeur_sia_ecrit_active_handeingabe_et_recalcule(
         excel.Quit()
 
 
-def test_remplir_classeur_sia_ignore_les_valeurs_absentes_sans_ecrire_zero(
+def test_fill_sia_workbook_ignore_les_valeurs_absentes_sans_ecrire_zero(
         classeur_jetable, vue_test1, tmp_path):
     """Une cle (grandeur, cas, periode) absente de vue_test1['lignes'] ne
     doit jamais provoquer l'ecriture d'un faux 0 (CLAUDE.md, "jamais de
@@ -192,11 +192,11 @@ def test_remplir_classeur_sia_ignore_les_valeurs_absentes_sans_ecrire_zero(
 
     Pour distinguer un VRAI "non ecrit" d'une coincidence (N28 vaut deja 0
     par defaut dans le classeur jetable), on place d'abord une valeur
-    sentinelle non nulle (999) dans N28 : si `remplir_classeur_sia` ecrivait
+    sentinelle non nulle (999) dans N28 : si `fill_sia_workbook` ecrivait
     un faux 0 a la place d'une valeur candidate absente, ce test le
     detecterait (999 != 0)."""
     cle_periode_inexistante = ('grandeur_qui_nexiste_pas', 'cas_x', 'annual')
-    valeur_avant = export_excel_com._valeur_ligne(vue_test1, cle_periode_inexistante)
+    valeur_avant = excel_export._row_value(vue_test1, cle_periode_inexistante)
     assert valeur_avant is None
 
     excel = win32com_client.Dispatch(u'Excel.Application')
@@ -205,7 +205,7 @@ def test_remplir_classeur_sia_ignore_les_valeurs_absentes_sans_ecrire_zero(
     try:
         classeur = excel.Workbooks.Open(classeur_jetable)
         try:
-            classeur.Worksheets(export_excel_com.FEUILLE_DONNEES).Range('N28').Value = 999
+            classeur.Worksheets(excel_export.DATA_SHEET).Range('N28').Value = 999
             classeur.Save()
         finally:
             classeur.Close(SaveChanges=False)
@@ -214,8 +214,8 @@ def test_remplir_classeur_sia_ignore_les_valeurs_absentes_sans_ecrire_zero(
 
     carte_cellules = {cle_periode_inexistante: 'N28'}
     chemin_sortie = str(tmp_path / 'classeur_ignore.xlsx')
-    export_excel_com.remplir_classeur_sia(
-        classeur_jetable, vue_test1, carte_cellules, chemin_sortie=chemin_sortie)
+    excel_export.fill_sia_workbook(
+        classeur_jetable, vue_test1, carte_cellules, output_path=chemin_sortie)
 
     excel = win32com_client.Dispatch(u'Excel.Application')
     excel.Visible = False
@@ -223,7 +223,7 @@ def test_remplir_classeur_sia_ignore_les_valeurs_absentes_sans_ecrire_zero(
     try:
         classeur = excel.Workbooks.Open(chemin_sortie)
         try:
-            feuille = classeur.Worksheets(export_excel_com.FEUILLE_DONNEES)
+            feuille = classeur.Worksheets(excel_export.DATA_SHEET)
             # La sentinelle doit etre restee INTACTE : preuve directe que
             # la valeur candidate absente n'a PAS ete remplacee par 0.
             assert feuille.Range('N28').Value == 999

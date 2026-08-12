@@ -633,6 +633,345 @@ def convert_client_weather_archive(
     return audit
 
 
+def _parse_meteoswiss_station_metadata(
+    metadata_path: Path,
+    time_zone_hours: float,
+) -> Tuple[WeatherLocation, Dict[str, Any]]:
+    """Read the station row from the multilingual MeteoSwiss metadata CSV."""
+
+    if not metadata_path.is_file():
+        raise ConfigurationError(
+            "Adjacent MeteoSwiss metadata file is missing: {}".format(metadata_path)
+        )
+    content = metadata_path.read_bytes()
+    text = _decode_text(content, metadata_path.name)
+    rows = list(csv.reader(io.StringIO(text), delimiter=";"))
+    if len(rows) < 2 or len(rows[1]) < 20:
+        raise ConfigurationError("MeteoSwiss station metadata is malformed")
+    station = rows[1]
+    try:
+        location = WeatherLocation(
+            city=station[0].strip(),
+            region=station[19].strip(),
+            country="CHE",
+            source=station[13].strip() or "MeteoSwiss",
+            station_id=station[1].strip(),
+            latitude_degrees=float(station[17]),
+            longitude_degrees=float(station[18]),
+            time_zone_hours=float(time_zone_hours),
+            elevation_m=float(station[14]),
+        )
+    except (TypeError, ValueError) as exc:
+        raise ConfigurationError(
+            "MeteoSwiss station metadata contains invalid coordinates"
+        ) from exc
+    if not -12.0 <= location.time_zone_hours <= 12.0:
+        raise ConfigurationError("Explicit EPW time zone is outside -12..12")
+    return location, {
+        "path": str(metadata_path.resolve()),
+        "sha256": _sha256_bytes(content),
+        "station_row": {
+            "station": location.city,
+            "abbreviation": location.station_id,
+            "owner": location.source,
+            "elevation_m": location.elevation_m,
+            "latitude_degrees": location.latitude_degrees,
+            "longitude_degrees": location.longitude_degrees,
+        },
+    }
+
+
+def _standard_pressure_pa(elevation_m: float) -> float:
+    """Return standard barometric pressure at station elevation.
+
+    The equation is the standard-atmosphere replacement used for missing EPW
+    station pressure. It is a documented transport derivation, not a measured
+    MeteoSwiss variable.
+    """
+
+    base = 1.0 - 2.25577e-5 * elevation_m
+    if base <= 0.0:
+        raise ConfigurationError("Station elevation cannot produce EPW pressure")
+    return 101325.0 * base**5.2559
+
+
+def _combine_meteoswiss_csv_records(
+    csv_rows: Sequence[Mapping[str, str]],
+    elevation_m: float,
+) -> List[ClientWeatherRecord]:
+    """Validate one 365-day MeteoSwiss climate year and derive EPW transport fields."""
+
+    records: List[ClientWeatherRecord] = []
+    source_year = int(_float(csv_rows[0], "time.yy", 2))
+    pressure = _standard_pressure_pa(elevation_m)
+    common_year_start = datetime(2001, 1, 1)
+    for index, row in enumerate(csv_rows):
+        line_number = index + 2
+        expected = common_year_start + timedelta(hours=index)
+        year = int(_float(row, "time.yy", line_number))
+        month = int(_float(row, "time.mm", line_number))
+        day = int(_float(row, "time.dd", line_number))
+        hour = int(_float(row, "time.hh", line_number))
+        if year != source_year or (month, day, hour) != (
+            expected.month,
+            expected.day,
+            expected.hour,
+        ):
+            raise ConfigurationError(
+                "MeteoSwiss CSV is not a continuous 365-day hourly climate year "
+                "at line {}".format(line_number)
+            )
+        try:
+            timestamp = datetime(year, month, day, hour)
+        except ValueError as exc:
+            raise ConfigurationError(
+                "Invalid MeteoSwiss date at line {}".format(line_number)
+            ) from exc
+
+        values = {
+            "dry_bulb": _float(row, "tre200h0", line_number),
+            "relative_humidity": _float(row, "ure200h0", line_number),
+            "wind_speed": _float(row, "fkl010h0", line_number),
+            "wind_direction": _float(row, "dkl010h0", line_number),
+            "sky_cover": _float(row, "skycover", line_number),
+            "ghi": _float(row, "gls", line_number),
+            "dhi": _float(row, "str.diffus", line_number),
+            "dni": _float(row, "str.direkt", line_number),
+        }
+        for key, bounds in (
+            ("dry_bulb", (-70.0, 70.0)),
+            ("relative_humidity", (0.01, 100.0)),
+            ("wind_speed", (0.0, 40.0)),
+            ("wind_direction", (0.0, 360.0)),
+            ("sky_cover", (0.0, 100.0)),
+            ("ghi", (0.0, 2000.0)),
+            ("dhi", (0.0, 2000.0)),
+            ("dni", (0.0, 2000.0)),
+        ):
+            _validate_range(values[key], bounds[0], bounds[1], key, line_number)
+        if values["dhi"] > values["ghi"] + 0.01:
+            raise ConfigurationError(
+                "Diffuse horizontal exceeds global horizontal at line {}".format(
+                    line_number
+                )
+            )
+        records.append(
+            ClientWeatherRecord(
+                timestamp=timestamp,
+                dry_bulb_c=values["dry_bulb"],
+                relative_humidity_percent=values["relative_humidity"],
+                wind_speed_m_s=values["wind_speed"],
+                wind_direction_degrees=values["wind_direction"],
+                total_sky_cover_percent=values["sky_cover"],
+                global_horizontal_w_m2=values["ghi"],
+                diffuse_horizontal_w_m2=values["dhi"],
+                direct_normal_w_m2=values["dni"],
+                pressure_pa=pressure,
+                source_flags="?",
+            )
+        )
+    return records
+
+
+def _write_meteoswiss_epw_candidate(
+    source_csv: Path,
+    csv_bytes: bytes,
+    records: Sequence[ClientWeatherRecord],
+    location: WeatherLocation,
+    metadata_evidence: Mapping[str, Any],
+    output_directory: Path,
+) -> Dict[str, Any]:
+    """Write one complete EPW candidate and its adjacent derivation audit."""
+
+    stem = source_csv.stem
+    epw_path = output_directory / "{}_IESVE_CANDIDATE.epw".format(stem)
+    audit_path = output_directory / "{}_IESVE_DERIVATION.json".format(stem)
+    first_weekday = calendar.day_name[records[0].timestamp.weekday()]
+    header = [
+        "LOCATION,{},{},{},{},{},{:.6f},{:.6f},{:g},{:g}".format(
+            _ascii(location.city),
+            _ascii(location.region),
+            _ascii(location.country),
+            _ascii(location.source),
+            _ascii(location.station_id),
+            location.latitude_degrees,
+            location.longitude_degrees,
+            location.time_zone_hours,
+            location.elevation_m,
+        ),
+        "DESIGN CONDITIONS,0",
+        "TYPICAL/EXTREME PERIODS,0",
+        "GROUND TEMPERATURES,0",
+        "HOLIDAYS/DAYLIGHT SAVINGS,No,0,0,0",
+        "COMMENTS 1,MeteoSwiss future indoor-climate CSV transport candidate: {}".format(
+            stem
+        ),
+        "COMMENTS 2,See {} for derivations limitations and source hashes".format(
+            audit_path.name
+        ),
+        "DATA PERIODS,1,1,Data,{},1/1,12/31".format(first_weekday),
+    ]
+    epw_rows = [
+        ",".join(str(value) for value in _epw_record(record)) for record in records
+    ]
+    _write_atomic(epw_path, "\n".join(header + epw_rows) + "\n", "ascii")
+
+    generated = [
+        line.split(",")
+        for line in epw_path.read_text(encoding="ascii").splitlines()[8:]
+        if line.strip()
+    ]
+    controls = {
+        "source_hour_count": _control(
+            len(records) == EXPECTED_HOURS, EXPECTED_HOURS, len(records)
+        ),
+        "generated_hour_count": _control(
+            len(generated) == EXPECTED_HOURS, EXPECTED_HOURS, len(generated)
+        ),
+        "epw_field_count": _control(
+            all(len(row) == EXPECTED_EPW_FIELDS for row in generated),
+            EXPECTED_EPW_FIELDS,
+            sorted({len(row) for row in generated}),
+        ),
+        "direct_diffuse_radiation_present": _control(
+            max(record.direct_normal_w_m2 for record in records) > 0.0
+            and max(record.diffuse_horizontal_w_m2 for record in records) > 0.0,
+            True,
+            True,
+        ),
+        "dew_point_not_above_dry_bulb": _control(
+            all(float(row[7]) <= float(row[6]) + 0.1 for row in generated),
+            True,
+            True,
+        ),
+    }
+    passed = all(item["status"] == "PASS" for item in controls.values())
+    audit: Dict[str, Any] = {
+        "schema_version": "1.0",
+        "method": "swiss_sia.meteoswiss_csv_epw.v1",
+        "status": "READY_FOR_IESVE_READ_ONLY_PROBE" if passed else "FAIL",
+        "purpose": "IESVE transport candidate from MeteoSwiss hourly climate CSV",
+        "compliance_claim_allowed": False,
+        "official_sia_weather_identity_confirmed": False,
+        "source": {
+            "csv_path": str(source_csv.resolve()),
+            "csv_sha256": _sha256_bytes(csv_bytes),
+            "metadata": dict(metadata_evidence),
+            "license": "CC BY 4.0; attribution required by GVE_Metadata.csv",
+        },
+        "weather": {
+            "path": str(epw_path.resolve()),
+            "sha256": _sha256_path(epw_path),
+            "format": "EPW",
+            "record_count": len(generated),
+            "location": location.__dict__,
+        },
+        "field_mapping": {
+            "dry_bulb_c": "CSV tre200h0",
+            "relative_humidity_percent": "CSV ure200h0",
+            "wind_speed_m_s": "CSV fkl010h0",
+            "wind_direction_degrees": "CSV dkl010h0",
+            "global_horizontal": "CSV gls hourly mean -> hourly Wh/m2",
+            "diffuse_horizontal": "CSV str.diffus hourly mean -> hourly Wh/m2",
+            "direct_normal": "CSV str.direkt hourly mean -> hourly Wh/m2",
+            "total_sky_cover": "CSV skycover percent -> nearest tenth",
+            "opaque_sky_cover": "Total sky cover used as explicit proxy",
+            "dew_point": "Derived from dry bulb and RH using NOAA MADIS equations",
+            "horizontal_infrared": "Derived using EnergyPlus EPW equation",
+            "station_pressure": (
+                "Standard atmosphere derived from MeteoSwiss station elevation"
+            ),
+            "unsupported_fields": "EPW documented missing-value sentinels",
+        },
+        "controls": controls,
+        "warnings": [
+            "This is a transport conversion, not an official MeteoSwiss/SIA EPW.",
+            "The CSV contains no measured station pressure; standard elevation pressure is used.",
+            "Opaque sky cover is unavailable; total sky cover is used as a proxy.",
+            "Precipitation snow illuminance and ground temperatures are unavailable.",
+            "The source is a 365-day climate year; 2060 omits leap day by source design.",
+            "IESVE WeatherFileReader read-back is mandatory before assignment.",
+            "Regulatory suitability and scenario selection require reviewer confirmation.",
+        ],
+        "model_or_weather_assignment_changed": False,
+    }
+    _write_atomic(
+        audit_path,
+        json.dumps(audit, indent=2, ensure_ascii=False) + "\n",
+        "utf-8",
+    )
+    if not passed:
+        raise ConfigurationError(
+            "Generated MeteoSwiss EPW failed controls: {}".format(audit_path)
+        )
+    return audit
+
+
+def convert_meteoswiss_csv_directory(
+    input_directory: PathLike,
+    output_directory: PathLike,
+    time_zone_hours: float,
+) -> Dict[str, Any]:
+    """Convert every scenario CSV beside one GVE_Metadata.csv, fail closed."""
+
+    source_root = Path(input_directory).resolve()
+    output_root = Path(output_directory).resolve()
+    if not source_root.is_dir():
+        raise ConfigurationError(
+            "MeteoSwiss source directory does not exist: {}".format(source_root)
+        )
+    location, metadata = _parse_meteoswiss_station_metadata(
+        source_root / "GVE_Metadata.csv", time_zone_hours
+    )
+    candidates = sorted(
+        path
+        for path in source_root.glob("GVE_*.csv")
+        if path.name.casefold() != "gve_metadata.csv"
+    )
+    if not candidates:
+        raise ConfigurationError("No GVE scenario CSV files were found")
+    output_root.mkdir(parents=True, exist_ok=True)
+    outputs = []
+    for source_csv in candidates:
+        csv_bytes = source_csv.read_bytes()
+        csv_rows = _parse_client_csv(_decode_text(csv_bytes, source_csv.name))
+        records = _combine_meteoswiss_csv_records(csv_rows, location.elevation_m)
+        audit = _write_meteoswiss_epw_candidate(
+            source_csv,
+            csv_bytes,
+            records,
+            location,
+            metadata,
+            output_root,
+        )
+        outputs.append(
+            {
+                "source": str(source_csv),
+                "epw": audit["weather"]["path"],
+                "audit": str(
+                    output_root / "{}_IESVE_DERIVATION.json".format(source_csv.stem)
+                ),
+                "status": audit["status"],
+            }
+        )
+    summary = {
+        "schema_version": "1.0",
+        "status": "READY_FOR_IESVE_READ_ONLY_PROBE",
+        "input_directory": str(source_root),
+        "output_directory": str(output_root),
+        "time_zone_hours_explicit_input": float(time_zone_hours),
+        "station": location.__dict__,
+        "outputs": outputs,
+        "compliance_claim_allowed": False,
+    }
+    _write_atomic(
+        output_root / "GVE_IESVE_CONVERSION_SUMMARY.json",
+        json.dumps(summary, indent=2, ensure_ascii=False) + "\n",
+        "utf-8",
+    )
+    return summary
+
+
 __all__ = [
     "CONVERSION_METHOD_VERSION",
     "OUTPUT_AUDIT_NAME",
@@ -640,4 +979,5 @@ __all__ = [
     "ClientWeatherRecord",
     "WeatherLocation",
     "convert_client_weather_archive",
+    "convert_meteoswiss_csv_directory",
 ]

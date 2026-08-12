@@ -35,8 +35,8 @@ def _write_json(path, payload):
     )
 
 
-def run():
-    """Prepare or create the selected model in the active VE project."""
+def run(resume_after_import=False):
+    """Prepare, create, or safely resume the selected active-project model."""
 
     from swiss_sia.reference_model.config_loader import load_configuration
     from swiss_sia.reference_model.gbxml_writer import GbxmlWriter
@@ -231,7 +231,10 @@ def run():
         geometry_factory=lambda: geometry,
         geometry_artifact_name="{}.gbxml".format(stem),
     )
-    outcome = workflow.run(dry_run=False)
+    outcome = workflow.run(
+        dry_run=False,
+        resume_after_import=bool(resume_after_import),
+    )
     try:
         from swiss_sia.reference_model.sia4010.evidence_registry import (
             build_all_class_navigators,

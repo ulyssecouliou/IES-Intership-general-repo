@@ -153,6 +153,27 @@ class Sia4010MvpBundleTests(unittest.TestCase):
         self.assertEqual(template["name"], "SIA4010_TEST1_CASE600")
         self.assertIn("ISO Test 1", template["description"])
         self.assertIn("ISO 52016-1:2017", template["source"])
+        system_data = template["system_data"]
+        self.assertEqual(
+            system_data["heating_plant_radiant_fraction"]["value"], 0.0
+        )
+        self.assertEqual(
+            system_data["cooling_plant_radiant_fraction"]["value"], 0.0
+        )
+        self.assertIn(
+            "ISO 52016-1:2017",
+            system_data["heating_plant_radiant_fraction"]["source"],
+        )
+        self.assertEqual(
+            system_data["system_air_minimum_flowrate"]["value"], 0.0
+        )
+        self.assertEqual(
+            system_data["system_air_minimum_flowrate_units"]["value"], 3
+        )
+        self.assertIn(
+            "no mechanical ventilation",
+            system_data["system_air_minimum_flowrate"]["description"],
+        )
 
     def test_case600_internal_gain_is_constant_sensible_200w_with_60_40_split(self):
         receipt = build_case600_mvp_bundle(self.project, ROOT)
@@ -178,6 +199,16 @@ class Sia4010MvpBundleTests(unittest.TestCase):
                 exchange["properties"]["variation_profile"]["value"] == "ON"
                 for exchange in assets["air_exchanges"]
             )
+        )
+        self.assertEqual(
+            assets["thermal_template"]["system_data"][
+                "system_air_variation_profile"
+            ]["value"],
+            "ON",
+        )
+        self.assertNotIn(
+            "profile_ref",
+            json.dumps(assets["thermal_template"]["system_data"]),
         )
         self.assertAlmostEqual(
             equipment["max_power_consumption"]["value"] * 48.0, 200.0

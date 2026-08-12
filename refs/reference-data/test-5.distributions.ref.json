@@ -1,8 +1,8 @@
 {
  "test": 5,
  "critere": "Häufigkeitsverteilung : « muss im Streubereich der Referenzprogramme liegen » (Spezifikation_Test5.pdf, Testkriterien)",
- "statut_critere": "NON_CALCULE_PAR_LE_CLASSEUR",
- "pourquoi_non_calcule": "Les feuilles « Verteilung » sont des GRAPHIQUES : elles tracent les variantes de référence et le programme testé, sans calculer aucune bande. Aucune cellule du classeur ne définit le Streubereich d'une distribution. Deux lectures restent possibles — enveloppe min/max des programmes, ou moyenne ± écart maximal comme pour les sommes annuelles — et le choix ne peut pas être fait ici sans inventer le critère.",
+ "statut_critere": "CONFIRME_AUTORITE_2026-08-10",
+ "pourquoi_non_calcule": "Les feuilles « Verteilung » sont des GRAPHIQUES : elles tracent les variantes de référence et le programme testé, sans calculer aucune bande. Aucune cellule du classeur ne définit le Streubereich d'une distribution. La clarification écrite du 2026-08-10 définit la règle : enveloppe min/max des programmes de référence, classe par classe.",
  "classes_concernees": [
   "3",
   "4A",
@@ -21,9 +21,8 @@
  "nb_distributions": 16,
  "reserves": [
   "Bloc(s) B : le classeur ne porte AUCUN identifiant de cas sur la ligne prévue. La spécification range ces grandeurs sous un cas précis, mais le classeur ne le dit pas : le champ reste nul plutôt que d'être comblé par déduction.",
-  "Totaux horaires observés : 3380, 8738, 8739, 8744, 8747, 8751, 8752, 8753, 8758, 8759, 8760. Plusieurs programmes totalisent moins de 8760 heures. Ce sont des données réelles, reproduites telles quelles : les compléter à 8760 fausserait la dispersion.",
-  "Totaux très partiels (3380) sur : Zulufttemperatur im Betrieb. Vraisemblablement une grandeur définie seulement pendant le fonctionnement de l'installation — à confirmer avant tout usage comme critère.",
-  "Les effectifs sont des FAITS relevés cellule par cellule et réconciliés avec la ligne de totaux du classeur. La BANDE, elle, n'est pas établie : voir statut_critere."
+  "Totaux affichés dans les classes : 3380, 8738, 8739, 8744, 8747, 8751, 8752, 8753, 8758, 8759, 8760. La SIA a confirmé le 2026-08-10 que les écarts à 8760 ne sont pas des heures manquantes : les autres valeurs sont hors des bornes définies par les classes. Elles sont conservées comme compte hors classes et ne sont pas ajoutées à la dernière classe.",
+  "Les effectifs sont des FAITS relevés cellule par cellule et réconciliés avec la ligne de totaux du classeur. La bande d'acceptation min/max par classe est confirmée par la réponse écrite du 2026-08-10."
  ],
  "distributions": [
   {
@@ -37,22 +36,34 @@
     {
      "colonne": "D",
      "programme": "IDA ICE",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "E",
      "programme": "Excel",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "F",
      "programme": "Energy+/OpenStudio",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "G",
      "programme": "EDSL-Tas",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     }
    ],
    "effectifs": [
@@ -269,27 +280,42 @@
     {
      "colonne": "J",
      "programme": "Testprogramm",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "K",
      "programme": "IDA ICE",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "L",
      "programme": "Excel",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "M",
      "programme": "Energy+/OpenStudio",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "N",
      "programme": "EDSL-Tas",
-     "total_heures": 3380
+     "total_heures": 3380,
+     "heures_dans_classes": 3380,
+     "heures_hors_classes": 5380,
+     "heures_source_attendues": 8760
     }
    ],
    "effectifs": [
@@ -526,27 +552,42 @@
     {
      "colonne": "Q",
      "programme": "Testprogramm",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "R",
      "programme": "IDA ICE",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "S",
      "programme": "Excel",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "T",
      "programme": "Energy+/OpenStudio",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "U",
      "programme": "EDSL-Tas",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     }
    ],
    "effectifs": [
@@ -783,27 +824,42 @@
     {
      "colonne": "X",
      "programme": "Testprogramm",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "Y",
      "programme": "IDA ICE",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "Z",
      "programme": "Excel",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "AA",
      "programme": "Energy+/OpenStudio",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "AB",
      "programme": "EDSL-Tas",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     }
    ],
    "effectifs": [
@@ -1040,22 +1096,34 @@
     {
      "colonne": "AF",
      "programme": "IDA ICE",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "AG",
      "programme": "Excel",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "AH",
      "programme": "Energy+/OpenStudio",
-     "total_heures": 8758
+     "total_heures": 8758,
+     "heures_dans_classes": 8758,
+     "heures_hors_classes": 2,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "AI",
      "programme": "EDSL-Tas",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     }
    ],
    "effectifs": [
@@ -1272,22 +1340,34 @@
     {
      "colonne": "AM",
      "programme": "IDA ICE",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "AN",
      "programme": "Excel",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "AO",
      "programme": "Energy+/OpenStudio",
-     "total_heures": 8758
+     "total_heures": 8758,
+     "heures_dans_classes": 8758,
+     "heures_hors_classes": 2,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "AP",
      "programme": "EDSL-Tas",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     }
    ],
    "effectifs": [
@@ -1504,22 +1584,34 @@
     {
      "colonne": "AT",
      "programme": "IDA ICE",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "AU",
      "programme": "Excel",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "AV",
      "programme": "Energy+/OpenStudio",
-     "total_heures": 8758
+     "total_heures": 8758,
+     "heures_dans_classes": 8758,
+     "heures_hors_classes": 2,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "AW",
      "programme": "EDSL-Tas",
-     "total_heures": 8759
+     "total_heures": 8759,
+     "heures_dans_classes": 8759,
+     "heures_hors_classes": 1,
+     "heures_source_attendues": 8760
     }
    ],
    "effectifs": [
@@ -1736,22 +1828,34 @@
     {
      "colonne": "BA",
      "programme": "IDA ICE",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "BB",
      "programme": "Excel",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "BC",
      "programme": "Energy+/OpenStudio",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "BD",
      "programme": "EDSL-Tas",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     }
    ],
    "effectifs": [
@@ -1968,22 +2072,34 @@
     {
      "colonne": "BH",
      "programme": "IDA ICE",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "BI",
      "programme": "Excel",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "BJ",
      "programme": "Energy+/OpenStudio",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "BK",
      "programme": "EDSL-Tas",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     }
    ],
    "effectifs": [
@@ -2200,22 +2316,34 @@
     {
      "colonne": "BO",
      "programme": "IDA ICE",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "BP",
      "programme": "Excel",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "BQ",
      "programme": "Energy+/OpenStudio",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "BR",
      "programme": "EDSL-Tas",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     }
    ],
    "effectifs": [
@@ -2432,22 +2560,34 @@
     {
      "colonne": "BV",
      "programme": "IDA ICE",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "BW",
      "programme": "Excel",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "BX",
      "programme": "Energy+/OpenStudio",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "BY",
      "programme": "EDSL-Tas",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     }
    ],
    "effectifs": [
@@ -2664,22 +2804,34 @@
     {
      "colonne": "CC",
      "programme": "IDA ICE",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "CD",
      "programme": "Excel",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "CE",
      "programme": "Energy+/OpenStudio",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "CF",
      "programme": "EDSL-Tas",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     }
    ],
    "effectifs": [
@@ -2896,22 +3048,34 @@
     {
      "colonne": "CK",
      "programme": "IDA ICE",
-     "total_heures": 8744
+     "total_heures": 8744,
+     "heures_dans_classes": 8744,
+     "heures_hors_classes": 16,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "CL",
      "programme": "Excel",
-     "total_heures": 8738
+     "total_heures": 8738,
+     "heures_dans_classes": 8738,
+     "heures_hors_classes": 22,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "CM",
      "programme": "Energy+/OpenStudio",
-     "total_heures": 8751
+     "total_heures": 8751,
+     "heures_dans_classes": 8751,
+     "heures_hors_classes": 9,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "CN",
      "programme": "EDSL-Tas",
-     "total_heures": 8739
+     "total_heures": 8739,
+     "heures_dans_classes": 8739,
+     "heures_hors_classes": 21,
+     "heures_source_attendues": 8760
     }
    ],
    "effectifs": [
@@ -3128,22 +3292,34 @@
     {
      "colonne": "CR",
      "programme": "IDA ICE",
-     "total_heures": 8753
+     "total_heures": 8753,
+     "heures_dans_classes": 8753,
+     "heures_hors_classes": 7,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "CS",
      "programme": "Excel",
-     "total_heures": 8747
+     "total_heures": 8747,
+     "heures_dans_classes": 8747,
+     "heures_hors_classes": 13,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "CT",
      "programme": "Energy+/OpenStudio",
-     "total_heures": 8752
+     "total_heures": 8752,
+     "heures_dans_classes": 8752,
+     "heures_hors_classes": 8,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "CU",
      "programme": "EDSL-Tas",
-     "total_heures": 8751
+     "total_heures": 8751,
+     "heures_dans_classes": 8751,
+     "heures_hors_classes": 9,
+     "heures_source_attendues": 8760
     }
    ],
    "effectifs": [
@@ -3360,22 +3536,34 @@
     {
      "colonne": "CY",
      "programme": "IDA ICE",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "CZ",
      "programme": "Excel",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "DA",
      "programme": "Energy+/OpenStudio",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "DB",
      "programme": "EDSL-Tas",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     }
    ],
    "effectifs": [
@@ -3592,22 +3780,34 @@
     {
      "colonne": "DF",
      "programme": "IDA ICE",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "DG",
      "programme": "Excel",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "DH",
      "programme": "Energy+/OpenStudio",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "DI",
      "programme": "EDSL-Tas",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     }
    ],
    "effectifs": [

@@ -72,7 +72,7 @@ class Test1VariantBundleTests(unittest.TestCase):
         self.assertEqual(assets["metadata"]["sia4010_case_id"], "640")
         profiles = {item["key"]: item for item in assets["profiles"]}
         self.assertEqual(
-            profiles["heating_setpoint_profile"]["data"]["value"],
+            profiles["heating_setpoint_daily_profile"]["data"]["value"],
             [
                 [0.0, 10.0, ""],
                 [7.0, 10.0, ""],
@@ -83,16 +83,37 @@ class Test1VariantBundleTests(unittest.TestCase):
             ],
         )
         self.assertEqual(
-            profiles["heating_setpoint_profile"]["data"]["source"],
+            profiles["heating_setpoint_daily_profile"]["data"]["source"],
             "SIA 4010 Test 1 specification",
         )
+        self.assertFalse(
+            profiles["heating_setpoint_daily_profile"]["modulating"]
+        )
+        self.assertEqual(profiles["heating_setpoint_daily_profile"]["units"], 0)
+        self.assertEqual(
+            profiles["heating_setpoint_weekly_profile"]["data"]["value"],
+            [{"profile_ref": "heating_setpoint_daily_profile"}] * 12,
+        )
+        self.assertNotIn("heating_setpoint_profile", profiles)
         conditions = assets["thermal_template"]["room_conditions"]
         self.assertEqual(
-            conditions["heating_profile"]["value"],
-            {"profile_ref": "heating_setpoint_profile"},
+            assets["thermal_template"]["name"],
+            "SIA4010_TEST1_CASE640_VARIABLE_SETPOINT_V7",
         )
         self.assertEqual(
-            conditions["heating_profile"]["source"],
+            conditions["heating_profile"]["value"],
+            "ON",
+        )
+        self.assertEqual(
+            conditions["heating_setpoint_type"]["value"],
+            "variable",
+        )
+        self.assertEqual(
+            conditions["heating_setpoint_profile"]["value"],
+            {"profile_ref": "heating_setpoint_weekly_profile"},
+        )
+        self.assertEqual(
+            conditions["heating_setpoint_profile"]["source"],
             "SIA 4010 Test 1 specification",
         )
         self.assertTrue(
@@ -105,6 +126,13 @@ class Test1VariantBundleTests(unittest.TestCase):
         self.assertEqual(assets["metadata"]["sia4010_case_id"], "600FF")
         self.assertFalse(
             assets["thermal_template"]["system_data"]["conditioned"]["value"]
+        )
+        conditions = assets["thermal_template"]["room_conditions"]
+        self.assertEqual(conditions["heating_profile"]["value"], "OFF")
+        self.assertEqual(conditions["cooling_profile"]["value"], "OFF")
+        self.assertEqual(
+            conditions["heating_profile"]["source"],
+            "SIA 4010 Test 1 specification",
         )
         self.assertNotIn(
             "heating_setpoint_profile",
@@ -171,11 +199,11 @@ class Test1VariantBundleTests(unittest.TestCase):
         assets = self._read(receipt.asset_manifest_path)
         profiles = {item["key"]: item for item in assets["profiles"]}
         self.assertEqual(
-            profiles["heating_setpoint_profile"]["reference"],
-            "SIA940_HEATING_SETPOINT",
+            profiles["heating_setpoint_daily_profile"]["reference"],
+            "SIA940_HEATING_SETPOINT_ABSOLUTE_DAY",
         )
         self.assertEqual(
-            profiles["heating_setpoint_profile"]["data"]["value"],
+            profiles["heating_setpoint_daily_profile"]["data"]["value"],
             [
                 [0.0, 10.0, ""],
                 [7.0, 10.0, ""],
@@ -201,6 +229,9 @@ class Test1VariantBundleTests(unittest.TestCase):
         self.assertFalse(
             assets["thermal_template"]["system_data"]["conditioned"]["value"]
         )
+        conditions = assets["thermal_template"]["room_conditions"]
+        self.assertEqual(conditions["heating_profile"]["value"], "OFF")
+        self.assertEqual(conditions["cooling_profile"]["value"], "OFF")
         self.assertNotIn(
             "heating_setpoint_profile",
             {item["key"] for item in assets["profiles"]},
@@ -242,6 +273,26 @@ class Test1VariantBundleTests(unittest.TestCase):
         second = self._build("600FF")
         self.assertEqual(second.asset_manifest_path.read_bytes(), first_assets)
         self.assertEqual(second.config_path.read_bytes(), first_config)
+
+    def test_every_runtime_case_forces_zero_mechanical_outdoor_air(self):
+        for case_id in ("640", "600FF", "900", "940", "900FF"):
+            with self.subTest(case_id=case_id):
+                receipt = build_test1_runtime_probe_bundle(
+                    self.project,
+                    ROOT,
+                    case_id,
+                    weather_file=self.weather,
+                )
+                assets = json.loads(
+                    receipt.asset_manifest_path.read_text(encoding="utf-8")
+                )
+                system = assets["thermal_template"]["system_data"]
+                self.assertEqual(
+                    system["system_air_minimum_flowrate"]["value"], 0.0
+                )
+                self.assertEqual(
+                    system["system_air_minimum_flowrate_units"]["value"], 3
+                )
 
 
 if __name__ == "__main__":

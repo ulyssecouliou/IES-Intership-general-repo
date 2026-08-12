@@ -25,11 +25,11 @@ criterion must bite:
     rows 8-12, 14-18, 20  Testgroessen   -> L/M/N carry mean / upper / lower
     rows 21-26            Diagnosegroessen -> L/M/N EMPTY
 
-The arbitration recorded in `traceability/critere-test4.spec.md` reached the
-same conclusion for Test 4 by analogy; here it is observable. The status stays
-INFERRED until the SIA sub-commission confirms it (SIA 4010 clause 4.6.2): the
-engine reports the verdict AND the fact that the criterion is inferred, so a
-reader never mistakes one for a normative rule.
+The original workbook's conditional-formatting rule compared mean-to-upper
+instead of lower-to-upper. Prof. Gerhard Zweifel confirmed the mistake and sent
+a corrected workbook on 2026-08-10. Direct XML inspection verified that the
+rule now uses lower-to-upper (``$N8`` to ``$M8``) over the same Testgroessen
+range; its SHA-256 is pinned in the traceability record.
 
 CONTRIBUTING SET. It varies per quantity -- GHJ, GHIJ, GHI across the eleven
 bands. A program that did not deliver a quantity drops out and is never counted
@@ -102,13 +102,14 @@ MOTIF_VERROU_IRRADIANCE = (
     "`evaluer_test7()` en decrivant precisement l'origine de l'irradiance ; "
     "cette declaration sera reproduite dans tous les rapports.")
 
-STATUT_CRITERE = 'INFERE'
+STATUT_CRITERE = 'CLASSEUR_CORRIGE_VERIFIE_2026-08-10'
 JUSTIFICATION_CRITERE = (
     "La specification du Test 7 ne definit aucun critere ; SIA 4010:2023 "
     "clause 4.4 delegue la comparaison au classeur d'evaluation, qui porte des "
-    "bandes sur les seules Testgroessen. Arbitrage : "
-    "traceability/critere-test4.spec.md. A confirmer par la sous-commission "
-    "(SIA 4010 clause 4.6.2).")
+    "bandes sur les seules Testgroessen. Le classeur corrige recu le "
+    "2026-08-10 a ete controle par checksum et lecture XML : la mise en forme "
+    "conditionnelle compare bien la borne basse a la borne haute. Cette "
+    "evaluation logicielle ne remplace pas l'attestation de la sous-commission.")
 
 
 def charger_reference(chemin=None):
@@ -142,9 +143,9 @@ def evaluer_grandeur(grandeur, valeur_candidate, tolerance=TOLERANCE_DEFAUT,
                      source_irradiance=None):
     """Verdict d'une grandeur : le candidat tombe-t-il dans la bande ?
 
-    Le critere applique est INFERE (cf. STATUT_CRITERE) : la specification du
-    Test 7 n'en enonce aucun. Le champ `critere_statut` de la valeur retournee
-    le rappelle, pour qu'aucun appelant ne puisse le presenter comme normatif.
+    Le champ `critere_statut` conserve l'identité de la source corrigée utilisée
+    et permet au rapport de distinguer l'évaluation logicielle de l'attestation
+    délivrée par la sous-commission.
 
     `source_irradiance` : description de l'origine de l'irradiance, obligatoire
     pour soumettre une grandeur de `GRANDEURS_EXIGEANT_IRRADIANCE`. Sans elle,
@@ -273,6 +274,12 @@ def evaluer_test7(reference, candidat=None, tolerance=TOLERANCE_DEFAUT,
         # a lui seul. Les classes 4A et 4B exigent d'autres tests en plus :
         # ce drapeau ne dit rien d'elles.
         'classe_5_validee': verdict_global in (
+            scatter_band.VERDICT_PASS,
+            scatter_band.VERDICT_PASS_WITH_RESERVATION),
+        # Alias historique conservÃ© pour les consommateurs existants. Depuis
+        # rÃ©ception du classeur corrigÃ©, il porte la mÃªme valeur que le drapeau
+        # principal et ne signifie plus que le critÃ¨re est provisoire.
+        'classe_5_provisoirement_conforme': verdict_global in (
             scatter_band.VERDICT_PASS,
             scatter_band.VERDICT_PASS_WITH_RESERVATION),
     }

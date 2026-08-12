@@ -1,5 +1,26 @@
 # Swiss SIA Compliance Checker
 
+## Unified VEScripts hub
+
+Open and save the target VE project, then run
+`Run_VE_Swiss_Compliance_Hub.py` from the IESVE Scripts window. The scrollable
+hub delegates to the existing read-only client audit, evidence wizard,
+compliance report, reference-model workflow, SIA 4010 Model Builder and
+eight-class navigator. VE-mutating entries are disabled unless the active
+project name explicitly ends in `_TEST`, `_COPY` or `_DISPOSABLE`.
+
+Hub action 4 first opens `Run_VE_Swiss_Reference_Model_Setup.py`. The setup
+requires an explicitly selected EPW, copies it and the maintained JSON inputs
+into the disposable project, records the EPW SHA-256 and LOCATION metadata,
+backs up any existing project JSON, and only then starts the fail-closed VE
+generator. An unknown climate scenario remains
+`UNCONFIRMED_REVIEW_REQUIRED`; it is never inferred from a filename.
+
+The hub reports the current capability boundary rather than implying complete
+validation: one of the 30 exact SIA 4010 cases has a verified guarded mutation
+path, five have runtime-qualification paths, and the remaining cases are still
+preparation/readiness workflows.
+
 Professional IESVE Run-button workflow for Swiss SIA 380/2:2022 readiness checks and SIA 4010:2023 validation-evidence tracking.
 
 This project produces readiness and audit artifacts. The workbook and evidence
@@ -14,6 +35,17 @@ Use this file from the IESVE Scripts window:
 ```text
 Run_VE_Swiss_Compliance.py
 ```
+
+For a first read-only diagnosis on a disposable client-model copy, run:
+
+```text
+Run_VE_Swiss_Compliance_Remediation_Probe.py
+```
+
+The remediation probe lists the exact surfaces, openings and rooms requiring
+review and separates VE-model corrections from VEScripts extraction gaps,
+ApacheSim output gaps and reviewer-owned evidence.  It writes JSON and text
+diagnostics under the active project without changing VE model data.
 
 If reviewer CSV files need to be initialized first, run:
 
@@ -76,6 +108,7 @@ The end user does not need PowerShell or command-line access.
 ## Key Files
 
 - `Run_VE_Swiss_Compliance.py`: IESVE Run-button launcher.
+- `Run_VE_Swiss_Compliance_Remediation_Probe.py`: read-only disposable-copy diagnostic launcher.
 - `Prepare_SIA4010_Evidence_Folder.py`: IESVE Run-button helper that prepares project-named evidence CSV files.
 - `main.py`: compatibility wrapper for existing shortcuts.
 - `swiss_sia/app.py`: workflow orchestration and timestamped report naming.

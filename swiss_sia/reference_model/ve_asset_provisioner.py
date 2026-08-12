@@ -221,6 +221,12 @@ class ProvisioningReceipt:
 class IesVeAssetProvisioner:
     """Create CDB and thermal-template assets in an active VE project."""
 
+    # Source-traced calculation assumptions that belong in the compliance
+    # manifest/report but are not writable VEThermalTemplate room-condition
+    # options.  Keep this list deliberately narrow: every entry needs runtime
+    # evidence from VE and must emit an explicit compatibility warning.
+    AUDIT_ONLY_ROOM_CONDITION_KEYS = frozenset({"solar_reflected_fraction"})
+
     PROFILE_UNIT_MEMBERS = {
         -1: ("none",),
         0: ("metric",),
@@ -387,6 +393,43 @@ class IesVeAssetProvisioner:
         """Verify materials with VE's glass-only three-decimal optical storage."""
 
         remaining = dict(expected)
+        minimum_fields: Dict[str, Dict[str, float]] = {}
+        for key in ("density", "specific_heat_capacity"):
+            requested = remaining.get(key)
+            persisted = actual.get(key)
+            if (
+                isinstance(requested, (int, float))
+                and float(requested) == 0.0
+                and isinstance(persisted, (int, float))
+                and _values_match(1.0e-6, float(persisted))
+            ):
+                remaining.pop(key)
+                minimum_fields[key] = {
+                    "requested": 0.0,
+                    "ve_readback": float(persisted),
+                    "ve_minimum": 1.0e-6,
+                }
+        if minimum_fields:
+            warning = {
+                "code": "VE-MATERIAL-ZERO-THERMAL-MASS-MINIMUM",
+                "message": (
+                    "VE persisted a source-traced zero thermal-mass material "
+                    "property at its 1e-6 numerical minimum. The normative zero "
+                    "remains in the manifest; only this exact VE canonical value "
+                    "is accepted during read-back."
+                ),
+                "material_key": definition.key,
+                "fields": minimum_fields,
+            }
+            if warning not in self._compatibility_warnings:
+                self._compatibility_warnings.append(warning)
+            LOGGER.warning(
+                "asset_provisioning | materials | %s | WARNING | zero "
+                "thermal-mass properties persisted at VE's 1e-6 numerical "
+                "minimum: %s",
+                definition.key,
+                minimum_fields,
+            )
         rounded_fields: Dict[str, Dict[str, float]] = {}
         if definition.category == "glass":
             for key in ("transmittance", "visible_transmittance"):
@@ -436,9 +479,61 @@ class IesVeAssetProvisioner:
         actual: Mapping[str, Any],
         context: str,
     ) -> None:
-        """Verify glazing properties with VE's native 4-decimal VLT storage."""
+        """Verify construction properties after documented VE canonicalisation.
+
+        VE 2025 persists construction surface resistances to four decimal
+        places.  This is a storage/read-back rule only: the source value stays
+        in the manifest and later U-value checks remain independent and strict.
+        """
 
         remaining = dict(expected)
+        rounded_surface_resistances: Dict[str, Dict[str, float]] = {}
+        for key in (
+            "inside_surface_resistance",
+            "outside_surface_resistance",
+        ):
+            requested_resistance = remaining.get(key)
+            persisted_resistance = actual.get(key)
+            if not isinstance(requested_resistance, (int, float)) or not isinstance(
+                persisted_resistance, (int, float)
+            ):
+                continue
+            canonical_resistance = round(float(requested_resistance), 4)
+            if (
+                not _values_match(
+                    float(requested_resistance), float(persisted_resistance)
+                )
+                and _values_match(
+                    canonical_resistance, float(persisted_resistance)
+                )
+            ):
+                remaining.pop(key)
+                rounded_surface_resistances[key] = {
+                    "requested": float(requested_resistance),
+                    "ve_readback": float(persisted_resistance),
+                    "canonical_4dp": canonical_resistance,
+                }
+        if rounded_surface_resistances:
+            warning = {
+                "code": "VE-CONSTRUCTION-SURFACE-RESISTANCE-ROUNDED-4DP",
+                "message": (
+                    "VE persisted construction surface resistances at four "
+                    "decimal places. The source precision remains in the asset "
+                    "manifest; construction U-value validation remains strict "
+                    "and independent."
+                ),
+                "construction_key": definition.key,
+                "fields": rounded_surface_resistances,
+            }
+            if warning not in self._compatibility_warnings:
+                self._compatibility_warnings.append(warning)
+            LOGGER.warning(
+                "asset_provisioning | constructions | %s | WARNING | surface "
+                "resistances rounded to four decimals: %s",
+                definition.key,
+                rounded_surface_resistances,
+            )
+
         requested = remaining.get("visible_light_transmittance")
         persisted = actual.get("visible_light_transmittance")
         rounded = False
@@ -821,20 +916,38 @@ class IesVeAssetProvisioner:
                     ) from exc
             if created and not self.project.save_profiles():
                 raise VeMutationError("VEProject.save_profiles returned failure")
+            # VE 2025 may return a generic profile proxy from create_profile().
+            # After save_profiles(), project.profiles() exposes the persistent
+            # DailyProfile/GroupProfile proxy with the type predicates needed
+            # for strict read-back. Always prefer that persisted object.
+            persisted_by_reference = self._existing_profiles() if created else {}
             for definition, resolved_data, profile in created:
+                persisted_matches = persisted_by_reference.get(
+                    definition.reference, []
+                )
+                if len(persisted_matches) > 1:
+                    raise VeMutationError(
+                        "Saved profile reference is ambiguous: {}".format(
+                            definition.reference
+                        )
+                    )
+                if persisted_matches:
+                    persistent_id, profile = persisted_matches[0]
+                else:
+                    try:
+                        persistent_id = self._profile_id(profile)
+                    except VeMutationError as exc:
+                        raise VeMutationError(
+                            "Profile {} was saved but its persistent ID could "
+                            "not be resolved: {}".format(definition.key, exc)
+                        ) from exc
                 self._verify_profile_readback(
                     definition,
                     resolved_data,
                     profile,
                     "profile {}".format(definition.key),
                 )
-                try:
-                    identifiers[definition.key] = self._profile_id(profile)
-                except VeMutationError as exc:
-                    raise VeMutationError(
-                        "Profile {} was saved but its persistent ID could not "
-                        "be resolved: {}".format(definition.key, exc)
-                    ) from exc
+                identifiers[definition.key] = persistent_id
                 if self._is_constant_one_daily_profile(
                     definition, resolved_data
                 ):
@@ -1611,6 +1724,27 @@ class IesVeAssetProvisioner:
             self._gain_enum(definition)
         for definition in manifest.air_exchanges:
             self._air_enums(definition)
+        room_conditions = manifest.thermal_template.raw_room_conditions()
+        for key in ("heating_setpoint_type", "cooling_setpoint_type"):
+            requested = room_conditions.get(key)
+            if isinstance(requested, str):
+                member = requested.strip().lower()
+                if member not in {"constant", "variable", "two_value"}:
+                    raise VeMutationError(
+                        "Unsupported {} value: {!r}".format(key, requested)
+                    )
+                self._resolve_enum(
+                    (
+                        "VERoomData.setpoint_type",
+                        "VEThermalTemplate.setpoint_type",
+                        "setpoint_type",
+                    ),
+                    (member,),
+                    key,
+                )
+        system_data = manifest.thermal_template.raw_system_data()
+        if isinstance(system_data.get("conditioned"), bool):
+            self._conditioned_flag(system_data["conditioned"])
 
     def reconcile_existing_air_exchange(
         self, manifest: AssetManifest, exchange_key: str
@@ -1872,6 +2006,126 @@ class IesVeAssetProvisioner:
                 return str(handle)
         raise VeMutationError("New thermal template has no resolvable handle")
 
+    def _writable_room_conditions(
+        self, room_conditions: Mapping[str, Any]
+    ) -> Dict[str, Any]:
+        """Return only room-condition fields supported by the VE setter.
+
+        ``solar_reflected_fraction`` records the ISO 52016-1 verification-case
+        assumption that solar re-reflection losses are not taken into account.
+        VE 2025.2 rejects that name in ``set_room_conditions``; it is an engine
+        calculation assumption rather than an exposed thermal-template field.
+        The traced value therefore remains in the manifest and audit report but
+        is not passed to the version-sensitive setter.
+        """
+
+        writable = dict(room_conditions)
+        for key in ("heating_setpoint_type", "cooling_setpoint_type"):
+            requested = writable.get(key)
+            if isinstance(requested, str):
+                member = requested.strip().lower()
+                if member not in {"constant", "variable", "two_value"}:
+                    raise VeMutationError(
+                        "Unsupported {} value: {!r}".format(key, requested)
+                    )
+                writable[key] = self._resolve_enum(
+                    (
+                        "VERoomData.setpoint_type",
+                        "VEThermalTemplate.setpoint_type",
+                        "setpoint_type",
+                    ),
+                    (member,),
+                    key,
+                )
+        for key in sorted(self.AUDIT_ONLY_ROOM_CONDITION_KEYS & writable.keys()):
+            requested = _serializable(writable.pop(key))
+            warning = {
+                "code": "VE-ROOM-CONDITION-AUDIT-ONLY",
+                "severity": "WARNING",
+                "field": key,
+                "requested_value": requested,
+                "ve_binding": "NOT_EXPOSED_BY_VETHERMALTEMPLATE",
+                "message": (
+                    "The source-traced assumption remains in the manifest and "
+                    "audit evidence but is not passed to set_room_conditions; "
+                    "VE 2025.2 rejects this option. Engine behaviour must be "
+                    "confirmed before a certification claim."
+                ),
+            }
+            if warning not in self._compatibility_warnings:
+                self._compatibility_warnings.append(warning)
+            LOGGER.warning(
+                "asset_provisioning | thermal_template | %s | WARNING | "
+                "source-traced room condition is audit-only because the VE "
+                "setter does not expose this option; requested=%s",
+                key,
+                requested,
+            )
+        return writable
+
+    def _conditioned_flag(self, conditioned: bool) -> Any:
+        """Return VE's typed conditioned-state enum for a manifest boolean.
+
+        ``VEThermalTemplate.set_apache_systems`` documents ``conditioned`` as
+        a setter key, but VE 2025 exposes it as ``conditioned_flag`` rather
+        than a Python bool.  In particular, ``False`` numerically aliases the
+        enum's default/not-applicable state and is read back as ``yes``.  The
+        explicit free-floating member is therefore required for Test 1 cases
+        600FF and 900FF.
+        """
+
+        member = "yes" if conditioned else "no_free_floating"
+        return self._resolve_enum(
+            (
+                "VEThermalTemplate.conditioned_flag",
+                "VERoomData.conditioned_flag",
+                "conditioned_flag",
+            ),
+            (member,),
+            "thermal-template conditioned state",
+        )
+
+    def _writable_system_data(
+        self, system_data: Mapping[str, Any]
+    ) -> Dict[str, Any]:
+        """Translate source-level system values to VE setter types."""
+
+        writable = dict(system_data)
+        requested = writable.get("conditioned")
+        if isinstance(requested, bool):
+            if requested:
+                writable["conditioned"] = self._conditioned_flag(True)
+            else:
+                # VE 2025.2 accepts the documented enum on the template setter
+                # but reads the template back as ``yes``. VERoomData does not
+                # document ``conditioned`` as a writable system field either.
+                # Keep the source value in the manifest and enforce the actual
+                # free-floating physics with verified OFF heating and cooling
+                # availability profiles in Room Conditions.
+                writable.pop("conditioned", None)
+                warning = {
+                    "code": "VE-TEMPLATE-FREE-FLOATING-MAPPED-TO-PROFILES",
+                    "field": "conditioned",
+                    "requested_value": False,
+                    "ve_binding": (
+                        "VEThermalTemplate/VERoomData heating_profile and "
+                        "cooling_profile"
+                    ),
+                    "message": (
+                        "VE did not persist no_free_floating through the documented "
+                        "thermal-template setter. Free-floating operation is mapped "
+                        "to OFF heating/cooling availability profiles and must pass "
+                        "room-level read-back before simulation."
+                    ),
+                }
+                if warning not in self._compatibility_warnings:
+                    self._compatibility_warnings.append(warning)
+                LOGGER.warning(
+                    "asset_provisioning | thermal_template | conditioned | WARNING | "
+                    "free-floating state mapped to verified OFF heating/cooling profiles"
+                )
+        return writable
+
     def _create_template(
         self,
         manifest: AssetManifest,
@@ -1889,12 +2143,14 @@ class IesVeAssetProvisioner:
                     definition.standard
                 )
             )
-        room_conditions = self._resolve_runtime_value(
+        traced_room_conditions = self._resolve_runtime_value(
             definition.raw_room_conditions(), profile_ids, apache_system_id
         )
-        system_data = self._resolve_runtime_value(
+        room_conditions = self._writable_room_conditions(traced_room_conditions)
+        traced_system_data = self._resolve_runtime_value(
             definition.raw_system_data(), profile_ids, apache_system_id
         )
+        system_data = self._writable_system_data(traced_system_data)
         if apache_system_id:
             system_data["HVAC_system"] = apache_system_id
         matches = [
@@ -1916,16 +2172,6 @@ class IesVeAssetProvisioner:
                     )
                 )
             template = matches[0]
-            _assert_subset(
-                room_conditions,
-                dict(template.get_room_conditions()),
-                "existing thermal template room conditions",
-            )
-            _assert_subset(
-                system_data,
-                dict(template.get_apache_systems()),
-                "existing thermal template system data",
-            )
 
             def record_names(records: Iterable[Any]) -> List[str]:
                 """Return the persisted names of a set of VE gain/exchange records."""
@@ -1942,18 +2188,94 @@ class IesVeAssetProvisioner:
                 gains[key] for key in definition.gain_keys
             )
             actual_gain_names = record_names(template.get_casual_gains())
-            if expected_gain_names != actual_gain_names:
-                raise VeMutationError(
-                    "Existing thermal template gain links differ from manifest"
-                )
             expected_exchange_names = record_names(
                 air_exchanges[key] for key in definition.air_exchange_keys
             )
             actual_exchange_names = record_names(template.get_air_exchanges())
-            if expected_exchange_names != actual_exchange_names:
-                raise VeMutationError(
-                    "Existing thermal template air-exchange links differ from manifest"
+            try:
+                _assert_subset(
+                    room_conditions,
+                    dict(template.get_room_conditions()),
+                    "existing thermal template room conditions",
                 )
+                _assert_subset(
+                    system_data,
+                    dict(template.get_apache_systems()),
+                    "existing thermal template system data",
+                )
+                if expected_gain_names != actual_gain_names:
+                    raise VeMutationError(
+                        "Existing thermal template gain links differ from manifest"
+                    )
+                if expected_exchange_names != actual_exchange_names:
+                    raise VeMutationError(
+                        "Existing thermal template air-exchange links differ from manifest"
+                    )
+            except VeMutationError:
+                # A failed post-setter read-back can leave either an empty
+                # template or a fully linked template whose links are already
+                # exactly those declared by the manifest.  Both states are
+                # deterministic to repair.  Partial or divergent links remain
+                # fail-closed because re-adding them could duplicate data.
+                links_empty = not actual_gain_names and not actual_exchange_names
+                links_match = (
+                    expected_gain_names == actual_gain_names
+                    and expected_exchange_names == actual_exchange_names
+                )
+                if not (links_empty or links_match):
+                    raise
+                warning = {
+                    "code": "VE-INCOMPLETE-THERMAL-TEMPLATE-RECOVERED",
+                    "message": (
+                        "An existing template with the exact manifest name was "
+                        "left by an interrupted or failed setter/read-back. Its "
+                        "source-traced content was reapplied only because its "
+                        "gain and air-exchange links were either empty or an "
+                        "exact manifest match; divergent links are never repaired."
+                    ),
+                    "template_name": definition.name,
+                }
+                if warning not in self._compatibility_warnings:
+                    self._compatibility_warnings.append(warning)
+                LOGGER.warning(
+                    "asset_provisioning | thermal_template | %s | WARNING | "
+                    "recovering a manifest-matched template left by an "
+                    "interrupted or failed setter/read-back",
+                    definition.name,
+                )
+                try:
+                    template.set_room_conditions(room_conditions)
+                    template.set_apache_systems(system_data)
+                    if links_empty:
+                        for key in definition.gain_keys:
+                            template.add_gain(gains[key])
+                        for key in definition.air_exchange_keys:
+                            template.add_air_exchange(air_exchanges[key])
+                    template.apply_changes()
+                except Exception as exc:
+                    raise VeMutationError(
+                        "Incomplete thermal template recovery failed: {}".format(exc)
+                    ) from exc
+                _assert_subset(
+                    room_conditions,
+                    dict(template.get_room_conditions()),
+                    "recovered thermal template room conditions",
+                )
+                _assert_subset(
+                    system_data,
+                    dict(template.get_apache_systems()),
+                    "recovered thermal template system data",
+                )
+                if expected_gain_names != record_names(template.get_casual_gains()):
+                    raise VeMutationError(
+                        "Recovered thermal template gain links differ from manifest"
+                    )
+                if expected_exchange_names != record_names(
+                    template.get_air_exchanges()
+                ):
+                    raise VeMutationError(
+                        "Recovered thermal template air-exchange links differ from manifest"
+                    )
             return definition.name, self._template_handle(template)
         try:
             template = self.project.create_thermal_template(definition.name)

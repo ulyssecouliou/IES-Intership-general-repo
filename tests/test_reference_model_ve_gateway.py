@@ -10,6 +10,7 @@ proves real-runtime support; it proves the gateway's own control flow.
 
 import unittest
 from pathlib import Path
+from tempfile import TemporaryDirectory
 from types import SimpleNamespace
 
 from swiss_sia.reference_model.compliance_config import build_default_registry
@@ -115,7 +116,12 @@ class _RoomData:
         return dict(self._apache)
 
     def set_apache_systems(self, data):
-        self._apache = dict(data)
+        payload = dict(data)
+        if "system_air_minimum_flowrate_units" in payload:
+            payload["system_air_minimum_flowrate_unit"] = payload.pop(
+                "system_air_minimum_flowrate_units"
+            )
+        self._apache.update(payload)
 
     def get_internal_gains(self):
         return list(self._gains)
@@ -154,6 +160,19 @@ class _MutableGain:
                 values = dict(self._data.get(plural, {}))
                 values[units] = payload[scalar]
                 self._data[plural] = values
+        for plural in mapping.values():
+            if plural in payload:
+                self._data[plural] = dict(payload[plural])
+
+
+class _IsolatedScalarLatentGain(_MutableGain):
+    """VE 2025 shape that resets latent in a multi-field payload."""
+
+    def set(self, payload):
+        scalar_filtered = dict(payload)
+        if len(payload) > 1:
+            scalar_filtered.pop("max_latent_gain", None)
+        super().set(scalar_filtered)
 
 
 class _Body:
@@ -273,6 +292,10 @@ def _build_iesve(*, bodies, signature="both", weather_readable=True, with_versio
 
     cdb_project = _CdbProject(signature=signature)
     iesve = SimpleNamespace(
+        conditioned_flag=SimpleNamespace(
+            yes="conditioned_yes",
+            no_free_floating="conditioned_no_free_floating",
+        ),
         VEProject=SimpleNamespace(get_current_project=lambda: project),
         VEBody=SimpleNamespace(
             VEBody_type=SimpleNamespace(room=_ROOM),
@@ -446,6 +469,82 @@ class VeGatewayAdjacencyGuardTests(unittest.TestCase):
 
 
 class VeGatewayMiscTests(unittest.TestCase):
+    def test_room_control_sync_writes_only_changed_supported_fields(self):
+        """Never replay read-only getter fields such as VE 2025 ``dhw_unit``."""
+
+        room = _default_room()
+        iesve, project, model = _build_iesve(bodies=[room])
+        room_data = room.get_room_data()
+        actual_conditions = {
+            "heating_profile": "WEEK0048",
+            "heating_setpoint_type": 0,
+            "heating_setpoint_profile": "0",
+            "dhw_unit": "l/h",
+        }
+        submitted = []
+
+        room_data.get_room_conditions = lambda: dict(actual_conditions)
+
+        def set_room_conditions(payload):
+            payload = dict(payload)
+            if "dhw_unit" in payload:
+                raise RuntimeError("unrecognised option: dhw_unit")
+            submitted.append(payload)
+            actual_conditions.update(
+                {
+                    key: value
+                    for key, value in payload.items()
+                    if not key.endswith("_from_template")
+                }
+            )
+
+        room_data.set_room_conditions = set_room_conditions
+        room_data._apache = {
+            "conditioned": True,
+            "HVAC_system": "SYST0000",
+        }
+        expected_conditions = {
+            "heating_profile": "ON",
+            "heating_setpoint_type": 1,
+            "heating_setpoint_profile": "WEEK0048",
+        }
+        template = SimpleNamespace(
+            name="TEST TEMPLATE",
+            apply_changes=lambda: None,
+            get_casual_gains=lambda: [],
+            get_air_exchanges=lambda: [],
+            get_room_conditions=lambda: dict(expected_conditions),
+            get_apache_systems=lambda: dict(room_data._apache),
+        )
+        project.thermal_templates = lambda assigned=False: {5: template}
+
+        def assign_template(_template, _room_ids):
+            room_data._general = {
+                "thermal_template": 5,
+                "thermal_template_name": "TEST TEMPLATE",
+            }
+
+        model.assign_thermal_template_to_rooms = assign_template
+
+        IesVeGateway(iesve_module=iesve).assign_thermal_template(
+            _expected_geometry(["RM_Z1"]), _configured_parameters()
+        )
+
+        self.assertEqual(len(submitted), 1)
+        self.assertNotIn("dhw_unit", submitted[0])
+        self.assertEqual(submitted[0]["heating_profile"], "ON")
+        self.assertEqual(submitted[0]["heating_setpoint_type"], 1)
+        self.assertEqual(
+            submitted[0]["heating_setpoint_profile"], "WEEK0048"
+        )
+        self.assertFalse(submitted[0]["heating_setpoint_from_template"])
+        self.assertNotIn(
+            "heating_setpoint_profile_from_template", submitted[0]
+        )
+        self.assertNotIn(
+            "cooling_setpoint_profile_from_template", submitted[0]
+        )
+
     def test_assign_thermal_template_accepts_native_handle_and_name_readback(self):
         room = _default_room()
         iesve, project, model = _build_iesve(bodies=[room])
@@ -476,6 +575,70 @@ class VeGatewayMiscTests(unittest.TestCase):
         )
         self.assertEqual(
             room.get_room_data().get_general()["thermal_template"], 5
+        )
+
+    def test_assign_thermal_template_applies_deferred_free_floating_to_room(self):
+        """Verify effective OFF profiles despite VE's advisory conditioned enum."""
+
+        room = _default_room()
+        room_data = room.get_room_data()
+        room_data._apache = {
+            "conditioned": "conditioned_yes",
+            "conditioned_from_template": True,
+        }
+        room_conditions = {
+            "heating_profile": "ON",
+            "cooling_profile": "ON",
+        }
+        room_data.get_room_conditions = lambda: dict(room_conditions)
+
+        def set_room_conditions(payload):
+            room_conditions.update(
+                {
+                    key: value
+                    for key, value in dict(payload).items()
+                    if not key.endswith("_from_template")
+                }
+            )
+
+        room_data.set_room_conditions = set_room_conditions
+        iesve, project, model = _build_iesve(bodies=[room])
+        template = SimpleNamespace(
+            name="TEST TEMPLATE",
+            apply_changes=lambda: None,
+            get_casual_gains=lambda: [],
+            get_air_exchanges=lambda: [],
+            get_room_conditions=lambda: {
+                "heating_profile": "OFF",
+                "cooling_profile": "OFF",
+            },
+            get_apache_systems=lambda: dict(room_data._apache),
+        )
+        project.thermal_templates = lambda assigned=False: {5: template}
+
+        def assign_template(_template, _room_ids):
+            room_data._general = {
+                "thermal_template": 5,
+                "thermal_template_name": "TEST TEMPLATE",
+            }
+
+        model.assign_thermal_template_to_rooms = assign_template
+        gateway = IesVeGateway(iesve_module=iesve)
+        gateway._provisioned_conditioned_state = False
+
+        gateway.assign_thermal_template(
+            _expected_geometry(["RM_Z1"]), _configured_parameters()
+        )
+
+        self.assertEqual(room_conditions["heating_profile"], "OFF")
+        self.assertEqual(room_conditions["cooling_profile"], "OFF")
+        self.assertEqual(
+            room_data.get_apache_systems()["conditioned"], "conditioned_yes"
+        )
+        warnings = gateway.consume_runtime_compatibility_warnings()
+        self.assertEqual(
+            warnings[0]["control_changes"]["free_floating"]["expected"],
+            {"heating_profile": "OFF", "cooling_profile": "OFF"},
         )
 
     def test_assign_thermal_template_rejects_default_room_content(self):
@@ -562,6 +725,253 @@ class VeGatewayMiscTests(unittest.TestCase):
         warnings = gateway.consume_runtime_compatibility_warnings()
         self.assertEqual(warnings[0]["code"], "VE-TEMPLATE-CONTENT-DIRECT-SYNC")
 
+    def test_assign_template_uses_isolated_scalar_people_latent_fallback(self):
+        room = _default_room()
+        iesve, project, model = _build_iesve(bodies=[room])
+        expected_gain = SimpleNamespace(
+            get=lambda: {
+                "name": "SIA_REF_PEOPLE",
+                "type_str": "People",
+                "units_val": 0,
+                "occupancy_density": 15.0,
+                "max_sensible_gain": 75.0,
+                "max_latent_gain": 45.0,
+                "diversity_factor": 1.0,
+                "variation_profile": "DAY_0035",
+            }
+        )
+        room_gain = _IsolatedScalarLatentGain(
+            {
+                "name": "Default People",
+                "type_str": "People",
+                "units_val": 0,
+                "occupancies": {0: 15.0, 1: 4.0},
+                "max_sensible_gains": {0: 75.0, 1: 300.0},
+                "max_latent_gains": {0: 0.0, 1: 0.0},
+                "diversity_factor": 1.0,
+                "variation_profile": "DAY_0035",
+            }
+        )
+        template = SimpleNamespace(
+            name="TEST TEMPLATE",
+            apply_changes=lambda: None,
+            get_casual_gains=lambda: [expected_gain],
+            get_air_exchanges=lambda: [],
+        )
+        project.thermal_templates = lambda assigned=False: {5: template}
+
+        def assign_template(_template, _room_ids):
+            room.get_room_data()._general = {
+                "thermal_template": 5,
+                "thermal_template_name": "TEST TEMPLATE",
+            }
+            room.get_room_data()._gains = [room_gain]
+
+        model.assign_thermal_template_to_rooms = assign_template
+        gateway = IesVeGateway(iesve_module=iesve)
+        gateway.assign_thermal_template(
+            _expected_geometry(["RM_Z1"]), _configured_parameters()
+        )
+
+        readback = room_gain.get()
+        self.assertEqual(readback["max_latent_gains"][0], 45.0)
+        warnings = gateway.consume_runtime_compatibility_warnings()
+        self.assertEqual(
+            warnings[0]["gain_changes"][0]["people_latent_fallback"],
+            "isolated_scalar",
+        )
+
+    def test_missing_mechanical_exchange_maps_to_apache_system_air(self):
+        room = _default_room()
+        room.get_room_data()._apache = {
+            "HVAC_methodology": "apache_system",
+            "system_air_minimum_flowrate": 0.8,
+            "system_air_minimum_flowrate_unit": 2,
+            "system_air_variation_profile": "OFF",
+            "system_air_minimum_flowrate_from_template": True,
+            "system_air_variation_profile_from_template": True,
+        }
+        iesve, project, model = _build_iesve(bodies=[room])
+        outdoor_air = SimpleNamespace(
+            get=lambda: {
+                "name": "SIA_REF_OUTDOOR_AIR",
+                "type_str": "Auxiliary Ventilation",
+                "type_val": "mechanical_ventilation",
+                "max_flow": 10.0,
+                "units_val": 3,
+                "variation_profile": "DAY_0035",
+            }
+        )
+        template = SimpleNamespace(
+            name="TEST TEMPLATE",
+            apply_changes=lambda: None,
+            get_casual_gains=lambda: [],
+            get_air_exchanges=lambda: [outdoor_air],
+            get_apache_systems=lambda: {},
+        )
+        project.thermal_templates = lambda assigned=False: {5: template}
+
+        def assign_template(_template, _room_ids):
+            room.get_room_data()._general = {
+                "thermal_template": 5,
+                "thermal_template_name": "TEST TEMPLATE",
+            }
+
+        model.assign_thermal_template_to_rooms = assign_template
+        gateway = IesVeGateway(iesve_module=iesve)
+        gateway.assign_thermal_template(
+            _expected_geometry(["RM_Z1"]), _configured_parameters()
+        )
+
+        system = room.get_room_data().get_apache_systems()
+        self.assertEqual(system["system_air_minimum_flowrate"], 10.0)
+        self.assertEqual(system["system_air_minimum_flowrate_unit"], 3)
+        self.assertEqual(system["system_air_variation_profile"], "DAY_0035")
+        warnings = gateway.consume_runtime_compatibility_warnings()
+        change = warnings[0]["air_exchange_changes"][0]
+        self.assertEqual(
+            change["binding"], "apache_system.system_air_minimum_flowrate"
+        )
+
+    def test_mechanical_exchange_uses_plural_unit_setter_with_singular_readback(self):
+        room = _default_room()
+        room_data = room.get_room_data()
+        room_data._apache = {
+            "HVAC_methodology": "apache_system",
+            "system_air_minimum_flowrate": 0.8,
+            "system_air_minimum_flowrate_unit": 2,
+            "system_air_variation_profile": "OFF",
+        }
+
+        def set_apache_systems(data):
+            payload = dict(data)
+            if "system_air_minimum_flowrate_unit" in payload:
+                raise RuntimeError(
+                    "unrecognised option: system_air_minimum_flowrate_unit"
+                )
+            unit = payload.pop("system_air_minimum_flowrate_units", None)
+            room_data._apache.update(payload)
+            if unit is not None:
+                room_data._apache["system_air_minimum_flowrate_unit"] = unit
+
+        room_data.set_apache_systems = set_apache_systems
+        iesve, project, model = _build_iesve(bodies=[room])
+        outdoor_air = SimpleNamespace(
+            get=lambda: {
+                "name": "SIA_REF_OUTDOOR_AIR",
+                "type_str": "Auxiliary Ventilation",
+                "type_val": "mechanical_ventilation",
+                "max_flow": 10.0,
+                "units_val": 3,
+                "variation_profile": "DAY_0035",
+            }
+        )
+        template = SimpleNamespace(
+            name="TEST TEMPLATE",
+            apply_changes=lambda: None,
+            get_casual_gains=lambda: [],
+            get_air_exchanges=lambda: [outdoor_air],
+            get_apache_systems=lambda: {},
+        )
+        project.thermal_templates = lambda assigned=False: {5: template}
+
+        def assign_template(_template, _room_ids):
+            room_data._general = {
+                "thermal_template": 5,
+                "thermal_template_name": "TEST TEMPLATE",
+            }
+
+        model.assign_thermal_template_to_rooms = assign_template
+        gateway = IesVeGateway(iesve_module=iesve)
+        gateway.assign_thermal_template(
+            _expected_geometry(["RM_Z1"]), _configured_parameters()
+        )
+
+        system = room_data.get_apache_systems()
+        self.assertEqual(system["system_air_minimum_flowrate"], 10.0)
+        self.assertEqual(system["system_air_minimum_flowrate_unit"], 3)
+        self.assertEqual(system["system_air_variation_profile"], "DAY_0035")
+
+    def test_mechanical_exchange_converts_when_room_unit_is_read_only(self):
+        room = _default_room()
+        room_data = room.get_room_data()
+        room_data._apache = {
+            "HVAC_methodology": "apache_system",
+            "system_air_minimum_flowrate": 0.8,
+            "system_air_minimum_flowrate_unit": 2,
+            "system_air_minimum_flowrates": {
+                0: 0.96,
+                1: 48.0,
+                2: 0.8,
+                3: 12.0,
+                4: 1.0,
+            },
+            "system_air_variation_profile": "OFF",
+        }
+
+        def set_apache_systems(data):
+            payload = dict(data)
+            for rejected in (
+                "system_air_minimum_flowrate_units",
+                "system_air_minimum_flowrate_unit",
+            ):
+                if rejected in payload:
+                    raise RuntimeError("unrecognised option: {}".format(rejected))
+            old_flow = room_data._apache["system_air_minimum_flowrate"]
+            new_flow = payload.get("system_air_minimum_flowrate", old_flow)
+            scale = float(new_flow) / float(old_flow)
+            room_data._apache["system_air_minimum_flowrates"] = {
+                key: value * scale
+                for key, value in room_data._apache[
+                    "system_air_minimum_flowrates"
+                ].items()
+            }
+            room_data._apache.update(payload)
+
+        room_data.set_apache_systems = set_apache_systems
+        iesve, project, model = _build_iesve(bodies=[room])
+        outdoor_air = SimpleNamespace(
+            get=lambda: {
+                "name": "SIA_REF_OUTDOOR_AIR",
+                "type_str": "Auxiliary Ventilation",
+                "type_val": "mechanical_ventilation",
+                "max_flow": 10.0,
+                "units_val": 3,
+                "variation_profile": "DAY_0035",
+            }
+        )
+        template = SimpleNamespace(
+            name="TEST TEMPLATE",
+            apply_changes=lambda: None,
+            get_casual_gains=lambda: [],
+            get_air_exchanges=lambda: [outdoor_air],
+            get_apache_systems=lambda: {},
+        )
+        project.thermal_templates = lambda assigned=False: {5: template}
+
+        def assign_template(_template, _room_ids):
+            room_data._general = {
+                "thermal_template": 5,
+                "thermal_template_name": "TEST TEMPLATE",
+            }
+
+        model.assign_thermal_template_to_rooms = assign_template
+        gateway = IesVeGateway(iesve_module=iesve)
+        gateway.assign_thermal_template(
+            _expected_geometry(["RM_Z1"]), _configured_parameters()
+        )
+
+        system = room_data.get_apache_systems()
+        self.assertAlmostEqual(system["system_air_minimum_flowrate"], 2.0 / 3.0)
+        self.assertEqual(system["system_air_minimum_flowrate_unit"], 2)
+        self.assertAlmostEqual(system["system_air_minimum_flowrates"][3], 10.0)
+        change = gateway.consume_runtime_compatibility_warnings()[0][
+            "air_exchange_changes"
+        ][0]
+        self.assertEqual(
+            change["binding_mode"], "converted_existing_native_unit"
+        )
+
     def test_assign_thermal_template_rejects_missing_native_readback(self):
         room = _default_room()
         room.get_room_data()._general = {
@@ -616,6 +1026,122 @@ class VeGatewayMiscTests(unittest.TestCase):
         iesve, _project, _model = _build_iesve(bodies=[_default_room()])
         gateway = IesVeGateway(iesve_module=iesve)
         gateway.assign_weather("C:/wx/test.fwt")  # no raise
+
+    def test_assign_weather_uses_basename_for_identical_ve_weather_file(self):
+        with TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            source_folder = root / "project"
+            installed_folder = root / "weather"
+            source_folder.mkdir()
+            installed_folder.mkdir()
+            source = source_folder / "DRYCOLD_IESVE.epw"
+            installed = installed_folder / source.name
+            source.write_bytes(b"same-qualified-weather")
+            installed.write_bytes(source.read_bytes())
+            iesve, _project, _model = _build_iesve(bodies=[_default_room()])
+            iesve.get_weather_file_paths = lambda: [str(installed_folder)]
+            gateway = IesVeGateway(iesve_module=iesve)
+
+            gateway.assign_weather(str(source))
+
+            self.assertEqual(_Locate.store["weather_file"], source.name)
+
+    def test_normalize_weather_uses_basename_for_project_local_epw(self):
+        with TemporaryDirectory() as temporary:
+            project_path = Path(temporary)
+            source = project_path / "DRYCOLD_IESVE.epw"
+            source.write_bytes(b"qualified-project-local-weather")
+            iesve, project, _model = _build_iesve(bodies=[_default_room()])
+            project.path = str(project_path)
+            _Locate.store["weather_file"] = str(source)
+            gateway = IesVeGateway(iesve_module=iesve)
+
+            before, after = gateway.normalize_weather_reference_for_apachesim()
+
+            self.assertEqual(before, str(source))
+            self.assertEqual(after, source.name)
+            self.assertEqual(_Locate.store["weather_file"], source.name)
+
+    def test_assign_weather_verifies_project_local_basename_via_absolute_path(self):
+        with TemporaryDirectory() as temporary:
+            project_path = Path(temporary)
+            source = project_path / "DRYCOLD_IESVE.epw"
+            source.write_bytes(b"qualified-project-local-weather")
+            iesve, project, _model = _build_iesve(bodies=[_default_room()])
+            project.path = str(project_path)
+
+            class _ProjectLocalWeatherReader:
+                basename_attempts = 0
+
+                def open_weather_file(self, reference):
+                    path = Path(str(reference))
+                    if not path.is_absolute():
+                        type(self).basename_attempts += 1
+                        # The qualification in _apache_weather_reference works,
+                        # while the post-VELocate basename read-back reproduces
+                        # the inconsistent VE runtime behavior.
+                        return 1 if type(self).basename_attempts == 1 else -1
+                    return 1 if path == source else -1
+
+                def close(self):
+                    return None
+
+            iesve.WeatherFileReader = _ProjectLocalWeatherReader
+            gateway = IesVeGateway(iesve_module=iesve)
+
+            gateway.assign_weather(str(source))
+
+            self.assertEqual(_Locate.store["weather_file"], source.name)
+            self.assertGreaterEqual(
+                _ProjectLocalWeatherReader.basename_attempts, 2
+            )
+
+    def test_assign_weather_accepts_prequalified_source_when_post_save_probe_fails(self):
+        with TemporaryDirectory() as temporary:
+            project_path = Path(temporary)
+            source = project_path / "DRYCOLD_IESVE.epw"
+            source.write_bytes(b"qualified-project-local-weather")
+            iesve, project, _model = _build_iesve(bodies=[_default_room()])
+            project.path = str(project_path)
+
+            class _PostSaveUnreadableWeatherReader:
+                def open_weather_file(self, reference):
+                    path = Path(str(reference))
+                    if not _Locate.store and path == source:
+                        return 1
+                    return -1
+
+                def close(self):
+                    return None
+
+            iesve.WeatherFileReader = _PostSaveUnreadableWeatherReader
+            gateway = IesVeGateway(iesve_module=iesve)
+
+            gateway.assign_weather(str(source))
+
+            self.assertEqual(_Locate.store["weather_file"], source.name)
+            warnings = gateway.consume_runtime_compatibility_warnings()
+            self.assertEqual(warnings[0]["code"], "VE-WEATHER-POST-SAVE-READBACK")
+            self.assertEqual(warnings[0]["qualified_source"], str(source))
+
+    def test_assign_weather_rejects_basename_collision_by_retaining_path(self):
+        with TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            source_folder = root / "project"
+            installed_folder = root / "weather"
+            source_folder.mkdir()
+            installed_folder.mkdir()
+            source = source_folder / "DRYCOLD_IESVE.epw"
+            installed = installed_folder / source.name
+            source.write_bytes(b"qualified-weather")
+            installed.write_bytes(b"different-weather")
+            iesve, _project, _model = _build_iesve(bodies=[_default_room()])
+            iesve.get_weather_file_paths = lambda: [str(installed_folder)]
+            gateway = IesVeGateway(iesve_module=iesve)
+
+            gateway.assign_weather(str(source))
+
+            self.assertEqual(_Locate.store["weather_file"], str(source))
 
     def test_import_geometry_missing_file_raises(self):
         iesve, _project, _model = _build_iesve(bodies=[_default_room()])

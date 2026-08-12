@@ -6,7 +6,7 @@ PDF/HTML résumant les verdicts par classe").
 --------------------------------------------------------------------------
 STATUT D'EXÉCUTION -- IMPORTANT, À LIRE AVANT DE FAIRE CONFIANCE À CE MODULE
 --------------------------------------------------------------------------
-Contrairement à `ui/dialog_tkinter.py` et `ui/export_excel_com.py`, CE
+Contrairement à `ui/dialog_tkinter.py` et `ui/excel_export.py`, CE
 MODULE A ÉTÉ RÉELLEMENT EXÉCUTÉ dans cet environnement de développement :
 `pip install reportlab` a réussi (reportlab 5.0.0) et
 `ui/tests/test_export_pdf_reportlab.py` génère un vrai PDF à partir de la

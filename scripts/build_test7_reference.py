@@ -49,6 +49,7 @@ Usage :
 from __future__ import print_function
 
 import io
+import hashlib
 import json
 import os
 import re
@@ -88,6 +89,14 @@ TOLERANCE = 1e-6
 
 _CONTRIB = re.compile(r'ABS\(\s*([A-Z]+)(\d+)\s*-')
 _PLANCHER = re.compile(r'^=\s*MAX\(\s*0\s*,', re.I)
+
+
+def _sha256(chemin):
+    h = hashlib.sha256()
+    with open(chemin, 'rb') as flux:
+        for bloc in iter(lambda: flux.read(1024 * 1024), b''):
+            h.update(bloc)
+    return h.hexdigest()
 
 
 class ExtractionRefusee(RuntimeError):
@@ -220,9 +229,11 @@ def extraire():
         u'classe_de_validation': u'5 — SIA 4010:2023 tableau 63 : le Test 7 est '
                                  u'le seul test exigé par la classe 5',
         u'statut': u'FIGÉ — bandes recalculées et confrontées au classeur',
-        u'date_extraction': u'2026-08-05',
+        u'date_extraction': u'2026-08-10',
         u'source': {
             u'fichier': u'SIA_4010_geteilter_Link/Test7/Resultaterfassung Test7.xlsx',
+            u'sha256': _sha256(_CLASSEUR),
+            u'correction': u'Règle conditionnelle N (borne basse) à M (borne haute)',
             u'feuille': FEUILLE,
             u'programmes': programmes,
             u'versions': versions,

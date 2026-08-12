@@ -6,13 +6,13 @@
   "compliance_claim_allowed": false,
   "weather": {
     "path": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\references\\standards\\bestest\\DRYCOLD_IESVE.epw",
-    "sha256": "C30E1ECFC07DF60D2DED3F0663E4B3C112C49796920629FC60E86B160B6C6DD0",
+    "sha256": "B14F5698EFE1E25B527F0C900635BAC7D3082DA0E20704FBC688A85B1BBBE696",
     "format": "EPW",
     "record_count": 8760
   },
   "source_tmy1": {
     "path": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\references\\standards\\bestest\\DRYCOLD.TMY",
-    "sha256": "C33778B4E89C82245A12E17903225F2EB3AFF89C526E9E69A7DC3798D52B2D4E",
+    "sha256": "E1F4EFC2476706D03EB2E4FD249B1A5FFE84CA961A9977E2E0DB9AC5F67B6DBD",
     "format": "NOAA_TMY1_FIXED_WIDTH"
   },
   "conversion": {
@@ -23,7 +23,12 @@
       "elevation_m": 1609.0
     },
     "hour_interpretation": "TMY1 hour-ending; solar geometry at midpoint",
-    "diffuse_radiation_method": "DHI=max(0,GHI-DNI*cos(zenith)); DNI capped to preserve GHI"
+    "diffuse_radiation_method": "DHI=max(0,GHI-DNI*cos(zenith)); DNI capped to preserve GHI",
+    "apparent_sky_temperature": {
+      "method": "EPW horizontal infrared = Stefan-Boltzmann radiation at outdoor dry bulb minus 11 K",
+      "external_air_minus_apparent_sky_temperature_k": 11.0,
+      "source": "BS EN ISO 52016-1:2017 clause 7.2.2.12"
+    }
   },
   "controls": {
     "record_count": {
@@ -42,6 +47,11 @@
     "global_horizontal_preserved_with_integer_epw_rounding": {
       "status": "PASS",
       "maximum_absolute_difference_w_m2": 0.5
+    },
+    "fixed_apparent_sky_temperature_offset": {
+      "status": "PASS",
+      "expected_offset_k": 11.0,
+      "maximum_absolute_difference_k": 0.0001516854796470568
     }
   },
   "limitations": [

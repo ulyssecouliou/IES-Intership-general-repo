@@ -1,7 +1,9 @@
 """Tests for audit exports, post-import validation, and fail-closed workflow."""
 
 import json
+import hashlib
 import unittest
+from dataclasses import replace
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -251,6 +253,43 @@ class ReferenceModelReportingAndWorkflowTests(unittest.TestCase):
         )
         failures = [result for result in results if result.status == ValidationStatus.FAIL]
         self.assertEqual(failures, [], [(item.control_id, item.message) for item in failures])
+
+    def test_converted_weather_candidate_reports_claim_guardrail(self):
+        temporary = _test_dir("converted_weather_claim_guardrail")
+        weather = temporary / "GVE_TEST_IESVE_CANDIDATE.epw"
+        weather.write_text("test weather evidence\n", encoding="ascii")
+        digest = hashlib.sha256(weather.read_bytes()).hexdigest()
+        evidence_dir = temporary / "reference_model_artifacts" / "weather"
+        evidence_dir.mkdir(parents=True, exist_ok=True)
+        audit = evidence_dir / "GVE_TEST_IESVE_DERIVATION.json"
+        audit.write_text(
+            json.dumps(
+                {
+                    "status": "READY_FOR_IESVE_READ_ONLY_PROBE",
+                    "compliance_claim_allowed": False,
+                    "official_sia_weather_identity_confirmed": False,
+                    "weather": {"sha256": digest},
+                }
+            ),
+            encoding="utf-8",
+        )
+        parameters = _fully_configured_registry().with_overrides(
+            {"weather_file": _source(str(weather))}
+        )
+        geometry = ReferenceGeometryGenerator(parameters).generate()
+        snapshot = replace(
+            _valid_snapshot(parameters, geometry, temporary),
+            weather_file=weather.name,
+        )
+        results = ReferenceModelValidator().validate_model_snapshot(
+            snapshot, parameters, geometry
+        )
+        provenance = next(
+            item for item in results if item.control_id == "VE-WEA-002"
+        )
+        self.assertEqual(provenance.status, ValidationStatus.WARNING)
+        self.assertFalse(provenance.evidence["compliance_claim_allowed"])
+        self.assertTrue(provenance.evidence["checksum_matches"])
 
     def test_report_exports_json_csv_and_jsonl(self):
         temporary = _test_dir("report_exports")

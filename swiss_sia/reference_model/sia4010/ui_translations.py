@@ -1964,10 +1964,10 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
         "it": "Capacita interna Test 1",
     },
     "dlg_test1_input_qualify_body": {
-        "en": "Case {case} in {project}: change only furniture_mass_factor, verify read-back, and keep unlimited capacities unchanged? The project will not be saved automatically.",
-        "de": "Fall {case} in {project}: nur furniture_mass_factor aendern, Readback pruefen und unbegrenzte Leistungen unveraendert lassen? Das Projekt wird nicht automatisch gespeichert.",
-        "fr": "Cas {case} dans {project} : modifier uniquement furniture_mass_factor, verifier la relecture et laisser les puissances illimitees inchangees ? Le projet ne sera pas enregistre automatiquement.",
-        "it": "Caso {case} in {project}: modificare solo furniture_mass_factor, verificare la rilettura e lasciare invariate le potenze illimitate? Il progetto non sara salvato automaticamente.",
+        "en": "Case {case} in {project}: apply furniture_mass_factor and fully convective heating/cooling, verify read-back, and keep unlimited capacities unchanged? The project will not be saved automatically.",
+        "de": "Fall {case} in {project}: furniture_mass_factor und voll konvektive Heizung/Kuehlung anwenden, Readback pruefen und unbegrenzte Leistungen unveraendert lassen? Das Projekt wird nicht automatisch gespeichert.",
+        "fr": "Cas {case} dans {project} : appliquer furniture_mass_factor et le chauffage/refroidissement entierement convectifs, verifier la relecture et laisser les puissances illimitees inchangees ? Le projet ne sera pas enregistre automatiquement.",
+        "it": "Caso {case} in {project}: applicare furniture_mass_factor e riscaldamento/raffrescamento interamente convettivi, verificare la rilettura e lasciare invariate le potenze illimitate? Il progetto non sara salvato automaticamente.",
     },
     "status_qualifying_test1_inputs_detail": {
         "en": "Applying and reading back the guarded Test 1 capacity mapping...",

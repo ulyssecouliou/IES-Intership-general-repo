@@ -574,10 +574,27 @@
       "name": "SIA 2024 category 3.1 profiles",
       "description": "Hourly and annual schedules for people, equipment and lighting for single/group office standard use.",
       "units": "structured schedules",
-      "source": "Controlled copy of SIA 2024:2021, use category 3.1",
+      "source": "Authority email from Prof. Gerhard Zweifel dated 2026-08-10; inline SIA 2024:2021 category 3.1 extract; third-last column confirmed as standard values",
       "validation": {"type": "object"},
-      "status": "PLACEHOLDER_REQUIRED",
-      "value": null
+      "status": "CONFIRMED",
+      "value": {
+        "use_category": "3.1 Einzel-/Gruppenbüro",
+        "value_set": "standard values",
+        "source_hour_bins": {
+          "occupancy": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.2, 0.6, 1.0, 1.0, 0.8, 0.4, 0.6, 1.0, 0.8, 0.6, 0.2, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+          "equipment": [0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.6, 0.8, 1.0, 0.8, 0.4, 0.6, 1.0, 0.8, 0.6, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3],
+          "lighting": [0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.6, 0.8, 1.0, 0.8, 0.4, 0.6, 1.0, 0.8, 0.6, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3]
+        },
+        "rest_days_per_week": 2,
+        "use_days_per_year": 261,
+        "people_annual_simultaneity": 0.8,
+        "annual_full_load_hours": {
+          "people": 1500,
+          "equipment": 2910,
+          "lighting": 1400
+        },
+        "native_ve_calendar_mapping_status": "PENDING_EXACT_WEEKDAY_DATE_AND_HOUR_BOUNDARY_BINDING"
+      }
     },
     "shading_activation_w_m2": {
       "name": "External shading activation threshold",

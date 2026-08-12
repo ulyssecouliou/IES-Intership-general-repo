@@ -2,9 +2,11 @@
   "test": 7,
   "classe_de_validation": "5 — SIA 4010:2023 tableau 63 : le Test 7 est le seul test exigé par la classe 5",
   "statut": "FIGÉ — bandes recalculées et confrontées au classeur",
-  "date_extraction": "2026-08-05",
+  "date_extraction": "2026-08-10",
   "source": {
     "fichier": "SIA_4010_geteilter_Link/Test7/Resultaterfassung Test7.xlsx",
+    "sha256": "24937d8f421daa74a7f957025bfeb17a42fe2dc807b1a301a6752f4c0e808958",
+    "correction": "Règle conditionnelle N (borne basse) à M (borne haute)",
     "feuille": "Zusammenfassung",
     "programmes": [
       "IDA ICE",

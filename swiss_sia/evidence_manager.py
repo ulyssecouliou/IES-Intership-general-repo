@@ -464,6 +464,7 @@ def _normalize_global_comparison_record(raw_row: Dict[str, Any]) -> Dict[str, An
     }
     record.setdefault("project_id", record.get("project", ""))
     record.setdefault("comparison_scope", "")
+    record.setdefault("comparison_metric", "")
     record.setdefault("project_value", "")
     record.setdefault("reference_value", "")
     record.setdefault("unit", "")
@@ -481,9 +482,11 @@ def _normalize_global_comparison_record(raw_row: Dict[str, Any]) -> Dict[str, An
         record["project_value_numeric"] = None
         record["reference_value_numeric"] = None
     result_key = _status_key(record.get("comparison_result"))
+    metric_key = _status_key(record.get("comparison_metric"))
     record["accepted"] = (
         _status_key(record.get("review_status")) in ACCEPTED_REVIEW_STATUSES
         and _status_key(record.get("comparison_scope")) == "complete_sia3802_project"
+        and metric_key == "global_energy_expenditure_index_sia380"
         and result_key in {"pass", "passed", "compliant", "accepted"}
         and bool(record.get("project_id"))
         and record.get("project_value_numeric") is not None

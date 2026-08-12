@@ -92,7 +92,11 @@ def official_features(variant: str, case_id: str) -> Dict[str, bool]:
         "heat_recovery": family in {"4", "5", "6"},
         "humidification": family == "5",
         "energy_systems": family == "7",
-        "hourly_distributions": family in {"2", "3", "5"},
+        # Tests 4 and 6 also expose official frequency classes/distribution
+        # sheets (confirmed by workbook inspection and authority reply on
+        # 2026-08-10). Their exact role in the pass gate remains fail-closed,
+        # but the hourly evidence must be generated and retained.
+        "hourly_distributions": family in {"2", "3", "4", "5", "6"},
         "aps_results": True,
         "audit_report": True,
     }

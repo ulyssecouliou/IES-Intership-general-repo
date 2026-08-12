@@ -759,6 +759,80 @@ def _build_assets(
     template["system_data"]["conditioned"]["source_locator"] = (
         "Clauses 7.2.2.15 and 7.2.2.16, pages 129-130"
     )
+    template["system_data"]["system_air_minimum_flowrate"] = _field(
+        0.0,
+        (
+            "ISO Test 1 has no mechanical ventilation. The Apache system "
+            "minimum outdoor-air flow is therefore explicitly zero instead "
+            "of inheriting the generic office-template assumption."
+        ),
+        "L/(s person)",
+        "Clause 7.2.2.14, page 129",
+        "number",
+        0.0,
+        0.0,
+    )
+    template["system_data"]["system_air_minimum_flowrate"]["source"] = (
+        ISO_52016_SOURCE
+    )
+    template["system_data"]["system_air_minimum_flowrate_units"] = _field(
+        3,
+        (
+            "VE unit selector for litres per second per person; the associated "
+            "ISO Test 1 flow is exactly zero."
+        ),
+        "VE enum index",
+        "IESVE Room/System Air API mapping and clause 7.2.2.14, page 129",
+        "integer",
+        0,
+        4,
+    )
+    template["system_data"]["system_air_minimum_flowrate_units"]["source"] = (
+        ISO_52016_SOURCE
+    )
+    template["system_data"]["system_air_variation_profile"] = _field(
+        "ON",
+        (
+            "VE built-in constant multiplier for the Apache system air "
+            "schedule. ISO Test 1 has no mechanical ventilation, so the "
+            "explicitly zero outdoor-air magnitude remains zero."
+        ),
+        "VE built-in profile ID",
+        "Case 600 constant schedules; portable VE ON representation",
+        "string",
+    )
+    template["system_data"]["system_air_variation_profile"]["source"] = (
+        ISO_52016_SOURCE
+    )
+    template["system_data"]["system_air_variation_profile"][
+        "source_locator"
+    ] = "Clause 7.2.2.14, page 129"
+    template["system_data"]["heating_plant_radiant_fraction"] = _field(
+        0.0,
+        "Ideal heating is fully convective (f_H;c = 1.00).",
+        "fraction",
+        "BS EN ISO 52016-1:2017 clause 7.2.2.9, page 127",
+        "number",
+        0.0,
+        1.0,
+    )
+    template["system_data"]["cooling_plant_radiant_fraction"] = _field(
+        0.0,
+        "Ideal cooling is fully convective (f_C;c = 1.00).",
+        "fraction",
+        "BS EN ISO 52016-1:2017 clause 7.2.2.9, page 127",
+        "number",
+        0.0,
+        1.0,
+    )
+    for fraction_name in (
+        "heating_plant_radiant_fraction",
+        "cooling_plant_radiant_fraction",
+    ):
+        template["system_data"][fraction_name]["source"] = ISO_52016_SOURCE
+        template["system_data"][fraction_name]["source_locator"] = (
+            "Clause 7.2.2.9, page 127"
+        )
     if assets.get("apache_system"):
         assets["apache_system"].update(
             {

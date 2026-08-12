@@ -49,6 +49,7 @@ def _opening(**kwargs):
         "u_value": 1.4,
         "frame_fraction": 0.30,
         "is_external": True,
+        "opening_type": "window",
         "construction_id": "STD_GLZ",
     }
     payload.update(kwargs)
@@ -178,6 +179,23 @@ class SurfaceSubstitutionTests(unittest.TestCase):
         )
         self.assertEqual(_by_parameter(spec, "external_wall_u"), [])
 
+    def test_floating_point_surface_residue_is_ignored(self):
+        spec = build_reference_project_specification(
+            [
+                _room(
+                    surfaces=[
+                        _surface(
+                            surface_type="partition",
+                            area=7.8e-14,
+                            net_area=7.8e-14,
+                        )
+                    ]
+                )
+            ],
+            _Analyzer(),
+        )
+        self.assertEqual(_by_parameter(spec, "unclassified_external_surface"), [])
+
 
 class OpeningSubstitutionTests(unittest.TestCase):
     def test_window_u_and_frame_fraction_are_paired_with_table_2(self):
@@ -201,9 +219,30 @@ class OpeningSubstitutionTests(unittest.TestCase):
         self.assertEqual(_by_parameter(spec, "window_u")[0].status, PROJECT_VALUE_MISSING)
         self.assertEqual(spec.status, "BLOCKED_INCOMPLETE_INPUTS")
 
+    def test_external_door_is_not_treated_as_window(self):
+        spec = build_reference_project_specification(
+            [
+                _room(
+                    surfaces=[_surface()],
+                    openings=[
+                        _opening(
+                            id="door-1",
+                            opening_type="door",
+                            u_value=None,
+                            frame_fraction=None,
+                        )
+                    ],
+                )
+            ],
+            _Analyzer(),
+        )
+        self.assertEqual(_by_parameter(spec, "window_u"), [])
+        self.assertEqual(_by_parameter(spec, "window_frame_fraction"), [])
+        self.assertEqual(spec.blockers, ())
+
 
 class CompleteSpecificationTests(unittest.TestCase):
-    def test_fully_resolvable_model_is_ready_for_the_reference_run(self):
+    def test_resolvable_envelope_remains_partial_until_all_table2_families_exist(self):
         spec = build_reference_project_specification(
             [
                 _room(
@@ -216,9 +255,10 @@ class CompleteSpecificationTests(unittest.TestCase):
             ],
             _Analyzer(),
         )
-        self.assertEqual(spec.status, "READY_FOR_REFERENCE_RUN")
-        self.assertTrue(spec.is_complete)
+        self.assertEqual(spec.status, "PARTIAL_REFERENCE_INPUT_SPECIFICATION")
+        self.assertFalse(spec.is_complete)
         self.assertEqual(spec.blockers, ())
+        self.assertIn("sia380_annual_aggregation_and_weighting", spec.missing_input_families)
         self.assertTrue(
             all(item.status == SUBSTITUTABLE for item in spec.substitutions)
         )
@@ -237,7 +277,16 @@ class CompleteSpecificationTests(unittest.TestCase):
         )
         payload = spec.to_dict()
         self.assertEqual(
-            set(payload), {"status", "substitutions", "blockers", "notes", "is_complete"}
+            set(payload),
+            {
+                "status",
+                "substitutions",
+                "blockers",
+                "notes",
+                "implemented_input_families",
+                "missing_input_families",
+                "is_complete",
+            },
         )
         self.assertIn("reference_value", payload["substitutions"][0])
 

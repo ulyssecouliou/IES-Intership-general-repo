@@ -33,7 +33,7 @@ def _office_profiles(with_graph=True):
                     reference="SIA2024_WEEK",
                     modulating=True,
                     units=-1,
-                    data=tuple({"profile_ref": "daily"} for _ in range(7)),
+                    data=tuple({"profile_ref": "daily"} for _ in range(12)),
                     source_locator="authorized weekday mapping",
                 ),
                 NormalizedVeProfileNode(
@@ -79,7 +79,7 @@ class Test2AProfileBindingTests(unittest.TestCase):
         )
         self.assertEqual(
             bundle.definitions[1].data.value,
-            [{"profile_ref": "daily"}] * 7,
+            [{"profile_ref": "daily"}] * 12,
         )
         self.assertEqual(
             bundle.definitions[2].data.value,

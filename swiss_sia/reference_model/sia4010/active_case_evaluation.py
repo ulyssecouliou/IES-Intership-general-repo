@@ -300,7 +300,10 @@ def evaluate_qualified_active_case(
         for quantity in quantities:
             band = bands.get((pair[1], quantity.header_label))
             if band is not None:
-                counts = extractor.test2_solar_distribution(band.upper_edges)
+                counts = extractor.test2_solar_distribution(
+                    band.upper_edges,
+                    include_overflow=band.include_overflow,
+                )
                 if counts:
                     candidate[(pair[1], quantity.header_label)] = counts
         distributions = evaluate_distribution_criteria(

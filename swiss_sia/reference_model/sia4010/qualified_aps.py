@@ -703,6 +703,7 @@ class Sia4010QualifiedApsExtractor:
     def test2_solar_distribution(
         self,
         upper_edges: Sequence[float],
+        include_overflow: bool = True,
     ) -> Tuple[int, ...]:
         """Return official-bin counts for hourly total solar heat gain in W."""
 
@@ -710,4 +711,12 @@ class Sia4010QualifiedApsExtractor:
             self.power_series("total_room_solar_heat_gain_power"),
             self.results_per_hour,
         )
-        return histogram_counts(hourly_watts, upper_edges) if hourly_watts else ()
+        return (
+            histogram_counts(
+                hourly_watts,
+                upper_edges,
+                include_overflow=include_overflow,
+            )
+            if hourly_watts
+            else ()
+        )

@@ -7,6 +7,7 @@ documented in the VE 2023 VEScript User Guide bundled under ``references``.
 
 from abc import ABC, abstractmethod
 from enum import Enum
+import hashlib
 import math
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple
@@ -307,6 +308,7 @@ class IesVeGateway(VeGateway):
             self.project = self.iesve.VEProject.get_current_project()
             self.model = self.project.models[0]
             self._runtime_compatibility_warnings: List[Dict[str, Any]] = []
+            self._provisioned_conditioned_state: Optional[bool] = None
         except Exception as exc:
             raise VeApiUnavailableError(
                 "No usable current VE project/real model is available: {}".format(exc)
@@ -409,10 +411,71 @@ class IesVeGateway(VeGateway):
     def provision_assets(self, manifest: AssetManifest) -> ProvisioningReceipt:
         """Create all source-traced VE assets and return their persistent IDs."""
 
+        requested_conditioned = manifest.thermal_template.raw_system_data().get(
+            "conditioned"
+        )
+        self._provisioned_conditioned_state = (
+            requested_conditioned
+            if type(requested_conditioned) is bool
+            else None
+        )
         provisioner = IesVeAssetProvisioner(
             self.iesve, self.project, self._cdb_project()
         )
         return provisioner.provision(manifest)
+
+    @staticmethod
+    def _is_off_profile(value: Any) -> bool:
+        """Return whether a VE room-control profile is the built-in OFF profile."""
+
+        return str(_enum_or_value(value) or "").strip().upper() == "OFF"
+
+    def _verify_provisioned_room_free_floating_controls(
+        self, room_data: Any, room_name: str
+    ) -> Optional[Dict[str, Any]]:
+        """Verify the effective VE controls for a manifest free-floating room.
+
+        VE 2025.2 accepts ``conditioned`` on the thermal-template setter but
+        reads it back as ``yes``. The room-level system setter does not list
+        ``conditioned`` as writable. Heating and cooling availability profiles
+        are the documented engine controls, so both must read back as ``OFF``.
+        """
+
+        if self._provisioned_conditioned_state is not False:
+            return None
+        conditions = dict(room_data.get_room_conditions())
+        unresolved = {
+            key: _enum_or_value(conditions.get(key))
+            for key in ("heating_profile", "cooling_profile")
+            if not self._is_off_profile(conditions.get(key))
+        }
+        if unresolved:
+            raise VeMutationError(
+                "Free-floating room controls did not persist for '{}': "
+                "heating_profile and cooling_profile must both be OFF; "
+                "read-back={}".format(
+                    room_name, unresolved
+                )
+            )
+        system = dict(room_data.get_apache_systems())
+        return {
+            "expected": {
+                "heating_profile": "OFF",
+                "cooling_profile": "OFF",
+            },
+            "verified_after": {
+                "heating_profile": _enum_or_value(
+                    conditions.get("heating_profile")
+                ),
+                "cooling_profile": _enum_or_value(
+                    conditions.get("cooling_profile")
+                ),
+            },
+            "conditioned_readback_advisory": _enum_or_value(
+                system.get("conditioned")
+            ),
+            "binding": "room heating/cooling availability profiles",
+        }
 
     def reconcile_existing_gain(
         self, manifest: AssetManifest, gain_key: str
@@ -869,6 +932,38 @@ class IesVeGateway(VeGateway):
                 ) from exc
             after = self._record_data(actual_record, "synchronized room gain")
             remaining = _gain_semantic_mismatches(expected, after)
+            people_latent_fallback: Optional[str] = None
+            if family == "people" and set(remaining) == {"max_latent_gain"}:
+                # VE 2025 exposes max_latent_gains as a read-only plural
+                # conversion dictionary. The supported scalar option can be
+                # reset when it is submitted in the same payload as occupancy
+                # and units, so retry it alone after those fields have settled.
+                try:
+                    actual_record.set(
+                        {"max_latent_gain": expected["max_latent_gain"]}
+                    )
+                except Exception:
+                    pass
+                after = self._record_data(
+                    actual_record, "isolated-scalar room people gain"
+                )
+                remaining = _gain_semantic_mismatches(expected, after)
+                if not remaining:
+                    people_latent_fallback = "isolated_scalar"
+                elif set(remaining) == {"max_latent_gain"}:
+                    # The global PeopleGain was already provisioned and
+                    # numerically verified. If direct override remains blocked,
+                    # restore this one field's native template inheritance.
+                    try:
+                        actual_record.set({"max_latent_gain_from_template": True})
+                    except Exception:
+                        pass
+                    after = self._record_data(
+                        actual_record, "template-inherited room people gain"
+                    )
+                    remaining = _gain_semantic_mismatches(expected, after)
+                    if not remaining:
+                        people_latent_fallback = "template_inheritance"
             if remaining:
                 raise VeMutationError(
                     "Direct room-level {} gain synchronization did not persist "
@@ -883,6 +978,7 @@ class IesVeGateway(VeGateway):
                         key: _enum_or_value(expected.get(key))
                         for key in mismatches
                     },
+                    "people_latent_fallback": people_latent_fallback,
                 }
             )
         return changes
@@ -913,6 +1009,210 @@ class IesVeGateway(VeGateway):
             expected_flow = expected.get("max_flow", 0.0)
             match = actual_by_type.get(key)
             if match is None:
+                if "mechanicalventilation" in key or "auxiliaryventilation" in key:
+                    # Under apache_system methodology VE 2025 does not create a
+                    # second RoomAirExchange for template auxiliary ventilation.
+                    # The simulation-equivalent native binding is the room's
+                    # system-air minimum flow, unit and variation profile.
+                    if not all(
+                        hasattr(room_data, member)
+                        for member in ("get_apache_systems", "set_apache_systems")
+                    ):
+                        raise VeMutationError(
+                            "Room '{}' exposes no Apache-system setter for template "
+                            "mechanical ventilation '{}'".format(
+                                room_name, expected.get("name", "")
+                            )
+                        )
+                    before_system = dict(room_data.get_apache_systems())
+                    methodology = _normalise_type(
+                        before_system.get("HVAC_methodology", "")
+                    )
+                    if "apachesystem" not in methodology:
+                        raise VeMutationError(
+                            "Room '{}' omitted mechanical air exchange but is not "
+                            "using apache_system methodology".format(room_name)
+                        )
+                    # get_apache_systems() also returns display/read-only keys
+                    # such as heating_capacity_unit_str. Passing the complete
+                    # read-back dictionary to the setter is rejected by VE;
+                    # submit only writable system-air options. VE 2025 exposes
+                    # the unit as ``system_air_minimum_flowrate_unit`` on room
+                    # read-back. Some VE builds accept the plural template key,
+                    # some accept the singular room key, and VE 2025.0 accepts
+                    # neither unit selector. In that last case preserve the
+                    # existing native unit and use VE's own equivalent-flow
+                    # read-back to calculate the requested physical flow.
+                    payload = {
+                        "system_air_minimum_flowrate": expected_flow,
+                        "system_air_minimum_flowrate_units": expected.get(
+                            "units_val"
+                        ),
+                        "system_air_variation_profile": expected.get(
+                            "variation_profile"
+                        ),
+                        "system_air_minimum_flowrate_from_template": False,
+                        "system_air_variation_profile_from_template": False,
+                    }
+                    binding_mode = "unit_selector_plural"
+                    try:
+                        room_data.set_apache_systems(payload)
+                    except Exception as exc:
+                        if "unrecognised option: system_air_minimum_flowrate_units" not in str(
+                            exc
+                        ).lower():
+                            raise VeMutationError(
+                                "Apache system-air synchronization failed for '{}': "
+                                "{}".format(room_name, exc)
+                            ) from exc
+                        fallback_payload = dict(payload)
+                        fallback_payload["system_air_minimum_flowrate_unit"] = (
+                            fallback_payload.pop("system_air_minimum_flowrate_units")
+                        )
+                        try:
+                            room_data.set_apache_systems(fallback_payload)
+                            binding_mode = "unit_selector_singular"
+                        except Exception as fallback_exc:
+                            fallback_message = str(fallback_exc).lower()
+                            if (
+                                "unrecognised option: system_air_minimum_flowrate_unit"
+                                not in fallback_message
+                            ):
+                                raise VeMutationError(
+                                    "Apache system-air synchronization failed for '{}': "
+                                    "{}".format(room_name, fallback_exc)
+                                ) from fallback_exc
+                            native_unit = _selected_readback(
+                                before_system,
+                                "system_air_minimum_flowrate_units",
+                                "system_air_minimum_flowrate_unit",
+                            )
+                            equivalent_flows = before_system.get(
+                                "system_air_minimum_flowrates"
+                            )
+                            requested_unit = expected.get("units_val")
+
+                            def equivalent_value(unit: Any) -> Any:
+                                if not isinstance(equivalent_flows, dict):
+                                    return None
+                                return equivalent_flows.get(
+                                    unit, equivalent_flows.get(str(unit))
+                                )
+
+                            native_equivalent = equivalent_value(native_unit)
+                            requested_equivalent = equivalent_value(requested_unit)
+                            try:
+                                converted_flow = (
+                                    float(native_equivalent)
+                                    * float(expected_flow)
+                                    / float(requested_equivalent)
+                                )
+                            except (TypeError, ValueError, ZeroDivisionError) as conversion_exc:
+                                raise VeMutationError(
+                                    "VE exposes a read-only system-air unit for '{}', "
+                                    "but its equivalent-flow conversion could not be "
+                                    "resolved (native unit={!r}, requested unit={!r}, "
+                                    "equivalents={!r})".format(
+                                        room_name,
+                                        native_unit,
+                                        requested_unit,
+                                        equivalent_flows,
+                                    )
+                                ) from conversion_exc
+                            native_payload = {
+                                "system_air_minimum_flowrate": converted_flow,
+                                "system_air_variation_profile": expected.get(
+                                    "variation_profile"
+                                ),
+                            }
+                            try:
+                                room_data.set_apache_systems(native_payload)
+                                binding_mode = "converted_existing_native_unit"
+                            except Exception as native_exc:
+                                raise VeMutationError(
+                                    "Apache system-air synchronization failed for '{}': "
+                                    "{}".format(room_name, native_exc)
+                                ) from native_exc
+                    verified_system = dict(room_data.get_apache_systems())
+                    verified_flow = _selected_readback(
+                        verified_system,
+                        "system_air_minimum_flowrates",
+                        "system_air_minimum_flowrate",
+                    )
+                    verified_unit = _selected_readback(
+                        verified_system,
+                        "system_air_minimum_flowrate_units",
+                        "system_air_minimum_flowrate_unit",
+                    )
+                    verified_equivalents = verified_system.get(
+                        "system_air_minimum_flowrates"
+                    )
+                    if _values_equivalent(verified_unit, expected.get("units_val")):
+                        verified_flow_in_requested_units = verified_flow
+                    elif isinstance(verified_equivalents, dict):
+                        requested_unit = expected.get("units_val")
+                        verified_flow_in_requested_units = verified_equivalents.get(
+                            requested_unit, verified_equivalents.get(str(requested_unit))
+                        )
+                    else:
+                        verified_flow_in_requested_units = None
+                    system_mismatches = {}
+                    for field, wanted, observed in (
+                        (
+                            "max_flow_in_requested_units",
+                            expected_flow,
+                            verified_flow_in_requested_units,
+                        ),
+                        (
+                            "variation_profile",
+                            expected.get("variation_profile"),
+                            verified_system.get("system_air_variation_profile"),
+                        ),
+                    ):
+                        if not _values_equivalent(wanted, observed):
+                            system_mismatches[field] = {
+                                "expected": _enum_or_value(wanted),
+                                "actual": _enum_or_value(observed),
+                            }
+                    if system_mismatches:
+                        raise VeMutationError(
+                            "Apache system-air synchronization did not persist for "
+                            "'{}': {}".format(room_name, system_mismatches)
+                        )
+                    changes.append(
+                        {
+                            "template_record": str(expected.get("name", "")),
+                            "binding": "apache_system.system_air_minimum_flowrate",
+                            "binding_mode": binding_mode,
+                            "requested_unit": _enum_or_value(expected.get("units_val")),
+                            "before": {
+                                "flow": _enum_or_value(
+                                    before_system.get("system_air_minimum_flowrate")
+                                ),
+                                "unit": _enum_or_value(
+                                    before_system.get(
+                                        "system_air_minimum_flowrate_unit"
+                                    )
+                                ),
+                                "profile": _enum_or_value(
+                                    before_system.get("system_air_variation_profile")
+                                ),
+                            },
+                            "verified_after": {
+                                "flow": _enum_or_value(verified_flow),
+                                "unit": _enum_or_value(verified_unit),
+                                "flow_in_requested_units": _enum_or_value(
+                                    verified_flow_in_requested_units
+                                ),
+                                "profile": _enum_or_value(
+                                    verified_system.get(
+                                        "system_air_variation_profile"
+                                    )
+                                ),
+                            },
+                        }
+                    )
+                    continue
                 # A zero-flow mechanical-ventilation placeholder has no
                 # simulation effect and VE may legitimately omit it at room level.
                 if _values_equivalent(expected_flow, 0.0):
@@ -997,13 +1297,54 @@ class IesVeGateway(VeGateway):
             return changes
         expected_conditions = dict(template.get_room_conditions())
         actual_conditions = dict(room_data.get_room_conditions())
-        condition_keys = (
-            "heating_setpoint",
-            "cooling_setpoint",
+        condition_keys = [
             "heating_profile",
             "cooling_profile",
             "plant_profile",
-        )
+        ]
+
+        def setpoint_mode(prefix: str) -> str:
+            """Return the documented constant/variable/two-value mode."""
+
+            value = _enum_or_value(
+                expected_conditions.get("{}_setpoint_type".format(prefix))
+            )
+            if isinstance(value, (int, float)) and not isinstance(value, bool):
+                return {0: "constant", 1: "variable", 2: "two_value"}.get(
+                    int(value), ""
+                )
+            normalized = _normalise_type(value)
+            if "twovalue" in normalized:
+                return "two_value"
+            if "variable" in normalized:
+                return "variable"
+            if "constant" in normalized:
+                return "constant"
+            return ""
+
+        for prefix in ("heating", "cooling"):
+            type_key = "{}_setpoint_type".format(prefix)
+            if type_key not in expected_conditions:
+                continue
+            condition_keys.append(type_key)
+            mode = setpoint_mode(prefix)
+            if mode == "constant":
+                condition_keys.append("{}_setpoint".format(prefix))
+            elif mode == "variable":
+                condition_keys.append("{}_setpoint_profile".format(prefix))
+            elif mode == "two_value":
+                condition_keys.extend(
+                    [
+                        "{}_setpoint_twovalue_main_setpoint".format(prefix),
+                        "{}_setpoint_twovalue_profile".format(prefix),
+                        "{}_setpoint_twovalue_setback".format(prefix),
+                    ]
+                )
+            else:
+                raise VeMutationError(
+                    "Unsupported {} setpoint mode read back from template: {!r}"
+                    .format(prefix, expected_conditions.get(type_key))
+                )
         condition_drift = {
             key: {
                 "expected": _enum_or_value(expected_conditions[key]),
@@ -1016,10 +1357,22 @@ class IesVeGateway(VeGateway):
             )
         }
         if condition_drift:
-            payload = dict(actual_conditions)
+            # Submit only the fields that actually differ. VE room-condition
+            # getters expose display/read-only keys (for example ``dhw_unit``
+            # in VE 2025.2) which the corresponding setter rejects. Replaying
+            # the complete read-back dictionary therefore breaks an otherwise
+            # valid template assignment. Coupled setpoint mode/profile fields
+            # are already both present in ``condition_drift`` when required.
+            payload: Dict[str, Any] = {}
             for key in condition_drift:
                 payload[key] = expected_conditions[key]
-                payload["{}_from_template".format(key)] = False
+                if key.startswith("heating_setpoint"):
+                    inheritance_key = "heating_setpoint_from_template"
+                elif key.startswith("cooling_setpoint"):
+                    inheritance_key = "cooling_setpoint_from_template"
+                else:
+                    inheritance_key = "{}_from_template".format(key)
+                payload[inheritance_key] = False
             try:
                 room_data.set_room_conditions(payload)
             except Exception as exc:
@@ -1053,6 +1406,8 @@ class IesVeGateway(VeGateway):
             "cooling_capacity_unlimited",
             "cooling_capacity_unit",
             "cooling_capacity_value",
+            "heating_plant_radiant_fraction",
+            "cooling_plant_radiant_fraction",
         )
         system_drift = {
             key: {
@@ -1146,6 +1501,11 @@ class IesVeGateway(VeGateway):
             control_changes = self._synchronise_room_controls(
                 room_data, template, str(current_body.name)
             )
+            conditioned_change = self._verify_provisioned_room_free_floating_controls(
+                room_data, str(current_body.name)
+            )
+            if conditioned_change:
+                control_changes["free_floating"] = conditioned_change
             if gain_changes or exchange_changes or control_changes:
                 self._runtime_compatibility_warnings.append(
                     {
@@ -1199,11 +1559,27 @@ class IesVeGateway(VeGateway):
     def assign_weather(self, weather_file: str) -> None:
         """Persist the weather selection and verify it remains readable."""
 
+        source = Path(weather_file)
+        source_prequalified = False
+        if source.is_absolute() and source.is_file():
+            source_prequalified = self._weather_reference_readable(str(source))
+        assignment_reference = self._apache_weather_reference(weather_file)
+        if source_prequalified:
+            project_path = Path(str(getattr(self.project, "path", "") or ""))
+            try:
+                if source.resolve().parent == project_path.resolve():
+                    # The separate ApacheSim worker resolves project-local
+                    # weather by basename even when WeatherFileReader only
+                    # accepts the absolute source during qualification.
+                    assignment_reference = source.name
+            except Exception:
+                pass
+
         locate = self.iesve.VELocate()
         try:
             if locate.open_wea_data() < 0:
                 raise VeMutationError("VELocate.open_wea_data returned failure")
-            locate.set({"weather_file": weather_file})
+            locate.set({"weather_file": assignment_reference})
             locate.save_and_close()
         except VeMutationError:
             raise
@@ -1215,17 +1591,133 @@ class IesVeGateway(VeGateway):
             raise VeMutationError("Weather assignment failed: {}".format(exc)) from exc
 
         assigned, readable = self._weather_state()
-        if not readable or not (
-            assigned == weather_file
+        assignment_matches = (
+            assigned == assignment_reference
             or assigned.replace("\\", "/").endswith(
-                weather_file.replace("\\", "/").split("/")[-1]
+                assignment_reference.replace("\\", "/").split("/")[-1]
             )
-        ):
+        )
+        if not assignment_matches:
             raise VeMutationError(
                 "Weather verification failed (assigned='{}', readable={})".format(
                     assigned, readable
                 )
             )
+        if not readable:
+            source_matches_assignment = source_prequalified and (
+                assigned == str(source)
+                or Path(assigned).name == source.name
+            )
+            if not source_matches_assignment:
+                raise VeMutationError(
+                    "Weather verification failed (assigned='{}', readable={})".format(
+                        assigned, readable
+                    )
+                )
+            # VE 2025 can read a project-local EPW immediately before VELocate
+            # saves it, yet return failure for both basename and absolute path
+            # on the immediate read-back.  Retain the verified basename for
+            # ApacheSim and expose the workaround in the workflow audit.  The
+            # simulation call remains the definitive runtime qualification.
+            self._runtime_compatibility_warnings.append(
+                {
+                    "code": "VE-WEATHER-POST-SAVE-READBACK",
+                    "assigned": assigned,
+                    "qualified_source": str(source),
+                    "message": (
+                        "Weather source was readable before VELocate save but "
+                        "WeatherFileReader could not reopen it immediately after; "
+                        "ApacheSim runtime qualification is required."
+                    ),
+                }
+            )
+
+    @staticmethod
+    def _file_sha256(path: Path) -> str:
+        """Return a stable digest used to prevent weather-name collisions."""
+
+        digest = hashlib.sha256()
+        with path.open("rb") as handle:
+            for block in iter(lambda: handle.read(1024 * 1024), b""):
+                digest.update(block)
+        return digest.hexdigest()
+
+    def _apache_weather_reference(self, weather_file: str) -> str:
+        """Return a weather reference that the ApacheSim worker can resolve.
+
+        The VE 2025 ``VELocate`` example assigns weather by basename.  An
+        absolute custom path can be read by ``WeatherFileReader`` yet still be
+        rejected by the separate ApacheSim worker.  A weather file stored
+        directly in the active VE project is therefore assigned by basename;
+        ApacheSim resolves that reference relative to the project.  Otherwise
+        we use the basename only when the exact same file is present in one of
+        the weather folders reported by VE itself.  A same-name/different-
+        content file is never accepted.
+        """
+
+        source = Path(weather_file)
+        if source.is_absolute() and source.is_file():
+            project_path = Path(str(getattr(self.project, "path", "") or ""))
+            try:
+                if source.resolve().parent == project_path.resolve():
+                    reader = self.iesve.WeatherFileReader()
+                    try:
+                        if reader.open_weather_file(source.name) > 0:
+                            return source.name
+                    finally:
+                        try:
+                            reader.close()
+                        except Exception:
+                            pass
+            except Exception:
+                # Keep the full reference if either path or reader cannot be
+                # qualified; callers subsequently verify the persisted state.
+                pass
+        get_paths = getattr(self.iesve, "get_weather_file_paths", None)
+        if not source.is_file() or not callable(get_paths):
+            return weather_file
+        try:
+            source_digest = self._file_sha256(source)
+            weather_paths = list(get_paths())
+        except Exception:
+            return weather_file
+        for folder in weather_paths:
+            candidate = Path(str(folder)) / source.name
+            try:
+                if (
+                    candidate.is_file()
+                    and self._file_sha256(candidate) == source_digest
+                ):
+                    reader = self.iesve.WeatherFileReader()
+                    try:
+                        if reader.open_weather_file(source.name) > 0:
+                            return source.name
+                    finally:
+                        try:
+                            reader.close()
+                        except Exception:
+                            pass
+            except Exception:
+                continue
+        return weather_file
+
+    def normalize_weather_reference_for_apachesim(self) -> Tuple[str, str]:
+        """Re-save the active weather using an ApacheSim-resolvable reference."""
+
+        before, readable = self._weather_state()
+        if not before or not readable:
+            raise VeMutationError(
+                "Active weather is missing or unreadable (assigned='{}')".format(
+                    before
+                )
+            )
+        self.assign_weather(before)
+        after, readable_after = self._weather_state()
+        if not readable_after:
+            raise VeMutationError(
+                "Normalized weather reference is unreadable: '{}'".format(after)
+            )
+        return before, after
 
     def _weather_state(self) -> Tuple[str, bool]:
         """Return the assigned weather path and readability state."""
@@ -1243,17 +1735,41 @@ class IesVeGateway(VeGateway):
                 pass
         readable = False
         if assigned:
-            reader = self.iesve.WeatherFileReader()
-            try:
-                readable = reader.open_weather_file(assigned) > 0
-            except Exception:
-                readable = False
-            finally:
-                try:
-                    reader.close()
-                except Exception:
-                    pass
+            references = [assigned]
+            assigned_path = Path(assigned)
+            if not assigned_path.is_absolute():
+                project_path = Path(
+                    str(getattr(self.project, "path", "") or "")
+                )
+                if str(project_path):
+                    project_reference = str(project_path / assigned_path)
+                    if project_reference not in references:
+                        references.append(project_reference)
+
+            # ApacheSim requires project-local weather to remain assigned by
+            # basename, but WeatherFileReader does not resolve that basename
+            # consistently after VELocate has saved it.  Verify the persisted
+            # reference as-is first, then resolve it against the active VE
+            # project solely for the readability check.
+            for reference in references:
+                readable = self._weather_reference_readable(reference)
+                if readable:
+                    break
         return assigned, readable
+
+    def _weather_reference_readable(self, reference: str) -> bool:
+        """Probe one weather reference and always close its VE reader."""
+
+        reader = self.iesve.WeatherFileReader()
+        try:
+            return reader.open_weather_file(reference) > 0
+        except Exception:
+            return False
+        finally:
+            try:
+                reader.close()
+            except Exception:
+                pass
 
     def _safe_version(self) -> str:
         """Return the VE version string, tolerating a missing accessor."""

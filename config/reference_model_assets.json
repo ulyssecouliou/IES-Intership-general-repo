@@ -326,7 +326,10 @@
       "cooling_setpoint": {"value": 26.0, "description": "Occupied cooling setpoint.", "units": "degC", "source": "Reference-model office engineering assumption", "source_locator": "RM-BASELINE-2026 section 4; replace with licensed SIA 2024/project input", "validation_range": {"expected_type": "number", "minimum": 0.0, "maximum": 50.0, "allow_none": false}, "required": true}
     },
     "system_data": {
-      "conditioned": {"value": true, "description": "All four reference rooms are conditioned.", "units": "boolean", "source": "Reference-model scope decision", "source_locator": "RM-BASELINE-2026 section 5", "validation_range": {"expected_type": "boolean", "allow_none": false}, "required": true}
+      "conditioned": {"value": true, "description": "All four reference rooms are conditioned.", "units": "boolean", "source": "Reference-model scope decision", "source_locator": "RM-BASELINE-2026 section 5", "validation_range": {"expected_type": "boolean", "allow_none": false}, "required": true},
+      "system_air_minimum_flowrate": {"value": 10.0, "description": "Occupied outdoor-air supply represented by the Apache system minimum-flow field.", "units": "L/(s person)", "source": "Reference-model office engineering assumption; not asserted as a licensed SIA 2024 value", "source_locator": "RM-BASELINE-2026 section 4 and outdoor_air asset", "validation_range": {"expected_type": "number", "minimum": 0.0, "maximum": 100.0, "allow_none": false}, "required": true},
+      "system_air_minimum_flowrate_units": {"value": 3, "description": "VE unit selector for litres per second per person.", "units": "VE enum index", "source": "IESVE Room/System Air API mapping", "source_locator": "VEScripts RoomAirExchange and Apache system read-back", "validation_range": {"expected_type": "integer", "minimum": 0, "maximum": 4, "allow_none": false}, "required": true},
+      "system_air_variation_profile": {"value": {"profile_ref": "occupancy_profile"}, "description": "Mechanical outdoor-air schedule.", "units": "profile reference", "source": "Reference-model implementation decision", "source_locator": "RM-BASELINE-2026 section 4", "validation_range": {"expected_type": "object", "allow_none": false}, "required": true}
     },
     "gain_keys": ["people_gain", "lighting_gain", "equipment_gain"],
     "air_exchange_keys": ["infiltration", "outdoor_air"]

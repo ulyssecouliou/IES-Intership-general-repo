@@ -178,6 +178,14 @@ class IESVEExtractionContractTests(unittest.TestCase):
                     extractor.get_profile_daily_equivalent_hours(profile_id)
                 )
 
+    def test_builtin_on_profile_resolves_without_project_profile_lookup(self):
+        """VE's built-in ON identifier represents a constant 24-hour profile."""
+        extractor, profiles = self.make_profile_extractor()
+
+        self.assertEqual(extractor.get_profile_daily_equivalent_hours("ON"), 24.0)
+        self.assertEqual(extractor.get_profile_daily_equivalent_hours("on"), 24.0)
+        profiles.assert_not_called()
+
     def test_project_apache_systems_list_is_indexed_by_documented_ids(self):
         primary = FakeApacheSystem("SYS-01", "Primary")
         secondary = FakeApacheSystem("SYS-02", "Secondary")

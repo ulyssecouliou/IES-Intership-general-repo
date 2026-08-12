@@ -120,6 +120,7 @@ def test_candidat_au_centre_de_chaque_bande_passe(reference, candidat_parfait):
                              source_irradiance=SOURCE_FICTIVE)
     assert r['verdict'] == scatter_band.VERDICT_PASS
     assert r['classe_5_validee'] is True
+    assert r['classe_5_provisoirement_conforme'] is True
     assert r['nb_echecs'] == 0
     assert r['nb_non_evaluables'] == 0
 
@@ -185,11 +186,12 @@ def test_les_diagnosegroessen_nentrent_pas_dans_le_verdict(reference):
          if g['groupe'] == moteur.GROUPE_AVEC_CRITERE])
 
 
-def test_le_critere_est_annonce_comme_infere(reference):
-    """Rule 1 : ne jamais présenter une inférence comme une règle normative."""
+def test_le_classeur_corrige_est_annonce_comme_verifie(reference):
+    """Le résultat identifie la source corrigée désormais active."""
     r = moteur.evaluer_test7(reference, None)
-    assert r['critere']['statut'] == 'INFERE'
+    assert r['critere']['statut'] == 'CLASSEUR_CORRIGE_VERIFIE_2026-08-10'
     assert '4.4' in r['critere']['justification']
+    assert '2026-08-10' in r['critere']['justification']
 
 
 def test_appariement_insensible_a_la_casse_et_aux_espaces(reference):
@@ -283,6 +285,7 @@ def test_une_provenance_declaree_leve_le_verrou(reference, candidat_parfait):
                              source_irradiance=source)
     assert r['verdict'] == scatter_band.VERDICT_PASS
     assert r['classe_5_validee'] is True
+    assert r['classe_5_provisoirement_conforme'] is True
     assert r['grandeurs_verrouillees'] == []
     assert r['source_irradiance'] == source
 
@@ -304,13 +307,13 @@ def test_le_resume_affiche_le_verrou(reference, candidat_parfait):
     assert 'PV-Ertrag' in texte
 
 
-def test_chaque_ligne_porte_le_statut_infere_du_critere(reference,
-                                                         candidat_parfait):
+def test_chaque_ligne_porte_le_statut_du_classeur_corrige(reference,
+                                                          candidat_parfait):
     """`evaluer_grandeur` est publique : le marqueur ne doit pas dépendre
     d'un passage par `evaluer_test7`."""
     grandeur = reference['grandeurs'][0]
     ligne = moteur.evaluer_grandeur(grandeur, grandeur['moyenne'])
-    assert ligne['critere_statut'] == 'INFERE'
+    assert ligne['critere_statut'] == 'CLASSEUR_CORRIGE_VERIFIE_2026-08-10'
 
 
 def test_la_liste_des_grandeurs_a_irradiance_correspond_a_la_reference(reference):

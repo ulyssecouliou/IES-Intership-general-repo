@@ -174,7 +174,7 @@ class NormalizedExternalInputTests(unittest.TestCase):
                         "reference": weekly.upper(),
                         "modulating": True,
                         "units": -1,
-                        "data": [{"profile_ref": daily}] * 7,
+                        "data": [{"profile_ref": daily}] * 12,
                         "source_locator": "controlled weekday mapping",
                     },
                     {

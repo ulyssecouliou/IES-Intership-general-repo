@@ -86,7 +86,7 @@ def _bindings(project, *, width=8.0, with_profile_graph=False):
                     modulating=True,
                     units=-1,
                     data=tuple(
-                        {"profile_ref": "controlled_daily"} for _ in range(7)
+                        {"profile_ref": "controlled_daily"} for _ in range(12)
                     ),
                     source_locator="controlled weekly mapping",
                 ),

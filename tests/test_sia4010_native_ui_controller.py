@@ -158,6 +158,68 @@ class NativeModelBuilderControllerTests(unittest.TestCase):
         finally:
             shutil.rmtree(project, ignore_errors=True)
 
+    def test_test1_weather_migrates_only_audited_managed_transport(self):
+        project = ROOT / ".codex_tmp" / "ui_test1_weather_migration"
+        repository = project / "repository"
+        source = repository / "references" / "standards" / "bestest"
+        source.mkdir(parents=True, exist_ok=True)
+        try:
+            tmy = source / "DRYCOLD.TMY"
+            tmy.write_text("controlled tmy", encoding="ascii")
+            legacy_tmy_checksum = hashlib.sha256(
+                b"controlled tmy with legacy line endings"
+            ).hexdigest()
+            (source / "DRYCOLD_TMY_ISO_SOURCE_VERIFICATION.json").write_text(
+                json.dumps(
+                    {"weather": {"sha256": legacy_tmy_checksum}}
+                ),
+                encoding="utf-8",
+            )
+            new_weather = source / "DRYCOLD_IESVE.epw"
+            new_weather.write_text("new sky boundary", encoding="ascii")
+            new_audit = source / "DRYCOLD_IESVE_EPW_DERIVATION.json"
+            new_audit.write_text("{}\n", encoding="utf-8")
+
+            old_weather = project / "DRYCOLD_IESVE.epw"
+            old_weather.write_text("old generated transport", encoding="ascii")
+            old_audit = project / "DRYCOLD_IESVE_EPW_DERIVATION.json"
+            old_audit.write_text(
+                json.dumps(
+                    {
+                        "status": "PASS",
+                        "weather": {
+                            "format": "EPW",
+                            "sha256": hashlib.sha256(
+                                old_weather.read_bytes()
+                            ).hexdigest()
+                        },
+                        "source_tmy1": {
+                            "format": "NOAA_TMY1_FIXED_WIDTH",
+                            "sha256": legacy_tmy_checksum
+                        },
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            result = self.controller.ensure_test1_weather(
+                project, repository
+            )
+            self.assertEqual(result, old_weather)
+            self.assertEqual(
+                old_weather.read_text(encoding="ascii"),
+                "new sky boundary",
+            )
+            self.assertEqual(
+                (
+                    project
+                    / "DRYCOLD_IESVE.pre_iso_sky_boundary.epw.bak"
+                ).read_text(encoding="ascii"),
+                "old generated transport",
+            )
+        finally:
+            shutil.rmtree(project, ignore_errors=True)
+
     def test_class_filters_variants(self):
         self.assertEqual(
             self.controller.variants_for_class("1A"),

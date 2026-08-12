@@ -1,4 +1,4 @@
-"""Frequency-distribution second criterion for SIA 4010 (Tests 2, 3, 5).
+"""Frequency-distribution criterion for the SIA 4010 evaluation workbooks.
 
 Besides the annual-sum band, these tests require the candidate's hourly
 frequency distribution of a quantity (e.g. solar heat gain) to lie "im
@@ -9,52 +9,30 @@ This module is the pure-Python core:
 
 - ``parse_frequency_classes`` reads the official ``Haeufigkeitsklassen`` legend
   (per-quantity class upper edges) verbatim - it invents no bins.
-- ``histogram_counts`` bins an hourly series with Excel ``FREQUENCY`` semantics
-  (class ``i`` counts ``edge[i-1] < v <= edge[i]``; a final overflow class
-  counts ``v > edge[-1]``), so candidate and reference are binned identically.
-- ``build_scatter_band`` derives the per-bin band as ``mean +/- max|count -
-  mean|`` across the reference programs' per-bin counts, computed only from the
-  reference programs' own data (nothing invented).
-- ``compare_distribution`` reports PASS when every candidate bin lies within the
-  band, PASS_WITH_RESERVATION when it does but leaves the narrower min/max
-  envelope, FAIL if any bin is outside the band, and NOT_CHECKABLE when the
-  candidate distribution is absent (fail-closed; a missing candidate is never a
-  pass).
+- ``histogram_counts`` bins an hourly series with Excel ``FREQUENCY`` semantics.
+  Its optional overflow result is kept separate from the official displayed
+  classes, so hours outside the class limits are audited rather than mistaken
+  for missing data or silently merged into the last class.
+- ``build_scatter_band`` derives the acceptance interval as the per-bin
+  ``min(reference programs) .. max(reference programs)`` envelope.
+- ``compare_distribution`` reports PASS only when every candidate bin lies in
+  that envelope, FAIL outside it, and NOT_CHECKABLE when evidence is missing.
 
-WHY THE SYMMETRIC BAND AND NOT THE MIN/MAX ENVELOPE
----------------------------------------------------
-The workbook tabulates no band for this criterion (verified: zero
-``Mittelwert`` / ``obere Grenze`` / ``untere Grenze`` label anywhere in the
-frequency zone of Resultaterfassung_Test2, rows 26-308 x 239 columns, and its 50
-charts merely superimpose the programs' histograms - no envelope series). The
-band therefore has to be derived, which makes the choice of formula a normative
-reading rather than a lookup.
+AUTHORITY CLARIFICATION
+-----------------------
+The workbooks draw the reference histograms but do not calculate a numerical
+distribution band. A written clarification from Prof. Gerhard Zweifel received
+on 2026-08-10 confirms that ``Streubereich`` is interpretation #1: the envelope
+of the reference programs for every frequency class (minimum to maximum).
+The same authority clarified that apparent totals below 8,760 in the displayed
+histograms do not mean that the reference series are incomplete: some hourly
+values fall outside the class boundaries. Those hours remain part of the source
+series and are reported separately as overflow; they are not an invented scored
+class.
 
-Wherever the SIA does tabulate a scatter band, it computes it as the symmetric
-band. Read directly from the official workbooks:
-
-    Resultaterfassung_Test1, "Zusammenfassung Testfaelle"
-        H16 = G16+MAX(ABS(C16-G16),ABS(D16-G16),ABS(E16-G16),ABS(F16-G16))
-        I16 = MAX(0,G16-MAX(ABS(C16-G16),...))
-    Resultaterfassung_Test2, "Zusammenfassung"
-        N14 = M14+MAX(ABS(E14-M14),ABS(H14-M14),ABS(K14-M14),ABS(L14-M14))
-        O14 = M14-MAX(...)
-
-Spezifikation_Test1 applies the same word to the criterion those tables encode:
-"Resultate fuer den Test 1E muessen im Streubereich der enthaltenen
-Referenzprogramme liegen". So when the SIA had to turn this word into numbers,
-it wrote the symmetric band.
-
-Since ``max|count - mean| >= max - mean`` and ``>= mean - min``, the min/max
-envelope is always contained in the symmetric band: reading the criterion as the
-envelope is strictly stricter and risks failing a candidate that the official
-criterion accepts. That is why the envelope is reported, never enforced.
-
-Full arbitration, including the counter-argument and what would overturn it:
-``traceability/streubereich-distributions.spec.md`` in the SIA_Compliance_Scripts
-repository (confidence ~92%, not certain). The decision is reversible: switching
-the enforced criterion means swapping which pair of tuples ``compare_distribution``
-tests against.
+The formerly inferred symmetric band ``mean +/- max deviation`` is retained as
+diagnostic metadata only, to preserve auditability of results produced before
+the clarification. It is no longer an acceptance criterion.
 
 NOTE ON THE CONTRIBUTING SET
 ----------------------------
@@ -91,20 +69,18 @@ class FrequencyClasses:
 class DistributionBand:
     """Per-bin scatter band built from the reference programs.
 
-    ``lower_counts`` / ``upper_counts`` are the ACCEPTANCE band: per bin, the
-    symmetric band ``mean +/- max|count - mean|`` across the contributing
-    reference programs. This is the construction the SIA itself applies wherever
-    it tabulates a scatter band; see the module docstring for the evidence.
+    ``lower_counts`` / ``upper_counts`` are the ACCEPTANCE band: the per-bin
+    minimum and maximum across the contributing reference programs.
 
-    ``envelope_lower_counts`` / ``envelope_upper_counts`` are the per-bin
-    min/max span of the same programs. This is the competing reading of the
-    criterion, kept only to flag the cases where the two readings disagree
-    (``PASS_WITH_RESERVATION``). It is never the acceptance criterion. Empty
-    tuples mean "envelope unknown", and no reservation is ever raised.
+    ``envelope_lower_counts`` / ``envelope_upper_counts`` repeat that accepted
+    envelope for backward-compatible reports. ``symmetric_*`` contains the old
+    inferred mean-plus-deviation diagnostic and is never used for a verdict.
 
-    ``bin_count`` is ``len(upper_edges) + 1`` (the final entry is the overflow
-    class). ``program_count`` records how many reference programs contributed,
-    for the audit trail.
+    ``include_overflow`` records whether the final Excel ``FREQUENCY`` overflow
+    result is scored. Official workbook bands set it to ``False`` because the
+    workbook charts only the declared classes; generic callers may retain the
+    full Excel result. ``outside_class_counts`` preserves the excluded overflow
+    count per reference program for the audit trail.
     """
 
     quantity: str
@@ -116,15 +92,20 @@ class DistributionBand:
     source_locator: str
     envelope_lower_counts: Tuple[float, ...] = ()
     envelope_upper_counts: Tuple[float, ...] = ()
+    symmetric_lower_counts: Tuple[float, ...] = ()
+    symmetric_upper_counts: Tuple[float, ...] = ()
+    include_overflow: bool = True
+    reference_hour_totals: Tuple[Tuple[str, int], ...] = ()
+    outside_class_counts: Tuple[Tuple[str, int], ...] = ()
+    incomplete_reference_programs: Tuple[str, ...] = ()
 
 
 class DistributionStatus:
     """String outcomes for a distribution comparison (mirrors ComparisonStatus)."""
 
     PASS = "PASS"
-    # Inside the acceptance band, but outside the narrower min/max envelope.
-    # A pass under the retained reading of the criterion, carrying a flag for
-    # the sub-commission (SIA 4010 clause 4.6.2). Treat as passing; report it.
+    # Retained only for backward-compatible deserialization of historical
+    # reports. New comparisons never emit this status after the clarification.
     PASS_WITH_RESERVATION = "PASS_WITH_RESERVATION"
     FAIL = "FAIL"
     NOT_CHECKABLE = "NOT_CHECKABLE"
@@ -133,9 +114,7 @@ class DistributionStatus:
     def is_passing(status: str) -> bool:
         """Whether a status counts as meeting the criterion.
 
-        Use this instead of ``== DistributionStatus.PASS``: a reserved pass IS a
-        pass under the retained reading, and comparing against PASS alone would
-        silently turn it into a failure.
+        Historical reserved passes remain passing when old reports are read.
         """
 
         return status in (DistributionStatus.PASS,
@@ -227,14 +206,18 @@ def parse_frequency_classes(
 
 
 def histogram_counts(
-    values: Iterable[Any], upper_edges: Sequence[float]
+    values: Iterable[Any],
+    upper_edges: Sequence[float],
+    include_overflow: bool = True,
 ) -> Tuple[int, ...]:
     """Bin numeric ``values`` into classes with Excel ``FREQUENCY`` semantics.
 
-    Returns ``len(upper_edges) + 1`` counts: class ``i`` counts
+    Class ``i`` counts
     ``edge[i-1] < v <= edge[i]`` (class 0 is ``v <= edge[0]``), and the final
-    entry counts the overflow ``v > edge[-1]``. Non-numeric values are ignored,
-    so a missing hour never fabricates a count.
+    Excel result counts the overflow ``v > edge[-1]``. When
+    ``include_overflow`` is false, that last result is omitted to reproduce the
+    classes displayed in the SIA workbooks. Non-numeric values are ignored, so
+    a missing hour never fabricates a count.
     """
 
     edges = list(upper_edges)
@@ -250,7 +233,7 @@ def histogram_counts(
                 break
         if not placed:
             counts[-1] += 1
-    return tuple(counts)
+    return tuple(counts if include_overflow else counts[:-1])
 
 
 def build_scatter_band(
@@ -259,14 +242,13 @@ def build_scatter_band(
     unit: str,
     upper_edges: Sequence[float],
     source_locator: str,
+    include_overflow: bool = True,
 ) -> Optional[DistributionBand]:
     """Return the per-bin acceptance band across the reference programs' counts.
 
-    The acceptance band is, per bin, ``mean +/- max|count - mean|`` over the
-    contributing programs -- the construction the SIA applies wherever it
-    tabulates a scatter band. The min/max envelope is computed alongside and
-    stored separately; since it is always contained in the symmetric band, it
-    only serves to flag disagreement between the two readings.
+    The acceptance band is the per-bin min/max envelope of the contributing
+    programs, following the written authority clarification received on
+    2026-08-10. The former symmetric interpretation is diagnostic only.
 
     No zero floor is applied. The SIA floors the lower bound only in the Test 1
     tables (``MAX(0, ...)``), not in the Test 2 family from which this criterion
@@ -280,19 +262,19 @@ def build_scatter_band(
     """
 
     matrix = [tuple(counts) for counts in program_counts]
-    expected_len = len(upper_edges) + 1
+    expected_len = len(upper_edges) + (1 if include_overflow else 0)
     matrix = [row for row in matrix if len(row) == expected_len]
     if not matrix:
         return None
 
-    lower: List[float] = []
-    upper: List[float] = []
+    symmetric_lower: List[float] = []
+    symmetric_upper: List[float] = []
     for index in range(expected_len):
         column = [float(row[index]) for row in matrix]
         mean = sum(column) / float(len(column))
         deviation = max(abs(value - mean) for value in column)
-        lower.append(mean - deviation)
-        upper.append(mean + deviation)
+        symmetric_lower.append(mean - deviation)
+        symmetric_upper.append(mean + deviation)
 
     envelope_lower = tuple(
         float(min(row[i] for row in matrix)) for i in range(expected_len)
@@ -304,12 +286,15 @@ def build_scatter_band(
         quantity=quantity,
         unit=unit,
         upper_edges=tuple(float(edge) for edge in upper_edges),
-        lower_counts=tuple(lower),
-        upper_counts=tuple(upper),
+        lower_counts=envelope_lower,
+        upper_counts=envelope_upper,
         program_count=len(matrix),
         source_locator=source_locator,
         envelope_lower_counts=envelope_lower,
         envelope_upper_counts=envelope_upper,
+        symmetric_lower_counts=tuple(symmetric_lower),
+        symmetric_upper_counts=tuple(symmetric_upper),
+        include_overflow=include_overflow,
     )
 
 
@@ -346,6 +331,24 @@ def compare_distribution(
             out_of_band_bins=(), program_count=band.program_count,
             source_locator=band.source_locator,
         )
+    quality_suffix = ""
+    if band.outside_class_counts:
+        outside = [
+            "{}={}".format(name, count)
+            for name, count in band.outside_class_counts
+            if count
+        ]
+        if outside:
+            quality_suffix += (
+                "; reference hours outside the declared class boundaries "
+                "are audited separately: " + ", ".join(outside)
+            )
+    if band.incomplete_reference_programs:
+        quality_suffix += (
+            "; WARNING: incomplete official reference series retained unchanged: "
+            + ", ".join(band.incomplete_reference_programs)
+        )
+
     out_of_band = tuple(
         index
         for index, count in enumerate(candidate_counts)
@@ -356,46 +359,23 @@ def compare_distribution(
             quantity=band.quantity,
             unit=band.unit,
             status=DistributionStatus.FAIL,
-            message="Candidate distribution leaves the reference scatter band",
+            message=(
+                "Candidate distribution leaves the per-bin reference min/max envelope"
+                + quality_suffix
+            ),
             out_of_band_bins=out_of_band,
             program_count=band.program_count,
             source_locator=band.source_locator,
         )
 
-    # Inside the acceptance band. Check the narrower min/max envelope only to
-    # surface where the two readings of the criterion disagree; leaving the
-    # envelope is never on its own a failure.
-    outside_envelope: Tuple[int, ...] = ()
-    if (len(band.envelope_lower_counts) == len(candidate_counts)
-            and len(band.envelope_upper_counts) == len(candidate_counts)):
-        outside_envelope = tuple(
-            index
-            for index, count in enumerate(candidate_counts)
-            if not (band.envelope_lower_counts[index]
-                    <= count
-                    <= band.envelope_upper_counts[index])
-        )
-    if outside_envelope:
-        return DistributionOutcome(
-            quantity=band.quantity,
-            unit=band.unit,
-            status=DistributionStatus.PASS_WITH_RESERVATION,
-            message=(
-                "Candidate distribution lies within the reference scatter band "
-                "but outside the min/max envelope of the reference programs in "
-                "{} bin(s); flag for the sub-commission".format(
-                    len(outside_envelope)
-                )
-            ),
-            out_of_band_bins=outside_envelope,
-            program_count=band.program_count,
-            source_locator=band.source_locator,
-        )
     return DistributionOutcome(
         quantity=band.quantity,
         unit=band.unit,
         status=DistributionStatus.PASS,
-        message="Candidate distribution lies within the reference scatter band",
+        message=(
+            "Candidate distribution lies within the per-bin reference min/max envelope"
+            + quality_suffix
+        ),
         out_of_band_bins=(),
         program_count=band.program_count,
         source_locator=band.source_locator,

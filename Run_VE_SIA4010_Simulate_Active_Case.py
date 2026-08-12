@@ -28,8 +28,22 @@ def run():
     from swiss_sia.reference_model.sia4010.evidence_registry import (
         register_case_simulation,
     )
+    from swiss_sia.reference_model.ve_api import IesVeGateway
 
     project = iesve.VEProject.get_current_project()
+    print("Active VE project: {}".format(str(getattr(project, "path", "") or "")))
+    gateway = IesVeGateway(iesve_module=iesve)
+    weather_before, weather_after = (
+        gateway.normalize_weather_reference_for_apachesim()
+    )
+    if weather_after != weather_before:
+        print(
+            "ApacheSim weather reference repaired: {} -> {}".format(
+                weather_before, weather_after
+            )
+        )
+    else:
+        print("ApacheSim weather reference verified: {}".format(weather_after))
     simulation = run_qualified_apachesim(
         project=project,
         apachesim_factory=iesve.ApacheSim,

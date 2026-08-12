@@ -128,6 +128,17 @@ référencent sept profils journaliers. L’artefact SIA 2024 peut donc fournir 
 - trois sorties explicites pour occupation, équipement et éclairage ;
 - un `source_locator` sur chaque nœud et sur le graphe complet.
 
+Le complément écrit reçu de l'autorité le 10 août 2026 fournit désormais les
+valeurs standard et les 24 classes horaires affichées pour la catégorie
+SIA 2024:2021 `3.1 Einzel-/Gruppenbüro`. La preuve et sa transcription liée par
+SHA-256 sont conservées sous
+`sia4010_evidence/source_audits/sia2024_3_1_authority_20260810/`. Cette source
+confirme notamment 2 jours de repos par semaine, 261 jours d'utilisation par
+an et un facteur de simultanéité annuel des personnes de 0,80. Elle ne nomme
+cependant pas les jours de semaine, les dates d'exception ni la convention de
+frontière horaire VE : ces éléments ne sont donc pas inventés dans le graphe
+natif.
+
 Sans ce graphe, le statut est
 `SOURCE_BINDINGS_READY_PROFILE_GRAPH_REQUIRED`. Avec un graphe valide, il
 devient `SOURCE_BINDINGS_READY_VE_BINDING_REQUIRED`. Dans les deux cas, la

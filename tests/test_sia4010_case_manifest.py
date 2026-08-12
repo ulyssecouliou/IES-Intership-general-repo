@@ -53,7 +53,10 @@ class Sia4010CaseManifestTests(unittest.TestCase):
         self.assertNotIn(
             "test1_heating_setpoint_c", case_600ff.missing_parameters
         )
-        self.assertIn("sia2024_office_profiles", case_1e.missing_parameters)
+        self.assertNotIn("sia2024_office_profiles", case_1e.missing_parameters)
+        self.assertIn(
+            "zurich_kloten_dry_weather_file", case_1e.missing_parameters
+        )
         self.assertNotIn("iso_test1_glazing", case_1e.missing_parameters)
         self.assertNotIn("denver_drycold_weather_file", case_1e.missing_parameters)
 
@@ -75,9 +78,26 @@ class Sia4010CaseManifestTests(unittest.TestCase):
         infiltration = self.manifest.value("iso_test1_infiltration")
         self.assertEqual(infiltration["air_changes_per_hour"], 0.41)
 
-    def test_placeholder_values_cannot_be_read_as_model_inputs(self):
-        with self.assertRaises(ConfigurationError):
-            self.manifest.value("sia2024_office_profiles")
+    def test_authority_supplied_office_profiles_are_source_traced(self):
+        profiles = self.manifest.value("sia2024_office_profiles")
+        self.assertEqual(profiles["use_category"], "3.1 Einzel-/Gruppenbüro")
+        self.assertEqual(profiles["value_set"], "standard values")
+        self.assertAlmostEqual(
+            sum(profiles["source_hour_bins"]["occupancy"]), 7.2
+        )
+        self.assertAlmostEqual(
+            sum(profiles["source_hour_bins"]["equipment"]), 11.1
+        )
+        self.assertAlmostEqual(
+            sum(profiles["source_hour_bins"]["lighting"]), 11.1
+        )
+        self.assertEqual(profiles["rest_days_per_week"], 2)
+        self.assertEqual(profiles["use_days_per_year"], 261)
+        self.assertEqual(profiles["people_annual_simultaneity"], 0.8)
+        self.assertEqual(
+            profiles["native_ve_calendar_mapping_status"],
+            "PENDING_EXACT_WEEKDAY_DATE_AND_HOUR_BOUNDARY_BINDING",
+        )
 
     def test_every_parameter_has_required_metadata(self):
         for parameter in self.manifest.parameters.values():

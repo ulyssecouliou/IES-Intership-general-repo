@@ -107,6 +107,21 @@ def run():
                 payload["summary"]["simulation_linked_aps_evaluations"]
             )
         )
+        print("Official test evidence gates:")
+        for test_id, evidence in sorted(payload["tests"].items()):
+            print(
+                "  Test {}: {} | model {}/{} | simulation {}/{} | "
+                "APS result {}/{}".format(
+                    test_id,
+                    evidence["status"],
+                    evidence["checksum_valid_model_cases"],
+                    evidence["exact_cases"],
+                    evidence["checksum_valid_simulation_cases"],
+                    evidence["exact_cases"],
+                    evidence["simulation_linked_result_cases"],
+                    evidence["exact_cases"],
+                )
+            )
         print(
             "Report: {}".format(
                 payload["global_artifacts"]["html"]

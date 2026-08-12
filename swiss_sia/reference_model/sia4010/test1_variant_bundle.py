@@ -23,7 +23,7 @@ import copy
 from pathlib import Path
 from typing import Any, Dict, Optional, Union
 
-from ..asset_manifest import load_asset_manifest
+from ..asset_manifest import VE_WEEKLY_PROFILE_SLOT_COUNT, load_asset_manifest
 from ..config_loader import load_configuration
 from ..exceptions import ConfigurationError
 from .case_manifest import Sia4010CaseManifest
@@ -113,19 +113,33 @@ def _apply_night_setback_controls(
     """Add the exact Test 1 Case 640/940 heating-setback contract."""
 
     profiles = _by_key(assets["profiles"])
-    if "heating_setpoint_profile" in profiles:
+    profile_keys = {
+        "heating_setpoint_daily_profile",
+        "heating_setpoint_weekly_profile",
+        "heating_setpoint_profile",
+    }
+    if profile_keys & set(profiles):
         raise ConfigurationError(
-            "Unexpected duplicate heating_setpoint_profile in Case {} bundle".format(
-                case_id
-            )
+            "Unexpected duplicate heating-setpoint profile graph in Case {} "
+            "bundle".format(case_id)
         )
-    assets["profiles"].append(
+    daily_key = "heating_setpoint_daily_profile"
+    weekly_key = "heating_setpoint_weekly_profile"
+    # Version the template identity because older runtime probes linked the
+    # room directly to a non-portable DAY_* profile.  Creating a new,
+    # case-specific template is safer than silently rewriting an existing
+    # linked template in a partially built disposable project.
+    assets["thermal_template"]["name"] = (
+        "SIA4010_TEST1_CASE{}_VARIABLE_SETPOINT_V7".format(case_id)
+    )
+    assets["profiles"].extend(
+        [
         {
-            "key": "heating_setpoint_profile",
+            "key": daily_key,
             "profile_type": "daily",
-            "reference": "SIA{}_HEATING_SETPOINT".format(case_id),
-            "modulating": True,
-            "units": -1,
+            "reference": "SIA{}_HEATING_SETPOINT_ABSOLUTE_DAY".format(case_id),
+            "modulating": False,
+            "units": 0,
             "description": (
                 "Case {} daily heating setpoint: 20 degC from 07:00 to "
                 "23:00 and 10 degC otherwise.".format(case_id)
@@ -148,13 +162,56 @@ def _apply_night_setback_controls(
                 "degC versus hour",
                 "array",
             ),
-        }
+        },
+        {
+            "key": weekly_key,
+            "profile_type": "weekly",
+            "reference": "SIA{}_HEATING_SETPOINT_WEEK_V4".format(case_id),
+            "modulating": False,
+            "units": 0,
+            "description": (
+                "VE weekly group profile applying the exact Case {} daily "
+                "setpoint on all calendar and heating/cooling design days.".format(
+                    case_id
+                )
+            ),
+            "source": "SIA 4010 Test 1 specification",
+            "source_locator": TEST1_SPECIFICATION_LOCATOR,
+            "data": _sia_field(
+                [{"profile_ref": daily_key}] * VE_WEEKLY_PROFILE_SLOT_COUNT,
+                "Exact Case {} mapping for the twelve native VE weekly slots "
+                "including calendar, room and system design days.".format(case_id),
+                "daily profile references",
+                "array",
+            ),
+        },
+        ]
     )
     conditions = assets["thermal_template"]["room_conditions"]
+    # ``heating_profile`` is the heating availability schedule in the VE
+    # contract. It must remain the built-in modulating ON profile. The
+    # absolute 10/20 degC schedule belongs to ``heating_setpoint_profile``
+    # with setpoint type ``variable``. Binding an absolute WEEK_* profile to
+    # ``heating_profile`` makes Apache look it up in the modulating namespace.
     conditions["heating_profile"] = _sia_field(
-        {"profile_ref": "heating_setpoint_profile"},
-        "VE daily-profile link for the Case {} heating setpoint.".format(case_id),
-        "profile reference",
+        "ON",
+        "Heating is continuously available; the variable setpoint profile "
+        "implements the prescribed night setback.",
+        "modulating profile ID",
+        "string",
+    )
+    conditions["heating_setpoint_type"] = _sia_field(
+        "variable",
+        "VE room-condition setpoint mode required for an absolute setpoint "
+        "profile.",
+        "VE setpoint_type",
+        "string",
+    )
+    conditions["heating_setpoint_profile"] = _sia_field(
+        {"profile_ref": weekly_key},
+        "Absolute VE weekly setpoint profile for Case {}, repeated throughout "
+        "the year by ApacheSim.".format(case_id),
+        "absolute profile ID",
         "object",
     )
     conditions["heating_setpoint"]["description"] = (
@@ -167,6 +224,18 @@ def _apply_free_float_controls(
     assets: Dict[str, Any], case_id: str
 ) -> None:
     """Disable room conditioning for the official free-floating case."""
+
+    conditions = assets["thermal_template"]["room_conditions"]
+    for load in ("heating", "cooling"):
+        conditions["{}_profile".format(load)] = _sia_field(
+            "OFF",
+            (
+                "Case {} is free floating; the VE {} availability profile "
+                "is forced OFF so ApacheSim cannot deliver an ideal {} load."
+            ).format(case_id, load, load),
+            "modulating profile ID",
+            "string",
+        )
 
     conditioned = assets["thermal_template"]["system_data"]["conditioned"]
     conditioned.update(
@@ -569,8 +638,9 @@ def build_test1_runtime_probe_bundle(
             "id": "VE_HEATING_PROFILE_RUNTIME_QUALIFICATION",
             "severity": "WARNING",
             "detail": (
-                "VE must accept and read back the two-level setpoint profile "
-                "and the room must resolve its heating_profile to that exact ID."
+                "VE must accept and read back the two-level absolute setpoint "
+                "profile, keep heating availability ON, and resolve the room's "
+                "heating_setpoint_type/profile as variable and the exact WEEK ID."
             ),
             }
         )
@@ -580,8 +650,11 @@ def build_test1_runtime_probe_bundle(
             "id": "VE_FREE_FLOAT_RUNTIME_QUALIFICATION",
             "severity": "WARNING",
             "detail": (
-                "VE must read back conditioned=False and ApacheSim must prove "
-                "zero ideal heating/cooling delivery for the free-floating room."
+                "VE must read back heating_profile=OFF and cooling_profile=OFF; "
+                "ApacheSim must then prove that the free-floating room has no "
+                "ideal heating or cooling delivery. The derived conditioned flag "
+                "is recorded as advisory only because VE does not expose it on "
+                "the room-level system setter."
             ),
             }
         )

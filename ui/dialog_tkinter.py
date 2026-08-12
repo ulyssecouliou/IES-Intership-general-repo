@@ -542,10 +542,10 @@ class NavigateurSIA4010(object):
         self._texte_detail.configure(state='disabled')
 
     def _exporter_excel(self):
-        # ⚠ À VÉRIFIER -- non exécuté. Délégué à `ui/export_excel_com.py`,
+        # ⚠ À VÉRIFIER -- non exécuté. Délégué à `ui/excel_export.py`,
         # qui exige explicitement un classeur source (copie, jamais
         # l'original) et une carte de cellules Handeingabe -- non fournie
-        # par défaut (cf. docstring de ce module et d'`export_excel_com.py`).
+        # par défaut (cf. docstring de ce module et d'`excel_export.py`).
         if filedialog is None:
             return
         chemin_source = filedialog.askopenfilename(
@@ -556,11 +556,11 @@ class NavigateurSIA4010(object):
         # Chaque test SIA a SON classeur d'évaluation : on ne remplit donc
         # qu'un test à la fois depuis ce bouton, celui affiché en premier.
         # Un bouton unique remplissant plusieurs classeurs demanderait autant
-        # de sélections de fichier -- laissé à `remplir_classeurs_sia`, que
+        # de sélections de fichier -- laissé à `fill_sia_workbooks`, que
         # le script appelant peut piloter sans dialogue.
         try:
-            from ui import export_excel_com
-            rapport = export_excel_com.remplir_classeur_sia_detaille(
+            from ui import excel_export
+            rapport = excel_export.fill_sia_workbook_reporting(
                 chemin_source, self._vues[0])
             message = u'Classeur rempli : %s\n%d cellule(s) écrite(s).' % (
                 rapport['chemin_sortie'], len(rapport['cellules_ecrites']))

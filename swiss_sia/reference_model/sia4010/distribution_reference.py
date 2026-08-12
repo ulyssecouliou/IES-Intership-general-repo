@@ -1,12 +1,11 @@
-"""Build SIA 4010 distribution reference bands from the official Daten_* sheets.
+"""Build SIA 4010 distribution reference envelopes from official Daten_* sheets.
 
 The frequency-distribution second criterion needs the per-bin scatter band of
 the reference programs. That band is not tabulated: each reference program ships
 an hourly series (one ``Daten_<program>`` worksheet) per case and quantity, and
-the band is the per-bin ``mean +/- max|count - mean|`` of those series binned
-with the official ``Haeufigkeitsklassen`` legend. See the module docstring of
-:mod:`frequency_distribution` for why that construction and not the min/max
-envelope, and for the workbook formulas it mirrors.
+the acceptance band is the per-bin minimum/maximum of those series binned with
+the official frequency legend. This follows the written clarification received
+from Prof. Gerhard Zweifel on 2026-08-10.
 
 This module locates the hourly column for each (case, quantity) in every
 reference sheet, bins it, and builds a :class:`DistributionBand`. A reference
@@ -14,7 +13,10 @@ program contributes only when it actually provided the series (the column holds
 numeric hours); a not-provided case is an empty column and is simply excluded,
 never counted as zero. The candidate sheet (``Daten_Testprogramm``) is never
 used as a reference. Nothing is invented: bins, values and the contributing set
-all come from the workbook.
+all come from the workbook. The authority clarified on 2026-08-10 that displayed
+class totals below 8,760 are caused by values outside the declared class
+boundaries, not by missing reference hours. The source-hour total and excluded
+overflow count are therefore carried separately in every band.
 """
 
 import itertools
@@ -44,6 +46,7 @@ _CASE_MARKER = re.compile(r"^\d\s?[A-Z]\d*$")
 # the maximum deviation is zero, so the band collapses to that program's exact
 # counts and would reject almost any candidate.
 MIN_REFERENCE_PROGRAMS = 2
+EXPECTED_ANNUAL_HOURS = 8760
 
 
 @dataclass(frozen=True)
@@ -131,8 +134,8 @@ def build_distribution_bands(
 
     For each reference ``Daten_*`` sheet (excluding the candidate), the hourly
     column of every requested (case, quantity) is located and binned; the bands
-    are the per-bin ``mean +/- max|count - mean|`` across the contributing
-    programs (see :func:`build_scatter_band`). A (case, quantity) with no
+    are the per-bin minimum/maximum across the contributing programs (see
+    :func:`build_scatter_band`). A (case, quantity) with no
     contributing program is omitted, so an empty band is never invented.
     """
 
@@ -153,7 +156,9 @@ def build_distribution_bands(
             if name.startswith(data_prefix) and name != candidate_sheet
         ]
         # (case, header_label) -> list of (program_name, per-bin counts)
-        contributions: Dict[Tuple[str, str], List[Tuple[str, Tuple[int, ...]]]] = {}
+        contributions: Dict[
+            Tuple[str, str], List[Tuple[str, Tuple[int, ...], int, int]]
+        ] = {}
         for name in reference_names:
             row_iter = workbook[name].iter_rows(values_only=True)
             # Consume rows until the header row; data rows then follow in row_iter.
@@ -189,9 +194,14 @@ def build_distribution_bands(
                 numeric = series[col]
                 if not numeric:
                     continue  # program did not provide this case (empty column)
-                counts = histogram_counts(numeric, legend[legend_key].upper_edges)
+                full_counts = histogram_counts(
+                    numeric,
+                    legend[legend_key].upper_edges,
+                    include_overflow=True,
+                )
+                counts = full_counts[:-1]
                 contributions.setdefault((marker, header_label), []).append(
-                    (name, counts)
+                    (name, counts, len(numeric), full_counts[-1])
                 )
     finally:
         workbook.close()
@@ -201,16 +211,41 @@ def build_distribution_bands(
         quantity = next(q for q in quantities if q.header_label == header_label)
         legend_entry = legend[quantity.legend_key]
         band = build_scatter_band(
-            [counts for _name, counts in program_counts],
+            [counts for _name, counts, _hours, _outside in program_counts],
             quantity=header_label,
             unit=legend_entry.unit,
             upper_edges=legend_entry.upper_edges,
             source_locator="{}!Daten_* [{}] refs={}".format(
-                path.name, case_id, ",".join(sorted(name for name, _ in program_counts))
+                path.name,
+                case_id,
+                ",".join(sorted(
+                    name for name, _counts, _hours, _outside in program_counts
+                )),
             ),
+            include_overflow=False,
         )
         if band is not None:
-            bands[(case_id, header_label)] = band
+            hour_totals = tuple(
+                sorted(
+                    (name, hours)
+                    for name, _counts, hours, _outside in program_counts
+                )
+            )
+            outside_counts = tuple(
+                sorted(
+                    (name, outside)
+                    for name, _counts, _hours, outside in program_counts
+                )
+            )
+            bands[(case_id, header_label)] = replace(
+                band,
+                reference_hour_totals=hour_totals,
+                outside_class_counts=outside_counts,
+                incomplete_reference_programs=tuple(
+                    name for name, hours in hour_totals
+                    if hours != EXPECTED_ANNUAL_HOURS
+                ),
+            )
     return bands
 
 
@@ -348,7 +383,9 @@ def build_split_header_distribution_bands(
                         agreed.setdefault(case_id, set()).add(cell.strip())
 
         # Pass 2: extract, restricted to the agreed label set for that case.
-        contributions: Dict[Tuple[str, str], List[Tuple[str, Tuple[int, ...]]]] = {}
+        contributions: Dict[
+            Tuple[str, str], List[Tuple[str, Tuple[int, ...], int, int]]
+        ] = {}
         for name in reference_names:
             head, row_iter = read_head(name)
             case_index, spans = case_spans(head)
@@ -385,8 +422,13 @@ def build_split_header_distribution_bands(
             for col, (case_id, header_label, legend_key) in targets.items():
                 if not series[col]:
                     continue  # program did not provide this case/quantity
+                full_counts = histogram_counts(
+                    series[col],
+                    legend[legend_key].upper_edges,
+                    include_overflow=True,
+                )
                 contributions.setdefault((case_id, header_label), []).append(
-                    (name, histogram_counts(series[col], legend[legend_key].upper_edges))
+                    (name, full_counts[:-1], len(series[col]), full_counts[-1])
                 )
     finally:
         workbook.close()
@@ -398,7 +440,7 @@ def build_split_header_distribution_bands(
         quantity = next(q for q in quantities if q.header_label == header_label)
         legend_entry = legend[quantity.legend_key]
         band = build_scatter_band(
-            [counts for _name, counts in program_counts],
+            [counts for _name, counts, _hours, _outside in program_counts],
             quantity=header_label,
             unit=legend_entry.unit,
             upper_edges=legend_entry.upper_edges,
@@ -406,11 +448,34 @@ def build_split_header_distribution_bands(
                 path.name,
                 data_prefix,
                 case_id,
-                ",".join(sorted(name for name, _ in program_counts)),
+                ",".join(sorted(
+                    name for name, _counts, _hours, _outside in program_counts
+                )),
             ),
+            include_overflow=False,
         )
         if band is not None:
-            bands[(case_id, header_label)] = band
+            hour_totals = tuple(
+                sorted(
+                    (name, hours)
+                    for name, _counts, hours, _outside in program_counts
+                )
+            )
+            outside_counts = tuple(
+                sorted(
+                    (name, outside)
+                    for name, _counts, _hours, outside in program_counts
+                )
+            )
+            bands[(case_id, header_label)] = replace(
+                band,
+                reference_hour_totals=hour_totals,
+                outside_class_counts=outside_counts,
+                incomplete_reference_programs=tuple(
+                    name for name, hours in hour_totals
+                    if hours != EXPECTED_ANNUAL_HOURS
+                ),
+            )
     return bands
 
 
@@ -517,6 +582,53 @@ def evaluate_distribution_criteria(
 # - Test 5 "Leistung Befeuchter" (case 5D): the legend defines bins for
 #   "Leistung Hilfsenergie Befeuchter" but not for the humidifier power itself,
 #   so that one scored quantity stays NOT_CHECKABLE instead of borrowing bins.
+
+# Workbook evidence discovered after the authority reply of 2026-08-10. These
+# entries deliberately do NOT enter ``DISTRIBUTION_CRITERIA`` yet: Prof. Zweifel
+# confirmed that the sheets exist. Yiqiao subsequently confirmed in writing
+# that the results to be delivered for Tests 4, 6 and 7 are those listed in the
+# Excel sheets. This establishes the output contract, but not that every plotted
+# diagnostic is a pass gate. Recording the exact workbook labels removes the
+# former false claim without inventing the remaining acceptance scope.
+DISTRIBUTION_WORKBOOK_EVIDENCE: Dict[str, Dict[str, object]] = {
+    "4": {
+        "legend_sheet": "Haeufigkeitskassen",
+        "summary_heading": "Stündliche Häufigkeitsverteilung",
+        "status": "REQUIRED_OUTPUT_SCOPE_CONFIRMED_ACCEPTANCE_GATE_PENDING",
+        "legend_quantities": (
+            "Zu-/Abluft-Volumenstrom",
+            "Zulufttemperatur",
+            "Mittlere Raumlufttemperatur",
+            "Operative Temperatur",
+            "CO2 Konzentration",
+            "Leistung Zuluftventilator",
+            "Leistung Abluftventilator",
+            "Leistung Zu- und Abluftventilator",
+            "Lufterwärmerleistung",
+            "Luftkühlerleistung total",
+            "Luftkühlerleistung latent",
+        ),
+    },
+    "6": {
+        "legend_sheet": "Haeufigkeitskassen",
+        "summary_heading": "Stündliche Häufigkeitsverteilung",
+        "status": "REQUIRED_OUTPUT_SCOPE_CONFIRMED_ACCEPTANCE_GATE_PENDING",
+        "legend_quantities": (
+            "Zu-/Abluft-Volumenstrom",
+            "Zulufttemperatur",
+            "Ablufttemperatur",
+            "Leistung Zu- und Abluftventilator",
+            "Leistung Lufterwärmer",
+            "Leistung Luftkühler total",
+            "Leistung Luftkühler latent",
+            "Wärmeverluste Verteilung",
+            "Leistung Hilfsenergie WRG",
+            "Wärmezufuhr WRG",
+            "Wärmeabfuhr WRG",
+        ),
+    },
+}
+
 DISTRIBUTION_CRITERIA: Dict[str, Dict[str, object]] = {
     "2": {
         "case_ids": ("2A", "2B", "2C", "2D"),

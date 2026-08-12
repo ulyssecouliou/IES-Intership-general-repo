@@ -52,6 +52,7 @@ data_extractor_module = _reload_local_module("data_extractor")
 model_analyzer_module = _reload_local_module("model_analyzer")
 rule_engine_module = _reload_local_module("rule_engine")
 evidence_manager_module = _reload_local_module("evidence_manager")
+evidence_bootstrap_module = _reload_local_module("evidence_bootstrap")
 evidence_pack_module = _reload_local_module("evidence_pack")
 simulation_results_module = _reload_local_module("simulation_results")
 _reload_local_module("value_integrity")
@@ -89,6 +90,7 @@ scan_sia3802_project_metadata = evidence_manager_module.scan_sia3802_project_met
 find_accepted_project_metadata = evidence_manager_module.find_accepted_project_metadata
 scan_sia3802_global_comparisons = evidence_manager_module.scan_sia3802_global_comparisons
 find_accepted_global_comparison = evidence_manager_module.find_accepted_global_comparison
+prepare_evidence_folder = evidence_bootstrap_module.prepare_evidence_folder
 create_evidence_pack = evidence_pack_module.create_evidence_pack
 
 REPORTS_DIR = os.path.join(str(PROJECT_ROOT), OUTPUT_DIR)
@@ -902,6 +904,25 @@ def main():
         project_label = os.path.basename(
             os.path.normpath(str(getattr(project, "path", "") or ""))
         ) or "VE_Project"
+
+        logger.info("Preparing project-scoped evidence templates without overwriting reviews.")
+        evidence_preparation = prepare_evidence_folder(
+            PROJECT_ROOT,
+            project_label=project_label,
+            overwrite=False,
+        )
+        logger.info(
+            "Evidence templates: %s (%s created, %s existing, %s missing)",
+            evidence_preparation.get("status"),
+            evidence_preparation.get("created_count", 0),
+            evidence_preparation.get("existing_count", 0),
+            evidence_preparation.get("missing_template_count", 0),
+        )
+        if evidence_preparation.get("status") != "READY":
+            logger.warning(
+                "Evidence template preparation is incomplete: %s",
+                evidence_preparation.get("evidence_dir"),
+            )
 
         logger.info("Extracting VE model data.")
         data_extractor = VEDataExtractor(project)

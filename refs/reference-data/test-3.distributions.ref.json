@@ -1,8 +1,8 @@
 {
  "test": 3,
  "critere": "Häufigkeitsverteilung : « muss im Streubereich der Referenzprogramme liegen » (Spezifikation_Test3.pdf, Testkriterien)",
- "statut_critere": "NON_CALCULE_PAR_LE_CLASSEUR",
- "pourquoi_non_calcule": "Les feuilles « Verteilung » sont des GRAPHIQUES : elles tracent les variantes de référence et le programme testé, sans calculer aucune bande. Aucune cellule du classeur ne définit le Streubereich d'une distribution. Deux lectures restent possibles — enveloppe min/max des programmes, ou moyenne ± écart maximal comme pour les sommes annuelles — et le choix ne peut pas être fait ici sans inventer le critère.",
+ "statut_critere": "CONFIRME_AUTORITE_2026-08-10",
+ "pourquoi_non_calcule": "Les feuilles « Verteilung » sont des GRAPHIQUES : elles tracent les variantes de référence et le programme testé, sans calculer aucune bande. Aucune cellule du classeur ne définit le Streubereich d'une distribution. La clarification écrite du 2026-08-10 définit la règle : enveloppe min/max des programmes de référence, classe par classe.",
  "classes_concernees": [
   "2A",
   "2B",
@@ -21,8 +21,8 @@
  },
  "nb_distributions": 16,
  "reserves": [
-  "Totaux horaires observés : 8759, 8760. Plusieurs programmes totalisent moins de 8760 heures. Ce sont des données réelles, reproduites telles quelles : les compléter à 8760 fausserait la dispersion.",
-  "Les effectifs sont des FAITS relevés cellule par cellule et réconciliés avec la ligne de totaux du classeur. La BANDE, elle, n'est pas établie : voir statut_critere."
+  "Totaux affichés dans les classes : 8759, 8760. La SIA a confirmé le 2026-08-10 que les écarts à 8760 ne sont pas des heures manquantes : les autres valeurs sont hors des bornes définies par les classes. Elles sont conservées comme compte hors classes et ne sont pas ajoutées à la dernière classe.",
+  "Les effectifs sont des FAITS relevés cellule par cellule et réconciliés avec la ligne de totaux du classeur. La bande d'acceptation min/max par classe est confirmée par la réponse écrite du 2026-08-10."
  ],
  "distributions": [
   {
@@ -36,32 +36,50 @@
     {
      "colonne": "C",
      "programme": "IDA ICE",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "D",
      "programme": "IDA ICE",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "E",
      "programme": "IDA ICE",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "F",
      "programme": "Excel",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "G",
      "programme": "Energy+/OpenStudio",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "J",
      "programme": "EDSL-Tas",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     }
    ],
    "effectifs": [
@@ -318,32 +336,50 @@
     {
      "colonne": "N",
      "programme": "IDA ICE\nFe det Spec",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "O",
      "programme": "IDA ICE\nFe det noSpec",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "P",
      "programme": "IDA ICE\nFe einf",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "Q",
      "programme": "Excel\nSIA 387/4 + 380/2",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "R",
      "programme": "Energy+/OpenStudio\nFe det Spec",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "U",
      "programme": "EDSL-Tas\nFe det Spect",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     }
    ],
    "effectifs": [
@@ -600,32 +636,50 @@
     {
      "colonne": "Y",
      "programme": "IDA ICE\nFe det Spec",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "Z",
      "programme": "IDA ICE\nFe det noSpec",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "AA",
      "programme": "IDA ICE\nFe einf",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "AB",
      "programme": "Excel\nSIA 387/4 + 380/2",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "AC",
      "programme": "Energy+/OpenStudio\nFe det Spec",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "AF",
      "programme": "EDSL-Tas\nFe det Spect",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     }
    ],
    "effectifs": [
@@ -882,27 +936,42 @@
     {
      "colonne": "AJ",
      "programme": "IDA ICE\nFe det Spec",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "AK",
      "programme": "IDA ICE\nFe det noSpec",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "AM",
      "programme": "Excel\nSIA 387/4 + 380/2",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "AN",
      "programme": "Energy+/OpenStudio\nFe det Spec",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "AQ",
      "programme": "EDSL-Tas\nFe det Spect",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     }
    ],
    "effectifs": [
@@ -1139,27 +1208,42 @@
     {
      "colonne": "AU",
      "programme": "IDA ICE\nFe det Spec",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "AV",
      "programme": "IDA ICE\nFe det noSpec",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "AW",
      "programme": "IDA ICE\nFe einf",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "AX",
      "programme": "Excel\nSIA 387/4 + 380/2",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "AY",
      "programme": "Energy+/OpenStudio\nFe det Spec",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     }
    ],
    "effectifs": [
@@ -1396,32 +1480,50 @@
     {
      "colonne": "BF",
      "programme": "IDA ICE\nFe det Spec",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "BG",
      "programme": "IDA ICE\nFe det noSpec",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "BH",
      "programme": "IDA ICE\nFe einf",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "BI",
      "programme": "Excel\nSIA 387/4 + 380/2",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "BJ",
      "programme": "Energy+/OpenStudio\nFe det Spec",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "BM",
      "programme": "EDSL-Tas\nFe det Spect",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     }
    ],
    "effectifs": [
@@ -1678,32 +1780,50 @@
     {
      "colonne": "BQ",
      "programme": "IDA ICE\nFe det Spec",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "BR",
      "programme": "IDA ICE\nFe det noSpec",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "BT",
      "programme": "Excel\nSIA 387/4 + 380/2",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "BU",
      "programme": "Energy+/OpenStudio\nFe det Spec",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "BV",
      "programme": "Energy+/OpenStudio\nFe det noSpec",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "BW",
      "programme": "Energy+/OpenStudio\nFe einf",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     }
    ],
    "effectifs": [
@@ -1960,32 +2080,50 @@
     {
      "colonne": "CD",
      "programme": "IDA ICE\nFe det Spec",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "CE",
      "programme": "IDA ICE\nFe det noSpec",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "CG",
      "programme": "Excel\nSIA 387/4 + 380/2",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "CH",
      "programme": "Energy+/OpenStudio\nFe det Spec",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "CI",
      "programme": "Energy+/OpenStudio\nFe det noSpec",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "CJ",
      "programme": "Energy+/OpenStudio\nFe einf",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     }
    ],
    "effectifs": [
@@ -2242,37 +2380,58 @@
     {
      "colonne": "CO",
      "programme": "IDA ICE\nFe det Spec",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "CP",
      "programme": "IDA ICE\nFe det noSpec",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "CR",
      "programme": "Excel\nSIA 387/4 + 380/2",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "CS",
      "programme": "Energy+/OpenStudio\nFe det Spec",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "CT",
      "programme": "Energy+/OpenStudio\nFe det noSpec",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "CU",
      "programme": "Energy+/OpenStudio\nFe einf",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "CV",
      "programme": "EDSL-Tas\nFe det Spect",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     }
    ],
    "effectifs": [
@@ -2549,37 +2708,58 @@
     {
      "colonne": "CZ",
      "programme": "IDA ICE\nFe det Spec",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "DA",
      "programme": "IDA ICE\nFe det noSpec",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "DC",
      "programme": "Excel\nSIA 387/4 + 380/2",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "DD",
      "programme": "Energy+/OpenStudio\nFe det Spec",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "DE",
      "programme": "Energy+/OpenStudio\nFe det noSpec",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "DF",
      "programme": "Energy+/OpenStudio\nFe einf",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "DG",
      "programme": "EDSL-Tas\nFe det Spect",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     }
    ],
    "effectifs": [
@@ -2856,32 +3036,50 @@
     {
      "colonne": "DK",
      "programme": "IDA ICE\nFe det Spec",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "DL",
      "programme": "IDA ICE\nFe det noSpec",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "DN",
      "programme": "Excel\nSIA 387/4 + 380/2",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "DO",
      "programme": "Energy+/OpenStudio\nFe det Spec",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "DP",
      "programme": "Energy+/OpenStudio\nFe det noSpec",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "DQ",
      "programme": "Energy+/OpenStudio\nFe einf",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     }
    ],
    "effectifs": [
@@ -3138,32 +3336,50 @@
     {
      "colonne": "DV",
      "programme": "IDA ICE\nFe det Spec",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "DW",
      "programme": "IDA ICE\nFe det noSpec",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "DY",
      "programme": "Excel\nSIA 387/4 + 380/2",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "DZ",
      "programme": "Energy+/OpenStudio\nFe det Spec",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "EA",
      "programme": "Energy+/OpenStudio\nFe det noSpec",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "EB",
      "programme": "Energy+/OpenStudio\nFe einf",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     }
    ],
    "effectifs": [
@@ -3420,27 +3636,42 @@
     {
      "colonne": "EG",
      "programme": "IDA ICE\nFe det Spec",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "EH",
      "programme": "IDA ICE\nFe det noSpec",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "EI",
      "programme": "IDA ICE\nFe einf",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "EJ",
      "programme": "Excel\nSIA 387/4 + 380/2",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "EK",
      "programme": "Energy+/OpenStudio\nFe det Spec",
-     "total_heures": 8759
+     "total_heures": 8759,
+     "heures_dans_classes": 8759,
+     "heures_hors_classes": 1,
+     "heures_source_attendues": 8760
     }
    ],
    "effectifs": [
@@ -3677,32 +3908,50 @@
     {
      "colonne": "ER",
      "programme": "IDA ICE\nFe det Spec",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "ES",
      "programme": "IDA ICE\nFe det noSpec",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "EU",
      "programme": "Excel\nSIA 387/4 + 380/2",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "EV",
      "programme": "Energy+/OpenStudio\nFe det Spec",
-     "total_heures": 8759
+     "total_heures": 8759,
+     "heures_dans_classes": 8759,
+     "heures_hors_classes": 1,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "EW",
      "programme": "Energy+/OpenStudio\nFe det noSpec",
-     "total_heures": 8759
+     "total_heures": 8759,
+     "heures_dans_classes": 8759,
+     "heures_hors_classes": 1,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "EX",
      "programme": "Energy+/OpenStudio\nFe einf",
-     "total_heures": 8759
+     "total_heures": 8759,
+     "heures_dans_classes": 8759,
+     "heures_hors_classes": 1,
+     "heures_source_attendues": 8760
     }
    ],
    "effectifs": [
@@ -3959,32 +4208,50 @@
     {
      "colonne": "FC",
      "programme": "IDA ICE\nFe det Spec",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "FD",
      "programme": "IDA ICE\nFe det noSpec",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "FF",
      "programme": "Excel\nSIA 387/4 + 380/2",
-     "total_heures": 8760
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "FG",
      "programme": "Energy+/OpenStudio\nFe det Spec",
-     "total_heures": 8759
+     "total_heures": 8759,
+     "heures_dans_classes": 8759,
+     "heures_hors_classes": 1,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "FH",
      "programme": "Energy+/OpenStudio\nFe det noSpec",
-     "total_heures": 8759
+     "total_heures": 8759,
+     "heures_dans_classes": 8759,
+     "heures_hors_classes": 1,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "FI",
      "programme": "Energy+/OpenStudio\nFe einf",
-     "total_heures": 8759
+     "total_heures": 8759,
+     "heures_dans_classes": 8759,
+     "heures_hors_classes": 1,
+     "heures_source_attendues": 8760
     }
    ],
    "effectifs": [
@@ -4241,32 +4508,50 @@
     {
      "colonne": "FN",
      "programme": "IDA ICE\nFe det Spec",
-     "total_heures": 8759
+     "total_heures": 8759,
+     "heures_dans_classes": 8759,
+     "heures_hors_classes": 1,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "FO",
      "programme": "IDA ICE\nFe det noSpec",
-     "total_heures": 8759
+     "total_heures": 8759,
+     "heures_dans_classes": 8759,
+     "heures_hors_classes": 1,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "FQ",
      "programme": "Excel\nSIA 387/4 + 380/2",
-     "total_heures": 8759
+     "total_heures": 8759,
+     "heures_dans_classes": 8759,
+     "heures_hors_classes": 1,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "FR",
      "programme": "Energy+/OpenStudio\nFe det Spec",
-     "total_heures": 8759
+     "total_heures": 8759,
+     "heures_dans_classes": 8759,
+     "heures_hors_classes": 1,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "FS",
      "programme": "Energy+/OpenStudio\nFe det noSpec",
-     "total_heures": 8759
+     "total_heures": 8759,
+     "heures_dans_classes": 8759,
+     "heures_hors_classes": 1,
+     "heures_source_attendues": 8760
     },
     {
      "colonne": "FT",
      "programme": "Energy+/OpenStudio\nFe einf",
-     "total_heures": 8759
+     "total_heures": 8759,
+     "heures_dans_classes": 8759,
+     "heures_hors_classes": 1,
+     "heures_source_attendues": 8760
     }
    ],
    "effectifs": [

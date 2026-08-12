@@ -2283,6 +2283,18 @@ class ExcelReportGenerator:
         worksheet.write("B6", len(substitutions), integer_format)
         worksheet.write("A7", "Blockers", subheader_format)
         worksheet.write("B7", len(specification.get("blockers", []) or []), integer_format)
+        worksheet.write("D5", "Implemented Table 2 families", subheader_format)
+        worksheet.write(
+            "E5",
+            len(specification.get("implemented_input_families", []) or []),
+            integer_format,
+        )
+        worksheet.write("D6", "Missing Table 2 / SIA 380 families", subheader_format)
+        worksheet.write(
+            "E6",
+            len(specification.get("missing_input_families", []) or []),
+            integer_format,
+        )
 
         headers = [
             "Parameter",
@@ -2335,12 +2347,31 @@ class ExcelReportGenerator:
         if not (specification.get("blockers") or []):
             worksheet.merge_range(
                 blocker_row, 0, blocker_row, 8,
-                "No blocker: every listed construction can be substituted deterministically.",
-                ok_format,
+                "No blocker among the implemented substitutions; the missing families below still block a complete reference run.",
+                warn_format,
             )
             blocker_row += 1
 
-        notes_start = blocker_row + 1
+        family_row = blocker_row + 2
+        worksheet.write(
+            family_row,
+            0,
+            "Reference-input families not yet automated",
+            header_format,
+        )
+        family_row += 1
+        for family in specification.get("missing_input_families", []) or []:
+            worksheet.merge_range(
+                family_row,
+                0,
+                family_row,
+                8,
+                str(family),
+                warn_format,
+            )
+            family_row += 1
+
+        notes_start = family_row + 1
         for note in specification.get("notes", []) or []:
             worksheet.merge_range(notes_start, 0, notes_start, 8, note, note_format)
             notes_start += 1

@@ -12,6 +12,7 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any, Dict, List, Mapping, Optional, Sequence, Set, Tuple
 
+from ..asset_manifest import VE_WEEKLY_PROFILE_SLOT_COUNT
 from ..exceptions import ConfigurationError
 from .external_input_manifest import (
     EXTERNAL_INPUT_BINDING_SCHEMAS,
@@ -732,6 +733,7 @@ def _integer_day(value: Any, context: str) -> int:
 def _native_ve_profile_data(
     value: Any,
     profile_type: str,
+    modulating: bool,
     context: str,
 ) -> Tuple[Any, ...]:
     """Validate one proven native VE daily/weekly/yearly payload shape."""
@@ -746,10 +748,13 @@ def _native_ve_profile_data(
     if not isinstance(value, list) or not value:
         raise ConfigurationError("{} must be a non-empty array".format(context))
     if profile_type == "weekly":
-        if len(value) != 7:
+        if len(value) != VE_WEEKLY_PROFILE_SLOT_COUNT:
             raise ConfigurationError(
-                "{} weekly data must contain exactly seven daily "
-                "profile_ref entries".format(context)
+                "{} weekly data must contain exactly {} daily profile_ref "
+                "entries for VE 2025".format(
+                    context,
+                    VE_WEEKLY_PROFILE_SLOT_COUNT,
+                )
             )
         return tuple(
             {"profile_ref": _profile_reference(
@@ -856,16 +861,18 @@ def _load_ve_profile_graph(
             raise ConfigurationError(
                 "{} units must be an integer from -1 to 1".format(key)
             )
+        modulating = bool(node.get("modulating", True))
         nodes.append(
             NormalizedVeProfileNode(
                 key=key,
                 profile_type=profile_type,
                 reference=reference,
-                modulating=bool(node.get("modulating", True)),
+                modulating=modulating,
                 units=units_raw,
                 data=_native_ve_profile_data(
                     node.get("data"),
                     profile_type,
+                    modulating,
                     context + ".data",
                 ),
                 source_locator=_text(

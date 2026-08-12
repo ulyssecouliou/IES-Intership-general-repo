@@ -45,12 +45,11 @@ def reference(request):
 # Le critère n'est pas inventé
 # --------------------------------------------------------------------------
 
-def test_le_critere_est_declare_non_calcule(reference):
-    """Les feuilles « Verteilung » sont des GRAPHIQUES : aucune cellule du
-    classeur ne définit la bande d'une distribution. Le déclarer, plutôt que
-    de choisir une formule — ce serait inventer le critère."""
-    assert reference['statut_critere'] == 'NON_CALCULE_PAR_LE_CLASSEUR'
+def test_le_critere_est_confirme_par_lautorite(reference):
+    """Le classeur ne calcule pas la bande, mais la SIA a confirmé min/max."""
+    assert reference['statut_critere'] == 'CONFIRME_AUTORITE_2026-08-10'
     assert 'GRAPHIQUES' in reference['pourquoi_non_calcule']
+    assert 'min/max' in reference['pourquoi_non_calcule']
 
 
 def test_le_critere_cite_sa_source(reference):
@@ -120,14 +119,22 @@ def test_les_bornes_sont_croissantes(reference):
 # Ce que le relevé dit de lui-même
 # --------------------------------------------------------------------------
 
-def test_les_totaux_partiels_sont_conserves_pas_completes(reference):
-    """Plusieurs programmes totalisent moins de 8760 heures. Les compléter
-    fausserait la dispersion ; les taire la rendrait inexplicable."""
+def test_les_heures_hors_classes_sont_explicites(reference):
+    """Un total affiché court signifie hors classes, pas série incomplète."""
     totaux = set(c['total_heures'] for bloc in reference['distributions']
                  for c in bloc['contributeurs'])
     if any(t < 8760 for t in totaux):
         texte = u' '.join(reference['reserves'])
         assert u'8760' in texte
+        assert u'heures manquantes' in texte
+        for bloc in reference['distributions']:
+            for contributeur in bloc['contributeurs']:
+                assert contributeur['heures_dans_classes'] == contributeur['total_heures']
+                assert (
+                    contributeur['heures_dans_classes']
+                    + contributeur['heures_hors_classes']
+                    == contributeur['heures_source_attendues']
+                )
 
 
 def test_un_bloc_sans_cas_est_signale(reference):
@@ -138,8 +145,8 @@ def test_un_bloc_sans_cas_est_signale(reference):
         assert any('identifiant de cas' in r for r in reference['reserves'])
 
 
-def test_les_reserves_rappellent_que_la_bande_manque(reference):
-    assert any('statut_critere' in r for r in reference['reserves'])
+def test_les_reserves_rappellent_la_bande_confirmee(reference):
+    assert any('min/max' in r for r in reference['reserves'])
 
 
 def test_chaque_bloc_nomme_sa_grandeur(reference):

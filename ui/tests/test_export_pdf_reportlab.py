@@ -2,7 +2,7 @@
 """Test d'intégration RÉEL de `ui/export_pdf_reportlab.py`.
 
 Contrairement à la majorité de `ui/dialog_tkinter.py` et
-`ui/export_excel_com.py`, ce test S'EXÉCUTE réellement ici : `reportlab` a pu
+`ui/excel_export.py`, ce test S'EXÉCUTE réellement ici : `reportlab` a pu
 être installé dans cet environnement de développement (`pip install
 reportlab`, version 5.0.0). Il ne prouve PAS la compatibilité avec ReportLab
 3.2 (version réellement embarquée dans VEScripts, ADR-001 §2) -- seulement

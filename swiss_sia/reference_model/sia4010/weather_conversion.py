@@ -4,7 +4,10 @@ IESVE 2025 does not read the historical fixed-width DRYCOLD.TMY source
 directly.  This module creates an EPW transport file while preserving the
 hourly TMY1 meteorological values.  When TMY1 diffuse horizontal radiation is
 missing, it is reconstructed from global horizontal and direct normal
-radiation using documented solar geometry at the midpoint of the hour.
+radiation using documented solar geometry at the midpoint of the hour.  The
+ISO 52016-1 verification-case boundary condition is also transported through
+the EPW horizontal-infrared field: apparent sky temperature is exactly 11 K
+below the hourly outdoor dry-bulb temperature.
 
 The conversion is an interoperability step, not a normative SIA result.
 """
@@ -29,6 +32,8 @@ DENVER_TIME_ZONE_HOURS = -7.0
 DENVER_ELEVATION_M = 1609.0
 EXPECTED_HOURS = 8760
 EPW_AUDIT_FILENAME = "DRYCOLD_IESVE_EPW_DERIVATION.json"
+APPARENT_SKY_TEMPERATURE_OFFSET_K = 11.0
+STEFAN_BOLTZMANN_W_M2_K4 = 5.670374419e-8
 
 
 @dataclass(frozen=True)
@@ -203,12 +208,52 @@ def _solar_components(record: _RawTmy1) -> Tuple[float, float, float]:
     return ghi, dni, dhi
 
 
+def _horizontal_infrared_radiation_w_m2(dry_bulb_c: float) -> float:
+    """Return long-wave sky radiation for the ISO fixed 11 K sky offset.
+
+    EPW field 13 is the horizontal infrared radiation intensity from the sky.
+    Encoding the prescribed apparent sky temperature in that field avoids
+    delegating this normative boundary condition to an engine default.
+    """
+
+    apparent_sky_temperature_k = (
+        float(dry_bulb_c)
+        + 273.15
+        - APPARENT_SKY_TEMPERATURE_OFFSET_K
+    )
+    if apparent_sky_temperature_k <= 0.0:
+        raise ConfigurationError(
+            "Invalid apparent sky temperature derived from dry bulb: "
+            "{} degC".format(dry_bulb_c)
+        )
+    return (
+        STEFAN_BOLTZMANN_W_M2_K4
+        * apparent_sky_temperature_k**4
+    )
+
+
+def _apparent_sky_temperature_c(horizontal_infrared_w_m2: float) -> float:
+    """Return apparent sky temperature decoded from EPW field 13."""
+
+    if horizontal_infrared_w_m2 <= 0.0:
+        raise ConfigurationError(
+            "Horizontal infrared radiation must be positive"
+        )
+    return (
+        (horizontal_infrared_w_m2 / STEFAN_BOLTZMANN_W_M2_K4) ** 0.25
+        - 273.15
+    )
+
+
 def _epw_line(record: _RawTmy1) -> str:
     """Return one EPW-formatted hourly line for a raw TMY1 record."""
 
     ghi, dni, dhi = _solar_components(record)
     relative_humidity = _relative_humidity(
         record.dry_bulb_c, record.dew_point_c
+    )
+    horizontal_infrared = _horizontal_infrared_radiation_w_m2(
+        record.dry_bulb_c
     )
     fields = [
         2001,
@@ -223,7 +268,7 @@ def _epw_line(record: _RawTmy1) -> str:
         record.pressure_pa,
         9999,
         9999,
-        9999,
+        "{:.3f}".format(horizontal_infrared),
         int(round(ghi)),
         int(round(dni)),
         int(round(dhi)),
@@ -318,6 +363,16 @@ def convert_tmy1_to_iesve_epw(
         abs(float(fields[13]) - record.global_horizontal_w_m2)
         for fields, record in zip(parsed, records)
     )
+    apparent_sky_offset_difference = max(
+        abs(
+            (
+                float(fields[6])
+                - _apparent_sky_temperature_c(float(fields[12]))
+            )
+            - APPARENT_SKY_TEMPERATURE_OFFSET_K
+        )
+        for fields in parsed
+    )
     audit: Dict[str, Any] = {
         "schema_version": "1.0",
         "status": "PASS",
@@ -349,6 +404,16 @@ def convert_tmy1_to_iesve_epw(
             "diffuse_radiation_method": (
                 "DHI=max(0,GHI-DNI*cos(zenith)); DNI capped to preserve GHI"
             ),
+            "apparent_sky_temperature": {
+                "method": (
+                    "EPW horizontal infrared = Stefan-Boltzmann radiation "
+                    "at outdoor dry bulb minus 11 K"
+                ),
+                "external_air_minus_apparent_sky_temperature_k": (
+                    APPARENT_SKY_TEMPERATURE_OFFSET_K
+                ),
+                "source": "BS EN ISO 52016-1:2017 clause 7.2.2.12",
+            },
         },
         "controls": {
             "record_count": {
@@ -367,6 +432,17 @@ def convert_tmy1_to_iesve_epw(
             "global_horizontal_preserved_with_integer_epw_rounding": {
                 "status": "PASS" if ghi_rounding_difference <= 0.5 else "FAIL",
                 "maximum_absolute_difference_w_m2": ghi_rounding_difference,
+            },
+            "fixed_apparent_sky_temperature_offset": {
+                "status": (
+                    "PASS"
+                    if apparent_sky_offset_difference <= 0.1
+                    else "FAIL"
+                ),
+                "expected_offset_k": APPARENT_SKY_TEMPERATURE_OFFSET_K,
+                "maximum_absolute_difference_k": (
+                    apparent_sky_offset_difference
+                ),
             },
         },
         "limitations": [

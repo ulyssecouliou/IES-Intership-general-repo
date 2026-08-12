@@ -1,4 +1,4 @@
-"""Tests for the SIA 4010 frequency-distribution second criterion (Tests 2/3/5).
+"""Tests for the SIA 4010 frequency-distribution criterion.
 
 The pure-Python engine is proven on the REAL official legend and a real
 reference hourly column (count conservation), plus synthetic scatter bands to
@@ -16,6 +16,7 @@ from openpyxl import Workbook
 
 from swiss_sia.reference_model.sia4010.distribution_reference import (
     DISTRIBUTION_CRITERIA,
+    DISTRIBUTION_WORKBOOK_EVIDENCE,
     DistributionQuantity,
     build_distribution_bands,
 )
@@ -82,12 +83,17 @@ class HistogramEngineTests(unittest.TestCase):
         counts = histogram_counts([5, 10, 15, 150, 1000, None, "x"], [10, 100, 150])
         self.assertEqual(counts, (2, 1, 1, 1))  # 5 and 10 -> class0; 15 -> c1; 150 -> c2; 1000 -> overflow
 
-    def test_build_scatter_band_is_the_per_bin_symmetric_band(self):
-        """The acceptance band is mean +/- max|count - mean|, per bin.
+    def test_official_displayed_classes_keep_overflow_separate(self):
+        counts = histogram_counts(
+            [5, 10, 15, 150, 1000],
+            [10, 100, 150],
+            include_overflow=False,
+        )
+        self.assertEqual(counts, (2, 1, 1))
+        self.assertEqual(sum(counts), 4)
 
-        Not the min/max envelope: see the module docstring of
-        ``frequency_distribution`` for the workbook formulas this mirrors.
-        """
+    def test_build_scatter_band_is_the_per_bin_min_max_envelope(self):
+        """The written authority clarification makes min/max the acceptance band."""
 
         band = build_scatter_band(
             [(10, 5, 2), (8, 7, 3), (12, 4, 1)],
@@ -97,17 +103,14 @@ class HistogramEngineTests(unittest.TestCase):
             source_locator="loc",
         )
         self.assertIsNotNone(band)
-        # bin 0: [10, 8, 12] -> mean 10, deviation 2      -> [8, 12]
-        # bin 1: [5, 7, 4]   -> mean 16/3, deviation 5/3  -> [11/3, 7]
-        # bin 2: [2, 3, 1]   -> mean 2, deviation 1       -> [1, 3]
-        for index, expected in enumerate((8.0, 11.0 / 3.0, 1.0)):
+        for index, expected in enumerate((8.0, 4.0, 1.0)):
             self.assertAlmostEqual(band.lower_counts[index], expected, places=9)
         for index, expected in enumerate((12.0, 7.0, 3.0)):
             self.assertAlmostEqual(band.upper_counts[index], expected, places=9)
         self.assertEqual(band.program_count, 3)
 
-    def test_build_scatter_band_also_records_the_min_max_envelope(self):
-        """The envelope is kept alongside, for reporting only -- never enforced."""
+    def test_build_scatter_band_records_envelope_and_old_diagnostic(self):
+        """The accepted envelope and superseded symmetric diagnostic are auditable."""
 
         band = build_scatter_band(
             [(10, 5, 2), (8, 7, 3), (12, 4, 1)],
@@ -118,14 +121,14 @@ class HistogramEngineTests(unittest.TestCase):
         )
         self.assertEqual(band.envelope_lower_counts, (8.0, 4.0, 1.0))
         self.assertEqual(band.envelope_upper_counts, (12.0, 7.0, 3.0))
+        for index, expected in enumerate((8.0, 11.0 / 3.0, 1.0)):
+            self.assertAlmostEqual(
+                band.symmetric_lower_counts[index], expected, places=9
+            )
+        self.assertEqual(band.symmetric_upper_counts, (12.0, 7.0, 3.0))
 
-    def test_envelope_is_always_inside_the_acceptance_band(self):
-        """Arithmetic property that makes the envelope the stricter reading.
-
-        max|c - mean| >= max - mean and >= mean - min, so the envelope can never
-        be wider than the band. Enforcing the envelope would risk failing a
-        candidate the official criterion accepts.
-        """
+    def test_accepted_envelope_is_inside_the_old_diagnostic_band(self):
+        """The superseded symmetric diagnostic remains wider or equal."""
 
         for programs in (
             [(1, 2, 3), (4, 5, 6), (7, 8, 9)],
@@ -139,13 +142,13 @@ class HistogramEngineTests(unittest.TestCase):
             )
             for index in range(len(band.lower_counts)):
                 self.assertLessEqual(
-                    band.lower_counts[index],
-                    band.envelope_lower_counts[index] + 1e-9,
+                    band.symmetric_lower_counts[index],
+                    band.lower_counts[index] + 1e-9,
                     msg="{} bin {}".format(programs, index),
                 )
                 self.assertGreaterEqual(
-                    band.upper_counts[index],
-                    band.envelope_upper_counts[index] - 1e-9,
+                    band.symmetric_upper_counts[index],
+                    band.upper_counts[index] - 1e-9,
                     msg="{} bin {}".format(programs, index),
                 )
 
@@ -189,22 +192,16 @@ class HistogramEngineTests(unittest.TestCase):
         outcome = compare_distribution((1, 2), self._band())  # band has 3 bins
         self.assertEqual(outcome.status, DistributionStatus.NOT_CHECKABLE)
 
-    def test_inside_band_but_outside_envelope_is_a_reserved_pass(self):
-        """Where the two readings of the criterion disagree, flag -- do not fail.
-
-        The band for bin 1 is [11/3, 7] while the envelope is [4, 7]. A count of
-        3.8 sits inside the band and outside the envelope: it passes under the
-        retained reading, with a reservation recorded for the sub-commission.
-        """
+    def test_inside_old_symmetric_band_but_outside_envelope_fails(self):
+        """The authority-confirmed min/max envelope is now enforced."""
 
         outcome = compare_distribution((10, 3.8, 2), self._band())
-        self.assertEqual(outcome.status,
-                         DistributionStatus.PASS_WITH_RESERVATION)
+        self.assertEqual(outcome.status, DistributionStatus.FAIL)
         self.assertEqual(outcome.out_of_band_bins, (1,))
-        self.assertIn("sub-commission", outcome.message)
+        self.assertIn("min/max envelope", outcome.message)
 
-    def test_a_reserved_pass_counts_as_passing(self):
-        """Callers must use is_passing(), never == PASS, or a pass becomes a fail."""
+    def test_historical_reserved_pass_still_deserializes_as_passing(self):
+        """Backward compatibility does not change new comparison behavior."""
 
         self.assertTrue(DistributionStatus.is_passing(DistributionStatus.PASS))
         self.assertTrue(DistributionStatus.is_passing(
@@ -296,23 +293,45 @@ class SyntheticExtractionTests(unittest.TestCase):
         # ProgA and ProgB contribute 1A; the candidate Daten_Testprogramm must not.
         band = self.bands[("1A", "Q1")]
         self.assertEqual(band.program_count, 2)
-        self.assertEqual(band.lower_counts, (1, 0, 1))
-        self.assertEqual(band.upper_counts, (2, 1, 1))
+        self.assertEqual(band.lower_counts, (1, 0))
+        self.assertEqual(band.upper_counts, (2, 1))
+        self.assertFalse(band.include_overflow)
+        self.assertEqual(
+            dict(band.outside_class_counts),
+            {"Daten_ProgA": 1, "Daten_ProgB": 1},
+        )
         self.assertEqual(band.unit, "W")
+
+    def test_incomplete_reference_series_are_retained_and_flagged(self):
+        """Authority instruction: do not repair or exclude supplied series."""
+
+        band = self.bands[("1A", "Q1")]
+        self.assertEqual(
+            dict(band.reference_hour_totals),
+            {"Daten_ProgA": 3, "Daten_ProgB": 3},
+        )
+        self.assertEqual(
+            set(band.incomplete_reference_programs),
+            {"Daten_ProgA", "Daten_ProgB"},
+        )
+        outcome = compare_distribution((2, 1), band)
+        self.assertEqual(outcome.status, DistributionStatus.PASS)
+        self.assertIn("retained unchanged", outcome.message)
+        self.assertIn("outside the declared class boundaries", outcome.message)
 
     def test_not_provided_case_has_fewer_contributors(self):
         # Only ProgA provided case 1B (ProgB's 1B column is empty).
         band = self.bands[("1B", "Q1")]
         self.assertEqual(band.program_count, 1)
-        self.assertEqual(band.lower_counts, (0, 1, 0))
+        self.assertEqual(band.lower_counts, (0, 1))
 
     def test_comparator_against_synthetic_band(self):
         band = self.bands[("1A", "Q1")]
         self.assertEqual(
-            compare_distribution((2, 1, 1), band).status, DistributionStatus.PASS
+            compare_distribution((2, 1), band).status, DistributionStatus.PASS
         )
         self.assertEqual(
-            compare_distribution((3, 0, 0), band).status, DistributionStatus.FAIL
+            compare_distribution((3, 0), band).status, DistributionStatus.FAIL
         )
 
     def test_evaluate_distribution_criteria_fail_closed_then_pass(self):
@@ -372,7 +391,15 @@ class Test2ReferenceBandTests(unittest.TestCase):
     def test_band_shape_is_consistent(self):
         band = self.bands[("2A", self.SOLAR)]
         self.assertEqual(band.unit, "W")
-        self.assertEqual(len(band.lower_counts), len(band.upper_edges) + 1)
+        self.assertFalse(band.include_overflow)
+        self.assertEqual(len(band.lower_counts), len(band.upper_edges))
+        self.assertEqual(
+            set(dict(band.reference_hour_totals).values()),
+            {8760},
+        )
+        self.assertTrue(
+            all(count >= 0 for count in dict(band.outside_class_counts).values())
+        )
         self.assertTrue(
             all(lo <= hi for lo, hi in zip(band.lower_counts, band.upper_counts))
         )
@@ -402,6 +429,19 @@ class DistributionRegistryTests(unittest.TestCase):
         # Spezifikation_Test2/3/5 are the only specs that require the hourly
         # frequency distribution to lie within the reference scatter band.
         self.assertEqual(set(DISTRIBUTION_CRITERIA), {"2", "3", "5"})
+
+    def test_tests_4_6_distribution_sheets_are_no_longer_denied(self):
+        """Presence is proven; exact pass-gate scope remains fail-closed."""
+
+        self.assertEqual(set(DISTRIBUTION_WORKBOOK_EVIDENCE), {"4", "6"})
+        for test_id, evidence in DISTRIBUTION_WORKBOOK_EVIDENCE.items():
+            with self.subTest(test_id=test_id):
+                self.assertEqual(evidence["legend_sheet"], "Haeufigkeitskassen")
+                self.assertEqual(
+                    evidence["status"],
+                    "REQUIRED_OUTPUT_SCOPE_CONFIRMED_ACCEPTANCE_GATE_PENDING",
+                )
+                self.assertGreaterEqual(len(evidence["legend_quantities"]), 10)
 
     def test_every_validation_class_has_its_criteria_registered(self):
         # A class is only validatable when every test family it requires has both
@@ -579,19 +619,29 @@ class SplitHeaderExtractionTests(unittest.TestCase):
         self.assertEqual(band.program_count, 3)  # ProgA, ProgB, ProgC - not the candidate
         self.assertEqual(band.unit, "W")
 
-    def test_band_is_the_per_bin_symmetric_band_of_the_reference_programs(self):
+    def test_band_is_the_per_bin_min_max_envelope_of_reference_programs(self):
         band = self.bands[("Case A", "FanPower")]
-        # ProgA (1,1,1), ProgB (2,0,1), ProgC (0,3,0) over bins <=10, <=100, >100.
-        # bin 0: [1, 2, 0] -> mean 1,   deviation 1   -> [0, 2]
-        # bin 1: [1, 0, 3] -> mean 4/3, deviation 5/3 -> [-1/3, 3]
-        # bin 2: [1, 1, 0] -> mean 2/3, deviation 2/3 -> [0, 4/3]
-        for index, expected in enumerate((0.0, -1.0 / 3.0, 0.0)):
+        # The official displayed classes are <=10 and <=100. The >100 Excel
+        # overflow is audited separately, not scored as an invented class.
+        for index, expected in enumerate((0.0, 0.0)):
             self.assertAlmostEqual(band.lower_counts[index], expected, places=9)
-        for index, expected in enumerate((2.0, 3.0, 4.0 / 3.0)):
+        for index, expected in enumerate((2.0, 3.0)):
             self.assertAlmostEqual(band.upper_counts[index], expected, places=9)
-        # The min/max envelope is still recorded, for reporting only.
-        self.assertEqual(band.envelope_lower_counts, (0.0, 0.0, 0.0))
-        self.assertEqual(band.envelope_upper_counts, (2.0, 3.0, 1.0))
+        # Backward-compatible envelope fields repeat the accepted interval.
+        self.assertEqual(band.envelope_lower_counts, (0.0, 0.0))
+        self.assertEqual(band.envelope_upper_counts, (2.0, 3.0))
+        self.assertEqual(
+            dict(band.outside_class_counts),
+            {"Daten ProgA": 1, "Daten ProgB": 1, "Daten ProgC": 0},
+        )
+        for index, expected in enumerate((0.0, -1.0 / 3.0)):
+            self.assertAlmostEqual(
+                band.symmetric_lower_counts[index], expected, places=9
+            )
+        for index, expected in enumerate((2.0, 3.0)):
+            self.assertAlmostEqual(
+                band.symmetric_upper_counts[index], expected, places=9
+            )
 
     def test_single_program_bands_are_refused(self):
         from swiss_sia.reference_model.sia4010.distribution_reference import (

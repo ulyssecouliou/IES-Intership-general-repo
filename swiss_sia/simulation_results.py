@@ -304,6 +304,49 @@ def find_first_aps_variable(
     return None
 
 
+def find_room_sensible_load_variable(
+    variables: Iterable[Dict[str, Any]],
+    mode: str,
+) -> Optional[APSVariable]:
+    """Return the preferred room-unit sensible heating or cooling load.
+
+    APS catalogs can expose steady-state, observed-room and delivered plant
+    loads with overlapping words.  Prefer the documented room-units sensible
+    series by exact APS identity before falling back to token discovery.
+    """
+    normalized_mode = str(mode or "").strip().lower()
+    if normalized_mode not in {"heating", "cooling"}:
+        raise ValueError("mode must be 'heating' or 'cooling'")
+    variable_rows = list(variables)
+    preferred_aps_name = "room units {} load".format(normalized_mode)
+    for variable in variable_rows:
+        aps_name = str(variable.get("aps_varname") or variable.get("name") or "")
+        model_level = str(
+            variable.get("model_level") or variable.get("level") or ""
+        ).strip().lower()
+        if aps_name.strip().lower() != preferred_aps_name or model_level not in {"", "z"}:
+            continue
+        return (
+            aps_name,
+            str(variable.get("display_name") or aps_name),
+            model_level or "z",
+            str(variable.get("resolved_metric_unit") or ""),
+            _safe_unit_number(
+                variable.get("resolved_metric_divisor"), 1.0, reject_zero=True
+            ),
+            _safe_unit_number(variable.get("resolved_metric_offset"), 0.0),
+        )
+
+    matches = find_aps_variables(
+        variable_rows, (normalized_mode, "load"), "z", max_matches=8
+    )
+    for match in matches:
+        label = "{} {}".format(match[0], match[1]).lower()
+        if "steady state" not in label and "[obs]" not in label:
+            return match
+    return matches[0] if matches else None
+
+
 def result_label(aps_variable: Tuple[Any, ...]) -> str:
     """Return a readable label for a discovered APS variable."""
     aps_name, display_name, level = aps_variable[:3]
@@ -553,8 +596,8 @@ def collect_room_dynamic_results(results_file: Any) -> List[RoomDynamicResult]:
     variables = get_available_variables(results_file)
     rph = get_results_per_hour(results_file)
 
-    heating_var = find_aps_variable(variables, ("heating", "load"), "z")
-    cooling_var = find_aps_variable(variables, ("cooling", "load"), "z")
+    heating_var = find_room_sensible_load_variable(variables, "heating")
+    cooling_var = find_room_sensible_load_variable(variables, "cooling")
     temp_var = find_aps_variable(variables, ("dry", "resultant", "temperature"), "z")
     occ_var = find_aps_variable(variables, ("number", "people"), "z")
     lighting_var = find_first_aps_variable(

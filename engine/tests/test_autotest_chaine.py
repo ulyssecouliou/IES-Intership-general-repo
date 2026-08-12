@@ -25,8 +25,9 @@ def rendus():
 # La chaîne tient
 # --------------------------------------------------------------------------
 
-def test_les_cinq_tests_a_bandes_passent_la_chaine(rendus):
+def test_les_sept_tests_passent_la_chaine(rendus):
     assert len(rendus) == len(auto.TESTS)
+    assert [r['bandes']['test'] for r in rendus] == list(range(1, 8))
 
 
 def test_chaque_test_rejoue_au_moins_un_cas(rendus):
@@ -50,8 +51,21 @@ def test_les_distributions_sont_evaluees_quand_elles_existent(rendus):
 
 
 @pytest.mark.parametrize('numero', (4, 6))
-def test_les_tests_sans_distribution_le_declarent(numero):
+def test_les_tests_sans_referentiel_distribution_executable_le_declarent(numero):
+    """Leur présence est confirmée, mais le gate exact reste en revue."""
     assert auto.verifier_distributions(numero) is None
+
+
+def test_tests_1_et_7_passent_par_leurs_moteurs_dedies(rendus):
+    par_test = dict((r['bandes']['test'], r) for r in rendus)
+    assert par_test[1]['bandes']['nb_cas_rejoues'] == 28
+    assert par_test[1]['bandes']['critere'] == 'ENONCE_DANS_LA_SPEC'
+    assert par_test[7]['bandes']['nb_cas_rejoues'] == 11
+    assert par_test[7]['bandes']['critere'] == (
+        'CLASSEUR_CORRIGE_VERIFIE_2026-08-10'
+    )
+    assert par_test[1]['vue']['nb_lignes'] > 0
+    assert par_test[7]['vue']['nb_lignes'] == 11
 
 
 # --------------------------------------------------------------------------
@@ -62,12 +76,14 @@ def test_le_module_dit_ce_quil_ne_prouve_pas():
     assert 'ne prouve **rien** sur IESVE' in auto.__doc__
 
 
-def test_les_distributions_restent_non_etablies(rendus):
-    """Même rejouées à l'identique, elles ne concluent pas : le classeur
-    officiel ne définit aucune bande de distribution."""
+def test_les_distributions_rejouees_passent_enveloppe_confirmee(rendus):
+    """Un programme de référence doit rester dans sa propre enveloppe min/max."""
     for rendu in rendus:
         if rendu['distributions']:
-            assert rendu['distributions']['verdict'] == 'NON_ETABLI'
+            assert rendu['distributions']['verdict'] == 'PASS'
+            assert rendu['distributions']['critere'] == (
+                'CONFIRME_AUTORITE_2026-08-10'
+            )
 
 
 def test_le_statut_du_critere_remonte_tel_quel(rendus):

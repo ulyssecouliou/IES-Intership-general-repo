@@ -557,6 +557,12 @@ def _iesve_namespace():
 
     profile_units_none = object()
     return SimpleNamespace(
+        conditioned_flag=SimpleNamespace(
+            yes="conditioned_yes",
+            no_free_floating="conditioned_no_free_floating",
+            no_tempered="conditioned_no_tempered",
+            not_applicable="conditioned_not_applicable",
+        ),
         ProfileUnits=SimpleNamespace(none=profile_units_none),
         CasualGain_type=SimpleNamespace(
             people="create_people",
@@ -571,6 +577,11 @@ def _iesve_namespace():
         AirChange_unit=SimpleNamespace(
             ac_per_h="ach",
             l_per_s_per_person="l_per_s_per_person",
+        ),
+        setpoint_type=SimpleNamespace(
+            constant="constant",
+            variable="variable",
+            two_value="two_value",
         ),
         VECdbConstruction=SimpleNamespace(delete_layer=lambda *args: None),
         VECdbLayer=SimpleNamespace(get_id=lambda *args: None),
@@ -672,6 +683,46 @@ class _DryRunGateway(VeGateway):
 
 class ReferenceModelAssetProvisioningTests(unittest.TestCase):
     """Exercise manifest validation and capability-gated VE creation."""
+
+    def test_room_setpoint_mode_resolves_to_runtime_enum(self):
+        """Translate the auditable string into the typed VE setter value."""
+
+        provisioner = IesVeAssetProvisioner(
+            _iesve_namespace(), _Project(), _CdbProject()
+        )
+        writable = provisioner._writable_room_conditions(
+            {
+                "heating_profile": "ON",
+                "heating_setpoint_type": "variable",
+                "heating_setpoint_profile": "WEEK0048",
+            }
+        )
+        self.assertEqual(writable["heating_profile"], "ON")
+        self.assertEqual(writable["heating_setpoint_type"], "variable")
+        self.assertEqual(
+            writable["heating_setpoint_profile"], "WEEK0048"
+        )
+
+    def test_conditioned_boolean_resolves_to_typed_runtime_enum(self):
+        """Map True to VE enum and False to verified OFF room profiles."""
+
+        provisioner = IesVeAssetProvisioner(
+            _iesve_namespace(), _Project(), _CdbProject()
+        )
+        self.assertEqual(
+            provisioner._writable_system_data({"conditioned": True})[
+                "conditioned"
+            ],
+            "conditioned_yes",
+        )
+        self.assertNotIn(
+            "conditioned",
+            provisioner._writable_system_data({"conditioned": False}),
+        )
+        self.assertEqual(
+            provisioner._compatibility_warnings[-1]["code"],
+            "VE-TEMPLATE-FREE-FLOATING-MAPPED-TO-PROFILES",
+        )
 
     def test_ve_float32_readback_is_tolerated_without_masking_real_changes(self):
         """Accept a float32 round trip but reject a meaningful property drift."""
@@ -840,6 +891,39 @@ class ReferenceModelAssetProvisioningTests(unittest.TestCase):
                 _write_manifest("cyclic_profile_references", payload)
             )
 
+    def test_manifest_rejects_seven_slot_week_before_mutation(self):
+        """Require VE's Monday-Sunday plus Holiday weekly profile shape."""
+
+        payload = _valid_manifest_payload()
+        daily = json.loads(json.dumps(payload["profiles"][0]))
+        daily.update(
+            {
+                "key": "weekday",
+                "reference": "WEEKDAY",
+                "profile_type": "daily",
+            }
+        )
+        weekly = json.loads(json.dumps(daily))
+        weekly.update(
+            {
+                "key": "office_week",
+                "reference": "OFFICE_WEEK",
+                "profile_type": "weekly",
+                "data": _field(
+                    [{"profile_ref": "weekday"}] * 7,
+                    "array",
+                ),
+            }
+        )
+        payload["profiles"] = [daily, weekly]
+
+        with self.assertRaisesRegex(
+            ConfigurationError, "exactly 12 daily-profile slots"
+        ):
+            load_asset_manifest(
+                _write_manifest("seven_slot_week_rejected", payload)
+            )
+
     def test_profile_groups_are_topologically_created_and_read_back(self):
         """Resolve logical daily -> weekly -> yearly IDs in stable layers."""
 
@@ -863,7 +947,7 @@ class ReferenceModelAssetProvisioningTests(unittest.TestCase):
                 "reference": "OFFICE_WEEK",
                 "profile_type": "weekly",
                 "data": _field(
-                    [{"profile_ref": "weekday"}] * 7,
+                    [{"profile_ref": "weekday"}] * 12,
                     "array",
                 ),
             }
@@ -908,12 +992,86 @@ class ReferenceModelAssetProvisioningTests(unittest.TestCase):
         )
         self.assertEqual(
             weekly_profile.get_data(),
-            [receipt.profile_ids["weekday"]] * 7,
+            [receipt.profile_ids["weekday"]] * 12,
         )
         self.assertEqual(
             yearly_profile.get_data(),
             [[receipt.profile_ids["office_week"], 1, 365]],
         )
+
+    def test_group_profile_is_reread_after_save_when_create_returns_generic_proxy(self):
+        """Verify VE 2025 groups through their persisted GroupProfile proxy."""
+
+        payload = _valid_manifest_payload()
+        base = payload["profiles"][0]
+        daily = json.loads(json.dumps(base))
+        daily.update(
+            {
+                "key": "weekday",
+                "reference": "WEEKDAY",
+                "profile_type": "daily",
+            }
+        )
+        weekly = json.loads(json.dumps(base))
+        weekly.update(
+            {
+                "key": "office_week",
+                "reference": "OFFICE_WEEK",
+                "profile_type": "weekly",
+                "data": _field(
+                    [{"profile_ref": "weekday"}] * 12,
+                    "array",
+                ),
+            }
+        )
+        payload["profiles"] = [base, daily, weekly]
+        manifest = load_asset_manifest(
+            _write_manifest("generic_group_proxy", payload)
+        )
+        project = _Project()
+        original_create = project.create_profile
+        original_save = project.save_profiles
+
+        class _GenericCreatedProfile:
+            def __init__(self, identifier, reference):
+                self.id = identifier
+                self.reference = reference
+                self.data = None
+
+            def set_data(self, data):
+                self.data = json.loads(json.dumps(data))
+                return True
+
+        def create_profile(profile_type, reference, modulating, units):
+            if profile_type != "weekly":
+                return original_create(profile_type, reference, modulating, units)
+            identifier = "PRO-{}".format(len(project._profiles) + 1)
+            generic = _GenericCreatedProfile(identifier, reference)
+            project._profiles[identifier] = generic
+            project.profile_creation_order.append(reference)
+            return generic
+
+        def save_profiles():
+            result = original_save()
+            for identifier, profile in list(project._profiles.items()):
+                if not isinstance(profile, _GenericCreatedProfile):
+                    continue
+                persisted = _Profile(identifier, profile.reference, "weekly")
+                persisted.set_data(profile.data)
+                project._profiles[identifier] = persisted
+            return result
+
+        project.create_profile = create_profile
+        project.save_profiles = save_profiles
+
+        receipt = IesVeAssetProvisioner(
+            _iesve_namespace(), project, _CdbProject()
+        ).provision(manifest)
+
+        self.assertIn("office_week", receipt.profile_ids)
+        persisted = project._profiles[receipt.profile_ids["office_week"]]
+        self.assertTrue(persisted.is_weekly())
+        self.assertEqual(len(persisted.get_data()), 12)
 
     def test_profile_only_public_boundary_reuses_strict_graph_checks(self):
         """Qualify profiles without provisioning unrelated VE asset families."""
@@ -1561,6 +1719,186 @@ class ReferenceModelAssetProvisioningTests(unittest.TestCase):
         ]
         self.assertEqual(len(asset_results), 1)
         self.assertEqual(asset_results[0].status, ValidationStatus.PASS)
+
+
+    def test_audit_only_room_condition_is_traced_but_not_sent_to_ve(self):
+        """Keep the ISO assumption in evidence without calling an invalid setter."""
+
+        payload = _valid_manifest_payload()
+        payload["thermal_template"]["room_conditions"][
+            "solar_reflected_fraction"
+        ] = _field(0.0, "number", 0.0, 1.0)
+        manifest = load_asset_manifest(
+            _write_manifest("audit_only_room_condition", payload)
+        )
+        project = _Project()
+        cdb = _CdbProject()
+        provisioner = IesVeAssetProvisioner(_iesve_namespace(), project, cdb)
+
+        receipt = provisioner.provision(manifest)
+
+        template = next(iter(project._templates.values()))
+        self.assertNotIn(
+            "solar_reflected_fraction", template.get_room_conditions()
+        )
+        self.assertEqual(
+            manifest.thermal_template.raw_room_conditions()[
+                "solar_reflected_fraction"
+            ],
+            0.0,
+        )
+        warnings = [
+            warning
+            for warning in receipt.compatibility_warnings
+            if warning["code"] == "VE-ROOM-CONDITION-AUDIT-ONLY"
+        ]
+        self.assertEqual(len(warnings), 1)
+        self.assertEqual(warnings[0]["field"], "solar_reflected_fraction")
+        self.assertEqual(warnings[0]["requested_value"], 0.0)
+
+    def test_reuse_accepts_only_exact_ve_minimum_for_zero_mass_material(self):
+        """Audit VE's 1e-6 floor without weakening other material checks."""
+
+        payload = _valid_manifest_payload()
+        payload["on_existing"] = "reuse_verified"
+        properties = payload["materials"][0]["properties"]
+        properties["density"] = _field(0.0, "number", 0.0, 30000.0)
+        properties["specific_heat_capacity"] = _field(
+            0.0, "number", 0.0, 10000.0
+        )
+        manifest = load_asset_manifest(
+            _write_manifest("zero_mass_material_minimum", payload)
+        )
+        project = _Project()
+        cdb = _CdbProject()
+        provisioner = IesVeAssetProvisioner(_iesve_namespace(), project, cdb)
+        provisioner.provision(manifest)
+        material = cdb.materials[0]
+        material._properties["density"] = 1.0e-6
+        material._properties["specific_heat_capacity"] = 1.0e-6
+
+        receipt = provisioner.provision(manifest)
+
+        warnings = [
+            warning
+            for warning in receipt.compatibility_warnings
+            if warning["code"] == "VE-MATERIAL-ZERO-THERMAL-MASS-MINIMUM"
+        ]
+        self.assertEqual(len(warnings), 1)
+        self.assertEqual(
+            set(warnings[0]["fields"]),
+            {"density", "specific_heat_capacity"},
+        )
+        material._properties["density"] = 2.0e-6
+        with self.assertRaises(VeMutationError):
+            provisioner.provision(manifest)
+
+    def test_reuse_verified_audits_surface_resistance_rounding_to_four_decimals(
+        self,
+    ):
+        """Accept only VE's native four-decimal surface-resistance values."""
+
+        payload = _valid_manifest_payload()
+        payload["on_existing"] = "reuse_verified"
+        wall = next(
+            item for item in payload["constructions"] if item["key"] == "wall"
+        )
+        wall["properties"].update(
+            {
+                "inside_surface_resistance": _field(
+                    0.1310615989515072, "number", 0.0, 1.0
+                ),
+                "outside_surface_resistance": _field(
+                    0.041425020712510356, "number", 0.0, 1.0
+                ),
+            }
+        )
+        manifest = load_asset_manifest(
+            _write_manifest("surface_resistance_rounding", payload)
+        )
+        project = _Project()
+        cdb = _CdbProject()
+        provisioner = IesVeAssetProvisioner(_iesve_namespace(), project, cdb)
+        provisioner.provision(manifest)
+        wall_construction = cdb.constructions[0]
+        wall_construction._properties.update(
+            {
+                "inside_surface_resistance": 0.13109999895095825,
+                "outside_surface_resistance": 0.0414000004529953,
+            }
+        )
+
+        receipt = provisioner.provision(manifest)
+
+        warnings = [
+            warning
+            for warning in receipt.compatibility_warnings
+            if warning["code"]
+            == "VE-CONSTRUCTION-SURFACE-RESISTANCE-ROUNDED-4DP"
+        ]
+        self.assertEqual(len(warnings), 1)
+        self.assertEqual(
+            warnings[0]["fields"]["inside_surface_resistance"]["canonical_4dp"],
+            0.1311,
+        )
+        wall_construction._properties["inside_surface_resistance"] = 0.13
+        with self.assertRaises(VeMutationError):
+            provisioner.provision(manifest)
+
+    def test_reuse_recovers_only_an_unlinked_interrupted_template(self):
+        """Resume the precise empty state left by a failed first setter."""
+
+        payload = _valid_manifest_payload()
+        payload["on_existing"] = "reuse_verified"
+        manifest = load_asset_manifest(
+            _write_manifest("recover_interrupted_template", payload)
+        )
+        project = _Project()
+        project.create_thermal_template(manifest.thermal_template.name)
+        cdb = _CdbProject()
+        provisioner = IesVeAssetProvisioner(_iesve_namespace(), project, cdb)
+
+        receipt = provisioner.provision(manifest)
+
+        template = next(iter(project._templates.values()))
+        self.assertEqual(
+            template.get_room_conditions()["heating_setpoint"], 20.0
+        )
+        self.assertEqual(len(template.get_casual_gains()), 3)
+        self.assertEqual(len(template.get_air_exchanges()), 1)
+        warnings = [
+            warning
+            for warning in receipt.compatibility_warnings
+            if warning["code"] == "VE-INCOMPLETE-THERMAL-TEMPLATE-RECOVERED"
+        ]
+        self.assertEqual(len(warnings), 1)
+
+    def test_reuse_recovers_exactly_linked_template_after_readback_failure(self):
+        """Reapply typed data without duplicating exact manifest links."""
+
+        payload = _valid_manifest_payload()
+        payload["on_existing"] = "reuse_verified"
+        manifest = load_asset_manifest(
+            _write_manifest("recover_linked_template", payload)
+        )
+        project = _Project()
+        cdb = _CdbProject()
+        provisioner = IesVeAssetProvisioner(_iesve_namespace(), project, cdb)
+        provisioner.provision(manifest)
+        template = next(iter(project._templates.values()))
+        template._systems["conditioned"] = "conditioned_no_free_floating"
+
+        receipt = provisioner.provision(manifest)
+
+        self.assertEqual(template.get_apache_systems()["conditioned"], "conditioned_yes")
+        self.assertEqual(len(template.get_casual_gains()), 3)
+        self.assertEqual(len(template.get_air_exchanges()), 1)
+        warnings = [
+            warning
+            for warning in receipt.compatibility_warnings
+            if warning["code"] == "VE-INCOMPLETE-THERMAL-TEMPLATE-RECOVERED"
+        ]
+        self.assertEqual(len(warnings), 1)
 
 
 if __name__ == "__main__":

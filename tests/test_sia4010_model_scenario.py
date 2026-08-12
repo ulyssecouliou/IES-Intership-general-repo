@@ -51,6 +51,8 @@ class Sia4010ModelScenarioTests(unittest.TestCase):
         self.assertFalse(official_features("test_1", "600")["solar_protection"])
         self.assertTrue(official_features("test_1", "1E")["solar_protection"])
         self.assertTrue(official_features("test_2A", "2A")["solar_protection"])
+        self.assertTrue(official_features("test_4", "4")["hourly_distributions"])
+        self.assertTrue(official_features("test_6", "6")["hourly_distributions"])
 
     def test_loads_valid_official_scenario(self):
         scenario = ModelScenario.load(self._write(self._payload()))

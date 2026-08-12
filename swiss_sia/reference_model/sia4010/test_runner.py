@@ -78,6 +78,7 @@ class Sia4010TestEvaluation:
     variant_statuses: Dict[str, str] = field(default_factory=dict)
     variant_band_statuses: Dict[str, str] = field(default_factory=dict)
     variant_counts: Dict[str, Dict[str, int]] = field(default_factory=dict)
+    criterion_status: str = "OFFICIAL_WORKBOOK"
 
     def to_dict(self) -> Dict[str, Any]:
         """Return the evaluation as serializable data."""
@@ -97,6 +98,7 @@ class Sia4010TestEvaluation:
                 key: dict(value)
                 for key, value in (self.variant_counts or {}).items()
             },
+            "criterion_status": self.criterion_status,
         }
 
 
@@ -116,6 +118,7 @@ _TEST_PARSERS: Dict[str, Callable[..., Tuple[ExpectedResult, ...]]] = {
 # specifications: the annual result band and an hourly frequency-distribution
 # band.  A missing distribution must therefore never be promoted to a pass.
 _DISTRIBUTION_REQUIRED_TESTS = frozenset({"2", "3", "5"})
+TEST7_CRITERION_STATUS = "CORRECTED_WORKBOOK_VERIFIED_2026-08-10"
 
 
 class Sia4010TestRunner:
@@ -366,6 +369,9 @@ class Sia4010TestRunner:
                 status = "OFFICIAL_RESULTS_RECORDED"
             else:
                 status = "NOT_CHECKABLE"
+        criterion_status = "OFFICIAL_WORKBOOK"
+        if test_id == "7":
+            criterion_status = TEST7_CRITERION_STATUS
         return Sia4010TestEvaluation(
             test_id=test_id,
             bundle=bundle,
@@ -378,6 +384,7 @@ class Sia4010TestRunner:
             variant_statuses=variant_statuses,
             variant_band_statuses=variant_band_statuses,
             variant_counts=variant_counts,
+            criterion_status=criterion_status,
         )
 
     def evaluate_all(

@@ -5,7 +5,7 @@ Python PUR : aucun `import iesve`, `tkinter`, `win32com` ou `reportlab`. C'est
 la SEULE partie de `ui/` testable par `pytest` classique dans cet
 environnement (docs/ADR-001-architecture-MSP.md §2 -- Tkinter/Pywin32/
 ReportLab tournent uniquement dans VE ; voir `ui/dialog_tkinter.py`,
-`ui/export_excel_com.py`, `ui/export_pdf_reportlab.py`, marqués
+`ui/excel_export.py`, `ui/export_pdf_reportlab.py`, marqués
 `# ⚠ À VÉRIFIER -- non exécuté` partout où ils dépendent de VE).
 
 Style volontairement conservateur (pas de f-string, pas de `dataclasses`),
@@ -390,7 +390,7 @@ def construire_lignes_classes(resultat_test1):
 # --------------------------------------------------------------------------
 # Point d'entrée principal -- structure complète consommée par
 # `ui/dialog_tkinter.py`, `ui/export_pdf_reportlab.py` et
-# `ui/export_excel_com.py`.
+# `ui/excel_export.py`.
 # --------------------------------------------------------------------------
 
 def construire_vue_test1(resultat_test1):
@@ -453,12 +453,13 @@ def _citation_classe_test7(classe):
 # JUSTIFICATION_CRITERE, elles-mêmes appuyées sur SIA 4010:2023 §4.4 et sur
 # l'arbitrage traceability/critere-test4.spec.md.
 CITATION_CRITERE_TEST7 = (
-    u'Critère INFÉRÉ. La spécification du Test 7 n\'énonce aucun critère ; '
+    u'La spécification du Test 7 n\'énonce aucun critère ; '
     u'SIA 4010:2023 §4.4 délègue la comparaison au classeur d\'évaluation, '
     u'qui porte des bandes sur les seules Testgrössen (lignes 8-20) et aucune '
     u'sur les Diagnosegrössen (21-26). Formule : moyenne ± MAX(ABS(programme '
-    u'− moyenne)), bornes incluses. À confirmer par la sous-commission '
-    u'(SIA 4010 §4.6.2).'
+    u'− moyenne)), bornes incluses. Le classeur corrigé reçu le 2026-08-10 '
+    u'applique explicitement borne basse / borne haute ; contrôle XML et '
+    u'checksum consignés dans la traçabilité.'
 )
 
 SOURCE_VALEUR_REFERENCE_TEST7 = (
