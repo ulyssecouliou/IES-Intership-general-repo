@@ -1,0 +1,148 @@
+{
+  "schema": "sia4010-official-source-provenance.v1",
+  "artifact": "KLO_dry.txt",
+  "sha256": "aa3f3853300ceb55293c418d75ebfa36ef74353693acbaf369703c65bd337ffd",
+  "size_bytes": 1121557,
+  "imported_on": "2026-08-12",
+  "what_it_is": "SIA 2028 DRY normal hourly climate dataset for Zuerich Kloten (station code KLO), the climate the SIA 4010 test specifications require for Tests 2 to 7 and the Test 1 diagnostic case.",
+  "provenance": {
+    "supplied_by": "Prof. Gerhard Zweifel",
+    "role": "responsible for the SIA 4010 validation procedure",
+    "email": "gz_office@bluewin.ch",
+    "channel": "email attachment, thread 'WG: Validation SIA 4010 et 380/2'",
+    "message_file": "Downloads/WG Validation SIA 4010 et 3802.msg",
+    "cc": "Yiqiao Wang | SIA <yiqiao.wang@sia.ch>",
+    "quoted_answer": "I attach the file KLO_dry.txt",
+    "answered_question": "SIA 2028, DRY normal climate for Zuerich-Kloten, required by Tests 2 to 7 and the relevant Test 1 diagnostic case"
+  },
+  "structure": {
+    "format": "tab-separated text, one header row plus 8760 hourly rows",
+    "rows": 8760,
+    "columns": 29,
+    "encoding": "utf-8",
+    "station_column_value": "KLO",
+    "year_field_note": "time.yy varies across rows (e.g. 2000 for 1 January, 1999 for 31 December, 1998 at the solar peak). This is expected: a Design Reference Year splices real months from different years. Do not treat it as a calendar year."
+  },
+  "column_legend_status": {
+    "state": "PARTIALLY_CONFIRMED",
+    "confirmed_by_in_repo_authority": {
+      "source": "MeteoSwiss <STATION>_Metadata.csv shipped with the klimaszenarien-raumklima product, which spells out these same parameter codes",
+      "columns": {
+        "tre200h0": "Lufttemperatur 2 m ueber Boden, hourly mean, degC",
+        "ure200h0": "Relative Luftfeuchte, hourly mean, percent",
+        "fkl010h0": "Windgeschwindigkeit, Mittel, hourly mean, m/s",
+        "fkl010h1": "Windgeschwindigkeit, Boeenspitze, one-second gust hourly maximum, m/s",
+        "dkl010h0": "Windrichtung, hourly mean, degrees",
+        "gls": "Globalstrahlung horizontal, hourly mean, W/m2",
+        "str.diffus": "Diffuse Strahlung horizontal, hourly mean, W/m2",
+        "str.direkt": "Direktstrahlung normal (Beam), hourly mean, W/m2"
+      }
+    },
+    "confirmed_by_physical_validation": {
+      "method": "numerical cross-checks over all 8760 rows, 2026-08-12; see verification block below",
+      "columns": {
+        "dewpt": "dew-point temperature, degC - reproduces Magnus(tre200h0, ure200h0) to 0.538 K worst case",
+        "mixratio": "humidity ratio, g/kg - reproduced from dewpt and prestahs to 0.109 g/kg worst case",
+        "enthalpy": "specific enthalpy, kJ/kg - reproduces 1.006*T + W*(2501 + 1.86*T) to 0.131 kJ/kg worst case",
+        "prestahs": "station barometric pressure, hPa - identified by the humidity-ratio closure above, which fails if this column is not pressure in hPa"
+      }
+    },
+    "weakly_confirmed": {
+      "note": "Position is consistent but no independent identification was made.",
+      "columns": {
+        "wetbulb": "wet-bulb temperature, degC - satisfies dewpt <= wetbulb <= drybulb on all 8760 rows, with 0 violations, but was not solved for independently"
+      }
+    },
+    "inferred_from_name_only_TO_VERIFY": {
+      "note": "Names are strongly indicative and dimensionally plausible, but no authority statement is held and no numerical closure identifies them. Values are carried through to the audit record and are NOT used to produce any regulatory result until the legend is confirmed in writing.",
+      "columns": {
+        "rre150h0": "precipitation, mm [TO VERIFY]",
+        "tso100hs": "soil temperature at 100 cm [TO VERIFY] - entirely NA in this file",
+        "nto000sw": "total cloud cover [TO VERIFY] - NA on 7665 of 8760 rows",
+        "str.vert.E": "irradiance on a vertical east surface, W/m2 [TO VERIFY]",
+        "str.vert.S": "irradiance on a vertical south surface, W/m2 [TO VERIFY]",
+        "str.vert.W": "irradiance on a vertical west surface, W/m2 [TO VERIFY]",
+        "str.vert.N": "irradiance on a vertical north surface, W/m2 [TO VERIFY]",
+        "bodenalbedo": "ground albedo, percent [TO VERIFY] - discrete values 14/30/50/65/80",
+        "ir.horizontal": "downwelling horizontal infrared radiation, W/m2 [TO VERIFY]",
+        "ir.vertikal.S": "infrared radiation on a vertical south surface, W/m2 [TO VERIFY]",
+        "bodenemissivitaet": "ground emissivity, percent [TO VERIFY] - discrete values 94/96/98"
+      }
+    },
+    "outstanding_request": "Prof. Zweifel offered the legend in German and it was not captured as text in the received message. Request a machine-readable legend, or a written confirmation of the inferred block above, before any of those columns drives a regulatory result."
+  },
+  "verification_on_import": {
+    "date": "2026-08-12",
+    "row_count": {"expected": 8760, "observed": 8760, "status": "PASS"},
+    "column_alignment": {"header": 29, "data": 29, "status": "PASS"},
+    "dew_point_vs_magnus": {
+      "sample": "row 1, tre200h0=-0.2 degC, ure200h0=89.5 percent",
+      "file_value_c": -1.7,
+      "magnus_computed_c": -1.72,
+      "deviation_k": 0.02,
+      "status": "PASS"
+    },
+    "full_year_psychrometric_closure": {
+      "rows_checked": 8760,
+      "dew_point_vs_magnus_max_deviation_k": 0.538,
+      "enthalpy_vs_temperature_and_humidity_ratio_max_deviation_kj_kg": 0.131,
+      "humidity_ratio_from_dew_point_and_pressure_max_deviation_g_kg": 0.109,
+      "note": "The humidity-ratio closure uses dewpt and prestahs together, so it identifies both columns at once.",
+      "status": "PASS"
+    },
+    "psychrometric_ordering": {
+      "rule": "dewpt <= wetbulb <= drybulb",
+      "rows_checked": 8760,
+      "violations": 0,
+      "status": "PASS"
+    },
+    "radiation_closure": {
+      "rule": "str.diffus must not exceed gls",
+      "violating_rows": 0,
+      "status": "PASS"
+    },
+    "solar_peak_plausibility": {
+      "timestamp": "1998-06-19 11h",
+      "gls_w_m2": 920.0,
+      "str_direkt_w_m2": 832.0,
+      "str_diffus_w_m2": 162.0,
+      "vertical_e_s_w_n_w_m2": [195.0, 505.0, 130.0, 122.0],
+      "note": "South dominates east and west at midday, north lowest: correct northern-hemisphere summer ordering.",
+      "status": "PASS"
+    },
+    "annual_aggregates": {
+      "dry_bulb_min_c": -13.1,
+      "dry_bulb_max_c": 34.1,
+      "dry_bulb_mean_c": 9.4692,
+      "global_horizontal_kwh_m2": 1105.6,
+      "vertical_south_kwh_m2": 868.8,
+      "station_pressure_min_max_hpa": [927.9, 984.5]
+    },
+    "cross_check_against_frozen_reference": {
+      "against": "refs/reference-data/sia-2028-kloten-temperature.csv",
+      "that_reference_origin": "Resultaterfassung Test4.xlsx, sheet Wetterdaten, described as EnergyPlus reference-program output, extracted 2026-08-05",
+      "annual_mean_c": {"frozen": 9.4692, "official_file": 9.4692, "status": "IDENTICAL"},
+      "annual_max_c": {"frozen": 34.1, "official_file": 34.1, "status": "IDENTICAL"},
+      "annual_min_c": {"frozen": -13.0167, "official_file": -13.1},
+      "sorted_distribution_mean_deviation_k": 0.0335,
+      "best_hour_offset_h": 0,
+      "hourly_mean_deviation_at_offset_0_k": 0.2903,
+      "hourly_max_deviation_at_offset_0_k": 2.167,
+      "conclusion": "Same climate dataset. The residual hourly deviation is attributable to the reference program's internal processing, since the frozen reference is EnergyPlus output rather than the source. No hour rotation exists between the two.",
+      "explicitly_not_proven": "This does NOT resolve the IESVE APS hour-convention question, which compares a different pair of series and still requires a documented binding decision."
+    }
+  },
+  "what_this_unblocks": [
+    "The climate input required by the SIA 4010 test specifications for Tests 2 to 7 and the Test 1 diagnostic case is now held locally.",
+    "Four EPW fields previously derived by this repository are available as supplied values instead: dew point, station pressure, horizontal infrared radiation and, partially, cloud cover.",
+    "str.vert.S provides a supplied south-vertical irradiance series, usable as an independent benchmark when investigating solar-transport deviations for the Kloten-based tests."
+  ],
+  "what_this_does_not_unblock": [
+    "No acceptance criterion is established or changed by this file.",
+    "The Tests 4, 6 and 7 distribution-criterion question remains open with the sub-commission.",
+    "SIA 2024:2021 usage data remains outstanding; Prof. Zweifel answered 'Will follow, maybe by revised test specs'.",
+    "This is the test climate. It is not the CH2018 RCP 8.5 '2035' application climate of SIA 4010 clause 3.1.1 used for real Swiss projects. The two must never be conflated.",
+    "No VE run, no APS, and no SIA attestation follow from holding this file."
+  ],
+  "handling": "Read-only official source material. Never edit, reformat or regenerate. Derived artifacts belong beside their own audit record."
+}
