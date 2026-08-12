@@ -183,6 +183,14 @@ LEGACY_COLOUR_TO_STATUS = {
 # Typography
 # ---------------------------------------------------------------------------
 
+#: Face for the generated workbook. Calibri, not because it is the house face
+#: but because it is the one present on every Office install: a workbook that
+#: falls back to a substitute face re-flows its own column widths. Camphor Pro
+#: cannot be embedded (see the module note) and Segoe UI is a Windows-only
+#: assumption for a file a client may open anywhere. Recorded here so the choice
+#: has one home rather than 285 scattered format dictionaries.
+EXCEL_FONT = 'Calibri'
+
 #: See the licence reservation in the module note: Camphor Pro is not
 #: embeddable, so reports set Helvetica.
 REPORT_TITLE_FONT = 'Helvetica-Bold'

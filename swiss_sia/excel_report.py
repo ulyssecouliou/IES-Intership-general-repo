@@ -17,6 +17,8 @@ except ImportError:
     USE_XLSXWRITER = False
     logging.warning("xlsxwriter is not available.")
 
+from ui import design
+from . import report_style
 from .config import (
     OUTPUT_DIR,
     EXCEL_REPORT_NAME,
@@ -180,7 +182,7 @@ class ExcelReportGenerator:
             "DETAILED SCORES", "ROOMS",
         ]),
     ]
-    _COVER_TAB_COLOR = "#0B3D3A"
+    _COVER_TAB_COLOR = report_style.XW_TAB_COLOR
 
     @staticmethod
     def _display_score_result(score_result: "ScoreResult") -> "ScoreResult":
@@ -228,41 +230,28 @@ class ExcelReportGenerator:
         worksheet.set_column("B:E", 22)
         worksheet.set_column("F:F", 2)
 
-        title_format = self.workbook.add_format({
-            "bold": True, "font_size": 24, "font_color": "#0B3D3A",
-            "font_name": "Calibri", "valign": "vcenter",
-        })
-        subtitle_format = self.workbook.add_format({
-            "font_size": 12, "font_color": "#334155", "italic": True,
-        })
-        logo_format = self.workbook.add_format({
-            "align": "center", "valign": "vcenter", "font_size": 10,
-            "font_color": "#94A3B8", "border": 1, "border_color": "#CBD5E1",
-        })
-        label_format = self.workbook.add_format({
-            "bold": True, "font_color": "#475569", "font_size": 10,
-        })
-        value_format = self.workbook.add_format({
-            "font_size": 11, "font_color": "#0F172A",
-        })
-        kpi_label_format = self.workbook.add_format({
-            "bold": True, "font_color": "#0B3D3A", "font_size": 10,
-            "bg_color": "#E6F0EE", "border": 1, "border_color": "#CBD5E1",
-        })
-        kpi_value_format = self.workbook.add_format({
-            "bold": True, "font_size": 18, "font_color": "#0F766E",
-            "num_format": "0.0", "border": 1, "border_color": "#CBD5E1",
-            "align": "center",
-        })
-        kpi_int_format = self.workbook.add_format({
-            "bold": True, "font_size": 18, "font_color": "#0F766E",
-            "num_format": "#,##0", "border": 1, "border_color": "#CBD5E1",
-            "align": "center",
-        })
-        disclaimer_format = self.workbook.add_format({
-            "font_size": 10, "font_color": "#7F1D1D", "italic": True,
-            "text_wrap": True, "valign": "top",
-        })
+        # Every format below resolves through report_style, so this sheet
+        # carries no colour of its own. See that module for why the status
+        # colours are the derived text shades and not the stroke hues.
+        title_format = self.workbook.add_format(report_style.xw_title())
+        subtitle_format = self.workbook.add_format(report_style.xw_subtitle())
+        logo_format = self.workbook.add_format(
+            report_style.xw_format(
+                "muted", size=design.SIZE_BODY, align="center", valign="vcenter"
+            )
+        )
+        label_format = self.workbook.add_format(report_style.xw_label())
+        value_format = self.workbook.add_format(report_style.xw_value())
+        kpi_label_format = self.workbook.add_format(report_style.xw_kpi_label())
+        kpi_value_format = self.workbook.add_format(report_style.xw_kpi_value())
+        kpi_int_format = self.workbook.add_format(
+            report_style.xw_kpi_value(num_format="#,##0")
+        )
+        # The disclaimer was set in a dark red, which reads as a failure state.
+        # It is a scope statement, not a verdict: muted, like every other note.
+        disclaimer_format = self.workbook.add_format(
+            {**report_style.xw_disclaimer(), "valign": "top"}
+        )
 
         # Logo placeholder (drop a PNG at assets/ies_logo.png to brand it).
         worksheet.merge_range("B2:C4", "", logo_format)
@@ -325,16 +314,18 @@ class ExcelReportGenerator:
         worksheet.set_column("B:B", 40)
         worksheet.set_column("C:C", 60)
 
-        title_format = self.workbook.add_format({
-            "bold": True, "font_size": 16, "font_color": "#0B3D3A",
-        })
-        section_format = self.workbook.add_format({
-            "bold": True, "font_size": 11, "font_color": "white",
-            "bg_color": "#0F766E", "border": 1, "border_color": "#0B3D3A",
-        })
-        link_format = self.workbook.add_format({
-            "font_color": "#1D4ED8", "underline": 1,
-        })
+        # Resolved through report_style, like the cover. The section bar was a
+        # solid teal; the house style bands in navy and reserves saturated
+        # colour for small areas, so the band carries light type on navy.
+        title_format = self.workbook.add_format(
+            report_style.xw_format(
+                "band", size=design.SIZE_TITLE, bold=True, border=None
+            )
+        )
+        section_format = self.workbook.add_format(report_style.xw_band())
+        link_format = self.workbook.add_format(
+            {**report_style.xw_link(), "underline": 1}
+        )
 
         worksheet.write("B2", "Report index", title_format)
         row = 3

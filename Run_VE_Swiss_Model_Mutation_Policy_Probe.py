@@ -47,28 +47,33 @@ def run() -> int:
         write_probe_report,
     )
 
-    project = getattr(iesve, "VEProject", None)
-    if callable(project):
-        try:
-            project = iesve.VEProject()
-        except Exception as exc:
-            print("READY_FOR_REAL_VE_QUALIFICATION: cannot open VEProject: {}".format(exc))
-            return 2
+    # ``VEProject`` is a Boost.Python class and cannot be instantiated: doing so
+    # raises "This class cannot be instantiated from Python". The accessor below
+    # is the one every launcher in this repository uses. An earlier version of
+    # this file called ``iesve.VEProject()`` and failed on the first real run --
+    # in a script whose whole purpose is to check API assumptions.
+    project = iesve.VEProject.get_current_project()
     if project is None:
         print("READY_FOR_REAL_VE_QUALIFICATION: no active VE project detected.")
         return 2
 
     project_id = getattr(project, "name", None) or getattr(project, "id", None)
 
+    # The construction database is reached through VECdbDatabase, not from the
+    # project: same accessor as ``IesVeGateway._cdb_project``. A probe must not
+    # invent its own route to an object it exists to inspect.
     cdb_project = None
-    for candidate in ("get_cdb_project", "cdb_project"):
-        member = getattr(project, candidate, None)
-        try:
-            cdb_project = member() if callable(member) else member
-        except Exception:
-            cdb_project = None
-        if cdb_project is not None:
-            break
+    try:
+        database = iesve.VECdbDatabase.get_current_database()
+        projects = database.get_projects()
+        candidates = projects.get(0, []) if isinstance(projects, dict) else []
+        if candidates:
+            cdb_project = candidates[0]
+    except Exception as exc:
+        print(
+            "Construction database unavailable, CDB checks will report FAIL: "
+            "{}".format(exc)
+        )
 
     report = run_probe(
         iesve_module=iesve,

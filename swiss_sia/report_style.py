@@ -51,6 +51,21 @@ __all__ = [
     "excel_font",
     "excel_side",
     "excel_thin_border",
+    "xw_hex",
+    "xw_format",
+    "xw_title",
+    "xw_subtitle",
+    "xw_band",
+    "xw_section",
+    "xw_label",
+    "xw_value",
+    "xw_kpi_label",
+    "xw_kpi_value",
+    "xw_table_header",
+    "xw_disclaimer",
+    "xw_link",
+    "xw_status",
+    "XW_TAB_COLOR",
     "REPORT_DISCLAIMER_KEY",
 ]
 
@@ -348,6 +363,194 @@ def _resolve(role_or_token: str) -> str:
             role_or_token
         )
     )
+
+
+# ---------------------------------------------------------------------------
+# xlsxwriter formats
+# ---------------------------------------------------------------------------
+#
+# The workbook is written with xlsxwriter, not openpyxl, and the two differ in
+# ways that matter here: xlsxwriter wants ``#RRGGBB`` *with* the hash, and a
+# format is a plain property dict handed to ``workbook.add_format``. So these
+# helpers return dicts and this module still imports neither library.
+#
+# The named builders below exist so a sheet asks for "a KPI value" rather than
+# assembling eight properties, which is how a workbook ends up with 285 colour
+# literals and no two cards alike.
+
+
+def xw_hex(token: str) -> str:
+    """Return an xlsxwriter-ready ``#rrggbb`` string for one token."""
+
+    red, green, blue = _channels(token)
+    return "#{:02X}{:02X}{:02X}".format(red, green, blue)
+
+
+def xw_format(
+    role_or_token: str = "ink",
+    *,
+    size: Optional[float] = None,
+    bold: bool = False,
+    italic: bool = False,
+    background: Optional[str] = None,
+    border: Optional[str] = "rule",
+    align: Optional[str] = None,
+    valign: Optional[str] = None,
+    num_format: Optional[str] = None,
+    text_wrap: bool = False,
+) -> Dict[str, Any]:
+    """Return one xlsxwriter format dict in the house style.
+
+    ``border`` names the rule colour and is dropped entirely when ``None``, so
+    a caller gets a hairline by default and has to ask for a borderless cell.
+    """
+
+    spec: Dict[str, Any] = {
+        "font_name": design.EXCEL_FONT,
+        "font_size": size if size is not None else design.SIZE_TABLE,
+        "font_color": xw_hex(_resolve(role_or_token)),
+    }
+    if bold:
+        spec["bold"] = True
+    if italic:
+        spec["italic"] = True
+    if background is not None:
+        spec["bg_color"] = xw_hex(_resolve(background))
+    if border is not None:
+        spec["border"] = 1
+        spec["border_color"] = xw_hex(_resolve(border))
+    if align:
+        spec["align"] = align
+    if valign:
+        spec["valign"] = valign
+    if num_format:
+        spec["num_format"] = num_format
+    if text_wrap:
+        spec["text_wrap"] = True
+    return spec
+
+
+def xw_title() -> Dict[str, Any]:
+    """Cover title: navy, large, no box around it."""
+
+    return xw_format(
+        "band",
+        size=design.SIZE_DISPLAY,
+        bold=True,
+        border=None,
+        valign="vcenter",
+    )
+
+
+def xw_subtitle() -> Dict[str, Any]:
+    """One line under the title, muted and unboxed."""
+
+    return xw_format("muted", size=design.SIZE_SUBTITLE, border=None)
+
+
+def xw_band() -> Dict[str, Any]:
+    """Full-width navy band with light type on it, as on the site."""
+
+    return xw_format(
+        "on_dark",
+        size=design.SIZE_SECTION,
+        bold=True,
+        background="band",
+        border=None,
+        valign="vcenter",
+    )
+
+
+def xw_section() -> Dict[str, Any]:
+    """Section heading inside a sheet."""
+
+    return xw_format("band", size=design.SIZE_SECTION, bold=True, border=None)
+
+
+def xw_label() -> Dict[str, Any]:
+    """Field label in an identification block."""
+
+    return xw_format("muted", size=design.SIZE_BODY, bold=True, border=None)
+
+
+def xw_value() -> Dict[str, Any]:
+    """Field value beside a label."""
+
+    return xw_format("ink", size=design.SIZE_BODY, border=None)
+
+
+def xw_kpi_label() -> Dict[str, Any]:
+    """Caption of a headline figure, on the pale blue table ground."""
+
+    return xw_format(
+        "band",
+        size=design.SIZE_BODY,
+        bold=True,
+        background="table_header",
+        align="center",
+    )
+
+
+def xw_kpi_value(num_format: str = "0.0") -> Dict[str, Any]:
+    """A headline figure. Accent blue, because a number is not a verdict."""
+
+    return xw_format(
+        "accent",
+        size=design.SIZE_TITLE,
+        bold=True,
+        background="white",
+        align="center",
+        num_format=num_format,
+    )
+
+
+def xw_table_header() -> Dict[str, Any]:
+    """Table header row: navy type on the pale blue ground."""
+
+    return xw_format(
+        "band",
+        size=design.SIZE_TABLE,
+        bold=True,
+        background="table_header",
+        align="left",
+        text_wrap=True,
+    )
+
+
+def xw_disclaimer() -> Dict[str, Any]:
+    """The non-certification sentence. Muted, wrapped, never truncated."""
+
+    return xw_format(
+        "muted", size=design.SIZE_CAPTION, italic=True, border=None, text_wrap=True
+    )
+
+
+def xw_link() -> Dict[str, Any]:
+    """An internal link on the index sheet."""
+
+    return xw_format("accent", size=design.SIZE_BODY, border=None)
+
+
+def xw_status(status: str, *, size: Optional[float] = None) -> Dict[str, Any]:
+    """Return the format for a verdict cell.
+
+    Colour comes from ``STATUS_TEXT``, so the word clears WCAG AA on its own
+    ground. The caller still owes the symbol and the word: see
+    :func:`status_presentation`.
+    """
+
+    presented = status_presentation(status)
+    return xw_format(
+        presented.text,
+        size=size if size is not None else design.SIZE_TABLE,
+        bold=True,
+        background=presented.ground,
+        align="center",
+    )
+
+
+#: Tab colour for the two landing sheets. Navy, matching the band.
+XW_TAB_COLOR = xw_hex(design.NAVY)
 
 
 # ---------------------------------------------------------------------------
