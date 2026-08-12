@@ -118,9 +118,18 @@ def discover_weather_file(project_root: Union[str, Path]) -> Optional[Path]:
         if path.is_file() and path.suffix.casefold() in SUPPORTED_WEATHER_SUFFIXES
     )
     if len(candidates) > 1:
+        # The message used to name Case 600 unconditionally. It fired on case
+        # 640 on 2026-08-12 and told the operator to keep one file "for Case
+        # 600", which reads like the wrong case was being prepared. The guard is
+        # case-independent, so its message must be too: a diagnostic transport
+        # left beside the prescribed weather is the usual cause.
         raise ConfigurationError(
-            "Several weather files are present; retain exactly one for Case 600: "
-            + ", ".join(path.name for path in candidates)
+            "Several weather files are present in {root}; retain exactly one, "
+            "the prescribed weather for the case being prepared, and move any "
+            "diagnostic or derived transport elsewhere: {names}".format(
+                root=root,
+                names=", ".join(path.name for path in candidates),
+            )
         )
     return candidates[0] if candidates else None
 

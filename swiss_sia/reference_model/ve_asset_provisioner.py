@@ -1061,11 +1061,24 @@ class IesVeAssetProvisioner:
                         )
                     )
                 identifier, actual = matches[0]
+                # Name the description the lookup matched on and say that reuse
+                # is what is being refused. On 2026-08-12 this raised for
+                # xps_ground with expected 0.0 against actual 10.0/1400.0, and
+                # the bare message sent the reader looking for a code defect;
+                # the cause was a CDB material left by a superseded manifest
+                # revision, which is a data state to reconcile, not a bug.
                 self._verify_material_properties(
                     definition,
                     properties,
                     actual,
-                    "existing material {}".format(definition.key),
+                    (
+                        "existing material {key} (CDB id {identifier}, matched "
+                        "on description {description!r}) cannot be reused"
+                    ).format(
+                        key=definition.key,
+                        identifier=identifier,
+                        description=description,
+                    ),
                 )
                 identifiers[definition.key] = identifier
                 continue

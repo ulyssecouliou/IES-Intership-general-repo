@@ -105,6 +105,53 @@ def _has_callable(obj: Any, name: str) -> Tuple[bool, str]:
     return True, "callable"
 
 
+def _probe_model_bodies(project: Any) -> CapabilityFinding:
+    """Check the proven route to rooms: models[0].get_bodies(False).
+
+    Read-only: ``get_bodies`` enumerates, it does not mutate. The body count is
+    reported as evidence but never asserted -- a project legitimately holds no
+    room before generation, and this probe reports capability, not model state.
+    """
+
+    capability_id = "MODEL_GET_BODIES"
+    models = getattr(project, "models", None)
+    if not models:
+        return CapabilityFinding(
+            capability_id=capability_id,
+            status=ProbeStatus.FAIL,
+            detail="Project exposes no models to read bodies from",
+            evidence={"models": None},
+        )
+    model = models[0]
+    ok, detail = _has_callable(model, "get_bodies")
+    if not ok:
+        return CapabilityFinding(
+            capability_id=capability_id,
+            status=ProbeStatus.FAIL,
+            detail=detail,
+            evidence={"attribute": "get_bodies", "kind": "callable"},
+        )
+    try:
+        bodies = model.get_bodies(False)
+    except Exception as exc:  # pragma: no cover - real VE only
+        return CapabilityFinding(
+            capability_id=capability_id,
+            status=ProbeStatus.FAIL,
+            detail="get_bodies(False) raised {}: {}".format(
+                type(exc).__name__, exc
+            ),
+            evidence={"attribute": "get_bodies"},
+        )
+    return CapabilityFinding(
+        capability_id=capability_id,
+        status=ProbeStatus.PASS,
+        detail="get_bodies(False) returned {} body handle(s)".format(
+            len(list(bodies))
+        ),
+        evidence={"attribute": "get_bodies", "kind": "callable"},
+    )
+
+
 def _probe_attribute(
     target: Any,
     capability_id: str,
@@ -212,9 +259,16 @@ def run_probe(
     findings: List[CapabilityFinding] = []
     now = (clock or _iso_now_utc)()
 
+    # Rooms are NOT reached from the project. The real run of 2026-08-12
+    # reported "PROJECT_ROOMS: attribute missing" because this probe invented
+    # ``project.rooms``. The proven route, the one ve_api.py uses, is
+    # ``project.models[0]`` (line 309) then ``VEModel.get_bodies(False)``
+    # filtered to rooms (line 513). A probe that fails on its own invented
+    # member blocks a policy claim for no reason, which is worse than no probe.
     findings.append(
-        _probe_attribute(project, "PROJECT_ROOMS", "rooms", kind="attribute")
+        _probe_attribute(project, "PROJECT_MODELS", "models", kind="attribute")
     )
+    findings.append(_probe_model_bodies(project))
     findings.append(_probe_attribute(project, "PROJECT_SAVE_PROFILES", "save_profiles"))
     findings.append(_probe_attribute(project, "PROJECT_CREATE_PROFILE", "create_profile"))
     findings.append(
@@ -230,7 +284,19 @@ def run_probe(
         _probe_attribute(project, "PROJECT_CREATE_THERMAL_TEMPLATE", "create_thermal_template")
     )
 
-    findings.append(_probe_attribute(cdb_project, "CDB_UVALUE_TYPES", "uvalue_types", kind="attribute"))
+    # ``uvalue_types`` is an enum container on the ``VECdbProject`` CLASS, not a
+    # member of a CDB project instance: Run_VE_Reference_Model_Capability_Probe
+    # reads it as ``getattr(iesve.VECdbProject, "uvalue_types")`` (line 413) and
+    # ve_api checks it the same way (line 395). Probing the instance reported
+    # "attribute missing" on the real run for that reason alone.
+    findings.append(
+        _probe_attribute(
+            getattr(iesve_module, "VECdbProject", None),
+            "CDB_UVALUE_TYPES",
+            "uvalue_types",
+            kind="attribute",
+        )
+    )
     findings.append(_probe_attribute(cdb_project, "CDB_CREATE_MATERIAL", "create_material"))
     findings.append(
         _probe_attribute(cdb_project, "CDB_CREATE_CONSTRUCTION", "create_construction")

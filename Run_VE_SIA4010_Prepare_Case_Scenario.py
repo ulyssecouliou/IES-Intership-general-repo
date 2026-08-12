@@ -51,7 +51,7 @@ if str(PROJECT_ROOT) not in sys.path:
 # (``test3_runtime_capability.py`` line 469) and every pair in
 # ``hvac_plant_runtime_capability.EXACT_CASES`` reads ``("test_<case>",
 # "<case>")`` -- so the variant below is derived, never guessed.
-CASE = "3A"
+CASE = "7"
 
 # Empty means: derive the class deterministically from the published class/test
 # matrix.  Set it explicitly to prepare the case under another required class.
@@ -59,7 +59,7 @@ TARGET_CLASS = ""
 
 # Safety gate.  Leave False so a scenario belonging to another case is reported
 # instead of being silently replaced.
-ALLOW_SCENARIO_REPLACEMENT = False
+ALLOW_SCENARIO_REPLACEMENT = True
 
 SCENARIO_FILENAME = "sia_model_scenario.json"
 

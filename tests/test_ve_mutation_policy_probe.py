@@ -19,8 +19,18 @@ from swiss_sia.reference_model.ve_mutation_policy_probe import (
 
 
 def _fully_capable_project():
+    """Mirror the shape VE 2025 really exposes, as the 2026-08-12 run showed.
+
+    Two members this fake used to carry do not exist on the real runtime, and
+    the fake hid it: there is no ``project.rooms`` -- rooms come from
+    ``project.models[0].get_bodies(False)`` -- and ``uvalue_types`` lives on the
+    ``VECdbProject`` class, not on a CDB project instance. A fake that is more
+    generous than the runtime turns a probe green in CI and red in VE.
+    """
+
+    model = SimpleNamespace(get_bodies=lambda assigned_only: [])
     project = SimpleNamespace(
-        rooms=[],
+        models=[model],
         save_profiles=lambda: True,
         create_profile=lambda *a, **k: None,
         create_casual_gain=lambda *a, **k: None,
@@ -29,12 +39,12 @@ def _fully_capable_project():
         create_thermal_template=lambda *a, **k: None,
     )
     cdb = SimpleNamespace(
-        uvalue_types=SimpleNamespace(iso=object()),
         create_material=lambda *a, **k: None,
         create_construction=lambda *a, **k: None,
         get_construction=lambda *a, **k: None,
     )
     iesve = SimpleNamespace(
+        VECdbProject=SimpleNamespace(uvalue_types=SimpleNamespace(iso=object())),
         construction_class=SimpleNamespace(none=object()),
         element_categories=SimpleNamespace(),
         material_categories=SimpleNamespace(),
@@ -66,6 +76,43 @@ class VeMutationPolicyProbeTests(unittest.TestCase):
             if f.status is ProbeStatus.WARNING
         }
         self.assertIn("IESVE_CONSTRUCTION_CLASS_ENUM", warning_ids)
+
+    def test_rooms_are_probed_through_the_model_not_the_project(self) -> None:
+        """The real run failed on an invented ``project.rooms``.
+
+        Guarding the member names keeps the probe honest: a probe that reports
+        FAIL because it asked for something the API never had would block a
+        policy claim for no reason at all.
+        """
+
+        iesve, project, cdb = _fully_capable_project()
+        self.assertFalse(hasattr(project, "rooms"))
+        report = run_probe(
+            iesve, project, cdb, project_id="proj_X", clock=_fake_clock()
+        )
+        ids = {finding.capability_id for finding in report.findings}
+        self.assertIn("PROJECT_MODELS", ids)
+        self.assertIn("MODEL_GET_BODIES", ids)
+        self.assertNotIn("PROJECT_ROOMS", ids)
+
+    def test_a_project_without_models_fails_closed(self) -> None:
+        iesve, project, cdb = _fully_capable_project()
+        project.models = []
+        report = run_probe(
+            iesve, project, cdb, project_id="proj_X", clock=_fake_clock()
+        )
+        self.assertEqual(report.overall, ProbeStatus.FAIL)
+
+    def test_uvalue_types_is_probed_on_the_class_not_the_instance(self) -> None:
+        iesve, project, cdb = _fully_capable_project()
+        self.assertFalse(hasattr(cdb, "uvalue_types"))
+        report = run_probe(
+            iesve, project, cdb, project_id="proj_X", clock=_fake_clock()
+        )
+        finding = next(
+            f for f in report.findings if f.capability_id == "CDB_UVALUE_TYPES"
+        )
+        self.assertIs(finding.status, ProbeStatus.PASS)
 
     def test_missing_required_setter_yields_fail(self) -> None:
         iesve, project, cdb = _fully_capable_project()
