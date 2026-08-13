@@ -85,8 +85,10 @@ class NormalizedExternalInputTests(unittest.TestCase):
                 },
             },
             "surface_coefficients_w_m2k": {
-                "inside": 8.0,
-                "outside": 25.0,
+                "wall_inside_horizontal": 8.0,
+                "roof_inside_upwards": 10.0,
+                "floor_inside_downwards": 6.0,
+                "external_all_directions": 25.0,
             },
             "lightweight_opaque_constructions": {
                 "external_wall": _construction("wall", "wall_layer"),
@@ -421,6 +423,114 @@ class NormalizedExternalInputTests(unittest.TestCase):
         )
         with self.assertRaisesRegex(
             ConfigurationError, "test_2A/2A"
+        ):
+            load_test2a_external_bindings(readiness)
+
+    #: Une déclaration provisoire bien formée, telle que la produit
+    #: `iso52016_chapter7_test_cell.binding.json` en attendant les émissivités.
+    _DECLARATION_PROVISOIRE = {
+        "field": "surface_properties.inside_ir_emissivity",
+        "provisional_value": 0.90,
+        "why_not_in_source": "The primary source states no IR emissivity.",
+        "how_derived": "epsilon = h_r / (4 sigma T^3) on the source coefficients.",
+        "cleared_by": "External request register, item I1",
+    }
+
+    def _avec_provisoire(self, **remplacements):
+        """Renvoie un mutateur ISO ajoutant une déclaration provisoire."""
+
+        declaration = dict(self._DECLARATION_PROVISOIRE)
+        declaration.update(remplacements.pop("declaration", {}))
+        for cle in remplacements.pop("sans", ()):
+            declaration.pop(cle)
+        claim = remplacements.pop("compliance_claim_allowed", False)
+        assert not remplacements, remplacements
+
+        def mutate(payload):
+            payload["declared_provisional_values"] = [declaration]
+            if claim is not None:
+                payload["compliance_claim_allowed"] = claim
+            else:
+                payload.pop("compliance_claim_allowed", None)
+
+        return mutate
+
+    def test_provisional_binding_value_is_surfaced_not_absorbed(self):
+        """Une valeur provisoire doit rester visible jusqu'au consommateur.
+
+        C'est le contraire du comportement d'origine : le manifeste validait la
+        déclaration du rapport et le contenu passait sans que personne ne voie
+        qu'une valeur ne venait pas de la source.
+        """
+
+        bindings = load_test2a_external_bindings(
+            self._write_fixture(mutate_iso=self._avec_provisoire())
+        )
+        self.assertTrue(bindings.carries_provisional_values)
+        self.assertEqual(
+            dict(bindings.provisional_fields)[
+                "iso52016_2017_chapter7_test_cell"
+            ],
+            ("surface_properties.inside_ir_emissivity",),
+        )
+        self.assertEqual(
+            dict(bindings.provisional_fields)[
+                "sia2028_dry_normal_zurich_kloten"
+            ],
+            (),
+        )
+        self.assertTrue(bindings.to_dict()["carries_provisional_values"])
+
+    def test_fully_source_stated_bindings_declare_no_provisional_field(self):
+        """Témoin négatif : sans déclaration, aucun champ provisoire."""
+
+        bindings = load_test2a_external_bindings(self._write_fixture())
+        self.assertFalse(bindings.carries_provisional_values)
+        self.assertEqual(
+            sorted(
+                input_id
+                for input_id, fields in bindings.provisional_fields
+                if fields
+            ),
+            [],
+        )
+
+    def test_provisional_value_that_still_allows_a_claim_is_rejected(self):
+        """La combinaison qui fabrique un verdict crédible et faux est refusée."""
+
+        for claim in (True, None):
+            with self.subTest(compliance_claim_allowed=claim):
+                readiness = self._write_fixture(
+                    mutate_iso=self._avec_provisoire(
+                        compliance_claim_allowed=claim
+                    )
+                )
+                with self.assertRaisesRegex(
+                    ConfigurationError, "never support a claim"
+                ):
+                    load_test2a_external_bindings(readiness)
+
+    def test_provisional_declaration_without_its_derivation_is_rejected(self):
+        """Sans dérivation ni levée, une valeur provisoire est une invention."""
+
+        for cle in ("how_derived", "cleared_by", "why_not_in_source", "field"):
+            with self.subTest(missing=cle):
+                readiness = self._write_fixture(
+                    mutate_iso=self._avec_provisoire(sans=(cle,))
+                )
+                with self.assertRaises(ConfigurationError):
+                    load_test2a_external_bindings(readiness)
+
+    def test_provisional_value_of_none_is_rejected(self):
+        """Déclarer un champ provisoire sans valeur ne rend rien exécutable."""
+
+        readiness = self._write_fixture(
+            mutate_iso=self._avec_provisoire(
+                declaration={"provisional_value": None}
+            )
+        )
+        with self.assertRaisesRegex(
+            ConfigurationError, "no provisional_value"
         ):
             load_test2a_external_bindings(readiness)
 

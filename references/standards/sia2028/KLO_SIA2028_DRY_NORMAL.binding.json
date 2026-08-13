@@ -1,0 +1,43 @@
+{
+  "schema_id": "sia4010.sia2028_hourly_weather.v1",
+  "schema_version": "1.0",
+  "primary_source_sha256": "aa3f3853300ceb55293c418d75ebfa36ef74353693acbaf369703c65bd337ffd",
+  "primary_source_path": "KLO_dry.txt",
+  "station_name": "Zurich-Kloten",
+  "dataset_identity": "SIA 2028 DRY normal, Zurich-Kloten, 8760 hourly records",
+  "source_locator": "KLO_dry.txt supplied directly by Prof. Gerhard Zweifel, SIA 4010 validation contact, in answer to the candidate's request; converted by swiss_sia.sia_dry_epw.v1",
+  "weather_file": {
+    "path": "../../../generated_weather/KLO/KLO_SIA2028_DRY_NORMAL_IESVE_CANDIDATE.epw",
+    "sha256": "a6b5ef9164887f18a8952fb09cdf10d1a4b9b2dc8a20d758e6af8336b3813f23",
+    "format": "EPW",
+    "hour_count": 8760
+  },
+  "conversion_record": {
+    "path": "../../../generated_weather/KLO/KLO_SIA2028_DRY_NORMAL_IESVE_DERIVATION.json",
+    "method": "swiss_sia.sia_dry_epw.v1",
+    "controls": {
+      "dew_point_vs_magnus_max_deviation_k": 0.538,
+      "dew_point_above_dry_bulb_rows": 0,
+      "diffuse_above_global_rows": 0
+    }
+  },
+  "derived_artifact_not_in_repository": {
+    "why": "generated_weather/ is excluded by .gitignore: converted weather candidates are derived artifacts, regenerable from the tracked official sources under references/standards/.",
+    "regenerate_with": "python Convert_MeteoSwiss_Station_Weather.py --station KLO",
+    "source_of_truth": "KLO_dry.txt"
+  },
+  "claim_guardrail": "Assignable transport conversion of an official SIA-supplied dataset. It is not an SIA-issued EPW, and its presence proves no simulation result and no validation.",
+  "declared_incompleteness": {
+    "columns_to_verify": [
+      "This is a transport conversion of an official dataset, not an official SIA-issued EPW.",
+      "Columns marked TO_VERIFY in the provenance record must not drive a regulatory result until the legend is confirmed in writing.",
+      "IESVE WeatherFileReader read-back is mandatory before assignment.",
+      "This is the SIA 4010 test climate. It is not the CH2018 RCP 8.5 '2035' application climate of clause 3.1.1."
+    ],
+    "written_as_epw_missing": {
+      "total_sky_cover": "column nto000sw is NA on 7665 of 8760 hours; written as the EPW sentinel 99 rather than estimated. The supplied horizontal infrared is what the solver uses for sky longwave.",
+      "ground_albedo": "column bodenalbedo is supplied but its legend is unconfirmed; not written as the EPW albedo field",
+      "others": "EPW documented missing-value sentinels"
+    }
+  }
+}

@@ -46,6 +46,14 @@ RUNTIME_BLOCKERS = (
 MISSING_NATIVE_PROFILE_GRAPH_BLOCKER = (
     "SIA2024_NATIVE_VE_PROFILE_GRAPH_NOT_SUPPLIED"
 )
+#: Raised into the blocker set when a delegated binding carries a value its
+#: primary source does not state.  Test 2A, unlike the 1A-1D diagnostic cases,
+#: has published acceptance criteria: a provisional input reaching a comparison
+#: would produce a verdict that looks authoritative and is not. The blocker
+#: keeps generation reachable and keeps the verdict out of reach.
+PROVISIONAL_EXTERNAL_INPUT_BLOCKER = (
+    "DELEGATED_INPUT_CARRIES_PROVISIONAL_VALUE"
+)
 QUALIFICATION_REPORT_SPECS = {
     "native_profiles": {
         "pattern": "sia2a_profiles_*.json",
@@ -338,6 +346,16 @@ def build_test2a_source_bound_bundle(
         status = "SOURCE_BINDINGS_READY_PROFILE_GRAPH_REQUIRED"
     elif qualification_evidence["all_storage_boundaries_qualified"]:
         status = "RUNTIME_STORAGE_QUALIFIED_MODEL_BINDING_REQUIRED"
+    provisional_fields = {
+        input_id: list(fields)
+        for input_id, fields in bindings.provisional_fields
+        if fields
+    }
+    if provisional_fields:
+        runtime_blockers = runtime_blockers + (
+            PROVISIONAL_EXTERNAL_INPUT_BLOCKER,
+        )
+        status = "SOURCE_BINDINGS_PROVISIONAL_RECALCULATION_REQUIRED"
 
     geometry_manifest_path = (
         repository / "config" / "sia4010_classes_1a_1b.json"
@@ -459,9 +477,18 @@ def build_test2a_source_bound_bundle(
                 "authorized SIA 2028 weather identity",
             ],
         },
+        "provisional_external_input_fields": provisional_fields,
         "claim_guardrail": (
             "This is a source-complete generator input contract, not a VE "
             "model, simulation result, SIA comparison or attestation."
+            if not provisional_fields
+            else (
+                "This generator input contract carries PROVISIONAL delegated "
+                "values, listed in provisional_external_input_fields. It keeps "
+                "generation reachable and supports no result, no SIA "
+                "comparison and no attestation until each is recalculated "
+                "from its primary source."
+            )
         ),
     }
     _write_json(generator_input_path, generator_input)
@@ -485,9 +512,16 @@ def build_test2a_source_bound_bundle(
         ),
         "runtime_qualification_evidence": qualification_evidence,
         "runtime_blockers": list(runtime_blockers),
+        "provisional_external_input_fields": provisional_fields,
+        "verdict_derivation_allowed": not provisional_fields,
         "mutation_supported": False,
         "next_action": (
-            "Supply a source-traced native VE daily/weekly/yearly profile "
+            "Recalculate the provisional delegated values listed in "
+            "provisional_external_input_fields from their primary source "
+            "before any Test 2A comparison. Generation may proceed; no "
+            "verdict may."
+            if provisional_fields
+            else "Supply a source-traced native VE daily/weekly/yearly profile "
             "graph before runtime qualification."
             if profile_graph is None
             else (

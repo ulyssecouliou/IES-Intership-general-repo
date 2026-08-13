@@ -1,0 +1,47 @@
+{
+  "schema_version": "1.0",
+  "input_id": "sia2028_dry_normal_zurich_kloten",
+  "source_path": "references/standards/sia2028/KLO_dry.txt",
+  "source_sha256": "aa3f3853300ceb55293c418d75ebfa36ef74353693acbaf369703c65bd337ffd",
+  "status": "PASS",
+  "validated_by": "Controle physique et de fidelite de conversion, recalcule sur les 8760 heures a la production de ce rapport",
+  "validation_method": "Relecture du fichier par le parseur du depot, recalcul du point de rosee par la relation de Magnus, controles de bornes physiques, et comparaison heure par heure de l'EPW produit a la source",
+  "checks": [
+    {
+      "id": "SIA2028-KLO-HOURLY-COVERAGE",
+      "status": "PASS",
+      "detail": "Le fichier porte exactement 8760 enregistrements horaires, du 2001-01-01 00:00:00 au 2001-12-31 23:00:00, sans trou ni doublon d'horodatage."
+    },
+    {
+      "id": "SIA2028-KLO-DEW-POINT-CONSISTENCY",
+      "status": "PASS",
+      "detail": "Le point de rosee fourni est reproduit par la relation de Magnus a partir de la temperature seche et de l'humidite relative : ecart maximal 0.538 K, moyen 0.027 K sur les 8760 heures. Le point de rosee est utilise tel quel, il n'est pas recalcule pour la conversion."
+    },
+    {
+      "id": "SIA2028-KLO-PHYSICAL-BOUNDS",
+      "status": "PASS",
+      "detail": "Aucune heure ne porte de rayonnement diffus superieur au global (0), de point de rosee superieur a la temperature seche (0), ni d'humidite relative hors de [0, 100] (0). Moyenne annuelle 9.4692 degC, extremes -13.1 et 34.1 degC."
+    },
+    {
+      "id": "SIA2028-KLO-EPW-CONVERSION-FIDELITY",
+      "status": "PASS",
+      "detail": "L'EPW produit reproduit la source sans ecart sur les 8760 heures : temperature seche 0.000000 K, point de rosee 0.000000 K, rayonnement global 0 Wh/m2. Methode swiss_sia.sia_dry_epw.v1."
+    },
+    {
+      "id": "SIA2028-KLO-INCOMPLETE-COLUMNS-DECLARED",
+      "status": "PASS",
+      "detail": "Ce PASS ne pretend pas que chaque colonne est identifiee. La fiche de derivation conserve 1 avertissement(s) de colonnes a verifier et 3 grandeur(s) ecrite(s) avec la sentinelle EPW d'absence : ground_albedo, others, total_sky_cover. Les colonnes utilisees par la conversion sont celles dont la legende est confirmee."
+    },
+    {
+      "id": "SIA2028-KLO-IDENTITY-NOT-LICENCE",
+      "status": "PASS",
+      "detail": "L'identite du jeu est etablie par sa fourniture directe : Supplied directly by Prof. Gerhard Zweifel, responsible for the SIA 4010 validation, in answer to the request for the SIA 2028 DRY normal Zuerich Kloten dataset Cela etablit l'origine, PAS l'etendue d'usage autorisee, qui reste un champ distinct du manifeste."
+    }
+  ],
+  "binding_artifact": {
+    "path": "KLO_SIA2028_DRY_NORMAL.binding.json",
+    "sha256": "01458f5ae543778ee88e6a3daa9f23d34df7fd50016f3e286c19e7c8a52a6e77",
+    "schema_id": "sia4010.sia2028_hourly_weather.v1"
+  },
+  "claim_guardrail": "PASS valide l'integrite horaire, la coherence physique et la fidelite de la conversion. Il n'etablit ni l'etendue d'usage autorisee du jeu, ni la legende des colonnes non confirmees, ni un resultat de simulation."
+}

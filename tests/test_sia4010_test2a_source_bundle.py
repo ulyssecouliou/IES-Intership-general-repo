@@ -21,6 +21,7 @@ from swiss_sia.reference_model.sia4010.normalized_external_inputs import (
 )
 from swiss_sia.reference_model.sia4010.test2a_source_bundle import (
     MISSING_NATIVE_PROFILE_GRAPH_BLOCKER,
+    PROVISIONAL_EXTERNAL_INPUT_BLOCKER,
     RUNTIME_BLOCKERS,
     build_test2a_source_bound_bundle,
 )
@@ -49,7 +50,9 @@ def _construction(identifier):
     )
 
 
-def _bindings(project, *, width=8.0, with_profile_graph=False):
+def _bindings(
+    project, *, width=8.0, with_profile_graph=False, provisional_fields=()
+):
     profiles = tuple(
         NormalizedUsageProfile(
             key=key,
@@ -127,7 +130,9 @@ def _bindings(project, *, width=8.0, with_profile_graph=False):
             window_sill_m=0.2,
             window_side_margin_m=0.5,
             window_gap_m=1.0,
-            inside_surface_coefficient_w_m2k=8.0,
+            wall_inside_surface_coefficient_w_m2k=8.0,
+            roof_inside_surface_coefficient_w_m2k=10.0,
+            floor_inside_surface_coefficient_w_m2k=6.0,
             outside_surface_coefficient_w_m2k=25.0,
             external_wall=_construction("wall"),
             roof=_construction("roof"),
@@ -157,6 +162,7 @@ def _bindings(project, *, width=8.0, with_profile_graph=False):
             ("sia2028_dry_normal_zurich_kloten", "2" * 64),
             ("sia2024_office_3_1_standard_profiles", "3" * 64),
         ),
+        provisional_fields=provisional_fields,
     )
 
 
@@ -290,6 +296,65 @@ class Test2ASourceBundleTests(unittest.TestCase):
             profile_contract["required_profile_types"],
             ["daily", "weekly", "yearly"],
         )
+
+    def test_provisional_delegated_value_blocks_the_verdict_not_generation(self):
+        """Le Test 2A porte un critère publié, contrairement aux cas 1A-1D.
+
+        Une entrée provisoire doit donc rester générable et rester injugeable.
+        Le contrat le dit dans son statut, dans ses bloqueurs, dans sa réserve
+        de revendication et par un booléen que le consommateur ne peut pas
+        confondre avec une simple note.
+        """
+
+        receipt = self._build(
+            _bindings(
+                self.project,
+                with_profile_graph=True,
+                provisional_fields=(
+                    (
+                        "iso52016_2017_chapter7_test_cell",
+                        ("surface_properties.inside_ir_emissivity",),
+                    ),
+                    ("sia2028_dry_normal_zurich_kloten", ()),
+                ),
+            )
+        )
+        self.assertEqual(
+            receipt.status,
+            "SOURCE_BINDINGS_PROVISIONAL_RECALCULATION_REQUIRED",
+        )
+        self.assertIn(
+            PROVISIONAL_EXTERNAL_INPUT_BLOCKER, receipt.runtime_blockers
+        )
+        audit = json.loads(receipt.audit_path.read_text(encoding="utf-8"))
+        self.assertFalse(audit["verdict_derivation_allowed"])
+        self.assertEqual(
+            audit["provisional_external_input_fields"],
+            {
+                "iso52016_2017_chapter7_test_cell": [
+                    "surface_properties.inside_ir_emissivity"
+                ]
+            },
+        )
+        self.assertIn("PROVISIONAL", audit["claim_guardrail"])
+        self.assertIn("Recalculate", audit["next_action"])
+        payload = json.loads(
+            receipt.generator_input_path.read_text(encoding="utf-8")
+        )
+        self.assertIn("PROVISIONAL", payload["claim_guardrail"])
+
+    def test_source_stated_bindings_carry_no_provisional_blocker(self):
+        """Témoin négatif : le garde ne doit pas se déclencher tout seul."""
+
+        receipt = self._build(
+            _bindings(self.project, with_profile_graph=True)
+        )
+        self.assertNotIn(
+            PROVISIONAL_EXTERNAL_INPUT_BLOCKER, receipt.runtime_blockers
+        )
+        audit = json.loads(receipt.audit_path.read_text(encoding="utf-8"))
+        self.assertTrue(audit["verdict_derivation_allowed"])
+        self.assertEqual(audit["provisional_external_input_fields"], {})
 
     def test_three_checksum_valid_storage_receipts_advance_honest_status(self):
         self._write_qualification(

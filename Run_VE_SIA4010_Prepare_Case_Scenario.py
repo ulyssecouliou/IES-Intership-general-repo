@@ -61,6 +61,14 @@ TARGET_CLASS = ""
 # instead of being silently replaced.
 ALLOW_SCENARIO_REPLACEMENT = True
 
+# Delegated-input contract to expose in the project.  False installs the EMPTY
+# template, which is the correct default: a manifest carries human authorization
+# decisions, and a fresh project must not inherit decisions nobody in it made.
+# Set it True only when you knowingly want the prepared contract -- the run then
+# prints every authorization it carries and the written basis of each, so what
+# was inherited is visible rather than assumed.
+INSTALL_PREPARED_EXTERNAL_INPUTS = False
+
 SCENARIO_FILENAME = "sia_model_scenario.json"
 
 # Which probe consumes which prepared case.  Taken from the probes themselves.
@@ -224,14 +232,38 @@ def run():
     # read-only probe: preparation is proven to succeed without it, reporting
     # PREPARED_WITH_BLOCKERS. A failure here is therefore audited, not fatal.
     try:
-        manifest_path, created = controller.ensure_external_input_manifest(
-            project_path, PROJECT_ROOT
-        )
-        print(
-            "External-input contract: {} (created={})".format(
-                manifest_path.name, created
+        if INSTALL_PREPARED_EXTERNAL_INPUTS:
+            (
+                manifest_path,
+                created,
+                authorizations,
+            ) = controller.install_prepared_external_input_manifest(
+                project_path, PROJECT_ROOT
             )
-        )
+            print(
+                "External-input contract: {} (installed={}, PREPARED)".format(
+                    manifest_path.name, created
+                )
+            )
+            for entry in authorizations:
+                print(
+                    "  authorized: {} -- {}".format(
+                        entry["input_id"], entry["basis"]
+                    )
+                )
+                if entry["decision"]:
+                    print("    decision: {}".format(entry["decision"]))
+            if not authorizations:
+                print("  authorized: none")
+        else:
+            manifest_path, created = controller.ensure_external_input_manifest(
+                project_path, PROJECT_ROOT
+            )
+            print(
+                "External-input contract: {} (created={}, EMPTY template)".format(
+                    manifest_path.name, created
+                )
+            )
     except Exception as exc:
         print(
             "WARNING - delegated-input templates not exposed: {}: {}".format(

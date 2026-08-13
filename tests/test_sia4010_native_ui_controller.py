@@ -431,6 +431,74 @@ class NativeModelBuilderControllerTests(unittest.TestCase):
                     Path("C:/repository")
                 )
 
+    def test_prepared_manifest_is_opt_in_and_declares_whose_decisions(self):
+        """Le manifeste préparé porte des décisions humaines.
+
+        Il ne doit donc jamais être le défaut : un projet neuf hériterait
+        d'autorisations que personne dans ce projet n'a prises. Cette action est
+        l'alternative explicite, et elle doit rendre visible ce qu'elle installe.
+        """
+
+        project = ROOT / ".codex_tmp" / "ui_prepared_manifest"
+        if project.exists():
+            shutil.rmtree(project)
+        project.mkdir(parents=True)
+        try:
+            controller = self.controller
+            (
+                path,
+                installed,
+                authorizations,
+            ) = controller.install_prepared_external_input_manifest(
+                project, ROOT
+            )
+            self.assertTrue(installed)
+            self.assertEqual(path.name, "sia4010_external_inputs.json")
+            ids = sorted(item["input_id"] for item in authorizations)
+            self.assertEqual(
+                ids,
+                [
+                    "iso52016_2017_chapter7_test_cell",
+                    "sia2024_office_3_1_standard_profiles",
+                    "sia2028_dry_normal_zurich_kloten",
+                ],
+            )
+            # Chaque base affichée vient de `license_reference`, le champ que le
+            # lecteur strict refuse vide. Une base vide ici signifierait qu'on
+            # affiche un champ que rien ne garantit.
+            for item in authorizations:
+                with self.subTest(input_id=item["input_id"]):
+                    self.assertTrue(item["basis"])
+
+            # Jamais d'écrasement : une autorisation ou une édition locale ne
+            # nous appartient pas.
+            payload = json.loads(path.read_text(encoding="utf-8"))
+            payload["operator_note"] = "preserve me"
+            path.write_text(
+                json.dumps(payload, indent=2), encoding="utf-8"
+            )
+            _same, again, _auth = (
+                controller.install_prepared_external_input_manifest(
+                    project, ROOT
+                )
+            )
+            self.assertFalse(again)
+            self.assertEqual(
+                json.loads(path.read_text(encoding="utf-8"))["operator_note"],
+                "preserve me",
+            )
+        finally:
+            if project.exists():
+                shutil.rmtree(project)
+
+    def test_prepared_manifest_install_refuses_a_missing_project(self):
+        """Écrire un contrat de preuve hors d'un projet sauvegardé n'a pas de sens."""
+
+        with self.assertRaises(FileNotFoundError):
+            self.controller.install_prepared_external_input_manifest(
+                ROOT / ".codex_tmp" / "does_not_exist_at_all", ROOT
+            )
+
     def test_external_input_manifest_is_created_once_and_never_overwritten(self):
         project = ROOT / ".codex_tmp" / "ui_external_input_manifest"
         if project.exists():

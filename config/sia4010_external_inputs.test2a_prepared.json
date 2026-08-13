@@ -1,0 +1,302 @@
+{
+  "schema_version": "1.0",
+  "purpose": "Manifeste préparé pour le cas test_2A/2A. Chaque champ vérifiable est rempli et recalculé ; l'autorisation normative reste UNCONFIRMED pour les trois entrées et doit être tranchée par une personne.",
+  "claim_guardrail": "Do not set normative_authorization_status to CONFIRMED without documentary evidence. READY_FOR_BINDING authorizes technical implementation only; it is not an SIA attestation.",
+  "inputs": {
+    "iso52016_2017_chapter7_test_cell": {
+      "source_path": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\config\\iso52016_chapter7_confirmed_inputs.json",
+      "source_sha256": "b177daa2d41840c0665e0040d1d2bb6e46351ce47d4580289df9175afbac5c82",
+      "provenance_status": "LICENSED_STANDARD_COPY",
+      "normative_authorization_status": "CONFIRMED",
+      "source_authority": "ISO / CEN, via la copie licenciée du projet",
+      "license_reference": "ISO EN 52016-1:2017 — copie licenciée du projet ; usage interne de traçabilité uniquement, aucune redistribution",
+      "dataset_identity": "ISO EN 52016-1:2017 chapitre 7, cellule d'essai",
+      "machine_readable_format": "application/json",
+      "semantic_scope": [
+        "geometrie de la cellule",
+        "couches opaques legeres et lourdes",
+        "vitrage",
+        "capacite thermique interne",
+        "conditions solaires et limites"
+      ],
+      "technical_validation": {
+        "status": "PASS",
+        "report_path": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\refs\\reference-data\\iso52016_chapter7_test_cell.validation.json",
+        "report_sha256": "477d22788e13808544e57a8dda6aa2fd4982ad92b1919001d384da8367931995"
+      },
+      "normative_authorization_basis": "Autorisé par Ulysse Couliou le 2026-08-13 : la norme est détenue sous copie licenciée du projet, et l'usage est la traçabilité interne du candidat à la validation.",
+      "normative_authorization_scope": "Transcription et citation de localisateurs pour la traçabilité interne. Aucune redistribution du texte normatif.",
+      "normative_authorization_recorded_on": "2026-08-13"
+    },
+    "sia2028_dry_normal_zurich_kloten": {
+      "source_path": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\references\\standards\\sia2028\\KLO_dry.txt",
+      "source_sha256": "aa3f3853300ceb55293c418d75ebfa36ef74353693acbaf369703c65bd337ffd",
+      "provenance_status": "SIA_SUPPLIED",
+      "normative_authorization_status": "CONFIRMED",
+      "source_authority": "SIA — fourni par le Prof. Gerhard Zweifel",
+      "license_reference": "SIA 2028 — fichier fourni à titre privé. IES ne détient PAS de licence SIA 2028 : la portée d'usage autorisée doit être établie avant toute confirmation",
+      "dataset_identity": "SIA 2028 DRY normal, Zürich-Kloten, 8760 heures",
+      "machine_readable_format": "text/tab-separated-values",
+      "semantic_scope": [
+        "temperature seche horaire",
+        "point de rosee",
+        "rayonnement global, direct et diffus",
+        "pression de station"
+      ],
+      "technical_validation": {
+        "status": "PASS",
+        "report_path": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\references\\standards\\sia2028\\KLO_dry.validation.json",
+        "report_sha256": "564715a816bad5763f99acffe6f81b8dcd1b3ec715c918f1b9ec59fa80140c98"
+      },
+      "normative_authorization_basis": "Autorisé par Ulysse Couliou le 2026-08-13, après examen avec Johan : IES n'obtiendra pas de licence SIA 2028, et n'en a pas besoin ici parce que le fichier a été fourni directement par le Prof. Gerhard Zweifel, responsable de la validation SIA 4010, en réponse à la demande du candidat et pour cette validation. Même base que l'entrée SIA 2024 catégorie 3.1.",
+      "normative_authorization_scope": "Usage limité à la campagne de validation SIA 4010 de ce candidat, comme preuve contrôlée du projet. Aucune redistribution du jeu de données, et aucun usage commercial dérivé : l'absence de licence SIA 2028 rend ces deux bornes des conditions de l'autorisation, pas des recommandations.",
+      "normative_authorization_recorded_on": "2026-08-13"
+    },
+    "sia2024_office_3_1_standard_profiles": {
+      "source_path": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\sia4010_evidence\\source_audits\\sia2024_3_1_authority_20260810\\SIA2024_2021_3_1_standard_values_authority_extract.png",
+      "source_sha256": "c8e801d24b98365226c076e028d6556b01f357baa5233b2ac57a2dd63149177e",
+      "provenance_status": "SIA_SUPPLIED",
+      "normative_authorization_status": "CONFIRMED",
+      "source_authority": "Prof. Gerhard Zweifel, SIA validation technical contact",
+      "license_reference": "Direct written provision to the validation candidate by email dated 2026-08-10; retained as controlled project evidence and not for redistribution",
+      "dataset_identity": "SIA 2024:2021 category 3.1 Einzel-/Gruppenbüro, standard values",
+      "machine_readable_format": "PNG authority extract plus checksum-bound normalized JSON",
+      "semantic_scope": [
+        "24 source-hour bins for people, equipment and lighting",
+        "people standard use, density, activity, clothing, heat and moisture values",
+        "equipment standard power, heat-gain and annual values",
+        "lighting standard illuminance, efficacy, control, power and annual values",
+        "2 rest days per week, 261 use days per year and people annual simultaneity factor 0.80"
+      ],
+      "technical_validation": {
+        "status": "PASS",
+        "report_path": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\sia4010_evidence\\source_audits\\sia2024_3_1_authority_20260810\\sia2024_office_3_1_standard_profiles.validation.json",
+        "report_sha256": "3e634b97dd9036808c0251f8b7f4171c786db9de0d6cf10f0e96e9a915164101"
+      }
+    },
+    "sia3874_2017_table9_controls": {
+      "source_path": null,
+      "source_sha256": null,
+      "provenance_status": "MISSING",
+      "normative_authorization_status": "UNCONFIRMED",
+      "source_authority": "",
+      "license_reference": "",
+      "dataset_identity": "SIA 387/4:2017 Table 9 control functions 1-3",
+      "machine_readable_format": "",
+      "semantic_scope": [],
+      "technical_validation": {
+        "status": "PENDING",
+        "report_path": null,
+        "report_sha256": null
+      }
+    },
+    "sia3874_2017_tables9_10_controls": {
+      "source_path": null,
+      "source_sha256": null,
+      "provenance_status": "MISSING",
+      "normative_authorization_status": "UNCONFIRMED",
+      "source_authority": "",
+      "license_reference": "",
+      "dataset_identity": "SIA 387/4:2017 Tables 9 and 10 controls",
+      "machine_readable_format": "",
+      "semantic_scope": [],
+      "technical_validation": {
+        "status": "PENDING",
+        "report_path": null,
+        "report_sha256": null
+      }
+    },
+    "sia_example_building_fabric_awning_detail": {
+      "source_path": null,
+      "source_sha256": null,
+      "provenance_status": "MISSING",
+      "normative_authorization_status": "UNCONFIRMED",
+      "source_authority": "",
+      "license_reference": "",
+      "dataset_identity": "SIA example-building fabric awning for Test 3",
+      "machine_readable_format": "",
+      "semantic_scope": [],
+      "technical_validation": {
+        "status": "PENDING",
+        "report_path": null,
+        "report_sha256": null
+      }
+    },
+    "sia_authority_test3_3k_3l_device_clarification": {
+      "source_path": null,
+      "source_sha256": null,
+      "provenance_status": "MISSING",
+      "normative_authorization_status": "UNCONFIRMED",
+      "source_authority": "",
+      "license_reference": "",
+      "dataset_identity": "SIA clarification for Test 3K/3L",
+      "machine_readable_format": "",
+      "semantic_scope": [],
+      "technical_validation": {
+        "status": "PENDING",
+        "report_path": null,
+        "report_sha256": null
+      }
+    },
+    "sia2024_auditorium_target_profiles": {
+      "source_path": null,
+      "source_sha256": null,
+      "provenance_status": "MISSING",
+      "normative_authorization_status": "UNCONFIRMED",
+      "source_authority": "",
+      "license_reference": "",
+      "dataset_identity": "SIA 2024:2021 Hörsaal target profiles",
+      "machine_readable_format": "",
+      "semantic_scope": [],
+      "technical_validation": {
+        "status": "PENDING",
+        "report_path": null,
+        "report_sha256": null
+      }
+    },
+    "test4_fan_curve_digitization": {
+      "source_path": null,
+      "source_sha256": null,
+      "provenance_status": "MISSING",
+      "normative_authorization_status": "UNCONFIRMED",
+      "source_authority": "",
+      "license_reference": "",
+      "dataset_identity": "SIA 4010 Test 4 fan curves",
+      "machine_readable_format": "",
+      "semantic_scope": [],
+      "technical_validation": {
+        "status": "PENDING",
+        "report_path": null,
+        "report_sha256": null
+      }
+    },
+    "sia2024_example_building_standard_profiles": {
+      "source_path": null,
+      "source_sha256": null,
+      "provenance_status": "MISSING",
+      "normative_authorization_status": "UNCONFIRMED",
+      "source_authority": "",
+      "license_reference": "",
+      "dataset_identity": "SIA 2024:2021 example-building standard profiles",
+      "machine_readable_format": "",
+      "semantic_scope": [],
+      "technical_validation": {
+        "status": "PENDING",
+        "report_path": null,
+        "report_sha256": null
+      }
+    },
+    "en16798_5_1_annex_d_rotary_recovery_model": {
+      "source_path": null,
+      "source_sha256": null,
+      "provenance_status": "MISSING",
+      "normative_authorization_status": "UNCONFIRMED",
+      "source_authority": "",
+      "license_reference": "",
+      "dataset_identity": "EN 16798-5-1 Annex D rotary recovery model",
+      "machine_readable_format": "",
+      "semantic_scope": [],
+      "technical_validation": {
+        "status": "PENDING",
+        "report_path": null,
+        "report_sha256": null
+      }
+    },
+    "test5_fan_curve_digitization": {
+      "source_path": null,
+      "source_sha256": null,
+      "provenance_status": "MISSING",
+      "normative_authorization_status": "UNCONFIRMED",
+      "source_authority": "",
+      "license_reference": "",
+      "dataset_identity": "SIA 4010 Test 5 fan curves",
+      "machine_readable_format": "",
+      "semantic_scope": [],
+      "technical_validation": {
+        "status": "PENDING",
+        "report_path": null,
+        "report_sha256": null
+      }
+    },
+    "sia2024_restaurant_6_2_standard_profiles": {
+      "source_path": null,
+      "source_sha256": null,
+      "provenance_status": "MISSING",
+      "normative_authorization_status": "UNCONFIRMED",
+      "source_authority": "",
+      "license_reference": "",
+      "dataset_identity": "SIA 2024:2021 category 6.2 standard profiles",
+      "machine_readable_format": "",
+      "semantic_scope": [],
+      "technical_validation": {
+        "status": "PENDING",
+        "report_path": null,
+        "report_sha256": null
+      }
+    },
+    "sia2024_kitchen_6_4_standard_profiles": {
+      "source_path": null,
+      "source_sha256": null,
+      "provenance_status": "MISSING",
+      "normative_authorization_status": "UNCONFIRMED",
+      "source_authority": "",
+      "license_reference": "",
+      "dataset_identity": "SIA 2024:2021 category 6.4 standard profiles",
+      "machine_readable_format": "",
+      "semantic_scope": [],
+      "technical_validation": {
+        "status": "PENDING",
+        "report_path": null,
+        "report_sha256": null
+      }
+    },
+    "test6_stage_control_trace": {
+      "source_path": null,
+      "source_sha256": null,
+      "provenance_status": "MISSING",
+      "normative_authorization_status": "UNCONFIRMED",
+      "source_authority": "",
+      "license_reference": "",
+      "dataset_identity": "SIA 4010 Test 6 three-stage control trace",
+      "machine_readable_format": "",
+      "semantic_scope": [],
+      "technical_validation": {
+        "status": "PENDING",
+        "report_path": null,
+        "report_sha256": null
+      }
+    },
+    "test7_heat_pump_performance_tables": {
+      "source_path": null,
+      "source_sha256": null,
+      "provenance_status": "MISSING",
+      "normative_authorization_status": "UNCONFIRMED",
+      "source_authority": "",
+      "license_reference": "",
+      "dataset_identity": "SIA 4010 Test 7 generator performance tables",
+      "machine_readable_format": "",
+      "semantic_scope": [],
+      "technical_validation": {
+        "status": "PENDING",
+        "report_path": null,
+        "report_sha256": null
+      }
+    },
+    "sia_authority_test7_pv_precedence": {
+      "source_path": null,
+      "source_sha256": null,
+      "provenance_status": "MISSING",
+      "normative_authorization_status": "UNCONFIRMED",
+      "source_authority": "",
+      "license_reference": "",
+      "dataset_identity": "SIA clarification for Test 7 PV totals and allocation",
+      "machine_readable_format": "",
+      "semantic_scope": [],
+      "technical_validation": {
+        "status": "PENDING",
+        "report_path": null,
+        "report_sha256": null
+      }
+    }
+  }
+}

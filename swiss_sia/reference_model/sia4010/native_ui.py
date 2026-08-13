@@ -452,6 +452,82 @@ class ModelBuilderController:
                 )
         return target, created
 
+    @staticmethod
+    def install_prepared_external_input_manifest(
+        project_path: Path,
+        repository_root: Path,
+    ):
+        """Install the prepared delegated-input manifest, declaring whose it is.
+
+        `ensure_external_input_manifest` installs the **empty** template, which
+        is the right default: a manifest carries human authorization decisions,
+        and a fresh project must not silently inherit decisions nobody in it
+        made.  This action is the explicit alternative, for the operator who
+        knowingly wants the prepared contract -- so it returns the authorized
+        entries with the written basis of each, for the caller to display.
+
+        An existing manifest is never overwritten: replacing one would discard
+        authorizations, blocked statuses or project-local edits that are not
+        ours to drop.
+
+        Args:
+            project_path: Saved VE project directory.
+            repository_root: Repository root.
+
+        Returns:
+            tuple[Path, bool, list[dict]]: Manifest path, whether this call
+            installed it, and one record per CONFIRMED authorization carrying
+            its input id and written basis.
+
+        Raises:
+            FileNotFoundError: If the project directory or prepared manifest is
+                absent.
+        """
+
+        project = Path(project_path)
+        repository = Path(repository_root)
+        if not project.is_dir():
+            raise FileNotFoundError(
+                "Saved VE project directory does not exist: {}".format(project)
+            )
+        prepared = (
+            repository
+            / "config"
+            / "sia4010_external_inputs.test2a_prepared.json"
+        )
+        if not prepared.is_file():
+            raise FileNotFoundError(
+                "Prepared external-input manifest does not exist: "
+                "{}".format(prepared)
+            )
+        target = project / EXTERNAL_INPUT_FILENAME
+        installed = False
+        if not target.exists():
+            shutil.copyfile(str(prepared), str(target))
+            installed = True
+        # Load through the strict reader either way: an existing manifest we did
+        # not write still has to be a valid contract before we report on it.
+        manifest = Sia4010ExternalInputManifest.load(target)
+        authorizations = []
+        for input_id, record in sorted(manifest.entries.items()):
+            if str(record.get(
+                "normative_authorization_status", ""
+            )).upper() != "CONFIRMED":
+                continue
+            # `license_reference` is the contract's own field: the strict reader
+            # rejects an entry whose value is empty, so it cannot silently
+            # become blank.  `normative_authorization_basis` is a richer
+            # annotation some entries carry, and nothing validates it -- it is
+            # shown in addition, never instead.
+            authorizations.append({
+                "input_id": input_id,
+                "basis": str(record.get("license_reference", "")).strip(),
+                "decision": str(
+                    record.get("normative_authorization_basis", "")
+                ).strip(),
+            })
+        return target, installed, authorizations
+
     def build_payload(
         self,
         scenario_id: str,

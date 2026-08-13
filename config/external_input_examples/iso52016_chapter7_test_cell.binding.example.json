@@ -17,8 +17,10 @@
     }
   },
   "surface_coefficients_w_m2k": {
-    "inside": null,
-    "outside": null
+    "wall_inside_horizontal": null,
+    "roof_inside_upwards": null,
+    "floor_inside_downwards": null,
+    "external_all_directions": null
   },
   "lightweight_opaque_constructions": {
     "external_wall": {

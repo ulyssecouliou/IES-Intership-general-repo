@@ -156,7 +156,102 @@ def _load_bound_json(evidence: ExternalInputEvidence) -> Dict[str, Any]:
     _text(payload.get("source_locator"), "{} source_locator".format(
         evidence.input_id
     ))
+    _validate_provisional_declarations(payload, evidence.input_id)
     return payload
+
+
+#: Keys every provisional declaration must carry.  A provisional value without
+#: its derivation and without the item that lifts it is indistinguishable from
+#: an invented value, which is the one thing this pipeline exists to prevent.
+_PROVISIONAL_REQUIRED_KEYS = (
+    "field",
+    "provisional_value",
+    "why_not_in_source",
+    "how_derived",
+    "cleared_by",
+)
+
+
+def _validate_provisional_declarations(
+    payload: Mapping[str, Any], input_id: str
+) -> Tuple[str, ...]:
+    """Return the fields a binding declares as provisional, refusing bad shapes.
+
+    A normalized artifact may carry values its primary source does not state, so
+    that the generation chain stays executable while an external answer is
+    pending.  Two conditions make that safe rather than corrosive, and both are
+    enforced here instead of being trusted: every declaration documents how the
+    value was obtained and what lifts it, and the artifact denies any compliance
+    claim.  An artifact that carries provisional values *and* claims compliance
+    is rejected outright -- that combination is exactly how a credible false
+    verdict is produced.
+
+    Args:
+        payload: The loaded normalized artifact.
+        input_id: Delegated input identifier, for error messages.
+
+    Returns:
+        tuple[str, ...]: Declared provisional field paths, empty when none.
+
+    Raises:
+        ConfigurationError: If a declaration is malformed, or if the artifact
+            declares provisional values while still allowing a claim.
+    """
+
+    raw = payload.get("declared_provisional_values", ())
+    if raw in (None, ()):
+        return ()
+    if not isinstance(raw, (list, tuple)):
+        raise ConfigurationError(
+            "External input '{}' declared_provisional_values must be a "
+            "list".format(input_id)
+        )
+    fields = []
+    for index, item in enumerate(raw):
+        entry = _object(
+            item, "{} declared_provisional_values[{}]".format(input_id, index)
+        )
+        for key in _PROVISIONAL_REQUIRED_KEYS:
+            if key == "provisional_value":
+                if entry.get(key) is None:
+                    raise ConfigurationError(
+                        "External input '{}' provisional declaration {} has no "
+                        "provisional_value".format(input_id, index)
+                    )
+                continue
+            _text(
+                entry.get(key),
+                "{} declared_provisional_values[{}].{}".format(
+                    input_id, index, key
+                ),
+            )
+        fields.append(str(entry["field"]))
+    if not fields:
+        return ()
+    if payload.get("compliance_claim_allowed") is not False:
+        raise ConfigurationError(
+            "External input '{}' declares {} provisional value(s) but does not "
+            "set compliance_claim_allowed to false; a provisional value may "
+            "keep the chain executable, never support a claim".format(
+                input_id, len(fields)
+            )
+        )
+    return tuple(fields)
+
+
+def binding_provisional_fields(evidence: ExternalInputEvidence) -> Tuple[str, ...]:
+    """Return the provisional field paths one delegated binding declares.
+
+    Args:
+        evidence: Checksum-validated external input evidence.
+
+    Returns:
+        tuple[str, ...]: Provisional field paths, empty when the binding is
+        fully source-stated.
+    """
+
+    payload = _load_bound_json(evidence)
+    return _validate_provisional_declarations(payload, evidence.input_id)
 
 
 @dataclass(frozen=True)
@@ -195,7 +290,14 @@ class NormalizedIsoTestCell:
     window_sill_m: float
     window_side_margin_m: float
     window_gap_m: float
-    inside_surface_coefficient_w_m2k: float
+    #: Combined radiative-convective surface coefficients, kept per orientation
+    #: because the source states them per orientation and because the proven
+    #: case-600 path (`mvp_bundle`) already consumes them that way.  Flattening
+    #: them to a single interior value would have required a value the source
+    #: does not state.
+    wall_inside_surface_coefficient_w_m2k: float
+    roof_inside_surface_coefficient_w_m2k: float
+    floor_inside_surface_coefficient_w_m2k: float
     outside_surface_coefficient_w_m2k: float
     external_wall: NormalizedOpaqueConstruction
     roof: NormalizedOpaqueConstruction
@@ -332,6 +434,17 @@ class CommonCellExternalBindings:
     weather: NormalizedWeatherBinding
     office_profiles: NormalizedOfficeProfiles
     evidence_sha256: Tuple[Tuple[str, str], ...]
+    #: Provisional field paths per delegated input, empty when fully
+    #: source-stated.  Non-empty forbids deriving any verdict downstream.
+    #: Deliberately without a default: a construction site that forgot it would
+    #: claim, silently, that every input is fully source-stated.
+    provisional_fields: Tuple[Tuple[str, Tuple[str, ...]], ...]
+
+    @property
+    def carries_provisional_values(self) -> bool:
+        """Return True when any delegated binding carries a provisional value."""
+
+        return any(fields for _input_id, fields in self.provisional_fields)
 
     def to_dict(self) -> Dict[str, Any]:
         """Return one JSON-safe source receipt."""
@@ -341,6 +454,11 @@ class CommonCellExternalBindings:
             "weather": self.weather.to_dict(),
             "office_profiles": self.office_profiles.to_dict(),
             "evidence_sha256": dict(self.evidence_sha256),
+            "provisional_fields": {
+                input_id: list(fields)
+                for input_id, fields in self.provisional_fields
+            },
+            "carries_provisional_values": self.carries_provisional_values,
         }
 
 
@@ -352,6 +470,17 @@ class Test2AExternalBindings:
     weather: NormalizedWeatherBinding
     office_profiles: NormalizedOfficeProfiles
     evidence_sha256: Tuple[Tuple[str, str], ...]
+    #: Provisional field paths per delegated input, empty when fully
+    #: source-stated.  Non-empty forbids deriving any verdict downstream.
+    #: Deliberately without a default: a construction site that forgot it would
+    #: claim, silently, that every input is fully source-stated.
+    provisional_fields: Tuple[Tuple[str, Tuple[str, ...]], ...]
+
+    @property
+    def carries_provisional_values(self) -> bool:
+        """Return True when any delegated binding carries a provisional value."""
+
+        return any(fields for _input_id, fields in self.provisional_fields)
 
     def to_dict(self) -> Dict[str, Any]:
         """Return a JSON-safe generator input receipt."""
@@ -361,6 +490,11 @@ class Test2AExternalBindings:
             "weather": self.weather.to_dict(),
             "office_profiles": self.office_profiles.to_dict(),
             "evidence_sha256": dict(self.evidence_sha256),
+            "provisional_fields": {
+                input_id: list(fields)
+                for input_id, fields in self.provisional_fields
+            },
+            "carries_provisional_values": self.carries_provisional_values,
         }
 
 
@@ -531,14 +665,24 @@ def load_iso_test_cell(
         window_sill_m=sill,
         window_side_margin_m=margin,
         window_gap_m=gap,
-        inside_surface_coefficient_w_m2k=_number(
-            surface_coefficients.get("inside"),
-            "ISO surface coefficient inside",
+        wall_inside_surface_coefficient_w_m2k=_number(
+            surface_coefficients.get("wall_inside_horizontal"),
+            "ISO surface coefficient wall_inside_horizontal",
+            minimum=0.000001,
+        ),
+        roof_inside_surface_coefficient_w_m2k=_number(
+            surface_coefficients.get("roof_inside_upwards"),
+            "ISO surface coefficient roof_inside_upwards",
+            minimum=0.000001,
+        ),
+        floor_inside_surface_coefficient_w_m2k=_number(
+            surface_coefficients.get("floor_inside_downwards"),
+            "ISO surface coefficient floor_inside_downwards",
             minimum=0.000001,
         ),
         outside_surface_coefficient_w_m2k=_number(
-            surface_coefficients.get("outside"),
-            "ISO surface coefficient outside",
+            surface_coefficients.get("external_all_directions"),
+            "ISO surface coefficient external_all_directions",
             minimum=0.000001,
         ),
         external_wall=_load_construction(
@@ -1083,6 +1227,7 @@ def load_test2a_external_bindings(
         weather=common.weather,
         office_profiles=common.office_profiles,
         evidence_sha256=common.evidence_sha256,
+        provisional_fields=common.provisional_fields,
     )
 
 
@@ -1103,6 +1248,10 @@ def load_common_cell_external_bindings(
         raise ConfigurationError(
             "Common cell evidence is incomplete: {}".format(missing)
         )
+    provisional_fields = tuple(
+        (input_id, binding_provisional_fields(indexed[input_id]))
+        for input_id in TEST2A_EXTERNAL_INPUT_IDS
+    )
     return CommonCellExternalBindings(
         iso_cell=load_iso_test_cell(
             indexed["iso52016_2017_chapter7_test_cell"]
@@ -1120,4 +1269,5 @@ def load_common_cell_external_bindings(
             )
             for input_id in TEST2A_EXTERNAL_INPUT_IDS
         ),
+        provisional_fields=provisional_fields,
     )

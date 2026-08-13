@@ -1,0 +1,130 @@
+{
+  "schema_id": "sia4010.iso52016_chapter7_test_cell.v1",
+  "schema_version": "1.0",
+  "primary_source_sha256": "b177daa2d41840c0665e0040d1d2bb6e46351ce47d4580289df9175afbac5c82",
+  "primary_source_path": "config/iso52016_chapter7_confirmed_inputs.json",
+  "source_locator": "Clause 7.2.2.2, Figure 2 and Table 22, page 123",
+  "cell": {
+    "width_m": 8.0,
+    "depth_m": 6.0,
+    "height_m": 2.7,
+    "south_windows": {
+      "count": 2,
+      "width_m": 3.0,
+      "height_m": 2.0,
+      "sill_m": 0.2,
+      "side_margin_m": 0.5,
+      "gap_m": 1.0
+    }
+  },
+  "surface_coefficients_w_m2k": {
+    "wall_inside_horizontal": 7.63,
+    "roof_inside_upwards": 10.13,
+    "floor_inside_downwards": 5.83,
+    "external_all_directions": 24.14
+  },
+  "lightweight_opaque_constructions": {
+    "external_wall": {
+      "construction_id": "ISO_CH7_LW_EXTERNAL_WALL",
+      "layers_outside_to_inside": [
+        {
+          "material_id": "wood_siding",
+          "thickness_m": 0.009,
+          "conductivity_w_mk": 0.14,
+          "density_kg_m3": 530,
+          "specific_heat_j_kgk": 900
+        },
+        {
+          "material_id": "fiberglass_quilt",
+          "thickness_m": 0.066,
+          "conductivity_w_mk": 0.04,
+          "density_kg_m3": 12,
+          "specific_heat_j_kgk": 840
+        },
+        {
+          "material_id": "plasterboard",
+          "thickness_m": 0.012,
+          "conductivity_w_mk": 0.16,
+          "density_kg_m3": 950,
+          "specific_heat_j_kgk": 840
+        }
+      ],
+      "surface_properties": {
+        "inside_ir_emissivity": 0.9,
+        "outside_ir_emissivity": 0.9,
+        "inside_solar_absorptance": 0.6,
+        "outside_solar_absorptance": 0.6
+      }
+    },
+    "roof": {
+      "construction_id": "ISO_CH7_LW_ROOF",
+      "layers_outside_to_inside": [
+        {
+          "material_id": "roofdeck",
+          "thickness_m": 0.019,
+          "conductivity_w_mk": 0.14,
+          "density_kg_m3": 530,
+          "specific_heat_j_kgk": 900
+        },
+        {
+          "material_id": "fiberglass_quilt",
+          "thickness_m": 0.1118,
+          "conductivity_w_mk": 0.04,
+          "density_kg_m3": 12,
+          "specific_heat_j_kgk": 840
+        },
+        {
+          "material_id": "plasterboard",
+          "thickness_m": 0.01,
+          "conductivity_w_mk": 0.16,
+          "density_kg_m3": 950,
+          "specific_heat_j_kgk": 840
+        }
+      ],
+      "surface_properties": {
+        "inside_ir_emissivity": 0.9,
+        "outside_ir_emissivity": 0.9,
+        "inside_solar_absorptance": 0.6,
+        "outside_solar_absorptance": 0.6
+      }
+    },
+    "floor": {
+      "construction_id": "ISO_CH7_LW_FLOOR",
+      "layers_outside_to_inside": [
+        {
+          "material_id": "ideal_floor_insulation",
+          "thickness_m": 1.003,
+          "conductivity_w_mk": 0.04,
+          "density_kg_m3": 0,
+          "specific_heat_j_kgk": 0
+        },
+        {
+          "material_id": "timber_flooring",
+          "thickness_m": 0.025,
+          "conductivity_w_mk": 0.14,
+          "density_kg_m3": 650,
+          "specific_heat_j_kgk": 1200
+        }
+      ],
+      "surface_properties": {
+        "inside_ir_emissivity": 0.9,
+        "outside_ir_emissivity": 0.9,
+        "inside_solar_absorptance": 0.6,
+        "outside_solar_absorptance": 0.6
+      }
+    }
+  },
+  "status": "PROVISIONAL_VALUES_PRESENT_RECALCULATION_REQUIRED",
+  "compliance_claim_allowed": false,
+  "declared_provisional_values": [
+    {
+      "field": "lightweight_opaque_constructions.*.surface_properties.inside_ir_emissivity et outside_ir_emissivity",
+      "provisional_value": 0.9,
+      "why_not_in_source": "iso52016_chapter7_confirmed_inputs.json ne porte aucune emissivite infrarouge, que le contrat normalise exige pour les deux faces de chaque construction opaque.",
+      "how_derived": "epsilon = h_r / (4 sigma T^3) applique aux coefficients radiatifs que la source porte : interieur 5.13 / 5.714 a 293.15 K = 0.8978 ; exterieur 4.14 / 4.6225 a 273.15 K = 0.8956. Les deux convergent a 0.0022 pres, et la valeur retenue est leur moyenne arrondie a deux decimales.",
+      "assumption_to_confirm": "Les temperatures de reference de ces coefficients radiatifs, que la source n'enonce pas : 293.15 K a l'interieur et 273.15 K a l'exterieur.",
+      "cleared_by": "ISO EN 52016-1:2017 clauses 7.2.2.7 a 7.2.2.10, registre des demandes externes point I1"
+    }
+  ],
+  "claim_guardrail": "Transcription normalisee de la cellule d'essai du chapitre 7. Elle porte une valeur PROVISOIRE declaree ci-dessus : elle rend la chaine de generation executable, elle ne fonde aucun resultat, aucune comparaison SIA et aucune attestation avant recalcul."
+}
