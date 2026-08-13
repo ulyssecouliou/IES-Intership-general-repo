@@ -22,7 +22,7 @@
       "technical_validation": {
         "status": "PASS",
         "report_path": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\refs\\reference-data\\iso52016_chapter7_test_cell.validation.json",
-        "report_sha256": "477d22788e13808544e57a8dda6aa2fd4982ad92b1919001d384da8367931995"
+        "report_sha256": "65be53a1e12479434826a9d578252640ff91b60dc036dcbc3d05c1baa1e0c2b3"
       },
       "normative_authorization_basis": "Autorisé par Ulysse Couliou le 2026-08-13 : la norme est détenue sous copie licenciée du projet, et l'usage est la traçabilité interne du candidat à la validation.",
       "normative_authorization_scope": "Transcription et citation de localisateurs pour la traçabilité interne. Aucune redistribution du texte normatif.",

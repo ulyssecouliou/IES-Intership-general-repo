@@ -123,7 +123,7 @@
       "why_not_in_source": "iso52016_chapter7_confirmed_inputs.json ne porte aucune emissivite infrarouge, que le contrat normalise exige pour les deux faces de chaque construction opaque.",
       "how_derived": "epsilon = h_r / (4 sigma T^3) applique aux coefficients radiatifs que la source porte : interieur 5.13 / 5.714 a 293.15 K = 0.8978 ; exterieur 4.14 / 4.6225 a 273.15 K = 0.8956. Les deux convergent a 0.0022 pres, et la valeur retenue est leur moyenne arrondie a deux decimales.",
       "assumption_to_confirm": "Les temperatures de reference de ces coefficients radiatifs, que la source n'enonce pas : 293.15 K a l'interieur et 273.15 K a l'exterieur.",
-      "cleared_by": "ISO EN 52016-1:2017 clauses 7.2.2.7 a 7.2.2.10, registre des demandes externes point I1"
+      "cleared_by": "NON resolu par les pages ISO deja capturees. iso52016_chapter7_confirmed_inputs.json porte les pages 123 a 126 seulement, et son bloc unresolved_from_current_captures enonce que la page 126 dit uniquement qu'une emittance standard est implicitement supposee, sans valeur numerique. La valeur est donc definie ailleurs dans ISO EN 52016-1:2017, hors des pages capturees. Voie subsidiaire : la specification parente du cas 600, NREL/TP-472-6231, presente dans le depot, qui ne donnerait que le statut PUBLIC_REFERENCE selon references/standards/bestest/README.md. Registre des demandes externes, point I1."
     }
   ],
   "claim_guardrail": "Transcription normalisee de la cellule d'essai du chapitre 7. Elle porte une valeur PROVISOIRE declaree ci-dessus : elle rend la chaine de generation executable, elle ne fonde aucun resultat, aucune comparaison SIA et aucune attestation avant recalcul."

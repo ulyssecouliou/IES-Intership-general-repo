@@ -34,11 +34,48 @@ comparaison, consignée ici pour qu'elle ne reparte pas.
 
 | # | Question | Où chercher | Ce qu'elle débloque |
 |---|---|---|---|
-| I1 | Quelles **émissivités infrarouges** intérieure et extérieure pour les surfaces opaques de la cellule du chapitre 7 ? Et l'`opaque_solar_absorptance` de 0,6 s'applique-t-elle aux **deux faces** ? | La copie licenciée d'**ISO EN 52016-1:2017**, clauses 7.2.2.7 à 7.2.2.10, pages 126-127 — celles que `iso52016_chapter7_confirmed_inputs.json` cite déjà pour les autres valeurs du même bloc. | L'entrée déléguée `iso52016_2017_chapter7_test_cell`, donc le **Test 2A** et toute la chaîne des cas liés aux sources. |
+| I1 | Quelles **émissivités infrarouges** intérieure et extérieure pour les surfaces opaques de la cellule du chapitre 7 ? Et l'`opaque_solar_absorptance` de 0,6 s'applique-t-elle aux **deux faces** ? | **Pas dans les pages déjà capturées.** Voir le détail ci-dessous : la piste est ailleurs dans ISO EN 52016-1:2017, hors des pages 123-126. | L'entrée déléguée `iso52016_2017_chapter7_test_cell`, donc le **Test 2A** et toute la chaîne des cas liés aux sources. |
 
-C'est la demande la plus rentable du registre : deux valeurs, dans un document
-que nous détenons, et elle ferme la dernière entrée déléguée du Test 2A. En
-attendant, la chaîne tourne sur une valeur **provisoire dérivée** (voir §4).
+### Où chercher, exactement
+
+Corrigé le 2026-08-13. La formulation précédente envoyait aux clauses 7.2.2.7
+à 7.2.2.10 : c'était faux, ces pages ont déjà été lues et ne répondent pas.
+
+**Ce que le dépôt sait déjà.** `config/iso52016_chapter7_confirmed_inputs.json`
+ne cite que les pages **123, 124, 125 et 126**, et son bloc
+`unresolved_from_current_captures` énonce noir sur blanc : « Numerical infrared
+emittance value, because page 126 states only that a standard emittance is
+implicitly assumed ». Quelqu'un a donc déjà regardé, et la page 126 dit
+seulement qu'une émittance standard est *implicitement supposée*.
+
+**Ce que cela implique.** Si la norme la suppose implicitement, elle la définit
+quelque part — et ce quelque part est **hors des quatre pages capturées**. La
+chose à chercher n'est donc pas la cellule d'essai du chapitre 7, mais l'endroit
+où ISO EN 52016-1:2017 énonce l'émissivité de surface standard ou par défaut
+qu'elle applique : le traitement du rayonnement de grande longueur d'onde dans
+le corps de la norme, ou sa table de valeurs par défaut en annexe. C'est la
+**seule** voie qui donne un statut normatif.
+
+**Voie subsidiaire, déjà dans le dépôt.** La cellule du chapitre 7 dérive du cas
+600 de BESTEST, dont le rapport est présent :
+`references/standards/bestest/NREL_TP_472_6231.pdf` (296 pages). Sa section de
+spécification du bâtiment cas 600 donne les propriétés de surface. **Mais** —
+`references/standards/bestest/README.md` fixe la règle : une valeur tracée
+uniquement à cette source vaut `PUBLIC_REFERENCE`, suffisant pour faire tourner
+et démontrer, **jamais** pour une revendication SIA 4010.
+
+**Pourquoi je ne l'ai pas lu moi-même.** Ce PDF est un scan : 296 pages, **zéro**
+caractère extractible, et l'environnement n'a ni OCR ni moteur de rendu de page.
+Vous pouvez l'ouvrir, moi non.
+
+En attendant l'une ou l'autre voie, la chaîne tourne sur une valeur
+**provisoire dérivée** (voir §4).
+
+**Incohérence à trancher, sans lien avec le calcul** : ce README affirme « The
+source is not redistributed in this repository », alors que le PDF de 14 Mo est
+bien suivi par git. Le rapport est public (DOI 10.2172/90674), donc c'est
+probablement le README qui est périmé — mais c'est votre décision, pas la
+mienne, et je n'ai touché ni au fichier ni au README.
 
 ---
 

@@ -248,8 +248,18 @@ def construire(chemin_source):
                     % (T_INTERIEUR_K, T_EXTERIEUR_K)
                 ),
                 'cleared_by': (
-                    u"ISO EN 52016-1:2017 clauses 7.2.2.7 a 7.2.2.10, "
-                    u"registre des demandes externes point I1"
+                    u"NON resolu par les pages ISO deja capturees. "
+                    u"iso52016_chapter7_confirmed_inputs.json porte les pages "
+                    u"123 a 126 seulement, et son bloc "
+                    u"unresolved_from_current_captures enonce que la page 126 "
+                    u"dit uniquement qu'une emittance standard est "
+                    u"implicitement supposee, sans valeur numerique. La valeur "
+                    u"est donc definie ailleurs dans ISO EN 52016-1:2017, hors "
+                    u"des pages capturees. Voie subsidiaire : la specification "
+                    u"parente du cas 600, NREL/TP-472-6231, presente dans le "
+                    u"depot, qui ne donnerait que le statut PUBLIC_REFERENCE "
+                    u"selon references/standards/bestest/README.md. "
+                    u"Registre des demandes externes, point I1."
                 ),
             },
         ],

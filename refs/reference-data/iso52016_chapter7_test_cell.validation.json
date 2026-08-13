@@ -40,7 +40,7 @@
   ],
   "binding_artifact": {
     "path": "iso52016_chapter7_test_cell.binding.json",
-    "sha256": "b0815ff996d10e2a6303618380b40a2ecdefcac0826461ac3b247a861546a37f",
+    "sha256": "2d925deb363be663b1b2d2da848b3651adebf9e074490cc48d47a30b8bc704eb",
     "schema_id": "sia4010.iso52016_chapter7_test_cell.v1"
   },
   "claim_guardrail": "PASS valide la coherence interne de la transcription et la presence des localisateurs. Il ne vaut ni relecture de la norme licenciee, ni autorisation d'usage, ni resultat de simulation."
