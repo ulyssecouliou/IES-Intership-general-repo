@@ -99,10 +99,28 @@ def _excel_disponible():
                 pass
 
 
+_EXCEL_COM_OPT_IN = 'SIA_RUN_EXCEL_COM_INTEGRATION'
+
+
 pytestmark = pytest.mark.skipif(
-    not _excel_disponible(),
-    reason=u'Excel indisponible via COM sur cette machine -- excel_export '
-           u'non testable ici (voir docstring du module).')
+    os.environ.get(_EXCEL_COM_OPT_IN) != '1',
+    reason=(
+        u'Intégration Excel COM désactivée par défaut. Définir '
+        u'SIA_RUN_EXCEL_COM_INTEGRATION=1 pour l’exécuter sur un poste '
+        u'Excel autorisé.'
+    ),
+)
+
+
+@pytest.fixture(scope='module', autouse=True)
+def _require_working_excel_com():
+    """Probe Excel only during opted-in setup, never during collection."""
+
+    if not _excel_disponible():
+        pytest.skip(
+            u'Excel indisponible via COM sur cette machine -- excel_export '
+            u'non testable ici (voir docstring du module).'
+        )
 
 
 @pytest.fixture(scope='module')

@@ -88,7 +88,8 @@ class Sia4010CaseCapability:
         return (
             self.variant == "test_1"
             and self.case_id
-            in {"600", "640", "600FF", "900", "940", "900FF"}
+            in set(TEST1_DIAGNOSTIC_CASES)
+            | {"600", "640", "600FF", "900", "940", "900FF"}
             and (
                 self.mutation_supported
                 or self.runtime_qualification_supported
@@ -102,6 +103,14 @@ class Sia4010CaseCapability:
         if self.variant == "test_1":
             if self.case_id == "1E":
                 return "OFFICIAL_CRITERIA_IMPLEMENTED"
+            if self.case_id in TEST1_DIAGNOSTIC_CASES:
+                # Deliberately NOT REFERENCE_OUTPUTS_IMPLEMENTED: that value
+                # would assert reference outputs exist, and test-1.ref.json
+                # holds none for 1A to 1D -- zero mentions of them. The
+                # specification asks for an annual hourly deliverable and states
+                # no comparison criterion, so there is nothing to compare to and
+                # nothing may be invented.
+                return "HOURLY_DELIVERABLE_ONLY_NO_REFERENCE"
             if self.case_id in {
                 "600",
                 "640",
@@ -247,18 +256,21 @@ def get_case_capability(variant: str, case_id: str) -> Sia4010CaseCapability:
             case_id=case_id,
             base_test_id=test_id,
             preparation_status=PREPARATION_READY,
-            generation_status="NOT_IMPLEMENTED",
-            generator_id="source_traced_preparation_v1",
-            blocker_code="TEST1_DIAGNOSTIC_CHAIN_GENERATOR_NOT_IMPLEMENTED",
+            generation_status=RUNTIME_QUALIFICATION_READY,
+            generator_id="test1_diagnostic_chain_probe_v1",
+            blocker_code="VE_RUNTIME_QUALIFICATION_REQUIRED",
             blocker_detail=(
                 "Diagnostic case of the Test 1 to Test 2 transition. The chain "
                 "and every parameter it adds are frozen in "
                 "refs/reference-data/test-1.diagnostics.ref.json, read from the "
-                "official PDFs; no VE generator binds them yet. The "
-                "specification requires annual data sets with hourly heating "
-                "and cooling power for these cases and states NO comparison "
-                "criterion, so no reference band exists and none may be "
-                "invented: they are deliverables, not judged cases."
+                "official PDFs, and test1_diagnostic_bundle applies the four "
+                "links cumulatively from that frozen reference. Run it only in "
+                "a fresh saved disposable project; the generator remains "
+                "unverified until every VE setter, read-back and post-mutation "
+                "check passes. The specification requires annual data sets with "
+                "hourly heating and cooling power for these cases and states NO "
+                "comparison criterion, so no reference band exists and none may "
+                "be invented: they are deliverables, not judged cases."
             ),
             required_source_roles=(
                 "test_specification",

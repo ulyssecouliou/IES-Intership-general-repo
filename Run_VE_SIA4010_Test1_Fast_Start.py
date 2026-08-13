@@ -16,7 +16,12 @@ PROJECT_ROOT = Path(__file__).resolve().parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-TEST1_CASES = ("600", "640", "600FF", "900", "940", "900FF")
+#: The six ISO cases, then the four diagnostic cases of the Test 1 to Test 2
+#: transition. 1E is absent on purpose: its fabric-awning dynamics is not
+#: stated by the specification, so no generator may claim to reproduce it.
+TEST1_ISO_CASES = ("600", "640", "600FF", "900", "940", "900FF")
+TEST1_DIAGNOSTIC_CASES = ("1A", "1B", "1C", "1D")
+TEST1_CASES = TEST1_ISO_CASES + TEST1_DIAGNOSTIC_CASES
 
 
 def _reload_launcher(module_name):
@@ -126,7 +131,9 @@ def _select_case(project_path):
     try:
         selected = simpledialog.askstring(
             "SIA 4010 Test 1",
-            "Cas ISO exact: 600, 640, 600FF, 900, 940 ou 900FF",
+            "Cas exact. ISO : 600, 640, 600FF, 900, 940, 900FF. "
+            "Diagnostique : 1A, 1B, 1C, 1D (climat Kloten, livrable "
+            "horaire, sans critere).",
             initialvalue=suggested,
             parent=root,
         )

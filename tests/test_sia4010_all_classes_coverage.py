@@ -48,11 +48,14 @@ class Sia4010AllClassesCoverageTests(unittest.TestCase):
         # et la géométrie des quatre nouveaux cas est la même cellule ISO 52016
         # chapitre 7 que le cas 600 dont ils dérivent.
         self.assertEqual(summary["deterministic_geometry_artifact_cases"], 27)
-        self.assertEqual(summary["runtime_qualification_cases"], 5)
+        # 5 -> 9 : les quatre cas diagnostiques du Test 1
+        self.assertEqual(summary["runtime_qualification_cases"], 9)
         self.assertEqual(summary["runtime_discovery_cases"], 20)
         self.assertEqual(summary["source_bound_bundle_cases"], 13)
-        self.assertEqual(summary["apachesim_qualification_cases"], 6)
-        self.assertEqual(summary["qualified_aps_evaluation_cases"], 11)
+        # 6 -> 10 : le livrable de 1A a 1D est le jeu annuel horaire
+        self.assertEqual(summary["apachesim_qualification_cases"], 10)
+        # 11 -> 15 : evaluation du livrable, sans critere ni reference
+        self.assertEqual(summary["qualified_aps_evaluation_cases"], 15)
         self.assertEqual(
             summary["qualified_aps_complete_evaluation_cases"], 11
         )

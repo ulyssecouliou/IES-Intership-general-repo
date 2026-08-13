@@ -47,6 +47,10 @@ class Sia4010CaseRegistryTests(unittest.TestCase):
             for item in all_case_capabilities()
             if item.runtime_qualification_supported
         ]
+        # Les quatre cas diagnostiques ont rejoint la liste le 2026-08-13 :
+        # `test1_diagnostic_bundle` applique leurs maillons figés, donc ils
+        # passent par la même qualification en projet jetable. Ils suivent les
+        # six ISO dans l'ordre du registre.
         self.assertEqual(
             probes,
             [
@@ -55,6 +59,10 @@ class Sia4010CaseRegistryTests(unittest.TestCase):
                 ("test_1", "900"),
                 ("test_1", "940"),
                 ("test_1", "900FF"),
+                ("test_1", "1A"),
+                ("test_1", "1B"),
+                ("test_1", "1C"),
+                ("test_1", "1D"),
             ],
         )
         for case_id in ("640", "600FF", "900", "940", "900FF"):
@@ -128,10 +136,30 @@ class Sia4010CaseRegistryTests(unittest.TestCase):
             for item in all_case_capabilities()
             if item.variant == "test_1" and item.aps_evaluation_supported
         ]
+        # 1A à 1D évaluent un livrable horaire, sans critère ni référence : ils
+        # sont donc « supported » sans être comparés. La portée le dit, et le
+        # test ci-dessous vérifie qu'elle n'emprunte pas celle du cas 600.
         self.assertEqual(
             supported,
-            ["600", "640", "600FF", "900", "940", "900FF", "1E"],
+            [
+                "600",
+                "640",
+                "600FF",
+                "900",
+                "940",
+                "900FF",
+                "1A",
+                "1B",
+                "1C",
+                "1D",
+                "1E",
+            ],
         )
+        for case_id in ("1A", "1B", "1C", "1D"):
+            self.assertEqual(
+                get_case_capability("test_1", case_id).aps_evaluation_scope,
+                "HOURLY_DELIVERABLE_ONLY_NO_REFERENCE",
+            )
         self.assertEqual(
             get_case_capability("test_1", "600").aps_evaluation_scope,
             "REFERENCE_OUTPUTS_IMPLEMENTED",
@@ -154,9 +182,23 @@ class Sia4010CaseRegistryTests(unittest.TestCase):
             for item in all_case_capabilities()
             if item.apachesim_qualification_supported
         ]
+        # Les diagnostiques ont besoin de l'ApacheSim annuel comme les autres :
+        # leur livrable EST le jeu de 8760 heures. 1E reste dehors, son
+        # générateur n'existe pas.
         self.assertEqual(
             supported,
-            ["600", "640", "600FF", "900", "940", "900FF"],
+            [
+                "600",
+                "640",
+                "600FF",
+                "900",
+                "940",
+                "900FF",
+                "1A",
+                "1B",
+                "1C",
+                "1D",
+            ],
         )
         self.assertFalse(
             get_case_capability(

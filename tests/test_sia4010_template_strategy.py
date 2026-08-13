@@ -50,16 +50,30 @@ class Sia4010TemplateStrategyTests(unittest.TestCase):
     def test_unbound_complex_cases_are_blocked(self):
         plans = build_hybrid_case_plans(self.requirements, ())
         blocked = [item for item in plans if item.status == "BLOCKED_TEMPLATE_REQUIRED"]
-        # 27 : les quatre cas diagnostiques du Test 1 n'ont pas de
-        # template lie non plus, donc ils rejoignent les cas bloques.
-        self.assertEqual(len(blocked), 27)
-        # Cette assertion encodait « le Test 1 est entierement lie ». Ce
-        # n'est plus vrai : les quatre cas diagnostiques 1A a 1D n'ont pas
-        # de template lie non plus. Ce qui doit rester vrai est que les six
-        # cas ISO et 1E, eux, ne sont pas bloques.
+        # 23 : tous les cas hors Test 1 dont aucun template VE n'est lie.
+        #
+        # La version precedente attendait 27 et rangeait 1A a 1D parmi eux
+        # « faute de template lie ». C'etait le bon compte pour la mauvaise
+        # raison, et l'assertion juste en dessous verifie desormais pourquoi :
+        # le Test 1 ne consomme AUCUN template VE (template_allowed est faux) ;
+        # il utilise le template generique a charges idealisees que son propre
+        # bundle construit. Ces quatre cas etaient donc bloques par l'absence de
+        # generateur, pas de template. Le generateur existe depuis le
+        # 2026-08-13, et leur statut suit celui des cinq autres cas outilles.
+        self.assertEqual(len(blocked), 23)
+        self.assertFalse(self.requirements["1"].template_allowed)
         test1_bloques = {item.case_id for item in blocked
                          if item.base_test_id == "1"}
-        self.assertEqual(test1_bloques, {"1A", "1B", "1C", "1D"})
+        self.assertEqual(test1_bloques, set())
+        # Le temoin positif : les quatre suivent bien la voie de qualification,
+        # et 1E reste a la preparation, son generateur n'existant pas.
+        par_cas = {item.case_id: item.status for item in plans
+                   if item.base_test_id == "1"}
+        for case_id in ("1A", "1B", "1C", "1D"):
+            self.assertEqual(
+                par_cas[case_id], "READY_FOR_REAL_VE_QUALIFICATION", case_id
+            )
+        self.assertEqual(par_cas["1E"], "SOURCE_PREPARATION_ONLY")
 
     @patch(
         "swiss_sia.reference_model.sia4010.template_strategy.validate_binding"

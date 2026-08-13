@@ -552,6 +552,87 @@ def _apply_fabric_awning(
     }
 
 
+def _bind_kloten_case_manifest_role(
+    case_manifest_path: Path,
+    kloten_weather_file: Optional[Union[str, Path]],
+) -> None:
+    """Fill the ``zurich_kloten_dry_weather_file`` role of the project manifest.
+
+    The chain writes the climate into the executable configuration, but the case
+    manifest carries a separate declaration: the delegated *role* the official
+    input contract requires.  It ships as ``PLACEHOLDER_REQUIRED`` with a null
+    value, exactly as case 600 ships ``denver_drycold_weather_file``, and the
+    preflight refuses to mutate VE while it stays unfilled.  Filling it here,
+    with the resolved path and its checksum, is what makes the diagnostic cases
+    runnable rather than merely preparable.
+
+    An absent file leaves the role ``UNRESOLVED`` on purpose: link 1A already
+    reports that as a blocker, and a role marked satisfied without a file would
+    let a Denver run proceed under a Kloten label.
+
+    Args:
+        case_manifest_path: Project-local case manifest written by the bundle.
+        kloten_weather_file: Resolved Kloten EPW, or None.
+    """
+
+    payload = _load_json(case_manifest_path)
+    parameters = payload.get("parameters")
+    if not isinstance(parameters, dict):
+        raise ConfigurationError(
+            "Project case manifest has no parameters object: {}".format(
+                case_manifest_path
+            )
+        )
+    role = parameters.get("zurich_kloten_dry_weather_file")
+    if not isinstance(role, dict):
+        raise ConfigurationError(
+            "Project case manifest does not declare the "
+            "zurich_kloten_dry_weather_file role: {}".format(case_manifest_path)
+        )
+    path = (
+        Path(kloten_weather_file)
+        if kloten_weather_file is not None
+        else None
+    )
+    if path is not None and path.is_file():
+        role.update(
+            {
+                # CONFIRMED, not CONFIRMED_NORMATIVE: the source authority and
+                # the written authorization are established, but no reviewer has
+                # compared the dataset line by line, and 11 of its 24 columns
+                # remain unidentified. The reserve travels with the value.
+                "status": "CONFIRMED",
+                "value": str(path),
+                "source": (
+                    "SIA 2028 DRY normal Zurich-Kloten, supplied directly by "
+                    "the SIA validation contact and converted to EPW by "
+                    "swiss_sia.sia_dry_epw. Not an SIA-issued EPW; IES holds no "
+                    "SIA 2028 licence"
+                ),
+                "source_locator": (
+                    "{}; SHA256={}; reserve: unidentified columns are recorded "
+                    "in references/standards/sia2028/KLO_dry.provenance.json "
+                    "and must not drive a regulatory result".format(
+                        path.name, _checksum(path)
+                    )
+                ),
+            }
+        )
+    else:
+        role.update(
+            {
+                "status": "UNRESOLVED",
+                "value": None,
+                "source": "Kloten weather file pending",
+                "source_locator": (
+                    "Link 1A of the diagnostic chain requires SIA 2028 DRY "
+                    "normal Zurich-Kloten; none was resolved"
+                ),
+            }
+        )
+    _write_json(case_manifest_path, payload)
+
+
 def build_test1_diagnostic_bundle(
     project_root: Union[str, Path],
     repository_root: Union[str, Path],
@@ -639,6 +720,9 @@ def build_test1_diagnostic_bundle(
 
     _write_json(receipt.asset_manifest_path, assets)
     _write_json(receipt.config_path, config)
+    _bind_kloten_case_manifest_role(
+        receipt.case_manifest_path, kloten_weather_file
+    )
     load_asset_manifest(receipt.asset_manifest_path)
     load_configuration(receipt.config_path)
 

@@ -7,8 +7,8 @@
   },
   "variants": {
     "test_1": {
-      "description": "All Test 1 submission cases; only case 1E has an acceptance band.",
-      "case_ids": ["600", "640", "600FF", "900", "940", "900FF", "1E"],
+      "description": "All Test 1 submission cases. Only case 1E has an acceptance band; the diagnostic cases 1A to 1D are annual hourly deliverables with no comparison criterion.",
+      "case_ids": ["600", "640", "600FF", "900", "940", "900FF", "1A", "1B", "1C", "1D", "1E"],
       "required_parameters": [
         "cell_width_m",
         "cell_depth_m",
@@ -83,6 +83,48 @@
           "iso_heavyweight_construction", "iso_test1_glazing",
           "iso_test1_infiltration", "denver_drycold_weather_file",
           "test1_equipment_gain_w"
+        ],
+        "1A": [
+          "cell_width_m", "cell_depth_m", "cell_height_m",
+          "south_window_count", "south_window_width_m", "south_window_height_m",
+          "south_window_sill_m", "south_window_side_margin_m", "south_window_gap_m",
+          "iso_lightweight_construction",
+          "iso_test1_glazing", "iso_test1_infiltration",
+          "zurich_kloten_dry_weather_file",
+          "test1_heating_setpoint_c", "test1_cooling_setpoint_c",
+          "test1_equipment_gain_w"
+        ],
+        "1B": [
+          "cell_width_m", "cell_depth_m", "cell_height_m",
+          "south_window_count", "south_window_width_m", "south_window_height_m",
+          "south_window_sill_m", "south_window_side_margin_m", "south_window_gap_m",
+          "iso_lightweight_construction",
+          "test2_glazing_system", "iso_test1_infiltration",
+          "zurich_kloten_dry_weather_file",
+          "test1_heating_setpoint_c", "test1_cooling_setpoint_c",
+          "test1_equipment_gain_w"
+        ],
+        "1C": [
+          "cell_width_m", "cell_depth_m", "cell_height_m",
+          "south_window_count", "south_window_width_m", "south_window_height_m",
+          "south_window_sill_m", "south_window_side_margin_m", "south_window_gap_m",
+          "iso_lightweight_construction",
+          "test2_glazing_system", "test2_infiltration_m3_h_m2",
+          "zurich_kloten_dry_weather_file",
+          "test1_heating_setpoint_c", "test1_cooling_setpoint_c",
+          "test1_equipment_gain_w"
+        ],
+        "1D": [
+          "cell_width_m", "cell_depth_m", "cell_height_m",
+          "south_window_count", "south_window_width_m", "south_window_height_m",
+          "south_window_sill_m", "south_window_side_margin_m", "south_window_gap_m",
+          "iso_lightweight_construction",
+          "test2_glazing_system", "test2_infiltration_m3_h_m2",
+          "zurich_kloten_dry_weather_file",
+          "test1_heating_setpoint_c", "test1_cooling_setpoint_c",
+          "test2_people_count", "test2_people_activity_met",
+          "test2_equipment_gain_w_m2", "test2_lighting_gain_w_m2",
+          "sia2024_office_profiles"
         ],
         "1E": [
           "cell_width_m", "cell_depth_m", "cell_height_m",

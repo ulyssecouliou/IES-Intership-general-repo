@@ -36,6 +36,16 @@ REFERENCE_ONLY_RESULTS_RECORDED = (
     "REFERENCE_RESULTS_RECORDED_NO_ACCEPTANCE_CRITERION"
 )
 
+#: Cases 1A to 1D differ from 600/640/900/940 in a way that matters: those have
+#: reference results to be shown against, these have none at all. The status
+#: says both absences out loud so no reader supplies either from habit.
+DIAGNOSTIC_DELIVERABLE_RECORDED = (
+    "DIAGNOSTIC_DELIVERABLE_RECORDED_NO_CRITERION_NO_REFERENCE"
+)
+
+#: The APS evaluation scope that routes to the criterion-free deliverable path.
+HOURLY_DELIVERABLE_SCOPE = "HOURLY_DELIVERABLE_ONLY_NO_REFERENCE"
+
 
 QUALIFIED_ACTIVE_CASES = frozenset(
     (item.variant, item.case_id)
@@ -144,7 +154,10 @@ class ActiveCaseEvaluationReceipt:
     acceptance_criterion_available: bool
     required_output_scope_complete: bool
     artifact_path: Optional[Path]
-    evaluation: Sia4010TestEvaluation
+    #: Absent for the diagnostic cases 1A to 1D. They have no criterion and no
+    #: reference, so nothing is evaluated; carrying an empty evaluation object
+    #: here would read as "evaluated, found nothing".
+    evaluation: Optional[Sia4010TestEvaluation] = None
 
     def to_dict(self) -> Dict[str, Any]:
         """Return a JSON-safe receipt."""
@@ -165,8 +178,98 @@ class ActiveCaseEvaluationReceipt:
             "artifact_path": (
                 str(self.artifact_path) if self.artifact_path else None
             ),
-            "evaluation": self.evaluation.to_dict(),
+            "evaluation": (
+                self.evaluation.to_dict()
+                if self.evaluation is not None
+                else None
+            ),
         }
+
+
+def _record_test1_diagnostic_deliverable(
+    *,
+    variant: str,
+    case_id: str,
+    extractor: "Sia4010QualifiedApsExtractor",
+    aps: Path,
+    bindings_path: Path,
+    output_path: Optional[Union[str, Path]],
+) -> ActiveCaseEvaluationReceipt:
+    """Record the annual hourly deliverable of one diagnostic case 1A to 1D.
+
+    These four cases take a separate path on purpose. The ISO reference-only
+    path compares the run against ISO 52016-1 chapter 7 reference results, and
+    that comparison is impossible here for two independent reasons: the
+    diagnostic cases run under the Zurich-Kloten climate rather than DRYCOLD, so
+    they are not ISO cases; and `test-1.ref.json` carries no reference for them
+    at all. Routing them through that path would have produced a deviation
+    against the wrong object, which is the one failure mode this pipeline exists
+    to prevent.
+
+    Args:
+        variant: Official variant, always ``test_1`` here.
+        case_id: One of 1A, 1B, 1C, 1D.
+        extractor: Runtime-qualified APS extractor.
+        aps: APS evidence file.
+        bindings_path: Qualified APS binding file.
+        output_path: Where to write the deliverable artifact, if anywhere.
+
+    Returns:
+        ActiveCaseEvaluationReceipt: Receipt with no evaluation attached, whose
+        status is the deliverable status when both annual series are complete
+        and ``NOT_CHECKABLE`` when either is not.
+    """
+
+    deliverable = extractor.test1_diagnostic_hourly_deliverable(case_id)
+    complete = deliverable is not None and deliverable.hour_count == 8760
+    status = (
+        DIAGNOSTIC_DELIVERABLE_RECORDED if complete else "NOT_CHECKABLE"
+    )
+    artifact = Path(output_path) if output_path is not None else None
+    if artifact is not None:
+        payload = {
+            "schema_version": "1.0",
+            "status": status,
+            "variant": variant,
+            "case_id": str(case_id).upper(),
+            "test_id": "1",
+            "acceptance_criterion_available": False,
+            "reference_results_available": False,
+            "compliance_claim_allowed": False,
+            "source_evidence": {
+                "aps_path": str(aps),
+                "aps_sha256": _sha256(aps),
+                "bindings_path": str(bindings_path),
+                "bindings_sha256": _sha256(bindings_path),
+            },
+            "deliverable": (
+                deliverable.to_dict() if deliverable is not None else None
+            ),
+            "incompleteness": (
+                None
+                if complete
+                else (
+                    "One or both annual power series is absent or is not "
+                    "exactly one 365-day year, so no deliverable is recorded. "
+                    "A partial year is not delivered as if it were whole."
+                )
+            ),
+        }
+        _write_json(artifact, payload)
+    return ActiveCaseEvaluationReceipt(
+        status=status,
+        variant=variant,
+        case_id=str(case_id).upper(),
+        test_id="1",
+        observed_metric_count=(
+            2 * deliverable.hour_count if deliverable is not None else 0
+        ),
+        distribution_criterion_count=0,
+        acceptance_criterion_available=False,
+        required_output_scope_complete=complete,
+        artifact_path=artifact,
+        evaluation=None,
+    )
 
 
 def evaluate_qualified_active_case(
@@ -209,6 +312,16 @@ def evaluate_qualified_active_case(
         bindings,
         "{}#sha256={}".format(aps, _sha256(aps)),
     )
+
+    if capability.aps_evaluation_scope == HOURLY_DELIVERABLE_SCOPE:
+        return _record_test1_diagnostic_deliverable(
+            variant=pair[0],
+            case_id=pair[1],
+            extractor=extractor,
+            aps=aps,
+            bindings_path=Path(bindings_path),
+            output_path=output_path,
+        )
 
     distributions = ()
     if test_id == "1":

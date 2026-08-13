@@ -385,6 +385,53 @@ class Sia4010QualifiedApsExtractor:
             self.results_per_hour,
         )
 
+    #: The four diagnostic cases whose deliverable is hourly power only.  1E is
+    #: excluded on purpose: it is the one Test 1 case the specification judges.
+    TEST1_DIAGNOSTIC_DELIVERABLE_CASES = ("1A", "1B", "1C", "1D")
+
+    def test1_diagnostic_hourly_deliverable(
+        self, case_id: str
+    ) -> Optional["Test1DiagnosticHourlyDeliverable"]:
+        """Return the annual hourly heating and cooling power of case 1A to 1D.
+
+        Args:
+            case_id: One of 1A, 1B, 1C, 1D.
+
+        Returns:
+            Test1DiagnosticHourlyDeliverable: The two complete annual series in
+            watts, or None when either series is absent or is not exactly one
+            365-day year.  A partial year is not delivered as if it were whole.
+
+        Raises:
+            ConfigurationError: If the case is not one the specification lists
+                as a diagnostic case, or if 1E is requested here -- 1E is judged
+                against a band and must not travel this criterion-free path.
+        """
+
+        normalized = str(case_id).upper()
+        if normalized == "1E":
+            raise ConfigurationError(
+                "Case 1E is judged against the reference band and must not use "
+                "the criterion-free diagnostic deliverable path"
+            )
+        if normalized not in self.TEST1_DIAGNOSTIC_DELIVERABLE_CASES:
+            raise ConfigurationError(
+                "Diagnostic hourly deliverable is unavailable for case {!r}; "
+                "supported cases are {}".format(
+                    case_id, list(self.TEST1_DIAGNOSTIC_DELIVERABLE_CASES)
+                )
+            )
+        heating = self.hourly_power_watts("sensible_heating_power")
+        cooling = self.hourly_power_watts("sensible_cooling_power")
+        if not heating or not cooling or len(heating) != len(cooling):
+            return None
+        return Test1DiagnosticHourlyDeliverable(
+            case_id=normalized,
+            heating_power_w=heating,
+            cooling_power_w=cooling,
+            evidence_locator=self.evidence_locator,
+        )
+
     def series_evidence(
         self, quantity_ids: Iterable[str]
     ) -> Dict[str, Dict[str, Any]]:
@@ -720,3 +767,56 @@ class Sia4010QualifiedApsExtractor:
             if hourly_watts
             else ()
         )
+
+
+@dataclass(frozen=True)
+class Test1DiagnosticHourlyDeliverable:
+    """The exact annual deliverable of one Test 1 diagnostic case 1A to 1D.
+
+    The specification asks for one thing and nothing else for these four cases:
+    ``Zu liefernde Resultate: Jahresdatensaetze mit stuendlicher Leistung
+    Heizen und Kuehlen``.  Hourly room-air and operative temperature are the
+    deliverable of the *main* cases, not of the diagnostic ones, so they are
+    deliberately absent here rather than added for good measure.
+
+    It carries no expected value, no band and no reference: the specification
+    states no comparison criterion for 1A to 1D, and ``test-1.ref.json`` holds
+    no reference for them.  A deliverable is not a verdict.
+    """
+
+    case_id: str
+    heating_power_w: Tuple[float, ...]
+    cooling_power_w: Tuple[float, ...]
+    evidence_locator: str
+
+    @property
+    def hour_count(self) -> int:
+        """Return the delivered hour count, equal on both series by construction."""
+
+        return len(self.heating_power_w)
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Return one JSON-safe deliverable record."""
+
+        return {
+            "case_id": self.case_id,
+            "hour_count": self.hour_count,
+            "unit": "W",
+            "quantities": {
+                "sensible_heating_power": list(self.heating_power_w),
+                "sensible_cooling_power": list(self.cooling_power_w),
+            },
+            "specification_requirement_verbatim_de": (
+                "Zu liefernde Resultate: Jahresdatensaetze mit stuendlicher "
+                "Leistung Heizen und Kuehlen"
+            ),
+            "acceptance_criterion": "NONE_STATED_BY_SPECIFICATION",
+            "reference_results_available": False,
+            "evidence_locator": self.evidence_locator,
+            "claim_guardrail": (
+                "Annual hourly deliverable of a Test 1 diagnostic case. The "
+                "specification states no comparison criterion for cases 1A to "
+                "1D and no reference exists for them, so this artifact "
+                "supports no verdict, no deviation and no compliance claim."
+            ),
+        }

@@ -306,9 +306,23 @@ class ModelScenario:
             "missing_parameters": blockers,
             "provisional_parameters": provisional,
             "features": dict(self.features),
-            "compliance_claim_allowed": (
+            # What the input statuses actually establish: every official input
+            # of this exact case is confirmed, so the model can be built. That
+            # is a readiness fact, not an entitlement.
+            "official_inputs_fully_confirmed": (
                 self.is_official and not blockers and not provisional
             ),
+            # Never True here, whatever the inputs say. A scenario is a
+            # pre-mutation artifact: no VE object exists yet, no simulation has
+            # run, no generator has been qualified, and the SIA sub-commission
+            # has attested nothing (SIA 4010:2023 clause 4.6.2). Cases 1A to 1D
+            # make the point unmissable -- the specification states no
+            # acceptance criterion for them, so there is no criterion left to
+            # claim conformity with. This used to be derived from the input
+            # statuses, which was safe only by accident: every case carried at
+            # least one PUBLIC_REFERENCE input until the first fully confirmed
+            # one appeared.
+            "compliance_claim_allowed": False,
         }
 
     def to_dict(self) -> Dict[str, Any]:

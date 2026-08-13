@@ -44,10 +44,14 @@ class ComplianceHubTests(unittest.TestCase):
         # Test 1 : 1E existait sans la base que sa definition exige.
         self.assertEqual(summary["exact_cases"], 34)
         self.assertEqual(summary["guarded_mutation_cases"], 1)
-        self.assertEqual(summary["runtime_qualification_cases"], 5)
-        # 28 : aucun generateur VE ne lie encore les quatre cas
-        # diagnostiques du Test 1, donc ils comptent comme non implementes.
-        self.assertEqual(summary["not_implemented_cases"], 28)
+        # 5 -> 9 le 2026-08-13 : les quatre cas diagnostiques 1A a 1D du
+        # Test 1 passent par la meme qualification en projet jetable.
+        self.assertEqual(summary["runtime_qualification_cases"], 9)
+        # 28 -> 24 : les quatre cas diagnostiques ont un generateur depuis le
+        # 2026-08-13. Ce compteur est ce que l'interface montre au client, et
+        # il ne doit ni surestimer ni sous-estimer : 24 cas restent bloques,
+        # tous par une liaison VE que nous n'avons pas ecrite.
+        self.assertEqual(summary["not_implemented_cases"], 24)
 
     def test_hub_geometry_is_centred_and_kept_on_screen(self) -> None:
         """Small displays must not place the hub outside the visible desktop."""

@@ -71,6 +71,25 @@ class HaeufigkeitskassenExtractorRegressionTests(unittest.TestCase):
         )
 
         cls.extract = staticmethod(extract_haeufigkeitskassen)
+        # These authority workbooks are large.  Loading the same six files in
+        # every assertion made the repository gate take several minutes and
+        # look hung.  The source files are immutable during a test run, so one
+        # extraction per workbook preserves the exact coverage while keeping
+        # the gate usable.
+        cls.tables = {
+            test_id: extract_haeufigkeitskassen(path, test_id=test_id)
+            for test_id, path in TEST_WORKBOOK_PATHS.items()
+            if os.path.exists(path)
+        }
+
+    def _table(self, test_id: str):
+        """Return the cached authority table or skip when its source is absent."""
+
+        if test_id not in self.tables:
+            self.skipTest(
+                "Workbook missing: {}".format(TEST_WORKBOOK_PATHS[test_id])
+            )
+        return self.tables[test_id]
 
     def test_tests_4_6_7_carry_haeufigkeitskassen(self) -> None:
         """Direct refutation of the "Tests 4/6 have no distribution" claim.
@@ -82,10 +101,7 @@ class HaeufigkeitskassenExtractorRegressionTests(unittest.TestCase):
         """
 
         for test_id in ("4", "6", "7"):
-            path = TEST_WORKBOOK_PATHS[test_id]
-            if not os.path.exists(path):
-                self.skipTest("Workbook missing: {}".format(path))
-            table = self.extract(path, test_id=test_id)
+            table = self._table(test_id)
             self.assertGreater(
                 len(table.quantities),
                 0,
@@ -98,10 +114,7 @@ class HaeufigkeitskassenExtractorRegressionTests(unittest.TestCase):
         """Both sheet spellings must resolve, for all of Tests 2 to 7."""
 
         for test_id, (sheet, count) in EXPECTED_SHEET_AND_COUNT.items():
-            path = TEST_WORKBOOK_PATHS[test_id]
-            if not os.path.exists(path):
-                self.skipTest("Workbook missing: {}".format(path))
-            table = self.extract(path, test_id=test_id)
+            table = self._table(test_id)
             self.assertEqual(
                 table.sheet_name,
                 sheet,
@@ -117,10 +130,7 @@ class HaeufigkeitskassenExtractorRegressionTests(unittest.TestCase):
         """A text legend column must never be read as a frequency-class column."""
 
         for test_id in ("2", "3"):
-            path = TEST_WORKBOOK_PATHS[test_id]
-            if not os.path.exists(path):
-                self.skipTest("Workbook missing: {}".format(path))
-            table = self.extract(path, test_id=test_id)
+            table = self._table(test_id)
             labels = [q.quantity_label for q in table.quantities]
             self.assertNotIn("Fenstermodelle", labels)
             for q in table.quantities:
@@ -140,13 +150,8 @@ class HaeufigkeitskassenExtractorRegressionTests(unittest.TestCase):
     def test_tests_4_and_6_have_more_bins_than_tests_2_and_3(self) -> None:
         """Pins the fact that refuted our claim to the SIA."""
 
-        for test_id in ("2", "3", "4", "6"):
-            if not os.path.exists(TEST_WORKBOOK_PATHS[test_id]):
-                self.skipTest("Workbook missing for test {}".format(test_id))
         counts = {
-            test_id: len(
-                self.extract(TEST_WORKBOOK_PATHS[test_id], test_id=test_id).quantities
-            )
+            test_id: len(self._table(test_id).quantities)
             for test_id in ("2", "3", "4", "6")
         }
         self.assertGreater(counts["4"], counts["2"])
@@ -157,10 +162,7 @@ class HaeufigkeitskassenExtractorRegressionTests(unittest.TestCase):
     def test_sentinel_9999_preserved_separately(self) -> None:
         """The SIA convention ``9999`` must never be reported as a bound."""
 
-        path = TEST_WORKBOOK_PATHS["6"]
-        if not os.path.exists(path):
-            self.skipTest("Test 6 workbook missing")
-        table = self.extract(path, test_id="6")
+        table = self._table("6")
         seen_sentinel = False
         for q in table.quantities:
             self.assertNotIn(9999.0, q.upper_bounds)
@@ -176,10 +178,8 @@ class HaeufigkeitskassenExtractorRegressionTests(unittest.TestCase):
         )
 
     def test_every_quantity_has_label_and_unit(self) -> None:
-        for test_id, path in TEST_WORKBOOK_PATHS.items():
-            if not os.path.exists(path):
-                self.skipTest("Workbook missing: {}".format(path))
-            table = self.extract(path, test_id=test_id)
+        for test_id in TEST_WORKBOOK_PATHS:
+            table = self._table(test_id)
             for q in table.quantities:
                 self.assertTrue(
                     q.quantity_label,
@@ -189,10 +189,8 @@ class HaeufigkeitskassenExtractorRegressionTests(unittest.TestCase):
                 )
 
     def test_class_indices_strictly_monotonic(self) -> None:
-        for test_id, path in TEST_WORKBOOK_PATHS.items():
-            if not os.path.exists(path):
-                self.skipTest("Workbook missing: {}".format(path))
-            table = self.extract(path, test_id=test_id)
+        for test_id in TEST_WORKBOOK_PATHS:
+            table = self._table(test_id)
             for q in table.quantities:
                 self.assertEqual(
                     list(q.class_indices),
@@ -212,10 +210,7 @@ class HaeufigkeitskassenExtractorRegressionTests(unittest.TestCase):
     def test_test_4_first_column_matches_expected_bounds(self) -> None:
         """Verbatim regression: the SIA workbook layout is stable."""
 
-        path = TEST_WORKBOOK_PATHS["4"]
-        if not os.path.exists(path):
-            self.skipTest("Test 4 workbook missing")
-        table = self.extract(path, test_id="4")
+        table = self._table("4")
         first = table.quantities[0]
         self.assertEqual(first.column_letter, "B")
         self.assertIn("Zu-/Abluft", first.quantity_label)

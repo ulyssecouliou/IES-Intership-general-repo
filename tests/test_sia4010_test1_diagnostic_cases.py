@@ -56,18 +56,34 @@ class Test1DiagnosticCaseRegistrationTests(unittest.TestCase):
         u"""Ajouter des cas ne doit pas déplacer ni altérer les six normatifs."""
         self.assertEqual(TEST_CASES["test_1"][:6], CAS_ISO)
 
-    def test_aucun_diagnostic_ne_porte_de_champ_devaluation_aps(self) -> None:
+    def test_aucun_diagnostic_ne_porte_de_bande_de_comparaison(self) -> None:
         u"""La spécification n'énonce aucun critère pour eux : pas de bande.
 
         `refs/reference-data/test-1.ref.json` ne porte de valeurs de référence
-        que pour les six cas ISO et pour 1E. Un champ d'évaluation sur 1A à 1D
-        impliquerait une bande qui n'existe pas.
+        que pour les six cas ISO et pour 1E. Une portée impliquant une
+        comparaison sur 1A à 1D inventerait une bande qui n'existe pas.
+
+        Depuis le 2026-08-13 ils ont une portée d'évaluation — mais celle du
+        livrable horaire, qui n'affirme ni critère ni référence. L'ancienne
+        version exigeait `UNAVAILABLE`, ce qui protégeait la même chose en
+        rendant le cas inexécutable ; ce qui compte est l'absence de
+        comparaison, pas l'absence de chemin.
         """
+        interdites = (
+            "OFFICIAL_CRITERIA_IMPLEMENTED",
+            "REFERENCE_OUTPUTS_IMPLEMENTED",
+        )
         for case_id in TEST1_DIAGNOSTIC_CASES:
             with self.subTest(case=case_id):
                 capability = get_case_capability("test_1", case_id)
-                self.assertEqual(capability.aps_evaluation_scope, "UNAVAILABLE")
-                self.assertFalse(capability.aps_evaluation_supported)
+                self.assertEqual(
+                    capability.aps_evaluation_scope,
+                    "HOURLY_DELIVERABLE_ONLY_NO_REFERENCE",
+                )
+                self.assertNotIn(
+                    capability.aps_evaluation_scope, interdites
+                )
+                self.assertFalse(capability.aps_full_evaluation_supported)
 
     def test_le_cas_1e_garde_son_critere(self) -> None:
         u"""Le contre-exemple : 1E est jugé, lui, et doit le rester."""
@@ -76,14 +92,24 @@ class Test1DiagnosticCaseRegistrationTests(unittest.TestCase):
             capability.aps_evaluation_scope, "OFFICIAL_CRITERIA_IMPLEMENTED"
         )
 
-    def test_aucun_diagnostic_nest_declare_generable(self) -> None:
-        u"""Aucun générateur VE ne les lie ; le registre ne doit pas le suggérer."""
+    def test_les_diagnostics_sont_generables_mais_jamais_juges(self) -> None:
+        u"""Générable et jugeable sont deux choses, et une seule est vraie ici.
+
+        La version précédente exigeait `NOT_IMPLEMENTED`, alors que
+        `test1_diagnostic_bundle` appliquait déjà les quatre maillons figés :
+        c'était un bloqueur faux, corrigé le 2026-08-13. Ce qui doit rester
+        verrouillé n'est pas l'absence de générateur mais l'absence de verdict —
+        et le fait qu'ils passent par la qualification en projet jetable, jamais
+        par la mutation directe réservée au cas 600.
+        """
         for case_id in TEST1_DIAGNOSTIC_CASES:
             with self.subTest(case=case_id):
                 capability = get_case_capability("test_1", case_id)
-                self.assertEqual(capability.generation_status, "NOT_IMPLEMENTED")
+                self.assertEqual(
+                    capability.generation_status, "RUNTIME_QUALIFICATION_READY"
+                )
+                self.assertTrue(capability.runtime_qualification_supported)
                 self.assertFalse(capability.mutation_supported)
-                self.assertFalse(capability.runtime_qualification_supported)
 
     def test_le_blocage_nomme_la_chaine_et_son_referentiel(self) -> None:
         for case_id in TEST1_DIAGNOSTIC_CASES:
@@ -91,7 +117,7 @@ class Test1DiagnosticCaseRegistrationTests(unittest.TestCase):
                 capability = get_case_capability("test_1", case_id)
                 self.assertEqual(
                     capability.blocker_code,
-                    "TEST1_DIAGNOSTIC_CHAIN_GENERATOR_NOT_IMPLEMENTED",
+                    "VE_RUNTIME_QUALIFICATION_REQUIRED",
                 )
                 self.assertIn(
                     "test-1.diagnostics.ref.json", capability.blocker_detail
