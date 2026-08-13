@@ -22,11 +22,53 @@ Chaque affirmation y est adossée à la cellule ou au fichier qui la prouve.
 | S3 | Signalement, pas une question : `Resultaterfassung Test7.xlsx`, feuille `Zusammenfassung`, cellules `W32` et `W33` portent `kW` dans la cellule de grandeur et `°C` sur la ligne d'unité. Seul bloc sur dix-sept où les deux divergent. | Rien de bloquant. Nous conservons les effectifs et laissons l'unité nulle. | oui, cellule par cellule |
 | S4 | Les fiches **SIA 2024** restantes que notre matrice exige : auditorium, bâtiment exemple, restaurant 6.2, cuisine 6.4. | Les Tests 3 à 6 sur ces catégories d'usage. La catégorie 3.1 est déjà en main et suffit à toute la chaîne 1A→1E. | oui |
 
+| S5 | Le **tableau 10** de SIA 387/4. Nous ne détenons que le **tableau 9**, fourni en captures par Yiqiao Yang (SIA) le 2026-08-04 — voir `refs/reference-data/sia-387-4-2017.blinds.json`. Et l'**édition** : nous avons reçu 387/4:**2017**, alors que SIA 4010:2023 §3.1.5 cite 387/4:**2023**. | L'entrée déléguée `sia3874_2017_tables9_10_controls`, donc les **douze cas du Test 3**. | oui, vérifié sur le fichier |
+| S6 | **EN 16798-5-1 annexe D**, modèle de récupérateur rotatif. Absent du dépôt : ce n'est pas une transcription à faire, c'est un document que nous n'avons pas. Question d'acquisition ou de licence, peut-être répondable en interne chez IES. | L'entrée déléguée `en16798_5_1_annex_d_rotary_recovery_model`, donc les **quatre cas du Test 5**. | oui |
+
 **À ne pas envoyer** : la « divergence » sur le Ug du vitrage. Elle n'existe pas.
 La documentation décrit la même fenêtre sous deux familles de normes — 0,646 en
 conditions de référence EN ISO 52022-3, 0,654 en conditions d'hiver ISO 15099 — et
 la spécification reprend la seconde, au chiffre près. C'était notre erreur de
 comparaison, consignée ici pour qu'elle ne reparte pas.
+
+---
+
+## 1 bis. Ce qui peut aller au bout **sans attendre aucune de ces réponses**
+
+Établi le 2026-08-13 en interrogeant `case_registry` et le manifeste d'entrées déléguées, pas la documentation.
+
+**Les 28 cas non implémentés sont bloqués par des liaisons VE que nous n'avons pas écrites, aucun n'attend le SIA.** Les codes le disent : `VE_LIGHTING_CONTROL_BINDING_NOT_IMPLEMENTED` (12 cas), `VE_SOLAR_CONTROL_BINDING_NOT_IMPLEMENTED` (4), `VE_MULTIZONE_HVAC_BINDING_NOT_IMPLEMENTED` (4), `TEST1_DIAGNOSTIC_CHAIN_GENERATOR_NOT_IMPLEMENTED` (4), et quatre autres à un cas.
+
+### Les six cas normatifs du Test 1 : rien ne les retient
+
+| Fait | Vérifié sur |
+|---|---|
+| Générateur présent pour les six | `generation_status` = `GUARDED_MUTATION_READY` (600) et `RUNTIME_QUALIFICATION_READY` (640, 600FF, 900, 940, 900FF) |
+| Extraction APS implémentée pour les six | `aps_evaluation_scope` = `REFERENCE_OUTPUTS_IMPLEMENTED` |
+| **Aucune** entrée déléguée exigée | readiness = `NOT_REQUIRED` |
+| **Aucun** critère d'acceptation, par spécification | « Es gibt dafuer kein Abweichungskriterium » |
+
+Leur état terminal est donc « résultats enregistrés », et il est atteignable aujourd'hui. 640 et 600FF y sont déjà. Restent : requalifier 600 après correction du matériau CDB, et trois exécutions VE pour 900, 940, 900FF. **Travail VE, côté Ulysse, sans dépendance externe.**
+
+### Les quatre cas 1A→1D : le meilleur usage du temps d'attente
+
+Leurs entrées déléguées sont **déjà prêtes** (`READY_FOR_BINDING`, zéro bloquée), la chaîne est figée dans `refs/reference-data/test-1.diagnostics.ref.json` (43 champs relevés, 0 à confirmer), et **ils n'ont aucun critère d'acceptation**. Aucune réponse externe ne peut donc jamais être nécessaire pour qu'ils atteignent leur état terminal. Le seul manque est le générateur, c'est-à-dire notre travail. Cela porterait le Test 1 de 6 à 10 cas sur 11.
+
+Le cas **1E** est à part : ses entrées sont prêtes aussi, mais la **dynamique** du store reste inconnue (S2). Il est générable, pas jugeable.
+
+### Tests 2 à 7 : aucun n'est complétable
+
+Chacun cumule une liaison VE non écrite **et** au moins une entrée déléguée manquante. Résidu externe exact par test :
+
+| Test | Liaison VE (nous) | Entrées manquantes | Dont réellement externe |
+|---|---|---|---|
+| 2A-2D | contrôle solaire | émissivité IR | I1, ou piste BESTEST |
+| 3A-3F | contrôle éclairage | SIA 387/4 tableau 10 ; détail du store du bâtiment exemple | S5 seulement — le détail du store est dans un document que nous détenons, donc transcription |
+| 3G-3L | idem | + clarification d'autorité 3K/3L | S5 + clarification |
+| 4 | topologie HVAC | fiche SIA 2024 auditorium ; numérisation de courbe de ventilateur | S4 seulement — la courbe est dans la spécification |
+| 5A-5D | HVAC multizone | fiche SIA 2024 bâtiment exemple ; **EN 16798-5-1 annexe D** ; courbe de ventilateur | S4 + **S6** |
+| 6 | séquence de ventilation | deux fiches SIA 2024 ; relevé de commande par étages | S4 seulement |
+| 7 | systèmes énergétiques | tables de performance de PAC ; précédence PV | tables probablement transcriptibles ; précédence PV = autorité SIA |
 
 ---
 
