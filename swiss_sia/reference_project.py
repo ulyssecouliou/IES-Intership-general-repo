@@ -30,6 +30,7 @@ from .config import (
     SIA3802_GENERATION_REFERENCE,
     SIA3802_LIMIT_VALUES,
     SIA3802_SOURCE_REFERENCES,
+    SIA3802_TARGET_VALUES,
 )
 from .model_analyzer import RoomData
 
@@ -162,6 +163,11 @@ class ReferenceSubstitution:
     # (e.g. convective emission, unlimited capacity) that Table 2 imposes
     # regardless of the project value. None on numeric substitutions.
     directive: Optional[str] = None
+    # The "valeur cible" of the reference project (SIA 380/2:2022 7.2.5.2 compares
+    # the project value against the limit OR the target). reference_value carries
+    # the binding limit case (7.2.2.1); this carries the aspirational target
+    # (7.2.2.2). None on identity/directive rows, which have no limit/target split.
+    reference_target_value: Optional[float] = None
 
     def to_dict(self) -> Dict[str, Any]:
         """Return the substitution as serializable data."""
@@ -177,6 +183,7 @@ class ReferenceSubstitution:
             "status": self.status,
             "affected_elements": self.affected_elements,
             "directive": self.directive,
+            "reference_target_value": self.reference_target_value,
         }
 
 
@@ -336,6 +343,7 @@ def _collect_surface_substitutions(
                 source=_source(_SURFACE_SOURCE_KEY),
                 status=status,
                 affected_elements=entry["count"],
+                reference_target_value=_float_or_none(SIA3802_TARGET_VALUES.get(parameter)),
             )
         )
     for scope, count in sorted(unclassified.items()):
@@ -431,6 +439,7 @@ def _collect_opening_substitutions(
                 source=_source(_OPENING_SOURCE_KEY),
                 status=status,
                 affected_elements=entry["count"],
+                reference_target_value=_float_or_none(SIA3802_TARGET_VALUES.get(parameter)),
             )
         )
     return substitutions, blockers
@@ -484,6 +493,7 @@ def _collect_infiltration_substitution(
         source=_source(_INFILTRATION_SOURCE_KEY),
         status=status,
         affected_elements=len(values) + unit_incomparable,
+        reference_target_value=_float_or_none(SIA3802_TARGET_VALUES.get(_INFILTRATION_PARAMETER)),
     )
     return [substitution], blockers
 
@@ -497,6 +507,10 @@ def _reference_band(table_key: str, capacity: float) -> Optional[Dict[str, Any]]
     150 kW, which Table 8 does not tabulate -- a blocker, never an extrapolation).
     """
 
+    # Some tables (Table 9 brine-water) are not tabulated from 0 kW; a capacity
+    # below the table floor has no reference value, reported as None not guessed.
+    if capacity < SIA3802_GENERATION_REFERENCE[table_key].get("min_kw", 0.0):
+        return None
     for band in SIA3802_GENERATION_REFERENCE[table_key]["bands"]:
         upper = band["upper_kw"]
         if upper is None or capacity <= upper:
@@ -512,6 +526,7 @@ def _generation_substitution(
     table_key: str,
     reference_value: Optional[float],
     project_value: Optional[float],
+    reference_target_value: Optional[float] = None,
 ) -> ReferenceSubstitution:
     """Build one generation substitution, tagging the SN EN 14825 caveat."""
 
@@ -535,6 +550,7 @@ def _generation_substitution(
         source=source,
         status=status,
         affected_elements=1,
+        reference_target_value=reference_target_value,
     )
 
 
@@ -587,7 +603,8 @@ def _collect_generation_substitutions(
                     reference = band["limit"] if band else None
                     substitutions.append(_generation_substitution(
                         "cooling_generation_eer", scope, "cooling_generator", "EER",
-                        "cooling_air_chiller", reference, cooling_eer))
+                        "cooling_air_chiller", reference, cooling_eer,
+                        reference_target_value=band["target"] if band else None))
                     if cooling_eer is None:
                         blockers.append(
                             "No project EER could be extracted for cooling "
@@ -604,9 +621,19 @@ def _collect_generation_substitutions(
                     else None
                 )
                 reference = band["limit"] if band else None
+                # The reference LIMIT is the air-water heat pump (Table 8); the
+                # reference TARGET is the brine-water heat pump (Table 9) per
+                # SIA 380/2:2022 7.2.5.9 -- a different generator with its own
+                # capacity bands (no target below 12 kW).
+                target_band = (
+                    _reference_band("heating_brine_water_hp", heating_capacity)
+                    if heating_capacity is not None
+                    else None
+                )
                 substitutions.append(_generation_substitution(
                     "heating_generation_scop", scope, "heating_generator", "SCOP",
-                    "heating_air_water_hp", reference, heating_scop))
+                    "heating_air_water_hp", reference, heating_scop,
+                    reference_target_value=target_band["target"] if target_band else None))
                 if heating_capacity is None:
                     blockers.append(
                         "No heating capacity to select the SIA 380/2 reference "
@@ -818,7 +845,10 @@ def build_reference_project_specification(
 
     notes = [
         "Reference values are read from the encoded SIA 380/2 tables with their "
-        "locators; none is computed or interpolated here.",
+        "locators; none is computed or interpolated here. Each numeric "
+        "substitution carries both the binding limit (SIA 380/2:2022 7.2.2.1) "
+        "and the aspirational target (7.2.2.2), which 7.2.5.2 compares the "
+        "project value against.",
         "This specification prepares the reference run. It is not a compliance "
         "conclusion: the reference demand requires a VE/ApacheSim run, and the "
         "project/reference comparison still requires reviewer acceptance.",

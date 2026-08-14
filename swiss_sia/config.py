@@ -69,6 +69,9 @@ SIA3802_GENERATION_REFERENCE = {
         "grandeur": "SCOP",
         "project_attribute": "scop",
         "source": "SIA 380/2:2022 FR, tableau 9, page PDF 39",
+        # Table 9 is tabulated from 12 kW upward (unlike Tables 5 and 8, which
+        # start at 0). Below this floor there is no brine-water target value.
+        "min_kw": 12.0,
         "bands": [
             {"upper_kw": 50.0, "limit": 4.00, "target": 4.40},
             {"upper_kw": 150.0, "limit": 4.20, "target": 4.60},

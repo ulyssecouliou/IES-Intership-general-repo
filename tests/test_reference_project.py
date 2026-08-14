@@ -486,6 +486,65 @@ class ReferenceDirectiveTests(unittest.TestCase):
         self.assertEqual(spec.blockers, ())
 
 
+class ReferenceTargetValueTests(unittest.TestCase):
+    def test_envelope_and_window_carry_both_limit_and_target(self):
+        spec = build_reference_project_specification(
+            [_room(surfaces=[_surface()], openings=[_opening()])], _Analyzer()
+        )
+        wall = _by_parameter(spec, "external_wall_u")[0]
+        self.assertEqual(wall.reference_value, SIA3802_LIMIT_VALUES["external_wall_u"])
+        self.assertEqual(wall.reference_target_value, 0.14)
+        self.assertEqual(_by_parameter(spec, "window_u")[0].reference_target_value, 0.88)
+
+    def test_cooling_target_comes_from_the_same_table_5_band(self):
+        spec = build_reference_project_specification(
+            [_room(surfaces=[_surface()], hvac_systems=[_system(cooling_capacity_kw=100.0, eer=3.5)])],
+            _Analyzer(),
+        )
+        item = _by_parameter(spec, "cooling_generation_eer")[0]
+        self.assertEqual(item.reference_value, 3.10)   # Table 5 limit
+        self.assertEqual(item.reference_target_value, 3.20)  # Table 5 target
+
+    def test_heating_target_is_the_brine_water_table_9_not_air_water(self):
+        # SIA 380/2:2022 7.2.5.8-9: the limit is the air-water HP (Table 8, no
+        # target column) and the target is the brine-water HP (Table 9).
+        spec = build_reference_project_specification(
+            [_room(surfaces=[_surface()], hvac_systems=[_system(heating_capacity_kw=100.0, scop=4.0)])],
+            _Analyzer(),
+        )
+        item = _by_parameter(spec, "heating_generation_scop")[0]
+        self.assertEqual(item.reference_value, 3.20)   # Table 8 air-water limit
+        self.assertEqual(item.reference_target_value, 4.60)  # Table 9 brine-water target
+
+    def test_heating_target_is_undefined_below_the_table_9_range(self):
+        # Table 9 (brine-water) starts at 12 kW; a smaller heat pump has an
+        # air-water limit but no brine-water target -- reported as None, not guessed.
+        spec = build_reference_project_specification(
+            [_room(surfaces=[_surface()], hvac_systems=[_system(heating_capacity_kw=8.0, scop=3.5)])],
+            _Analyzer(),
+        )
+        item = _by_parameter(spec, "heating_generation_scop")[0]
+        self.assertEqual(item.reference_value, 3.00)   # Table 8 <=12 limit
+        self.assertIsNone(item.reference_target_value)
+
+    def test_identity_and_directive_rows_have_no_target(self):
+        room = _room(surfaces=[_surface()])
+        # The checker sets this attribute (sia380_checker.py:726); mirror it.
+        setattr(room, "sia2024_category", "1.01")
+        spec = build_reference_project_specification([room], _Analyzer())
+        directives = [s for s in spec.substitutions if s.status == REFERENCE_DIRECTIVE]
+        identities = [s for s in spec.substitutions if s.status == STANDARD_USAGE_INPUT]
+        self.assertTrue(directives and identities)
+        self.assertTrue(all(s.reference_target_value is None for s in directives))
+        self.assertTrue(all(s.reference_target_value is None for s in identities))
+
+    def test_to_dict_exposes_the_target(self):
+        spec = build_reference_project_specification(
+            [_room(surfaces=[_surface()])], _Analyzer()
+        )
+        self.assertIn("reference_target_value", spec.to_dict()["substitutions"][0])
+
+
 class CompleteSpecificationTests(unittest.TestCase):
     def test_resolvable_envelope_remains_partial_until_all_table2_families_exist(self):
         spec = build_reference_project_specification(
