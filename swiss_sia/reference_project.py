@@ -37,11 +37,19 @@ _SURFACE_PARAMETERS: Dict[str, str] = {
 _SURFACE_SOURCE_KEY = "table_3"
 
 # Opening parameter -> (reference key, attribute on OpeningData, unit).
+# The visible transmittance tau_v reads straight from its attribute; the glazing
+# g-value g_perp needs the EN 410 comparability gate below, so it is handled
+# separately rather than as a plain attribute read.
 _OPENING_PARAMETERS: Tuple[Tuple[str, str, str], ...] = (
     ("window_u", "u_value", "W/(m2K)"),
     ("window_frame_fraction", "frame_fraction", "-"),
+    ("glazing_light_transmittance", "visible_transmittance", "-"),
 )
 _OPENING_SOURCE_KEY = "table_2"
+
+# The reference key for the glazing g-value g_perp (Table 2). Its project value
+# is only substitutable when the modelled g-value is a proven EN 410 g_perp.
+_GLAZING_G_PARAMETER = "glazing_g_value"
 
 # Numerical residues below one square millimetre are topology artefacts, not
 # physical envelope elements.  This is an engineering/API tolerance only; it
@@ -59,10 +67,10 @@ UNCLASSIFIED = "UNCLASSIFIED"
 IMPLEMENTED_REFERENCE_INPUT_FAMILIES: Tuple[str, ...] = (
     "opaque_envelope_constructions",
     "window_u_value_and_frame_fraction",
+    "glazing_solar_and_visible_properties",
 )
 MISSING_REFERENCE_INPUT_FAMILIES: Tuple[str, ...] = (
     "thermal_bridges",
-    "glazing_solar_and_visible_properties",
     "glazed_area_ratio_solar_protection_and_control",
     "infiltration",
     "sia2024_internal_gains_profiles_and_setpoints",
@@ -181,6 +189,28 @@ def _is_window_opening(opening: Any) -> bool:
     return any(token in opening_type for token in ("window", "glaz", "rooflight"))
 
 
+def _comparable_g_perp(opening: Any) -> Optional[float]:
+    """Return the glazing g_perp only when it is a proven EN 410 value.
+
+    Table 2 substitutes the glazing g-value g_perp (verre seul, incidence
+    normale). A modelled solar factor is comparable to that reference only when
+    its source is proven as EN 410 g_perp; otherwise it may be a g_total that
+    already includes shading, which must never be silently substituted. This
+    mirrors ``SIA3802Checker._is_sia_comparable_g_value`` so the reference
+    specification and the component check agree on what counts as a g_perp.
+    """
+
+    source = str(getattr(opening, "solar_factor_source", "") or "").lower()
+    en410_value = _float_or_none(getattr(opening, "g_value_bs_en_410", None))
+    if "bs_en_410" not in source and en410_value is None:
+        return None
+    # Prefer the value the component check compares (solar_factor); fall back to
+    # the explicit EN 410 field when the solar factor is not populated.
+    return _float_or_none(getattr(opening, "solar_factor", None)) if getattr(
+        opening, "solar_factor", None
+    ) is not None else en410_value
+
+
 def _collect_surface_substitutions(
     rooms: Sequence[RoomData], model_analyzer: Any
 ) -> Tuple[List[ReferenceSubstitution], List[str]]:
@@ -293,6 +323,18 @@ def _collect_opening_substitutions(
                 if value is not None:
                     entry["values"].append(value)
 
+            # g_perp is gated on EN 410 provenance, so it cannot share the plain
+            # attribute loop above: a non-comparable g-value leaves no project
+            # value and is reported as a blocker, never substituted.
+            g_entry = grouped.setdefault(
+                (scope, _GLAZING_G_PARAMETER),
+                {"values": [], "count": 0, "unit": "-"},
+            )
+            g_entry["count"] += 1
+            g_value = _comparable_g_perp(opening)
+            if g_value is not None:
+                g_entry["values"].append(g_value)
+
     substitutions: List[ReferenceSubstitution] = []
     blockers: List[str] = []
     for (scope, parameter), entry in sorted(grouped.items()):
@@ -300,11 +342,18 @@ def _collect_opening_substitutions(
         project_value = max(values) if values else None
         status = SUBSTITUTABLE if project_value is not None else PROJECT_VALUE_MISSING
         if status == PROJECT_VALUE_MISSING:
-            blockers.append(
-                "No project {} could be extracted for glazing {} ({} openings)".format(
-                    parameter, scope, entry["count"]
+            if parameter == _GLAZING_G_PARAMETER:
+                blockers.append(
+                    "No EN 410-comparable g_perp could be extracted for glazing "
+                    "{} ({} openings); a g_total including shading must not be "
+                    "substituted for the Table 2 g_perp".format(scope, entry["count"])
                 )
-            )
+            else:
+                blockers.append(
+                    "No project {} could be extracted for glazing {} ({} openings)".format(
+                        parameter, scope, entry["count"]
+                    )
+                )
         substitutions.append(
             ReferenceSubstitution(
                 parameter=parameter,
@@ -369,9 +418,10 @@ def build_reference_project_specification(
         "This specification prepares the reference run. It is not a compliance "
         "conclusion: the reference demand requires a VE/ApacheSim run, and the "
         "project/reference comparison still requires reviewer acceptance.",
-        "Only opaque-envelope constructions and window U-value/frame fraction "
-        "are currently automated. Every other SIA 380/2 Table 2 family remains "
-        "an explicit implementation blocker.",
+        "Opaque-envelope constructions, window U-value/frame fraction and "
+        "glazing solar/visible properties (g_perp, tau_v) are currently "
+        "automated. Every other SIA 380/2 Table 2 family remains an explicit "
+        "implementation blocker.",
     ]
     if not substitutions:
         status = "NOT_CHECKABLE"

@@ -41,13 +41,21 @@ def _surface(**kwargs):
 
 
 def _opening(**kwargs):
-    """Build an external opening with defaults the specification reads."""
+    """Build an external opening with defaults the specification reads.
+
+    The solar factor carries a proven EN 410 source so the glazing g_perp is
+    substitutable by default; tests that exercise the comparability gate
+    override ``solar_factor_source`` explicitly.
+    """
     payload = {
         "id": "w1",
         "name": "W1",
         "area": 2.0,
         "u_value": 1.4,
         "frame_fraction": 0.30,
+        "solar_factor": 0.60,
+        "solar_factor_source": "bs_en_410",
+        "visible_transmittance": 0.65,
         "is_external": True,
         "opening_type": "window",
         "construction_id": "STD_GLZ",
@@ -210,6 +218,65 @@ class OpeningSubstitutionTests(unittest.TestCase):
         self.assertEqual(
             frame.reference_value, SIA3802_LIMIT_VALUES["window_frame_fraction"]
         )
+
+    def test_glazing_g_perp_and_transmittance_are_paired_with_table_2(self):
+        spec = build_reference_project_specification(
+            [_room(surfaces=[_surface()], openings=[_opening()])], _Analyzer()
+        )
+        g_perp = _by_parameter(spec, "glazing_g_value")[0]
+        tau_v = _by_parameter(spec, "glazing_light_transmittance")[0]
+        self.assertEqual(g_perp.status, SUBSTITUTABLE)
+        self.assertEqual(g_perp.project_value, 0.60)
+        self.assertEqual(g_perp.reference_value, SIA3802_LIMIT_VALUES["glazing_g_value"])
+        self.assertEqual(tau_v.project_value, 0.65)
+        self.assertEqual(
+            tau_v.reference_value, SIA3802_LIMIT_VALUES["glazing_light_transmittance"]
+        )
+
+    def test_non_en410_g_value_blocks_rather_than_substituting(self):
+        # A g-value whose source is not proven EN 410 g_perp (e.g. a g_total that
+        # already includes shading) must never be substituted for the reference.
+        spec = build_reference_project_specification(
+            [
+                _room(
+                    surfaces=[_surface()],
+                    openings=[_opening(solar_factor_source="building_regs", g_value_bs_en_410=None)],
+                )
+            ],
+            _Analyzer(),
+        )
+        g_perp = _by_parameter(spec, "glazing_g_value")[0]
+        self.assertEqual(g_perp.status, PROJECT_VALUE_MISSING)
+        self.assertIsNone(g_perp.project_value)
+        self.assertEqual(spec.status, "BLOCKED_INCOMPLETE_INPUTS")
+        self.assertTrue(any("g_perp" in blocker for blocker in spec.blockers))
+
+    def test_explicit_en410_field_makes_g_value_substitutable(self):
+        # The solar factor source string is absent, but the explicit EN 410 field
+        # is present: the gate accepts it and uses the modelled solar factor.
+        spec = build_reference_project_specification(
+            [
+                _room(
+                    surfaces=[_surface()],
+                    openings=[_opening(solar_factor_source=None, g_value_bs_en_410=0.48)],
+                )
+            ],
+            _Analyzer(),
+        )
+        g_perp = _by_parameter(spec, "glazing_g_value")[0]
+        self.assertEqual(g_perp.status, SUBSTITUTABLE)
+        self.assertEqual(g_perp.project_value, 0.60)
+
+    def test_missing_visible_transmittance_blocks(self):
+        spec = build_reference_project_specification(
+            [_room(surfaces=[_surface()], openings=[_opening(visible_transmittance=None)])],
+            _Analyzer(),
+        )
+        self.assertEqual(
+            _by_parameter(spec, "glazing_light_transmittance")[0].status,
+            PROJECT_VALUE_MISSING,
+        )
+        self.assertEqual(spec.status, "BLOCKED_INCOMPLETE_INPUTS")
 
     def test_missing_opening_value_blocks(self):
         spec = build_reference_project_specification(
