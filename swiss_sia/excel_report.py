@@ -2396,9 +2396,9 @@ class ExcelReportGenerator:
         substitutions = specification.get("substitutions", []) or []
         status = str(specification.get("status") or "NOT_CHECKABLE")
 
-        worksheet.merge_range("A1:H1", "SIA 380/2 Reference-Project Input Specification", header_format)
+        worksheet.merge_range("A1:J1", "SIA 380/2 Reference-Project Input Specification", header_format)
         worksheet.merge_range(
-            "A2:H3",
+            "A2:J3",
             (
                 "The decisive SIA 380/2 conclusion compares the project demand with the reference-project "
                 "demand. This sheet lists, per construction, the substitution required to build that "
@@ -2436,12 +2436,14 @@ class ExcelReportGenerator:
             "Construction / scope",
             "Element type",
             "Project value",
-            "Reference value",
+            "Reference value (limit)",
+            "Reference target",
             "Unit",
             "Elements",
             "Status",
             "SIA source",
         ]
+        last_col = len(headers) - 1
         start_row = 9
         worksheet.write_row(start_row, 0, headers, header_format)
         row = start_row + 1
@@ -2452,36 +2454,39 @@ class ExcelReportGenerator:
             worksheet.write(row, 2, item.get("element_type", ""), cell_format)
             self._write_optional_number(worksheet, row, 3, item.get("project_value"), number_format, cell_format)
             self._write_optional_number(worksheet, row, 4, item.get("reference_value"), number_format, cell_format)
-            worksheet.write(row, 5, item.get("unit", ""), cell_format)
-            worksheet.write(row, 6, item.get("affected_elements", 0), integer_format)
+            # SIA 380/2:2022 7.2.5.2 compares the project value against the limit
+            # OR the target; identity/directive rows have no target.
+            self._write_optional_number(worksheet, row, 5, item.get("reference_target_value"), number_format, cell_format)
+            worksheet.write(row, 6, item.get("unit", ""), cell_format)
+            worksheet.write(row, 7, item.get("affected_elements", 0), integer_format)
             worksheet.write(
                 row,
-                7,
+                8,
                 item_status,
                 ok_format if item_status == "SUBSTITUTABLE" else blocked_format,
             )
-            worksheet.write(row, 8, item.get("source", ""), cell_format)
+            worksheet.write(row, 9, item.get("source", ""), cell_format)
             row += 1
         if not substitutions:
             worksheet.merge_range(
-                row, 0, row, 8,
+                row, 0, row, last_col,
                 "No external construction was available for substitution.",
                 cell_format,
             )
             row += 1
 
-        worksheet.autofilter(start_row, 0, max(start_row, row - 1), len(headers) - 1)
+        worksheet.autofilter(start_row, 0, max(start_row, row - 1), last_col)
         worksheet.freeze_panes(start_row + 1, 0)
 
         blockers_start = row + 2
         worksheet.write(blockers_start, 0, "Blockers before the reference run", header_format)
         blocker_row = blockers_start + 1
         for blocker in specification.get("blockers", []) or []:
-            worksheet.merge_range(blocker_row, 0, blocker_row, 8, blocker, cell_format)
+            worksheet.merge_range(blocker_row, 0, blocker_row, last_col, blocker, cell_format)
             blocker_row += 1
         if not (specification.get("blockers") or []):
             worksheet.merge_range(
-                blocker_row, 0, blocker_row, 8,
+                blocker_row, 0, blocker_row, last_col,
                 "No blocker among the implemented substitutions; the missing families below still block a complete reference run.",
                 warn_format,
             )
@@ -2500,7 +2505,7 @@ class ExcelReportGenerator:
                 family_row,
                 0,
                 family_row,
-                8,
+                last_col,
                 str(family),
                 warn_format,
             )
@@ -2508,17 +2513,17 @@ class ExcelReportGenerator:
 
         notes_start = family_row + 1
         for note in specification.get("notes", []) or []:
-            worksheet.merge_range(notes_start, 0, notes_start, 8, note, note_format)
+            worksheet.merge_range(notes_start, 0, notes_start, last_col, note, note_format)
             notes_start += 1
 
         worksheet.set_column("A:A", 32)
         worksheet.set_column("B:B", 34)
         worksheet.set_column("C:C", 16)
-        worksheet.set_column("D:E", 16)
-        worksheet.set_column("F:F", 12)
-        worksheet.set_column("G:G", 11)
-        worksheet.set_column("H:H", 24)
-        worksheet.set_column("I:I", 46)
+        worksheet.set_column("D:F", 16)  # project value, reference limit, reference target
+        worksheet.set_column("G:G", 12)  # unit
+        worksheet.set_column("H:H", 11)  # elements
+        worksheet.set_column("I:I", 24)  # status
+        worksheet.set_column("J:J", 46)  # SIA source
 
     @staticmethod
     def _write_optional_number(worksheet, row, column, value, number_format, text_format):
