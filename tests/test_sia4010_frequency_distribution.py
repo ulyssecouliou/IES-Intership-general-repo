@@ -7,7 +7,6 @@ from the legend and the band comes only from the reference programs' counts.
 """
 
 import glob
-import os
 import unittest
 import warnings
 from pathlib import Path
@@ -33,9 +32,10 @@ TEST2_WB = REPO_ROOT / "SIA_4010_geteilter_Link" / "Test2" / "Resultaterfassung_
 TEST3_WB = REPO_ROOT / "SIA_4010_geteilter_Link" / "Test3" / "Resultaterfassung_Test3.xlsx"
 HAS_TEST2 = TEST2_WB.is_file()
 HAS_TEST3 = TEST3_WB.is_file()
-# The real Test 2 extraction reads several ~8760-row reference sheets (~1 min);
-# keep it out of the fast suite unless explicitly requested.
-RUN_HEAVY = bool(os.environ.get("SIA4010_RUN_HEAVY"))
+# The real Test 2/3/5 extractions read several ~8760-row reference sheets
+# (~1 min combined). They run automatically whenever the official SIA 4010
+# package is present and skip gracefully when it is not -- no manual opt-in, so
+# a distribution-criterion regression cannot hide behind a skip gate.
 SYNTHETIC_WB = REPO_ROOT / ".codex_tmp" / "sia4010_freq_dist" / "synthetic.xlsx"
 
 
@@ -359,8 +359,8 @@ class SyntheticExtractionTests(unittest.TestCase):
 
 
 @unittest.skipUnless(
-    HAS_TEST2 and RUN_HEAVY,
-    "set SIA4010_RUN_HEAVY=1 (with the official package) to run the heavy real extraction",
+    HAS_TEST2,
+    "official SIA 4010 Test 2 workbook not present",
 )
 class Test2ReferenceBandTests(unittest.TestCase):
     """Build the real Test 2 solar-heat-gain scatter band from the reference sheets."""
@@ -493,8 +493,8 @@ class DistributionRegistryTests(unittest.TestCase):
 
 
 @unittest.skipUnless(
-    HAS_TEST3 and RUN_HEAVY,
-    "set SIA4010_RUN_HEAVY=1 (with the official package) to run the heavy real extraction",
+    HAS_TEST3,
+    "official SIA 4010 Test 3 workbook not present",
 )
 class Test3ReferenceBandTests(unittest.TestCase):
     """Build the real Test 3 lighting-power scatter bands from the reference sheets."""
@@ -683,8 +683,8 @@ class SplitHeaderExtractionTests(unittest.TestCase):
 
 
 @unittest.skipUnless(
-    (REPO_ROOT / "SIA_4010_geteilter_Link" / "Test5").is_dir() and RUN_HEAVY,
-    "set SIA4010_RUN_HEAVY=1 (with the official package) to run the heavy real extraction",
+    (REPO_ROOT / "SIA_4010_geteilter_Link" / "Test5").is_dir(),
+    "official SIA 4010 Test 5 workbook directory not present",
 )
 class Test5ReferenceBandTests(unittest.TestCase):
     """Build the real Test 5 ventilation scatter bands from the reference sheets."""
