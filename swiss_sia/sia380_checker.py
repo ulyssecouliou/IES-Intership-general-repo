@@ -6,8 +6,9 @@ evidence/readiness checks when the standard requires a reference calculation,
 SIA 2024 mapping or official SIA 4010 validation evidence.
 """
 
+import logging
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional
 
 from .config import (
     PROJECT_ROOT,
@@ -39,6 +40,9 @@ from .value_integrity import add_value_integrity_alerts
 # not turn meaningful reference-input deviations (for example 0.3033 vs 0.30)
 # into a match.
 REFERENCE_INPUT_NUMERICAL_EPSILON_W_M2K = 1.0e-4
+
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class SIA3802Checker:
@@ -256,13 +260,25 @@ class SIA3802Checker:
                 ),
             }
 
-        envelope = self._check_envelope(rooms_data)
-        openings = self._check_openings(rooms_data)
-        ventilation = self._check_ventilation(rooms_data)
-        gains = self._check_gains(rooms_data, external_mappings)
-        setpoints = self._check_setpoints(rooms_data)
-        hvac = self._check_hvac(rooms_data)
-        dynamic = self._check_dynamic_method(dynamic_results or {})
+        envelope = self._run_category(
+            "Envelope", self._check_envelope, rooms_data
+        )
+        openings = self._run_category(
+            "Openings", self._check_openings, rooms_data
+        )
+        ventilation = self._run_category(
+            "Ventilation", self._check_ventilation, rooms_data
+        )
+        gains = self._run_category(
+            "Gains", self._check_gains, rooms_data, external_mappings
+        )
+        setpoints = self._run_category(
+            "Setpoints", self._check_setpoints, rooms_data
+        )
+        hvac = self._run_category("HVAC", self._check_hvac, rooms_data)
+        dynamic = self._run_category(
+            "Dynamic Method", self._check_dynamic_method, dynamic_results or {}
+        )
         value_integrity = add_value_integrity_alerts(self.rule_engine, rooms_data)
         global_reference_comparison = self._check_global_reference_comparison(
             dynamic_results or {}
@@ -293,6 +309,70 @@ class SIA3802Checker:
             "alerts": list(self.rule_engine.alerts),
         }
         return results
+
+    def _run_category(
+        self,
+        category: str,
+        check: Callable[..., Dict[str, Any]],
+        *args: Any,
+    ) -> Dict[str, Any]:
+        """Run one category check, failing that category closed on any error.
+
+        The seven category checks read VE-extracted data whose shape can vary:
+        the extractor degrades to empty or ``None`` rather than raising, so a
+        real client model can present a room, surface or system this checker did
+        not anticipate.  Without this guard, one unexpected value in a single
+        category would raise and take down the entire analysis, leaving the user
+        with no report at all.
+
+        On error the category is recorded as a blocking
+        ``RULE_EXECUTION_ERROR`` alert -- which the category score already treats
+        as a hard zero and the reported verdict treats as ``NOT_DETERMINED`` --
+        so the run continues, every other category still produces its diagnostic,
+        and the failure can never read as a pass.  The exception is logged with
+        its stage and category, never with model data.
+
+        Args:
+            category: Human-readable SIA category, e.g. ``"Envelope"``.
+            check: The bound category-check method.
+            *args: Positional arguments forwarded to ``check``.
+
+        Returns:
+            dict: The check result, or a fail-closed ``RULE_EXECUTION_ERROR``
+            record when the check raised.
+        """
+
+        try:
+            return check(*args)
+        except Exception as exc:  # noqa: BLE001 -- fail closed, never crash the run
+            rule = "SIA3802_{}_RULE_EXECUTION_ERROR".format(
+                category.upper().replace(" ", "_")
+            )
+            _LOGGER.exception(
+                "SIA 380/2 category check failed; stage=check_all "
+                "category=%s outcome=NOT_CHECKABLE",
+                category,
+            )
+            self.rule_engine.add_alert(
+                rule=rule,
+                description=(
+                    "The {} check could not run to completion on this model, "
+                    "so this category cannot be evaluated. This is a "
+                    "fail-closed result, not a pass.".format(category)
+                ),
+                severity=Severity.CRITICAL,
+                category=category,
+                recommendation=(
+                    "Report the model to the tool maintainer with the logged "
+                    "error; the extracted data shape was not anticipated by "
+                    "the {} check.".format(category)
+                ),
+                data=None,
+            )
+            return {
+                "status": "RULE_EXECUTION_ERROR",
+                "error_type": type(exc).__name__,
+            }
 
     def _check_global_reference_comparison(
         self,

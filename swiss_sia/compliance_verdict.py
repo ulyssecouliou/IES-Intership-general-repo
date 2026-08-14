@@ -129,9 +129,17 @@ def _count_by_category(alerts: Sequence[Any]) -> Dict[str, Dict[str, int]]:
             {"blocking": 0, "advisory": 0, "indeterminate": 0},
         )
         rule_name = str(getattr(alert, "rule", "") or "").upper()
+        # A "cannot check" alert (missing data, unavailable evidence, a rule
+        # that raised) means the domain is undetermined -- never that it failed.
+        # It is counted as indeterminate ONLY, even at CRITICAL severity, so it
+        # cannot make the domain read as NOT_COMPLIANT.  Reporting a client's
+        # building as non-compliant because the tool could not read it is a
+        # false failure, as dishonest as a false pass. A determined violation is
+        # a rule that ran and found the value out of range; those carry no
+        # indeterminate marker and still count as blocking below.
         if any(marker in rule_name for marker in _INDETERMINATE_RULE_MARKERS):
             bucket["indeterminate"] += 1
-        if _severity_name(alert) in _BLOCKING_SEVERITIES:
+        elif _severity_name(alert) in _BLOCKING_SEVERITIES:
             bucket["blocking"] += 1
         else:
             bucket["advisory"] += 1
