@@ -51,6 +51,11 @@ _OPENING_SOURCE_KEY = "table_2"
 # is only substitutable when the modelled g-value is a proven EN 410 g_perp.
 _GLAZING_G_PARAMETER = "glazing_g_value"
 
+# Whole-building infiltration per net floor area (Table 2). Unlike the envelope
+# and openings this is a single building input, not a per-construction value.
+_INFILTRATION_PARAMETER = "infiltration_m3_h_m2"
+_INFILTRATION_SOURCE_KEY = "table_2"
+
 # Numerical residues below one square millimetre are topology artefacts, not
 # physical envelope elements.  This is an engineering/API tolerance only; it
 # is not a regulatory threshold and never substitutes a real SIA input.
@@ -68,11 +73,11 @@ IMPLEMENTED_REFERENCE_INPUT_FAMILIES: Tuple[str, ...] = (
     "opaque_envelope_constructions",
     "window_u_value_and_frame_fraction",
     "glazing_solar_and_visible_properties",
+    "infiltration",
 )
 MISSING_REFERENCE_INPUT_FAMILIES: Tuple[str, ...] = (
     "thermal_bridges",
     "glazed_area_ratio_solar_protection_and_control",
-    "infiltration",
     "sia2024_internal_gains_profiles_and_setpoints",
     "sia3874_lighting_power_and_control",
     "emission_system_and_unlimited_capacity",
@@ -370,6 +375,58 @@ def _collect_opening_substitutions(
     return substitutions, blockers
 
 
+def _collect_infiltration_substitution(
+    rooms: Sequence[RoomData],
+) -> Tuple[List[ReferenceSubstitution], List[str]]:
+    """Pair the whole-building infiltration with the Table 2 reference value.
+
+    Infiltration is a single building input in m3/(h.m2) of net floor area, so
+    one substitution is emitted for the whole model. The worst (maximum) room
+    value is reported, never an average, matching the conservatism used for the
+    envelope. Only ``infiltration_m3_h_m2`` is directly comparable; a room that
+    exposes infiltration in another unit is a blocker for unit conversion, not a
+    silent substitution -- the same comparability rule the component check uses.
+    """
+
+    values: List[float] = []
+    unit_incomparable = 0
+    for room in rooms:
+        value = _float_or_none(getattr(room, "infiltration_m3_h_m2", None))
+        if value is not None:
+            values.append(value)
+        elif getattr(room, "infiltration_rate", None) is not None:
+            unit_incomparable += 1
+
+    reference_value = _float_or_none(SIA3802_LIMIT_VALUES.get(_INFILTRATION_PARAMETER))
+    project_value = max(values) if values else None
+    status = SUBSTITUTABLE if project_value is not None else PROJECT_VALUE_MISSING
+    blockers: List[str] = []
+    if project_value is None:
+        if unit_incomparable:
+            blockers.append(
+                "Infiltration is present for {} room(s) but not in a comparable "
+                "m3/(h.m2) unit; provide the conversion before substituting the "
+                "Table 2 reference".format(unit_incomparable)
+            )
+        else:
+            blockers.append(
+                "No comparable project infiltration in m3/(h.m2) could be "
+                "extracted for the building"
+            )
+    substitution = ReferenceSubstitution(
+        parameter=_INFILTRATION_PARAMETER,
+        scope="building",
+        element_type="infiltration",
+        project_value=project_value,
+        reference_value=reference_value,
+        unit="m3/(h.m2)",
+        source=_source(_INFILTRATION_SOURCE_KEY),
+        status=status,
+        affected_elements=len(values) + unit_incomparable,
+    )
+    return [substitution], blockers
+
+
 def build_reference_project_specification(
     rooms_data: Optional[Sequence[RoomData]],
     model_analyzer: Any = None,
@@ -399,8 +456,9 @@ def build_reference_project_specification(
 
     surface_items, surface_blockers = _collect_surface_substitutions(rooms, model_analyzer)
     opening_items, opening_blockers = _collect_opening_substitutions(rooms)
-    substitutions = tuple(surface_items + opening_items)
-    blockers = tuple(surface_blockers + opening_blockers)
+    infiltration_items, infiltration_blockers = _collect_infiltration_substitution(rooms)
+    substitutions = tuple(surface_items + opening_items + infiltration_items)
+    blockers = tuple(surface_blockers + opening_blockers + infiltration_blockers)
 
     missing_reference = [
         item.parameter
@@ -418,10 +476,10 @@ def build_reference_project_specification(
         "This specification prepares the reference run. It is not a compliance "
         "conclusion: the reference demand requires a VE/ApacheSim run, and the "
         "project/reference comparison still requires reviewer acceptance.",
-        "Opaque-envelope constructions, window U-value/frame fraction and "
-        "glazing solar/visible properties (g_perp, tau_v) are currently "
-        "automated. Every other SIA 380/2 Table 2 family remains an explicit "
-        "implementation blocker.",
+        "Opaque-envelope constructions, window U-value/frame fraction, glazing "
+        "solar/visible properties (g_perp, tau_v) and whole-building "
+        "infiltration are currently automated. Every other SIA 380/2 Table 2 "
+        "family remains an explicit implementation blocker.",
     ]
     if not substitutions:
         status = "NOT_CHECKABLE"

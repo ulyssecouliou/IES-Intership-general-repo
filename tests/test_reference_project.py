@@ -64,14 +64,22 @@ def _opening(**kwargs):
     return OpeningData(**payload)
 
 
-def _room(surfaces=None, openings=None):
-    """Build a room carrying the given surfaces and openings."""
-    return RoomData(
-        id="r1",
-        name="Room 1",
-        surfaces=list(surfaces or []),
-        openings=list(openings or []),
-    )
+def _room(surfaces=None, openings=None, **kwargs):
+    """Build a room carrying the given surfaces and openings.
+
+    A comparable infiltration value is set by default so envelope-only fixtures
+    keep the whole-building infiltration substitutable; tests that exercise the
+    infiltration path override ``infiltration_m3_h_m2``/``infiltration_rate``.
+    """
+    payload = {
+        "id": "r1",
+        "name": "Room 1",
+        "surfaces": list(surfaces or []),
+        "openings": list(openings or []),
+        "infiltration_m3_h_m2": 0.10,
+    }
+    payload.update(kwargs)
+    return RoomData(**payload)
 
 
 def _by_parameter(spec, parameter):
@@ -306,6 +314,57 @@ class OpeningSubstitutionTests(unittest.TestCase):
         self.assertEqual(_by_parameter(spec, "window_u"), [])
         self.assertEqual(_by_parameter(spec, "window_frame_fraction"), [])
         self.assertEqual(spec.blockers, ())
+
+
+class InfiltrationSubstitutionTests(unittest.TestCase):
+    def test_building_infiltration_is_paired_with_table_2(self):
+        spec = build_reference_project_specification(
+            [_room(surfaces=[_surface()], infiltration_m3_h_m2=0.10)], _Analyzer()
+        )
+        item = _by_parameter(spec, "infiltration_m3_h_m2")[0]
+        self.assertEqual(item.status, SUBSTITUTABLE)
+        self.assertEqual(item.scope, "building")
+        self.assertEqual(item.project_value, 0.10)
+        self.assertEqual(
+            item.reference_value, SIA3802_LIMIT_VALUES["infiltration_m3_h_m2"]
+        )
+        self.assertEqual(item.unit, "m3/(h.m2)")
+
+    def test_worst_case_infiltration_is_reported_not_an_average(self):
+        spec = build_reference_project_specification(
+            [
+                _room(surfaces=[_surface()], infiltration_m3_h_m2=0.10),
+                _room(infiltration_m3_h_m2=0.20),
+            ],
+            _Analyzer(),
+        )
+        self.assertEqual(
+            _by_parameter(spec, "infiltration_m3_h_m2")[0].project_value, 0.20
+        )
+
+    def test_missing_infiltration_blocks(self):
+        spec = build_reference_project_specification(
+            [_room(surfaces=[_surface()], infiltration_m3_h_m2=None)], _Analyzer()
+        )
+        item = _by_parameter(spec, "infiltration_m3_h_m2")[0]
+        self.assertEqual(item.status, PROJECT_VALUE_MISSING)
+        self.assertIsNone(item.project_value)
+        self.assertEqual(spec.status, "BLOCKED_INCOMPLETE_INPUTS")
+
+    def test_incomparable_infiltration_unit_blocks_rather_than_substituting(self):
+        spec = build_reference_project_specification(
+            [
+                _room(
+                    surfaces=[_surface()],
+                    infiltration_m3_h_m2=None,
+                    infiltration_rate=0.5,
+                )
+            ],
+            _Analyzer(),
+        )
+        item = _by_parameter(spec, "infiltration_m3_h_m2")[0]
+        self.assertEqual(item.status, PROJECT_VALUE_MISSING)
+        self.assertTrue(any("unit" in blocker.lower() for blocker in spec.blockers))
 
 
 class CompleteSpecificationTests(unittest.TestCase):
