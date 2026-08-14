@@ -379,7 +379,16 @@ class SIA3802Checker:
         dynamic_results: Dict[str, Any],
     ) -> Dict[str, Any]:
         """Require an explicit reviewed project/reference result for compliance."""
+        # This method runs outside the per-category fail-closed guard, so a
+        # degenerate dynamic_results payload (a non-dict, or a non-dict
+        # global_reference_comparison value) must not raise and take down the
+        # whole analysis. Coerce both to empty dicts so the checks below fall
+        # through to the explicit NOT_CHECKABLE result rather than an exception.
+        if not isinstance(dynamic_results, dict):
+            dynamic_results = {}
         comparison = dynamic_results.get("global_reference_comparison", {}) or {}
+        if not isinstance(comparison, dict):
+            comparison = {}
         accepted = bool(comparison.get("accepted"))
         project_value = self._float_or_none(
             comparison.get("project_value_numeric", comparison.get("project_value"))

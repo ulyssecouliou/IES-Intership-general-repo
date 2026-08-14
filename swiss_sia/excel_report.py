@@ -3096,6 +3096,13 @@ class ExcelReportGenerator:
             note_format,
         )
 
+        # A non-dict global_reference_comparison payload must not raise on the
+        # .get() reads below; coerce it once so the overview degrades to blank
+        # values instead of aborting the workbook.
+        global_reference_comparison = dynamic_results.get("global_reference_comparison", {}) or {}
+        if not isinstance(global_reference_comparison, dict):
+            global_reference_comparison = {}
+
         overview = [
             ("Status", dynamic_results.get("status", "NOT_CHECKABLE")),
             ("Selected APS file", dynamic_results.get("selected_aps_file") or "None"),
@@ -3143,15 +3150,15 @@ class ExcelReportGenerator:
             ("Global project/reference evidence", dynamic_results.get("global_reference_comparison_status") or "NOT_PROVIDED"),
             (
                 "Reviewed global project value",
-                (dynamic_results.get("global_reference_comparison", {}) or {}).get("project_value_numeric"),
+                global_reference_comparison.get("project_value_numeric"),
             ),
             (
                 "Reviewed global reference value",
-                (dynamic_results.get("global_reference_comparison", {}) or {}).get("reference_value_numeric"),
+                global_reference_comparison.get("reference_value_numeric"),
             ),
             (
                 "Reviewed global comparison unit",
-                (dynamic_results.get("global_reference_comparison", {}) or {}).get("unit") or "Not provided",
+                global_reference_comparison.get("unit") or "Not provided",
             ),
             ("Design-power result status", dynamic_results.get("design_power_status")),
             ("Notes", dynamic_results.get("notes") or "None"),
@@ -3169,7 +3176,14 @@ class ExcelReportGenerator:
         overview_end = overview_start + len(overview) - 1
         section_start = overview_end + 2
 
-        skipped_rows = dynamic_results.get("skipped_aps_files", []) or []
+        # Drop any malformed (None/non-dict) skipped-file entry so one bad row
+        # cannot raise and abort the whole workbook; each entry below is read
+        # with .get().
+        skipped_rows = [
+            row
+            for row in (dynamic_results.get("skipped_aps_files", []) or [])
+            if isinstance(row, dict)
+        ]
         skipped_start = section_start
         if skipped_rows:
             worksheet.write(skipped_start, 0, "Skipped APS file", header_format)
@@ -3219,7 +3233,15 @@ class ExcelReportGenerator:
         worksheet.write_row(start_row, 0, headers, header_format)
 
         row = start_row + 1
-        room_rows = dynamic_results.get("rooms", []) or []
+        # Match the checker's own guard (SIA3802Checker._check_dynamic_method):
+        # keep only dict rows so a None/malformed APS room entry cannot raise
+        # here and abort the whole workbook. A dropped row is rendered as the
+        # "no readable result" fallback, never a silent success.
+        room_rows = [
+            item
+            for item in (dynamic_results.get("rooms", []) or [])
+            if isinstance(item, dict)
+        ]
         if room_rows:
             for item in room_rows:
                 worksheet.write(row, 0, item.get("room_name", ""), cell_format)

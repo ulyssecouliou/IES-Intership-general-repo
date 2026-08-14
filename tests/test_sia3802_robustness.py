@@ -178,5 +178,73 @@ class Sia3802UndeterminedNotFailedTests(unittest.TestCase):
         self.assertEqual(envelope["reason"], "blocking_findings")
 
 
+class Sia3802GlobalReferenceComparisonRobustnessTests(unittest.TestCase):
+    """The reviewed project/reference gate must survive a degenerate payload.
+
+    Unlike the seven category checks, ``_check_global_reference_comparison``
+    runs outside the per-category fail-closed guard, so an unexpected shape in
+    ``dynamic_results`` (a non-dict payload, or a non-dict
+    ``global_reference_comparison`` value) would otherwise raise and abort the
+    whole analysis. It must instead degrade to NOT_CHECKABLE -- never crash, and
+    never read as a reviewed pass.
+    """
+
+    def setUp(self):
+        logging.disable(logging.CRITICAL)
+
+    def tearDown(self):
+        logging.disable(logging.NOTSET)
+
+    def _run(self, dynamic_results):
+        engine = RuleEngine()
+        checker = SIA3802Checker(model_analyzer=object(), rule_engine=engine)
+        return checker.check_all(
+            rooms_data=[], dynamic_results=dynamic_results, external_mappings={}
+        )
+
+    def test_valid_reviewed_comparison_is_still_accepted(self):
+        """Success path: a complete reviewed comparison is unchanged."""
+        results = self._run(
+            {
+                "global_reference_comparison": {
+                    "accepted": True,
+                    "project_value_numeric": 42.0,
+                    "reference_value_numeric": 40.0,
+                    "source_document": "Reviewed calc.pdf",
+                }
+            }
+        )
+        comparison = results["global_reference_comparison"]
+        self.assertEqual(comparison["status"], "REVIEWED_RESULT_AVAILABLE")
+        self.assertEqual(comparison["project_value"], 42.0)
+
+    def test_non_dict_comparison_value_degrades_to_not_checkable(self):
+        """Invalid data: a string where a comparison dict is expected."""
+        results = self._run({"global_reference_comparison": "accepted"})
+        self.assertEqual(
+            results["global_reference_comparison"]["status"], "NOT_CHECKABLE"
+        )
+
+    def test_non_dict_dynamic_results_degrades_to_not_checkable(self):
+        """Invalid data: the whole dynamic_results payload is not a dict."""
+        results = self._run([1, 2, 3])
+        self.assertEqual(
+            results["global_reference_comparison"]["status"], "NOT_CHECKABLE"
+        )
+
+    def test_degenerate_comparison_emits_a_blocking_alert_never_a_pass(self):
+        """A non-checkable comparison stays a hard blocker, not a silent pass."""
+        results = self._run({"global_reference_comparison": ["not", "a", "dict"]})
+        self.assertEqual(
+            results["global_reference_comparison"]["status"], "NOT_CHECKABLE"
+        )
+        self.assertTrue(
+            any(
+                "GLOBAL_REFERENCE_COMPARISON_NOT_CHECKABLE" in str(alert.rule)
+                for alert in results["alerts"]
+            )
+        )
+
+
 if __name__ == "__main__":
     unittest.main()
