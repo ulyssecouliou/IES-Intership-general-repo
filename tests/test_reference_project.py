@@ -367,6 +367,98 @@ class InfiltrationSubstitutionTests(unittest.TestCase):
         self.assertTrue(any("unit" in blocker.lower() for blocker in spec.blockers))
 
 
+def _system(**kwargs):
+    """Build a normalized HVAC system dict as model_analyzer emits it."""
+    payload = {
+        "id": "sys-1",
+        "name": "System 1",
+        "cooling_capacity_kw": None,
+        "heating_capacity_kw": None,
+        "eer": None,
+        "scop": None,
+    }
+    payload.update(kwargs)
+    return payload
+
+
+class GenerationSubstitutionTests(unittest.TestCase):
+    def test_cooling_below_threshold_is_paired_with_table_5_eer(self):
+        spec = build_reference_project_specification(
+            [_room(surfaces=[_surface()], hvac_systems=[_system(cooling_capacity_kw=100.0, eer=3.5)])],
+            _Analyzer(),
+        )
+        item = _by_parameter(spec, "cooling_generation_eer")[0]
+        self.assertEqual(item.status, SUBSTITUTABLE)
+        self.assertEqual(item.project_value, 3.5)
+        self.assertEqual(item.reference_value, 3.10)  # Table 5, band >50..<=150
+        self.assertEqual(item.unit, "EER")
+
+    def test_cooling_band_is_selected_by_capacity(self):
+        cases = {10.0: 2.90, 40.0: 3.00, 120.0: 3.10}
+        for capacity, expected in cases.items():
+            spec = build_reference_project_specification(
+                [_room(surfaces=[_surface()], hvac_systems=[_system(cooling_capacity_kw=capacity, eer=4.0)])],
+                _Analyzer(),
+            )
+            self.assertEqual(
+                _by_parameter(spec, "cooling_generation_eer")[0].reference_value,
+                expected,
+                msg=f"capacity {capacity}",
+            )
+
+    def test_cooling_at_or_above_150kw_blocks_on_eer_plus_metric(self):
+        spec = build_reference_project_specification(
+            [_room(surfaces=[_surface()], hvac_systems=[_system(cooling_capacity_kw=200.0, eer=4.5)])],
+            _Analyzer(),
+        )
+        item = _by_parameter(spec, "cooling_generation_eer")[0]
+        self.assertEqual(item.status, PROJECT_VALUE_MISSING)
+        self.assertIsNone(item.reference_value)
+        self.assertTrue(any("EER+" in blocker for blocker in spec.blockers))
+
+    def test_missing_cooling_capacity_blocks(self):
+        spec = build_reference_project_specification(
+            [_room(surfaces=[_surface()], hvac_systems=[_system(eer=3.5)])],
+            _Analyzer(),
+        )
+        self.assertEqual(
+            _by_parameter(spec, "cooling_generation_eer")[0].status, PROJECT_VALUE_MISSING
+        )
+        self.assertTrue(any("cooling capacity" in b for b in spec.blockers))
+
+    def test_heating_is_paired_with_table_8_scop_and_carries_en14825_caveat(self):
+        spec = build_reference_project_specification(
+            [_room(surfaces=[_surface()], hvac_systems=[_system(heating_capacity_kw=100.0, scop=4.0)])],
+            _Analyzer(),
+        )
+        item = _by_parameter(spec, "heating_generation_scop")[0]
+        self.assertEqual(item.status, SUBSTITUTABLE)
+        self.assertEqual(item.project_value, 4.0)
+        self.assertEqual(item.reference_value, 3.20)  # Table 8, band >50..<=150
+        self.assertIn("SN EN 14825", item.source)
+
+    def test_heating_above_150kw_blocks_because_table_8_stops_there(self):
+        spec = build_reference_project_specification(
+            [_room(surfaces=[_surface()], hvac_systems=[_system(heating_capacity_kw=300.0, scop=4.5)])],
+            _Analyzer(),
+        )
+        item = _by_parameter(spec, "heating_generation_scop")[0]
+        self.assertEqual(item.status, PROJECT_VALUE_MISSING)
+        self.assertIsNone(item.reference_value)
+        self.assertTrue(any("air-water heat" in b for b in spec.blockers))
+
+    def test_same_system_across_rooms_is_not_double_counted(self):
+        system = _system(cooling_capacity_kw=100.0, eer=3.5)
+        spec = build_reference_project_specification(
+            [
+                _room(surfaces=[_surface()], hvac_systems=[system]),
+                _room(hvac_systems=[system]),
+            ],
+            _Analyzer(),
+        )
+        self.assertEqual(len(_by_parameter(spec, "cooling_generation_eer")), 1)
+
+
 class CompleteSpecificationTests(unittest.TestCase):
     def test_resolvable_envelope_remains_partial_until_all_table2_families_exist(self):
         spec = build_reference_project_specification(

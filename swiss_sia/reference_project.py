@@ -23,7 +23,12 @@ computed or interpolated here.
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 
-from .config import SIA3802_LIMIT_VALUES, SIA3802_SOURCE_REFERENCES
+from .config import (
+    SIA3802_COOLING_AIR_CHILLER_MAX_KW,
+    SIA3802_GENERATION_REFERENCE,
+    SIA3802_LIMIT_VALUES,
+    SIA3802_SOURCE_REFERENCES,
+)
 from .model_analyzer import RoomData
 
 # Normalized surface type -> reference parameter key in SIA3802_LIMIT_VALUES.
@@ -74,6 +79,8 @@ IMPLEMENTED_REFERENCE_INPUT_FAMILIES: Tuple[str, ...] = (
     "window_u_value_and_frame_fraction",
     "glazing_solar_and_visible_properties",
     "infiltration",
+    "cooling_generation_and_auxiliaries",
+    "heating_generation",
 )
 MISSING_REFERENCE_INPUT_FAMILIES: Tuple[str, ...] = (
     "thermal_bridges",
@@ -82,8 +89,6 @@ MISSING_REFERENCE_INPUT_FAMILIES: Tuple[str, ...] = (
     "sia3874_lighting_power_and_control",
     "emission_system_and_unlimited_capacity",
     "ventilation_system_and_controls",
-    "cooling_generation_and_auxiliaries",
-    "heating_generation",
     "photovoltaic_generation",
     "sia380_annual_aggregation_and_weighting",
 )
@@ -427,6 +432,142 @@ def _collect_infiltration_substitution(
     return [substitution], blockers
 
 
+def _reference_band(table_key: str, capacity: float) -> Optional[Dict[str, Any]]:
+    """Return the SIA 380/2 tableau 5-9 band whose power range holds capacity.
+
+    Bands are ordered by ascending inclusive upper bound; the first band whose
+    ``upper_kw`` is None (open top) or >= capacity matches. Returns None when
+    the capacity is above every encoded band (e.g. an air-water heat pump above
+    150 kW, which Table 8 does not tabulate -- a blocker, never an extrapolation).
+    """
+
+    for band in SIA3802_GENERATION_REFERENCE[table_key]["bands"]:
+        upper = band["upper_kw"]
+        if upper is None or capacity <= upper:
+            return band
+    return None
+
+
+def _generation_substitution(
+    parameter: str,
+    scope: str,
+    element_type: str,
+    unit: str,
+    table_key: str,
+    reference_value: Optional[float],
+    project_value: Optional[float],
+) -> ReferenceSubstitution:
+    """Build one generation substitution, tagging the SN EN 14825 caveat."""
+
+    source = SIA3802_GENERATION_REFERENCE[table_key]["source"]
+    if SIA3802_GENERATION_REFERENCE[table_key]["grandeur"] == "SCOP":
+        # SCOP is defined per SN EN 14825, which is not in refs/, so the
+        # equivalence with the VE SCoP output is not proven here.
+        source += " [SCOP per SN EN 14825 - VE index equivalence TO VERIFY]"
+    status = (
+        SUBSTITUTABLE
+        if reference_value is not None and project_value is not None
+        else PROJECT_VALUE_MISSING
+    )
+    return ReferenceSubstitution(
+        parameter=parameter,
+        scope=scope,
+        element_type=element_type,
+        project_value=project_value,
+        reference_value=reference_value,
+        unit=unit,
+        source=source,
+        status=status,
+        affected_elements=1,
+    )
+
+
+def _collect_generation_substitutions(
+    rooms: Sequence[RoomData],
+) -> Tuple[List[ReferenceSubstitution], List[str]]:
+    """Pair heating/cooling generation efficiencies with SIA 380/2 tableaux 5-9.
+
+    The reference project substitutes a standard generator: below 150 kW cooling
+    an air chiller (Table 5, full-load EER); heating an air-water heat pump as
+    the limit case (Table 8, SCOP). The reference value is selected by the
+    project's generation capacity band. Cases the norm routes to a metric the VE
+    model does not expose -- water chillers >= 150 kW (Table 7's EER+) and
+    air-water heat pumps above 150 kW (Table 8 stops there) -- are reported as
+    blockers, never substituted with a non-comparable figure.
+    """
+
+    substitutions: List[ReferenceSubstitution] = []
+    blockers: List[str] = []
+    seen: set = set()
+    for room in rooms:
+        for system in getattr(room, "hvac_systems", None) or []:
+            if not isinstance(system, dict):
+                continue
+            scope = str(system.get("id") or system.get("name") or "system").strip() or "system"
+
+            # Cooling generation (Table 5 air chiller below the water threshold).
+            cooling_capacity = _float_or_none(system.get("cooling_capacity_kw"))
+            cooling_eer = _float_or_none(system.get("eer"))
+            if (cooling_capacity is not None or cooling_eer is not None) and ("cooling", scope) not in seen:
+                seen.add(("cooling", scope))
+                if cooling_capacity is None:
+                    substitutions.append(_generation_substitution(
+                        "cooling_generation_eer", scope, "cooling_generator", "EER",
+                        "cooling_air_chiller", None, cooling_eer))
+                    blockers.append(
+                        "No cooling capacity to select the SIA 380/2 reference "
+                        "chiller band for {}".format(scope))
+                elif cooling_capacity >= SIA3802_COOLING_AIR_CHILLER_MAX_KW:
+                    substitutions.append(_generation_substitution(
+                        "cooling_generation_eer", scope, "cooling_generator", "EER",
+                        "cooling_air_chiller", None, cooling_eer))
+                    blockers.append(
+                        "Cooling >= {:.0f} kW for {} references the Table 7 EER+ "
+                        "metric (net of post-cooling), which the VE EER does not "
+                        "expose; not auto-comparable".format(
+                            SIA3802_COOLING_AIR_CHILLER_MAX_KW, scope))
+                else:
+                    band = _reference_band("cooling_air_chiller", cooling_capacity)
+                    reference = band["limit"] if band else None
+                    substitutions.append(_generation_substitution(
+                        "cooling_generation_eer", scope, "cooling_generator", "EER",
+                        "cooling_air_chiller", reference, cooling_eer))
+                    if cooling_eer is None:
+                        blockers.append(
+                            "No project EER could be extracted for cooling "
+                            "generator {}".format(scope))
+
+            # Heating generation (Table 8 air-water heat pump, the limit case).
+            heating_capacity = _float_or_none(system.get("heating_capacity_kw"))
+            heating_scop = _float_or_none(system.get("scop"))
+            if (heating_capacity is not None or heating_scop is not None) and ("heating", scope) not in seen:
+                seen.add(("heating", scope))
+                band = (
+                    _reference_band("heating_air_water_hp", heating_capacity)
+                    if heating_capacity is not None
+                    else None
+                )
+                reference = band["limit"] if band else None
+                substitutions.append(_generation_substitution(
+                    "heating_generation_scop", scope, "heating_generator", "SCOP",
+                    "heating_air_water_hp", reference, heating_scop))
+                if heating_capacity is None:
+                    blockers.append(
+                        "No heating capacity to select the SIA 380/2 reference "
+                        "heat-pump band for {}".format(scope))
+                elif reference is None:
+                    blockers.append(
+                        "Heating > {:.0f} kW for {}: the SIA 380/2 air-water heat "
+                        "pump limit table (Table 8) is not tabulated above that "
+                        "power".format(150.0, scope))
+                elif heating_scop is None:
+                    blockers.append(
+                        "No project SCOP could be extracted for heating generator "
+                        "{}".format(scope))
+
+    return substitutions, blockers
+
+
 def build_reference_project_specification(
     rooms_data: Optional[Sequence[RoomData]],
     model_analyzer: Any = None,
@@ -457,8 +598,13 @@ def build_reference_project_specification(
     surface_items, surface_blockers = _collect_surface_substitutions(rooms, model_analyzer)
     opening_items, opening_blockers = _collect_opening_substitutions(rooms)
     infiltration_items, infiltration_blockers = _collect_infiltration_substitution(rooms)
-    substitutions = tuple(surface_items + opening_items + infiltration_items)
-    blockers = tuple(surface_blockers + opening_blockers + infiltration_blockers)
+    generation_items, generation_blockers = _collect_generation_substitutions(rooms)
+    substitutions = tuple(
+        surface_items + opening_items + infiltration_items + generation_items
+    )
+    blockers = tuple(
+        surface_blockers + opening_blockers + infiltration_blockers + generation_blockers
+    )
 
     missing_reference = [
         item.parameter
@@ -477,9 +623,10 @@ def build_reference_project_specification(
         "conclusion: the reference demand requires a VE/ApacheSim run, and the "
         "project/reference comparison still requires reviewer acceptance.",
         "Opaque-envelope constructions, window U-value/frame fraction, glazing "
-        "solar/visible properties (g_perp, tau_v) and whole-building "
-        "infiltration are currently automated. Every other SIA 380/2 Table 2 "
-        "family remains an explicit implementation blocker.",
+        "solar/visible properties (g_perp, tau_v), whole-building infiltration "
+        "and heating/cooling generation efficiencies (tableaux 5-9) are "
+        "currently automated. Every other SIA 380/2 Table 2 family remains an "
+        "explicit implementation blocker.",
     ]
     if not substitutions:
         status = "NOT_CHECKABLE"

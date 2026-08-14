@@ -32,6 +32,57 @@ SIA3802_SOURCE_REFERENCES = {
     "method": "SIA 380/2:2022 FR, chapitres 4-7 et annexe A",
 }
 
+# Reference-project generation efficiencies, SIA 380/2:2022 tableaux 5-9 (pages
+# PDF 38-39). These are the reference-project ASSUMPTIONS, not requirements on
+# the real installation (footnote 5/6, p38-39). Each band value is a MINIMUM
+# (higher EER/SCOP is better). "upper_kw" is the inclusive upper bound of the
+# power band; None means "above the previous band". Only the VE-comparable
+# tables are encoded here: Table 5 (air chiller, EER full load) for cooling
+# < 150 kW per 7.2.5.4, and the heat-pump SCOP tables for heating. Water-cooled
+# chillers >= 150 kW use Table 7's EER+ metric (net-of-post-cooling), which the
+# VE model does not expose, so they are handled as a blocker, not encoded here.
+# The SEER/SCOP figures are defined per SN EN 14825; that standard is not in
+# refs/, so the equivalence with the VE SEER/SCoP outputs is unverified and the
+# engine compares the directly-named full-load EER for cooling. [TO VERIFY]
+SIA3802_GENERATION_REFERENCE = {
+    "cooling_air_chiller": {
+        "grandeur": "EER_full_load",
+        "project_attribute": "eer",
+        "source": "SIA 380/2:2022 FR, tableau 5, page PDF 38",
+        "bands": [
+            {"upper_kw": 12.0, "limit": 2.90, "target": 3.10},
+            {"upper_kw": 50.0, "limit": 3.00, "target": 3.15},
+            {"upper_kw": 150.0, "limit": 3.10, "target": 3.20},
+        ],
+    },
+    "heating_air_water_hp": {
+        "grandeur": "SCOP",
+        "project_attribute": "scop",
+        "source": "SIA 380/2:2022 FR, tableau 8, page PDF 39",
+        "bands": [
+            {"upper_kw": 12.0, "limit": 3.00, "target": None},
+            {"upper_kw": 50.0, "limit": 3.10, "target": None},
+            {"upper_kw": 150.0, "limit": 3.20, "target": None},
+        ],
+    },
+    "heating_brine_water_hp": {
+        "grandeur": "SCOP",
+        "project_attribute": "scop",
+        "source": "SIA 380/2:2022 FR, tableau 9, page PDF 39",
+        "bands": [
+            {"upper_kw": 50.0, "limit": 4.00, "target": 4.40},
+            {"upper_kw": 150.0, "limit": 4.20, "target": 4.60},
+            {"upper_kw": 450.0, "limit": 4.60, "target": 5.00},
+            {"upper_kw": 1000.0, "limit": 5.00, "target": 5.50},
+            {"upper_kw": None, "limit": 5.50, "target": 6.00},
+        ],
+    },
+}
+# Cooling power threshold that switches the reference chiller from an air
+# compressor (Table 5, EER) to a water compressor with dry post-cooling
+# (Table 7, EER+). SIA 380/2:2022 7.2.5.4-5, page PDF 34.
+SIA3802_COOLING_AIR_CHILLER_MAX_KW = 150.0
+
 SIA3802_LIMIT_VALUES = {
     # Tables 2 to 9 primarily define the limit-case reference project. Keep
     # these historical key names for API compatibility, but never interpret a
