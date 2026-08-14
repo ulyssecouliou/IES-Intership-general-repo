@@ -62,6 +62,12 @@ class ExcelReportGenerator:
         self.workbook = None
         self.use_xlsxwriter = USE_XLSXWRITER
         self.sia3802_justifications: Dict[str, Any] = {}
+        # Whether the workbook carries the SIA 4010 toolchain-validation
+        # material. The client SIA 380/2 report sets this False: SIA 4010
+        # validates the software, not the client building, so its sheets and
+        # cards on a client report can only be misread. See set at report time.
+        self.include_sia4010 = True
+        self._active_sections = self._REPORT_SECTIONS
 
         if not self.use_xlsxwriter:
             raise RuntimeError("xlsxwriter is not available. The Excel report cannot be generated inside the VE environment.")
@@ -90,10 +96,21 @@ class ExcelReportGenerator:
         preflight_checks: Optional[List[Dict[str, Any]]] = None,
         dynamic_results: Optional[Dict[str, Any]] = None,
         justification_results: Optional[Dict[str, Any]] = None,
+        include_sia4010: bool = True,
     ):
-        """Generate the full Excel report."""
+        """Generate the Excel report.
+
+        Args:
+            include_sia4010: When False, the workbook is a SIA 380/2-only client
+                report: the four dedicated SIA 4010 sheets are omitted and the
+                SIA 4010 fragments woven into shared sheets are suppressed, so
+                nothing about the software's validation state can be misread as
+                a statement about the client building. A single credential line
+                on the cover points to the separate Anwenderbericht. Defaults to
+                True so existing callers keep the full combined workbook.
+        """
         try:
-            self._generate_report_xlsxwriter(score_result, sia3802_results, sia4010_results, rooms_data, preflight_checks, dynamic_results, justification_results)
+            self._generate_report_xlsxwriter(score_result, sia3802_results, sia4010_results, rooms_data, preflight_checks, dynamic_results, justification_results, include_sia4010)
             logger.info(f"Excel report generated successfully: {self.output_path}")
         except Exception as e:
             logger.error(f"Error while generating the Excel report: {e}")
@@ -110,12 +127,27 @@ class ExcelReportGenerator:
         preflight_checks: Optional[List[Dict[str, Any]]] = None,
         dynamic_results: Optional[Dict[str, Any]] = None,
         justification_results: Optional[Dict[str, Any]] = None,
+        include_sia4010: bool = True,
     ):
         """Generate the workbook with xlsxwriter."""
+        self.include_sia4010 = include_sia4010
+        # The index and the tab-colour finalize both iterate this; dropping the
+        # SIA 4010 section here keeps them from linking to or colouring sheets
+        # that were never written.
+        self._active_sections = [
+            section
+            for section in self._REPORT_SECTIONS
+            if include_sia4010 or section[0] != "SIA 4010"
+        ]
         self.sia3802_justifications = justification_results or sia3802_results.get("justifications", {}) or {}
         # Round all displayed scores once, at the source, so no sheet renders
         # raw floating-point noise (e.g. 73.6842105263158 -> 73.7).
         score_result = self._display_score_result(score_result)
+        if not self.include_sia4010:
+            # Drop the SIA 4010 alerts before anything aggregates them, so no
+            # shared view (alerts sheet, action matrix, dashboards, P1) carries
+            # a validation-evidence finding onto a client 380/2 report.
+            score_result = self._without_sia4010_alerts(score_result)
         alert_groups = self._build_alert_groups(score_result.alerts)
         self._write_cover_xlsxwriter(score_result, sia3802_results, sia4010_results, rooms_data or [])
         self._write_index_xlsxwriter(bool(rooms_data))
@@ -141,10 +173,11 @@ class ExcelReportGenerator:
         self._write_input_request_xlsxwriter(sia3802_results, sia4010_results, rooms_data or [], preflight_checks or [], dynamic_results or {})
         self._write_sia3802_justifications_xlsxwriter(self.sia3802_justifications)
         self._write_open_items_backlog_xlsxwriter(alert_groups, sia3802_results, sia4010_results, rooms_data or [], preflight_checks or [], dynamic_results or {})
-        self._write_sia4010_readiness_xlsxwriter(sia4010_results, rooms_data or [])
-        self._write_sia4010_prevalidation_xlsxwriter(sia4010_results)
-        self._write_sia4010_class_matrix_xlsxwriter(sia4010_results, rooms_data or [])
-        self._write_sia4010_software_register_xlsxwriter()
+        if self.include_sia4010:
+            self._write_sia4010_readiness_xlsxwriter(sia4010_results, rooms_data or [])
+            self._write_sia4010_prevalidation_xlsxwriter(sia4010_results)
+            self._write_sia4010_class_matrix_xlsxwriter(sia4010_results, rooms_data or [])
+            self._write_sia4010_software_register_xlsxwriter()
         self._write_sia_navigator_backlog_xlsxwriter()
         self._write_dynamic_results_xlsxwriter(dynamic_results or {})
         self._write_alert_summary_xlsxwriter(alert_groups)
@@ -196,6 +229,38 @@ class ExcelReportGenerator:
         ]),
     ]
     _COVER_TAB_COLOR = report_style.XW_TAB_COLOR
+
+    @staticmethod
+    def _is_sia4010_alert(alert: Any) -> bool:
+        """Return whether an alert belongs to the SIA 4010 validation family.
+
+        Same rule the action matrix uses to label a row's standard: SIA 4010
+        alerts carry ``SIA4010`` in the rule or category. Used only to keep them
+        off a client SIA 380/2 report.
+        """
+
+        rule = str(getattr(alert, "rule", "") or "").upper()
+        category = str(getattr(alert, "category", "") or "").upper()
+        return "SIA4010" in rule or "4010" in category
+
+    def _without_sia4010_alerts(self, score_result: "ScoreResult") -> "ScoreResult":
+        """Return a copy of the score with SIA 4010 alerts removed.
+
+        The SIA 380/2 score, health score and detailed scores are unchanged --
+        only the alert list is filtered, so the client report's aggregated
+        views (alerts, action matrix, P1, dashboards) show 380/2 findings only.
+        """
+
+        return ScoreResult(
+            compliance_score=getattr(score_result, "compliance_score", 0.0),
+            health_score=getattr(score_result, "health_score", 0.0),
+            detailed_scores=dict(getattr(score_result, "detailed_scores", {}) or {}),
+            alerts=[
+                alert
+                for alert in getattr(score_result, "alerts", []) or []
+                if not self._is_sia4010_alert(alert)
+            ],
+        )
 
     @staticmethod
     def _display_score_result(score_result: "ScoreResult") -> "ScoreResult":
@@ -317,11 +382,18 @@ class ExcelReportGenerator:
         else:
             worksheet.write("B2", "Swiss SIA Compliance", logo_format)
 
-        worksheet.merge_range("B6:E6", "Swiss SIA Compliance Report", title_format)
+        report_title = (
+            "Swiss SIA Compliance Report"
+            if self.include_sia4010
+            else "Swiss SIA 380/2 Compliance Report"
+        )
+        worksheet.merge_range("B6:E6", report_title, title_format)
         worksheet.set_row(5, 32)
         worksheet.merge_range(
             "B7:E7",
-            "Automated SIA 380/2 readiness review and SIA 4010 evidence status",
+            "Automated SIA 380/2 readiness review and SIA 4010 evidence status"
+            if self.include_sia4010
+            else "Automated SIA 380/2 readiness review of the client model",
             subtitle_format,
         )
 
@@ -335,7 +407,9 @@ class ExcelReportGenerator:
         worksheet.write("B11", "Regulatory framework", label_format)
         worksheet.merge_range(
             "C11:E11",
-            "SIA 380/2:2022 (FR) + SIA 4010:2023 (FR) - editions fixed for this assessment",
+            "SIA 380/2:2022 (FR) + SIA 4010:2023 (FR) - editions fixed for this assessment"
+            if self.include_sia4010
+            else "SIA 380/2:2022 (FR) - edition fixed for this assessment",
             value_format,
         )
 
@@ -356,6 +430,17 @@ class ExcelReportGenerator:
             "never as a pass. See the INDEX sheet to navigate all sections.",
             disclaimer_format,
         )
+
+        if not self.include_sia4010:
+            # One honest credential line. SIA 4010 validates the software, not
+            # this building, so it appears here as a pointer, never as a score
+            # on the client model. Its full state lives in the Anwenderbericht.
+            worksheet.merge_range(
+                "B20:E20",
+                "Tool undergoing SIA 4010 validation (software, not this "
+                "building) - see the separate Anwenderbericht.",
+                logo_format,
+            )
 
     def _write_index_xlsxwriter(self, has_rooms: bool):
         """Write a clickable index grouped by report section."""
@@ -381,7 +466,7 @@ class ExcelReportGenerator:
 
         worksheet.write("B2", "Report index", title_format)
         row = 3
-        for section, color, sheets in self._REPORT_SECTIONS:
+        for section, color, sheets in self._active_sections:
             visible = [s for s in sheets if s != "ROOMS" or has_rooms]
             if not visible:
                 continue
@@ -403,7 +488,7 @@ class ExcelReportGenerator:
         """
 
         color_by_sheet = {}
-        for _section, color, sheets in self._REPORT_SECTIONS:
+        for _section, color, sheets in self._active_sections:
             for sheet in sheets:
                 color_by_sheet[sheet] = color
 
@@ -575,12 +660,26 @@ class ExcelReportGenerator:
         evidence = sia4010_results.get("evidence", {}) or {}
         evidence_present = sum(1 for item in SIA4010_REQUIRED_EVIDENCE if self._has_sia4010_evidence(evidence, item))
 
-        self._write_dashboard_card(worksheet, "A4:B7", "MODEL QA", f"{score_result.health_score:.1f}", "Health score from data completeness and model quality.", card_title_format, card_value_format, card_note_format)
-        self._write_dashboard_card(worksheet, "C4:D7", "SIA 380/2 SCORE", f"{score_result.compliance_score:.1f}", "Weighted automated indicator; non-checkable SIA 4010 evidence is kept separate.", card_title_format, card_value_format, card_note_format)
-        self._write_dashboard_card(worksheet, "E4:F7", "SIA 4010 EVIDENCE", f"{evidence_present}/{len(SIA4010_REQUIRED_EVIDENCE)}", "Official evidence items detected locally.", card_title_format, card_value_format, card_note_format)
-        self._write_dashboard_card(worksheet, "G4:H7", "ROOMS", f"{room_count}", "Thermal rooms extracted from VE.", card_title_format, card_value_format, card_note_format)
-        self._write_dashboard_card(worksheet, "I4:J7", "FLOOR AREA", f"{total_area:,.1f}", "m2 extracted from room areas.", card_title_format, card_value_format, card_note_format)
-        self._write_dashboard_card(worksheet, "K4:L7", "P1 RISKS", f"{critical_high}", "Critical + high alerts requiring attention.", card_title_format, card_value_format, card_note_format)
+        # Cards are placed left to right into fixed two-column slots. Building
+        # the list first means dropping the SIA 4010 card in 380/2-only mode
+        # reflows the rest with no empty slot, rather than leaving a hole.
+        cards = [
+            ("MODEL QA", f"{score_result.health_score:.1f}", "Health score from data completeness and model quality."),
+            ("SIA 380/2 SCORE", f"{score_result.compliance_score:.1f}",
+             "Weighted automated indicator computed from the extracted VE model."
+             if not self.include_sia4010
+             else "Weighted automated indicator; non-checkable SIA 4010 evidence is kept separate."),
+        ]
+        if self.include_sia4010:
+            cards.append(("SIA 4010 EVIDENCE", f"{evidence_present}/{len(SIA4010_REQUIRED_EVIDENCE)}", "Official evidence items detected locally."))
+        cards.extend([
+            ("ROOMS", f"{room_count}", "Thermal rooms extracted from VE."),
+            ("FLOOR AREA", f"{total_area:,.1f}", "m2 extracted from room areas."),
+            ("P1 RISKS", f"{critical_high}", "Critical + high alerts requiring attention."),
+        ])
+        card_slots = ["A4:B7", "C4:D7", "E4:F7", "G4:H7", "I4:J7", "K4:L7"]
+        for slot, (title, value, note) in zip(card_slots, cards):
+            self._write_dashboard_card(worksheet, slot, title, value, note, card_title_format, card_value_format, card_note_format)
 
         worksheet.merge_range("A9:L9", "Executive Interpretation", section_format)
         worksheet.merge_range("A10:L12", self._dashboard_verdict(score_result, sia4010_results, rooms_data), note_format)
@@ -820,7 +919,9 @@ class ExcelReportGenerator:
         worksheet.merge_range("A1:P1", "Action Dashboard - What To Change Next", title_format)
         worksheet.merge_range(
             "A2:P2",
-            "Single-page operational view: separated SIA 380/2 and SIA 4010 scores, current blockers, VE actions, evidence and owners.",
+            "Single-page operational view: separated SIA 380/2 and SIA 4010 scores, current blockers, VE actions, evidence and owners."
+            if self.include_sia4010
+            else "Single-page operational view of the client model: SIA 380/2 scores, current blockers, VE actions and owners.",
             subtitle_format,
         )
 
@@ -832,86 +933,34 @@ class ExcelReportGenerator:
         blocked_tests = self._count_blocked_sia4010_tests(sia4010_results)
         total_area = sum(self._safe_float(getattr(room, "area", 0.0), 0.0) or 0.0 for room in rooms_data)
 
-        self._write_dashboard_card(
-            worksheet,
-            "A4:B7",
-            "SIA 380/2 SCORE",
-            f"{float(score_result.compliance_score or 0.0):.1f}",
-            "Automated model-readiness indicator from direct SIA 380/2 checks.",
-            card_title_format,
-            card_value_format,
-            card_note_format,
-        )
-        self._write_dashboard_card(
-            worksheet,
-            "C4:D7",
-            "SIA 4010 OFFICIAL",
-            f"{float(sia4010_results.get('score', 0.0) or 0.0):.1f}",
-            "Official validation score remains zero until reviewed test evidence is present.",
-            card_title_format,
-            card_value_format,
-            card_note_format,
-        )
-        self._write_dashboard_card(
-            worksheet,
-            "E4:F7",
-            "4010 EVIDENCE",
-            f"{evidence_present}/{len(SIA4010_REQUIRED_EVIDENCE)}",
-            "Detected official evidence families in sia4010_evidence/.",
-            card_title_format,
-            card_value_format,
-            card_note_format,
-        )
-        self._write_dashboard_card(
-            worksheet,
-            "G4:H7",
-            "MODEL HEALTH",
-            f"{float(score_result.health_score or 0.0):.1f}",
-            "Data completeness and consistency indicator.",
-            card_title_format,
-            card_value_format,
-            card_note_format,
-        )
-        self._write_dashboard_card(
-            worksheet,
-            "I4:J7",
-            "P1 / P2 / P3",
-            f"{priority_counts.get('P1', 0)} / {priority_counts.get('P2', 0)} / {priority_counts.get('P3', 0)}",
-            "Grouped actions by priority.",
-            card_title_format,
-            card_value_format,
-            card_note_format,
-        )
-        self._write_dashboard_card(
-            worksheet,
-            "K4:L7",
-            "SIA 4010 TESTS",
-            f"{blocked_tests} blocked",
-            "Tests blocked until official evidence and reviewer acceptance are complete.",
-            card_title_format,
-            card_value_format,
-            card_note_format,
-        )
-        self._write_dashboard_card(
-            worksheet,
-            "M4:N7",
-            "ROOMS / AREA",
-            f"{len(rooms_data)} / {total_area:,.1f}",
-            "Thermal rooms and m2 extracted from VE.",
-            card_title_format,
-            card_value_format,
-            card_note_format,
-        )
-        self._write_dashboard_card(
-            worksheet,
-            "O4:P7",
-            "HIGH + CRITICAL",
-            f"{alerts_count.get('Critical', 0) + alerts_count.get('High', 0)}",
-            "Blocking or near-blocking findings.",
-            card_title_format,
-            card_value_format,
-            card_note_format,
-        )
+        # Left-to-right cards. The three SIA 4010 cards drop in 380/2-only mode
+        # and the rest reflow into the freed slots, so there is no empty card.
+        cards = [
+            ("SIA 380/2 SCORE", f"{float(score_result.compliance_score or 0.0):.1f}",
+             "Automated model-readiness indicator from direct SIA 380/2 checks."),
+        ]
+        if self.include_sia4010:
+            cards.append(("SIA 4010 OFFICIAL", f"{float(sia4010_results.get('score', 0.0) or 0.0):.1f}",
+                          "Official validation score remains zero until reviewed test evidence is present."))
+            cards.append(("4010 EVIDENCE", f"{evidence_present}/{len(SIA4010_REQUIRED_EVIDENCE)}",
+                          "Detected official evidence families in sia4010_evidence/."))
+        cards.append(("MODEL HEALTH", f"{float(score_result.health_score or 0.0):.1f}",
+                      "Data completeness and consistency indicator."))
+        cards.append(("P1 / P2 / P3",
+                      f"{priority_counts.get('P1', 0)} / {priority_counts.get('P2', 0)} / {priority_counts.get('P3', 0)}",
+                      "Grouped actions by priority."))
+        if self.include_sia4010:
+            cards.append(("SIA 4010 TESTS", f"{blocked_tests} blocked",
+                          "Tests blocked until official evidence and reviewer acceptance are complete."))
+        cards.append(("ROOMS / AREA", f"{len(rooms_data)} / {total_area:,.1f}",
+                      "Thermal rooms and m2 extracted from VE."))
+        cards.append(("HIGH + CRITICAL",
+                      f"{alerts_count.get('Critical', 0) + alerts_count.get('High', 0)}",
+                      "Blocking or near-blocking findings."))
+        card_slots = ["A4:B7", "C4:D7", "E4:F7", "G4:H7", "I4:J7", "K4:L7", "M4:N7", "O4:P7"]
+        for slot, (title, value, note) in zip(card_slots, cards):
+            self._write_dashboard_card(worksheet, slot, title, value, note,
+                                       card_title_format, card_value_format, card_note_format)
 
         worksheet.merge_range("A9:P10", self._dashboard_verdict(score_result, sia4010_results, rooms_data), muted_format)
 
@@ -934,24 +983,25 @@ class ExcelReportGenerator:
                 "max_value": 100,
             })
 
-        worksheet.merge_range("I12:P12", "SIA 4010 Official Validation Scores", section_format)
-        worksheet.write_row("I13", ["Area / test", "Score", "Status / evidence"], header_format)
-        sia4010_rows = self._action_dashboard_sia4010_score_rows(score_result, sia4010_results)
-        for row_index, row_values in enumerate(sia4010_rows, start=13):
-            worksheet.write(row_index, 8, row_values[0], cell_format)
-            worksheet.write(row_index, 9, row_values[1], score_format)
-            worksheet.write(row_index, 10, row_values[2], cell_format)
-        if sia4010_rows:
-            worksheet.conditional_format(13, 9, 12 + len(sia4010_rows), 9, {
-                # Navy, matching the normative series in the dashboard charts:
-                # SIA 4010 readiness is not the same axis as a 380/2 score.
-                "type": "data_bar",
-                "bar_color": report_style.XW_CHART_FILL_NORMATIVE,
-                "min_type": "num",
-                "min_value": 0,
-                "max_type": "num",
-                "max_value": 100,
-            })
+        if self.include_sia4010:
+            worksheet.merge_range("I12:P12", "SIA 4010 Official Validation Scores", section_format)
+            worksheet.write_row("I13", ["Area / test", "Score", "Status / evidence"], header_format)
+            sia4010_rows = self._action_dashboard_sia4010_score_rows(score_result, sia4010_results)
+            for row_index, row_values in enumerate(sia4010_rows, start=13):
+                worksheet.write(row_index, 8, row_values[0], cell_format)
+                worksheet.write(row_index, 9, row_values[1], score_format)
+                worksheet.write(row_index, 10, row_values[2], cell_format)
+            if sia4010_rows:
+                worksheet.conditional_format(13, 9, 12 + len(sia4010_rows), 9, {
+                    # Navy, matching the normative series in the dashboard charts:
+                    # SIA 4010 readiness is not the same axis as a 380/2 score.
+                    "type": "data_bar",
+                    "bar_color": report_style.XW_CHART_FILL_NORMATIVE,
+                    "min_type": "num",
+                    "min_value": 0,
+                    "max_type": "num",
+                    "max_value": 100,
+                })
 
         worksheet.merge_range("A22:P22", "Detailed Action Matrix - Change In VE Or Provide Evidence", section_format)
         headers = [
@@ -2514,13 +2564,29 @@ class ExcelReportGenerator:
             preflight_checks,
             dynamic_results,
         )
+        if not self.include_sia4010:
+            rows = [
+                row
+                for row in rows
+                if "4010" not in str(row.get("standard", "")).upper()
+                and "4010" not in str(row.get("validation_scope", "")).upper()
+            ]
         status_counts = Counter(row["coverage_status"] for row in rows)
 
-        worksheet.merge_range("A1:N1", "SIA 380/2 + SIA 4010 Data Coverage Matrix", header_format)
+        worksheet.merge_range(
+            "A1:N1",
+            "SIA 380/2 + SIA 4010 Data Coverage Matrix"
+            if self.include_sia4010
+            else "SIA 380/2 Data Coverage Matrix",
+            header_format,
+        )
         worksheet.merge_range(
             "A2:N2",
             "This sheet explains what is currently evidenced by the VE model/API, what requires APS/Vista outputs, "
-            "and what must remain external official SIA 4010 evidence before any final compliance claim.",
+            "and what must remain external official SIA 4010 evidence before any final compliance claim."
+            if self.include_sia4010
+            else "This sheet explains what is currently evidenced by the VE model/API and what still requires "
+            "APS/Vista outputs before a SIA 380/2 conclusion.",
             note_format,
         )
 
