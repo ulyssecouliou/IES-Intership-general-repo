@@ -461,6 +461,37 @@ class GenerationSubstitutionTests(unittest.TestCase):
         self.assertEqual(len(_by_parameter(spec, "cooling_generation_eer")), 1)
 
 
+class VentilationSubstitutionTests(unittest.TestCase):
+    def test_heat_recovery_efficiency_is_paired_with_table_2(self):
+        spec = build_reference_project_specification(
+            [_room(surfaces=[_surface()], hvac_systems=[_system(heat_recovery_efficiency=0.60)])],
+            _Analyzer(),
+        )
+        item = _by_parameter(spec, "ventilation_heat_recovery_efficiency")[0]
+        self.assertEqual(item.status, SUBSTITUTABLE)
+        self.assertEqual(item.project_value, 0.60)
+        self.assertEqual(item.reference_value, 0.73)   # Table 2 eta_rec,theta limit
+        self.assertEqual(item.reference_target_value, 0.78)  # target
+        self.assertIn("TO VERIFY", item.source)  # NCM<->SIA index caveat
+
+    def test_zero_heat_recovery_is_still_compared(self):
+        # A system without heat recovery reports 0.0 -- a real project value to
+        # compare against the reference, not a reason to skip.
+        spec = build_reference_project_specification(
+            [_room(surfaces=[_surface()], hvac_systems=[_system(heat_recovery_efficiency=0.0)])],
+            _Analyzer(),
+        )
+        self.assertEqual(
+            _by_parameter(spec, "ventilation_heat_recovery_efficiency")[0].project_value, 0.0
+        )
+
+    def test_missing_heat_recovery_value_emits_no_substitution(self):
+        spec = build_reference_project_specification(
+            [_room(surfaces=[_surface()], hvac_systems=[_system()])], _Analyzer()
+        )
+        self.assertEqual(_by_parameter(spec, "ventilation_heat_recovery_efficiency"), [])
+
+
 class ReferenceDirectiveTests(unittest.TestCase):
     def test_emission_and_capacity_directives_are_emitted_without_blocking(self):
         spec = build_reference_project_specification(

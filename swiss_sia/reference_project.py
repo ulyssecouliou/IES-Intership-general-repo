@@ -651,6 +651,56 @@ def _collect_generation_substitutions(
     return substitutions, blockers
 
 
+def _collect_ventilation_substitutions(
+    rooms: Sequence[RoomData],
+) -> Tuple[List[ReferenceSubstitution], List[str]]:
+    """Pair the ventilation heat-recovery efficiency with the SIA 380/2 reference.
+
+    The VE model exposes the NCM seasonal heat-recovery efficiency per Apache
+    system (confirmed by a real-project probe); it is compared to the SIA 380/2
+    Table 2 reference eta_rec,theta (0.73 limit / 0.78 target). The NCM seasonal
+    efficiency and the SIA temperature-change index are close but not proven
+    equivalent, so the source carries a [TO VERIFY] caveat, as for the SN EN
+    14825 SCOP. Duct/AHU leakage class, U_ahu and the airflow rates are not part
+    of this substitution -- the model exposes only the classes (still to map) and
+    not U_ahu.
+    """
+
+    reference = _float_or_none(SIA3802_LIMIT_VALUES.get("heat_recovery_temperature_efficiency"))
+    target = _float_or_none(SIA3802_TARGET_VALUES.get("heat_recovery_temperature_efficiency"))
+    source = _source(_OPENING_SOURCE_KEY) + (
+        " [NCM seasonal HR efficiency vs SIA eta_rec,theta - index equivalence TO VERIFY]"
+    )
+    substitutions: List[ReferenceSubstitution] = []
+    seen: set = set()
+    for room in rooms:
+        for system in getattr(room, "hvac_systems", None) or []:
+            if not isinstance(system, dict):
+                continue
+            scope = str(system.get("id") or system.get("name") or "system").strip() or "system"
+            if scope in seen:
+                continue
+            eta = _float_or_none(system.get("heat_recovery_efficiency"))
+            if eta is None:
+                # A system that reports no heat-recovery value has no eta to
+                # substitute; skipped rather than substituted with a guess.
+                continue
+            seen.add(scope)
+            substitutions.append(ReferenceSubstitution(
+                parameter="ventilation_heat_recovery_efficiency",
+                scope=scope,
+                element_type="ventilation",
+                project_value=eta,
+                reference_value=reference,
+                unit="-",
+                source=source,
+                status=SUBSTITUTABLE if reference is not None else PROJECT_VALUE_MISSING,
+                affected_elements=1,
+                reference_target_value=target,
+            ))
+    return substitutions, []
+
+
 def _collect_reference_directives(
     rooms: Sequence[RoomData],
 ) -> List[ReferenceSubstitution]:
@@ -821,16 +871,17 @@ def build_reference_project_specification(
     opening_items, opening_blockers = _collect_opening_substitutions(rooms)
     infiltration_items, infiltration_blockers = _collect_infiltration_substitution(rooms)
     generation_items, generation_blockers = _collect_generation_substitutions(rooms)
+    ventilation_items, ventilation_blockers = _collect_ventilation_substitutions(rooms)
     directive_items = _collect_reference_directives(rooms)
     # SIA 380/2:2022 §7.2.5.3 : consignes et gains SIA 2024 identiques projet/référence.
     usage_items, usage_blockers = _collect_usage_standard_inputs(rooms)
     substitutions = tuple(
         surface_items + opening_items + infiltration_items + generation_items
-        + directive_items + usage_items
+        + ventilation_items + directive_items + usage_items
     )
     blockers = tuple(
         surface_blockers + opening_blockers + infiltration_blockers
-        + generation_blockers + usage_blockers
+        + generation_blockers + ventilation_blockers + usage_blockers
     )
 
     missing_reference = [

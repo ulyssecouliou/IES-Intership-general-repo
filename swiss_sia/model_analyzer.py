@@ -703,6 +703,12 @@ class ModelAnalyzer:
                 "system_type": self._normalize_identifier(system_type),
                 "ventilation_control": self._normalize_identifier(ventilation_control),
                 "heat_recovery_type": self._normalize_identifier(heat_recovery),
+                # NCM seasonal heat-recovery efficiency (VEApacheSystem.ventilation_ncm),
+                # confirmed extractable on real projects. Compared to the SIA 380/2
+                # reference eta_rec in the reference-project family.
+                "heat_recovery_efficiency": self._to_float_or_none(
+                    ventilation_ncm.get("heat_recovery_efficiency")
+                ),
                 "cooling_raw": dict(cooling),
                 "heating_raw": dict(heating),
                 "ventilation_ncm_raw": dict(ventilation_ncm),
