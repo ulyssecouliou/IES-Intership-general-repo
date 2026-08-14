@@ -20,6 +20,8 @@ reference value is read from the encoded, source-traced SIA tables - none is
 computed or interpolated here.
 """
 
+import json
+import os
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 
@@ -73,9 +75,14 @@ UNCLASSIFIED = "UNCLASSIFIED"
 # "valeur limite"/"valeur cible" identical and prescriptive). No project value
 # is compared, so a directive is resolved, never a blocker.
 REFERENCE_DIRECTIVE = "REFERENCE_DIRECTIVE"
+# SIA 380/2:2022 §7.2.5.3 : les paramètres d'usage SIA 2024 sont IDENTIQUES
+# au projet et au projet de référence. Ces grandeurs ne font pas l'objet d'une
+# substitution différenciante ; elles sont donc résolues (jamais un bloqueur)
+# avec project_value=None et reference_value = valeur du tableau SIA 2024.
+STANDARD_USAGE_INPUT = "STANDARD_USAGE_INPUT"
 
 # Table 2 covers the complete reference-project model.  The current automated
-# specification resolves only the two families below.  Keeping the remaining
+# specification resolves only the families below.  Keeping the remaining
 # families explicit prevents a partial envelope plan from being mistaken for a
 # runnable SIA 380/2 reference project.
 IMPLEMENTED_REFERENCE_INPUT_FAMILIES: Tuple[str, ...] = (
@@ -86,16 +93,56 @@ IMPLEMENTED_REFERENCE_INPUT_FAMILIES: Tuple[str, ...] = (
     "cooling_generation_and_auxiliaries",
     "heating_generation",
     "emission_system_and_unlimited_capacity",
+    # SIA 380/2:2022 §7.2.5.3 : consignes et gains internes identiques
+    # projet/référence — résolus depuis le JSON SIA 2024:2021.
+    "sia2024_internal_gains_profiles_and_setpoints",
 )
 MISSING_REFERENCE_INPUT_FAMILIES: Tuple[str, ...] = (
     "thermal_bridges",
     "glazed_area_ratio_solar_protection_and_control",
-    "sia2024_internal_gains_profiles_and_setpoints",
     "sia3874_lighting_power_and_control",
     "ventilation_system_and_controls",
     "photovoltaic_generation",
     "sia380_annual_aggregation_and_weighting",
 )
+
+# ---------------------------------------------------------------------------
+# Données SIA 2024 : loader lazy + cache module-level
+# ---------------------------------------------------------------------------
+
+# Chemin absolu vers le fichier JSON SIA 2024 dans le dépôt.
+# Ne dépend d'aucun import iesve ; le fichier fait partie du dépôt et est
+# lisible en CI Python pur.
+_SIA2024_JSON_PATH: str = os.path.normpath(
+    os.path.join(
+        os.path.dirname(os.path.abspath(__file__)),
+        "..",
+        "refs", "reference-data", "sia-2024-2021.usage-data.json",
+    )
+)
+
+# Locateur source inséré dans chaque substitution STANDARD_USAGE_INPUT.
+_SIA2024_SOURCE: str = (
+    "SIA 2024:2021 Raumdatenblätter V221"
+    " | refs/reference-data/sia-2024-2021.usage-data.json"
+)
+
+# Symboles extraits pour chaque usage résolu.
+# (paramètre engine, colonne JSON, unité de repli si colonne absente)
+# Article de norme : SIA 380/2:2022 §7.2.5.3 + SIA 2024 Table 2.
+# IMPORTANT : on utilise col30 (theta_i_mean, exploitation) et jamais
+# col28 (theta_i_design) — cf. note du norm-analyst.
+_SIA2024_USAGE_SYMBOLS: Tuple[Tuple[str, str, str], ...] = (
+    ("theta_i_mean", "30", "°C"),   # Consigne exploitation (col30 — PAS col28)
+    ("phi_i",        "34", "%"),    # Humidité relative
+    ("A_p",          "42", "m²"),   # Surface par personne
+    ("M",            "43", "met"),  # Activité métabolique
+    ("p_Be",         "51", "W/m2"), # Puissance électrique équipements
+    ("E_vm",         "64", "lx"),   # Éclairement moyen
+)
+
+# Cache module-level : chargé au premier appel de _load_sia2024_usage_data.
+_SIA2024_DATA_CACHE: Optional[Dict[str, Any]] = None
 
 
 @dataclass(frozen=True)
@@ -619,6 +666,103 @@ def _collect_reference_directives(
     ]
 
 
+def _load_sia2024_usage_data() -> Dict[str, Any]:
+    """Charge le JSON SIA 2024 une seule fois (lazy + caché).
+
+    Le fichier est lu depuis le dépôt ; aucun import iesve n'est requis.
+    En cas d'absence du fichier (CI partiel), retourne un dict vide : les
+    codes d'usage ne pourront pas être résolus et les pièces avec une
+    catégorie définie seront comptées comme non résolues.
+    """
+
+    global _SIA2024_DATA_CACHE
+    if _SIA2024_DATA_CACHE is None:
+        try:
+            with open(_SIA2024_JSON_PATH, encoding="utf-8") as fh:
+                _SIA2024_DATA_CACHE = json.load(fh)
+        except OSError:
+            _SIA2024_DATA_CACHE = {}
+    return _SIA2024_DATA_CACHE
+
+
+def _collect_usage_standard_inputs(
+    rooms: Sequence[RoomData],
+) -> Tuple[List[ReferenceSubstitution], List[str]]:
+    """Émet les entrées SIA 2024 identiques projet et référence (§7.2.5.3).
+
+    Conformément à SIA 380/2:2022 §7.2.5.3, les consignes de température
+    (theta_i_mean col30 — exploitation, jamais col28 design), d'humidité,
+    les surfaces par personne, l'activité métabolique, la puissance équipements
+    et l'éclairement sont définis par l'usage SIA 2024 et s'appliquent de manière
+    IDENTIQUE au projet ET au projet de référence. Ces grandeurs ne font donc
+    pas l'objet d'une substitution différenciante.
+
+    Statut STANDARD_USAGE_INPUT :
+    - project_value = None (identité → pas de comparaison projet/référence)
+    - reference_value = valeur du tableau SIA 2024 pour l'usage résolu
+    - jamais un bloqueur individuel
+
+    La déduplication est faite par code d'usage : un jeu de 6 substitutions
+    est émis par usage distinct présent, pas une par pièce.
+
+    Si des pièces ont une ``sia2024_category`` définie mais non reconnue dans
+    le JSON, un bloqueur agrégé unique est émis. Les pièces sans attribut
+    ``sia2024_category`` (ou attribut vide) sont ignorées silencieusement :
+    elles n'ont pas encore été traitées par le checker.
+    """
+
+    data = _load_sia2024_usage_data()
+    usages_data = data.get("usages", {})
+
+    # Déduplication : code_usage -> nombre de pièces portant cet usage
+    seen_codes: Dict[str, int] = {}
+    unresolved_count = 0
+
+    for room in rooms:
+        code = (getattr(room, "sia2024_category", "") or "").strip()
+        if not code:
+            # Attribut absent ou vide → ignoré silencieusement
+            continue
+        if code not in usages_data:
+            # Catégorie définie mais inconnue du JSON SIA 2024
+            unresolved_count += 1
+            continue
+        seen_codes[code] = seen_codes.get(code, 0) + 1
+
+    substitutions: List[ReferenceSubstitution] = []
+    blockers: List[str] = []
+
+    for code in sorted(seen_codes):
+        params = usages_data[code].get("parameters", {})
+        room_count = seen_codes[code]
+        for parameter, col, fallback_unit in _SIA2024_USAGE_SYMBOLS:
+            col_data = params.get(col, {})
+            ref_value = _float_or_none(col_data.get("value"))
+            unit = col_data.get("unit") or fallback_unit
+            substitutions.append(
+                ReferenceSubstitution(
+                    parameter=parameter,
+                    scope=code,
+                    element_type="sia2024_usage",
+                    project_value=None,
+                    reference_value=ref_value,
+                    unit=unit,
+                    source=_SIA2024_SOURCE,
+                    status=STANDARD_USAGE_INPUT,
+                    affected_elements=room_count,
+                )
+            )
+
+    if unresolved_count:
+        blockers.append(
+            "SIA 2024 usage not resolved for {} room(s): set sia2024_category "
+            "to a valid SIA 2024 code (e.g. \"1.01\") before building the "
+            "reference project.".format(unresolved_count)
+        )
+
+    return substitutions, blockers
+
+
 def build_reference_project_specification(
     rooms_data: Optional[Sequence[RoomData]],
     model_analyzer: Any = None,
@@ -651,12 +795,15 @@ def build_reference_project_specification(
     infiltration_items, infiltration_blockers = _collect_infiltration_substitution(rooms)
     generation_items, generation_blockers = _collect_generation_substitutions(rooms)
     directive_items = _collect_reference_directives(rooms)
+    # SIA 380/2:2022 §7.2.5.3 : consignes et gains SIA 2024 identiques projet/référence.
+    usage_items, usage_blockers = _collect_usage_standard_inputs(rooms)
     substitutions = tuple(
         surface_items + opening_items + infiltration_items + generation_items
-        + directive_items
+        + directive_items + usage_items
     )
     blockers = tuple(
-        surface_blockers + opening_blockers + infiltration_blockers + generation_blockers
+        surface_blockers + opening_blockers + infiltration_blockers
+        + generation_blockers + usage_blockers
     )
 
     missing_reference = [
@@ -677,9 +824,11 @@ def build_reference_project_specification(
         "project/reference comparison still requires reviewer acceptance.",
         "Opaque-envelope constructions, window U-value/frame fraction, glazing "
         "solar/visible properties (g_perp, tau_v), whole-building infiltration, "
-        "heating/cooling generation efficiencies (tableaux 5-9) and the "
-        "convective-emission / unlimited-capacity directives are currently "
-        "automated. Every other SIA 380/2 Table 2 family remains an explicit "
+        "heating/cooling generation efficiencies (tableaux 5-9), the "
+        "convective-emission / unlimited-capacity directives, and the SIA 2024 "
+        "usage standard inputs (theta_i_mean col30, phi_i, A_p, M, p_Be, E_vm — "
+        "identical project/reference per §7.2.5.3) are currently automated. "
+        "Every other SIA 380/2 Table 2 family remains an explicit "
         "implementation blocker.",
     ]
     if not substitutions:

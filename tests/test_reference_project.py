@@ -7,6 +7,7 @@ from swiss_sia.model_analyzer import ModelAnalyzer, OpeningData, RoomData, Surfa
 from swiss_sia.reference_project import (
     PROJECT_VALUE_MISSING,
     REFERENCE_DIRECTIVE,
+    STANDARD_USAGE_INPUT,
     SUBSTITUTABLE,
     UNCLASSIFIED,
     build_reference_project_specification,
@@ -503,11 +504,12 @@ class CompleteSpecificationTests(unittest.TestCase):
         self.assertFalse(spec.is_complete)
         self.assertEqual(spec.blockers, ())
         self.assertIn("sia380_annual_aggregation_and_weighting", spec.missing_input_families)
-        # Every emitted input is resolved: numeric substitutions are SUBSTITUTABLE
-        # and reference-run directives are REFERENCE_DIRECTIVE; none is a blocker.
+        # Every emitted input is resolved: numeric substitutions are SUBSTITUTABLE,
+        # reference-run directives are REFERENCE_DIRECTIVE, and SIA 2024 usage
+        # inputs are STANDARD_USAGE_INPUT; none is a blocker.
         self.assertTrue(
             all(
-                item.status in (SUBSTITUTABLE, REFERENCE_DIRECTIVE)
+                item.status in (SUBSTITUTABLE, REFERENCE_DIRECTIVE, STANDARD_USAGE_INPUT)
                 for item in spec.substitutions
             )
         )
@@ -538,6 +540,111 @@ class CompleteSpecificationTests(unittest.TestCase):
             },
         )
         self.assertIn("reference_value", payload["substitutions"][0])
+
+
+class UsageStandardInputTests(unittest.TestCase):
+    """Tests pour les entrées d'usage SIA 2024 identiques projet/référence.
+
+    Article de norme : SIA 380/2:2022 §7.2.5.3.
+    Données de référence : refs/reference-data/sia-2024-2021.usage-data.json.
+    """
+
+    def _room_with_usage(self, code: str) -> RoomData:
+        """Construit une pièce avec sia2024_category positionné.
+
+        Reproduit exactement ce que le checker fait à la ligne 726 de
+        swiss_sia/sia380_checker.py : setattr(room, "sia2024_category", ...).
+        """
+        r = _room(surfaces=[_surface()])
+        setattr(r, "sia2024_category", code)
+        return r
+
+    def test_resolved_usage_emits_six_substitutions_with_standard_usage_input_status(self):
+        # Usage "1.01" (Wohnen MFH) : 6 grandeurs SIA 2024 émises.
+        spec = build_reference_project_specification(
+            [self._room_with_usage("1.01")], _Analyzer()
+        )
+        usage_items = [s for s in spec.substitutions if s.element_type == "sia2024_usage"]
+        self.assertEqual(len(usage_items), 6)
+        for item in usage_items:
+            self.assertEqual(item.status, STANDARD_USAGE_INPUT)
+            self.assertIsNone(item.project_value)
+            self.assertIsNotNone(item.reference_value)
+            self.assertEqual(item.scope, "1.01")
+            self.assertIn("SIA 2024:2021", item.source)
+
+    def test_reference_values_match_json_anchors_for_1_01(self):
+        # Valeurs d'ancrage lues dans le JSON pour usage 1.01.
+        # theta_i_mean col30=25°C, phi_i col34=60%, A_p col42=35m², M col43=1.2met.
+        spec = build_reference_project_specification(
+            [self._room_with_usage("1.01")], _Analyzer()
+        )
+        by_param = {
+            s.parameter: s
+            for s in spec.substitutions
+            if s.scope == "1.01"
+        }
+        self.assertEqual(by_param["theta_i_mean"].reference_value, 25.0)
+        self.assertEqual(by_param["phi_i"].reference_value, 60.0)
+        self.assertEqual(by_param["A_p"].reference_value, 35.0)
+        self.assertEqual(by_param["M"].reference_value, 1.2)
+
+    def test_theta_i_mean_uses_col30_exploitation_not_col28_design(self):
+        # La norme impose theta_i_mean (col30=25) ; theta_i_design (col28=26)
+        # ne doit jamais être utilisé comme consigne énergie.
+        spec = build_reference_project_specification(
+            [self._room_with_usage("1.01")], _Analyzer()
+        )
+        by_param = {
+            s.parameter: s
+            for s in spec.substitutions
+            if s.scope == "1.01"
+        }
+        # 25 = col30 exploitation ; 26 = col28 design (interdit ici)
+        self.assertEqual(by_param["theta_i_mean"].reference_value, 25.0)
+        self.assertNotEqual(by_param["theta_i_mean"].reference_value, 26.0)
+
+    def test_dedup_two_rooms_same_usage_emits_one_set_of_six_substitutions(self):
+        # Deux pièces avec le même usage → 1 jeu de 6 substitutions, 2 pièces.
+        spec = build_reference_project_specification(
+            [self._room_with_usage("1.01"), self._room_with_usage("1.01")],
+            _Analyzer(),
+        )
+        usage_items = [s for s in spec.substitutions if s.scope == "1.01"]
+        self.assertEqual(len(usage_items), 6)
+        for item in usage_items:
+            self.assertEqual(item.affected_elements, 2)
+
+    def test_unresolved_usage_code_emits_one_aggregated_blocker_not_one_per_room(self):
+        # Code inconnu dans le JSON → bloqueur agrégé (pas un par pièce).
+        r1 = _room(surfaces=[_surface()])
+        r2 = _room(surfaces=[_surface()])
+        setattr(r1, "sia2024_category", "9.99")
+        setattr(r2, "sia2024_category", "9.99")
+        spec = build_reference_project_specification([r1, r2], _Analyzer())
+        usage_blockers = [b for b in spec.blockers if "SIA 2024 usage not resolved" in b]
+        self.assertEqual(len(usage_blockers), 1)
+        self.assertIn("2 room", usage_blockers[0])
+
+    def test_missing_sia2024_category_emits_no_substitution_and_no_blocker(self):
+        # Pièces sans sia2024_category (tests existants) → ignorées silencieusement.
+        spec = build_reference_project_specification(
+            [_room(surfaces=[_surface()])], _Analyzer()
+        )
+        usage_items = [s for s in spec.substitutions if s.element_type == "sia2024_usage"]
+        self.assertEqual(usage_items, [])
+        usage_blockers = [b for b in spec.blockers if "SIA 2024 usage" in b]
+        self.assertEqual(usage_blockers, [])
+
+    def test_standard_usage_input_does_not_cause_blocked_status(self):
+        # STANDARD_USAGE_INPUT est résolu → le statut global n'est pas BLOCKED.
+        spec = build_reference_project_specification(
+            [self._room_with_usage("1.01")], _Analyzer()
+        )
+        usage_items = [s for s in spec.substitutions if s.status == STANDARD_USAGE_INPUT]
+        self.assertGreater(len(usage_items), 0)
+        self.assertNotEqual(spec.status, "BLOCKED_INCOMPLETE_INPUTS")
+        self.assertEqual(spec.blockers, ())
 
 
 if __name__ == "__main__":
