@@ -69,6 +69,10 @@ _MIN_MEANINGFUL_AREA_M2 = 1.0e-6
 SUBSTITUTABLE = "SUBSTITUTABLE"
 PROJECT_VALUE_MISSING = "PROJECT_VALUE_MISSING"
 UNCLASSIFIED = "UNCLASSIFIED"
+# The reference project fixes this input regardless of the project (Table 2
+# "valeur limite"/"valeur cible" identical and prescriptive). No project value
+# is compared, so a directive is resolved, never a blocker.
+REFERENCE_DIRECTIVE = "REFERENCE_DIRECTIVE"
 
 # Table 2 covers the complete reference-project model.  The current automated
 # specification resolves only the two families below.  Keeping the remaining
@@ -81,13 +85,13 @@ IMPLEMENTED_REFERENCE_INPUT_FAMILIES: Tuple[str, ...] = (
     "infiltration",
     "cooling_generation_and_auxiliaries",
     "heating_generation",
+    "emission_system_and_unlimited_capacity",
 )
 MISSING_REFERENCE_INPUT_FAMILIES: Tuple[str, ...] = (
     "thermal_bridges",
     "glazed_area_ratio_solar_protection_and_control",
     "sia2024_internal_gains_profiles_and_setpoints",
     "sia3874_lighting_power_and_control",
-    "emission_system_and_unlimited_capacity",
     "ventilation_system_and_controls",
     "photovoltaic_generation",
     "sia380_annual_aggregation_and_weighting",
@@ -107,6 +111,10 @@ class ReferenceSubstitution:
     source: str
     status: str
     affected_elements: int
+    # Set only on REFERENCE_DIRECTIVE rows: the fixed reference-run instruction
+    # (e.g. convective emission, unlimited capacity) that Table 2 imposes
+    # regardless of the project value. None on numeric substitutions.
+    directive: Optional[str] = None
 
     def to_dict(self) -> Dict[str, Any]:
         """Return the substitution as serializable data."""
@@ -121,6 +129,7 @@ class ReferenceSubstitution:
             "source": self.source,
             "status": self.status,
             "affected_elements": self.affected_elements,
+            "directive": self.directive,
         }
 
 
@@ -568,6 +577,48 @@ def _collect_generation_substitutions(
     return substitutions, blockers
 
 
+def _collect_reference_directives(
+    rooms: Sequence[RoomData],
+) -> List[ReferenceSubstitution]:
+    """Emit the whole-building emission and capacity reference-run directives.
+
+    SIA 380/2:2022 Table 2 (p33) fixes, for the reference project irrespective
+    of the project design, a convective emission system and unlimited heating
+    and cooling capacity. These are prescriptive reference-run settings, not
+    comparisons, so they are emitted as resolved directives with no project
+    value. They complete the reference-run recipe without ever reading as a
+    missing-input blocker.
+    """
+
+    source = _source(_OPENING_SOURCE_KEY)  # SIA 380/2:2022, tableau 2
+    return [
+        ReferenceSubstitution(
+            parameter="emission_system_type",
+            scope="building",
+            element_type="emission",
+            project_value=None,
+            reference_value=0.0,
+            unit="radiant_fraction",
+            source=source,
+            status=REFERENCE_DIRECTIVE,
+            affected_elements=len(rooms),
+            directive="Convective emission (radiant fraction 0)",
+        ),
+        ReferenceSubstitution(
+            parameter="max_heating_cooling_capacity",
+            scope="building",
+            element_type="capacity",
+            project_value=None,
+            reference_value=None,
+            unit="-",
+            source=source,
+            status=REFERENCE_DIRECTIVE,
+            affected_elements=len(rooms),
+            directive="Unlimited heating and cooling capacity",
+        ),
+    ]
+
+
 def build_reference_project_specification(
     rooms_data: Optional[Sequence[RoomData]],
     model_analyzer: Any = None,
@@ -599,8 +650,10 @@ def build_reference_project_specification(
     opening_items, opening_blockers = _collect_opening_substitutions(rooms)
     infiltration_items, infiltration_blockers = _collect_infiltration_substitution(rooms)
     generation_items, generation_blockers = _collect_generation_substitutions(rooms)
+    directive_items = _collect_reference_directives(rooms)
     substitutions = tuple(
         surface_items + opening_items + infiltration_items + generation_items
+        + directive_items
     )
     blockers = tuple(
         surface_blockers + opening_blockers + infiltration_blockers + generation_blockers
@@ -623,10 +676,11 @@ def build_reference_project_specification(
         "conclusion: the reference demand requires a VE/ApacheSim run, and the "
         "project/reference comparison still requires reviewer acceptance.",
         "Opaque-envelope constructions, window U-value/frame fraction, glazing "
-        "solar/visible properties (g_perp, tau_v), whole-building infiltration "
-        "and heating/cooling generation efficiencies (tableaux 5-9) are "
-        "currently automated. Every other SIA 380/2 Table 2 family remains an "
-        "explicit implementation blocker.",
+        "solar/visible properties (g_perp, tau_v), whole-building infiltration, "
+        "heating/cooling generation efficiencies (tableaux 5-9) and the "
+        "convective-emission / unlimited-capacity directives are currently "
+        "automated. Every other SIA 380/2 Table 2 family remains an explicit "
+        "implementation blocker.",
     ]
     if not substitutions:
         status = "NOT_CHECKABLE"

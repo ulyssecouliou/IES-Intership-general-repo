@@ -6,6 +6,7 @@ from swiss_sia.config import SIA3802_LIMIT_VALUES
 from swiss_sia.model_analyzer import ModelAnalyzer, OpeningData, RoomData, SurfaceData
 from swiss_sia.reference_project import (
     PROJECT_VALUE_MISSING,
+    REFERENCE_DIRECTIVE,
     SUBSTITUTABLE,
     UNCLASSIFIED,
     build_reference_project_specification,
@@ -459,6 +460,31 @@ class GenerationSubstitutionTests(unittest.TestCase):
         self.assertEqual(len(_by_parameter(spec, "cooling_generation_eer")), 1)
 
 
+class ReferenceDirectiveTests(unittest.TestCase):
+    def test_emission_and_capacity_directives_are_emitted_without_blocking(self):
+        spec = build_reference_project_specification(
+            [_room(surfaces=[_surface()])], _Analyzer()
+        )
+        emission = _by_parameter(spec, "emission_system_type")[0]
+        capacity = _by_parameter(spec, "max_heating_cooling_capacity")[0]
+        self.assertEqual(emission.status, REFERENCE_DIRECTIVE)
+        self.assertEqual(emission.reference_value, 0.0)
+        self.assertIn("onvective", emission.directive)
+        self.assertEqual(capacity.status, REFERENCE_DIRECTIVE)
+        self.assertIn("nlimited", capacity.directive)
+
+    def test_directives_do_not_count_as_blockers(self):
+        # A fully resolvable envelope + directives must stay PARTIAL, not BLOCKED:
+        # a directive has no project value by design and is not a missing input.
+        spec = build_reference_project_specification(
+            [_room(surfaces=[_surface()], openings=[_opening()])], _Analyzer()
+        )
+        self.assertEqual(spec.status, "PARTIAL_REFERENCE_INPUT_SPECIFICATION")
+        directives = [s for s in spec.substitutions if s.status == REFERENCE_DIRECTIVE]
+        self.assertEqual(len(directives), 2)
+        self.assertEqual(spec.blockers, ())
+
+
 class CompleteSpecificationTests(unittest.TestCase):
     def test_resolvable_envelope_remains_partial_until_all_table2_families_exist(self):
         spec = build_reference_project_specification(
@@ -477,8 +503,13 @@ class CompleteSpecificationTests(unittest.TestCase):
         self.assertFalse(spec.is_complete)
         self.assertEqual(spec.blockers, ())
         self.assertIn("sia380_annual_aggregation_and_weighting", spec.missing_input_families)
+        # Every emitted input is resolved: numeric substitutions are SUBSTITUTABLE
+        # and reference-run directives are REFERENCE_DIRECTIVE; none is a blocker.
         self.assertTrue(
-            all(item.status == SUBSTITUTABLE for item in spec.substitutions)
+            all(
+                item.status in (SUBSTITUTABLE, REFERENCE_DIRECTIVE)
+                for item in spec.substitutions
+            )
         )
 
     def test_notes_refuse_to_read_as_a_compliance_conclusion(self):
