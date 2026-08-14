@@ -303,6 +303,25 @@ class ExcelReportGenerator:
             return parts[1].replace("_", " ").strip()
         return "Swiss SIA project"
 
+    def _client_evidence_destination(self, text: str) -> str:
+        """Return a destination hint safe for a client SIA 380/2-only report.
+
+        The coverage matrix routes several genuine SIA 380/2 inputs into the
+        tool's ``sia4010_evidence/`` intake folder. On a client 380/2-only
+        report that internal folder name must not surface, so this keeps any
+        real location (the VE Vista folder, an Excel sheet) and neutralises the
+        bare folder token. In the default mode the text is returned unchanged.
+        """
+
+        if self.include_sia4010:
+            return text
+        cleaned = str(text or "")
+        for connector in (" or ", " plus "):
+            cleaned = cleaned.replace(f"{connector}sia4010_evidence/", "")
+        if cleaned.strip() == "sia4010_evidence/" or not cleaned.strip():
+            return "Project evidence folder"
+        return cleaned.replace("sia4010_evidence/", "project evidence folder")
+
     @staticmethod
     def _resolve_cover_logo():
         """Return the cover logo path, real brand first, placeholder second.
@@ -647,15 +666,20 @@ class ExcelReportGenerator:
             else "Executive view - client VE model, automated SIA 380/2 checks and action priorities.",
             subtitle_format,
         )
+        # Build the target list first, then drop it into the fixed slots, so the
+        # SIA 4010 button vanishes in 380/2-only mode (its sheet is never
+        # written) and the remaining buttons reflow with no dead link or gap.
         nav_links = [
-            ("A3:B3", "Action Page", "ACTION DASHBOARD"),
-            ("C3:D3", "P1 Actions", "P1 REMEDIATION"),
-            ("E3:F3", "Input Request", "INPUT REQUEST"),
-            ("G3:H3", "SIA Coverage", "SIA DATA COVERAGE"),
-            ("I3:J3", "SIA4010", "SIA4010 READINESS"),
-            ("K3:L3", "Audit Log", "AUDIT LOG"),
+            ("Action Page", "ACTION DASHBOARD"),
+            ("P1 Actions", "P1 REMEDIATION"),
+            ("Input Request", "INPUT REQUEST"),
+            ("SIA Coverage", "SIA DATA COVERAGE"),
         ]
-        for cell_range, label, sheet_name in nav_links:
+        if self.include_sia4010:
+            nav_links.append(("SIA4010", "SIA4010 READINESS"))
+        nav_links.append(("Audit Log", "AUDIT LOG"))
+        nav_slots = ["A3:B3", "C3:D3", "E3:F3", "G3:H3", "I3:J3", "K3:L3"]
+        for cell_range, (label, sheet_name) in zip(nav_slots, nav_links):
             first_cell = cell_range.split(":")[0]
             worksheet.merge_range(cell_range, "", nav_format)
             worksheet.write_url(first_cell, f"internal:'{sheet_name}'!A1", nav_format, string=label)
@@ -1409,8 +1433,10 @@ class ExcelReportGenerator:
         worksheet.write("B6", len(p1_groups), number_format)
         worksheet.write("A7", "P1 raw alerts", subheader_format)
         worksheet.write("B7", sum(int(group.get("count", 0) or 0) for group in p1_groups), number_format)
-        worksheet.write("A8", "SIA 4010 evidence families", subheader_format)
-        worksheet.write("B8", f"{evidence_present}/{len(SIA4010_REQUIRED_EVIDENCE)}", cell_format)
+        # The SIA 4010 evidence tally has no place on a client 380/2 board.
+        if self.include_sia4010:
+            worksheet.write("A8", "SIA 4010 evidence families", subheader_format)
+            worksheet.write("B8", f"{evidence_present}/{len(SIA4010_REQUIRED_EVIDENCE)}", cell_format)
 
         headers = [
             "Priority",
@@ -2137,6 +2163,7 @@ class ExcelReportGenerator:
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         total_area = sum(self._safe_float(getattr(room, "area", 0.0)) for room in rooms_data)
         preflight_counts = Counter(str(item.get("status", "UNKNOWN")) for item in preflight_checks)
+        template_remediation = dynamic_results.get("template_remediation", {}) or {}
 
         worksheet.merge_range("A1:F1", "Audit Log and Traceability", header_format)
         worksheet.merge_range(
@@ -2175,6 +2202,18 @@ class ExcelReportGenerator:
             ("Skipped stale APS files", len(dynamic_results.get("skipped_aps_files", []) or [])),
             ("APS files detected", len(dynamic_results.get("aps_files", []) or [])),
             ("Preflight PASS/WARNING/FAIL/NOT_CHECKABLE", f"{preflight_counts.get('PASS', 0)}/{preflight_counts.get('WARNING', 0)}/{preflight_counts.get('FAIL', 0)}/{preflight_counts.get('NOT_CHECKABLE', 0)}"),
+            ("Client template remediation status", template_remediation.get("status", "NOT RUN")),
+            ("Template remediation integrity", template_remediation.get("integrity_status", "NOT_CHECKABLE")),
+            ("Post-remediation audit", template_remediation.get("post_remediation_audit", "NOT_APPLICABLE")),
+            ("Reviewed template", template_remediation.get("template_name") or "None"),
+            ("Template target rooms", template_remediation.get("room_count", 0)),
+            ("Template reviewer", template_remediation.get("reviewer") or "Not provided"),
+            ("Template review date", template_remediation.get("review_date") or "Not provided"),
+            ("Template source", template_remediation.get("source_document") or "Not provided"),
+            ("Template source reference", template_remediation.get("source_reference") or "Not provided"),
+            ("Template preview plan", template_remediation.get("plan_path") or "None"),
+            ("Template mutation receipt", template_remediation.get("receipt_path") or "None"),
+            ("Template operation compliance claim", template_remediation.get("compliance_claim", "NOT_GRANTED")),
         ]
         if not self.include_sia4010:
             metadata_rows = [
@@ -2192,7 +2231,10 @@ class ExcelReportGenerator:
             else:
                 worksheet.write(row_index, 1, value, cell_format)
 
-        row = 25
+        # Start the evidence section after the complete metadata block. This is
+        # deliberately dynamic because guarded remediation adds traceability
+        # fields and must never overwrite earlier audit rows.
+        row = 6 + len(metadata_rows) + 2
         if self.include_sia4010:
             worksheet.write(row, 0, "Official Evidence Family", subheader_format)
             worksheet.write(row, 1, "Status", subheader_format)
@@ -2220,10 +2262,13 @@ class ExcelReportGenerator:
         worksheet.write(row, 1, "Required interpretation", subheader_format)
         guardrails = [
             ("SIA 380/2", "Only implemented direct checks can be read as automated findings; partial and missing evidence remain reviewer items."),
-            ("SIA 4010", "Official validation requires SIA test specifications, official evaluation workbooks, candidate results, reference comparisons and class confirmation."),
+        ]
+        if self.include_sia4010:
+            guardrails.append(("SIA 4010", "Official validation requires SIA test specifications, official evaluation workbooks, candidate results, reference comparisons and class confirmation."))
+        guardrails.extend([
             ("Missing data", "Missing or non-comparable data must never be treated as PASS."),
             ("Report wording", "Use readiness/audit wording until every blocker and official evidence requirement is reviewed."),
-        ]
+        ])
         for label, text in guardrails:
             row += 1
             worksheet.write(row, 0, label, cell_format)
@@ -2301,26 +2346,27 @@ class ExcelReportGenerator:
                 worksheet.write(row, 1, data.get("score", 0), cell_format)
                 row += 1
 
-        # SIA 4010 results
-        worksheet.write(row + 1, 0, "SIA 4010", header_format)
-        worksheet.write(row + 2, 0, "Overall score", header_format)
-        worksheet.write(row + 2, 1, sia4010_results.get("score", 0), cell_format)
+        # SIA 4010 results. A client 380/2 report carries no validation block.
+        if self.include_sia4010:
+            worksheet.write(row + 1, 0, "SIA 4010", header_format)
+            worksheet.write(row + 2, 0, "Overall score", header_format)
+            worksheet.write(row + 2, 1, sia4010_results.get("score", 0), cell_format)
 
-        row += 3
-        worksheet.write(row, 0, "SIA 4010 tests", header_format)
-        for test_name, test_data in sia4010_results.get("tests", {}).items():
-            row += 1
-            worksheet.write(row, 0, test_name, cell_format)
-            worksheet.write(row, 1, test_data.get("status", "N/A"), cell_format)
-            status = test_data.get("status")
-            if status == "PASS":
-                worksheet.write(row, 1, status, pass_format)
-            elif status == "WARNING":
-                worksheet.write(row, 1, status, warning_format)
-            elif status == "NOT_CHECKABLE":
-                worksheet.write(row, 1, status, not_checkable_format)
-            else:
-                worksheet.write(row, 1, status, fail_format)
+            row += 3
+            worksheet.write(row, 0, "SIA 4010 tests", header_format)
+            for test_name, test_data in sia4010_results.get("tests", {}).items():
+                row += 1
+                worksheet.write(row, 0, test_name, cell_format)
+                worksheet.write(row, 1, test_data.get("status", "N/A"), cell_format)
+                status = test_data.get("status")
+                if status == "PASS":
+                    worksheet.write(row, 1, status, pass_format)
+                elif status == "WARNING":
+                    worksheet.write(row, 1, status, warning_format)
+                elif status == "NOT_CHECKABLE":
+                    worksheet.write(row, 1, status, not_checkable_format)
+                else:
+                    worksheet.write(row, 1, status, fail_format)
 
         # Set readable column widths.
         worksheet.set_column("A:A", 30)
@@ -2784,7 +2830,7 @@ class ExcelReportGenerator:
             worksheet.write(row, 3, item["validation_scope"], cell_format)
             worksheet.write(row, 4, item["data_needed"], cell_format)
             worksheet.write(row, 5, item["preferred_format"], cell_format)
-            worksheet.write(row, 6, item["destination"], cell_format)
+            worksheet.write(row, 6, self._client_evidence_destination(item["destination"]), cell_format)
             worksheet.write(row, 7, item["criterion"], cell_format)
             worksheet.write(row, 8, item["owner"], cell_format)
             worksheet.write(row, 9, item["source"], cell_format)
@@ -2855,7 +2901,7 @@ class ExcelReportGenerator:
         worksheet.write("C6", "Accepted", header_format)
         worksheet.write("D6", accepted_count, number_format)
         worksheet.write("E6", "Evidence folder", header_format)
-        worksheet.merge_range("F6:N6", evidence_dir, cell_format)
+        worksheet.merge_range("F6:N6", self._client_evidence_destination(evidence_dir), cell_format)
 
         headers = [
             "Status",

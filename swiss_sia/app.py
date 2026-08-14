@@ -54,6 +54,9 @@ rule_engine_module = _reload_local_module("rule_engine")
 evidence_manager_module = _reload_local_module("evidence_manager")
 evidence_bootstrap_module = _reload_local_module("evidence_bootstrap")
 evidence_pack_module = _reload_local_module("evidence_pack")
+client_template_remediation_module = _reload_local_module(
+    "client_template_remediation"
+)
 simulation_results_module = _reload_local_module("simulation_results")
 _reload_local_module("value_integrity")
 
@@ -83,6 +86,13 @@ render_compliance_report_pdf = (
 )
 # The client chooses the report language; Swiss work runs in DE/FR/IT plus EN.
 REPORT_LANGUAGE_ENV_VAR = "SIA_REPORT_LANGUAGE"
+# Report scope. The default full report carries both SIA 380/2 and the SIA 4010
+# readiness/validation evidence. A client 380/2-only deliverable is selected by
+# setting SIA_REPORT_SCOPE to one of the tokens below, so the workbook drops
+# every SIA 4010 sheet, card and label except the protective disclaimers and the
+# provenance citations that a professional report must keep.
+REPORT_SCOPE_ENV_VAR = "SIA_REPORT_SCOPE"
+_CLIENT_ONLY_SCOPE_TOKENS = {"sia3802", "sia380", "sia3802_only", "380_2_only", "client"}
 HealthScoreCalculator = health_score_module.HealthScoreCalculator
 ExcelReportGenerator = excel_report_module.ExcelReportGenerator
 scan_sia3802_justifications = evidence_manager_module.scan_sia3802_justifications
@@ -92,6 +102,9 @@ scan_sia3802_global_comparisons = evidence_manager_module.scan_sia3802_global_co
 find_accepted_global_comparison = evidence_manager_module.find_accepted_global_comparison
 prepare_evidence_folder = evidence_bootstrap_module.prepare_evidence_folder
 create_evidence_pack = evidence_pack_module.create_evidence_pack
+latest_remediation_evidence = (
+    client_template_remediation_module.latest_remediation_evidence
+)
 
 REPORTS_DIR = os.path.join(str(PROJECT_ROOT), OUTPUT_DIR)
 os.makedirs(REPORTS_DIR, exist_ok=True)
@@ -888,10 +901,34 @@ def _build_preflight_checks(
     ]
 
 
-def main():
-    """Run the VE extraction, SIA checks, scoring, and Excel report generation."""
+def _resolve_include_sia4010(explicit: Optional[bool]) -> bool:
+    """Decide whether the workbook includes the SIA 4010 evidence sections.
+
+    An explicit caller argument wins so a dedicated client launcher can force
+    the 380/2-only deliverable. Otherwise the SIA_REPORT_SCOPE environment
+    variable selects it; any other value keeps the default full report.
+    """
+
+    if explicit is not None:
+        return explicit
+    scope = os.environ.get(REPORT_SCOPE_ENV_VAR, "").strip().lower()
+    return scope not in _CLIENT_ONLY_SCOPE_TOKENS
+
+
+def main(include_sia4010: Optional[bool] = None):
+    """Run the VE extraction, SIA checks, scoring, and Excel report generation.
+
+    Args:
+        include_sia4010: Force the report scope. ``None`` (default) resolves the
+            scope from the SIA_REPORT_SCOPE environment variable; ``False``
+            produces a client SIA 380/2-only workbook.
+    """
     try:
-        logger.info("Starting VE model analysis.")
+        include_sia4010 = _resolve_include_sia4010(include_sia4010)
+        logger.info(
+            "Starting VE model analysis (report scope: %s).",
+            "SIA 380/2 + SIA 4010" if include_sia4010 else "SIA 380/2 only (client)",
+        )
 
         if iesve is None:
             raise RuntimeError("The iesve Python module is only available inside IESVE.")
@@ -933,6 +970,9 @@ def main():
 
         logger.info("Collecting APS/Vista dynamic results where available.")
         dynamic_results = _collect_dynamic_results(project)
+        dynamic_results["template_remediation"] = latest_remediation_evidence(
+            str(getattr(project, "path", "") or "")
+        )
         _attach_dynamic_results_to_rooms(rooms_data, dynamic_results)
         logger.info(
             "APS/Vista dynamic result status: %s (%s)",
@@ -1027,6 +1067,7 @@ def main():
             preflight_checks,
             dynamic_results,
             justification_results,
+            include_sia4010=include_sia4010,
         )
         latest_report_path = (
             _copy_latest_report_alias(report_generator.output_path)
