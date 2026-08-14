@@ -173,7 +173,11 @@ def find_accepted_project_metadata(
     project_label: str,
 ) -> Optional[Dict[str, Any]]:
     """Return accepted metadata matching the active VE project label."""
-    accepted = (metadata_results or {}).get("accepted_records", []) or []
+    if not isinstance(metadata_results, dict):
+        return None
+    accepted = metadata_results.get("accepted_records", []) or []
+    if not isinstance(accepted, list):
+        return None
     for record in accepted:
         if isinstance(record, dict) and _field_matches(record.get("project_id"), project_label):
             return record
@@ -224,7 +228,12 @@ def find_accepted_global_comparison(
     project_label: str,
 ) -> Optional[Dict[str, Any]]:
     """Return the accepted complete comparison for the active VE project."""
-    for record in (comparison_results or {}).get("accepted_records", []) or []:
+    if not isinstance(comparison_results, dict):
+        return None
+    accepted = comparison_results.get("accepted_records", []) or []
+    if not isinstance(accepted, list):
+        return None
+    for record in accepted:
         if isinstance(record, dict) and _field_matches(record.get("project_id"), project_label):
             return record
     return None
@@ -237,7 +246,12 @@ def find_accepted_mapping(
     thermal_template_id: Optional[str] = None,
 ) -> Optional[Dict[str, Any]]:
     """Return an accepted external-standard mapping for a room or template."""
-    for record in (mapping_results or {}).get("accepted_records", []) or []:
+    if not isinstance(mapping_results, dict):
+        return None
+    accepted = mapping_results.get("accepted_records", []) or []
+    if not isinstance(accepted, list):
+        return None
+    for record in accepted:
         if not isinstance(record, dict):
             continue
         mapped_room = record.get("room_id") or record.get("room")
