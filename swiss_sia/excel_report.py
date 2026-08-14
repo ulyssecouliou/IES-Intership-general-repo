@@ -244,17 +244,22 @@ class ExcelReportGenerator:
         return "SIA4010" in rule or "4010" in category
 
     def _without_sia4010_alerts(self, score_result: "ScoreResult") -> "ScoreResult":
-        """Return a copy of the score with SIA 4010 alerts removed.
+        """Return a copy of the score with all SIA 4010 material removed.
 
-        The SIA 380/2 score, health score and detailed scores are unchanged --
-        only the alert list is filtered, so the client report's aggregated
-        views (alerts, action matrix, P1, dashboards) show 380/2 findings only.
+        The SIA 380/2 score and health score are unchanged. Both the alert list
+        and the per-domain detailed scores are filtered, so the client report's
+        aggregated views (alerts, action matrix, P1, dashboards) and the detailed
+        scores sheet show SIA 380/2 findings only, never a SIA4010_TEST_* row.
         """
 
         return ScoreResult(
             compliance_score=getattr(score_result, "compliance_score", 0.0),
             health_score=getattr(score_result, "health_score", 0.0),
-            detailed_scores=dict(getattr(score_result, "detailed_scores", {}) or {}),
+            detailed_scores={
+                key: value
+                for key, value in (getattr(score_result, "detailed_scores", {}) or {}).items()
+                if "4010" not in str(key).upper()
+            },
             alerts=[
                 alert
                 for alert in getattr(score_result, "alerts", []) or []
@@ -637,7 +642,9 @@ class ExcelReportGenerator:
         worksheet.merge_range("A1:L1", "Swiss SIA Compliance Dashboard", title_format)
         worksheet.merge_range(
             "A2:L2",
-            "Executive view - VE model, automated SIA 380/2 checks, SIA 4010 readiness and action priorities.",
+            "Executive view - VE model, automated SIA 380/2 checks, SIA 4010 readiness and action priorities."
+            if self.include_sia4010
+            else "Executive view - client VE model, automated SIA 380/2 checks and action priorities.",
             subtitle_format,
         )
         nav_links = [
@@ -682,7 +689,7 @@ class ExcelReportGenerator:
             self._write_dashboard_card(worksheet, slot, title, value, note, card_title_format, card_value_format, card_note_format)
 
         worksheet.merge_range("A9:L9", "Executive Interpretation", section_format)
-        worksheet.merge_range("A10:L12", self._dashboard_verdict(score_result, sia4010_results, rooms_data), note_format)
+        worksheet.merge_range("A10:L12", self._dashboard_verdict(score_result, sia4010_results, rooms_data, self.include_sia4010), note_format)
 
         score_rows = self._dashboard_score_rows(score_result)
         severity_rows = [
@@ -962,7 +969,7 @@ class ExcelReportGenerator:
             self._write_dashboard_card(worksheet, slot, title, value, note,
                                        card_title_format, card_value_format, card_note_format)
 
-        worksheet.merge_range("A9:P10", self._dashboard_verdict(score_result, sia4010_results, rooms_data), muted_format)
+        worksheet.merge_range("A9:P10", self._dashboard_verdict(score_result, sia4010_results, rooms_data, self.include_sia4010), muted_format)
 
         worksheet.merge_range("A12:G12", "SIA 380/2 Model Scores", section_format)
         worksheet.write_row("A13", ["Domain", "Score", "Meaning"], header_format)
@@ -1161,17 +1168,23 @@ class ExcelReportGenerator:
         evidence_present = sum(1 for item in SIA4010_REQUIRED_EVIDENCE if self._has_sia4010_evidence(evidence, item))
         p1_groups = [group for group in alert_groups if group.get("priority") == "P1"]
         total_area = sum(self._safe_float(getattr(room, "area", 0.0)) for room in rooms_data)
-        blocked_sia4010_tests = self._count_blocked_sia4010_tests(sia4010_results)
+        blocked_sia4010_tests = (
+            self._count_blocked_sia4010_tests(sia4010_results)
+            if self.include_sia4010
+            else 0
+        )
 
         worksheet.merge_range("A1:H1", "Client / Manager Summary", title_format)
         worksheet.merge_range(
             "A2:H3",
-            "Professional readiness statement for the active VE model. This page is intentionally conservative: it separates automated SIA 380/2 checks from official SIA 4010 validation evidence.",
+            "Professional readiness statement for the active VE model. This page is intentionally conservative: it separates automated SIA 380/2 checks from official SIA 4010 validation evidence."
+            if self.include_sia4010
+            else "Professional SIA 380/2 readiness statement for the active client VE model. It is intentionally conservative: missing data is reported, never assumed compliant.",
             note_format,
         )
 
         worksheet.write("A5", "Current decision", section_format)
-        worksheet.merge_range("B5:H6", self._dashboard_verdict(score_result, sia4010_results, rooms_data), fail_format if p1_groups or blocked_sia4010_tests else pass_format)
+        worksheet.merge_range("B5:H6", self._dashboard_verdict(score_result, sia4010_results, rooms_data, self.include_sia4010), fail_format if p1_groups or blocked_sia4010_tests else pass_format)
 
         worksheet.write("A8", "KPI", section_format)
         worksheet.write("B8", "Value", section_format)
@@ -1182,10 +1195,11 @@ class ExcelReportGenerator:
             ("Rooms analysed", len(rooms_data), "Thermal rooms/zones extracted from VE.", count_format),
             ("Floor area analysed (m2)", total_area, "Sum of extracted room areas.", number_format),
             ("P1 action groups", len(p1_groups), "Priority groups to treat before client compliance wording.", count_format),
-            ("SIA 4010 evidence", evidence_present, f"Official evidence families detected out of {len(SIA4010_REQUIRED_EVIDENCE)}.", count_format),
-            ("SIA 4010 blocked tests", blocked_sia4010_tests, "Tests remain blocked until official evidence is complete and reviewed.", count_format),
-            ("High + critical alerts", alerts_count.get("Critical", 0) + alerts_count.get("High", 0), "Blocking or near-blocking review items.", count_format),
         ]
+        if self.include_sia4010:
+            kpis.append(("SIA 4010 evidence", evidence_present, f"Official evidence families detected out of {len(SIA4010_REQUIRED_EVIDENCE)}.", count_format))
+            kpis.append(("SIA 4010 blocked tests", blocked_sia4010_tests, "Tests remain blocked until official evidence is complete and reviewed.", count_format))
+        kpis.append(("High + critical alerts", alerts_count.get("Critical", 0) + alerts_count.get("High", 0), "Blocking or near-blocking review items.", count_format))
         row = 8
         for label, value, interpretation, value_format in kpis:
             row += 1
@@ -1198,10 +1212,11 @@ class ExcelReportGenerator:
         worksheet.write("C19", "Reason", section_format)
         claim_rows = [
             ("Use", "Automated SIA 380/2 readiness review for directly extracted VE data.", "Supported by the implemented checks and requirement matrix."),
-            ("Use", "SIA 4010 evidence readiness matrix.", "The script scans evidence presence and keeps official tests NOT_CHECKABLE without proof."),
             ("Avoid", "This model is fully SIA compliant.", "Current P1 items remain open and several MSP checks are not implemented yet."),
-            ("Avoid", "The software/model is SIA 4010 validated.", "Official SIA test files, candidate outputs, reference comparisons and validation class confirmation are missing."),
         ]
+        if self.include_sia4010:
+            claim_rows.insert(1, ("Use", "SIA 4010 evidence readiness matrix.", "The script scans evidence presence and keeps official tests NOT_CHECKABLE without proof."))
+            claim_rows.append(("Avoid", "The software/model is SIA 4010 validated.", "Official SIA test files, candidate outputs, reference comparisons and validation class confirmation are missing."))
         for offset, claim in enumerate(claim_rows, start=20):
             worksheet.write_row(offset, 0, claim, cell_format)
 
@@ -1245,6 +1260,15 @@ class ExcelReportGenerator:
         ))
 
         checks = preflight_checks or self._fallback_preflight_checks(rooms_data, sia4010_results)
+        if not self.include_sia4010:
+            checks = [
+                check
+                for check in checks
+                if not any(
+                    "4010" in str(check.get(field, "")).upper()
+                    for field in ("check", "why", "action", "source", "observed", "id")
+                )
+            ]
         status_counts = Counter(str(check.get("status", "UNKNOWN")) for check in checks)
 
         worksheet.merge_range("A1:G1", "VE Run Preflight - Execution Readiness", header_format)
@@ -2007,6 +2031,8 @@ class ExcelReportGenerator:
             ("SIA 4010 classified evidence files", classified_evidence_count, "Official-looking files detected and classified by evidence family."),
             ("SIA 4010 blocked tests", blocked_sia4010_tests, "Tests still blocked until official evaluation evidence is complete and reviewed."),
         ]
+        if not self.include_sia4010:
+            kpis = [kpi for kpi in kpis if "4010" not in str(kpi[0]).upper()]
         for row, (label, value, meaning) in enumerate(kpis, start=6):
             worksheet.write(row, 0, label, subheader_format)
             worksheet.write(row, 1, value, number_format)
@@ -2065,6 +2091,16 @@ class ExcelReportGenerator:
                 "SIA 380/2 tables 4-10; SIA 4010 system tables.",
             ),
         ]
+        if not self.include_sia4010:
+            # Drop the assumption row that is purely about SIA 4010 validation.
+            # The remaining 380/2 rows keep their source citations, which may
+            # cross-reference an SIA 4010 clause as provenance -- a citation, not
+            # a claim about the building.
+            rows = [
+                row_values
+                for row_values in rows
+                if "SIA 4010 validation is evidence-based" not in row_values[1]
+            ]
         for offset, row_values in enumerate(rows, start=start_row + 1):
             status_format = blocker_format if row_values[0] == "BLOCKER" else warning_format if row_values[0] in {"REVIEW", "MSP GAP"} else cell_format
             worksheet.write(offset, 0, row_values[0], status_format)
@@ -2113,7 +2149,7 @@ class ExcelReportGenerator:
             ("Generated at", timestamp),
             ("Report path", self.output_path),
             ("Workbook generator", "swiss_sia.excel_report.ExcelReportGenerator"),
-            ("Standards scope", "SIA 380/2:2022 FR; SIA 4010:2023 FR"),
+            ("Standards scope", "SIA 380/2:2022 FR; SIA 4010:2023 FR" if self.include_sia4010 else "SIA 380/2:2022 FR"),
             ("Rooms analysed", len(rooms_data)),
             ("Floor area analysed (m2)", total_area),
             ("SIA 380/2 automated score", float(score_result.compliance_score or 0.0)),
@@ -2140,6 +2176,12 @@ class ExcelReportGenerator:
             ("APS files detected", len(dynamic_results.get("aps_files", []) or [])),
             ("Preflight PASS/WARNING/FAIL/NOT_CHECKABLE", f"{preflight_counts.get('PASS', 0)}/{preflight_counts.get('WARNING', 0)}/{preflight_counts.get('FAIL', 0)}/{preflight_counts.get('NOT_CHECKABLE', 0)}"),
         ]
+        if not self.include_sia4010:
+            metadata_rows = [
+                (label, value)
+                for (label, value) in metadata_rows
+                if "4010" not in str(label).upper()
+            ]
 
         worksheet.write("A5", "Field", subheader_format)
         worksheet.write("B5", "Value", subheader_format)
@@ -2151,26 +2193,27 @@ class ExcelReportGenerator:
                 worksheet.write(row_index, 1, value, cell_format)
 
         row = 25
-        worksheet.write(row, 0, "Official Evidence Family", subheader_format)
-        worksheet.write(row, 1, "Status", subheader_format)
-        worksheet.write(row, 2, "Detected Files", subheader_format)
-        row += 1
-        for item in SIA4010_REQUIRED_EVIDENCE:
-            key = self._evidence_key_for_required_item(item)
-            files = evidence.get(key, {}).get("files", []) if isinstance(evidence.get(key), dict) else []
-            worksheet.write(row, 0, item, cell_format)
-            worksheet.write(row, 1, "PRESENT" if self._has_sia4010_evidence(evidence, item) else "MISSING", cell_format)
-            worksheet.write(
-                row,
-                2,
-                self._compact_join(
-                    [file_data.get("path") or file_data.get("name", "") for file_data in files],
-                    empty="No file detected",
-                    max_chars=500,
-                ),
-                cell_format,
-            )
+        if self.include_sia4010:
+            worksheet.write(row, 0, "Official Evidence Family", subheader_format)
+            worksheet.write(row, 1, "Status", subheader_format)
+            worksheet.write(row, 2, "Detected Files", subheader_format)
             row += 1
+            for item in SIA4010_REQUIRED_EVIDENCE:
+                key = self._evidence_key_for_required_item(item)
+                files = evidence.get(key, {}).get("files", []) if isinstance(evidence.get(key), dict) else []
+                worksheet.write(row, 0, item, cell_format)
+                worksheet.write(row, 1, "PRESENT" if self._has_sia4010_evidence(evidence, item) else "MISSING", cell_format)
+                worksheet.write(
+                    row,
+                    2,
+                    self._compact_join(
+                        [file_data.get("path") or file_data.get("name", "") for file_data in files],
+                        empty="No file detected",
+                        max_chars=500,
+                    ),
+                    cell_format,
+                )
+                row += 1
 
         row += 2
         worksheet.write(row, 0, "Guardrail", subheader_format)
@@ -2453,7 +2496,13 @@ class ExcelReportGenerator:
         partial_format = self.workbook.add_format(report_style.xw_status("warning"))
         not_checkable_format = self.workbook.add_format(report_style.xw_status("not_checkable"))
 
-        worksheet.merge_range("A1:M1", "SIA 380/2 + SIA 4010 Requirement Matrix", header_format)
+        worksheet.merge_range(
+            "A1:M1",
+            "SIA 380/2 + SIA 4010 Requirement Matrix"
+            if self.include_sia4010
+            else "SIA 380/2 Requirement Matrix",
+            header_format,
+        )
         worksheet.merge_range(
             "A2:M2",
             "This matrix lists criteria from the PDF/config sources, their automation status and the next action. "
@@ -2467,6 +2516,11 @@ class ExcelReportGenerator:
             self._build_requirement_matrix_row(requirement, all_alerts, rule_evaluations)
             for requirement in SIA_COMPLIANCE_REQUIREMENT_MATRIX
         ]
+        if not self.include_sia4010:
+            rows = [
+                row for row in rows
+                if "4010" not in str(row.get("standard", "")).upper()
+            ]
         status_counts = Counter(row["status"] for row in rows)
 
         worksheet.write("A4", "KPI", header_format)
@@ -2690,6 +2744,12 @@ class ExcelReportGenerator:
             row for row in coverage_rows
             if row["coverage_status"] in {"PARTIAL", "MISSING", "NOT_CHECKABLE"}
         ]
+        if not self.include_sia4010:
+            request_rows = [
+                row for row in request_rows
+                if "4010" not in str(row.get("standard", "")).upper()
+                and "4010" not in str(row.get("validation_scope", "")).upper()
+            ]
 
         worksheet.merge_range("A1:J1", "Input Request - Data and Evidence Needed", header_format)
         worksheet.merge_range(
@@ -2900,6 +2960,18 @@ class ExcelReportGenerator:
             preflight_checks,
             dynamic_results,
         )
+        if not self.include_sia4010:
+            rows = [
+                row
+                for row in rows
+                if not any(
+                    "4010" in str(row.get(field, "")).upper()
+                    for field in (
+                        "source", "domain", "item", "reason",
+                        "next_action", "expected_output",
+                    )
+                )
+            ]
         priority_counts = Counter(row["priority"] for row in rows)
 
         worksheet.merge_range("A1:J1", "Open Items Backlog - Current Gaps and Deferred Work", title_format)
@@ -2971,7 +3043,10 @@ class ExcelReportGenerator:
         worksheet.merge_range(
             "A2:T2",
             "These values are readiness indicators extracted from APS/Vista when IESVE ResultsReader is available. "
-            "They support SIA 380/2 and SIA 4010 checks but do not replace official SIA 4010 comparison workbooks.",
+            "They support SIA 380/2 and SIA 4010 checks but do not replace official SIA 4010 comparison workbooks."
+            if self.include_sia4010
+            else "These values are readiness indicators extracted from APS/Vista when IESVE ResultsReader is "
+            "available. They support the SIA 380/2 checks of the client model.",
             note_format,
         )
 
@@ -5503,11 +5578,20 @@ class ExcelReportGenerator:
         )
 
     @staticmethod
-    def _dashboard_verdict(score_result: ScoreResult, sia4010_results: Dict[str, Any], rooms_data: List[Any]) -> str:
-        """Return the executive dashboard verdict from scores and blockers."""
+    def _dashboard_verdict(score_result: ScoreResult, sia4010_results: Dict[str, Any], rooms_data: List[Any], include_sia4010: bool = True) -> str:
+        """Return the executive dashboard verdict from scores and blockers.
+
+        When include_sia4010 is False the verdict is SIA 380/2-only: the SIA
+        4010 validation-evidence branches are not reachable, so a client 380/2
+        report never states a fact about the software's validation.
+        """
         critical_count = sum(1 for alert in score_result.alerts if alert.severity == Severity.CRITICAL)
         high_count = sum(1 for alert in score_result.alerts if alert.severity == Severity.HIGH)
-        blocked_tests = ExcelReportGenerator._count_blocked_sia4010_tests(sia4010_results)
+        blocked_tests = (
+            ExcelReportGenerator._count_blocked_sia4010_tests(sia4010_results)
+            if include_sia4010
+            else 0
+        )
         if not rooms_data:
             return (
                 "BLOCKER: no VE thermal room was extracted. The model cannot be assessed yet. "
@@ -5523,6 +5607,8 @@ class ExcelReportGenerator:
                 f"READINESS ONLY: SIA 380/2 direct checks can be reviewed, but {blocked_tests} SIA 4010 validation tests remain blocked "
                 "until official SIA evidence files, reference comparisons and reviewer acceptance are complete."
             )
+        if not include_sia4010:
+            return "READY FOR DETAILED REVIEW: no critical or high alert detected on the SIA 380/2 checks of this model."
         return "READY FOR DETAILED REVIEW: no critical/high alert detected and SIA 4010 tests are no longer blocked by missing evidence."
 
     def _build_requirement_matrix_row(
