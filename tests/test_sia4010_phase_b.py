@@ -106,6 +106,21 @@ class Sia4010PhaseBDryRunTests(unittest.TestCase):
         evaluation = self.runner.evaluate_test(root, "1", observed)
         self.assertGreater(evaluation.counts["NOT_CHECKABLE"], 0)
 
+    def test_non_numeric_ve_value_is_omitted_and_does_not_crash(self):
+        root = _build_bundle("nonnumeric")
+        expected = _expected(root)
+        # One metric carries a degenerate (non-numeric) value; every other metric
+        # supplies a valid midpoint. The bad value must fail closed -- omitted
+        # exactly like a missing metric -- and must not crash the whole batch.
+        good_key = expected[0].key
+        mapping = {e.key: ("not-a-number", e.unit) for e in expected}
+        mapping[good_key] = (
+            (expected[0].lower_bound + expected[0].upper_bound) / 2,
+            expected[0].unit,
+        )
+        observed = build_observed_results(expected, DictResultSource(mapping))
+        self.assertEqual([o.key for o in observed], [good_key])  # only the numeric one
+
 
 class VeApsResolverTests(unittest.TestCase):
     def test_unconfirmed_binding_resolves_to_none(self):
@@ -158,6 +173,16 @@ class VeApsResultAccessorTests(unittest.TestCase):
             raise RuntimeError("runtime read failed")
 
         accessor = VeApsResultAccessor(aps_results=None, quantity_extractors={"q": boom})
+        self.assertIsNone(
+            accessor(MetricBinding(quantity="q", unit="kWh", confirmed=True), _band_expected())
+        )
+
+    def test_non_numeric_extractor_value_is_fail_closed(self):
+        # An extractor returning a value the float conversion rejects must fail
+        # closed to None, just like one that raises, rather than letting a
+        # ValueError escape the accessor.
+        accessor = VeApsResultAccessor(aps_results=None)
+        accessor.register("q", lambda aps, b, e: "not-a-number")
         self.assertIsNone(
             accessor(MetricBinding(quantity="q", unit="kWh", confirmed=True), _band_expected())
         )

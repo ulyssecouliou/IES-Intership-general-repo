@@ -124,6 +124,15 @@ class Test1RuntimeInputMappingTests(unittest.TestCase):
                 }
             )
 
+    def test_ideal_load_emission_missing_fraction_is_fail_closed(self):
+        # A missing radiant fraction must fail closed to a ConfigurationError,
+        # not a raw TypeError from float(None). Degenerate VE read-back is a
+        # controlled failure here, mirroring the mechanical-ventilation validator.
+        with self.assertRaises(ConfigurationError):
+            validate_ideal_load_emission_semantics(
+                {"cooling_plant_radiant_fraction": 0.0}
+            )
+
     def test_mechanical_ventilation_payload_and_readback_are_zero(self):
         payload = build_zero_mechanical_ventilation_payload(
             {

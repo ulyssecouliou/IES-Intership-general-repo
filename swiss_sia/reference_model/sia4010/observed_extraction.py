@@ -38,12 +38,20 @@ def build_observed_results(
         if resolved is None:
             continue
         value, unit = resolved
+        try:
+            numeric_value = float(value)
+        except (TypeError, ValueError):
+            # A non-numeric resolver value is degenerate evidence, not a
+            # result. Omit the metric exactly as if it were missing, so the
+            # comparator reports it NOT_CHECKABLE rather than the whole
+            # extraction crashing on one bad value (fail-closed).
+            continue
         observed.append(
             ObservedResult(
                 test_id=expected.test_id,
                 case_id=expected.case_id,
                 metric=expected.metric,
-                value=float(value),
+                value=numeric_value,
                 unit=str(unit),
                 evidence_locator=evidence_locator,
             )
@@ -170,6 +178,8 @@ class VeApsResultAccessor:
             return None
         try:
             value = extractor(self._aps, binding, expected)
+            return None if value is None else float(value)
         except Exception:
-            return None  # fail-closed on any extraction error inside the runtime
-        return None if value is None else float(value)
+            # Fail-closed on any extraction error inside the runtime, including a
+            # non-numeric value the float conversion would reject.
+            return None

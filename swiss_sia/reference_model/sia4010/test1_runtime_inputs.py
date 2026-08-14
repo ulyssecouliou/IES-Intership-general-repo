@@ -432,8 +432,13 @@ def validate_ideal_load_emission_semantics(
 ) -> Dict[str, Any]:
     """Verify the ISO fully convective heating/cooling mapping."""
 
-    heating_radiant = float(system_data.get("heating_plant_radiant_fraction"))
-    cooling_radiant = float(system_data.get("cooling_plant_radiant_fraction"))
+    try:
+        heating_radiant = float(system_data.get("heating_plant_radiant_fraction"))
+        cooling_radiant = float(system_data.get("cooling_plant_radiant_fraction"))
+    except (TypeError, ValueError) as exc:
+        raise ConfigurationError(
+            "Test 1 ideal heating/cooling radiant fractions are unavailable"
+        ) from exc
     verified = math.isclose(heating_radiant, 0.0, abs_tol=1.0e-9) and math.isclose(
         cooling_radiant, 0.0, abs_tol=1.0e-9
     )

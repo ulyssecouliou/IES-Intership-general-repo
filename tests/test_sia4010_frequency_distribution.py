@@ -727,6 +727,25 @@ class Test5ReferenceBandTests(unittest.TestCase):
             with self.subTest(case=key[0], quantity=key[1]):
                 self.assertGreaterEqual(band.program_count, 2)
 
+    def test_band_shape_follows_the_no_overflow_convention(self):
+        # Post-2026-08-10 convention (see Test2/Test3ReferenceBandTests): no
+        # overflow bin, so counts align one-to-one with the edges, and hours
+        # outside the declared classes are tracked separately via
+        # outside_class_counts -- never folded into a trailing +1 bin.
+        for key, band in self.bands.items():
+            with self.subTest(case=key[0], quantity=key[1]):
+                self.assertFalse(band.include_overflow)
+                self.assertEqual(len(band.lower_counts), len(band.upper_edges))
+                self.assertTrue(
+                    all(
+                        count >= 0
+                        for count in dict(band.outside_class_counts).values()
+                    )
+                )
+                self.assertTrue(
+                    all(lo <= hi for lo, hi in zip(band.lower_counts, band.upper_counts))
+                )
+
     def test_diagnostic_fan_column_is_not_scored_for_case_5b(self):
         # Only the Daten Tas sheet omits the diagnostic boundary for 5B; the
         # agreed scored set must still exclude the fan power there.
