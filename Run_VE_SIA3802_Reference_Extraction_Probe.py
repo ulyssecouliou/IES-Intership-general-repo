@@ -144,19 +144,69 @@ def _probe_pv(iesve):
     return out or _ABSENT
 
 
-def _probe_thermal_bridges(iesve):
-    """Look for any psi/chi / linear-transmittance member on constructions."""
+def _probe_emission_capacity(project):
+    """Read radiant fraction / unlimited-capacity flags from body thermal templates.
+
+    The apache-system heating()/cooling() dicts do not carry the radiant fraction;
+    per the API contract it lives on the body's thermal-template apache systems
+    (VEBody.get_apache_systems). Probe a sample of bodies and report the target
+    keys plus the full key list of the first system for discovery.
+    """
     try:
-        cdb = iesve.VECdbData()
-        constructions = cdb.get_constructions() if hasattr(cdb, "get_constructions") else []
+        from swiss_sia.data_extractor import VEDataExtractor
+
+        bodies = VEDataExtractor(project).get_bodies()
     except Exception as exc:  # noqa: BLE001
-        return {"__error__": f"construction access failed: {type(exc).__name__}: {exc}"}
-    hits = []
-    for construction in list(constructions or [])[:200]:
-        for member in ("psi", "chi", "linear_transmittance", "thermal_bridge", "psi_value"):
-            if hasattr(construction, member):
-                hits.append({"construction": str(getattr(construction, "id", "?")), "member": member})
-    return hits or "<no psi/chi member found on any construction>"
+        return {"__error__": f"body access failed: {type(exc).__name__}: {exc}"}
+    out = []
+    discovered_keys = None
+    for body in list(bodies or [])[:30]:
+        systems = _call_dict(body, "get_apache_systems")
+        # get_apache_systems may return a dict keyed by system, or a value dict.
+        candidates = list(systems.values()) if isinstance(systems, dict) else [systems]
+        for entry in candidates[:5]:
+            if isinstance(entry, dict):
+                if discovered_keys is None and entry:
+                    discovered_keys = sorted(entry.keys())
+                radiant_h = _pick(entry, "heating_plant_radiant_fraction")
+                radiant_c = _pick(entry, "cooling_plant_radiant_fraction")
+                if radiant_h is not _ABSENT or radiant_c is not _ABSENT:
+                    out.append({
+                        "body": str(getattr(body, "id", "?")),
+                        "heating_plant_radiant_fraction": radiant_h,
+                        "cooling_plant_radiant_fraction": radiant_c,
+                        "heating_capacity_unlimited": _pick(entry, "heating_capacity_unlimited"),
+                        "cooling_capacity_unlimited": _pick(entry, "cooling_capacity_unlimited"),
+                    })
+    return {"found": out or _ABSENT, "first_system_keys": discovered_keys or _ABSENT}
+
+
+def _probe_enums(iesve):
+    """Introspect the leakage/CEN enums so the observed ints can be named.
+
+    The NCM dicts return integer codes (e.g. cen_class=3, ductwork_leakage_test=0);
+    this dumps any iesve attribute whose name relates to leakage/CEN so the exact
+    enum mapping to the SIA duct/AHU class can be confirmed, never guessed.
+    """
+    result = {}
+    for name in dir(iesve):
+        low = name.lower()
+        if any(token in low for token in ("leakage", "cen_", "cenclass", "leakage_standard")):
+            member = getattr(iesve, name, None)
+            try:
+                members = {k: _jsonable(getattr(member, k)) for k in dir(member) if not k.startswith("_")}
+                result[name] = members
+            except Exception:  # noqa: BLE001
+                result[name] = str(member)
+    # Common name-helper functions (e.g. aux_energy_method_names) may exist.
+    for helper in ("ncm_leakage_standard_names", "ncm_leakage_test_names", "cen_class_names"):
+        fn = getattr(iesve, helper, None)
+        if callable(fn):
+            try:
+                result[helper] = _jsonable(fn())
+            except Exception as exc:  # noqa: BLE001
+                result[helper] = f"<call failed: {exc}>"
+    return result or "<no leakage/CEN enum found on iesve; observed ints must be mapped from VE docs>"
 
 
 def main():
@@ -172,13 +222,17 @@ def main():
     project = iesve.VEProject.get_current_project()
     project_path = str(getattr(project, "path", "") or "")
 
+    emission_capacity = _probe_emission_capacity(project)
+    photovoltaic = _probe_pv(iesve)
     report = {
         "probe": "sia3802_reference_extraction",
         "generated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "project_path": project_path,
         "apache_systems": _probe_systems(iesve),
-        "photovoltaic": _probe_pv(iesve),
-        "thermal_bridges": _probe_thermal_bridges(iesve),
+        "emission_capacity": emission_capacity,
+        "photovoltaic": photovoltaic,
+        "leakage_enums": _probe_enums(iesve),
+        "thermal_bridges": "NOT EXPOSED per API contract (no psi/chi member); reviewer evidence only",
     }
 
     # Per-family verdict from what the probe actually found.
@@ -190,12 +244,24 @@ def main():
             for s in systems
         )
 
+    emission_found = (
+        isinstance(emission_capacity, dict)
+        and isinstance(emission_capacity.get("found"), list)
+        and bool(emission_capacity["found"])
+    )
+    if isinstance(photovoltaic, list) and photovoltaic:
+        pv_verdict = "EXTRACTABLE (PV present)"
+    elif isinstance(photovoltaic, dict) and "__error__" in photovoltaic:
+        pv_verdict = "API ERROR: " + str(photovoltaic["__error__"])
+    else:
+        pv_verdict = "API OK, no PV in this project (extractable when present)"
+
     report["verdict"] = {
         "ventilation_efficiency (eps_V)": "EXTRACTABLE" if _any("ventilation", "heat_recovery_efficiency") else "NOT EXPOSED",
-        "duct/AHU leakage class": "EXTRACTABLE" if _any("system_adjustment", "cen_class") else "NOT EXPOSED",
-        "emission radiant fraction": "EXTRACTABLE" if _any("emission", "heating_plant_radiant_fraction") else "NOT EXPOSED",
-        "photovoltaic": "EXTRACTABLE" if isinstance(report["photovoltaic"], list) and report["photovoltaic"] else "NOT EXPOSED",
-        "thermal_bridges (psi/chi)": "EXTRACTABLE" if isinstance(report["thermal_bridges"], list) else "NOT EXPOSED (reviewer evidence only)",
+        "duct/AHU leakage class": "EXTRACTABLE (int enum, see leakage_enums)" if _any("system_adjustment", "cen_class") else "NOT EXPOSED",
+        "emission radiant fraction": "EXTRACTABLE" if emission_found else "NOT EXPOSED via body templates",
+        "photovoltaic": pv_verdict,
+        "thermal_bridges (psi/chi)": "NOT EXPOSED (reviewer evidence only)",
     }
 
     out_dir = Path(project_path).parent if project_path else PROJECT_ROOT
