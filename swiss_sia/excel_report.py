@@ -233,6 +233,30 @@ class ExcelReportGenerator:
             return parts[1].replace("_", " ").strip()
         return "Swiss SIA project"
 
+    @staticmethod
+    def _resolve_cover_logo():
+        """Return the cover logo path, real brand first, placeholder second.
+
+        The assets directory is resolved from this module's location, not from
+        the workbook output path -- the workbook can be written anywhere, and the
+        previous relative lookup never found the file, so the cover always fell
+        back to bare text. A client-facing report should carry the on-brand
+        placeholder at worst, and the real IES logo the moment one is supplied.
+
+        Returns:
+            str | None: An existing logo file path, or None when neither the
+            real logo nor the placeholder is present.
+        """
+
+        assets = os.path.join(
+            os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "assets"
+        )
+        for candidate in ("ies_logo.png", "office_logo.placeholder.png"):
+            path = os.path.join(assets, candidate)
+            if os.path.isfile(path):
+                return path
+        return None
+
     def _write_cover_xlsxwriter(self, score_result, sia3802_results, sia4010_results, rooms_data):
         """Write the branded cover landing page with rounded headline KPIs."""
 
@@ -265,16 +289,33 @@ class ExcelReportGenerator:
             {**report_style.xw_disclaimer(), "valign": "top"}
         )
 
-        # Logo placeholder (drop a PNG at assets/ies_logo.png to brand it).
+        # Cover logo. Drop a real IES logo at assets/ies_logo.png to brand it;
+        # until then the on-brand navy placeholder under assets/ is used, so the
+        # cover never shows the bare text "[ IES logo ]" in front of a client.
         worksheet.merge_range("B2:C4", "", logo_format)
-        logo_path = os.path.join(os.path.dirname(os.path.abspath(self.output_path or ".")), "..", "assets", "ies_logo.png")
-        if os.path.isfile(logo_path):
+        worksheet.set_row(1, 22)
+        worksheet.set_row(2, 22)
+        worksheet.set_row(3, 22)
+        logo_path = self._resolve_cover_logo()
+        if logo_path is not None:
             try:
-                worksheet.insert_image("B2", logo_path, {"x_scale": 1, "y_scale": 1})
+                # Fit the ~480x160 asset into the three-row logo block without
+                # distorting it: scale to the block height, centred in its cell.
+                worksheet.insert_image(
+                    "B2",
+                    logo_path,
+                    {
+                        "x_scale": 0.34,
+                        "y_scale": 0.34,
+                        "object_position": 1,
+                        "x_offset": 4,
+                        "y_offset": 4,
+                    },
+                )
             except Exception:
-                worksheet.write("B2", "[ IES logo ]", logo_format)
+                worksheet.write("B2", "Swiss SIA Compliance", logo_format)
         else:
-            worksheet.write("B2", "[ IES logo ]", logo_format)
+            worksheet.write("B2", "Swiss SIA Compliance", logo_format)
 
         worksheet.merge_range("B6:E6", "Swiss SIA Compliance Report", title_format)
         worksheet.set_row(5, 32)

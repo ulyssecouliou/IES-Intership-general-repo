@@ -15,8 +15,10 @@ from .reference_model_setup import (
 try:
     import tkinter as tk
     from tkinter import filedialog, messagebox, ttk
+    from ui import design, tk_theme
 except ImportError:  # pragma: no cover
     tk = filedialog = messagebox = ttk = None
+    design = tk_theme = None
 
 
 class ReferenceModelSetupDialog:
@@ -30,72 +32,99 @@ class ReferenceModelSetupDialog:
         self.receipt: Optional[SetupReceipt] = None
         self.root = tk.Tk()
         self.root.title("Preparation du modele de reference suisse")
-        self.root.geometry("760x430")
-        self.root.minsize(680, 390)
+        # One call brings this window onto the shared IES house style, instead
+        # of the ad-hoc font and colour it carried before.
+        self.fonts = tk_theme.apply_ies_theme(self.root)
+        tk_theme.centre_on_screen(self.root, 780, 470)
+        self.root.minsize(700, 430)
         self.weather = tk.StringVar()
         self.station = tk.StringVar(value="Non selectionne")
         self.scenario = tk.StringVar()
         self._build()
 
     def _build(self) -> None:
-        frame = ttk.Frame(self.root, padding=18)
-        frame.pack(fill="both", expand=True)
-        frame.columnconfigure(1, weight=1)
+        # Navy heading band: the house style opens every surface the same way.
+        band = ttk.Frame(self.root, style="Band.TFrame", padding=design.PAD_BAND)
+        band.pack(fill="x")
         ttk.Label(
-            frame,
-            text="Modele de reference SIA 380/2 - preparation fail-closed",
-            font=("Segoe UI", 14, "bold"),
-        ).grid(row=0, column=0, columnspan=3, sticky="w")
+            band,
+            text="Modele de reference SIA 380/2",
+            style="BandTitle.TLabel",
+        ).pack(anchor="w")
         ttk.Label(
-            frame,
+            band,
             text=(
-                "Cette etape copie les JSON maintenus dans le projet jetable et "
-                "lie un EPW choisi. Elle ne certifie ni le modele ni le climat."
+                "Preparation fail-closed. Cette etape lie un EPW choisi ; elle "
+                "ne certifie ni le modele ni le climat."
             ),
+            style="BandSubtitle.TLabel",
             wraplength=700,
-        ).grid(row=1, column=0, columnspan=3, sticky="w", pady=(8, 18))
-        ttk.Label(frame, text="Projet jetable").grid(row=2, column=0, sticky="w")
-        ttk.Label(frame, text=str(self.project_path)).grid(
-            row=2, column=1, columnspan=2, sticky="w", padx=(12, 0)
-        )
-        ttk.Label(frame, text="Fichier meteo EPW").grid(
-            row=3, column=0, sticky="w", pady=(14, 0)
-        )
-        ttk.Entry(frame, textvariable=self.weather).grid(
-            row=3, column=1, sticky="ew", padx=12, pady=(14, 0)
-        )
-        ttk.Button(frame, text="Parcourir...", command=self._browse).grid(
-            row=3, column=2, pady=(14, 0)
-        )
-        ttk.Label(frame, text="Station EPW detectee").grid(
-            row=4, column=0, sticky="w", pady=(12, 0)
-        )
-        ttk.Label(frame, textvariable=self.station).grid(
-            row=4, column=1, columnspan=2, sticky="w", padx=(12, 0), pady=(12, 0)
-        )
-        ttk.Label(frame, text="Scenario/horizon (facultatif)").grid(
-            row=5, column=0, sticky="w", pady=(12, 0)
-        )
-        ttk.Entry(frame, textvariable=self.scenario).grid(
-            row=5, column=1, columnspan=2, sticky="ew", padx=(12, 0), pady=(12, 0)
+        ).pack(anchor="w", pady=(design.SPACE["xs"], 0))
+
+        # White card body, generous margin -- the house divides by space.
+        outer = ttk.Frame(self.root, style="TFrame", padding=design.PAD_CARD)
+        outer.pack(fill="both", expand=True)
+        card = ttk.Frame(outer, style="Card.TFrame", padding=design.SPACE["xl"])
+        card.pack(fill="both", expand=True)
+        card.columnconfigure(1, weight=1)
+        pad_y = (design.SPACE["md"], 0)
+
+        ttk.Label(card, text="Projet jetable", style="Card.TLabel").grid(
+            row=0, column=0, sticky="w"
         )
         ttk.Label(
-            frame,
+            card, text=str(self.project_path), style="Card.TLabel"
+        ).grid(row=0, column=1, columnspan=2, sticky="w", padx=(design.SPACE["md"], 0))
+
+        ttk.Label(
+            card, text="Fichier meteo EPW", style="Card.TLabel"
+        ).grid(row=1, column=0, sticky="w", pady=pad_y)
+        ttk.Entry(card, textvariable=self.weather).grid(
+            row=1, column=1, sticky="ew", padx=design.SPACE["md"], pady=pad_y
+        )
+        ttk.Button(
+            card, text="Parcourir...", style="Secondary.TButton",
+            command=self._browse,
+        ).grid(row=1, column=2, pady=pad_y)
+
+        ttk.Label(
+            card, text="Station EPW detectee", style="Card.TLabel"
+        ).grid(row=2, column=0, sticky="w", pady=pad_y)
+        ttk.Label(
+            card, textvariable=self.station, style="Card.TLabel"
+        ).grid(row=2, column=1, columnspan=2, sticky="w",
+               padx=(design.SPACE["md"], 0), pady=pad_y)
+
+        ttk.Label(
+            card, text="Scenario/horizon (facultatif)", style="Card.TLabel"
+        ).grid(row=3, column=0, sticky="w", pady=pad_y)
+        ttk.Entry(card, textvariable=self.scenario).grid(
+            row=3, column=1, columnspan=2, sticky="ew",
+            padx=(design.SPACE["md"], 0), pady=pad_y,
+        )
+
+        ttk.Label(
+            card,
             text=(
                 "Laisser vide conserve un marqueur UNCONFIRMED_REVIEW_REQUIRED. "
                 "Aucune valeur reglementaire ne sera inventee."
             ),
-            foreground="#6b4e16",
-            wraplength=700,
-        ).grid(row=6, column=0, columnspan=3, sticky="w", pady=(10, 20))
-        buttons = ttk.Frame(frame)
-        buttons.grid(row=7, column=0, columnspan=3, sticky="e")
-        ttk.Button(buttons, text="Annuler", command=self.root.destroy).pack(
-            side="right", padx=(8, 0)
-        )
+            style="CardCaption.TLabel",
+            wraplength=680,
+        ).grid(row=4, column=0, columnspan=3, sticky="w",
+               pady=(design.SPACE["lg"], 0))
+
+        # Footer: quiet Cancel, then the one accent-blue primary action.
+        buttons = ttk.Frame(self.root, style="TFrame", padding=design.PAD_CARD)
+        buttons.pack(fill="x")
         ttk.Button(
-            buttons, text="Preparer puis lancer", command=self._prepare
+            buttons, text="Preparer puis lancer", style="Primary.TButton",
+            command=self._prepare,
         ).pack(side="right")
+        ttk.Button(
+            buttons, text="Annuler", style="Secondary.TButton",
+            command=self.root.destroy,
+        ).pack(side="right", padx=(0, design.SPACE["sm"]))
 
     def _browse(self) -> None:
         selected = filedialog.askopenfilename(
