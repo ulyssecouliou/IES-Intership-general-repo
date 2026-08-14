@@ -34,6 +34,12 @@ def main():
         print("This script must run inside IESVE (iesve unavailable): %s" % exc)
         return
 
+    # VE keeps the Python interpreter alive across Run clicks and caches modules
+    # in sys.modules. Drop every cached swiss_sia module so this run picks up the
+    # current code on disk instead of a stale copy from an earlier run.
+    for _name in [n for n in list(sys.modules) if n == "swiss_sia" or n.startswith("swiss_sia.")]:
+        del sys.modules[_name]
+
     from swiss_sia.data_extractor import VEDataExtractor
     from swiss_sia.model_analyzer import ModelAnalyzer
     from swiss_sia.reference_project import build_reference_project_specification
