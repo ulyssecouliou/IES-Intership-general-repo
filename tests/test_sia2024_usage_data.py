@@ -16,7 +16,7 @@ import json
 from pathlib import Path
 
 
-class TestSIA2024UsageData:
+class SIA2024UsageDataTestCase:
     """Regression tests for SIA 2024:2021 usage data."""
 
     @classmethod
@@ -178,7 +178,7 @@ class TestSIA2024UsageData:
                 f"Expected usage code {code} not found in dataset"
 
     def test_all_parameter_columns_have_units(self):
-        """Test that parameter columns include unit information."""
+        """Test that parameter columns include unit information (no '?' placeholders)."""
         # Spot check a few usages
         for code in ['1.01', '2.01', '11.01']:
             usage = self.data['usages'][code]
@@ -187,6 +187,8 @@ class TestSIA2024UsageData:
                     f"{code} col {col} missing 'unit' field"
                 assert param['unit'] is not None, \
                     f"{code} col {col} unit is null"
+                assert param['unit'] != '?', \
+                    f"{code} col {col} unit should not be '?', got {param['unit']}"
                 assert isinstance(param['unit'], str), \
                     f"{code} col {col} unit should be string, got {type(param['unit'])}"
 
@@ -208,11 +210,55 @@ class TestSIA2024UsageData:
         date_str = self.data['metadata']['extraction_date']
         assert date_str, "extraction_date should not be empty"
 
+    def test_sia_article_traceability_eingabedaten(self):
+        """Test that sia_article references exact Raumdatenblätter V221 column."""
+        # Sample parameter from parameters
+        usage_1_01 = self.data['usages']['1.01']
+
+        # Check a few parameter columns
+        for col in ['9', '28', '30']:
+            param = usage_1_01['parameters'][col]
+            sia_art = param['sia_article']
+
+            # Should reference V221, Eingabedaten sheet, and specific column
+            assert 'Raumdatenblätter V221' in sia_art or 'V221' in sia_art, \
+                f"Col {col} sia_article should reference V221: {sia_art}"
+            assert 'Eingabedaten' in sia_art, \
+                f"Col {col} sia_article should reference Eingabedaten sheet: {sia_art}"
+            assert f"col{col}" in sia_art, \
+                f"Col {col} sia_article should specify column: {sia_art}"
+
+    def test_sia_article_traceability_kz_raum(self):
+        """Test that sia_article for annual energy references KZ_Raum_2024."""
+        usage_1_01 = self.data['usages']['1.01']
+
+        # Check annual energy columns
+        for col in ['3', '5', '8']:
+            if col in usage_1_01['annual_energy_kwhm2']:
+                param = usage_1_01['annual_energy_kwhm2'][col]
+                sia_art = param['sia_article']
+
+                # Should reference V221, KZ_Raum_2024 sheet
+                assert 'Raumdatenblätter V221' in sia_art or 'V221' in sia_art, \
+                    f"Annual energy col {col} sia_article should reference V221: {sia_art}"
+                assert 'KZ_Raum_2024' in sia_art, \
+                    f"Annual energy col {col} sia_article should reference KZ_Raum_2024: {sia_art}"
+                assert f"col{col}" in sia_art, \
+                    f"Annual energy col {col} sia_article should specify column: {sia_art}"
+
+    def test_col_21_g_zielwert_unit_is_dimensionless(self):
+        """Test that col 21 (g_Zielwert) unit is dimensionless ('-'), not '?'."""
+        for code, usage in self.data['usages'].items():
+            if '21' in usage['parameters']:
+                param = usage['parameters']['21']
+                assert param['unit'] == '-', \
+                    f"{code} col 21 unit should be '-' (dimensionless), got '{param['unit']}'"
+
 
 if __name__ == '__main__':
     import sys
 
-    test = TestSIA2024UsageData()
+    test = SIA2024UsageDataTestCase()
     test.setup_class()
 
     # Run a few key tests

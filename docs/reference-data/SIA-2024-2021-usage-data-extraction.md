@@ -46,13 +46,13 @@
 | Col | Symbole SIA | Unité | Label (DE) | Note |
 |-----|-------------|-------|-----------|------|
 | 9 | `fg` | % | Glasanteil | Ratio de surface vitrée |
-| 10 | `Fw` | – | Abminderungsfaktor | Facteur de réduction cadre |
+| 10 | `Fw` | - | Abminderungsfaktor | Facteur de réduction cadre |
 | 12 | `U_Fenster_Standard` | W/(m²K) | U-Wert Fenster | Standard |
 | 13 | `U_Fenster_Zielwert` | W/(m²K) | U-Wert Fenster | Zielwert |
 | 14 | `U_Fenster_Bestand` | W/(m²K) | U-Wert Fenster | Bestand |
-| 18 | `g_Standard` | – | Gesamtenergiedurchlassgrad | Standard |
-| 21 | `g_Zielwert` | – | Gesamtenergiedurchlassgrad | Zielwert |
-| 24 | `tau` | – | Lichttransmissionsgrad | Transmittance lumineuse |
+| 18 | `g_Standard` | - | Gesamtenergiedurchlassgrad | Standard, sans protection solaire |
+| 21 | `g_Zielwert` | - | Gesamtenergiedurchlassgrad | Zielwert, **avec protection solaire** |
+| 24 | `tau` | - | Lichttransmissionsgrad | Transmittance lumineuse |
 
 ### Climat intérieur & Occupation (Thermique + Humidité)
 
@@ -197,7 +197,27 @@
 
 ---
 
-## 5. Points critiques & Avertissements
+## 5. Traçabilité des données (sia_article)
+
+Chaque paramètre et colonne énergétique est tracé à sa source exacte dans le classeur Raumdatenblätter V221 via le champ `sia_article` :
+
+### Format Eingabedaten (paramètres de base)
+```
+"sia_article": "SIA 2024:2021 Raumdatenblätter V221, Eingabedaten col<N>"
+```
+Exemple : `col9` → cellule colonne 9, ligne 9-53 (45 usages)
+
+### Format KZ_Raum_2024 (besoins énergétiques annuels)
+```
+"sia_article": "SIA 2024:2021 Raumdatenblätter V221, KZ_Raum_2024 col<N>"
+```
+Exemple : `col3` → cellule colonne 3, ligne 7-51 (besoins énergétiques)
+
+**Note importante :** Les données ne viennent **pas** d'un « Tableau 2 » de la norme. Elles proviennent des datasheets Raumdatenblätter, qui constituent l'outil officiel d'application de SIA 2024:2021. Les valeurs sont extraites directement du classeur Excel `SIA 2024 Raumdatenblätter_dfi_V221 (1).xlsm`, version V221 (intègre C1:2024 et C2:2025).
+
+---
+
+## 6. Points critiques & Avertissements
 
 ### DISTINCTION CRITIQUE : Température design vs. exploitation
 
@@ -237,7 +257,7 @@ Les documents PDF corrigenda sont des références normatives ; V221 est confirm
 
 ---
 
-## 6. Utilisation dans le projet
+## 7. Utilisation dans le projet
 
 ### Projet de référence (`swiss_sia/reference_project.py`)
 
@@ -257,7 +277,7 @@ Ces données alimenteront :
 
 ---
 
-## 7. Références
+## 8. Références
 
 1. **SIA 2024:2021** — Raumnutzungsdaten für die Energie- und Gebäudetechnik  
    Herausgeber : Schweizerischer Ingenieur- und Architektenverein (SIA)  
@@ -278,6 +298,10 @@ Ces données alimenteront :
 
 ---
 
-## 8. Historique
+## 9. Historique
 
 - **2026-08-14** : Extraction initiale de V221, 45 usages, 24 paramètres + besoins énergétiques annuels
+- **2026-08-14** : Correction dettes de traçabilité
+  - **Col 21 (g_Zielwert)** : unité confirmée "−" (dimensionless, ajusté de "?")
+  - **sia_article** : remplacé « SIA 2024 Table 2 » imprécis par locators exacts (Raumdatenblätter V221 + feuille + colonne)
+  - Distinction ajoutée : col 18 (sans Sonnenschutz) vs. col 21 (avec Sonnenschutz)
