@@ -27,7 +27,7 @@ La spécification d'entrée du **projet de référence SIA 380/2** est un compos
 | **7** | Émission convective + capacité illimitée | Tableau 2, p.32-33 | **AUTOMATISÉE** | Directive prescriptive SIA (valeur figurée, jamais comparée), résolue en statut REFERENCE_DIRECTIVE. Tests complets. |
 | **8** | Consignes θ/φ + gains internes (A_p, M, p_Be, E_vm) — SIA 2024 identiques projet/référence | Tableau 2 → SIA 2024, `# 7.2.5.3` [TRACÉ] | **AUTOMATISÉE** | Données JSON SIA 2024:2021 figées en `/refs` ; `# 7.2.5.3` garantit l'identité projet/référence → aucune substitution différenciante. Tests complets. |
 | **9** | Ponts thermiques (ψ=0, χ=0) | Tableau 2, p.32-33 | **NON AUTOMATISÉE** | **Cause** : API VEScripts ne les expose pas. Preuve : API review, no capability to readback ψ/χ per construction. |
-| **10** | Ratio vitré (fg) + protections solaires | Tableau 2 + Tableau 10 + SIA 387/4 | **NON AUTOMATISÉE** | **Cause** : fg est **figée à référence SIA 2024** (projet doit la justifier, norme-analyst actif). Choix non-trivial, pas d'automatisation possible ici. |
+| **10** | Ratio vitré (fg) + protections solaires | Tableau 2 + Tableau 10 + SIA 387/4 | **NON AUTOMATISÉE** | **Cause** : référence SIA 2024 (Glasanteil, col9) tracée, mais la grandeur **projet** n'est pas exposée — le WWR du modèle (fenêtre/mur) ≠ Glasanteil (verre seul). Relier les deux serait un mapping faux. Débloqueur : définition exacte de fg + extraction de la fraction de verre projet. |
 | **11** | Puissance éclairage (pLi) + contrôles | Tableau 2 → SIA 387/4 | **NON AUTOMATISÉE** | **Cause** : norme SIA 387/4 (éclairage) **absente de `/refs`**. Table d'entrée SIA 387/4 Tableau 9/10 inaccessible. Bloqueur documentaire. |
 | **12** | Ventilation (εV ; classes C/L2/L1 ; U_ahu) | Tableau 2 + Tableau 4 ; `# 7.1.1` → SIA 382/1 | **NON AUTOMATISÉE** | **Cause** : contexte NCM/UK (système centralisé, profil annuel), sonde VE réelle exigée. Architecture : composant distinct requis (ne dépend pas de ce module). |
 | **13** | Photovoltaïque (puissance installée, rendement) | Tableau 2, p.32-33 | **NON AUTOMATISÉE** | **Cause** : référence SIA figée (10 W/m² SRE à 90 % rendement système). Valeur projet nécessite sonde VE. Architecture : composant distinct requis. |
@@ -59,9 +59,9 @@ La spécification d'entrée du **projet de référence SIA 380/2** est un compos
 - **Débloqueur** : extension API VEScripts pour readback ψ/χ par construction.
 
 #### Ratio vitré + protections solaires (10)
-- **SIA 380/2:2022 Tableau 2, p.32-33** : fg (fraction vitrée) figée à la **valeur de référence SIA 2024**.
-- **Blocage** : fg est une donnée d'**exploitation** du projet (choix architectural, orientation, latitude, scénario été). Elle n'est pas libre : le projet doit la justifier. Norme-analyst actif pour cette décision.
-- **Débloqueur** : décision de la voie de consigne (art. SIA 2024 ou simplifiée `# 5.2.2.6`) ; fg du projet est ensuite une justification métier, non une donnée d'API.
+- **SIA 380/2:2022 Tableau 2, p.32-33** : fg (« Taux des surfaces vitrées ») → référence **SIA 2024** ; projet = « spéc. au proj. » (substitution différenciante).
+- **Blocage** (verdict norm-analyst, `traceability/sia380-2-pathway.spec.md` §8.1) : la référence SIA 2024 est tracée (Glasanteil, col9), mais **la grandeur projet n'est pas exposée**. Le modèle calcule un WWR = fenêtre/mur ; la Glasanteil isole le **verre** du cadre (via Fw col10) et n'a pas le même dénominateur. WWR ≠ fg : les relier serait un mapping faux, interdit.
+- **Débloqueur** : la définition exacte de fg (numérateur verre vs fenêtre ; dénominateur façade/SRE) puis l'extraction d'une fraction de verre projet conforme (`[TO VERIFY]` i, j).
 
 #### Éclairage (11)
 - **SIA 380/2:2022 Tableau 2, p.32-33** : pLi (puissance nominale éclairage) et contrôles (catégories 4/2, commandes 2/3) → **SIA 387/4**.
@@ -148,7 +148,7 @@ La spécification `reference_project.py` = étape 1 de 4. Jamais un verdict seul
 | **Automatisation famille / 14** | **8 / 14** — enveloppe, fenêtres, vitrage, infiltration, génération, émission, SIA 2024 usage. |
 | **Obstacles API VEScripts** | **1** : ponts thermiques (ψ/χ non exposés). |
 | **Obstacles normatifs documentaires** | **2** : SIA 387/4 (éclairage) + SIA 380 (indice global) absentes. |
-| **Obstacles conception** | **3** : fg (choix client, norme-analyst) ; ventilation (sonde réelle) ; PV (sonde réelle). |
+| **Obstacles conception** | **3** : fg (grandeur projet non exposée — WWR ≠ Glasanteil) ; ventilation (sonde réelle) ; PV (sonde réelle). |
 | **Verdict client exécutable ?** | **NON** — 2 blocages aval : (1) unité SIA 380 en attente ; (2) VE-builder distinct requis. |
 | **Délai libération ?** | Dépend de (1) SIA 380 + (2) VE-builder + tests complets. Aucune dépendance technique sur reference_project.py. |
 
