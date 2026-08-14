@@ -523,7 +523,11 @@ class Test3ReferenceBandTests(unittest.TestCase):
             with self.subTest(case=key[0]):
                 self.assertEqual(band.unit, "W")
                 self.assertGreaterEqual(band.program_count, 2)
-                self.assertEqual(len(band.lower_counts), len(band.upper_edges) + 1)
+                # Post-2026-08-10 convention (see Test2ReferenceBandTests): no
+                # overflow bin, so counts align one-to-one with the edges;
+                # out-of-class hours are tracked separately, not as a +1 bin.
+                self.assertFalse(band.include_overflow)
+                self.assertEqual(len(band.lower_counts), len(band.upper_edges))
                 self.assertTrue(
                     all(lo <= hi for lo, hi in zip(band.lower_counts, band.upper_counts))
                 )
