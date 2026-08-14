@@ -370,7 +370,12 @@ class InfiltrationSubstitutionTests(unittest.TestCase):
 
 
 def _system(**kwargs):
-    """Build a normalized HVAC system dict as model_analyzer emits it."""
+    """Build a normalized HVAC system dict as model_analyzer emits it.
+
+    The heating generator defaults to a heat pump so a SCOP is comparable; the
+    boiler case (no heat-pump class) is exercised by overriding
+    ``heating_generator_class``.
+    """
     payload = {
         "id": "sys-1",
         "name": "System 1",
@@ -378,6 +383,8 @@ def _system(**kwargs):
         "heating_capacity_kw": None,
         "eer": None,
         "scop": None,
+        "heating_generator_class": "air_water_heat_pump",
+        "cooling_generator_class": "air_cooled",
     }
     payload.update(kwargs)
     return payload
@@ -438,6 +445,22 @@ class GenerationSubstitutionTests(unittest.TestCase):
         self.assertEqual(item.project_value, 4.0)
         self.assertEqual(item.reference_value, 3.20)  # Table 8, band >50..<=150
         self.assertIn("SN EN 14825", item.source)
+
+    def test_boiler_efficiency_is_not_compared_to_the_reference_scop(self):
+        # A non-heat-pump heating generator reports an efficiency (e.g. 0.80), not
+        # a SCOP; it must never be shown as a SUBSTITUTABLE comparison against the
+        # reference heat-pump SCOP (a false-but-credible verdict).
+        spec = build_reference_project_specification(
+            [_room(surfaces=[_surface()], hvac_systems=[
+                _system(heating_capacity_kw=100.0, scop=0.80, heating_generator_class="")
+            ])],
+            _Analyzer(),
+        )
+        item = _by_parameter(spec, "heating_generation_scop")[0]
+        self.assertEqual(item.status, PROJECT_VALUE_MISSING)
+        self.assertIsNone(item.project_value)
+        self.assertEqual(item.reference_value, 3.20)  # the reference HP SCOP still applies
+        self.assertTrue(any("not a heat pump" in b for b in spec.blockers))
 
     def test_heating_above_150kw_blocks_because_table_8_stops_there(self):
         spec = build_reference_project_specification(

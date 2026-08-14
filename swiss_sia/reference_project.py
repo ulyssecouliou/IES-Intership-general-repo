@@ -613,6 +613,12 @@ def _collect_generation_substitutions(
             # Heating generation (Table 8 air-water heat pump, the limit case).
             heating_capacity = _float_or_none(system.get("heating_capacity_kw"))
             heating_scop = _float_or_none(system.get("scop"))
+            # The reference is always a heat pump, but the project SCOP is only a
+            # comparable figure when the project generator is itself a heat pump.
+            # A boiler / district-heat efficiency (e.g. 0.80) is NOT a SCOP, so it
+            # must never be compared to the reference heat-pump SCOP.
+            is_project_heat_pump = bool(str(system.get("heating_generator_class") or "").strip())
+            comparable_scop = heating_scop if is_project_heat_pump else None
             if (heating_capacity is not None or heating_scop is not None) and ("heating", scope) not in seen:
                 seen.add(("heating", scope))
                 band = (
@@ -632,7 +638,7 @@ def _collect_generation_substitutions(
                 )
                 substitutions.append(_generation_substitution(
                     "heating_generation_scop", scope, "heating_generator", "SCOP",
-                    "heating_air_water_hp", reference, heating_scop,
+                    "heating_air_water_hp", reference, comparable_scop,
                     reference_target_value=target_band["target"] if target_band else None))
                 if heating_capacity is None:
                     blockers.append(
@@ -643,7 +649,13 @@ def _collect_generation_substitutions(
                         "Heating > {:.0f} kW for {}: the SIA 380/2 air-water heat "
                         "pump limit table (Table 8) is not tabulated above that "
                         "power".format(150.0, scope))
-                elif heating_scop is None:
+                elif heating_scop is not None and not is_project_heat_pump:
+                    blockers.append(
+                        "Heating generator {} is not a heat pump (value {:.2f} is a "
+                        "boiler/district efficiency, not a SCOP); the reference heat-"
+                        "pump SCOP applies but the project value is not comparable"
+                        .format(scope, heating_scop))
+                elif comparable_scop is None:
                     blockers.append(
                         "No project SCOP could be extracted for heating generator "
                         "{}".format(scope))
