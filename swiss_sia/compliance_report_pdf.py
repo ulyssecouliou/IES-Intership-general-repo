@@ -75,6 +75,29 @@ _STATUS_COLOURS = {
 }
 
 _ORIENTATION_ORDER = ("N", "NE", "E", "SE", "S", "SW", "W", "NW")
+REPORT_SCOPES = frozenset(("sia3802", "both"))
+
+
+def normalize_report_scope(scope: str = "both") -> str:
+    """Return a supported report scope or fail closed on an unknown value."""
+
+    normalized = str(scope or "").strip().lower()
+    if normalized not in REPORT_SCOPES:
+        raise ValueError(
+            "Unsupported compliance report scope {!r}; expected one of {}".format(
+                scope, sorted(REPORT_SCOPES)
+            )
+        )
+    return normalized
+
+
+def scoped_verdict_status(verdict: ComplianceVerdict, scope: str = "both") -> str:
+    """Return the headline status for the explicitly selected report scope."""
+
+    normalized = normalize_report_scope(scope)
+    if normalized == "sia3802":
+        return verdict.sia3802_status
+    return verdict.overall_status
 
 
 def _status_label(status: str, language: str) -> str:
@@ -215,11 +238,16 @@ def _draw_letterhead(
 
 
 def _draw_verdict_banner(
-    page: PdfPage, top: float, verdict: ComplianceVerdict, language: str
+    page: PdfPage,
+    top: float,
+    verdict: ComplianceVerdict,
+    language: str,
+    scope: str = "both",
 ) -> float:
     """Draw the headline verdict block and return the y position below it."""
 
-    status = verdict.overall_status
+    normalized_scope = normalize_report_scope(scope)
+    status = scoped_verdict_status(verdict, normalized_scope)
     colour, background = _STATUS_COLOURS[status]
     height = 24.0
     page.rect(MARGIN, top, CONTENT_WIDTH, height, fill=background)
@@ -260,6 +288,15 @@ def _draw_verdict_banner(
         align="right",
         width_mm=62.0,
     )
+    if normalized_scope == "sia3802":
+        page.text(
+            MARGIN + 7.0,
+            top + height + 4.0,
+            translate("sia4010_readiness_attestation_required", language),
+            size_pt=7.0,
+            colour=MUTED,
+        )
+        return top + height + 10.0
     return top + height + 7.0
 
 
@@ -565,10 +602,17 @@ def render_compliance_report_pdf(
     project_root: Optional[Union[str, Path]] = None,
     language: str = "en",
     model_name: str = "",
+    scope: str = "both",
 ) -> Path:
-    """Render the company SIA compliance report and return the written path."""
+    """Render the company SIA compliance report and return the written path.
+
+    ``scope="both"`` retains the combined SIA 380/2 and SIA 4010 headline.
+    ``scope="sia3802"`` reports only ``sia3802_status`` in that headline while
+    keeping the SIA 4010 readiness information and the scope block visible.
+    """
 
     code = normalize_language(language)
+    report_scope = normalize_report_scope(scope)
     office = profile
     if office is None:
         office = load_company_profile(project_root or Path.cwd())
@@ -602,7 +646,7 @@ def render_compliance_report_pdf(
         colour=MUTED,
     )
     cursor += 8.0
-    cursor = _draw_verdict_banner(page, cursor, verdict, code)
+    cursor = _draw_verdict_banner(page, cursor, verdict, code, report_scope)
 
     identification = [
         (translate("field_project", code), project_label or translate("value_unavailable", code)),

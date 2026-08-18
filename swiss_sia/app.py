@@ -68,6 +68,7 @@ validation_class_scope_module = _reload_local_module("validation_class_scope")
 reference_project_module = _reload_local_module("reference_project")
 company_profile_module = _reload_local_module("company_profile")
 compliance_report_pdf_module = _reload_local_module("compliance_report_pdf")
+compliance_report_html_module = _reload_local_module("compliance_report_html")
 excel_report_module = _reload_local_module("excel_report")
 
 VEDataExtractor = data_extractor_module.VEDataExtractor
@@ -83,6 +84,9 @@ build_reference_project_specification = (
 load_company_profile = company_profile_module.load_company_profile
 render_compliance_report_pdf = (
     compliance_report_pdf_module.render_compliance_report_pdf
+)
+render_compliance_report_html = (
+    compliance_report_html_module.render_compliance_report_html
 )
 # The client chooses the report language; Swiss work runs in DE/FR/IT plus EN.
 REPORT_LANGUAGE_ENV_VAR = "SIA_REPORT_LANGUAGE"
@@ -925,6 +929,7 @@ def main(include_sia4010: Optional[bool] = None):
     """
     try:
         include_sia4010 = _resolve_include_sia4010(include_sia4010)
+        report_scope = "both" if include_sia4010 else "sia3802"
         logger.info(
             "Starting VE model analysis (report scope: %s).",
             "SIA 380/2 + SIA 4010" if include_sia4010 else "SIA 380/2 only (client)",
@@ -1090,6 +1095,7 @@ def main(include_sia4010: Optional[bool] = None):
                 project_root=PROJECT_ROOT,
                 language=os.environ.get(REPORT_LANGUAGE_ENV_VAR, "") or "en",
                 model_name=_object_label(data_extractor.model, ""),
+                scope=report_scope,
             )
             logger.info("Compliance report PDF: %s", compliance_pdf_path)
             if not company_profile.is_configured:
@@ -1100,6 +1106,29 @@ def main(include_sia4010: Optional[bool] = None):
         except Exception as exc:
             # The PDF is an additional deliverable; never lose the workbook run.
             logger.error("Could not render the compliance report PDF: %s", exc)
+
+        logger.info("Rendering the interactive client compliance dashboard (HTML).")
+        compliance_html_path = None
+        try:
+            # profile=None: the generator loads the company profile itself, so this
+            # deliverable never depends on the PDF block above having succeeded.
+            compliance_html_path = render_compliance_report_html(
+                os.path.splitext(unique_report_path)[0] + "_dashboard.html",
+                project_label=project_label,
+                rooms_data=rooms_data,
+                sia3802_results=sia3802_results,
+                sia4010_results=sia4010_results,
+                score_result=score_result,
+                profile=None,
+                project_root=PROJECT_ROOT,
+                language=os.environ.get(REPORT_LANGUAGE_ENV_VAR, "") or "en",
+                model_name=_object_label(data_extractor.model, ""),
+                scope=report_scope,
+            )
+            logger.info("Client compliance dashboard (HTML): %s", compliance_html_path)
+        except Exception as exc:
+            # The HTML dashboard is an additional deliverable; never lose the run.
+            logger.error("Could not render the compliance dashboard HTML: %s", exc)
 
         evidence_pack_result = None
         try:

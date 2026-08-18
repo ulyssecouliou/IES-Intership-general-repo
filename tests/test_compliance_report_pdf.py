@@ -11,6 +11,7 @@ from scripts.quality.fixtures import StaticModelAnalyzer, build_reference_room
 from swiss_sia.company_profile import CompanyProfile, load_company_profile
 from swiss_sia.compliance_report_pdf import (
     render_compliance_report_pdf,
+    scoped_verdict_status,
     summarise_model,
 )
 from swiss_sia.compliance_verdict import (
@@ -417,6 +418,62 @@ class RenderedReportTests(unittest.TestCase):
         text = self._render("en")
         self.assertIn(translate("verdict_not_determined", "en"), text)
         self.assertNotIn(translate("verdict_compliant", "en") + "\n" + "SIA", text)
+
+    def test_sia3802_scope_ignores_sia4010_attestation_ceiling_in_banner(self):
+        sia3802 = {
+            "envelope": {},
+            "openings": {},
+            "ventilation": {},
+            "gains": {},
+            "setpoints": {},
+            "hvac": {},
+            "alerts": [],
+            "global_reference_comparison": {
+                "status": "REVIEWED_RESULT_AVAILABLE"
+            },
+        }
+        sia4010 = {
+            "tests": {"test_1": {"status": "OFFICIAL_RESULTS_RECORDED"}},
+            "validation_class": "1A",
+            "class_readiness": {"1A": {}},
+        }
+        verdict = build_compliance_verdict(sia3802, sia4010, len(self.rooms))
+        self.assertEqual(verdict.sia3802_status, COMPLIANT)
+        self.assertEqual(verdict.sia4010_status, NOT_DETERMINED)
+        self.assertEqual(verdict.overall_status, NOT_DETERMINED)
+        self.assertEqual(scoped_verdict_status(verdict, "sia3802"), COMPLIANT)
+
+        path = render_compliance_report_pdf(
+            OUTPUT_ROOT / "report_sia3802_scope.pdf",
+            project_label="ZOER_32_C1",
+            rooms_data=self.rooms,
+            sia3802_results=sia3802,
+            sia4010_results=sia4010,
+            profile=self.profile,
+            language="fr",
+            model_name="ZOER_32_C1.mit",
+            scope="sia3802",
+        )
+        text = PdfReader(str(path)).pages[0].extract_text()
+        heading = text.index(translate("verdict_heading", "fr").upper())
+        compliant = text.index(translate("verdict_compliant", "fr"), heading)
+        undetermined = text.find(translate("verdict_not_determined", "fr"), heading)
+        self.assertTrue(undetermined < 0 or compliant < undetermined)
+        self.assertIn(
+            translate("sia4010_readiness_attestation_required", "fr"), text
+        )
+
+    def test_unknown_report_scope_is_rejected(self):
+        with self.assertRaises(ValueError):
+            render_compliance_report_pdf(
+                OUTPUT_ROOT / "report_invalid_scope.pdf",
+                project_label="P",
+                rooms_data=self.rooms,
+                sia3802_results=self.sia3802,
+                sia4010_results=self.sia4010,
+                profile=self.profile,
+                scope="automatic",
+            )
 
     def test_report_renders_without_any_company_profile(self):
         path = render_compliance_report_pdf(

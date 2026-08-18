@@ -1799,6 +1799,12 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
         "fr": "Bureau d'ingénieurs non configuré",
         "it": "Studio di ingegneria non configurato",
     },
+    "sia4010_readiness_attestation_required": {
+        "en": "SIA 4010: readiness, attestation required",
+        "de": "SIA 4010: Bereitschaft, Bestätigung erforderlich",
+        "fr": "SIA 4010 : readiness, attestation requise",
+        "it": "SIA 4010: predisposizione, attestazione richiesta",
+    },
     "scope_line_1": {
         "en": (
             "This is an engineering assessment of the analysed model. It is not "
