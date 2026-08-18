@@ -32,6 +32,122 @@ SIA3802_SOURCE_REFERENCES = {
     "method": "SIA 380/2:2022 FR, chapitres 4-7 et annexe A",
 }
 
+# Source-traced implementation contracts for values that would otherwise be
+# opaque literals in the VE extraction/analysis boundary.  Every entry carries
+# a locator, unit and rationale so an integer enum, unit conversion or decision
+# threshold can never silently become a compliance assumption.
+SIA_COMPLIANCE_VALUE_PROVENANCE = {
+    "room_air_exchange_type_val": {
+        "status": "VERIFIED",
+        "values": {
+            "infiltration": 0,
+            "natural_ventilation": 1,
+            "auxiliary_ventilation": 2,
+        },
+        "locator": (
+            "VEScript User Guide 2023, section 6.1.15.1, PDF page 160; "
+            "ve_adapter/ve_api_surface.json AirExchange_type"
+        ),
+        "unit": "integer enum value",
+        "rationale": "The guide explicitly publishes every valid RoomAirExchange.type_val value.",
+    },
+    "room_air_exchange_units_val": {
+        "status": "VERIFIED",
+        "values": {"ach": 0, "litres_per_second": 1},
+        "locator": (
+            "VEScript User Guide 2023, section 6.1.15.1, PDF page 160; "
+            "ve_adapter/ve_api_surface.json AirChange_unit"
+        ),
+        "unit": "integer enum value",
+        "rationale": "The guide explicitly publishes units_val 0=ach and 1=l/s.",
+    },
+    "internal_gain_power_units_val": {
+        "status": "VERIFIED",
+        "values": {"watts_per_square_metre": 0, "watts": 1, "lux": 2},
+        "locator": "VEScript User Guide 2023, section 6.1.16.1, PDF pages 162-163",
+        "unit": "integer enum value",
+        "rationale": (
+            "The guide explicitly publishes RoomPowerGain units_val 0=W/m2, 1=W and "
+            "RoomLightingGain units_val 0=W/m2, 1=W, 2=lux."
+        ),
+    },
+    "surface_opening_type": {
+        "status": "PARTIALLY_VERIFIED",
+        "values": {
+            "int_glazing": "window",
+            "ext_glazing": "window",
+            "roof_glazing": "window",
+            "int_door": "door",
+            "ext_door": "door",
+            "hole": "hole",
+        },
+        "unverified_numeric_values": ("4", "5", "6", "11"),
+        "locator": (
+            "VEScript User Guide 2023, section 6.1.45.4, PDF page 241; "
+            "ve_adapter/ve_api_surface.json VESurface_type"
+        ),
+        "unit": "symbolic VESurface_type enum member",
+        "rationale": (
+            "The checked sources publish symbolic enum members but no numeric ordinals. "
+            "Previously observed numeric codes remain [TO VERIFY] and must not be mapped."
+        ),
+    },
+    "airflow_l_s_to_m3_h": {
+        "status": "VERIFIED",
+        "value": 3.6,
+        "locator": (
+            "BIPM SI Brochure, 9th edition, Table 8 (1 L=10^-3 m3; 1 h=3600 s); "
+            "VEScript User Guide 2023, section 6.1.15.1, PDF page 160"
+        ),
+        "unit": "(m3/h)/(L/s)",
+        "rationale": "Dimensional identity: (10^-3 m3/s) * (3600 s/h) = 3.6 m3/h.",
+    },
+    "window_support_full_day_threshold": {
+        "status": "NOT_CHECKABLE",
+        "value": None,
+        "locator": "[TO VERIFY] no threshold in the checked SIA/IESVE sources",
+        "unit": "h/day",
+        "rationale": (
+            "The former 23.5 h heuristic had no cited normative or API source; "
+            "window-support class must remain NOT_CHECKABLE pending reviewed evidence."
+        ),
+    },
+    "generator_classification": {
+        "status": "PARTIALLY_VERIFIED",
+        "cooling_field": "type",
+        "cooling_values": {
+            "air_cooled": "air_cooled",
+            "water_cooled": "water_cooled",
+            "remote_condenser": "remote_condenser",
+            "heat_pump_electric": "heat_pump_unclassified",
+            "heat_pump_gas_oil": "heat_pump_unclassified",
+        },
+        "heating_heat_pump_fields": ("Is_heat_pump", "is_heat_pump"),
+        "heating_source_field": "heat_source",
+        "heating_values": {},
+        "locator": (
+            "VEScript User Guide 2023, section 6.1.26, PDF pages 182-183 and 193; "
+            "ve_adapter/ve_api_surface.json ncm_chiller_type and ncm_heat_source"
+        ),
+        "unit": "symbolic API enum member",
+        "rationale": (
+            "Only exact cooling_ncm.type enum members are normalized. Heating source enums do "
+            "not prove the SIA air-water versus brine-water class, so a heat pump remains "
+            "heat_pump_unclassified. Free-text/token classification is forbidden."
+        ),
+    },
+    "door_u_value_limit": {
+        "status": "NOT_CHECKABLE",
+        "value": None,
+        "locator": "SIA 380/2:2022 7.2.5.3, table 2, PDF page 32",
+        "unit": "W/(m2.K)",
+        "rationale": (
+            "Table 2 publishes Uw for windows (glass and frame), not a door-specific limit. "
+            "Aliasing the window value to doors is unsupported and therefore [TO VERIFY]."
+        ),
+    },
+}
+
 # Reference-project generation efficiencies, SIA 380/2:2022 tableaux 5-9 (pages
 # PDF 38-39). These are the reference-project ASSUMPTIONS, not requirements on
 # the real installation (footnote 5/6, p38-39). Each band value is a MINIMUM
@@ -383,7 +499,7 @@ SIA3802_U_VALUES = {
     "roof": SIA3802_LIMIT_VALUES["flat_roof_u"],
     "floor": SIA3802_LIMIT_VALUES["ground_floor_u"],
     "window": SIA3802_LIMIT_VALUES["window_u"],
-    "door": SIA3802_LIMIT_VALUES["window_u"],
+    "door": SIA_COMPLIANCE_VALUE_PROVENANCE["door_u_value_limit"]["value"],
     "thermal_bridge": SIA3802_LIMIT_VALUES["thermal_bridge_psi_chi"],
 }
 

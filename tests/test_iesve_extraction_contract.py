@@ -113,7 +113,7 @@ class IESVEExtractionContractTests(unittest.TestCase):
         profiles = Mock(return_value=(daily_profiles, group_profiles))
         return self.make_extractor(profiles=profiles), profiles
 
-    def test_documented_real_model_at_index_zero_is_always_selected(self):
+    def test_model_with_most_relevant_room_bodies_is_selected(self):
         first_body = SimpleNamespace(type="BodyType.room", subtype="room")
         second_bodies = [
             SimpleNamespace(type="BodyType.room", subtype="room"),
@@ -130,12 +130,12 @@ class IESVEExtractionContractTests(unittest.TestCase):
         project = SimpleNamespace(models=[first_model, larger_model])
         extractor = VEDataExtractor(project)
 
-        self.assertIs(extractor.model, first_model)
-        self.assertIs(extractor.model, first_model)
+        self.assertIs(extractor.model, larger_model)
+        self.assertIs(extractor.model, larger_model)
         diagnostics = extractor.get_model_selection_diagnostics()
-        self.assertEqual(diagnostics["selected_model_index"], 0)
+        self.assertEqual(diagnostics["selected_model_index"], 1)
         self.assertEqual(diagnostics["model_count"], 2)
-        self.assertIn("project.models[0]", diagnostics["selection_basis"])
+        self.assertIn("maximum relevant room-body count", diagnostics["selection_basis"])
         first_model.get_bodies.assert_called_once_with(False)
         larger_model.get_bodies.assert_called_once_with(False)
 

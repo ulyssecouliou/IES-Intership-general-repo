@@ -323,14 +323,14 @@ def check_scoring_guardrails(validator: Validator) -> None:
     fake_project = FakeProject()
     fake_extractor = VEDataExtractor(fake_project)
     validator.require(
-        "VE model selector uses documented real building at index zero",
-        fake_extractor.model is fake_project.models[0],
+        "VE model selector uses the strongest relevant room-body evidence",
+        fake_extractor.model is fake_project.models[1],
     )
     fake_diagnostics = fake_extractor.get_body_extraction_diagnostics()
     validator.require(
         "VE body diagnostics report selected model index",
-        fake_diagnostics.get("selected_model_index") == 0
-        and fake_diagnostics.get("relevant_body_count") == 1,
+        fake_diagnostics.get("selected_model_index") == 1
+        and fake_diagnostics.get("relevant_body_count") == 2,
     )
     converted_power = convert_aps_series_to_metric(
         [3_406_347.65625],

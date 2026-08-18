@@ -15,6 +15,7 @@ from .config import (
     SIA3802_COOLING_EER_SEER_LIMITS,
     SIA3802_COOLING_EER_SEER_TARGETS,
     SIA3802_COOLING_NEED_SCREENING,
+    SIA_COMPLIANCE_VALUE_PROVENANCE,
     SIA3802_DYNAMIC_COMFORT,
     SIA3802_HEATING_SCOP_LIMITS,
     SIA3802_HEATING_SCOP_TARGETS,
@@ -99,11 +100,17 @@ class SIA3802Checker:
 
         self.rule_engine.add_rule(Rule(
             name="SIA3802_U_VALUE_DOOR",
-            description=f"Door U-value checked conservatively against Uw <= {SIA3802_U_VALUES['door']} W/m2K where the opening is treated like a window/opening.",
-            check=lambda opening: opening.u_value <= SIA3802_U_VALUES["door"] if opening.u_value is not None else False,
-            severity=Severity.LOW,
-            category=reference_category,
-            recommendation=f"Confirm whether the door must be treated as a window/opening or opaque element, then target <= {SIA3802_U_VALUES['door']} W/m2K if this grouping applies.",
+            description=(
+                "[TO VERIFY] No door-specific U-value is published in SIA 380/2:2022 "
+                "7.2.5.3, table 2, PDF page 32; the former window-U-value alias is unsupported."
+            ),
+            check=lambda _opening: False,
+            severity=Severity.MEDIUM,
+            category="Openings",
+            recommendation=(
+                "Provide a reviewer-approved source and applicability rule for the door U-value; "
+                "do not substitute the table-2 window Uw."
+            ),
         ))
 
         self.rule_engine.add_rule(Rule(
@@ -606,6 +613,22 @@ class SIA3802Checker:
                         recommendation="Check that the door construction exposes a usable U-value.",
                         data=opening,
                     )
+                else:
+                    self.rule_engine.add_alert(
+                        rule="SIA3802_OPENING_TYPE_NOT_CHECKABLE",
+                        description=(
+                            f"External opening {opening.name or opening.id} has no source-traced "
+                            "VESurface_type classification. "
+                            f"{getattr(opening, 'opening_type_note', '') or '[TO VERIFY] opening type'}"
+                        ),
+                        severity=Severity.CRITICAL,
+                        category="Openings",
+                        recommendation=(
+                            "Expose a documented symbolic VESurface_type enum member; numeric "
+                            "ordinals 4/5/6/11 are not published in the checked IESVE sources."
+                        ),
+                        data=opening,
+                    )
             self.rule_engine.check_rules(["SIA3802_WWR"], room)
 
         return {
@@ -626,6 +649,22 @@ class SIA3802Checker:
             )
 
         for room in rooms_data:
+            if getattr(room, "air_exchange_classification_status", "NOT_CHECKABLE") != "OK":
+                self.rule_engine.add_alert(
+                    rule="SIA3802_AIR_EXCHANGE_TYPE_NOT_CHECKABLE",
+                    description=(
+                        f"Room {room.name or room.id} contains no completely source-traced "
+                        "RoomAirExchange.type_val classification. "
+                        f"{getattr(room, 'air_exchange_classification_note', '')}"
+                    ),
+                    severity=Severity.MEDIUM,
+                    category="Ventilation",
+                    recommendation=(
+                        "Read type_val using the documented VEScript 6.1.15.1 contract "
+                        "(0 infiltration, 1 natural ventilation, 2 auxiliary ventilation)."
+                    ),
+                    data=room,
+                )
             if room.ventilation_rate is not None:
                 self.rule_engine.check_rules(["SIA3802_VENTILATION_RATE"], room)
                 ventilation_m3_h_m2 = getattr(room, "ventilation_m3_h_m2", None)
@@ -1280,7 +1319,15 @@ class SIA3802Checker:
             row["reason"] = "daily internal gains could not be integrated from VE profiles"
             return row
         if not isinstance(thresholds, dict):
-            row["reason"] = "window ventilation support is missing or not comparable"
+            placeholder = str(
+                getattr(room, "window_ventilation_support_placeholder", "") or ""
+            )
+            note = str(getattr(room, "window_ventilation_support_note", "") or "")
+            row["reason"] = (
+                "window ventilation support is missing or not comparable; "
+                f"{placeholder or 'WINDOW_SUPPORT_THRESHOLD_TO_VERIFY'}; "
+                f"{note or SIA_COMPLIANCE_VALUE_PROVENANCE['window_support_full_day_threshold']['locator']}"
+            )
             return row
         necessary_above = float(thresholds["necessary_above_wh_m2_day"])
         desirable_min = float(thresholds["desirable_min_wh_m2_day"])

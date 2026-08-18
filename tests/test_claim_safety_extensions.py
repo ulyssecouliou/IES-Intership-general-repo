@@ -35,14 +35,14 @@ class ClaimSafetyExtensionTests(unittest.TestCase):
         self.assertNotIn("gas_sensor", text)
         self.assertIn("real_value available", text)
 
-    def test_disabled_generator_flags_do_not_change_classification(self):
-        """Classify only the generator flag whose value is enabled."""
+    def test_undocumented_generator_flags_do_not_create_a_classification(self):
+        """Do not derive a generator class from undocumented key-name tokens."""
         cooling_ncm = {"water_cooled": False, "air_cooled": True}
         text = ModelAnalyzer._mapping_text(cooling_ncm)
 
         result = ModelAnalyzer._classify_cooling_generator({}, cooling_ncm, text)
 
-        self.assertEqual(result, "air_cooled")
+        self.assertIsNone(result)
 
     def test_adjacency_uses_documented_body_id_property(self):
         """Ignore invented adjacency labels and preserve documented room IDs."""

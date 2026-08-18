@@ -10,6 +10,8 @@ from __future__ import annotations
 import logging
 from typing import Any, Dict, List, Optional
 
+from .config import SIA_COMPLIANCE_VALUE_PROVENANCE
+
 logger = logging.getLogger(__name__)
 
 NOT_CHECKABLE = "NOT_CHECKABLE"
@@ -125,7 +127,7 @@ class VEDataExtractor:
         return self._model
 
     def _select_best_model(self, models: List[Any]) -> Any:
-        """Select the documented real/proposed VE building at model index zero."""
+        """Select the model containing the strongest usable room evidence."""
         model_rows: List[Dict[str, Any]] = []
 
         for index, model in enumerate(models):
@@ -149,13 +151,25 @@ class VEDataExtractor:
                 "error": error,
             })
 
+        selected_row = max(
+            model_rows,
+            key=lambda row: (
+                row["relevant_body_count"],
+                row["raw_body_count"],
+                -row["index"],
+            ),
+        )
+        selected_index = int(selected_row["index"])
         self._model_selection_diagnostics = {
             "model_count": len(models),
-            "selected_model_index": 0,
-            "selection_basis": "IESVE documents project.models[0] as the real/proposed building",
+            "selected_model_index": selected_index,
+            "selection_basis": (
+                "maximum relevant room-body count, then maximum raw body count, "
+                "then lowest project model index"
+            ),
             "models": model_rows,
         }
-        return models[0]
+        return models[selected_index]
 
     def get_model_selection_diagnostics(self) -> Dict[str, Any]:
         """Return model-selection diagnostics for report preflight checks."""
@@ -672,6 +686,10 @@ class VEDataExtractor:
         """Return normalized opening properties and audited glazing values."""
         try:
             props = self._safe_properties(opening)
+            raw_opening_type = self._safe_lookup(props, "type")
+            if raw_opening_type in (None, ""):
+                raw_opening_type = getattr(opening, "type", None)
+            opening_type_audit = self._opening_type_audit(raw_opening_type)
             construction_id = self.get_opening_construction(opening)
             construction_props = self.get_construction_properties(construction_id) if construction_id else {}
             g_audit = self._extract_g_value_audit(props, construction_props)
@@ -725,7 +743,12 @@ class VEDataExtractor:
                 "g_total_placeholder": g_total_audit["placeholder"],
                 "g_total_note": g_total_audit["note"],
                 "orientation": self._safe_lookup(props, "orientation"),
-                "type": self._safe_lookup(props, "type") or self._get_opening_type(opening),
+                "type": opening_type_audit["value"],
+                "opening_type_raw": str(raw_opening_type or ""),
+                "opening_type_status": opening_type_audit["status"],
+                "opening_type_source": opening_type_audit["source"],
+                "opening_type_placeholder": opening_type_audit["placeholder"],
+                "opening_type_note": opening_type_audit["note"],
                 "macroflo_id": self._safe_object_attr(opening, "get_macroflo_id"),
                 "construction_id": construction_id,
                 "construction_properties": construction_props,
@@ -1117,7 +1140,7 @@ class VEDataExtractor:
                         enum_candidates.append(enum)
 
         for enum in enum_candidates:
-            for name in ("iso", "cibse", "ashae", "ashrae", "t24"):
+            for name in ("iso", "cibse", "ashrae", "t24"):
                 value = getattr(enum, name, None)
                 marker = repr(value)
                 if value is not None and marker not in seen:
@@ -1330,19 +1353,50 @@ class VEDataExtractor:
 
     @staticmethod
     def _normalize_opening_type(opening_type: Any) -> str:
-        """Normalize IESVE opening-type values to reusable compliance labels."""
-        if opening_type in (4, "4"):
-            return "window"
-        if opening_type in (5, "5", 6, "6"):
-            return "door"
-        if opening_type in (11, "11"):
-            return "hole"
+        """Normalize only source-traced symbolic IESVE opening types."""
         normalized = VEDataExtractor._normalize_surface_type(opening_type)
+        contract = SIA_COMPLIANCE_VALUE_PROVENANCE["surface_opening_type"]
+        raw = str(opening_type or "").strip().lower()
+        if "." in raw:
+            raw = raw.split(".")[-1]
+        raw = raw.replace(" ", "_").replace("-", "_")
+        mapped = contract["values"].get(raw)
+        if mapped:
+            return str(mapped)
+        # These are internal normalized labels, not undocumented VE ordinals.
         if normalized in {"glazing", "window"}:
             return "window"
-        if normalized in {"door"}:
+        if normalized == "door":
             return "door"
         return normalized
+
+    @classmethod
+    def _opening_type_audit(cls, opening_type: Any) -> Dict[str, Any]:
+        """Return a fail-closed audit for one raw VE opening type."""
+        contract = SIA_COMPLIANCE_VALUE_PROVENANCE["surface_opening_type"]
+        normalized = cls._normalize_opening_type(opening_type)
+        raw = str(opening_type or "").strip().lower()
+        if "." in raw:
+            raw = raw.split(".")[-1]
+        raw = raw.replace(" ", "_").replace("-", "_")
+        if raw in contract["values"] or raw in {"window", "glazing", "door", "hole"}:
+            return {
+                "value": normalized,
+                "status": "OK",
+                "source": contract["locator"],
+                "placeholder": "",
+                "note": "",
+            }
+        return {
+            "value": None,
+            "status": NOT_CHECKABLE,
+            "source": contract["locator"],
+            "placeholder": "OPENING_TYPE_VE_ENUM_TO_VERIFY",
+            "note": (
+                f"{VE_MEMBER_ABSENT_NOTE}: raw opening type {opening_type!r}; "
+                "numeric VESurface_type ordinals are not published in the checked sources"
+            ),
+        }
 
     @staticmethod
     def _safe_lookup(mapping: Any, key: str) -> Any:
@@ -1392,7 +1446,7 @@ class VEDataExtractor:
 
         u_factors = construction_props.get("u_factors")
         if isinstance(u_factors, dict):
-            for preferred in ("iso", "cibse", "ashae", "ashrae", "t24"):
+            for preferred in ("iso", "cibse", "ashrae", "t24"):
                 numeric = cls._to_float_or_none(u_factors.get(preferred))
                 if numeric is not None:
                     return numeric

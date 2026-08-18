@@ -394,6 +394,7 @@ class CheckerBehaviorTests(unittest.TestCase):
             "ventilation_m3_h_m2": 4.0,
             "ventilation_installation_type": "monozone",
             "infiltration_m3_h_m2": 0.15,
+            "air_exchange_classification_status": "OK",
         }
 
         checker, engine = self._new_checker()

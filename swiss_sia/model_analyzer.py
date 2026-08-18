@@ -10,6 +10,8 @@ import logging
 from typing import List, Dict, Optional, Any, TYPE_CHECKING
 from dataclasses import dataclass, field
 
+from .config import SIA_COMPLIANCE_VALUE_PROVENANCE
+
 if TYPE_CHECKING:
     from .data_extractor import VEDataExtractor
 
@@ -71,6 +73,10 @@ class OpeningData:
     g_total_note: str = ""
     orientation: Optional[str] = None
     opening_type: Optional[str] = None  # Normalized type such as window or door.
+    opening_type_status: str = NOT_CHECKABLE
+    opening_type_source: Optional[str] = None
+    opening_type_placeholder: str = "OPENING_TYPE_VE_ENUM_TO_VERIFY"
+    opening_type_note: str = ""
     is_external: bool = False
     construction_id: str = ""
     macroflo_id: str = ""
@@ -139,12 +145,18 @@ class RoomData:
     daylight_dimming_profile: str = ""
     window_operable: Optional[bool] = None
     window_ventilation_support: Optional[str] = None
+    window_ventilation_support_status: str = NOT_CHECKABLE
+    window_ventilation_support_placeholder: str = "WINDOW_SUPPORT_THRESHOLD_TO_VERIFY"
+    window_ventilation_support_note: str = ""
     ventilation_rate: Optional[float] = None
     ventilation_m3_h_m2: Optional[float] = None
     ventilation_facade_m3_h_m2: Optional[float] = None
     infiltration_rate: Optional[float] = None
     infiltration_unit: Optional[str] = None
     infiltration_m3_h_m2: Optional[float] = None
+    air_exchange_classification_status: str = NOT_CHECKABLE
+    air_exchange_classification_placeholder: str = "AIR_EXCHANGE_TYPE_VAL_TO_VERIFY"
+    air_exchange_classification_note: str = ""
     hvac_systems: List[Dict[str, Any]] = field(default_factory=list)
     room_conditions: Dict[str, Any] = field(default_factory=dict)
     hvac_zone: Dict[str, Any] = field(default_factory=dict)
@@ -233,12 +245,31 @@ class ModelAnalyzer:
                 daylight_dimming_profile=str(gain_summary.get("daylight_dimming_profile") or ""),
                 window_operable=window_summary.get("window_operable"),
                 window_ventilation_support=window_summary.get("window_ventilation_support"),
+                window_ventilation_support_status=str(
+                    window_summary.get("window_ventilation_support_status") or NOT_CHECKABLE
+                ),
+                window_ventilation_support_placeholder=str(
+                    window_summary.get("window_ventilation_support_placeholder") or ""
+                ),
+                window_ventilation_support_note=str(
+                    window_summary.get("window_ventilation_support_note") or ""
+                ),
                 ventilation_rate=ventilation_rate,
                 ventilation_m3_h_m2=ventilation_m3_h_m2,
                 ventilation_facade_m3_h_m2=air_exchange_summary.get("ventilation_facade_m3_h_m2"),
                 infiltration_rate=infiltration_rate,
                 infiltration_unit=infiltration_unit,
                 infiltration_m3_h_m2=infiltration_m3_h_m2,
+                air_exchange_classification_status=str(
+                    air_exchange_summary.get("air_exchange_classification_status")
+                    or NOT_CHECKABLE
+                ),
+                air_exchange_classification_placeholder=str(
+                    air_exchange_summary.get("air_exchange_classification_placeholder") or ""
+                ),
+                air_exchange_classification_note=str(
+                    air_exchange_summary.get("air_exchange_classification_note") or ""
+                ),
                 hvac_systems=hvac_systems,
                 room_conditions=room_conditions,
                 fan_control=self._first_hvac_value(hvac_systems, "fan_control"),
@@ -376,6 +407,10 @@ class ModelAnalyzer:
                         g_total_note=str(props.get("g_total_note") or ""),
                         orientation=orientation,
                         opening_type=opening_type,
+                        opening_type_status=str(props.get("opening_type_status") or NOT_CHECKABLE),
+                        opening_type_source=str(props.get("opening_type_source") or "") or None,
+                        opening_type_placeholder=str(props.get("opening_type_placeholder") or ""),
+                        opening_type_note=str(props.get("opening_type_note") or ""),
                         is_external=is_external,
                         construction_id=construction_id,
                         macroflo_id=str(props.get("macroflo_id") or ""),
@@ -506,9 +541,15 @@ class ModelAnalyzer:
         value_table = gain_data.get("max_power_consumptions")
         if value_table in (None, {}):
             value_table = gain_data.get("max_sensible_gains")
+        gain_units = SIA_COMPLIANCE_VALUE_PROVENANCE[
+            "internal_gain_power_units_val"
+        ]["values"]
         if isinstance(value_table, dict):
-            if 0 in value_table or "0" in value_table:
-                return cls._to_float_or_none(value_table.get(0, value_table.get("0")))
+            watts_per_area = gain_units["watts_per_square_metre"]
+            if watts_per_area in value_table or str(watts_per_area) in value_table:
+                return cls._to_float_or_none(
+                    value_table.get(watts_per_area, value_table.get(str(watts_per_area)))
+                )
             active = value_table.get(units_val, value_table.get(str(units_val)))
         else:
             active = value_table
@@ -519,9 +560,9 @@ class ModelAnalyzer:
             gain_data.get("units_str")
             or (gain_data.get("units_strs") or {}).get(units_val, "")
         ).lower()
-        if "w/m" in units_text or units_val == 0:
+        if "w/m" in units_text or units_val == gain_units["watts_per_square_metre"]:
             return value
-        if ("w" in units_text or units_val == 1) and room_area > 0:
+        if ("w" in units_text or units_val == gain_units["watts"]) and room_area > 0:
             return value / room_area
         return None
 
@@ -531,10 +572,18 @@ class ModelAnalyzer:
             return None
 
         air_exchanges = self.data_extractor.get_air_exchanges(room_data)
+        contract = SIA_COMPLIANCE_VALUE_PROVENANCE
+        auxiliary_type = contract["room_air_exchange_type_val"]["values"][
+            "auxiliary_ventilation"
+        ]
+        ach_unit = contract["room_air_exchange_units_val"]["values"]["ach"]
         for exchange in air_exchanges:
             try:
                 exchange_data = self._safe_get_data(exchange)
-                if exchange_data.get("type_val") == 2 and exchange_data.get("units_val") == 0:
+                if (
+                    exchange_data.get("type_val") == auxiliary_type
+                    and exchange_data.get("units_val") == ach_unit
+                ):
                     return self._extract_first_numeric(exchange_data.get("max_flows"))
             except Exception as e:
                 logger.error("Error while analyzing ventilation: %s", e)
@@ -553,22 +602,33 @@ class ModelAnalyzer:
             "infiltration_rate": None,
             "infiltration_unit": None,
             "infiltration_m3_h_m2": None,
+            "air_exchange_classification_status": NOT_CHECKABLE,
+            "air_exchange_classification_placeholder": "AIR_EXCHANGE_TYPE_VAL_TO_VERIFY",
+            "air_exchange_classification_note": "No source-traced air-exchange type was resolved.",
         }
         if not room_data:
             return summary
 
         air_exchanges = self.data_extractor.get_air_exchanges(room_data)
+        type_contract = SIA_COMPLIANCE_VALUE_PROVENANCE["room_air_exchange_type_val"]
+        infiltration_type = type_contract["values"]["infiltration"]
+        auxiliary_type = type_contract["values"]["auxiliary_ventilation"]
+        recognized_types = set(type_contract["values"].values())
+        unresolved_types: List[Any] = []
         for exchange in air_exchanges:
             try:
                 exchange_data = self._safe_get_data(exchange)
-                exchange_name = str(exchange_data.get("name", "") or "").lower()
                 exchange_type = exchange_data.get("type_val")
                 max_flows = exchange_data.get("max_flows")
                 units = exchange_data.get("units_strs") or {}
                 units_val = exchange_data.get("units_val")
                 active_rate = self._extract_flow_for_unit(max_flows, units_val)
 
-                if exchange_type == 2 or (exchange_type is None and "ventilation" in exchange_name):
+                if exchange_type not in recognized_types:
+                    unresolved_types.append(exchange_type)
+                    continue
+
+                if exchange_type == auxiliary_type:
                     summary["ventilation_rate"] = active_rate
                     floor_flow = self._derive_m3_h_m2_from_flow_table(max_flows, units)
                     if floor_flow is None:
@@ -587,12 +647,22 @@ class ModelAnalyzer:
                             float(summary["ventilation_facade_m3_h_m2"] or 0.0) + facade_flow
                         )
 
-                if exchange_type == 0 or "infiltration" in exchange_name:
+                if exchange_type == infiltration_type:
                     summary["infiltration_rate"] = active_rate
                     summary["infiltration_unit"] = self._lookup_unit_label(units, units_val)
                     summary["infiltration_m3_h_m2"] = self._derive_m3_h_m2_from_flow_table(max_flows, units)
             except Exception as e:
                 logger.error("Error while analyzing air exchanges: %s", e)
+                unresolved_types.append("read_error")
+        if air_exchanges and not unresolved_types:
+            summary["air_exchange_classification_status"] = "OK"
+            summary["air_exchange_classification_placeholder"] = ""
+            summary["air_exchange_classification_note"] = type_contract["locator"]
+        elif unresolved_types:
+            summary["air_exchange_classification_note"] = (
+                "[TO VERIFY] RoomAirExchange.type_val outside the source-traced contract: "
+                f"{unresolved_types!r}; {type_contract['locator']}"
+            )
         return summary
 
     @staticmethod
@@ -631,7 +701,9 @@ class ModelAnalyzer:
             if is_floor_area_rate:
                 value = ModelAnalyzer._to_float_or_none(max_flows.get(key, max_flows.get(str(key))))
                 if value is not None:
-                    return value * 3.6
+                    return value * SIA_COMPLIANCE_VALUE_PROVENANCE[
+                        "airflow_l_s_to_m3_h"
+                    ]["value"]
         return None
 
     @staticmethod
@@ -647,7 +719,9 @@ class ModelAnalyzer:
             ):
                 value = ModelAnalyzer._to_float_or_none(max_flows.get(key, max_flows.get(str(key))))
                 if value is not None:
-                    return value * 3.6
+                    return value * SIA_COMPLIANCE_VALUE_PROVENANCE[
+                        "airflow_l_s_to_m3_h"
+                    ]["value"]
         return None
 
     @staticmethod
@@ -682,7 +756,11 @@ class ModelAnalyzer:
                     max_flows.get(key, max_flows.get(str(key)))
                 )
                 if value is not None:
-                    return value * 3.6 / density
+                    return (
+                        value
+                        * SIA_COMPLIANCE_VALUE_PROVENANCE["airflow_l_s_to_m3_h"]["value"]
+                        / density
+                    )
         return None
 
     def _analyze_hvac_systems(
@@ -709,13 +787,8 @@ class ModelAnalyzer:
             heating_ncm = apache_data.get("heating_ncm", {}) or {}
             ventilation_ncm = apache_data.get("ventilation_ncm", {}) or {}
             system_controls = apache_data.get("system_controls_ncm", {}) or {}
-            text_blob = self._mapping_text(
-                apache_data,
-                system_data,
-                room_conditions or {},
-            )
-            cooling_class = self._classify_cooling_generator(cooling, cooling_ncm, text_blob)
-            heating_class = self._classify_heating_generator(heating, heating_ncm, text_blob)
+            cooling_class = self._classify_cooling_generator(cooling, cooling_ncm, "")
+            heating_class = self._classify_heating_generator(heating, heating_ncm, "")
             fan_control = self._extract_control_identifier(
                 (ventilation_ncm, system_controls, apache_data.get("control", {})),
                 ("fan_ctrl", "fan_control", "fancontrol"),
@@ -777,7 +850,25 @@ class ModelAnalyzer:
         return hvac_systems
 
     def _analyze_window_ventilation(self, openings: List[OpeningData]) -> Dict[str, Any]:
-        """Classify window ventilation support from MacroFlo assignments."""
+        """Report operability without inventing a day/night profile threshold."""
+        threshold_contract = SIA_COMPLIANCE_VALUE_PROVENANCE[
+            "window_support_full_day_threshold"
+        ]
+        unresolved_openings = [
+            opening
+            for opening in openings
+            if opening.is_external and opening.opening_type_status != "OK"
+        ]
+        if unresolved_openings:
+            return {
+                "window_operable": None,
+                "window_ventilation_support": None,
+                "window_ventilation_support_status": NOT_CHECKABLE,
+                "window_ventilation_support_placeholder": "OPENING_TYPE_VE_ENUM_TO_VERIFY",
+                "window_ventilation_support_note": (
+                    "[TO VERIFY] external opening type is unresolved; window support cannot be classified"
+                ),
+            }
         external_windows = [
             opening
             for opening in openings
@@ -785,7 +876,13 @@ class ModelAnalyzer:
             and self._normalize_opening_type(opening.opening_type) == "window"
         ]
         if not external_windows:
-            return {"window_operable": None, "window_ventilation_support": None}
+            return {
+                "window_operable": False,
+                "window_ventilation_support": "no_window_support",
+                "window_ventilation_support_status": "OK",
+                "window_ventilation_support_placeholder": "",
+                "window_ventilation_support_note": "No source-traced external window is present.",
+            }
         macroflo_rows = (
             self.data_extractor.get_macroflo_openings()
             if hasattr(self.data_extractor, "get_macroflo_openings")
@@ -802,9 +899,21 @@ class ModelAnalyzer:
             if (self._to_float_or_none((row or {}).get("openable_area")) or 0.0) > 0.0
         ]
         if not explicitly_operable and not any(opening.macroflo_id for opening in external_windows):
-            return {"window_operable": False, "window_ventilation_support": "no_window_support"}
+            return {
+                "window_operable": False,
+                "window_ventilation_support": "no_window_support",
+                "window_ventilation_support_status": "OK",
+                "window_ventilation_support_placeholder": "",
+                "window_ventilation_support_note": "No MacroFlo assignment is present.",
+            }
         if not explicitly_operable:
-            return {"window_operable": None, "window_ventilation_support": None}
+            return {
+                "window_operable": None,
+                "window_ventilation_support": None,
+                "window_ventilation_support_status": NOT_CHECKABLE,
+                "window_ventilation_support_placeholder": "MACROFLO_OPERABILITY_TO_VERIFY",
+                "window_ventilation_support_note": "[TO VERIFY] MacroFlo operability read-back is incomplete.",
+            }
 
         profile_hours = []
         for row in explicitly_operable:
@@ -813,12 +922,16 @@ class ModelAnalyzer:
                 hours = self.data_extractor.get_profile_daily_equivalent_hours(profile_id)
                 if hours is not None:
                     profile_hours.append(hours)
-        support = (
-            "day_and_night_window_support"
-            if profile_hours and max(profile_hours) >= 23.5
-            else "occupied_hours_window_support"
-        )
-        return {"window_operable": True, "window_ventilation_support": support}
+        return {
+            "window_operable": True,
+            "window_ventilation_support": None,
+            "window_ventilation_support_status": NOT_CHECKABLE,
+            "window_ventilation_support_placeholder": "WINDOW_SUPPORT_THRESHOLD_TO_VERIFY",
+            "window_ventilation_support_note": (
+                f"{threshold_contract['locator']}; resolved daily profile hours={profile_hours!r}. "
+                "No day/night class is inferred."
+            ),
+        }
 
     def _annotate_hvac_zoning_and_controls(self, rooms_data: List[RoomData]) -> None:
         """Keep SIA ventilation classifications fail-closed.
@@ -925,17 +1038,12 @@ class ModelAnalyzer:
         cooling_ncm: Dict[str, Any],
         text_blob: str,
     ) -> Optional[str]:
-        """Classify a cooling generator only from explicit VE metadata."""
+        """Classify only an exact documented cooling_ncm.type enum member."""
         if bool(cooling.get("has_absorption_chiller")):
             return "absorption_chiller"
-        text = cls._mapping_text(cooling_ncm, text_blob)
-        if any(token in text for token in ("dry post", "post_cooling", "post cooling", "dry_cooler")):
-            return "water_cooled_post_cooling"
-        if any(token in text for token in ("water_cooled", "water cooled", "water condenser")):
-            return "water_cooled"
-        if any(token in text for token in ("air_cooled", "air cooled", "air condenser")):
-            return "air_cooled"
-        return None
+        contract = SIA_COMPLIANCE_VALUE_PROVENANCE["generator_classification"]
+        member = cls._api_enum_member_name(cooling_ncm.get(contract["cooling_field"]))
+        return contract["cooling_values"].get(member)
 
     @classmethod
     def _classify_heating_generator(
@@ -944,15 +1052,31 @@ class ModelAnalyzer:
         heating_ncm: Dict[str, Any],
         text_blob: str,
     ) -> Optional[str]:
-        """Classify a heat pump only when its source/sink is explicit in VE data."""
-        if not bool(heating.get("Is_heat_pump")):
+        """Keep a documented heat pump unclassified when its SIA subtype is unproven."""
+        contract = SIA_COMPLIANCE_VALUE_PROVENANCE["generator_classification"]
+        is_heat_pump = next(
+            (
+                heating.get(field)
+                for field in contract["heating_heat_pump_fields"]
+                if heating.get(field) is not None
+            ),
+            None,
+        )
+        if not bool(is_heat_pump):
             return None
-        text = cls._mapping_text(heating_ncm, text_blob)
-        if any(token in text for token in ("ground_source", "ground source", "brine", "geothermal")):
-            return "ground_source_heat_pump"
-        if any(token in text for token in ("air_water", "air water", "air-to-water", "air to water")):
-            return "air_water_heat_pump"
+        member = cls._api_enum_member_name(heating_ncm.get(contract["heating_source_field"]))
+        mapped = contract["heating_values"].get(member)
+        if mapped:
+            return str(mapped)
         return "heat_pump_unclassified"
+
+    @staticmethod
+    def _api_enum_member_name(value: Any) -> str:
+        """Normalize a symbolic API enum member without assigning numeric ordinals."""
+        text = str(value or "").strip().lower()
+        if "." in text:
+            text = text.split(".")[-1]
+        return text.replace(" ", "_").replace("-", "_")
 
     @staticmethod
     def _normalize_identifier(value: Any) -> str:
@@ -1136,13 +1260,12 @@ class ModelAnalyzer:
         return raw if raw in {"wall", "roof", "floor", "ceiling", "glazing", "door", "hole"} else raw
 
     def _normalize_opening_type(self, opening_type: Any) -> str:
-        """Normalize IESVE opening types to reusable categories."""
-        if opening_type in (4, "4"):
-            return "window"
-        if opening_type in (5, "5", 6, "6"):
-            return "door"
-        if opening_type in (11, "11"):
-            return "hole"
+        """Normalize only source-traced symbolic IESVE opening types."""
+        contract = SIA_COMPLIANCE_VALUE_PROVENANCE["surface_opening_type"]
+        raw = self._api_enum_member_name(opening_type)
+        mapped = contract["values"].get(raw)
+        if mapped:
+            return str(mapped)
         normalized = self._normalize_surface_type(opening_type)
         if normalized in {"glazing", "window"}:
             return "window"
