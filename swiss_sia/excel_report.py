@@ -6981,6 +6981,21 @@ class ExcelReportGenerator:
             g_total = self._safe_float(getattr(data, "g_total"), None)
             if g_total is not None:
                 parts.append(f"g_total={g_total:.3f}")
+        for evidence_name in (
+            "visible_transmittance",
+            "frame_fraction",
+            "g_total",
+            "internal_gains_daily",
+            "ventilation_installation_type",
+            "ventilation_control_level",
+        ):
+            status = str(getattr(data, f"{evidence_name}_status", "") or "")
+            placeholder = str(getattr(data, f"{evidence_name}_placeholder", "") or "")
+            if status == "NOT_CHECKABLE":
+                parts.append(
+                    f"{evidence_name}=NOT_CHECKABLE"
+                    + (f" [{placeholder}]" if placeholder else "")
+                )
         if hasattr(data, "area"):
             parts.append(f"area={self._safe_float(getattr(data, 'area'), 0.0):.2f} m2")
         if hasattr(data, "net_area"):

@@ -6,6 +6,7 @@ import unittest
 from unittest.mock import Mock, patch
 
 from swiss_sia.data_extractor import VEDataExtractor
+from swiss_sia.model_analyzer import ModelAnalyzer, RoomData
 
 
 class FakeProfile:
@@ -178,13 +179,108 @@ class IESVEExtractionContractTests(unittest.TestCase):
                     extractor.get_profile_daily_equivalent_hours(profile_id)
                 )
 
-    def test_builtin_on_profile_resolves_without_project_profile_lookup(self):
-        """VE's built-in ON identifier represents a constant 24-hour profile."""
+    def test_undocumented_on_profile_is_not_converted_to_24_hours(self):
+        """An undocumented special profile identifier must remain fail-closed."""
         extractor, profiles = self.make_profile_extractor()
 
-        self.assertEqual(extractor.get_profile_daily_equivalent_hours("ON"), 24.0)
-        self.assertEqual(extractor.get_profile_daily_equivalent_hours("on"), 24.0)
-        profiles.assert_not_called()
+        audit = extractor.get_profile_daily_equivalent_hours_audit("ON")
+
+        self.assertIsNone(audit["value"])
+        self.assertEqual(audit["status"], "NOT_CHECKABLE")
+        self.assertNotEqual(audit["value"], 0)
+        profiles.assert_called_once_with()
+
+    def test_documented_cdb_glazing_members_are_extracted_with_evidence(self):
+        """Use only fields documented on VECdbConstruction.get_properties()."""
+        construction = SimpleNamespace(
+            get_properties=Mock(return_value={
+                "visible_light_transmittance": 0.72,
+                "frame_percent": 30.0,
+                "g_total": 0.41,
+            })
+        )
+
+        audits = VEDataExtractor._documented_cdb_glazing_audits(construction)
+
+        self.assertEqual(audits["tau_v_audit"]["status"], "OK")
+        self.assertAlmostEqual(audits["tau_v_audit"]["value"], 0.72)
+        self.assertEqual(audits["frame_fraction_audit"]["status"], "OK")
+        self.assertAlmostEqual(audits["frame_fraction_audit"]["value"], 0.30)
+        self.assertEqual(audits["g_total_audit"]["status"], "NOT_CHECKABLE")
+        self.assertIsNone(audits["g_total_audit"]["value"])
+        self.assertNotEqual(audits["g_total_audit"]["value"], 0)
+
+    def test_missing_cdb_member_returns_named_not_checkable_placeholders(self):
+        """A double without the documented member must never produce zero."""
+        audits = VEDataExtractor._documented_cdb_glazing_audits(SimpleNamespace())
+
+        for name in ("tau_v_audit", "frame_fraction_audit", "g_total_audit"):
+            with self.subTest(name=name):
+                self.assertEqual(audits[name]["status"], "NOT_CHECKABLE")
+                self.assertIsNone(audits[name]["value"])
+                self.assertNotEqual(audits[name]["value"], 0)
+                self.assertTrue(audits[name]["placeholder"])
+                self.assertIn("[TO VERIFY] membre VE absent", audits[name]["note"])
+
+    def test_daily_internal_gains_use_documented_gain_and_profile_members(self):
+        """Integrate a gain only when gain, profile and diversity read-back exist."""
+        gain = SimpleNamespace(get=Mock(return_value={
+            "name": "Lighting",
+            "type_str": "Fluorescent Lighting",
+            "units_val": 0,
+            "max_sensible_gains": {0: 10.0},
+            "variation_profile": "DAY-1",
+            "diversity_factor": 1.0,
+        }))
+        extractor = SimpleNamespace(
+            get_internal_gains_audit=lambda room: {
+                "items": [gain], "status": "OK", "placeholder": "", "note": ""
+            },
+            get_profile_daily_equivalent_hours_audit=lambda profile_id: {
+                "value": 8.0,
+                "status": "OK",
+                "placeholder": "",
+                "note": "",
+            },
+        )
+
+        result = ModelAnalyzer(extractor)._analyze_internal_gains(object(), 50.0)
+
+        self.assertEqual(result["daily_status"], "OK")
+        self.assertAlmostEqual(result["daily_wh_m2"], 80.0)
+        self.assertEqual(result["daily_placeholder"], "")
+
+    def test_missing_daily_gain_member_is_not_checkable_and_never_zero(self):
+        """A room double without get_internal_gains is not evidence of zero gain."""
+        extractor = self.make_extractor()
+        analyzer = ModelAnalyzer(extractor)
+
+        result = analyzer._analyze_internal_gains(SimpleNamespace(), 50.0)
+
+        self.assertEqual(result["daily_status"], "NOT_CHECKABLE")
+        self.assertIsNone(result["daily_wh_m2"])
+        self.assertNotEqual(result["daily_wh_m2"], 0)
+        self.assertIn("[TO VERIFY] membre VE absent", result["daily_method"])
+
+    def test_ventilation_sia_classifications_are_not_inferred_from_labels(self):
+        """System labels and zone counts are context, not direct SIA members."""
+        extractor = SimpleNamespace(
+            get_room_zone_membership=lambda: {"R1": {"zone_room_count": 3}}
+        )
+        room = RoomData(
+            id="R1",
+            hvac_systems=[{"system_type": "MULTIZONE", "fan_control": "gas_sensor variable"}],
+            fan_control="gas_sensor variable",
+        )
+
+        ModelAnalyzer(extractor)._annotate_hvac_zoning_and_controls([room])
+
+        self.assertIsNone(room.ventilation_installation_type)
+        self.assertEqual(room.ventilation_installation_type_status, "NOT_CHECKABLE")
+        self.assertIsNone(room.ventilation_control_level)
+        self.assertEqual(room.ventilation_control_level_status, "NOT_CHECKABLE")
+        self.assertTrue(room.ventilation_installation_type_placeholder)
+        self.assertTrue(room.ventilation_control_level_placeholder)
 
     def test_project_apache_systems_list_is_indexed_by_documented_ids(self):
         primary = FakeApacheSystem("SYS-01", "Primary")

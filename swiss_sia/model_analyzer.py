@@ -15,6 +15,11 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
+NOT_CHECKABLE = "NOT_CHECKABLE"
+# [TO VERIFY] membre VE absent: neither checked API artefact exposes these SIA classifications.
+VENTILATION_INSTALLATION_TYPE_PLACEHOLDER = "VENTILATION_INSTALLATION_TYPE_VE_MEMBER_TO_VERIFY"
+VENTILATION_CONTROL_LEVEL_PLACEHOLDER = "VENTILATION_CONTROL_LEVEL_VE_MEMBER_TO_VERIFY"
+
 @dataclass
 class SurfaceData:
     """Normalized data for one VE surface such as a wall, roof or floor."""
@@ -47,12 +52,23 @@ class OpeningData:
     g_value_bfrc: Optional[float] = None
     g_values: Dict[str, Any] = field(default_factory=dict)
     visible_transmittance: Optional[float] = None
+    visible_transmittance_status: str = NOT_CHECKABLE
+    visible_transmittance_source: Optional[str] = None
+    visible_transmittance_placeholder: str = "TAU_V_VE_MEMBER_TO_VERIFY"
+    visible_transmittance_note: str = ""
     frame_fraction: Optional[float] = None
+    frame_fraction_status: str = NOT_CHECKABLE
+    frame_fraction_source: Optional[str] = None
+    frame_fraction_placeholder: str = "FRAME_FRACTION_VE_MEMBER_TO_VERIFY"
+    frame_fraction_note: str = ""
     shading_type: Optional[str] = None
     shading_control: Optional[str] = None
     shading_properties: Dict[str, Any] = field(default_factory=dict)
     g_total: Optional[float] = None
     g_total_source: Optional[str] = None
+    g_total_status: str = NOT_CHECKABLE
+    g_total_placeholder: str = "G_TOTAL_VE_MEMBER_TO_VERIFY"
+    g_total_note: str = ""
     orientation: Optional[str] = None
     opening_type: Optional[str] = None  # Normalized type such as window or door.
     is_external: bool = False
@@ -115,6 +131,8 @@ class RoomData:
     internal_gains: Dict[str, Optional[float]] = field(default_factory=dict)  # Lighting, people and equipment values.
     internal_gain_details: List[Dict[str, Any]] = field(default_factory=list)
     internal_gains_wh_m2_day: Optional[float] = None
+    internal_gains_daily_status: str = NOT_CHECKABLE
+    internal_gains_daily_placeholder: str = "DAILY_INTERNAL_GAINS_VE_MEMBER_TO_VERIFY"
     internal_gains_daily_method: str = ""
     occupancy_density_m2_per_person: Optional[float] = None
     thermal_template_id: str = ""
@@ -131,8 +149,12 @@ class RoomData:
     room_conditions: Dict[str, Any] = field(default_factory=dict)
     hvac_zone: Dict[str, Any] = field(default_factory=dict)
     ventilation_installation_type: Optional[str] = None
+    ventilation_installation_type_status: str = NOT_CHECKABLE
+    ventilation_installation_type_placeholder: str = VENTILATION_INSTALLATION_TYPE_PLACEHOLDER
     ventilation_control: Optional[str] = None
     ventilation_control_level: Optional[int] = None
+    ventilation_control_level_status: str = NOT_CHECKABLE
+    ventilation_control_level_placeholder: str = VENTILATION_CONTROL_LEVEL_PLACEHOLDER
     fan_control: Optional[str] = None
     heat_recovery_type: Optional[str] = None
     dynamic_results: Dict[str, Any] = field(default_factory=dict)
@@ -199,6 +221,8 @@ class ModelAnalyzer:
                 internal_gains=internal_gains,
                 internal_gain_details=list(gain_summary.get("details", []) or []),
                 internal_gains_wh_m2_day=self._to_float_or_none(gain_summary.get("daily_wh_m2")),
+                internal_gains_daily_status=str(gain_summary.get("daily_status") or NOT_CHECKABLE),
+                internal_gains_daily_placeholder=str(gain_summary.get("daily_placeholder") or ""),
                 internal_gains_daily_method=str(gain_summary.get("daily_method") or ""),
                 occupancy_density_m2_per_person=occupancy_density,
                 thermal_template_id=str(
@@ -333,12 +357,23 @@ class ModelAnalyzer:
                         g_value_bfrc=self._to_float_or_none(props.get("g_value_bfrc")),
                         g_values=dict(g_values),
                         visible_transmittance=visible_transmittance,
+                        visible_transmittance_status=str(props.get("visible_transmittance_status") or NOT_CHECKABLE),
+                        visible_transmittance_source=str(props.get("visible_transmittance_source") or "") or None,
+                        visible_transmittance_placeholder=str(props.get("visible_transmittance_placeholder") or ""),
+                        visible_transmittance_note=str(props.get("visible_transmittance_note") or ""),
                         frame_fraction=frame_fraction,
+                        frame_fraction_status=str(props.get("frame_fraction_status") or NOT_CHECKABLE),
+                        frame_fraction_source=str(props.get("frame_fraction_source") or "") or None,
+                        frame_fraction_placeholder=str(props.get("frame_fraction_placeholder") or ""),
+                        frame_fraction_note=str(props.get("frame_fraction_note") or ""),
                         shading_type=str(props.get("shading_type") or "") or None,
                         shading_control=str(props.get("shading_control") or "") or None,
                         shading_properties=dict(shading_properties),
                         g_total=self._to_float_or_none(props.get("g_total")),
                         g_total_source=str(props.get("g_total_source") or "") or None,
+                        g_total_status=str(props.get("g_total_status") or NOT_CHECKABLE),
+                        g_total_placeholder=str(props.get("g_total_placeholder") or ""),
+                        g_total_note=str(props.get("g_total_note") or ""),
                         orientation=orientation,
                         opening_type=opening_type,
                         is_external=is_external,
@@ -357,14 +392,30 @@ class ModelAnalyzer:
             "equipment": None,
             "details": [],
             "daily_wh_m2": None,
-            "daily_method": "",
+            "daily_status": NOT_CHECKABLE,
+            "daily_placeholder": "DAILY_INTERNAL_GAINS_VE_MEMBER_TO_VERIFY",
+            "daily_method": "NOT_CHECKABLE: documented VE gain/profile evidence has not been resolved",
             "daylight_dimming_profile": "",
             "occupancy_density_m2_per_person": None,
         }
         if not room_data:
             return gains
 
-        internal_gains = self.data_extractor.get_internal_gains(room_data)
+        if hasattr(self.data_extractor, "get_internal_gains_audit"):
+            gains_audit = self.data_extractor.get_internal_gains_audit(room_data)
+            internal_gains = list(gains_audit.get("items", []) or [])
+            if gains_audit.get("status") != "OK":
+                gains["daily_method"] = str(gains_audit.get("note") or gains["daily_method"])
+                gains["daily_placeholder"] = str(
+                    gains_audit.get("placeholder") or gains["daily_placeholder"]
+                )
+        else:
+            # [TO VERIFY] membre VE absent: older/non-conforming extractor boundary.
+            internal_gains = []
+            gains["daily_method"] = (
+                "NOT_CHECKABLE: [TO VERIFY] membre VE absent: "
+                "VEDataExtractor.get_internal_gains_audit"
+            )
         daily_components: List[float] = []
         daily_complete = True
         for gain in internal_gains:
@@ -374,14 +425,19 @@ class ModelAnalyzer:
                 units_val = gain_data.get("units_val")
                 density = self._gain_density_w_m2(gain_data, room_area)
                 variation_profile = str(gain_data.get("variation_profile") or "")
-                profile_hours = (
-                    self.data_extractor.get_profile_daily_equivalent_hours(variation_profile)
+                profile_audit = (
+                    self.data_extractor.get_profile_daily_equivalent_hours_audit(variation_profile)
                     if variation_profile
-                    and hasattr(self.data_extractor, "get_profile_daily_equivalent_hours")
-                    else None
+                    and hasattr(self.data_extractor, "get_profile_daily_equivalent_hours_audit")
+                    else {
+                        "value": None,
+                        "status": NOT_CHECKABLE,
+                        "placeholder": "DAILY_INTERNAL_GAINS_PROFILE_TO_VERIFY",
+                        "note": "NOT_CHECKABLE: [TO VERIFY] membre VE absent: VEProfile.get_data",
+                    }
                 )
+                profile_hours = self._to_float_or_none(profile_audit.get("value"))
                 diversity = self._to_float_or_none(gain_data.get("diversity_factor"))
-                diversity = diversity if diversity is not None else 1.0
                 category = ""
                 if "lighting" in gain_type or "fluorescent" in gain_type or "tungsten" in gain_type:
                     category = "lighting"
@@ -411,7 +467,7 @@ class ModelAnalyzer:
                 if density is not None:
                     previous = self._to_float_or_none(gains.get(category)) or 0.0
                     gains[category] = previous + density
-                if density is None or profile_hours is None:
+                if density is None or profile_hours is None or diversity is None:
                     daily_complete = False
                 else:
                     daily_components.append(density * diversity * profile_hours)
@@ -423,6 +479,8 @@ class ModelAnalyzer:
                     "density_w_m2": density,
                     "variation_profile": variation_profile,
                     "profile_full_load_hours": profile_hours,
+                    "profile_status": str(profile_audit.get("status") or NOT_CHECKABLE),
+                    "profile_placeholder": str(profile_audit.get("placeholder") or ""),
                     "diversity_factor": diversity,
                     "dimming_profile": str(gain_data.get("dimming_profile") or ""),
                 })
@@ -431,9 +489,11 @@ class ModelAnalyzer:
                 daily_complete = False
         if gains["details"] and daily_complete and len(daily_components) == len(gains["details"]):
             gains["daily_wh_m2"] = sum(daily_components)
+            gains["daily_status"] = "OK"
+            gains["daily_placeholder"] = ""
             gains["daily_method"] = (
                 "Sum of VE gain densities multiplied by diversity and the maximum representative "
-                "daily full-load hours resolved from modulating VE profiles"
+                "daily full-load hours resolved from documented modulating VE profile data"
             )
         elif gains["details"]:
             gains["daily_method"] = "NOT_CHECKABLE: at least one gain density or VE daily profile could not be resolved"
@@ -761,7 +821,13 @@ class ModelAnalyzer:
         return {"window_operable": True, "window_ventilation_support": support}
 
     def _annotate_hvac_zoning_and_controls(self, rooms_data: List[RoomData]) -> None:
-        """Add monozone/multizone and comparable control levels after room extraction."""
+        """Keep SIA ventilation classifications fail-closed.
+
+        ``VERoomData.get_apache_systems`` exposes system and demand-control
+        details, but neither checked API artefact documents direct members for
+        the SIA installation type or ordered control level.  Names, zone counts,
+        and sensor tokens are therefore audit context only, never classification.
+        """
         zone_membership = (
             self.data_extractor.get_room_zone_membership()
             if hasattr(self.data_extractor, "get_room_zone_membership")
@@ -770,53 +836,24 @@ class ModelAnalyzer:
         for room in rooms_data:
             zone = dict(zone_membership.get(str(room.id), {}) or {})
             room.hvac_zone = zone
-            system_types = {
-                str(system.get("system_type") or "").upper()
-                for system in room.hvac_systems
-                if system.get("system_type")
-            }
-            if any(value in {"MULTI_ZONE", "MULTIZONE"} for value in system_types):
-                room.ventilation_installation_type = "multizone"
-            elif any(value in {"SINGLE_ZONE", "SINGLEZONE"} for value in system_types):
-                room.ventilation_installation_type = "monozone"
-            elif zone.get("zone_room_count") not in (None, ""):
-                # Use the tolerant float conversion so a non-numeric zone room
-                # count cannot crash the whole model analysis (report generation).
-                room.ventilation_installation_type = (
-                    "multizone"
-                    if self._to_float(zone.get("zone_room_count")) > 1
-                    else "monozone"
-                )
-            else:
-                room.ventilation_installation_type = None
-            control_label, control_level = self._derive_ventilation_control(room)
-            room.ventilation_control = control_label
-            room.ventilation_control_level = control_level
+            # [TO VERIFY] membre VE absent: direct SIA installation classification.
+            room.ventilation_installation_type = None
+            room.ventilation_installation_type_status = NOT_CHECKABLE
+            room.ventilation_installation_type_placeholder = (
+                VENTILATION_INSTALLATION_TYPE_PLACEHOLDER
+            )
+            # [TO VERIFY] membre VE absent: direct SIA table-4 control level.
+            room.ventilation_control = None
+            room.ventilation_control_level = None
+            room.ventilation_control_level_status = NOT_CHECKABLE
+            room.ventilation_control_level_placeholder = (
+                VENTILATION_CONTROL_LEVEL_PLACEHOLDER
+            )
 
     def _derive_ventilation_control(self, room: RoomData) -> Any:
-        """Map VE fan/demand-control evidence to the ordered table-4 strategies."""
-        tokens = self._mapping_text(
-            room.room_conditions,
-            room.hvac_systems,
-            room.fan_control or "",
-        )
-        fan_control = self._normalize_identifier(room.fan_control)
-        variable_speed = any(token in tokens for token in ("variable", "min_pres", "const_pres"))
-        gas_control = any(token in tokens for token in ("gas_sensor", "gas sensor", "co2"))
-        occupancy_control = any(token in tokens for token in ("occupancy", "occupant", "people_count"))
-        staged = any(token in tokens for token in ("multi_stage", "two_speed", "two speed", "67/100"))
-        schedule = any(token in tokens for token in ("schedule", "time_control", "on_off"))
-
-        if gas_control and variable_speed:
-            return "variable speed >=25%, demand control by gas sensor", 4
-        if occupancy_control and variable_speed:
-            return "variable speed >=25%, demand control by occupancy", 3
-        if occupancy_control and staged:
-            return "two speeds 67/100%, occupancy control", 2
-        if staged:
-            return "two speeds 67/100%, time schedule control", 1
-        if schedule or fan_control == "DIRECT":
-            return "one speed, time schedule control", 0
+        """Return no classification when no direct documented VE member exists."""
+        # [TO VERIFY] membre VE absent.  Deliberately do not infer from labels,
+        # fan modes, sensor names, or zone topology.
         return None, None
 
     @staticmethod

@@ -12,6 +12,64 @@ from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
+NOT_CHECKABLE = "NOT_CHECKABLE"
+VE_MEMBER_ABSENT_NOTE = "[TO VERIFY] membre VE absent"
+G_TOTAL_VE_MEMBER_PLACEHOLDER = "G_TOTAL_VE_MEMBER_TO_VERIFY"
+
+# Documentation cross-check used by the extraction boundary.  PDF page numbers
+# refer to refs/VEScripts-API-VE2023.pdf; the runtime surface is
+# ve_adapter/ve_api_surface.json.  This matrix records API evidence only and
+# does not create a regulatory value or a SIA compliance verdict.
+IESVE_DOCUMENTED_MEMBER_EVIDENCE: Dict[str, Dict[str, Any]] = {
+    "tau_v": {
+        "verified": True,
+        "pdf": "VEScript User Guide 2023, 6.1.28, pp. 198-200",
+        "surface": "VECdbConstruction.get_properties",
+        "fields": ("visible_light_transmittance", "light_transmittance"),
+    },
+    "frame_fraction": {
+        "verified": True,
+        "pdf": "VEScript User Guide 2023, 6.1.28, p. 199",
+        "surface": "VECdbConstruction.get_properties",
+        "fields": ("frame_percent",),
+    },
+    "g_total": {
+        "verified": False,
+        "pdf": "VEScript User Guide 2023, 6.1.28, pp. 198-200",
+        "surface": "VECdbConstruction (no direct member)",
+        "fields": (),
+    },
+    "ventilation_installation_type": {
+        "verified": False,
+        "pdf": "VEScript User Guide 2023, 6.1.15 and 6.1.42, pp. 160, 229",
+        "surface": "RoomAirExchange/VERoomData (no direct member)",
+        "fields": (),
+    },
+    "ventilation_control_level": {
+        "verified": False,
+        "pdf": "VEScript User Guide 2023, 6.1.42, p. 229",
+        "surface": "VERoomData.get_apache_systems (no direct classification member)",
+        "fields": (),
+    },
+    "daily_internal_gains": {
+        "verified": True,
+        "pdf": "VEScript User Guide 2023, 6.1.16, 6.1.39, 6.1.42, pp. 162-163, 218, 230",
+        "surface": "VERoomData.get_internal_gains/Room*Gain.get/VEProfile.get_data",
+        "fields": ("max_sensible_gains", "max_power_consumptions", "variation_profile"),
+    },
+}
+
+
+def _missing_member_audit(placeholder: str, member: str) -> Dict[str, Any]:
+    """Return a named fail-closed result for an unavailable documented member."""
+    return {
+        "value": None,
+        "status": NOT_CHECKABLE,
+        "source": "",
+        "placeholder": placeholder,
+        "note": f"{VE_MEMBER_ABSENT_NOTE}: {member}",
+    }
+
 class VEDataExtractor:
     """Extract SIA-relevant data from the active VE project."""
 
@@ -38,6 +96,7 @@ class VEDataExtractor:
         self._hvac_systems: Dict[str, Any] = {}
         self._profiles: Optional[Dict[str, Any]] = None
         self._profile_daily_hours: Dict[str, Optional[float]] = {}
+        self._profile_daily_audits: Dict[str, Dict[str, Any]] = {}
         self._room_zone_membership: Optional[Dict[str, Dict[str, Any]]] = None
         self._macroflo_openings: Optional[Dict[str, Dict[str, Any]]] = None
         self._energy_sources: Dict[str, Any] = {}
@@ -223,20 +282,53 @@ class VEDataExtractor:
         is conservative. Unsupported absolute, compact, formula-only, or freeform
         profiles remain ``None`` instead of being approximated.
         """
+        return self.get_profile_daily_equivalent_hours_audit(profile_id)["value"]
+
+    def get_profile_daily_equivalent_hours_audit(self, profile_id: Any) -> Dict[str, Any]:
+        """Return daily profile integration with explicit API/read-back evidence.
+
+        VEScript User Guide 2023 sections 6.1.39 and 6.1.40 document
+        ``VEProfile.get_data`` and ``VEProject.profiles``.  The special string
+        ``ON`` is not defined by either checked API artefact, so it deliberately
+        remains fail-closed rather than being converted to 24 hours.
+        """
         key = str(profile_id or "").strip()
+        placeholder = "DAILY_INTERNAL_GAINS_PROFILE_TO_VERIFY"
         if not key:
-            return None
-        # ``ON`` is the documented VE built-in constant profile identifier used
-        # by profile-free gains and exchanges.  It is not returned by
-        # ``VEProject.profiles()``, so resolve its physical 24-hour behaviour
-        # explicitly instead of reporting a missing user profile.
-        if key.upper() == "ON":
-            return 24.0
-        if key in self._profile_daily_hours:
-            return self._profile_daily_hours[key]
-        value = self._resolve_profile_daily_equivalent_hours(key, set())
-        self._profile_daily_hours[key] = value
-        return value
+            return _missing_member_audit(placeholder, "RoomInternalGain.get().variation_profile")
+        if key in self._profile_daily_audits:
+            return dict(self._profile_daily_audits[key])
+
+        profile = self.get_profiles().get(key)
+        if profile is None:
+            audit = {
+                **_missing_member_audit(placeholder, "VEProfile.get_data"),
+                "note": f"NOT_CHECKABLE: VE profile {key!r} was not returned by VEProject.profiles()",
+            }
+        elif not hasattr(profile, "get_data") or not hasattr(profile, "is_modulating"):
+            missing = "VEProfile.get_data" if not hasattr(profile, "get_data") else "VEProfile.is_modulating"
+            audit = _missing_member_audit(placeholder, missing)
+        else:
+            value = self._resolve_profile_daily_equivalent_hours(key, set())
+            if value is None:
+                audit = {
+                    "value": None,
+                    "status": NOT_CHECKABLE,
+                    "source": "VEProject.profiles() / VEProfile.get_data()",
+                    "placeholder": placeholder,
+                    "note": "NOT_CHECKABLE: documented VE profile data could not be integrated without assumptions",
+                }
+            else:
+                audit = {
+                    "value": value,
+                    "status": "OK",
+                    "source": "VEProject.profiles() / VEProfile.get_data()",
+                    "placeholder": "",
+                    "note": "",
+                }
+        self._profile_daily_audits[key] = dict(audit)
+        self._profile_daily_hours[key] = audit["value"]
+        return dict(audit)
 
     def _resolve_profile_daily_equivalent_hours(self, profile_id: str, visited: set) -> Optional[float]:
         """Resolve one VE daily/group profile without following recursive loops."""
@@ -332,11 +424,35 @@ class VEDataExtractor:
 
     def get_internal_gains(self, room_data: Any) -> List[Any]:
         """Return room internal gains from ``VERoomData.get_internal_gains``."""
+        return self.get_internal_gains_audit(room_data)["items"]
+
+    def get_internal_gains_audit(self, room_data: Any) -> Dict[str, Any]:
+        """Return documented room gains or a named fail-closed placeholder."""
+        placeholder = "DAILY_INTERNAL_GAINS_VE_MEMBER_TO_VERIFY"
+        if room_data is None or not hasattr(room_data, "get_internal_gains"):
+            return {
+                **_missing_member_audit(placeholder, "VERoomData.get_internal_gains"),
+                "items": [],
+            }
         try:
-            return self._as_list(room_data.get_internal_gains())
+            return {
+                "items": self._as_list(room_data.get_internal_gains()),
+                "value": None,
+                "status": "OK",
+                "source": "VERoomData.get_internal_gains()",
+                "placeholder": "",
+                "note": "",
+            }
         except Exception as e:
             logger.error("Error while retrieving internal gains: %s", e)
-            return []
+            return {
+                "items": [],
+                "value": None,
+                "status": NOT_CHECKABLE,
+                "source": "VERoomData.get_internal_gains()",
+                "placeholder": placeholder,
+                "note": f"NOT_CHECKABLE: documented VE member read-back failed: {e}",
+            }
 
     def get_air_exchanges(self, room_data: Any) -> List[Any]:
         """Return room air exchanges from ``VERoomData.get_air_exchanges``."""
@@ -559,7 +675,24 @@ class VEDataExtractor:
             construction_id = self.get_opening_construction(opening)
             construction_props = self.get_construction_properties(construction_id) if construction_id else {}
             g_audit = self._extract_g_value_audit(props, construction_props)
-            g_total_audit = self._extract_g_total_audit(props, construction_props)
+            tau_v_audit = self._opening_audit(
+                construction_props,
+                "tau_v_audit",
+                "TAU_V_VE_MEMBER_TO_VERIFY",
+                "VECdbConstruction.get_properties().visible_light_transmittance",
+            )
+            frame_audit = self._opening_audit(
+                construction_props,
+                "frame_fraction_audit",
+                "FRAME_FRACTION_VE_MEMBER_TO_VERIFY",
+                "VECdbConstruction.get_properties().frame_percent",
+            )
+            g_total_audit = self._opening_audit(
+                construction_props,
+                "g_total_audit",
+                G_TOTAL_VE_MEMBER_PLACEHOLDER,
+                "VECdbConstruction.g_total",
+            )
             return {
                 "area": self._safe_lookup(props, "area"),
                 "U-value": (
@@ -573,13 +706,24 @@ class VEDataExtractor:
                 "g_value_building_regulations": g_audit["building_regulations"],
                 "g_value_bfrc": g_audit["bfrc"],
                 "g_values": g_audit["g_values"],
-                "visible_transmittance": self._extract_visible_transmittance(props, construction_props),
-                "frame_fraction": self._extract_frame_fraction(props, construction_props),
+                "visible_transmittance": tau_v_audit["value"],
+                "visible_transmittance_status": tau_v_audit["status"],
+                "visible_transmittance_source": tau_v_audit["source"],
+                "visible_transmittance_placeholder": tau_v_audit["placeholder"],
+                "visible_transmittance_note": tau_v_audit["note"],
+                "frame_fraction": frame_audit["value"],
+                "frame_fraction_status": frame_audit["status"],
+                "frame_fraction_source": frame_audit["source"],
+                "frame_fraction_placeholder": frame_audit["placeholder"],
+                "frame_fraction_note": frame_audit["note"],
                 "shading_type": self._extract_shading_type(props, construction_props),
                 "shading_control": self._extract_shading_control(props, construction_props),
                 "shading_properties": self._extract_shading_properties(props, construction_props),
                 "g_total": g_total_audit["value"],
                 "g_total_source": g_total_audit["source"],
+                "g_total_status": g_total_audit["status"],
+                "g_total_placeholder": g_total_audit["placeholder"],
+                "g_total_note": g_total_audit["note"],
                 "orientation": self._safe_lookup(props, "orientation"),
                 "type": self._safe_lookup(props, "type") or self._get_opening_type(opening),
                 "macroflo_id": self._safe_object_attr(opening, "get_macroflo_id"),
@@ -779,6 +923,9 @@ class VEDataExtractor:
         if raw_props:
             props.update(raw_props)
 
+        glazing_audits = self._documented_cdb_glazing_audits(construction, raw_props)
+        props.update(glazing_audits)
+
         try:
             props["g_values"] = self._as_dict(construction.get_g_values())
         except Exception:
@@ -812,6 +959,117 @@ class VEDataExtractor:
             props.setdefault("layers", [])
 
         return props
+
+    @classmethod
+    def _documented_cdb_glazing_audits(
+        cls,
+        construction: Any,
+        properties: Optional[Dict[str, Any]] = None,
+    ) -> Dict[str, Dict[str, Any]]:
+        """Audit only glazing fields documented for ``VECdbConstruction``.
+
+        Cross-checked against VEScript User Guide 2023 section 6.1.28 and
+        ``ve_adapter/ve_api_surface.json``.  No direct ``g_total`` member is
+        present in either artefact.
+        """
+        tau_missing = _missing_member_audit(
+            "TAU_V_VE_MEMBER_TO_VERIFY",
+            "VECdbConstruction.get_properties().visible_light_transmittance",
+        )
+        frame_missing = _missing_member_audit(
+            "FRAME_FRACTION_VE_MEMBER_TO_VERIFY",
+            "VECdbConstruction.get_properties().frame_percent",
+        )
+        # [TO VERIFY] membre VE absent: no documented direct glazing-plus-shading g_total read-back.
+        g_total_missing = _missing_member_audit(
+            G_TOTAL_VE_MEMBER_PLACEHOLDER,
+            "VECdbConstruction.g_total",
+        )
+        if construction is None or not hasattr(construction, "get_properties"):
+            return {
+                "tau_v_audit": tau_missing,
+                "frame_fraction_audit": frame_missing,
+                "g_total_audit": g_total_missing,
+            }
+
+        raw = properties
+        if raw is None:
+            try:
+                raw = cls._as_dict(construction.get_properties())
+            except Exception as exc:
+                note = f"NOT_CHECKABLE: documented VE member read-back failed: {exc}"
+                tau_missing["note"] = note
+                frame_missing["note"] = note
+                return {
+                    "tau_v_audit": tau_missing,
+                    "frame_fraction_audit": frame_missing,
+                    "g_total_audit": g_total_missing,
+                }
+        raw = raw if isinstance(raw, dict) else {}
+
+        tau_key, tau_raw = cls._find_first_present_with_key(
+            raw,
+            ("visible_light_transmittance", "light_transmittance"),
+        )
+        tau_value = cls._normalize_unit_fraction(cls._to_float_or_none(tau_raw))
+        tau_audit = cls._fraction_audit(
+            tau_value,
+            tau_key,
+            "TAU_V_VE_MEMBER_TO_VERIFY",
+            "VECdbConstruction.get_properties()",
+        )
+
+        frame_key, frame_raw = cls._find_first_present_with_key(raw, ("frame_percent",))
+        frame_numeric = cls._to_float_or_none(frame_raw)
+        frame_value = frame_numeric / 100.0 if frame_numeric is not None else None
+        frame_audit = cls._fraction_audit(
+            frame_value,
+            frame_key,
+            "FRAME_FRACTION_VE_MEMBER_TO_VERIFY",
+            "VECdbConstruction.get_properties()",
+        )
+        return {
+            "tau_v_audit": tau_audit,
+            "frame_fraction_audit": frame_audit,
+            "g_total_audit": g_total_missing,
+        }
+
+    @staticmethod
+    def _fraction_audit(
+        value: Optional[float],
+        key: str,
+        placeholder: str,
+        source_method: str,
+    ) -> Dict[str, Any]:
+        """Validate a documented unit fraction without substituting zero."""
+        if value is None or not 0.0 <= value <= 1.0:
+            return {
+                "value": None,
+                "status": NOT_CHECKABLE,
+                "source": source_method,
+                "placeholder": placeholder,
+                "note": "NOT_CHECKABLE: documented VE field is absent or outside [0, 1]",
+            }
+        return {
+            "value": value,
+            "status": "OK",
+            "source": f"{source_method}.{key}",
+            "placeholder": "",
+            "note": "",
+        }
+
+    @staticmethod
+    def _opening_audit(
+        construction_properties: Dict[str, Any],
+        key: str,
+        placeholder: str,
+        member: str,
+    ) -> Dict[str, Any]:
+        """Return a cached CDB audit or a named fail-closed placeholder."""
+        audit = construction_properties.get(key) if isinstance(construction_properties, dict) else None
+        if isinstance(audit, dict):
+            return dict(audit)
+        return _missing_member_audit(placeholder, member)
 
     def _read_construction_properties_variants(self, construction: Any) -> Dict[str, Any]:
         """Read construction properties with every known VE/CDB overload."""
@@ -1243,43 +1501,28 @@ class VEDataExtractor:
 
     @classmethod
     def _extract_visible_transmittance(cls, *mappings: Any) -> Optional[float]:
-        """Read visible transmittance aliases exposed by VE/CDB glazing data."""
+        """Read only documented VECdbConstruction visible-transmittance fields."""
         value = cls._first_numeric_from_mappings(
             mappings,
             (
-                "visible_transmittance",
                 "visible_light_transmittance",
                 "light_transmittance",
-                "transmission_lumineuse",
-                "tau_v",
-                "tau",
-                "tvis",
-                "vt",
             ),
         )
         return cls._normalize_unit_fraction(value)
 
     @classmethod
     def _extract_frame_fraction(cls, *mappings: Any) -> Optional[float]:
-        """Read and normalize frame fraction from VE CDB fields."""
+        """Read the documented CDB ``frame_percent`` field only."""
         for mapping in mappings:
             key, value = cls._find_first_present_with_key(
                 mapping,
-                (
-                    "frame_fraction",
-                    "frame-factor",
-                    "frame_factor",
-                    "frame_percent",
-                    "frame_inside_surface_area_ratio",
-                    "frame_outside_surface_area_ratio",
-                    "ff",
-                ),
+                ("frame_percent",),
             )
             numeric = cls._to_float_or_none(value)
             if numeric is None:
                 continue
-            if "percent" in str(key).lower() or numeric > 1.0:
-                numeric = numeric / 100.0
+            numeric = numeric / 100.0
             return numeric
         return None
 
@@ -1417,28 +1660,13 @@ class VEDataExtractor:
 
     @classmethod
     def _extract_g_total_audit(cls, *mappings: Any) -> Dict[str, Any]:
-        """Read direct effective glazing-plus-shading g-value aliases if present.
-
-        VEScripts does not document a direct g_total field for VECdbConstruction,
-        so any value found here is reported with its raw field name for review.
-        """
-        key, raw_value = cls._first_numeric_with_key_from_mappings(
-            mappings,
-            (
-                "g_total",
-                "total_g_value",
-                "glazing_shading_g_value",
-                "combined_g_value",
-                "effective_g_value",
-                "shaded_g_value",
-                "g_value_with_shading",
-            ),
+        """Return fail-closed evidence because no direct g_total member is documented."""
+        # [TO VERIFY] membre VE absent in VEScript User Guide 2023 section 6.1.28
+        # and ve_adapter/ve_api_surface.json.  Do not consume similarly named keys.
+        return _missing_member_audit(
+            G_TOTAL_VE_MEMBER_PLACEHOLDER,
+            "VECdbConstruction.g_total",
         )
-        value = cls._normalize_unit_fraction(raw_value)
-        return {
-            "value": value,
-            "source": f"undocumented VE field: {key}" if value is not None and key else "",
-        }
 
     @classmethod
     def _first_numeric_with_key_from_mappings(cls, mappings: Any, keys: Any) -> Any:
