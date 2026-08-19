@@ -1,39 +1,38 @@
 # -*- coding: utf-8 -*-
-u"""Enchaîne le Test 1 de bout en bout, depuis le Python Scripts navigator de VE.
+u"""Chains Test 1 end to end, from the VE Python Scripts navigator.
 
-Les briques existaient déjà dans `ve_adapter/test1_adapter.py` — génération des
-cas, affectation de la météo, lancement d'ApacheSim, extraction — mais rien ne
-les enchaînait. C'est ce que fait ce script.
+The building blocks already existed in `ve_adapter/test1_adapter.py` — case
+generation, weather assignment, ApacheSim launch, extraction — but nothing
+chained them together. That is what this script does.
 
-DEUX MODES.
+TWO MODES.
 
     python scripts/run_test1_dans_ve.py --preflight
-        Contrôle l'installation SANS rien simuler. Exécutable hors VE.
-        À lancer en premier : six simulations prennent du temps, autant
-        savoir avant qu'il manque un fichier.
+        Checks the installation WITHOUT simulating anything. Runnable outside VE.
+        Run this first: six simulations take time, and it is better to know
+        beforehand if a file is missing.
 
     python scripts/run_test1_dans_ve.py --run
-        Génère, simule et extrait les six cas DRYCOLD, écrit le candidat,
-        évalue et affiche le verdict. Exige une session VEScripts.
+        Generates, simulates and extracts the six DRYCOLD cases, writes the
+        candidate, evaluates and displays the verdict. Requires a VEScripts session.
 
-CE QUE CE SCRIPT NE FAIT PAS. Il ne traite pas les cas diagnostiques 1A à 1E :
-ils exigent le climat de Zürich-Kloten (`KLO_dry_normal.PRN`), absent de toute
-source en notre possession. Or **1E est le seul cas du Test 1 porteur d'un
-critère pass/fail**. Ce run produit donc la comparaison chiffrée des six cas
-principaux — démontrable et montrable — mais PAS le verdict formel du Test 1.
-Le script le dit à chaque exécution plutôt que de le laisser croire.
+WHAT THIS SCRIPT DOES NOT DO. It does not handle diagnostic cases 1A to 1E:
+they require the Zürich-Kloten climate (`KLO_dry_normal.PRN`), which is absent
+from any source in our possession. Yet **1E is the only Test 1 case carrying a
+pass/fail criterion**. This run therefore produces the numerical comparison of the
+six main cases — demonstrable and showable — but NOT the formal Test 1 verdict.
+The script says so at every execution rather than letting it be assumed.
 
-DEUX AVERTISSEMENTS DU FICHIER CLIMATIQUE ISO, à ne pas manquer :
+TWO WARNINGS FROM THE ISO CLIMATE FILE, not to be missed:
 
-1. Son premier mois est un mois d'INITIALISATION (décembre recopié, 744 h).
-   Une simulation de 8760 h partant du 1er janvier ne reproduit pas l'état
-   initial des programmes de référence. L'effet est maximal sur les cas à
-   forte masse — 900, 940, 900FF.
-2. Il fournit l'irradiance DÉJÀ CALCULÉE sur huit surfaces nommées, sans
-   décomposition global/direct/diffus. Un `.epw` livre global/direct/diffus et
-   laisse VE dériver les surfaces : l'entrée n'est pas la même. D'où le
-   contrôle solaire ci-dessous, à faire AVANT d'interpréter tout écart
-   thermique.
+1. Its first month is an INITIALISATION month (December copied, 744 h).
+   A simulation of 8760 h starting on 1 January does not reproduce the initial
+   state of the reference programs. The effect is greatest on high-mass cases —
+   900, 940, 900FF.
+2. It provides irradiance ALREADY CALCULATED on eight named surfaces, without
+   global/direct/diffuse decomposition. A `.epw` delivers global/direct/diffuse
+   and lets VE derive the surfaces: the input is not the same. Hence the solar
+   check below, to be done BEFORE interpreting any thermal discrepancy.
 """
 
 from __future__ import print_function
@@ -48,41 +47,40 @@ _RACINE = os.path.abspath(os.path.join(_ICI, os.pardir))
 if _RACINE not in sys.path:
     sys.path.insert(0, _RACINE)
 
-# Les six cas principaux du Test 1, ceux qui tournent sous DRYCOLD.
+# The six main Test 1 cases, the ones that run under DRYCOLD.
 CAS_DRYCOLD = ('600', '640', '900', '940', '600FF', '900FF')
 
-# Cas diagnostiques, hors de portée sans le climat de Kloten.
+# Diagnostic cases, out of scope without the Kloten climate.
 CAS_KLOTEN = ('1A', '1B', '1C', '1D', '1E')
 
-# Bibliothèque météo de VE : c'est là que le .epw doit être déposé.
+# VE weather library: this is where the .epw must be placed.
 DOSSIER_METEO_VE = r'C:\Program Files\IES\Shared Content\Weather'
 FICHIER_METEO = 'DRYCOLD_IESVE.epw'
 
-# Irradiation annuelle de référence sur la façade SUD, depuis le fichier
-# climatique public d'EN ISO 52016-1 (colonne « SV »), figée dans
+# Annual reference irradiation on the SOUTH facade, from the public
+# climate file of EN ISO 52016-1 (column "SV"), frozen in
 # refs/reference-data/iso-52016-1-climat-drycold.json.
 IRRADIATION_SUD_REFERENCE_KWH_M2 = 1547.1
 
-# Au-delà de cet écart relatif, le modèle de ciel de VE devient un facteur
-# confondant : tout écart thermique s'expliquerait d'abord par le solaire.
+# Beyond this relative discrepancy, VE's sky model becomes a confounding
+# factor: any thermal deviation would first be explained by the solar input.
 TOLERANCE_SOLAIRE_RELATIVE = 0.01
 
 CHEMIN_CANDIDAT = os.path.join(_RACINE, 'outputs', 'test1_candidat.json')
 
 
 def ascii_sur(texte):
-    u"""Retire les accents pour l'affichage console.
+    u"""Removes accents for console display.
 
-    La fenêtre de script de VEScripts n'est pas en UTF-8 : « détecté » y
-    ressort en « d鐵ct遡 ». Les accents sont donc retirés à
-    l'affichage — et uniquement là. Les fichiers écrits restent en UTF-8
-    accentué.
+    The VEScripts script window is not UTF-8: "détecté" would appear as
+    "d鐵ct遡". Accents are therefore stripped for display — and only
+    there. Files written remain in full UTF-8.
 
     Args:
-        texte: Texte à afficher.
+        texte: Text to display.
 
     Returns:
-        str: Le même texte, sans caractère non-ASCII.
+        str: The same text, without non-ASCII characters.
     """
     import unicodedata
     decompose = unicodedata.normalize('NFKD', u'%s' % texte)
@@ -90,32 +88,32 @@ def ascii_sur(texte):
 
 
 def dire(texte=u''):
-    u"""Affiche une ligne lisible dans la console de VEScripts.
+    u"""Displays a readable line in the VEScripts console.
 
     Args:
-        texte: Texte à afficher.
+        texte: Text to display.
     """
     print(ascii_sur(texte))
 
 
-#: Nombre maximal d'éléments conservés d'une séquence dans le rapport. Assez
-#: haut pour ne rien perdre d'un `dir()` : c'est justement la partie tronquée
-#: qui contient d'ordinaire le nom qu'on cherche.
+#: Maximum number of elements kept from a sequence in the report. High enough
+#: not to lose anything from a `dir()`: the truncated part is precisely the one
+#: that normally contains the name being looked for.
 LIMITE_ELEMENTS = 500
 
 
 def _serialisable(valeur, profondeur=0):
-    u"""Convertit une valeur quelconque en structure sérialisable en JSON.
+    u"""Converts any value to a JSON-serialisable structure.
 
-    Ne lève jamais : un objet exotique de l'API `iesve` est réduit à son
-    `repr`, jamais escamoté.
+    Never raises: an exotic `iesve` API object is reduced to its `repr`,
+    never discarded.
 
     Args:
-        valeur: Valeur à convertir.
-        profondeur: Profondeur de récursion courante.
+        valeur: Value to convert.
+        profondeur: Current recursion depth.
 
     Returns:
-        Any: Structure faite de types JSON.
+        Any: Structure made of JSON types.
     """
     if valeur is None or isinstance(valeur, (bool, int, float)):
         return valeur
@@ -135,13 +133,13 @@ def _serialisable(valeur, profondeur=0):
 
 
 def _membres(objet):
-    u"""Noms publics exposés par un objet, liste COMPLÈTE.
+    u"""Public names exposed by an object, COMPLETE list.
 
     Args:
-        objet: Objet à inspecter.
+        objet: Object to inspect.
 
     Returns:
-        list[str]: Noms triés, sans les membres privés.
+        list[str]: Sorted names, without private members.
     """
     try:
         return sorted(nom for nom in dir(objet) if not nom.startswith('_'))
@@ -149,73 +147,72 @@ def _membres(objet):
         return ['<dir() a echoue : %s>' % erreur]
 
 
-#: Clé sous laquelle `VECdbDatabase.get_projects()` range les projets. Les deux
-#: autres (« system », « manufacturer ») sont des bibliothèques fournies, pas le
-#: projet ouvert.
+#: Key under which `VECdbDatabase.get_projects()` stores the projects. The
+#: other two ("system", "manufacturer") are vendor-supplied libraries, not the
+#: open project.
 #:
-#: ATTENTION, ce n'est PAS une chaîne. Les clés sont des membres de
-#: `iesve.project_types`, et le rapport de sonde du 2026-08-07 l'a montré :
+#: CAUTION, this is NOT a string. The keys are members of
+#: `iesve.project_types`, and the probe report of 2026-08-07 showed this:
 #:
 #:     {iesve.project_types.project: [<VECdbProject>], ...}
 #:
-#: Sérialisées en JSON elles ressortent en « project », ce qui donne
-#: l'illusion d'un dictionnaire à clés textuelles. La comparaison se fait donc
-#: sur la forme textuelle de la clé, pas sur la clé elle-même.
+#: Serialised to JSON they come out as "project", giving the illusion of a
+#: text-keyed dictionary. Comparison is therefore made on the textual form of
+#: the key, not on the key itself.
 CLE_PROJET_CDB = 'project'
 
 
 def _premier_projet_cdb(projets):
-    u"""Extrait un `VECdbProject` de ce que renvoie `get_projects()`.
+    u"""Extracts a `VECdbProject` from what `get_projects()` returns.
 
-    POURQUOI CETTE FONCTION. La sonde v2 faisait `projets[0]` et a introspecté
-    une **liste** : elle a donc rapporté `['append', 'clear', 'copy', 'count',
-    'extend', 'index', 'insert', 'pop', 'remove', 'reverse', 'sort']` comme
-    étant les attributs de `VECdbProject`. `get_projects()` renvoie en réalité
-    un dictionnaire `{'project': [...], 'system': [...], 'manufacturer':
+    WHY THIS FUNCTION. Probe v2 did `projets[0]` and introspected a **list**:
+    it therefore reported `['append', 'clear', 'copy', 'count',
+    'extend', 'index', 'insert', 'pop', 'remove', 'reverse', 'sort']` as
+    the attributes of `VECdbProject`. `get_projects()` actually returns a
+    dictionary `{'project': [...], 'system': [...], 'manufacturer':
     [...]}`.
 
-    Le piège est qu'un dictionnaire est vrai, itérable et indexable : rien
-    n'échoue, et le rapport paraît valide. Seule la lecture des attributs
-    relevés a révélé l'erreur.
+    The trap is that a dictionary is truthy, iterable and indexable: nothing
+    fails, and the report looks valid. Only reading the reported attributes
+    revealed the error.
 
     Args:
-        projets: Valeur renvoyée par `get_projects()`, ou `None` si l'étape a
-            échoué.
+        projets: Value returned by `get_projects()`, or `None` if the step
+            failed.
 
     Returns:
-        Le premier projet, ou `None` si l'on n'en trouve aucun. Jamais un objet
-        d'un autre type : mieux vaut une étape en échec qu'un relevé faux.
+        The first project, or `None` if none is found. Never an object of
+        another type: a failed step is better than a false reading.
     """
     if not projets:
         return None
     if isinstance(projets, dict):
         candidats = _valeur_par_cle_textuelle(projets, CLE_PROJET_CDB)
     else:
-        # Forme inattendue : on l'accepte plutôt que d'échouer, mais sans
-        # supposer qu'elle contient des projets — le contrôle de type ci-dessous
-        # tranche.
+        # Unexpected form: accept it rather than failing, but without
+        # assuming it contains projects — the type check below decides.
         candidats = projets
     for candidat in candidats:
-        # Une liste ou une chaîne à cette place signale qu'on s'est encore
-        # trompé de niveau : ne pas l'introspecter.
+        # A list or a string at this position signals we are again at the
+        # wrong level: do not introspect it.
         if not isinstance(candidat, (list, tuple, dict)) and not _est_texte(candidat):
             return candidat
     return None
 
 
 def _valeur_par_cle_textuelle(table, nom):
-    u"""Cherche une entrée par la forme TEXTUELLE de sa clé.
+    u"""Looks up an entry by the TEXTUAL form of its key.
 
-    `get_projects()` indexe par membres de `iesve.project_types`, pas par
-    chaînes. Un `table.get('project')` échoue donc silencieusement et rend une
-    liste vide — ce qui se lit comme « aucun projet » alors qu'il y en a un.
+    `get_projects()` indexes by members of `iesve.project_types`, not by
+    strings. A `table.get('project')` therefore silently fails and returns an
+    empty list — which reads as "no project" when there actually is one.
 
     Args:
-        table: Dictionnaire dont les clés peuvent être des énumérés.
-        nom: Nom cherché, sous sa forme textuelle.
+        table: Dictionary whose keys may be enumerated members.
+        nom: Name sought, in its textual form.
 
     Returns:
-        list: Valeur associée, ou liste vide si la clé est absente.
+        list: Associated value, or empty list if the key is absent.
     """
     for cle, valeur in table.items():
         if cle == nom or u'%s' % (cle,) == nom or getattr(cle, 'name', None) == nom:
@@ -224,13 +221,13 @@ def _valeur_par_cle_textuelle(table, nom):
 
 
 def _est_texte(valeur):
-    u"""Vrai si la valeur est une chaîne, sur Python 2 comme sur Python 3.
+    u"""True if the value is a string, on both Python 2 and Python 3.
 
     Args:
-        valeur: Valeur à tester.
+        valeur: Value to test.
 
     Returns:
-        bool: Vrai pour une chaîne de caractères ou d'octets.
+        bool: True for a character or byte string.
     """
     try:
         types_texte = (str, unicode, bytes)  # noqa: F821 -- Python 2
@@ -239,28 +236,27 @@ def _est_texte(valeur):
     return isinstance(valeur, types_texte)
 
 
-#: Échelle croissante essayée pour l'isolant idéal. Zéro d'abord, puisque
-#: c'est ce que donne ISO 52016-1 ; puis des valeurs de plus en plus grandes
-#: jusqu'à ce que VE en restitue une à l'identique.
+#: Increasing scale tried for the ideal insulator. Zero first, since
+#: that is what ISO 52016-1 gives; then increasingly large values
+#: until VE preserves one unchanged on readback.
 ECHELLE_MINIMUM = (0.0, 0.001, 0.01, 0.1, 1.0, 10.0)
 
-#: Tolérance de relecture. VE stocke en flottant 32 bits.
+#: Readback tolerance. VE stores as 32-bit float.
 TOLERANCE_RELECTURE = 1e-6
 
 
 def _proprietes_des_couches(construction):
-    u"""Relit les couches d'une construction et leurs propriétés.
+    u"""Reads back the layers of a construction and their properties.
 
-    Sert à répondre à une question précise : `add_layer` n'écrit aucune
-    épaisseur, et l'épaisseur n'existe pas au niveau matériau. Les couches
-    portent-elles donc les bonnes valeurs, ou celles que VE leur donne par
-    défaut ?
+    Answers a precise question: `add_layer` writes no thickness, and thickness
+    does not exist at the material level. Do the layers therefore carry the
+    correct values, or those VE assigns them by default?
 
     Args:
-        construction: `VECdbConstruction` construite.
+        construction: `VECdbConstruction` built.
 
     Returns:
-        list: Une entrée par couche, ou une description de l'échec.
+        list: One entry per layer, or a description of the failure.
     """
     releves = []
     try:
@@ -279,17 +275,17 @@ def _proprietes_des_couches(construction):
 
 
 def _signature(methode):
-    u"""Décrit une méthode : docstring et signature si elle en expose une.
+    u"""Describes a method: docstring and signature if it exposes one.
 
-    Les méthodes natives de `iesve` n'exposent d'ordinaire pas de signature
-    introspectable ; leur docstring, elle, porte la liste des paramètres.
-    C'est ainsi qu'ont été relevés les setters de `VEApacheSystem`.
+    Native `iesve` methods do not normally expose an introspectable signature;
+    their docstring, however, carries the parameter list. That is how the
+    setters of `VEApacheSystem` were discovered.
 
     Args:
-        methode: Méthode ou fonction.
+        methode: Method or function.
 
     Returns:
-        dict: Ce qui a pu être relevé.
+        dict: What could be discovered.
     """
     import inspect
     releve = {'doc': (getattr(methode, '__doc__', None) or u'')[:400]}
@@ -301,18 +297,18 @@ def _signature(methode):
 
 
 def _signature_dimport(module_iesve):
-    u"""Relève ce qu'attend l'importeur gbXML.
+    u"""Discovers what the gbXML importer expects.
 
-    La documentation annonce `Import_file(file_name, heal_geometry, cap_mode,
-    cap_height)` avec un I majuscule ; l'introspection donne `import_file`.
-    Elle s'est donc déjà trompée une fois : on relève la docstring réelle
-    plutôt que de la croire sur le reste.
+    The documentation announces `Import_file(file_name, heal_geometry, cap_mode,
+    cap_height)` with a capital I; introspection gives `import_file`. It has
+    already been wrong once: the actual docstring is read rather than trusted
+    on anything else.
 
     Args:
         module_iesve: Module `iesve`.
 
     Returns:
-        dict: Ce qui a pu être relevé sur les deux orthographes.
+        dict: What could be discovered on both spellings.
     """
     releve = {}
     importeur = getattr(module_iesve, 'ImportGBXML', None)
@@ -327,17 +323,17 @@ def _signature_dimport(module_iesve):
 
 
 def _corps_du_modele(projet):
-    u"""Relève les corps du modèle courant et leurs surfaces.
+    u"""Reads the bodies of the current model and their surfaces.
 
-    C'est à ces surfaces que l'on comparera celles d'un gbXML importé. Sans ce
-    relevé, un import « réussi » ne prouverait rien : c'est exactement le
-    piège des épaisseurs à 1 mm.
+    It is against these surfaces that those of an imported gbXML will be
+    compared. Without this reading, a "successful" import would prove nothing:
+    that is exactly the trap of the 1 mm thickness layers.
 
     Args:
-        projet: `VEProject` courant.
+        projet: Current `VEProject`.
 
     Returns:
-        list | dict: Un relevé par corps, ou la description de l'échec.
+        list | dict: One reading per body, or a description of the failure.
     """
     try:
         modeles = list(projet.models or [])
@@ -346,10 +342,10 @@ def _corps_du_modele(projet):
     if not modeles:
         return {'aucun_modele': True}
 
-    # LISTE PLATE, volontairement. Imbriquer les corps sous leur modele
-    # portait le dictionnaire des surfaces au QUATRIEME niveau, ou
-    # `_serialisable` le reduit a un repr tronque a 400 caracteres — le releve
-    # du 2026-08-07 est ressorti illisible pour cette seule raison.
+    # FLAT LIST, intentionally. Nesting bodies under their model placed the
+    # surface dictionary at the FOURTH level, where `_serialisable` reduces it
+    # to a repr truncated to 400 characters — the 2026-08-07 reading came out
+    # unreadable for that reason alone.
     releves = []
     for modele in modeles[:2]:
         type_modele = u'%s' % getattr(modele, 'model_type', None)
@@ -372,8 +368,8 @@ def _corps_du_modele(projet):
                 except Exception as erreur:  # noqa: BLE001
                     detail[appel] = u'%s: %s' % (type(erreur).__name__, erreur)
                     continue
-                # Aplati en `appel.cle` : les surfaces restent lisibles quel
-                # que soit le plafond de profondeur.
+                # Flattened as `call.key`: surfaces remain readable regardless
+                # of the depth ceiling.
                 if isinstance(valeur, dict):
                     for cle, contenu in valeur.items():
                         detail[u'%s.%s' % (appel, cle)] = _serialisable(contenu)
@@ -384,22 +380,22 @@ def _corps_du_modele(projet):
 
 
 def _supprimer_materiaux(projet_cdb, identifiants):
-    u"""Supprime les matériaux d'essai créés par la sonde.
+    u"""Deletes test materials created by the probe.
 
-    POURQUOI. Chaque passage créait des matériaux et n'en supprimait aucun :
-    sept runs ont laissé **76 matériaux** dans la base de constructions du
-    projet de l'utilisateur. Une sonde en lecture doit rendre le modèle tel
-    qu'elle l'a trouvé ; ceux-ci n'ont aucune raison d'y rester.
+    WHY. Each run was creating materials and deleting none:
+    seven runs left **76 materials** in the construction database of the
+    user's project. A read-only probe must leave the model as it found it;
+    these have no reason to remain.
 
-    Les matériaux des CONSTRUCTIONS ne sont pas concernés : ils sont
-    légitimement utilisés par les parois créées.
+    The CONSTRUCTION materials are not concerned: they are legitimately
+    used by the walls created.
 
     Args:
-        projet_cdb: `VECdbProject` ouvert.
-        identifiants: Identifiants à supprimer.
+        projet_cdb: Open `VECdbProject`.
+        identifiants: Identifiers to delete.
 
     Returns:
-        dict: Ce qui a été supprimé, et ce qui a résisté.
+        dict: What was deleted, and what resisted.
     """
     supprimes, echecs = [], {}
     for identifiant in identifiants:
@@ -414,18 +410,18 @@ def _supprimer_materiaux(projet_cdb, identifiants):
 
 
 def _echelle_de_minimum(projet_cdb, module_iesve):
-    u"""Relève la plus petite masse volumique que VE accepte de conserver.
+    u"""Discovers the smallest density VE accepts to preserve.
 
-    Écrit chaque valeur de `ECHELLE_MINIMUM` sur un matériau d'essai, relit, et
-    consigne le couple écrit/relu. Aucune conclusion n'est tirée ici : le
-    rapport donne les couples, et c'est leur lecture qui tranche.
+    Writes each value from `ECHELLE_MINIMUM` on a test material, reads back,
+    and records the written/read pair. No conclusions are drawn here: the
+    report gives the pairs, and reading them is what decides.
 
     Args:
-        projet_cdb: `VECdbProject` ouvert.
+        projet_cdb: Open `VECdbProject`.
         module_iesve: Module `iesve`.
 
     Returns:
-        list[dict]: Un relevé par valeur essayée.
+        list[dict]: One reading per value tried.
     """
     categorie = _membre_enum(module_iesve, 'material_categories', 'other')
     releves = []
@@ -449,14 +445,14 @@ def _echelle_de_minimum(projet_cdb, module_iesve):
 
 
 def _proche(obtenu, attendu):
-    u"""Compare deux flottants avec la tolérance de relecture.
+    u"""Compares two floats with the readback tolerance.
 
     Args:
-        obtenu: Valeur relue.
-        attendu: Valeur écrite.
+        obtenu: Value read back.
+        attendu: Value written.
 
     Returns:
-        bool: Vrai si les deux coïncident.
+        bool: True if the two agree.
     """
     if obtenu is None:
         return False
@@ -465,20 +461,20 @@ def _proche(obtenu, attendu):
 
 
 def _membre_enum(module, nom_enum, nom_membre):
-    u"""Membre d'un énuméré du module `iesve`, résolu sans supposer.
+    u"""Member of an `iesve` module enumerated type, resolved without guessing.
 
     Args:
         module: Module `iesve`.
-        nom_enum: Nom de l'énuméré, par exemple `'material_categories'`.
-        nom_membre: Nom du membre, par exemple `'other'`.
+        nom_enum: Name of the enum, for example `'material_categories'`.
+        nom_membre: Name of the member, for example `'other'`.
 
     Returns:
-        Le membre.
+        The member.
 
     Raises:
-        RuntimeError: Si l'énuméré ou le membre manque — auquel cas c'est
-            l'API qui a changé, et le dire vaut mieux que de retomber sur une
-            valeur par défaut.
+        RuntimeError: If the enum or member is missing — in which case the
+            API has changed, and saying so is better than falling back to a
+            default.
     """
     enum = getattr(module, nom_enum, None)
     if enum is None:
@@ -491,33 +487,33 @@ def _membre_enum(module, nom_enum, nom_membre):
 
 
 def _echouer(message):
-    u"""Fait échouer une étape volontairement, avec un message explicite.
+    u"""Fails a step intentionally, with an explicit message.
 
-    Une étape absente du rapport est une information perdue ; une étape en
-    échec explique pourquoi elle n'a pas pu être faite.
+    A step absent from the report is lost information; a failed step
+    explains why it could not be done.
 
     Args:
-        message: Motif de l'échec.
+        message: Reason for the failure.
 
     Raises:
-        RuntimeError: Toujours.
+        RuntimeError: Always.
     """
     raise RuntimeError(message)
 
 
 def _enums(objet):
-    u"""Membres de type énuméré exposés par un objet, avec leurs valeurs.
+    u"""Enumerated-type members exposed by an object, with their values.
 
-    Dans l'API `iesve`, les catégories d'élément et classes de construction
-    sont portées par des classes dont les attributs publics sont des entiers.
-    C'est précisément ce que cherche `creer_constructions_cas`, et c'est ce
-    qui a changé de nom depuis VE 2023.
+    In the `iesve` API, element categories and construction classes are held
+    by classes whose public attributes are integers. That is precisely what
+    `creer_constructions_cas` needs, and it is what has changed name since
+    VE 2023.
 
     Args:
-        objet: Objet ou module à inspecter.
+        objet: Object or module to inspect.
 
     Returns:
-        dict: `{nom de l'enum: {membre: valeur}}`, vide si aucun.
+        dict: `{enum name: {member: value}}`, empty if none.
     """
     import types
 
@@ -527,9 +523,9 @@ def _enums(objet):
             candidat = getattr(objet, nom)
         except Exception:  # noqa: BLE001 -- certains attributs lèvent à la lecture
             continue
-        # Restreint aux CLASSES et MODULES : sans ce filtre, un simple entier
-        # produit un faux énuméré via ses attributs `numerator`, `real`, etc.,
-        # et le rapport se remplit de bruit qui masque les vrais.
+        # Restricted to CLASSES and MODULES: without this filter, a plain integer
+        # produces a false enum via its `numerator`, `real`, etc. attributes,
+        # and the report fills with noise that hides the real ones.
         if not isinstance(candidat, (type, types.ModuleType)):
             continue
         membres = {}
@@ -558,15 +554,15 @@ def _ko(libelle, detail=''):
 
 
 def preflight():
-    u"""Contrôle l'installation sans rien simuler.
+    u"""Checks the installation without simulating anything.
 
     Returns:
-        bool: Vrai si un run est possible. Faux si un prérequis manque.
+        bool: True if a run is possible. False if a prerequisite is missing.
     """
     dire(u'=== PRÉFLIGHT Test 1 ===')
     controles = []
 
-    # 1. Référence figée
+    # 1. Frozen reference
     try:
         from engine import test1_engine as moteur
         reference = moteur.charger_reference()
@@ -576,7 +572,7 @@ def preflight():
         controles.append(_ko(u'référence Test 1', str(erreur)[:60]))
         reference = None
 
-    # 2. Fichier météo déployé dans VE
+    # 2. Weather file deployed in VE
     chemin_meteo = os.path.join(DOSSIER_METEO_VE, FICHIER_METEO)
     if os.path.isfile(chemin_meteo):
         controles.append(_ok(u'météo DRYCOLD déployée',
@@ -584,14 +580,14 @@ def preflight():
     else:
         controles.append(_ko(u'météo DRYCOLD', chemin_meteo))
 
-    # 3. Adaptateur importable
+    # 3. Adapter importable
     try:
         from ve_adapter import test1_adapter  # noqa: F401
         controles.append(_ok(u'adaptateur Test 1 importable'))
     except Exception as erreur:
         controles.append(_ko(u'adaptateur Test 1', str(erreur)[:60]))
 
-    # 4. Session VE ?
+    # 4. VE session?
     dans_ve = _dans_ve()
     if dans_ve:
         controles.append(_ok(u'session VEScripts détectée'))
@@ -599,7 +595,7 @@ def preflight():
         dire(u'  [INFO] hors VEScripts — le préflight est complet, '
               u'mais --run exigera VE.')
 
-    # 5. Dossier de sortie
+    # 5. Output folder
     dossier = os.path.dirname(CHEMIN_CANDIDAT)
     if not os.path.isdir(dossier):
         os.makedirs(dossier)
@@ -619,10 +615,10 @@ def preflight():
 
 
 def _dans_ve():
-    u"""Indique si le module `iesve` est disponible.
+    u"""Indicates whether the `iesve` module is available.
 
     Returns:
-        bool: Vrai en session VEScripts.
+        bool: True in a VEScripts session.
     """
     try:
         import iesve  # noqa: F401
@@ -632,19 +628,19 @@ def _dans_ve():
 
 
 def controler_solaire(irradiation_sud_calculee):
-    u"""Compare l'irradiation sud de VE à la référence ISO.
+    u"""Compares VE's south irradiation against the ISO reference.
 
-    À faire AVANT d'interpréter tout écart thermique : le fichier ISO fournit
-    l'irradiance de surface déjà calculée, alors que VE la dérive du global.
-    Un écart ici expliquerait des divergences qu'on attribuerait sinon, à tort,
-    au moteur thermique.
+    To be done BEFORE interpreting any thermal discrepancy: the ISO file
+    provides already-calculated surface irradiance, whereas VE derives it
+    from the global value. A discrepancy here would explain divergences that
+    would otherwise, wrongly, be attributed to the thermal engine.
 
     Args:
-        irradiation_sud_calculee: Irradiation annuelle incidente sur la façade
-            sud relevée dans VE, en kWh/m2.
+        irradiation_sud_calculee: Annual incident irradiation on the south
+            facade as read from VE, in kWh/m2.
 
     Returns:
-        dict: Écart absolu, relatif, et verdict du contrôle.
+        dict: Absolute gap, relative gap, and check verdict.
     """
     ecart = irradiation_sud_calculee - IRRADIATION_SUD_REFERENCE_KWH_M2
     relatif = ecart / IRRADIATION_SUD_REFERENCE_KWH_M2
@@ -664,13 +660,14 @@ def controler_solaire(irradiation_sud_calculee):
 
 
 def executer():
-    u"""Génère, simule et extrait les six cas DRYCOLD.
+    u"""Generates, simulates and extracts the six DRYCOLD cases.
 
     Returns:
-        dict: Candidat extrait, prêt pour `evaluer_test1`.
+        dict: Extracted candidate, ready for `evaluer_test1`.
 
     Raises:
-        RuntimeError: Hors session VEScripts, ou si un prérequis manque.
+        RuntimeError: Outside a VEScripts session, or if a prerequisite is
+            missing.
     """
     if not _dans_ve():
         raise RuntimeError(
@@ -691,18 +688,18 @@ def executer():
 
 
 def sonder(cas_id='600'):
-    u"""Déroule UN cas pas à pas dans VE, en capturant ce que l'API renvoie.
+    u"""Steps through ONE case in VE, capturing what the API returns.
 
-    C'est le run à faire en premier dans une VE réelle. Il n'essaie pas de
-    réussir : il essaie d'APPRENDRE. Chaque étape est tentée isolément, son
-    résultat ou son erreur est consigné, et le rapport permet ensuite de câbler
-    l'enchaînement complet sans deviner un seul nom d'objet.
+    This is the run to do first in a real VE. It does not try to succeed:
+    it tries to LEARN. Each step is attempted in isolation, its result or
+    error is recorded, and the report then allows wiring the full chain
+    without guessing a single object name.
 
     Args:
-        cas_id: Cas à sonder. « 600 » est le plus simple des six.
+        cas_id: Case to probe. "600" is the simplest of the six.
 
     Returns:
-        dict: Rapport de sonde, écrit aussi sur disque.
+        dict: Probe report, also written to disk.
     """
     rapport = {
         'cas': cas_id,
@@ -716,17 +713,17 @@ def sonder(cas_id='600'):
     }
 
     def etape(nom, fonction):
-        u"""Exécute une étape en capturant son issue INTÉGRALE.
+        u"""Executes a step capturing its outcome IN FULL.
 
-        Le rapport ne tronque rien : c'est précisément la partie coupée d'une
-        liste d'attributs qui contient le nom qu'on cherche.
+        The report truncates nothing: the cut part of an attribute list is
+        precisely the one that contains the name being looked for.
 
         Args:
-            nom: Libellé de l'étape.
-            fonction: Appelable sans argument.
+            nom: Step label.
+            fonction: Callable taking no argument.
 
         Returns:
-            Any: Le résultat, ou `None` en cas d'échec.
+            Any: The result, or `None` on failure.
         """
         try:
             valeur = fonction()
@@ -754,17 +751,17 @@ def sonder(cas_id='600'):
     import iesve
     from ve_adapter import test1_adapter as adaptateur
 
-    # Identifiants des materiaux D ESSAI, a supprimer en fin de sonde. Ceux
-    # des constructions n en font pas partie : les parois s en servent.
+    # Identifiers of TEST materials, to delete at the end of the probe.
+    # Those of the constructions are not included: the walls use them.
     jetables = []
 
-    # --- Projet et modèle -------------------------------------------------
+    # --- Project and model ------------------------------------------------
     projet = etape(u'projet courant', lambda: iesve.VEProject.get_current_project())
     etape(u'modeles du projet', lambda: projet.models)
     etape(u'attributs du projet', lambda: _membres(projet))
 
-    # --- Base de constructions : VECdbDatabase n'a que 3 methodes, la vraie
-    # --- porte d'entree est get_projects() -> VECdbProject.
+    # --- Construction database: VECdbDatabase has only 3 methods, the real
+    # --- entry point is get_projects() -> VECdbProject.
     cdb = etape(u'base de constructions',
                 lambda: iesve.VECdbDatabase.get_current_database())
     etape(u'attributs de la base', lambda: _membres(cdb))
@@ -777,23 +774,23 @@ def sonder(cas_id='600'):
         etape(u'attributs de VECdbProject',
               lambda: _echouer(u'aucun projet dans %r' % (projets_cdb,)))
 
-    # --- Enums du module iesve : c'est la que se trouvent tres probablement
-    # --- les categories d'element et classes de construction.
+    # --- iesve module enums: this is most likely where element categories
+    # --- and construction classes live.
     etape(u'classes du module iesve', lambda: _membres(iesve))
     etape(u'enums du module iesve', lambda: _enums(iesve))
 
-    # --- Meteo : deja concluant au premier passage, on le rejoue pour la trace.
+    # --- Weather: already conclusive at first pass, replayed for the trace.
     etape(u'affectation meteo DRYCOLD',
           lambda: adaptateur.assigner_meteo_drycold(
               os.path.join(DOSSIER_METEO_VE, FICHIER_METEO)))
 
-    # --- Proprietes d un materiau : les CLES acceptees, pas celles supposees.
+    # --- Properties of a material: the ACCEPTED keys, not the guessed ones.
     #
-    # Le 2026-08-07, `set_properties({'description': 'plasterboard', ...})` a
-    # repondu « could not convert string to float: 'plasterboard' » : VE tente
-    # de convertir TOUTES les valeurs en flottant, donc `description` n est pas
-    # une cle acceptee — ou pas sous ce nom. En essayer d autres a l aveugle
-    # serait la cinquieme fois qu on devine ; on releve.
+    # On 2026-08-07, `set_properties({'description': 'plasterboard', ...})`
+    # replied "could not convert string to float: 'plasterboard'": VE tries to
+    # convert ALL values to float, so `description` is not an accepted key —
+    # or not under that name. Trying others blindly would be the fifth time we
+    # guessed; we read instead.
     if projet_cdb is not None:
         materiau = etape(
             u'create_material (materiau d essai)',
@@ -804,8 +801,8 @@ def sonder(cas_id='600'):
             etape(u'attributs du materiau', lambda: _membres(materiau))
             etape(u'get_properties() : LES CLES ACCEPTEES',
                   lambda: materiau.get_properties())
-            # Ecriture des seules valeurs numeriques : si elle passe, la cle
-            # fautive etait bien `description`.
+            # Writing only numeric values: if it passes, the faulty key
+            # was indeed `description`.
             etape(u'set_properties sans description (essai)',
                   lambda: materiau.set_properties({
                       'conductivity': 0.16, 'thickness': 0.012,
@@ -813,63 +810,63 @@ def sonder(cas_id='600'):
             etape(u'get_properties() apres ecriture',
                   lambda: materiau.get_properties())
 
-    # --- Minimum de masse accepte par VE, pour l isolant IDEAL du plancher.
+    # --- Minimum mass accepted by VE, for the IDEAL insulator of the floor.
     #
-    # ISO 52016-1 Table 23 donne 0 de masse volumique et 0 de chaleur
-    # massique ; ASHRAE 140 note (a) impose « le minimum que le logiciel teste
-    # autorise, mais pas < 0 ». La valeur est donc dependante du logiciel PAR
-    # CONSTRUCTION de la norme : elle se releve, elle ne se choisit pas.
+    # ISO 52016-1 Table 23 gives 0 for density and 0 for specific heat capacity;
+    # ASHRAE 140 note (a) mandates "the minimum the software under test permits,
+    # but not < 0". The value is therefore software-dependent BY CONSTRUCTION of
+    # the standard: it is read, not chosen.
     #
-    # On ecrit une echelle croissante et on RELIT : la premiere valeur que VE
-    # restitue a l identique est le minimum accepte.
+    # We write an increasing scale and READ BACK: the first value VE returns
+    # unchanged is the accepted minimum.
     if projet_cdb is not None:
         essais = etape(u'minimum de masse accepte par VE',
                        lambda: _echelle_de_minimum(projet_cdb, iesve))
         for essai in (essais or []):
             jetables.append(essai.get('id'))
 
-    # --- Creation des constructions.
+    # --- Construction creation.
     #
-    # CORRIGE le 2026-08-07 : la sonde passait `cdb`, la BASE, alors que
-    # `creer_constructions_cas` attend un `VECdbProject`. VE repondait
-    # « 'VECdbDatabase' object has no attribute 'create_construction' » —
-    # meme classe d erreur que les enums cherches sur le mauvais conteneur.
+    # CORRECTED on 2026-08-07: the probe was passing `cdb`, the DATABASE, whereas
+    # `creer_constructions_cas` expects a `VECdbProject`. VE replied
+    # "'VECdbDatabase' object has no attribute 'create_construction'" —
+    # same error class as the enums looked for on the wrong container.
     constructions = None
     if projet_cdb is not None:
         constructions = etape(
             u'constructions du cas',
             lambda: adaptateur.creer_constructions_cas(projet_cdb, 'legere'))
 
-    # --- LES EPAISSEURS SONT-ELLES POSEES ?
+    # --- ARE THE THICKNESSES SET?
     #
-    # `add_layer(materiau_id, False)` cree la couche mais n ecrit AUCUNE
-    # epaisseur — et depuis le 2026-08-07 l epaisseur n est plus sur le
-    # materiau non plus, puisque `thickness` n y existe pas. Les couches
-    # portent donc ce que VE leur donne par defaut.
+    # `add_layer(material_id, False)` creates the layer but writes NO thickness
+    # — and since 2026-08-07 the thickness is no longer on the material either,
+    # since `thickness` does not exist there. The layers therefore carry whatever
+    # VE assigns them by default.
     #
-    # Une construction qui se cree sans lever, avec des epaisseurs fausses,
-    # produirait des U credibles et faux. On relit.
+    # A construction created without raising, with wrong thicknesses, would
+    # produce credible but false U-values. We read back.
     if constructions:
         etape(u'couches du mur : epaisseurs REELLES',
               lambda: _proprietes_des_couches(constructions['mur']))
 
-    # --- GEOMETRIE : ce que l importeur attend, et ce que le modele contient.
+    # --- GEOMETRY: what the importer expects, and what the model contains.
     #
-    # L API n expose AUCUN constructeur de geometrie : la seule voie est
-    # `ImportGBXML.import_file`. Sa signature n a jamais ete observee. La
-    # documentation annonce `Import_file(file_name, heal_geometry, cap_mode,
-    # cap_height)` — mais elle se trompe deja sur la casse, l introspection
-    # donnant `import_file`. On releve donc avant d ecrire un gbXML contre une
-    # signature supposee.
+    # The API exposes NO geometry constructor: the only path is
+    # `ImportGBXML.import_file`. Its signature has never been observed. The
+    # documentation announces `Import_file(file_name, heal_geometry, cap_mode,
+    # cap_height)` — but it is already wrong on capitalisation, introspection
+    # giving `import_file`. We therefore read before writing a gbXML against
+    # an assumed signature.
     etape(u'ImportGBXML : signature',
           lambda: _signature_dimport(iesve))
 
-    # Et ce que le modele porte DEJA : s il contient une geometrie, ses
-    # surfaces se lisent, et c est a elles qu on comparera l import.
+    # And what the model ALREADY contains: if it holds a geometry, its surfaces
+    # can be read, and they are what the import will be compared against.
     etape(u'corps du modele courant',
           lambda: _corps_du_modele(projet))
 
-    # --- Menage. Une sonde doit rendre le modele tel qu elle l a trouve.
+    # --- Cleanup. A probe must leave the model as it found it.
     if projet_cdb is not None and jetables:
         etape(u'suppression des materiaux d essai',
               lambda: _supprimer_materiaux(projet_cdb, jetables))
@@ -890,15 +887,15 @@ def sonder(cas_id='600'):
 
 
 def evaluer_et_afficher(candidat=None):
-    u"""Évalue un candidat et affiche le tableau des écarts.
+    u"""Evaluates a candidate and displays the discrepancy table.
 
     Args:
-        candidat: Candidat déjà extrait. Si `None`, tente de relire
-            `outputs/test1_candidat.json` ; à défaut, évalue sans candidat
-            (tout gris).
+        candidat: Already-extracted candidate. If `None`, attempts to read
+            `outputs/test1_candidat.json`; failing that, evaluates without
+            a candidate (everything grey).
 
     Returns:
-        dict: Résultat de `evaluer_test1`.
+        dict: Result of `evaluer_test1`.
     """
     from engine import test1_engine as moteur
 
@@ -929,18 +926,18 @@ def evaluer_et_afficher(candidat=None):
 
 
 # --------------------------------------------------------------------------
-# MODE D'EXÉCUTION
+# EXECUTION MODE
 #
-# Le Python Scripts navigator de VE n'offre PAS de terminal : il n'y a qu'un
-# bouton « Run », donc aucun moyen de passer `--sonde`. Le mode est donc
-# déterminé automatiquement :
+# The VE Python Scripts navigator does NOT offer a terminal: there is only a
+# "Run" button, so there is no way to pass `--sonde`. The mode is therefore
+# determined automatically:
 #
-#     dans VE   -> SONDE     (la seule action qui apprenne quelque chose)
-#     hors VE   -> PREFLIGHT (contrôle d'installation, sans rien simuler)
+#     in VE    -> SONDE     (the only action that learns something)
+#     outside  -> PREFLIGHT (installation check, without simulating anything)
 #
-# Pour forcer un mode depuis VE, remplacer 'auto' ci-dessous par 'preflight',
-# 'sonde', 'evaluer' ou 'run', puis appuyer sur Run. C'est le seul réglage à
-# modifier ; aucune autre ligne du fichier n'a besoin d'être touchée.
+# To force a mode from VE, replace 'auto' below with 'preflight',
+# 'sonde', 'evaluer' or 'run', then press Run. That is the only setting
+# to change; no other line in the file needs to be touched.
 # --------------------------------------------------------------------------
 MODE = 'auto'
 
@@ -948,17 +945,16 @@ MODES_CONNUS = ('auto', 'preflight', 'sonde', 'evaluer', 'run')
 
 
 def _mode_effectif(arguments):
-    u"""Détermine le mode à exécuter.
+    u"""Determines the mode to run.
 
-    Les arguments de ligne de commande priment quand il y en a — pour ceux qui
-    disposent d'un terminal. Sinon on retombe sur `MODE`, puis sur la
-    détection automatique.
+    Command-line arguments take precedence when present — for those who have
+    a terminal. Otherwise falls back to `MODE`, then to automatic detection.
 
     Args:
-        arguments: Arguments de la ligne de commande, sans le nom du script.
+        arguments: Command-line arguments, without the script name.
 
     Returns:
-        str: Un mode parmi 'preflight', 'sonde', 'evaluer', 'run'.
+        str: One of 'preflight', 'sonde', 'evaluer', 'run'.
     """
     for nom in ('run', 'sonde', 'evaluer', 'preflight'):
         if '--' + nom in arguments:
@@ -971,14 +967,14 @@ def _mode_effectif(arguments):
 
 
 def main(arguments=()):
-    u"""Point d'entrée, utilisable au clavier comme au bouton Run.
+    u"""Entry point, usable from the keyboard as well as the Run button.
 
     Args:
-        arguments: Arguments de la ligne de commande, sans le nom du script.
-            Vide quand le script est lancé depuis le bouton Run de VE.
+        arguments: Command-line arguments, without the script name.
+            Empty when the script is launched from the VE Run button.
 
     Returns:
-        int: Code de sortie, 0 si tout s'est bien passé.
+        int: Exit code, 0 if everything went well.
     """
     mode = _mode_effectif(arguments)
     dire(u'mode : %s%s' % (mode, u'  (détecté automatiquement)'
@@ -1014,16 +1010,16 @@ def main(arguments=()):
 
 
 if __name__ == '__main__':
-    # `sys.argv` peut être absent ou réduit quand VEScripts exécute le fichier
-    # depuis son bouton Run : on ne suppose rien.
+    # `sys.argv` may be absent or empty when VEScripts executes the file
+    # via its Run button: we assume nothing.
     _arguments = tuple(getattr(sys, 'argv', ())[1:])
     _code = main(_arguments)
 
     dire()
     dire(u'--- terminé (code %d) ---' % _code)
 
-    # `sys.exit` lève SystemExit, que VEScripts remonte comme une erreur dans
-    # sa fenêtre de script. On ne sort donc explicitement que lorsqu'un
-    # terminal est manifestement présent (des arguments ont été passés).
+    # `sys.exit` raises SystemExit, which VEScripts surfaces as an error in
+    # its script window. We therefore only exit explicitly when a terminal is
+    # clearly present (arguments were passed).
     if _arguments:
         sys.exit(_code)

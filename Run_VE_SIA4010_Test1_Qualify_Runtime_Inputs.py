@@ -19,7 +19,18 @@ PROJECT_ROOT = Path(__file__).resolve().parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-TEST1_CASES = {"600", "640", "900", "940", "600FF", "900FF"}
+TEST1_CASES = {
+    "600",
+    "640",
+    "900",
+    "940",
+    "600FF",
+    "900FF",
+    "1A",
+    "1B",
+    "1C",
+    "1D",
+}
 
 
 def _reload_reference_model_package():

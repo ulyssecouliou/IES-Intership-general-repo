@@ -175,22 +175,22 @@ class Sia4010ExternalInputManifestTests(unittest.TestCase):
         )
 
     def test_matrix_accounts_for_all_34_exact_cases(self):
-        """34 depuis l'enregistrement des cas diagnostiques 1A a 1D du Test 1.
+        """34 since the registration of diagnostic cases 1A through 1D of Test 1.
 
-        Ils ne sont pas sans entree deleguee : 1A et 1B exigent la cellule ISO
-        et le climat de Zurich-Kloten, 1C et 1D y ajoutent SIA 2024, dont
-        l'infiltration ajustee de 1C est tiree.
+        They are not without delegated input: 1A and 1B require the ISO cell
+        and the Zurich-Kloten climate, 1C and 1D additionally require SIA 2024,
+        from which 1C's adjusted infiltration is drawn.
         """
         matrix = build_external_input_matrix(self.project)
         self.assertEqual(matrix["exact_case_count"], 34)
         self.assertEqual(
             matrix["catalog_input_count"], len(EXTERNAL_INPUT_CATALOG)
         )
-        # NOT_REQUIRED reste exactement 6 : les six cas ISO du Test 1, qui
-        # tournent sur la meteo DRYCOLD fournie. Que ce compte n'ait pas bouge
-        # apres l'ajout de 1A a 1D prouve que les quatre nouveaux cas ont bien
-        # recu leurs exigences, au lieu de tomber en silence dans "rien a
-        # fournir" -- ce qui aurait ete la maniere discrete de se tromper.
+        # NOT_REQUIRED stays exactly 6: the six ISO cases of Test 1, which
+        # run on the supplied DRYCOLD weather. That this count did not change
+        # after adding 1A through 1D proves the four new cases properly received
+        # their requirements, rather than silently falling into "nothing to
+        # supply" -- which would have been the discreet way to be wrong.
         self.assertEqual(matrix["status_counts"]["NOT_REQUIRED"], 6)
         self.assertEqual(matrix["status_counts"]["MISSING_MANIFEST"], 28)
         weather = next(
@@ -198,9 +198,9 @@ class Sia4010ExternalInputManifestTests(unittest.TestCase):
             for item in matrix["inputs"]
             if item["input_id"] == "sia2028_dry_normal_zurich_kloten"
         )
-        # 28 et non 24 : le climat de Zurich-Kloten est exactement ce que
-        # le maillon 1A ajoute au cas 600, donc les quatre cas
-        # diagnostiques en dependent tous.
+        # 28 not 24: the Zurich-Kloten climate is exactly what
+        # link 1A adds to case 600, so all four diagnostic cases
+        # depend on it.
         self.assertEqual(len(weather["affected_cases"]), 28)
 
     def test_example_manifest_has_exact_catalog_and_stays_blocked(self):

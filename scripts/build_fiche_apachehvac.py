@@ -1,21 +1,21 @@
 # -*- coding: utf-8 -*-
-u"""Génère la fiche de saisie du réseau ApacheHVAC du Test 4.
+u"""Generates the ApacheHVAC network data entry sheet for Test 4.
 
-POURQUOI UNE FICHE, ET PAS UN SCRIPT. `HVACNetwork` n'expose que
+WHY A SHEET, AND NOT A SCRIPT. `HVACNetwork` exposes only
 `components`, `systems`, `controllers`, `get_component_by_id`, `load_network`
-et `path` : **aucune méthode de création**. Le réseau ne peut donc pas être
-construit par script — il doit l'être à la main, une fois, dans l'éditeur
-ApacheHVAC de VE. Ensuite seulement le `.asp` se versionne et se recharge par
-`load_network`, et tout le reste redevient scriptable.
+and `path`: **no creation method**. The network therefore cannot be built by
+script — it must be built manually, once, in the ApacheHVAC editor in VE.
+Only then can the `.asp` be versioned and reloaded via `load_network`, and
+everything else becomes scriptable again.
 
-POURQUOI GÉNÉRÉE, ET PAS RÉDIGÉE. Les valeurs viennent de
-`construire_test4_dans_ve.PARAMETRES` et de
-`refs/reference-data/test-4.consignes.json`, tous deux tracés à la
-spécification. Une fiche retapée à la main se désynchroniserait de la source
-au premier changement, et une fiche fausse ferait construire un réseau faux —
-avec beaucoup plus de travail pour s'en apercevoir.
+WHY GENERATED, AND NOT HAND-WRITTEN. The values come from
+`construire_test4_dans_ve.PARAMETRES` and from
+`refs/reference-data/test-4.consignes.json`, both traced to the
+specification. A manually retyped sheet would drift from the source on
+the first change, and a wrong sheet would lead to building a wrong
+network — with much more work to discover the error.
 
-Usage :
+Usage:
     python scripts/build_fiche_apachehvac.py [--ecrire]
 """
 
@@ -37,9 +37,9 @@ _SORTIE = os.path.join(_RACINE, 'docs', 'FICHE-APACHEHVAC-TEST4.md')
 _CONSIGNES = os.path.join(_RACINE, 'refs', 'reference-data',
                           'test-4.consignes.json')
 
-#: Composants à poser, dans l'ordre du flux d'air. Chaque entrée nomme la
-#: classe `iesve` correspondante — relevée dans `ve_api_surface.json` — pour
-#: que le relevé du réseau, après coup, puisse être confronté à cette fiche.
+#: Components to place, in airflow order. Each entry names the corresponding
+#: `iesve` class — found in `ve_api_surface.json` — so that the network survey,
+#: after the fact, can be compared against this sheet.
 COMPOSANTS = [
     (u'Prise d\'air neuf', 'HVACInlet',
      [u'Air extérieur, appareil en toiture (« Geräteaufstellung: auf dem '
@@ -82,7 +82,7 @@ COMPOSANTS = [
       u'extérieur.']),
 ]
 
-#: Réglages qui ne portent sur aucun composant en particulier.
+#: Settings that do not relate to any particular component.
 REGLAGES_GENERAUX = ['horaire_fonctionnement']
 
 RESERVES = [
@@ -102,10 +102,10 @@ RESERVES = [
 
 
 def _consignes():
-    u"""Charge la consigne de température figée.
+    u"""Loads the frozen temperature setpoint.
 
     Returns:
-        dict | None: Référentiel, ou `None` s'il n'a pas été figé.
+        dict | None: Reference data, or `None` if it has not been frozen.
     """
     if not os.path.exists(_CONSIGNES):
         return None
@@ -114,17 +114,17 @@ def _consignes():
 
 
 def _ligne_de_parametre(cle):
-    u"""Rend une ligne de tableau pour un paramètre de la spécification.
+    u"""Returns a table row for a parameter from the specification.
 
     Args:
-        cle: Clé dans `PARAMETRES`, ou texte libre.
+        cle: Key in `PARAMETRES`, or free text.
 
     Returns:
-        str: Ligne Markdown.
+        str: Markdown row.
     """
     entree = source.PARAMETRES.get(cle)
     if entree is None:
-        # Texte libre : une consigne de saisie sans valeur chiffree propre.
+        # Free text: an entry instruction with no numeric value of its own.
         return u'| — | %s | %s |' % (cle, u'Spezifikation_Test4.pdf')
     valeur = entree['valeur']
     if isinstance(valeur, (tuple, list)):
@@ -135,10 +135,10 @@ def _ligne_de_parametre(cle):
 
 
 def construire():
-    u"""Rédige la fiche.
+    u"""Writes the data entry sheet.
 
     Returns:
-        str: Document Markdown.
+        str: Markdown document.
     """
     lignes = [
         u'# Fiche de saisie — réseau ApacheHVAC du Test SIA 4010 n° 4',
@@ -243,10 +243,10 @@ def construire():
 
 
 def main(arguments=()):
-    u"""Point d'entrée.
+    u"""Entry point.
 
     Args:
-        arguments: `--ecrire` pour écrire le fichier.
+        arguments: `--ecrire` to write the file.
 
     Returns:
         int: 0.

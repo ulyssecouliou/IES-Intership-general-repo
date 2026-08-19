@@ -33,6 +33,15 @@ traçabilité correspondante.
 
 ## 2. Architecture cible (4 couches)
 
+> **⚠ PÉRIMÉ — superseded par ADR-001 (2026-07-30) et l'audit du 2026-08-16.**
+> Ce schéma est un plan initial, pas l'état actuel. **(D2)** l'app web locale de
+> la « Couche 4 » est **supprimée** : l'UI est un dialogue Tkinter dans VE. **La
+> production est consolidée dans `swiss_sia/`** ; `engine/`+`ve_adapter/`+`ui/`
+> sont de l'outillage/hérité, pas le runtime client. La sonde VE 2025 annule aussi
+> la contrainte « Python 3.4 » (réel : 3.12.3). Voir
+> `docs/ADR-001-architecture-MSP.md` et `docs/project/AUDIT_COMPLET_2026-08-16.md`.
+> Le schéma ci-dessous est conservé comme trace historique.
+
 ```
 ┌─ Couche 4 : NAVIGATEUR (UI) ──────────────────────────────┐
 │  App web locale (HTML/JS) : Classes → Tests → grandeurs,   │

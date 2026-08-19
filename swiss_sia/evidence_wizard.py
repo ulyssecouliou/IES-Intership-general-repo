@@ -1,27 +1,26 @@
 # -*- coding: utf-8 -*-
-"""Collecte des preuves SIA 380/2 d'un modele client — noyau pur.
+"""Collects SIA 380/2 evidence for a client model — pure core.
 
-DEUX CHOSES QU IL NE FAUT PAS CONFONDRE, et ce module existe pour les tenir
-separees :
+TWO THINGS NOT TO CONFUSE, and this module exists to keep them separate:
 
-    SIA 4010  valide le LOGICIEL et ses methodes. C est le travail sur les
-              sept tests de reference, dans refs/ et engine/. Il ne dit rien
-              d un batiment client.
-    SIA 380/2 juge la conformite d un BATIMENT client. C est l objet de ce
-              module. Un logiciel valide n y suffit pas : il y faut les
-              donnees du projet et des preuves documentaires.
+    SIA 4010  validates the SOFTWARE and its methods. This is the work on the
+              seven reference tests, in refs/ and engine/. It says nothing
+              about a client building.
+    SIA 380/2 judges the compliance of a client BUILDING. This is the object
+              of this module. Validated software is not sufficient: the project
+              data and documentary evidence are also required.
 
-Un PASS technique — un APS lisible, une extraction reussie — n est ni l un ni
-l autre. Les trois vocabulaires sont distincts et le restent partout ici.
+A technical PASS — a readable APS, a successful extraction — is neither of
+the above. The three vocabularies are distinct and remain so throughout.
 
-CE QUE CE MODULE NE FAIT JAMAIS
-    - inventer une valeur reglementaire, une localisation, une altitude, un
-      debit de ventilation, une puissance d eclairage ;
-    - remplacer une donnee manquante par zero ;
-    - declarer un batiment conforme ;
-    - modifier le modele VE.
+WHAT THIS MODULE NEVER DOES
+    - invent a regulatory value, a location, an altitude, a ventilation flow
+      rate, a lighting power;
+    - replace a missing datum with zero;
+    - declare a building compliant;
+    - modify the VE model.
 
-Python pur : ni `iesve`, ni `tkinter`. Testable en integration continue.
+Pure Python: no `iesve`, no `tkinter`. Testable in continuous integration.
 """
 
 from __future__ import annotations
@@ -35,40 +34,40 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 # ---------------------------------------------------------------------------
-# Vocabulaire des statuts
+# Status vocabulary
 # ---------------------------------------------------------------------------
 #
-# Ces sept valeurs ne sont pas des synonymes. Les confondre est precisement ce
-# qui produit une fausse declaration de conformite.
+# These seven values are not synonyms. Confusing them is precisely what
+# produces a false compliance declaration.
 
-#: Le modele VE est en cause : quelque chose y manque ou y est faux.
+#: The VE model is at fault: something is missing or incorrect in it.
 DEFAUT_MODELE = "MODEL_DEFECT"
 
-#: Le modele est peut-etre correct, mais une donnee du client manque pour en
-#: juger. Ce n est pas un defaut du modele.
+#: The model may be correct, but a client datum is missing to judge it.
+#: This is not a model defect.
 DONNEE_CLIENT_MANQUANTE = "CLIENT_DATA_MISSING"
 
-#: La grandeur n a pas ete demandee a ApacheSim. Le modele et les donnees
-#: peuvent etre parfaits.
+#: The quantity was not requested from ApacheSim. The model and data
+#: may be perfectly correct.
 SORTIE_NON_ACTIVEE = "SIM_OUTPUT_NOT_ENABLED"
 
-#: L API VEScripts n expose pas ce qu il faudrait pour trancher.
+#: The VEScripts API does not expose what is needed to reach a conclusion.
 LIMITE_VESCRIPTS = "VESCRIPT_LIMITATION"
 
-#: Il manque un document, pas une donnee technique.
+#: A document is missing, not a technical datum.
 PREUVE_MANQUANTE = "DOCUMENTARY_EVIDENCE_MISSING"
 
-#: Le controle ne s applique pas a ce projet. A ne JAMAIS confondre avec un
-#: controle qu on n a pas su faire.
+#: The check does not apply to this project. NEVER confuse with a check
+#: that could not be performed.
 NON_APPLICABLE = "NOT_APPLICABLE"
 
-#: On ne peut pas conclure, faute d element. Different de NON_APPLICABLE.
+#: A conclusion cannot be reached for lack of evidence. Different from NON_APPLICABLE.
 NON_VERIFIABLE = "NOT_CHECKABLE"
 
-#: Une lecture technique a reussi. Ne vaut ni conformite ni validation.
+#: A technical read succeeded. Does not constitute compliance or validation.
 PASS_TECHNIQUE = "TECHNICAL_PASS"
 
-#: Aucun verdict SIA ne peut etre rendu en l etat.
+#: No SIA verdict can be issued in the current state.
 VERDICT_SIA_IMPOSSIBLE = "SIA_VERDICT_NOT_POSSIBLE"
 
 CATEGORIES = (
@@ -108,13 +107,13 @@ STATUTS_BATIMENT = ("NEW_BUILDING", "EXISTING_BUILDING")
 
 
 # ---------------------------------------------------------------------------
-# Champs demandes au reviseur
+# Fields requested of the reviewer
 # ---------------------------------------------------------------------------
 #
-# `obligatoire_pour_accepter` marque les champs sans lesquels le statut
-# `accepted` est REFUSE. La liste est volontairement plus large que celle
-# qu exige `evidence_manager._normalize_project_metadata_record` en aval :
-# mieux vaut refuser ici que laisser passer une acceptation trop legere.
+# `obligatoire_pour_accepter` marks fields without which the `accepted`
+# status is REFUSED. The list is intentionally broader than the one
+# required by `evidence_manager._normalize_project_metadata_record` downstream:
+# it is better to refuse here than to let through an overly light acceptance.
 
 CHAMPS: Tuple[Dict[str, Any], ...] = (
     {"nom": "project_id", "libelle": "Identifiant du projet",
@@ -156,7 +155,7 @@ CHAMPS: Tuple[Dict[str, Any], ...] = (
      "aide": "Tout ce qui aide un relecteur ulterieur.",
      "obligatoire_pour_accepter": False, "type": "texte_long"},
 
-    # --- MODEL-003 : ventilation -------------------------------------------
+    # --- MODEL-003: ventilation -------------------------------------------
     {"nom": "ventilation_strategy", "libelle": "Strategie de ventilation",
      "aide": "Ce que le projet prevoit reellement.",
      "obligatoire_pour_accepter": True, "type": "choix",
@@ -170,7 +169,7 @@ CHAMPS: Tuple[Dict[str, Any], ...] = (
      "aide": "D ou viennent les debits. Jamais inventes.",
      "obligatoire_pour_accepter": False, "type": "texte"},
 
-    # --- MODEL-004 : eclairage ---------------------------------------------
+    # --- MODEL-004: lighting ----------------------------------------------
     {"nom": "lighting_scope", "libelle": "Perimetre de l eclairage",
      "aide": "L eclairage fait-il partie du perimetre evalue ?",
      "obligatoire_pour_accepter": True, "type": "choix",
@@ -179,7 +178,7 @@ CHAMPS: Tuple[Dict[str, Any], ...] = (
      "aide": "Obligatoire si l eclairage est dans le perimetre.",
      "obligatoire_pour_accepter": False, "type": "texte"},
 
-    # --- SIM-003 : sorties ApacheSim ---------------------------------------
+    # --- SIM-003: ApacheSim outputs ---------------------------------------
     {"nom": "aps_outputs_required",
      "libelle": "Sorties fan/pump/auxiliary/coils necessaires ?",
      "aide": "NO si le systeme modelise n en produit pas — a justifier.",
@@ -191,9 +190,9 @@ CHAMPS: Tuple[Dict[str, Any], ...] = (
      "obligatoire_pour_accepter": False, "type": "texte_long"},
 )
 
-#: Colonnes du gabarit officiel, dans leur ordre. Les champs supplementaires
-#: sont ajoutes APRES : `evidence_manager` lit par nom de colonne et tolere
-#: les colonnes en trop, mais l ordre du gabarit reste lisible a l oeil.
+#: Columns of the official template, in order. Additional fields are
+#: added AFTER: `evidence_manager` reads by column name and tolerates
+#: extra columns, but the template order remains human-readable.
 COLONNES_GABARIT = (
     "project_id", "building_status", "weather_basis", "weather_file",
     "location", "altitude_m", "review_status", "reviewer", "review_date",
@@ -202,23 +201,23 @@ COLONNES_GABARIT = (
 
 
 def noms_des_champs() -> List[str]:
-    """Noms de tous les champs, dans l ordre d affichage."""
+    """Names of all fields, in display order."""
     return [champ["nom"] for champ in CHAMPS]
 
 
 def colonnes_csv() -> List[str]:
-    """Colonnes du CSV : le gabarit officiel, puis les champs ajoutes."""
+    """CSV columns: the official template, then any added fields."""
     supplementaires = [nom for nom in noms_des_champs()
                        if nom not in COLONNES_GABARIT]
     return list(COLONNES_GABARIT) + supplementaires
 
 
 def champ(nom: str) -> Dict[str, Any]:
-    """Definition d un champ.
+    """Field definition.
 
     Raises:
-        KeyError: Si le champ n existe pas. Rendre un dict vide laisserait
-            croire a un champ sans contrainte.
+        KeyError: If the field does not exist. Returning an empty dict would
+            suggest a field without constraints.
     """
     for definition in CHAMPS:
         if definition["nom"] == nom:
@@ -227,27 +226,27 @@ def champ(nom: str) -> Dict[str, Any]:
 
 
 # ---------------------------------------------------------------------------
-# Pre-remplissage : uniquement ce qui est techniquement demontre
+# Pre-fill: only what is technically demonstrated
 # ---------------------------------------------------------------------------
 
 def prefill(detecte: Optional[Dict[str, Any]] = None) -> Dict[str, str]:
-    """Valeurs pre-remplies, limitees a ce qui est techniquement demontre.
+    """Pre-filled values, limited to what is technically demonstrated.
 
-    Le `project_id` est pre-rempli car il se lit sur le dossier du projet VE
-    actif. RIEN D AUTRE ne l est : ni la localisation, ni l altitude, ni la
-    base climatique, ni le fichier meteo revu — aucun n est demontrable par
-    lecture du modele.
+    The `project_id` is pre-filled because it can be read from the active VE
+    project folder. NOTHING ELSE is: not the location, not the altitude, not
+    the climate basis, not the reviewed weather file — none is demonstrable by
+    reading the model.
 
-    En particulier, le fichier meteo DETECTE n est PAS recopie dans
-    `weather_file`. Ce champ porte le fichier que le REVISEUR declare correct ;
-    les confondre reviendrait a faire valider par le logiciel ce que seul un
-    humain peut declarer.
+    In particular, the DETECTED weather file is NOT copied into `weather_file`.
+    That field holds the file that the REVIEWER declares correct; conflating
+    the two would amount to letting the software validate what only a human can
+    declare.
 
     Args:
-        detecte: Faits releves dans VE, ex. `{'project_id': ...}`.
+        detecte: Facts gathered in VE, e.g. `{'project_id': ...}`.
 
     Returns:
-        dict: Champ -> valeur, uniquement pour les champs demontres.
+        dict: Field -> value, only for demonstrated fields.
     """
     detecte = detecte or {}
     valeurs = dict((nom, "") for nom in noms_des_champs())
@@ -259,17 +258,17 @@ def prefill(detecte: Optional[Dict[str, Any]] = None) -> Dict[str, str]:
 
 
 def faits_techniques(detecte: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
-    """Faits releves dans VE, presentes SANS les melanger aux reponses.
+    """Facts gathered in VE, presented WITHOUT mixing them with the responses.
 
-    Ils s affichent pour informer le reviseur, jamais pour repondre a sa
-    place. Chacun porte son statut : un fichier meteo detecte n est pas un
-    fichier meteo revu.
+    They are displayed to inform the reviewer, never to answer on their
+    behalf. Each carries its status: a detected weather file is not a
+    reviewed weather file.
 
     Args:
-        detecte: Ce que la sonde a releve.
+        detecte: What the probe observed.
 
     Returns:
-        dict: Faits, chacun avec sa valeur et son statut.
+        dict: Facts, each with its value and status.
     """
     detecte = detecte or {}
 
@@ -306,16 +305,16 @@ def faits_techniques(detecte: Optional[Dict[str, Any]] = None) -> Dict[str, Any]
 # ---------------------------------------------------------------------------
 
 def valider_champ(nom: str, valeur: Any) -> Optional[str]:
-    """Controle une valeur isolee.
+    """Validate one value in isolation.
 
     Args:
-        nom: Nom du champ.
-        valeur: Valeur saisie.
+        nom: Field name.
+        valeur: Entered value.
 
     Returns:
-        str | None: Motif du refus, ou `None` si la valeur convient. Une
-        valeur VIDE n est jamais refusee ici : l incompletude se traite au
-        moment d accepter, pas a la saisie.
+        str | None: Reason for rejection, or `None` if the value is
+        acceptable. An EMPTY value is never rejected here: incompleteness
+        is handled at acceptance time, not at entry.
     """
     definition = champ(nom)
     texte = ("" if valeur is None else "%s" % valeur).strip()
@@ -341,13 +340,13 @@ def valider_champ(nom: str, valeur: Any) -> Optional[str]:
 
 
 def valider(reponses: Dict[str, Any]) -> Dict[str, str]:
-    """Controle toutes les valeurs saisies.
+    """Validate all entered values.
 
     Args:
-        reponses: Champ -> valeur.
+        reponses: Field -> value.
 
     Returns:
-        dict: Champ -> motif, vide si tout convient.
+        dict: Field -> reason, empty if everything is acceptable.
     """
     erreurs = {}
     for nom in noms_des_champs():
@@ -358,13 +357,13 @@ def valider(reponses: Dict[str, Any]) -> Dict[str, str]:
 
 
 def champs_manquants(reponses: Dict[str, Any]) -> List[str]:
-    """Champs obligatoires encore vides.
+    """Mandatory fields that are still empty.
 
     Args:
-        reponses: Champ -> valeur.
+        reponses: Field -> value.
 
     Returns:
-        list[str]: Noms des champs manquants, dans l ordre d affichage.
+        list[str]: Names of missing fields, in display order.
     """
     manquants = []
     for definition in CHAMPS:
@@ -377,13 +376,13 @@ def champs_manquants(reponses: Dict[str, Any]) -> List[str]:
 
 
 def _conditionnels(reponses: Dict[str, Any]) -> List[str]:
-    """Obligations qui dependent d autres reponses.
+    """Obligations that depend on other answers.
 
     Args:
-        reponses: Champ -> valeur.
+        reponses: Field -> value.
 
     Returns:
-        list[str]: Motifs de refus.
+        list[str]: Reasons for rejection.
     """
     reponses = reponses or {}
     motifs = []
@@ -426,14 +425,14 @@ def evaluer_acceptation(
     reponses: Dict[str, Any],
     confirmation_utilisateur: bool = False,
 ) -> Dict[str, Any]:
-    """Decide si le statut `accepted` peut etre ecrit.
+    """Decide whether the `accepted` status can be written.
 
-    FAIL-CLOSED. Toute incertitude ramene a `pending`. Le statut demande par
-    l utilisateur n est jamais repris tel quel : il est RECALCULE.
+    FAIL-CLOSED. Any uncertainty reverts to `pending`. The status requested
+    by the user is never taken as-is: it is RECALCULATED.
 
     Args:
-        reponses: Champ -> valeur.
-        confirmation_utilisateur: Case cochee explicitement par le reviseur.
+        reponses: Field -> value.
+        confirmation_utilisateur: Box explicitly checked by the reviewer.
 
     Returns:
         dict: `statut_effectif`, `accepte`, `motifs_de_refus`, `manquants`,
@@ -465,20 +464,20 @@ def evaluer_acceptation(
 
 
 # ---------------------------------------------------------------------------
-# Correspondance meteo
+# Weather matching
 # ---------------------------------------------------------------------------
 
 def correspondance_meteo(detecte: Optional[str],
                          revu: Optional[str]) -> Dict[str, Any]:
-    """Compare le fichier meteo detecte et celui que le reviseur declare.
+    """Compare the detected weather file with the one the reviewer declares.
 
-    Une correspondance ne vaut PAS approbation du climat : elle dit seulement
-    que le reviseur parle du meme fichier que VE. `DRYCOLD_IESVE.epw` peut
-    correspondre parfaitement et n etre en rien un climat suisse approuve.
+    A match does NOT mean climate approval: it only says the reviewer is
+    referring to the same file as VE. `DRYCOLD_IESVE.epw` can match
+    perfectly and still not be an approved Swiss climate.
 
     Args:
-        detecte: Fichier meteo lu dans VE.
-        revu: Fichier meteo declare par le reviseur.
+        detecte: Weather file read from VE.
+        revu: Weather file declared by the reviewer.
 
     Returns:
         dict: `detecte`, `revu`, `statut`, `note`.
@@ -509,19 +508,19 @@ def correspondance_meteo(detecte: Optional[str],
 
 
 # ---------------------------------------------------------------------------
-# Ecriture : CSV de preuves, et JSON d audit
+# Writing: evidence CSV, and audit JSON
 # ---------------------------------------------------------------------------
 
 def sauvegarder_avant_ecriture(chemin: str,
                                horodatage: Optional[str] = None) -> Optional[str]:
-    """Copie un fichier existant avant de l ecraser.
+    """Copy an existing file before overwriting it.
 
     Args:
-        chemin: Fichier a preserver.
-        horodatage: Suffixe impose ; sinon l heure courante.
+        chemin: File to preserve.
+        horodatage: Imposed suffix; otherwise the current time.
 
     Returns:
-        str | None: Chemin de la sauvegarde, ou `None` si rien a preserver.
+        str | None: Path of the backup, or `None` if nothing to preserve.
     """
     if not os.path.exists(chemin):
         return None
@@ -535,16 +534,16 @@ def sauvegarder_avant_ecriture(chemin: str,
 def ecrire_csv(chemin: str, reponses: Dict[str, Any],
                statut_effectif: str,
                horodatage: Optional[str] = None) -> Dict[str, Any]:
-    """Ecrit le CSV de preuves, apres sauvegarde de l existant.
+    """Write the evidence CSV, after backing up any existing file.
 
-    Le statut ecrit est celui que `evaluer_acceptation` a RECALCULE, jamais
-    celui que l utilisateur a demande.
+    The written status is the one RECALCULATED by `evaluer_acceptation`,
+    never the one requested by the user.
 
     Args:
-        chemin: Fichier CSV a ecrire.
-        reponses: Champ -> valeur.
-        statut_effectif: Statut recalcule.
-        horodatage: Suffixe de sauvegarde impose.
+        chemin: CSV file to write.
+        reponses: Field -> value.
+        statut_effectif: Recalculated status.
+        horodatage: Imposed backup suffix.
 
     Returns:
         dict: `chemin`, `sauvegarde`, `colonnes`.
@@ -576,19 +575,19 @@ def construire_audit(reponses: Dict[str, Any],
                      chemin_csv: str,
                      sauvegarde: Optional[str] = None,
                      horodatage: Optional[str] = None) -> Dict[str, Any]:
-    """Compose le JSON d audit.
+    """Compose the audit JSON.
 
     Args:
-        reponses: Champ -> valeur.
-        detecte: Faits releves dans VE.
-        acceptation: Ce que rend `evaluer_acceptation`.
-        actions_restantes: Ce qu il reste a faire.
-        chemin_csv: CSV ecrit.
-        sauvegarde: Sauvegarde eventuelle.
-        horodatage: Horodatage impose.
+        reponses: Field -> value.
+        detecte: Facts gathered in VE.
+        acceptation: What `evaluer_acceptation` returns.
+        actions_restantes: Remaining actions.
+        chemin_csv: Written CSV.
+        sauvegarde: Optional backup.
+        horodatage: Imposed timestamp.
 
     Returns:
-        dict: Structure d audit.
+        dict: Audit structure.
     """
     detecte = detecte or {}
     marque = horodatage or datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -645,16 +644,16 @@ def construire_audit(reponses: Dict[str, Any],
 def ecrire_audit(dossier: str, audit: Dict[str, Any],
                  project_id: str,
                  horodatage: Optional[str] = None) -> str:
-    """Ecrit le JSON d audit, sans jamais ecraser un fichier existant.
+    """Write the audit JSON, without ever overwriting an existing file.
 
     Args:
-        dossier: Dossier `sia_compliance_artifacts/evidence/`.
-        audit: Structure a ecrire.
-        project_id: Identifiant, pour le nom de fichier.
-        horodatage: Horodatage impose.
+        dossier: `sia_compliance_artifacts/evidence/` folder.
+        audit: Structure to write.
+        project_id: Identifier, for the filename.
+        horodatage: Imposed timestamp.
 
     Returns:
-        str: Chemin ecrit.
+        str: Written path.
     """
     if not os.path.isdir(dossier):
         os.makedirs(dossier)
@@ -670,26 +669,26 @@ def ecrire_audit(dossier: str, audit: Dict[str, Any],
 
 
 # ---------------------------------------------------------------------------
-# Actions restantes, par nature de constat
+# Remaining actions, by finding type
 # ---------------------------------------------------------------------------
 #
-# Chaque action porte sa CATEGORIE. C est elle qui empeche de confondre un
-# defaut du modele avec une donnee client absente, ou une sortie ApacheSim
-# desactivee avec un controle non applicable — trois situations qui appellent
-# trois gestes differents, de trois personnes differentes.
+# Each action carries its CATEGORY. This is what prevents confusing a model
+# defect with a missing client datum, or a disabled ApacheSim output with a
+# non-applicable check — three situations that call for three different
+# responses, from three different people.
 
 def actions_ventilation(reponses: Dict[str, Any],
                         constat: Optional[Dict[str, Any]] = None
                         ) -> List[Dict[str, str]]:
-    """Actions pour MODEL-003, selon la strategie declaree.
+    """Actions for MODEL-003, according to the declared strategy.
 
     Args:
-        reponses: Champ -> valeur.
-        constat: Ce que la sonde a observe, ex.
+        reponses: Field -> value.
+        constat: What the probe observed, e.g.
             `{'infiltration_only': True, 'oa_max_flow': 0.0}`.
 
     Returns:
-        list[dict]: Actions, chacune avec sa categorie.
+        list[dict]: Actions, each with its category.
     """
     reponses = reponses or {}
     constat = constat or {}
@@ -763,15 +762,15 @@ def actions_ventilation(reponses: Dict[str, Any],
 def actions_eclairage(reponses: Dict[str, Any],
                       constat: Optional[Dict[str, Any]] = None
                       ) -> List[Dict[str, str]]:
-    """Actions pour MODEL-004, selon le perimetre declare.
+    """Actions for MODEL-004, according to the declared scope.
 
     Args:
-        reponses: Champ -> valeur.
-        constat: Observations, ex.
+        reponses: Field -> value.
+        constat: Observations, e.g.
             `{'lighting_gain_present': False, 'misc_gain_w_m2': 5.0}`.
 
     Returns:
-        list[dict]: Actions, chacune avec sa categorie.
+        list[dict]: Actions, each with its category.
     """
     reponses = reponses or {}
     constat = constat or {}
@@ -819,7 +818,7 @@ def actions_eclairage(reponses: Dict[str, Any],
     return actions
 
 
-#: Sorties APS que la sonde declare absentes, et ou les activer dans VE.
+#: APS outputs that the probe declares absent, and where to enable them in VE.
 OU_ACTIVER_LES_SORTIES = {
     "lighting": "ApacheSim > Results, cocher les consommations d eclairage.",
     "fan": "ApacheSim > Results, energies de ventilateurs (niveau systeme).",
@@ -832,19 +831,19 @@ OU_ACTIVER_LES_SORTIES = {
 
 def actions_sorties_aps(reponses: Dict[str, Any],
                         absentes: Sequence[str]) -> List[Dict[str, str]]:
-    """Actions pour SIM-003, sans jamais convertir une absence en zero.
+    """Actions for SIM-003, without ever converting an absence to zero.
 
-    DISTINCTION CENTRALE. Une sortie absente parce que le systeme modelise
-    n en produit pas est NON_APPLICABLE. La meme sortie absente parce
-    qu ApacheSim ne l a pas produite est SORTIE_NON_ACTIVEE. Les deux se
-    corrigent differemment, et aucune ne vaut zero.
+    CENTRAL DISTINCTION. An output absent because the modelled system does
+    not produce it is NOT_APPLICABLE. The same output absent because
+    ApacheSim did not produce it is SORTIE_NON_ACTIVEE. The two are corrected
+    differently, and neither equals zero.
 
     Args:
-        reponses: Champ -> valeur.
-        absentes: Grandeurs sans liaison APS.
+        reponses: Field -> value.
+        absentes: Quantities without an APS binding.
 
     Returns:
-        list[dict]: Actions, chacune avec sa categorie.
+        list[dict]: Actions, each with its category.
     """
     reponses = reponses or {}
     besoin = reponses.get("aps_outputs_required") or ""
@@ -903,10 +902,10 @@ def actions_sorties_aps(reponses: Dict[str, Any],
 
 
 def actions_preuves(acceptation: Dict[str, Any]) -> List[Dict[str, str]]:
-    """Actions pour EVID-001, sur les preuves documentaires.
+    """Actions for EVID-001, on documentary evidence.
 
     Args:
-        acceptation: Ce que rend `evaluer_acceptation`.
+        acceptation: What `evaluer_acceptation` returns.
 
     Returns:
         list[dict]: Actions.
@@ -931,15 +930,15 @@ def actions_preuves(acceptation: Dict[str, Any]) -> List[Dict[str, str]]:
 def actions_restantes(reponses: Dict[str, Any],
                       detecte: Optional[Dict[str, Any]],
                       acceptation: Dict[str, Any]) -> List[Dict[str, str]]:
-    """Assemble toutes les actions, et conclut sur le verdict SIA.
+    """Assemble all actions, and conclude on the SIA verdict.
 
     Args:
-        reponses: Champ -> valeur.
-        detecte: Observations de la sonde.
-        acceptation: Ce que rend `evaluer_acceptation`.
+        reponses: Field -> value.
+        detecte: Probe observations.
+        acceptation: What `evaluer_acceptation` returns.
 
     Returns:
-        list[dict]: Actions ordonnees, la conclusion en dernier.
+        list[dict]: Ordered actions, with the conclusion last.
     """
     detecte = detecte or {}
     actions = []

@@ -1,50 +1,50 @@
 # -*- coding: utf-8 -*-
-"""Moteur de validation SIA 4010 -- Test n 1 (ASHRAE 140 / EN ISO 52016-1 ch. 7).
+"""SIA 4010 validation engine -- Test 1 (ASHRAE 140 / EN ISO 52016-1 ch. 7).
 
-Python PUR : aucun `import iesve`. Compatible Python 3.4 (docs/ADR-001-architecture-
-MSP.md §2 -- pas de f-string, pas de `dataclasses`, pas d'annotation de variable ;
-seules des annotations de fonction utilisant des types natifs sont utilisees, pour
-rester "type" sans deprendre du module `typing`, absent en 3.4).
+Pure Python: no `import iesve`. Compatible with Python 3.4 (docs/ADR-001-architecture-
+MSP.md §2 -- no f-strings, no `dataclasses`, no variable annotations;
+only function annotations using native types are used, to stay
+typed without depending on the `typing` module, absent in 3.4).
 
-Ce module ne fait AUCUNE hypothese sur la physique du batiment : il compare le
-candidat IESVE aux valeurs de reference deja figees et auditees dans
-`refs/reference-data/test-1.ref.json` (AUDIT.md, verdict "GARDER -- SIGNE", passe 3,
-2026-07-30). Il n'invente ni valeur, ni tolerance, ni article de norme.
+This module makes NO assumption about building physics: it compares the
+IESVE candidate against reference values already frozen and audited in
+`refs/reference-data/test-1.ref.json` (AUDIT.md, verdict "GARDER -- SIGNE", pass 3,
+2026-07-30). It invents no value, no tolerance, no normative article.
 
-Regle de fond (traceability/test-1.spec.md §6, confirmee mot pour mot dans
-`Spezifikation_Test1.pdf`, rubrique "Testkriterien") :
+Core rule (traceability/test-1.spec.md §6, confirmed word for word in
+`Spezifikation_Test1.pdf`, section "Testkriterien"):
 
-* Cas **600, 640, 900, 940, 600FF, 900FF** : "Es gibt dafuer kein
-  Abweichungskriterium" -- AUCUN critere de deviation. Ce moteur ne produit donc
-  JAMAIS de verdict pass/fail pour ces cas : uniquement un delta informatif par
-  programme de reference (`comparer_periode_informative`).
-* Cas **1E** (unique cas avec critere) : "Resultate fuer den Test 1E muessen im
-  Streubereich der enthaltenen Referenzprogramme liegen" -- le candidat doit tomber
-  dans la plage de dispersion (Streubereich) des 4 programmes de reference. C'est le
-  SEUL verdict pass/fail du Test 1 (`evaluer_periode_1e`).
+* Cases **600, 640, 900, 940, 600FF, 900FF**: "Es gibt dafuer kein
+  Abweichungskriterium" -- NO deviation criterion. This engine therefore NEVER
+  produces a pass/fail verdict for these cases: only an informative delta per
+  reference program (`comparer_periode_informative`).
+* Case **1E** (the only case with a criterion): "Resultate fuer den Test 1E muessen im
+  Streubereich der enthaltenen Referenzprogramme liegen" -- the candidate must fall
+  within the Streubereich of the 4 reference programs. This is the
+  ONLY pass/fail verdict of Test 1 (`evaluer_periode_1e`).
 
-Formule du Streubereich -- etablie par audit independant, PAS un simple min/max
-(AUDIT.md, "Ce qui a ete VERIFIE ET CONFIRME" pt 4, ainsi que le re-audit passe 3,
-26/26 periodes) :
+Streubereich formula -- established by independent audit, NOT a simple min/max
+(AUDIT.md, "What was VERIFIED AND CONFIRMED" pt 4, and re-audit pass 3,
+26/26 periods):
 
-    moyenne    = moyenne arithmetique des 4 programmes de reference
-    ecart_max  = max( |programme_i - moyenne| )
-    plage_max  = moyenne + ecart_max
-    plage_min  = max(0, moyenne - ecart_max)
+    mean       = arithmetic mean of the 4 reference programs
+    max_dev    = max( |program_i - mean| )
+    upper      = mean + max_dev
+    lower      = max(0, mean - max_dev)
 
-Conformement a ADR-001 §4 pt 2 ("le moteur `engine/` recalcule les memes verdicts de
-facon independante"), ce module RECALCULE cette plage a partir des 4 valeurs de
-programme plutot que de se fier aux colonnes `range_min`/`range_max` deja calculees
-par le classeur Excel -- les deux doivent concorder (`coherence_reference`), ce qui
-constitue un garde-fou supplementaire, distinct de l'audit statique de
+In accordance with ADR-001 §4 pt 2 ("le moteur `engine/` recalcule les memes verdicts de
+facon independante"), this module RECOMPUTES this band from the 4 program values
+rather than trusting the `range_min`/`range_max` columns already computed
+by the Excel workbook -- the two must agree (`coherence_reference`), which
+provides an additional safeguard, separate from the static audit of
 `engine/tests/test_ref_integrity.py`.
 
-⚠ A VERIFIER -- forme du candidat : `ve_adapter/` n'existe pas encore a ce stade du
-pipeline (etape suivante). La forme exacte du JSON normalise qu'il produira n'est
-donc PAS confirmee. Ce module adopte une convention de travail explicite (miroir de
-la structure de `reference_values`, cf. docstring de `evaluer_test1`) et reste
-tolerant sur la forme scalaire exacte (`_valeur_candidate`) ; a reconfirmer avec
-`ve-adapter-engineer` avant integration reelle.
+⚠ A VERIFIER -- candidate shape: `ve_adapter/` does not yet exist at this stage of the
+pipeline (next step). The exact shape of the normalised JSON it will produce is
+therefore NOT confirmed. This module adopts an explicit working convention (mirror of
+the `reference_values` structure, cf. docstring of `evaluer_test1`) and remains
+tolerant of the exact scalar form (`_valeur_candidate`); to be reconfirmed with
+`ve-adapter-engineer` before real integration.
 """
 
 import json
@@ -53,7 +53,7 @@ import os
 from engine import scatter_band
 
 # --------------------------------------------------------------------------
-# Localisation de la reference figee
+# Location of the frozen reference
 # --------------------------------------------------------------------------
 
 _ICI = os.path.dirname(os.path.abspath(__file__))
@@ -63,18 +63,18 @@ CHEMIN_REFERENCE_DEFAUT = os.path.join(
 
 
 # --------------------------------------------------------------------------
-# Constantes normatives (toutes sourcees -- aucune valeur inventee)
+# Normative constants (all sourced -- no invented values)
 # --------------------------------------------------------------------------
 
-# Cles mensuelles telles qu'elles apparaissent dans test-1.ref.json.
+# Monthly keys as they appear in test-1.ref.json.
 MOIS = (
     'month_01', 'month_02', 'month_03', 'month_04', 'month_05', 'month_06',
     'month_07', 'month_08', 'month_09', 'month_10', 'month_11', 'month_12',
 )
 
-# Les 4 programmes de reference qui fondent le Streubereich du cas 1E.
-# Le cas 1E n'a pas de colonne ISO 52016-1 (AUDIT.md pt 3 ; traceability/
-# test-1.spec.md §6, identifies par les Anwenderberichte Test 1).
+# The 4 reference programs that define the Streubereich for case 1E.
+# Case 1E has no ISO 52016-1 column (AUDIT.md pt 3; traceability/
+# test-1.spec.md §6, identified in the Test 1 Anwenderberichte).
 PROGRAMMES_REFERENCE_1E = (
     'ida_ice_5_0_beta_23',
     'excel_sia_380_2',
@@ -82,30 +82,30 @@ PROGRAMMES_REFERENCE_1E = (
     'tas_edsl_9_5_2',
 )
 
-# Seul cas du Test 1 porte un critere pass/fail (traceability/test-1.spec.md §6).
+# The only Test 1 case that carries a pass/fail criterion (traceability/test-1.spec.md §6).
 CAS_AVEC_CRITERE = ('1E',)
 
-# Classes de validation qui requierent le Test 1 (traceability/test-1.spec.md §2,
-# SIA 4010:2023 §4.5 tab. 63 -- confirme : toutes les classes SAUF la classe 5).
+# Validation classes that require Test 1 (traceability/test-1.spec.md §2,
+# SIA 4010:2023 §4.5 tab. 63 -- confirmed: all classes EXCEPT class 5).
 CLASSES_REQUERANT_TEST1 = ('1A', '1B', '2A', '2B', '3', '4A', '4B')
 
 TOLERANCE_DEFAUT = 1e-6
 
 
 # --------------------------------------------------------------------------
-# Chargement de la reference figee
+# Loading the frozen reference
 # --------------------------------------------------------------------------
 
 def charger_reference(chemin=None):
-    """Charge les valeurs de reference figees et signees du Test 1.
+    """Load the frozen and signed reference values for Test 1.
 
-    Source : `refs/reference-data/test-1.ref.json`, extrait de
-    `SIA_4010_geteilter_Link/Test1/Resultaterfassung_Test1.xlsx` (feuille
-    "Zusammenfassung Testfaelle") et audite independamment (AUDIT.md, verdict
-    "GARDER -- SIGNE", passe 3, 2026-07-30 : 1336/1336 cellules concordantes, 0
-    incoherence libelle<->colonne). Ce moteur ne recalcule JAMAIS ces valeurs
-    elles-memes : il les charge telles quelles. La fidelite de l'extraction est
-    controlee separement par `engine/tests/test_ref_integrity.py`.
+    Source: `refs/reference-data/test-1.ref.json`, extracted from
+    `SIA_4010_geteilter_Link/Test1/Resultaterfassung_Test1.xlsx` (sheet
+    "Zusammenfassung Testfaelle") and independently audited (AUDIT.md, verdict
+    "GARDER -- SIGNE", pass 3, 2026-07-30: 1336/1336 cells concordant, 0
+    label<->column mismatch). This engine NEVER recomputes these values
+    themselves: it loads them as-is. Extraction fidelity is
+    verified separately by `engine/tests/test_ref_integrity.py`.
     """
     if chemin is None:
         chemin = CHEMIN_REFERENCE_DEFAUT
@@ -114,15 +114,15 @@ def charger_reference(chemin=None):
 
 
 # --------------------------------------------------------------------------
-# Extraction de valeurs scalaires
+# Scalar value extraction
 # --------------------------------------------------------------------------
 
 def _valeur_reelle(feuille):
-    """Extrait `value` d'une feuille de reference `{value, unit, cell, [note]}`.
+    """Extract `value` from a reference cell `{value, unit, cell, [note]}`.
 
-    Une valeur nulle correspond toujours a une erreur Excel documentee par une
-    `note` (AUDIT.md, controle "valeurs nulles documentees", 80/80 verifiees) : le
-    moteur la propage en `None`, il ne l'invente jamais a 0.
+    A null value always corresponds to an Excel error documented by a
+    `note` (AUDIT.md, check "documented null values", 80/80 verified): the
+    engine propagates it as `None`, it never invents it as 0.
     """
     if not feuille:
         return None
@@ -133,15 +133,15 @@ def _valeur_reelle(feuille):
 
 
 def _valeur_candidate(valeur):
-    """Normalise une valeur candidate fournie par l'adaptateur VE.
+    """Normalise a candidate value supplied by the VE adapter.
 
-    ⚠ A VERIFIER : la forme exacte que produira `ve-adapter-engineer` n'est pas
-    encore figee (l'adaptateur n'existe pas a ce stade du pipeline). Par prudence,
-    ce moteur accepte deux formes plausibles et rejette explicitement le reste
-    plutot que de deviner en silence :
-      - un nombre brut (`float`/`int`) ;
-      - un dict `{"value": <nombre>, ...}`, au meme format que les feuilles de
-        reference, si l'adaptateur choisit de rester coherent avec ce format.
+    ⚠ A VERIFIER: the exact shape that `ve-adapter-engineer` will produce is not
+    yet frozen (the adapter does not exist at this stage of the pipeline). As a
+    precaution, this engine accepts two plausible forms and explicitly rejects
+    the rest rather than guessing silently:
+      - a raw number (`float`/`int`);
+      - a dict `{"value": <number>, ...}`, in the same format as reference cells,
+        if the adapter chooses to stay consistent with that format.
     """
     if valeur is None:
         return None
@@ -155,37 +155,37 @@ def _valeur_candidate(valeur):
 
 
 # --------------------------------------------------------------------------
-# Cas 1E -- le seul critere pass/fail du Test 1
+# Case 1E -- the only pass/fail criterion of Test 1
 #
-# traceability/test-1.spec.md §6 : "Resultate fuer den Test 1E muessen im
-# Streubereich der enthaltenen Referenzprogramme liegen" -- confirme mot pour mot
-# dans `Spezifikation_Test1.pdf`, rubrique "Testkriterien".
+# traceability/test-1.spec.md §6: "Resultate fuer den Test 1E muessen im
+# Streubereich der enthaltenen Referenzprogramme liegen" -- confirmed word for
+# word in `Spezifikation_Test1.pdf`, section "Testkriterien".
 # --------------------------------------------------------------------------
 
 def calculer_plage_dispersion(valeurs_programmes):
-    """Calcule le Streubereich (plage de dispersion) des programmes de reference.
+    """Compute the Streubereich (dispersion band) of the reference programs.
 
-    Article : `Spezifikation_Test1.pdf`, rubrique "Testkriterien"
-    (traceability/test-1.spec.md §6). Formule etablie par audit independant --
-    PAS un simple min/max (AUDIT.md pt 4, 26/26 periodes verifiees) :
+    Article: `Spezifikation_Test1.pdf`, section "Testkriterien"
+    (traceability/test-1.spec.md §6). Formula established by independent audit --
+    NOT a simple min/max (AUDIT.md pt 4, 26/26 periods verified):
 
-        moyenne   = moyenne arithmetique des programmes
-        ecart_max = max( |programme_i - moyenne| )
-        plage_max = moyenne + ecart_max
-        plage_min = max(0, moyenne - ecart_max)
+        mean      = arithmetic mean of the programs
+        max_dev   = max( |program_i - mean| )
+        upper     = mean + max_dev
+        lower     = max(0, mean - max_dev)
 
-    Retourne un tuple `(moyenne, ecart_max, plage_min, plage_max)`.
+    Returns a tuple `(mean, max_dev, lower, upper)`.
 
-    ⚠ PLANCHER A ZERO : applique ici parce que les tables du Test 1 le font
-    (`I16 = MAX(0, G16 - ...)`, idem I82). Ce n'est PAS une propriete de la
-    formule : le Test 2 ecrit `O14 = M14 - MAX(...)`, sans plancher. Cette
-    fonction est donc specifique au Test 1 et ne doit pas etre reutilisee
-    telle quelle pour les tests 2 a 5 -- appeler `scatter_band.build_band()`
-    avec `floor_at_zero` explicite.
+    ⚠ FLOOR AT ZERO: applied here because the Test 1 tables do so
+    (`I16 = MAX(0, G16 - ...)`, likewise I82). This is NOT a property of the
+    formula: Test 2 writes `O14 = M14 - MAX(...)`, without a floor. This
+    function is therefore specific to Test 1 and must not be reused
+    as-is for tests 2 to 5 -- call `scatter_band.build_band()`
+    with an explicit `floor_at_zero`.
 
-    Le calcul lui-meme est delegue a `engine.scatter_band`, source unique de la
-    formule (elle-meme prouvee contre les 48 bandes tabulees par le SIA dans
-    `engine/tests/test_scatter_band.py`).
+    The computation itself is delegated to `engine.scatter_band`, the single
+    source of the formula (itself validated against the 48 bands tabulated by
+    the SIA in `engine/tests/test_scatter_band.py`).
     """
     if not valeurs_programmes:
         raise ValueError('Aucune valeur de programme de reference fournie.')
@@ -195,16 +195,16 @@ def calculer_plage_dispersion(valeurs_programmes):
 
 def evaluer_periode_1e(enregistrement_reference, valeur_candidate,
                         tolerance=TOLERANCE_DEFAUT):
-    """Verdict pass/fail du cas 1E pour UNE periode (un mois ou l'annuel) d'UNE
-    grandeur (chauffage OU refroidissement).
+    """Pass/fail verdict for case 1E for ONE period (a month or the annual) of ONE
+    quantity (heating OR cooling).
 
-    Article : `Spezifikation_Test1.pdf`, rubrique "Testkriterien"
-    (traceability/test-1.spec.md §6) -- seul le cas 1E porte un critere. La plage
-    est recalculee independamment des colonnes deja calculees par l'Excel
-    (ADR-001 §4 pt 2), avec un garde-fou de coherence (`coherence_reference`).
+    Article: `Spezifikation_Test1.pdf`, section "Testkriterien"
+    (traceability/test-1.spec.md §6) -- only case 1E carries a criterion. The band
+    is recomputed independently of the columns already calculated by Excel
+    (ADR-001 §4 pt 2), with a consistency safeguard (`coherence_reference`).
 
-    `enregistrement_reference` est le noeud brut de `test-1.ref.json` pour cette
-    periode (dict de feuilles `{value, unit, cell}` par programme, plus
+    `enregistrement_reference` is the raw node from `test-1.ref.json` for this
+    period (dict of cells `{value, unit, cell}` per program, plus
     `mean_of_programs`/`range_max`/`range_min`).
     """
     valeurs_programmes = []
@@ -249,19 +249,19 @@ def evaluer_periode_1e(enregistrement_reference, valeur_candidate,
 
 
 # --------------------------------------------------------------------------
-# Cas informatifs -- AUCUN verdict (traceability/test-1.spec.md §6)
+# Informative cases -- NO verdict (traceability/test-1.spec.md §6)
 # --------------------------------------------------------------------------
 
 def comparer_periode_informative(enregistrement_reference, valeur_candidate):
-    """Comparaison SANS verdict pass/fail (cas 600/640/900/940/600FF/900FF).
+    """Comparison WITHOUT pass/fail verdict (cases 600/640/900/940/600FF/900FF).
 
-    Article : `Spezifikation_Test1.pdf`, rubrique "Testkriterien" : "Es gibt
-    dafuer kein Abweichungskriterium" -- pas de critere de deviation pour ces cas
-    (traceability/test-1.spec.md §6, confirme mot pour mot). Cette fonction ne
-    produit donc JAMAIS de booleen `conforme` autre que `None` : uniquement un
-    delta informatif candidat vs chacun des programmes de reference disponibles
-    dans l'enregistrement (qui varient selon la grandeur : 5 programmes pour les
-    tables energie/temperature -- ISO 52016-1, IDA ICE, EXCEL SIA 380/2,
+    Article: `Spezifikation_Test1.pdf`, section "Testkriterien": "Es gibt
+    dafuer kein Abweichungskriterium" -- no deviation criterion for these cases
+    (traceability/test-1.spec.md §6, confirmed word for word). This function
+    therefore NEVER produces a `conforme` boolean other than `None`: only an
+    informative delta of the candidate vs each of the reference programs available
+    in the record (which vary by quantity: 5 programs for the
+    energy/temperature tables -- ISO 52016-1, IDA ICE, EXCEL SIA 380/2,
     Energy+/OpenStudio, EDSL-Tas).
     """
     valeur = _valeur_candidate(valeur_candidate)
@@ -290,21 +290,21 @@ def comparer_periode_informative(enregistrement_reference, valeur_candidate):
         'valeur_candidate': valeur,
         'comparaisons': comparaisons,
         'type_controle': 'informatif',
-        'conforme': None,  # explicite : AUCUN critere pour ce cas (spec §6)
+        'conforme': None,  # explicit: NO criterion for this case (spec §6)
     }
 
 
 # --------------------------------------------------------------------------
-# Parcours des periodes par grandeur -- gere les differences structurelles
-# du JSON de reference (AUDIT.md, "Remarques NON bloquantes" pt 1) :
-#   - Tables 28/29 (chauffage/refroidissement) : `annual` au niveau racine du cas.
-#   - Table 30 (temperature mensuelle) : `annual` imbrique sous `monthly.annual`.
-#   - Table 32 (extremes annuels, 600FF/900FF seulement) : noeud `extremes`.
+# Period iteration by quantity -- handles the structural differences
+# in the reference JSON (AUDIT.md, "Non-blocking remarks" pt 1):
+#   - Tables 28/29 (heating/cooling): `annual` at the case root level.
+#   - Table 30 (monthly temperature): `annual` nested under `monthly.annual`.
+#   - Table 32 (annual extremes, 600FF/900FF only): `extremes` node.
 # --------------------------------------------------------------------------
 
 def _perioder_energie(noeud_cas, candidat_cas):
-    """Chauffage/refroidissement sensible (Tables 28/29) : mensuel + `annual`
-    au niveau racine du cas."""
+    """Sensible heating/cooling (Tables 28/29): monthly + `annual`
+    at the case root level."""
     candidat_cas = candidat_cas or {}
     candidat_mensuel = candidat_cas.get('monthly') or {}
     for mois in MOIS:
@@ -313,8 +313,8 @@ def _perioder_energie(noeud_cas, candidat_cas):
 
 
 def _perioder_temperature_mensuelle(noeud_cas, candidat_cas):
-    """Temperature operative moyenne mensuelle (Table 30) : `annual` imbrique
-    sous `monthly.annual` -- PAS au niveau racine du cas (cf. AUDIT.md)."""
+    """Monthly mean operative temperature (Table 30): `annual` nested
+    under `monthly.annual` -- NOT at the case root level (cf. AUDIT.md)."""
     candidat_cas = candidat_cas or {}
     candidat_mensuel = candidat_cas.get('monthly') or {}
     for mois in MOIS:
@@ -323,8 +323,8 @@ def _perioder_temperature_mensuelle(noeud_cas, candidat_cas):
 
 
 def _perioder_extremes(noeud_cas, candidat_cas):
-    """Extremes annuels de temperature operative (Table 32, 600FF/900FF
-    uniquement) : noeud `extremes.{max,min,average}`."""
+    """Annual operative temperature extremes (Table 32, 600FF/900FF
+    only): `extremes.{max,min,average}` node."""
     candidat_cas = candidat_cas or {}
     candidat_extremes = candidat_cas.get('extremes') or {}
     for cle in ('max', 'min', 'average'):
@@ -332,13 +332,13 @@ def _perioder_extremes(noeud_cas, candidat_cas):
 
 
 def _perioder_pointe(noeud_cas, candidat_cas):
-    """Charges de pointe horaires annuelles (Table 31, cas 1E uniquement).
+    """Annual hourly peak loads (Table 31, case 1E only).
 
-    Noeud `peak.{heating,cooling}`. C'est le TROISIEME critere pass/fail du cas
-    1E, en plus des besoins mensuels (Table 28/29) : la Table 31 tabule bien un
-    triplet Mittelwert / obere Grenze / untere Grenze en G/H/I, ligne d'en-tete
-    L81. Lacune revelee par l'audit du loader existant
-    (AUDIT-swiss-sia-existant.md, element n 3).
+    Node `peak.{heating,cooling}`. This is the THIRD pass/fail criterion of
+    case 1E, in addition to the monthly demands (Table 28/29): Table 31 tabulates
+    a triplet Mittelwert / obere Grenze / untere Grenze in G/H/I, header row
+    L81. Gap revealed by the audit of the existing loader
+    (AUDIT-swiss-sia-existant.md, item 3).
     """
     candidat_cas = candidat_cas or {}
     candidat_pointe = candidat_cas.get('peak') or {}
@@ -356,15 +356,15 @@ _ITERATEURS_PAR_GRANDEUR = {
 
 
 # --------------------------------------------------------------------------
-# Orchestration -- un cas, puis le Test 1 complet
+# Orchestration -- one case, then the full Test 1
 # --------------------------------------------------------------------------
 
 def evaluer_cas(reference, grandeur, cas, candidat_cas):
-    """Evalue toutes les periodes d'un cas pour une grandeur donnee.
+    """Evaluate all periods of a case for a given quantity.
 
-    Dispatch normatif (traceability/test-1.spec.md §6) :
-      - `cas == '1E'` -> critere pass/fail (Streubereich, `evaluer_periode_1e`).
-      - tout autre cas -> comparaison informative uniquement, sans verdict
+    Normative dispatch (traceability/test-1.spec.md §6):
+      - `cas == '1E'` -> pass/fail criterion (Streubereich, `evaluer_periode_1e`).
+      - any other case -> informative comparison only, no verdict
         (`comparer_periode_informative`).
     """
     noeud_cas = reference['reference_values'][grandeur][cas]
@@ -382,11 +382,11 @@ def evaluer_cas(reference, grandeur, cas, candidat_cas):
 
 
 def _verdict_global_1e(cas_resultats):
-    """Verdict global du Test 1 = agregation du SEUL critere existant (cas 1E).
+    """Overall Test 1 verdict = aggregation of the ONLY existing criterion (case 1E).
 
-    traceability/test-1.spec.md §6 : le cas 1E est le seul a porter un critere
-    pass/fail. Les autres cas restent purement informatifs et n'ont donc aucune
-    incidence sur ce verdict.
+    traceability/test-1.spec.md §6: case 1E is the only one carrying a
+    pass/fail criterion. All other cases remain purely informative and therefore
+    have no impact on this verdict.
     """
     periodes_1e = []
     for bloc in cas_resultats.values():
@@ -417,16 +417,15 @@ def _verdict_global_1e(cas_resultats):
 
 
 def evaluer_test1(reference, candidat=None):
-    """Point d'entree principal : evalue l'ensemble du Test SIA 4010 n 1.
+    """Main entry point: evaluate the full SIA 4010 Test 1.
 
-    `reference` : dict charge par `charger_reference()` (ou compatible).
+    `reference`: dict loaded by `charger_reference()` (or compatible).
 
-    `candidat` : dict normalise produit par l'adaptateur VE, de forme MIROIR de
-    `reference['reference_values']` (meme grandeurs, memes cas, meme
-    imbrication mensuel/annuel/extremes -- cf. `_perioder_energie`,
-    `_perioder_temperature_mensuelle`, `_perioder_extremes`), mais dont les
-    feuilles terminales sont des scalaires (ou `None`) au lieu de dicts par
-    programme :
+    `candidat`: normalised dict produced by the VE adapter, MIRRORING the shape of
+    `reference['reference_values']` (same quantities, same cases, same
+    monthly/annual/extremes nesting -- cf. `_perioder_energie`,
+    `_perioder_temperature_mensuelle`, `_perioder_extremes`), but whose
+    terminal leaves are scalars (or `None`) instead of per-program dicts:
 
         {
           "sensible_heating_demand_kwh": {
@@ -445,11 +444,11 @@ def evaluer_test1(reference, candidat=None):
           }
         }
 
-    ⚠ A VERIFIER : cette forme est une convention de travail de ce module, PAS un
-    contrat confirme par `ve-adapter-engineer` (l'adaptateur n'existe pas encore).
-    Si `candidat` est `None` ou incomplet, chaque periode manquante est evaluee
-    avec `valeur_candidate=None` (`conforme=None`, motif explicite) plutot que
-    d'echouer silencieusement.
+    ⚠ A VERIFIER: this shape is a working convention of this module, NOT a
+    contract confirmed by `ve-adapter-engineer` (the adapter does not yet exist).
+    If `candidat` is `None` or incomplete, each missing period is evaluated
+    with `valeur_candidate=None` (`conforme=None`, explicit reason) rather than
+    failing silently.
     """
     candidat = candidat or {}
     resultat = {

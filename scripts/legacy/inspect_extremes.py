@@ -6,7 +6,7 @@ ws = wb["Zusammenfassung Testfälle"]
 
 print("Inspection des extrêmes annuels (Table 32) :\n")
 
-# Lignes 104-107 (structure standard avec étiquettes AY)
+# Rows 104-107 (standard structure with AY labels)
 print("=== Structure standard (lignes 104-107) ===")
 print("\nLignes 105-107, blocs A-G et I-O :")
 for row in range(105, 108):
@@ -19,14 +19,14 @@ for row in range(105, 108):
     ay_val = ws[f'AY{row}'].value
     print(f"Row {row}: A={a_val}, B={b_val}, C={c_val} | I={i_val}, J={j_val}, K={k_val} | AY={ay_val}")
 
-# Lignes 108-112 (labels/descriptions)
+# Rows 108-112 (labels/descriptions)
 print("\nLignes 108-112 (labels/codenames/countries) :")
 for row in range(108, 113):
     ay_val = ws[f'AY{row}'].value
     if ay_val:
         print(f"Row {row}: AY={ay_val}")
 
-# Vérifier les colonnes BH-BM
+# Check columns BH-BM
 print("\n=== Alternative structure (colonnes BH-BM) ===")
 print("\nLignes 105-107, colonnes BH-BM (si présentes) :")
 for row in range(105, 108):
@@ -38,7 +38,7 @@ for row in range(105, 108):
     bm_val = ws[f'BM{row}'].value
     print(f"Row {row}: BH={bh_val}, BI={bi_val}, BJ={bj_val}, BK={bk_val}, BL={bl_val}, BM={bm_val}")
 
-# Lignes 108-112 pour BH
+# Rows 108-112 for BH
 print("\nLignes 108-112, colonne BH :")
 for row in range(108, 113):
     bh_val = ws[f'BH{row}'].value

@@ -144,6 +144,24 @@ class ClaimSafetyExtensionTests(unittest.TestCase):
 
         self.assertEqual(checker._calculate_category_score("Envelope"), 0.0)
 
+    def test_seasonal_seer_scop_rules_carry_the_sn_en_14825_caveat(self):
+        """SEER/SCoP rest on the unverified SN EN 14825 index equivalence, so a
+        signed report must never state 'meets the SIA limit' for them without the
+        [TO VERIFY] caveat. The full-load EER rule compares the directly named
+        Table 5 value and must stay caveat-free."""
+        engine = RuleEngine()
+        SIA3802Checker(SimpleNamespace(), engine)
+        rules = {rule.name: rule for rule in engine.rules}
+
+        for name in ("SIA3802_COOLING_SEER_MIN", "SIA3802_HEATING_SCOP_MIN"):
+            rule = rules[name]
+            self.assertIn("SN EN 14825", rule.description, name)
+            self.assertIn("TO VERIFY", rule.description, name)
+            self.assertIn("SN EN 14825", rule.recommendation, name)
+
+        eer = rules["SIA3802_COOLING_EER_MIN"]
+        self.assertNotIn("SN EN 14825", eer.description)
+
     def test_reference_input_deviation_is_not_a_compliance_failure(self):
         """Keep reference-project deviations in their dedicated report state."""
         generator = ExcelReportGenerator.__new__(ExcelReportGenerator)

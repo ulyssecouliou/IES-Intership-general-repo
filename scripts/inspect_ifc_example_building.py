@@ -1,24 +1,24 @@
 # -*- coding: utf-8 -*-
-"""Inventaire du batiment exemple SIA 4010 depuis son IFC.
+"""Inventory of the SIA 4010 example building from its IFC file.
 
-LECTURE SEULE. Ne modifie ni l'IFC ni aucun modele VE. Sert a etablir, AVANT
-tout import dans VE, ce que le fichier contient reellement : locaux, etages,
-surfaces, et le rattachement de chaque local a son etage.
+READ-ONLY. Modifies neither the IFC nor any VE model. Used to establish,
+BEFORE any import into VE, what the file actually contains: rooms, storeys,
+surfaces, and the assignment of each room to its storey.
 
-Pourquoi ce script existe : le batiment exemple (`SIA 4010:2023` §4.3) est requis
-par les Tests 4 a 7, donc par les classes de validation 3, 4A et 4B. La
-specification du Test 4 designe nommement le local « Hoersaal » avec une surface
-de 165.8 m2 -- c'est un controle croise verifiable entre la specification et
-l'IFC, et le premier point a etablir avant de faire confiance au fichier.
+Why this script exists: the example building (`SIA 4010:2023` §4.3) is
+required by Tests 4 to 7, hence by validation classes 3, 4A and 4B. The
+Test 4 specification explicitly names the room "Hoersaal" with a surface
+of 165.8 m2 — this is a cross-check verifiable between the specification and
+the IFC, and the first point to establish before trusting the file.
 
-L'IFC est un IFC2X3 « CoordinationView » produit par AbstractBIM
-(`FILE_SCHEMA(('IFC2X3'))`), 312 Ko, 4897 entites. On le lit par analyse
-lexicale du format STEP plutot qu'avec une bibliotheque IFC : le besoin se
-limite aux entites `IFCSPACE`, `IFCBUILDINGSTOREY` et aux quantites associees,
-et cela evite d'ajouter une dependance lourde a la CI.
+The IFC is an IFC2X3 "CoordinationView" produced by AbstractBIM
+(`FILE_SCHEMA(('IFC2X3'))`), 312 KB, 4897 entities. It is read by lexical
+analysis of the STEP format rather than with an IFC library: the need is
+limited to `IFCSPACE`, `IFCBUILDINGSTOREY` and the associated quantities,
+and this avoids adding a heavy dependency to the CI.
 
-Les noms IFC sont encodes en ISO-10303-21 : « Hoersaal » s'y ecrit
-`H\\X2\\00F6\\X0\\rsaal`. Le decodage est explicite plus bas.
+IFC names are encoded in ISO-10303-21: "Hoersaal" appears there as
+`H\\X2\\00F6\\X0\\rsaal`. The decoding is explicit below.
 """
 
 import os
@@ -30,14 +30,14 @@ IFC_DEFAUT = os.path.join(
     RACINE, 'SIA_4010_geteilter_Link', 'Beispielgebäude',
     'IFC_Beispielebäude_201106_abstractBIM.ifc')
 
-# Encodage des caracteres non ASCII dans STEP : \X2\<hex UTF-16>\X0\
+# Encoding of non-ASCII characters in STEP: \X2\<hex UTF-16>\X0\
 _MOTIF_X2 = re.compile('\\\\X2\\\\((?:[0-9A-Fa-f]{4})+)\\\\X0\\\\')
 _MOTIF_X = re.compile('\\\\X\\\\([0-9A-Fa-f]{2})')
 _MOTIF_ENTITE = re.compile(r'#(\d+)\s*=\s*([A-Z0-9_]+)\s*\((.*?)\);', re.S)
 
 
 def decoder(texte):
-    """Rend un libelle STEP lisible."""
+    """Returns a readable STEP label."""
     def _x2(m):
         brut = m.group(1)
         return ''.join(chr(int(brut[i:i + 4], 16))
@@ -48,7 +48,7 @@ def decoder(texte):
 
 
 def champs(corps):
-    """Decoupe les champs d'une entite STEP en respectant parentheses et chaines."""
+    """Splits the fields of a STEP entity respecting parentheses and strings."""
     resultat, profondeur, courant, dans_chaine = [], 0, '', False
     for caractere in corps:
         if caractere == "'":
@@ -68,7 +68,7 @@ def champs(corps):
 
 
 def charger(chemin):
-    """Rend {identifiant: (type, champs)} pour tout le fichier."""
+    """Returns {identifier: (type, fields)} for the whole file."""
     with open(chemin, encoding='utf-8', errors='replace') as flux:
         brut = flux.read()
     entites = {}
@@ -97,11 +97,11 @@ def _references(valeur):
 
 
 def quantites_par_objet(entites):
-    """Rend {identifiant objet: {nom de quantite: valeur}}.
+    """Returns {object identifier: {quantity name: value}}.
 
-    Les quantites vivent dans des `IFCELEMENTQUANTITY` relies aux objets par
-    des `IFCRELDEFINESBYPROPERTIES`. On ne retient que les quantites nommees
-    (surface, longueur, volume), sans interpreter leur signification.
+    Quantities live in `IFCELEMENTQUANTITY` entities linked to objects by
+    `IFCRELDEFINESBYPROPERTIES`. Only named quantities (surface, length,
+    volume) are retained, without interpreting their meaning.
     """
     par_objet = {}
     for _identifiant, (type_entite, valeurs) in entites.items():
@@ -118,7 +118,7 @@ def quantites_par_objet(entites):
         cible = entites.get(definition[0])
         if cible is None or cible[0] != 'IFCELEMENTQUANTITY':
             continue
-        # IfcElementQuantity(..., Quantities) : dernier champ
+        # IfcElementQuantity(..., Quantities): last field
         mesures = {}
         for reference in _references(cible[1][-1]):
             mesure = entites.get(reference)
@@ -134,13 +134,12 @@ def quantites_par_objet(entites):
                 if valeur is not None:
                     break
             if nom and valeur is not None:
-                # ⚠ CE FICHIER STOCKE LES SURFACES ET VOLUMES EN NEGATIF :
+                # ⚠ THIS FILE STORES SURFACES AND VOLUMES AS NEGATIVE:
                 #   #54=IFCQUANTITYAREA('GrossFloorArea',$,#14, -237.36);
-                # C'est une propriete de l'export AbstractBIM, pas une erreur de
-                # lecture. On prend la valeur absolue et on conserve le signe
-                # d'origine dans `signes_negatifs` pour pouvoir le signaler :
-                # une surface negative doit etre remontee, jamais absorbee en
-                # silence.
+                # This is a property of the AbstractBIM export, not a reading
+                # error. We take the absolute value and keep the original sign
+                # in `signes_negatifs` so it can be reported: a negative
+                # surface must be surfaced, never silently absorbed.
                 mesures[nom] = abs(valeur)
                 if valeur < 0:
                     mesures.setdefault('_signes_negatifs', set()).add(nom)
@@ -150,14 +149,14 @@ def quantites_par_objet(entites):
 
 
 def etage_par_objet(entites):
-    """Rend ({identifiant objet: nom d'etage}, {identifiant etage: nom}).
+    """Returns ({object identifier: storey name}, {storey identifier: name}).
 
-    Dans CE fichier, les locaux ne sont PAS rattaches par `IFCRELAGGREGATES` :
-    celui-ci ne porte que la chaine projet -> site -> batiment (3 occurrences).
-    Le rattachement des locaux aux etages passe par
-    `IFCRELCONTAINEDINSPATIALSTRUCTURE` (5 occurrences, une par etage).
-    Les deux relations sont lues, la seconde primant, afin que le script reste
-    correct sur un IFC produit par un autre outil.
+    In THIS file, rooms are NOT linked via `IFCRELAGGREGATES`: that relation
+    only carries the chain project -> site -> building (3 occurrences).
+    The linkage of rooms to storeys goes through
+    `IFCRELCONTAINEDINSPATIALSTRUCTURE` (5 occurrences, one per storey).
+    Both relations are read, the second taking precedence, so the script
+    remains correct on an IFC produced by another tool.
     """
     etages = {}
     for identifiant, (type_entite, valeurs) in entites.items():
@@ -214,9 +213,9 @@ def main():
     print('locaux   : %d' % len(locaux))
     print('')
 
-    # Quantites de surface reellement presentes, sans presomption : ce fichier
-    # ne porte AUCUN `NetFloorArea`. La valeur de 165.8 m2 citee par la spec du
-    # Test 4 correspond au `GrossFloorArea` (verifie : 165.81).
+    # Surface quantities actually present, without assumption: this file
+    # carries NO `NetFloorArea`. The 165.8 m2 value cited by the Test 4
+    # specification corresponds to `GrossFloorArea` (verified: 165.81).
     noms_quantites = set()
     for local in locaux:
         noms_quantites.update(k for k in local['quantites'] if not k.startswith('_'))
@@ -272,9 +271,9 @@ def main():
         print('  %s' % ('CONCORDE (l IFC est bien le batiment de la spec).'
                         if abs(ecart) < 0.05
                         else 'ECART SIGNIFICATIF -- a elucider avant tout import.'))
-        # La spec dit « zweigeschossig, im 1. und 2. OG » : le local doit couvrir
-        # deux niveaux. Les etages sont a 3.4, 6.8 et 9.8 m, donc une hauteur
-        # d'environ 6.4 m confirmerait la double hauteur, 3.4 m la refuterait.
+        # The spec says "zweigeschossig, im 1. und 2. OG": the room must span
+        # two levels. Storeys are at 3.4, 6.8 and 9.8 m, so a height of ~6.4 m
+        # would confirm the double height, 3.4 m would refute it.
         for local in candidats:
             hauteur = local['quantites'].get('AverageHeight')
             if hauteur is None:

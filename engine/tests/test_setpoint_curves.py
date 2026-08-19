@@ -49,15 +49,15 @@ def sia2024():
 
 
 # --------------------------------------------------------------------------
-# 1. Reproduction des références publiées
+# 1. Reproduction of published references
 # --------------------------------------------------------------------------
 
-# SIA 4010:2023 §3.1.4, p. 10 — « une courbe limite inférieure et donc une
-# courbe de point de réglage décalée de 1 K pour les utilisations 3.04 salle de
-# guichets, 5.01 à 5.03 (magasins de vente) et 6.03 et 6.04 (cuisines), et de
-# 3 K pour l'utilisation 9.01 production (travail grossier). Un déplacement de
-# la courbe de point de réglage supérieure vers le haut se produit pour les
-# utilisations 6.03 et 6.04 (cuisines) de 2 K, pour l'utilisation 9.01 de 4 K. »
+# SIA 4010:2023 §3.1.4, p. 10 — "a lower limit curve and thus a setpoint
+# curve shifted by 1 K for usages 3.04 ticket counter hall, 5.01 to 5.03
+# (retail stores) and 6.03 and 6.04 (kitchens), and by
+# 3 K for usage 9.01 production (heavy work). An upward shift of
+# the upper setpoint curve occurs for usages 6.03 and 6.04 (kitchens)
+# by 2 K, for usage 9.01 by 4 K."
 DECALAGES_PUBLIES_INFERIEURE = {
     '3.04': 1.0, '5.01': 1.0, '5.02': 1.0, '5.03': 1.0,
     '6.03': 1.0, '6.04': 1.0, '9.01': 3.0,
@@ -66,10 +66,10 @@ DECALAGES_PUBLIES_SUPERIEURE = {'6.03': 2.0, '6.04': 2.0, '9.01': 4.0}
 
 
 def test_reproduces_the_ten_shifts_of_sia_4010():
-    """Les dix valeurs de SIA 4010 §3.1.4, reconstruites depuis le tableau 11.
+    """The ten values from SIA 4010 §3.1.4, reconstructed from table 11.
 
-    Le SIA énonce des décalages « vers le bas » / « vers le haut » : ce sont des
-    amplitudes. `usage_shift` renvoie des grandeurs signées, d'où les signes ici.
+    SIA states shifts "downward" / "upward": these are amplitudes. `usage_shift`
+    returns signed quantities, hence the signs here.
     """
     for usage, amplitude in sorted(DECALAGES_PUBLIES_INFERIEURE.items()):
         inferieur, _ = sc.usage_shift(usage)
@@ -85,11 +85,11 @@ def test_reproduces_the_ten_shifts_of_sia_4010():
 
 
 def test_reference_group_is_unanimous_which_is_what_makes_the_shift_scalar():
-    """§5.2.2.5 parle de « la différence » avec les usages 1.01 à 3.03.
+    """§5.2.2.5 speaks of "the difference" with usages 1.01 to 3.03.
 
-    Cette formulation n'a de sens que si les sept usages du groupe portent la
-    même valeur. Si le tableau 11 était hétérogène, la règle serait ambiguë et
-    ce module reposerait sur un choix non écrit.
+    This wording only makes sense if the seven usages in the group carry the
+    same value. If table 11 were heterogeneous, the rule would be ambiguous and
+    this module would rest on an unwritten choice.
     """
     chauffage = set(sc.DESIGN_TEMPERATURES[u][0] for u in sc.REFERENCE_USAGES)
     refroidissement = set(sc.DESIGN_TEMPERATURES[u][1] for u in sc.REFERENCE_USAGES)
@@ -98,18 +98,18 @@ def test_reference_group_is_unanimous_which_is_what_makes_the_shift_scalar():
 
 
 def test_usage_404_horsaal_is_not_shifted():
-    """Point ouvert O1 : la consigne du test 4 (usage 4.4 Hörsaal).
+    """Open point O1: the setpoint for test 4 (usage 4.4 Hörsaal).
 
-    4.04 porte 21/26 au tableau 11, identiques au groupe de référence : le
-    décalage est nul. C'est un fait tabulé, pas l'inférence à ~65 % que la
-    spécification du bâtiment exemple portait jusqu'ici.
+    4.04 carries 21/26 in table 11, identical to the reference group: the
+    shift is zero. This is a tabulated fact, not the ~65% inference that the
+    example building specification carried until now.
     """
     assert sc.usage_shift('4.04') == (0.0, 0.0)
     assert sc.limits('4.04') == (sc.LOWER_LIMIT, sc.UPPER_LIMIT)
 
 
 def test_embedded_design_temperatures_match_the_frozen_table_11(sia2024):
-    """Le module ne doit pas pouvoir dériver de sa source."""
+    """The module must not be able to drift from its source."""
     lignes = sia2024['tableau_11']['lignes']
     assert len(lignes) == len(sc.DESIGN_TEMPERATURES) == 45
     for ligne in lignes:
@@ -135,14 +135,14 @@ def test_delta_theta_ctr_matches_the_measured_figure(figure1):
 
 
 def test_variable_setpoint_curves_match_the_frozen_figure_1(figure1):
-    """Les consignes variables du module doivent redonner celles de la figure.
+    """The variable setpoints from the module must reproduce those of the figure.
 
-    La figure porte des sommets redondants (la consigne chauffage est plate en
-    12 et 17,5) : on compare donc les VALEURS aux abscisses de la figure, pas les
-    listes de sommets.
+    The figure carries redundant vertices (the heating setpoint is flat at
+    12 and 17.5): we therefore compare VALUES at the figure's abscissae, not
+    the vertex lists.
     """
     courbes = figure1['courbes']
-    chauffage, refroidissement = sc.setpoint_curves('3.01')  # usage non décalé
+    chauffage, refroidissement = sc.setpoint_curves('3.01')  # unshifted usage
     for x, y in courbes['consigne_chauffage_variable']['sommets']:
         assert abs(sc.evaluate(chauffage, x) - y) < 1e-9, x
     for x, y in courbes['consigne_refroidissement_variable']['sommets']:
@@ -150,7 +150,7 @@ def test_variable_setpoint_curves_match_the_frozen_figure_1(figure1):
 
 
 def test_constant_setpoints_match_the_dash_dot_lines_of_the_figure(figure1):
-    """22,7 et 23,8 — les deux traits mixtes de la figure 1."""
+    """22.7 and 23.8 — the two dash-dot lines of figure 1."""
     courbes = figure1['courbes']
     chauffage, refroidissement = sc.constant_setpoints('3.01')
     assert chauffage == courbes['consigne_chauffage_constante']['valeur_c']
@@ -159,9 +159,9 @@ def test_constant_setpoints_match_the_dash_dot_lines_of_the_figure(figure1):
 
 
 def test_limits_are_also_sia_180_figure_4():
-    """§5.2.2.5 : les limites « correspondent à celles de SIA 180:2014, figure 4 ».
+    """§5.2.2.5: limits "correspond to those of SIA 180:2014, figure 4".
 
-    Les huit valeurs de la capture fournie par le SIA le 2026-08-04.
+    The eight values from the capture provided by the SIA on 2026-08-04.
     """
     bas, haut = sc.limits('3.01', shift=False)
     assert [y for _, y in bas] == [20.5, 20.5, 22.0, 22.0]
@@ -171,16 +171,15 @@ def test_limits_are_also_sia_180_figure_4():
 
 
 # --------------------------------------------------------------------------
-# 2. Résistance à la mutation
+# 2. Mutation resistance
 # --------------------------------------------------------------------------
 
 def test_setpoint_is_inside_its_limit_never_outside():
-    """Mutation classique : le signe de Δθctr.
+    """Classic mutation: the sign of Δθctr.
 
-    La consigne de chauffage est AU-DESSUS de la limite inférieure, celle de
-    refroidissement EN DESSOUS de la limite supérieure. Un signe inversé
-    élargirait la bande au lieu de la resserrer, et passerait inaperçu sur une
-    comparaison de moyennes annuelles.
+    The heating setpoint is ABOVE the lower limit, the cooling one BELOW
+    the upper limit. An inverted sign would widen the band instead of
+    narrowing it, and would pass unnoticed on a comparison of annual means.
     """
     bas, haut = sc.limits('3.01')
     chauffage, refroidissement = sc.setpoint_curves('3.01')
@@ -190,23 +189,23 @@ def test_setpoint_is_inside_its_limit_never_outside():
 
 
 def test_constant_setpoints_take_the_correct_end_of_each_curve():
-    """§5.2.2.3 : MAXIMUM en chauffage, MINIMUM en refroidissement.
+    """§5.2.2.3: MAXIMUM for heating, MINIMUM for cooling.
 
-    Prendre le mauvais bout donnerait 21,2 et 25,8 — des valeurs qui restent
-    dans la bande et dont l'erreur ne se voit pas sans ce test.
+    Taking the wrong end would give 21.2 and 25.8 — values that remain
+    within the band and whose error is invisible without this test.
     """
     chauffage, refroidissement = sc.constant_setpoints('3.01')
     courbe_h, courbe_c = sc.setpoint_curves('3.01')
     assert chauffage == max(y for _, y in courbe_h)
     assert refroidissement == min(y for _, y in courbe_c)
-    assert chauffage != min(y for _, y in courbe_h)      # 21,2
-    assert refroidissement != max(y for _, y in courbe_c)  # 25,8
+    assert chauffage != min(y for _, y in courbe_h)      # 21.2
+    assert refroidissement != max(y for _, y in courbe_c)  # 25.8
 
 
 def test_shift_moves_the_ordinate_and_leaves_the_abscissa_alone():
-    """§5.2.2.5 : « les courbes se déplacent, mais gardent leur forme »."""
+    """§5.2.2.5: "the curves shift, but keep their shape"."""
     bas_ref, haut_ref = sc.limits('3.01')
-    bas, haut = sc.limits('6.03')  # cuisine : -1 K en bas, +2 K en haut
+    bas, haut = sc.limits('6.03')  # kitchen: -1 K lower, +2 K upper
     assert [x for x, _ in bas] == [x for x, _ in bas_ref]
     assert [x for x, _ in haut] == [x for x, _ in haut_ref]
     assert [y for _, y in bas] == [y - 1.0 for _, y in bas_ref]
@@ -214,9 +213,9 @@ def test_shift_moves_the_ordinate_and_leaves_the_abscissa_alone():
 
 
 def test_kitchen_band_is_wider_than_the_office_band():
-    """Contrôle de sens physique : la cuisine descend plus bas ET monte plus haut.
+    """Physical sense check: the kitchen goes lower AND higher.
 
-    Une erreur de signe sur l'un des deux décalages RÉTRÉCIRAIT la bande.
+    A sign error on either shift would NARROW the band.
     """
     bas_bureau, haut_bureau = sc.limits('3.01')
     bas_cuisine, haut_cuisine = sc.limits('6.03')
@@ -231,10 +230,10 @@ def test_evaluate_is_exact_at_the_vertices():
 
 
 def test_evaluate_interpolates_linearly_on_the_sloped_segment():
-    """Milieu du segment croissant de chaque limite, calculé à la main."""
-    # limite inférieure : de (19 ; 20,5) à (23,5 ; 22,0), milieu en 21,25
+    """Midpoint of the rising segment of each limit, computed by hand."""
+    # lower limit: from (19; 20.5) to (23.5; 22.0), midpoint at 21.25
     assert abs(sc.evaluate(sc.LOWER_LIMIT, 21.25) - 21.25) < 1e-12
-    # limite supérieure : de (12 ; 24,5) à (17,5 ; 26,5), milieu en 14,75
+    # upper limit: from (12; 24.5) to (17.5; 26.5), midpoint at 14.75
     assert abs(sc.evaluate(sc.UPPER_LIMIT, 14.75) - 25.5) < 1e-12
 
 
@@ -246,10 +245,10 @@ def test_evaluate_clamps_outside_the_figure_domain():
 
 
 def test_slopes_are_one_third_and_four_elevenths():
-    """Les deux pentes ne sont PAS égales — 1/3 en bas, 4/11 en haut.
+    """The two slopes are NOT equal — 1/3 lower, 4/11 upper.
 
-    Les supposer égales est l'erreur naturelle en lisant la figure à l'œil ;
-    elle décalerait le point de rupture supérieur de 17,5 à 18.
+    Assuming them equal is the natural error when reading the figure by eye;
+    it would shift the upper breakpoint from 17.5 to 18.
     """
     assert abs((22.0 - 20.5) / (23.5 - 19.0) - 1.0 / 3.0) < 1e-12
     assert abs((26.5 - 24.5) / (17.5 - 12.0) - 4.0 / 11.0) < 1e-12
@@ -270,7 +269,7 @@ def test_control_class_outside_one_to_four_is_refused():
 
 
 def test_unknown_usage_raises_instead_of_defaulting():
-    """Jamais de repli silencieux sur 21/26."""
+    """Never a silent fallback to 21/26."""
     with pytest.raises(sc.UnknownUsage):
         sc.usage_shift('4.99')
     with pytest.raises(sc.UnknownUsage):
@@ -278,7 +277,7 @@ def test_unknown_usage_raises_instead_of_defaulting():
 
 
 def test_usage_without_cooling_design_value_yields_no_cooling_curve():
-    """11.01 Turnhalle : « – » en refroidissement au tableau 11."""
+    """11.01 Turnhalle: '–' for cooling in table 11."""
     inferieur, superieur = sc.usage_shift('11.01')
     assert inferieur == -3.0
     assert superieur is None
@@ -291,13 +290,12 @@ def test_usage_without_cooling_design_value_yields_no_cooling_curve():
 
 
 def test_non_seasonal_clothing_usages_have_constant_limits():
-    """§5.2.2.5 : la courbe « prend la forme d'une ligne droite ».
+    """§5.2.2.5: the curve "takes the form of a straight line".
 
-    La limite inférieure garde sa valeur BASSE (pas d'augmentation quand il fait
-    chaud dehors), la supérieure sa valeur HAUTE (pas de diminution quand il
-    fait froid).
+    The lower limit keeps its LOW value (no increase when it is hot outside),
+    the upper keeps its HIGH value (no decrease when it is cold).
     """
-    bas, haut = sc.limits('11.02')  # Fitnessraum, 21/26 -> décalage nul
+    bas, haut = sc.limits('11.02')  # Fitnessraum, 21/26 -> zero shift
     assert len(set(y for _, y in bas)) == 1
     assert len(set(y for _, y in haut)) == 1
     assert sc.evaluate(bas, 10.0) == sc.evaluate(bas, 25.0) == 20.5
@@ -305,18 +303,18 @@ def test_non_seasonal_clothing_usages_have_constant_limits():
 
 
 def test_seasonal_usages_keep_a_variable_band():
-    """Contrôle miroir du précédent : un bureau n'est PAS aplati."""
+    """Mirror check of the previous: an office is NOT flattened."""
     bas, haut = sc.limits('3.01')
     assert len(set(y for _, y in bas)) > 1
     assert len(set(y for _, y in haut)) > 1
 
 
 def test_within_limits_flags_both_directions():
-    """À θ_rm = 15 °C, la limite haute vaut 24,5 + 2·(15−12)/5,5 = 25,5909…
+    """At θ_rm = 15 °C, the upper limit is 24.5 + 2·(15−12)/5.5 = 25.5909…
 
-    Écrire 25,5 ici serait commettre l'erreur de pente que
-    `test_slopes_are_one_third_and_four_elevenths` interdit : 15 °C tombe sur le
-    segment croissant, de pente 4/11 et non 1/3.
+    Writing 25.5 here would commit the slope error that
+    `test_slopes_are_one_third_and_four_elevenths` forbids: 15 °C falls on the
+    rising segment, with slope 4/11 not 1/3.
     """
     haut_attendu = 24.5 + 2.0 * (15.0 - 12.0) / 5.5
     inside, bas, haut = sc.within_limits('3.01', 15.0, 23.0)
@@ -331,10 +329,10 @@ def test_within_limits_flags_both_directions():
 
 
 def test_within_limits_is_inclusive_at_the_boundary():
-    """§3.2.4.3 compte les heures « dépass[ant] » la limite : le bord passe.
+    """§3.2.4.3 counts hours "exceed[ing]" the limit: the boundary passes.
 
-    Les deux bornes sont prises du module lui-même : coder une décimale en dur
-    testerait l'arrondi de l'auteur du test, pas l'inclusivité.
+    Both bounds are taken from the module itself: hard-coding a decimal would
+    test the test author's rounding, not inclusivity.
     """
     _, bas, haut = sc.within_limits('3.01', 15.0, 23.0)
     for temperature in (bas, haut):
@@ -343,11 +341,11 @@ def test_within_limits_is_inclusive_at_the_boundary():
 
 
 def test_within_limits_ignores_an_undefined_limit():
-    """11.01 n'a pas de limite haute : 40 °C ne peut pas être déclaré hors bande."""
+    """11.01 has no upper limit: 40 °C cannot be declared out-of-band."""
     inside, bas, haut = sc.within_limits('11.01', 15.0, 40.0)
     assert inside
     assert haut is None
-    assert bas == 17.5  # 20,5 - 3 K
+    assert bas == 17.5  # 20.5 - 3 K
 
 
 def test_running_mean_uses_48_hours_not_24():
@@ -359,7 +357,7 @@ def test_running_mean_uses_48_hours_not_24():
 def test_running_mean_window_slides_and_drops_the_49th_hour():
     serie = [100.0] + [0.0] * 48
     assert sc.running_mean_48h(serie, 47) == 100.0 / 48.0
-    assert sc.running_mean_48h(serie, 48) == 0.0  # l'heure 0 est sortie
+    assert sc.running_mean_48h(serie, 48) == 0.0  # hour 0 has left the window
 
 
 def test_running_mean_refuses_an_hour_outside_the_series():
@@ -370,7 +368,7 @@ def test_running_mean_refuses_an_hour_outside_the_series():
 
 
 def test_no_iesve_import():
-    """Règle 4 de CLAUDE.md : engine/ est du Python pur."""
+    """Rule 4 of CLAUDE.md: engine/ is pure Python."""
     chemin = os.path.join(_RACINE, 'engine', 'setpoint_curves.py')
     with io.open(chemin, encoding='utf-8') as f:
         for numero, ligne in enumerate(f, 1):

@@ -1,17 +1,17 @@
 # -*- coding: utf-8 -*-
-u"""Contrôles du référentiel de la chaîne diagnostique 1A → 1E du Test 1.
+u"""Checks of the reference data for the diagnostic chain 1A → 1E of Test 1.
 
-Le cas 1E est le seul cas du Test 1 à porter un critère pass/fail. Sa
-construction dépend d'une chaîne de quatre maillons, et chaque maillon ajoute un
-paramètre normatif : climat, fenêtre, infiltration, usage. Une erreur silencieuse
-dans ces valeurs produirait un verdict pass/fail crédible et faux, ce qui est
-pire qu'un `NOT_CHECKABLE`.
+Case 1E is the only case of Test 1 that carries a pass/fail criterion. Its
+construction depends on a chain of four links, and each link adds a normative
+parameter: climate, window, infiltration, use. A silent error in these values
+would produce a plausible and wrong pass/fail verdict, which is worse than a
+`NOT_CHECKABLE`.
 
-Le contrôle qui compte le plus n'est pas qu'un champ existe, mais que les deux
-colonnes du tableau optique ne soient pas interverties. Elles ne sont pas
-nommées ligne par ligne : leur ordre vient d'un en-tête séparé. Un swap donnerait
-un store laissant passer dix fois plus de soleil, et rien dans le fichier ne
-paraîtrait anormal. On le vérifie donc par la physique, pas par la structure.
+The check that matters most is not that a field exists, but that the two
+columns of the optical table have not been swapped. They are not labelled
+row by row: their order comes from a separate header. A swap would give a
+blind that lets ten times more sunlight through, and nothing in the file
+would look unusual. We therefore check by physics, not by structure.
 """
 
 import json
@@ -25,7 +25,7 @@ _RACINE = os.path.dirname(os.path.dirname(os.path.dirname(
 _REFERENCE = os.path.join(_RACINE, 'refs', 'reference-data',
                           'test-1.diagnostics.ref.json')
 
-#: Maillons attendus, dans l'ordre de la spécification.
+#: Expected links, in the order of the specification.
 MAILLONS = ('1A', '1B', '1C', '1D', '1E')
 
 
@@ -42,17 +42,17 @@ def test_les_cinq_maillons_sont_presents_et_ordonnes(reference):
 
 
 def test_chaque_maillon_porte_sa_definition_verbatim(reference):
-    u"""Une paraphrase française serait une interprétation déguisée en donnée."""
+    u"""A French paraphrase would be an interpretation disguised as data."""
     for maillon in reference['chaine']:
         assert maillon['statut'] == 'RELEVE', maillon
         assert maillon['definition_verbatim_de'], maillon
 
 
 def test_la_chaine_est_bien_une_chaine(reference):
-    u"""Chaque maillon cite le précédent : 1E → 1D → 1C → 1B → 1A → cas 600.
+    u"""Each link cites the previous one: 1E → 1D → 1C → 1B → 1A → case 600.
 
-    Si un maillon cessait de citer son prédécesseur, la chaîne serait rompue et
-    1E se construirait sur un modèle incomplet sans que rien ne le signale.
+    If a link stopped citing its predecessor, the chain would be broken and
+    1E would be built on an incomplete model with no signal.
     """
     par_cas = {m['cas']: m['definition_verbatim_de'] for m in reference['chaine']}
     assert u'600' in par_cas['1A']
@@ -68,7 +68,7 @@ def test_le_cas_1e_ajoute_bien_le_store(reference):
 
 
 def test_le_maillon_1a_impose_le_climat_de_kloten(reference):
-    u"""Ce n'est PAS la météo DRYCOLD des six cas normatifs du Test 1."""
+    u"""This is NOT the DRYCOLD weather of the six normative cases of Test 1."""
     par_cas = {m['cas']: m['definition_verbatim_de'] for m in reference['chaine']}
     assert u'Kloten' in par_cas['1A']
 
@@ -80,13 +80,12 @@ def test_lusage_est_la_categorie_3_1_de_sia_2024(reference):
 
 
 def test_la_categorie_correspond_a_lextrait_dautorite_detenu():
-    u"""Le maillon 1D est liable parce que nous détenons CETTE catégorie.
+    u"""Link 1D is traceable because we hold THIS category.
 
-    La comparaison porte sur le numéro de catégorie, pas sur le libellé : la
-    spécification écrit « 3.1 Einzel-Gruppenbüro » et l'extrait d'autorité
-    « 3.1 Einzel-/Gruppenbüro ». Même catégorie, typographie différente selon le
-    document ; exiger l'égalité des chaînes ferait échouer un test sur une
-    barre oblique.
+    The comparison is on the category number, not the label: the specification
+    writes "3.1 Einzel-Gruppenbüro" and the authority extract "3.1 Einzel-/
+    Gruppenbüro". Same category, different typography across documents; requiring
+    string equality would fail a test on a slash.
     """
     extrait = os.path.join(
         _RACINE, 'sia4010_evidence', 'source_audits',
@@ -108,11 +107,11 @@ def test_les_parametres_chiffres_sont_releves(reference):
 
 
 def test_les_deux_seuils_du_store_concordent(reference):
-    u"""Le seuil est écrit dans deux documents ; ils doivent dire la même chose.
+    u"""The threshold is written in two documents; they must say the same thing.
 
-    La spécification Test 2 et la documentation du bâtiment exemple portent
-    chacune ce seuil. Une divergence signalerait qu'on lit la mauvaise ligne
-    dans l'un des deux.
+    The Test 2 specification and the example-building documentation each carry
+    this threshold. A divergence would indicate that one reads the wrong row in
+    one of them.
     """
     store = reference['parametres']['store']
     assert (store['seuil_activation_w_m2']['valeur']
@@ -120,7 +119,7 @@ def test_les_deux_seuils_du_store_concordent(reference):
 
 
 def test_le_produit_du_store_est_releve_en_entier(reference):
-    u"""Le type porte une espace ; un motif trop strict ne relevait que « Soltis »."""
+    u"""The type contains a space; too strict a pattern extracted only "Soltis"."""
     produit = reference['parametres']['store']['produit']
     assert produit['statut'] == 'RELEVE'
     assert produit['valeur']['type'] == u'Soltis 92-2048-Alu'
@@ -139,22 +138,22 @@ def test_lordre_des_colonnes_optiques_est_demontre(reference):
     ('en_410', 7),
 ])
 def test_chaque_bloc_optique_porte_ses_grandeurs(reference, bloc, attendu):
-    u"""Effectifs figés : « EN 410 » sortait vide sur une borne mal cherchée.
+    u"""Frozen counts: "EN 410" came out empty with a badly searched boundary.
 
-    « Layer d [mm] » apparaît deux fois dans le document et la première
-    occurrence précède « EN 410: ». Chercher la borne de fin globalement donnait
-    un segment de longueur négative, donc un bloc vide, sans erreur visible.
+    "Layer d [mm]" appears twice in the document and the first occurrence
+    precedes "EN 410:". Searching the end boundary globally gave a negative-length
+    segment, hence an empty block, with no visible error.
     """
     grandeurs = reference['fenetre_entiere']['blocs'][bloc]['grandeurs']
     assert len(grandeurs) == attendu, sorted(grandeurs)
 
 
 def test_le_store_deploye_reduit_la_transmission(reference):
-    u"""Contrôle par la physique, seul garde-fou contre une interversion.
+    u"""Physics check, the only safeguard against a column swap.
 
-    Déployer un store ne peut pas augmenter la transmission solaire ni la
-    transmission visible. Si les deux colonnes étaient interverties, ce test
-    échouerait ; aucun contrôle de structure ne le ferait.
+    Deploying a blind cannot increase solar transmittance or visible
+    transmittance. If the two columns were swapped, this test would fail;
+    no structural check would.
     """
     blocs = reference['fenetre_entiere']['blocs']
     transmissions = (
@@ -169,7 +168,7 @@ def test_le_store_deploye_reduit_la_transmission(reference):
 
 
 def test_le_store_deploye_augmente_la_reflexion_exterieure(reference):
-    u"""L'autre moitié du même contrôle : un store réfléchit ce qu'il arrête."""
+    u"""The other half of the same check: a blind reflects what it blocks."""
     en_410 = reference['fenetre_entiere']['blocs']['en_410']['grandeurs']
     for cle in ('reflexion_solaire_exterieure_re',
                 'reflexion_visible_exterieure_rv'):
@@ -178,22 +177,22 @@ def test_le_store_deploye_augmente_la_reflexion_exterieure(reference):
 
 
 def test_la_reflexion_visible_recoupe_la_specification_test_2(reference):
-    u"""Recoupement inter-documents : la spec Test 2 cite « Reflexion v → 0.145 ».
+    u"""Cross-document corroboration: Test 2 spec cites "Reflexion v → 0.145".
 
-    La valeur vient de la documentation du bâtiment exemple ; la retrouver dans
-    la spécification confirme qu'on lit la bonne fenêtre.
+    The value comes from the example-building documentation; finding it in
+    the specification confirms that one reads the correct window.
     """
     en_410 = reference['fenetre_entiere']['blocs']['en_410']['grandeurs']
     assert en_410['reflexion_visible_exterieure_rv']['store_rentre'] == 0.145
 
 
 def test_le_vitrage_du_maillon_1b_est_chiffre_par_la_specification(reference):
-    u"""La spécification tranche ce que la documentation laisse ouvert.
+    u"""The specification resolves what the documentation leaves open.
 
-    La documentation du bâtiment exemple donne deux g totaux, en conditions
-    d'été et de référence. La spécification retient une valeur, et c'est elle
-    qui définit le cas de test : choisir soi-même reviendrait à décider d'une
-    donnée normative.
+    The example-building documentation gives two total g values, under summer
+    and reference conditions. The specification retains one value, and it is
+    that value which defines the test case: choosing oneself would mean deciding
+    a normative datum.
     """
     vitrage = reference['parametres']['vitrage']
     assert vitrage['type']['valeur'] == u'SGG Planitherm XN_4/14/4/14/4'
@@ -204,12 +203,12 @@ def test_le_vitrage_du_maillon_1b_est_chiffre_par_la_specification(reference):
 
 
 def test_les_symboles_grecs_ne_font_pas_echouer_le_releve(reference):
-    u"""Piège d'extraction : « τv » et « ρv » sortent en zone privée.
+    u"""Extraction trap: "τv" and "ρv" come out in the private-use area.
 
-    La couche texte rend ces symboles comme des glyphes de la police Symbol,
-    pas comme des caractères grecs Unicode. Un motif écrit avec le vrai τ ne
-    mordrait jamais et le champ sortirait en `A_CONFIRMER`, en laissant croire
-    que la spécification ne donne pas la valeur.
+    The text layer renders these symbols as glyphs from the Symbol font,
+    not as Unicode Greek characters. A pattern written with the real τ would
+    never match and the field would come out as `A_CONFIRMER`, suggesting that
+    the specification does not give the value.
     """
     vitrage = reference['parametres']['vitrage']
     assert vitrage['transmission_visible']['statut'] == 'RELEVE'
@@ -217,7 +216,7 @@ def test_les_symboles_grecs_ne_font_pas_echouer_le_releve(reference):
 
 
 def test_le_g_et_la_transmission_concordent_entre_les_deux_sources(reference):
-    u"""Recoupement : les deux documents doivent dire la même chose."""
+    u"""Cross-corroboration: the two documents must say the same thing."""
     spec = reference['parametres']['vitrage']
     blocs = reference['fenetre_entiere']['blocs']
     ete = blocs['en_iso_52022_3_conditions_ete']['grandeurs']['g_total']
@@ -227,17 +226,17 @@ def test_le_g_et_la_transmission_concordent_entre_les_deux_sources(reference):
 
 
 def test_le_u_de_la_specification_concorde_avec_une_norme_du_document(reference):
-    u"""Il n'y a PAS de divergence entre les deux documents officiels.
+    u"""There is NO divergence between the two official documents.
 
-    Une version antérieure de ce référentiel en annonçait une : 0,654 dans la
-    spécification contre 0,646 dans la documentation. L'erreur était la mienne.
-    La documentation décrit la même fenêtre sous deux familles de normes et le U
-    n'y a pas la même valeur — 0,646 en conditions de référence EN ISO 52022-3,
-    0,654 en conditions d'hiver ISO 15099. La spécification reprend la seconde,
-    à l'unité près.
+    An earlier version of this reference announced one: 0.654 in the
+    specification against 0.646 in the documentation. The error was mine.
+    The documentation describes the same window under two families of standards
+    and the U value differs — 0.646 under EN ISO 52022-3 reference conditions,
+    0.654 under ISO 15099 winter conditions. The specification takes the second,
+    to the unit.
 
-    Ce test existe parce que cette fausse coquille avait failli partir dans un
-    courrier à l'auteur de ces documents.
+    This test exists because this false discrepancy almost went into a letter
+    to the author of these documents.
     """
     concordance = reference['concordance_du_u_vitrage']
     assert concordance['statut'] == 'RELEVE', concordance
@@ -248,7 +247,7 @@ def test_le_u_de_la_specification_concorde_avec_une_norme_du_document(reference)
 
 
 def test_le_u_differe_selon_la_norme_dans_le_meme_document(reference):
-    u"""Le fait qui explique la fausse divergence, verrouillé explicitement."""
+    u"""The fact that explains the false discrepancy, locked explicitly."""
     blocs = reference['fenetre_entiere']['blocs']
     reference_52022 = blocs['en_iso_52022_3_conditions_reference']['grandeurs']
     hiver_15099 = blocs['iso_15099_conditions_hiver']['grandeurs']
@@ -257,14 +256,14 @@ def test_le_u_differe_selon_la_norme_dans_le_meme_document(reference):
 
 
 def test_le_store_deploye_ameliore_le_u(reference):
-    u"""Une couche de plus devant le vitrage ne peut pas dégrader son U."""
+    u"""An extra layer in front of the glazing cannot degrade its U value."""
     hiver = reference['fenetre_entiere']['blocs'][
         'iso_15099_conditions_hiver']['grandeurs']['u_vitrage_w_m2k']
     assert hiver['store_deploye'] < hiver['store_rentre'], hiver
 
 
 def test_les_apports_du_maillon_1d_sont_chiffres(reference):
-    u"""Seuls les HORAIRES renvoient à SIA 2024 ; les puissances sont écrites."""
+    u"""Only the SCHEDULES refer to SIA 2024; the power levels are written."""
     apports = reference['parametres']['apports']
     assert apports['appareils_w_m2']['valeur'] == 11
     assert apports['eclairage_w_m2']['valeur'] == 12.5
@@ -274,10 +273,10 @@ def test_les_apports_du_maillon_1d_sont_chiffres(reference):
 
 
 def test_le_nombre_doccupants_est_coherent_avec_la_surface(reference):
-    u"""3,43 personnes pour 48 m² à 14 m²/personne : contrôle arithmétique.
+    u"""3.43 persons for 48 m² at 14 m²/person: arithmetic check.
 
-    La spécification donne les deux chiffres séparément. S'ils ne se
-    recoupaient pas, l'un des deux serait mal relevé.
+    The specification gives both figures separately. If they did not
+    cross-check, one of them would be misread.
     """
     usage = reference['parametres']['usage']['personnes_par_piece']['valeur']
     par_personne = reference['parametres']['apports'][
@@ -286,10 +285,10 @@ def test_le_nombre_doccupants_est_coherent_avec_la_surface(reference):
 
 
 def test_chaque_source_porte_son_empreinte(reference):
-    u"""Quatre sources : trois PDF officiels et l'extrait d'autorité SIA 2024.
+    u"""Four sources: three official PDFs and the SIA 2024 authority extract.
 
-    Ce dernier ne vient pas du lien partagé — la spécification renvoie à SIA
-    2024:2021 sans reproduire la fiche — d'où le chemin différent.
+    The latter does not come from the shared link — the specification refers to
+    SIA 2024:2021 without reproducing the data sheet — hence the different path.
     """
     assert len(reference['sources']) == 4
     for cle, source in reference['sources'].items():
@@ -301,11 +300,11 @@ def test_chaque_source_porte_son_empreinte(reference):
 
 
 def test_le_gain_sensible_des_occupants_est_releve(reference):
-    u"""Il rend inutile toute conversion met → watts.
+    u"""It makes any met → watts conversion unnecessary.
 
-    J'avais bloqué le maillon 1D en affirmant qu'il fallait une convention de
-    surface corporelle. C'était vrai de la spécification et faux comme
-    conclusion : la fiche SIA 2024 donne le gain sensible en W/m².
+    I had blocked link 1D by asserting that a body-surface area convention was
+    needed. That was true of the specification and false as a conclusion: the
+    SIA 2024 data sheet gives the sensible gain in W/m².
     """
     apports = reference['parametres']['apports']
     assert apports['personnes_gain_sensible_w_m2']['valeur'] == 4.9
@@ -318,7 +317,7 @@ def test_lextrait_dautorite_porte_la_bonne_categorie(reference):
 
 
 def test_aucun_champ_ne_reste_a_confirmer_en_silence(reference):
-    u"""Un `A_CONFIRMER` est admissible, mais il doit porter sa raison."""
+    u"""An `A_CONFIRMER` is admissible, but it must carry its reason."""
     manquants = []
 
     def visiter(noeud, chemin=''):
@@ -336,7 +335,7 @@ def test_aucun_champ_ne_reste_a_confirmer_en_silence(reference):
 
 
 def test_le_referentiel_ne_revendique_aucune_validation(reference):
-    u"""Figer la donnée ne rend pas 1E validable, et le fichier doit le dire."""
+    u"""Freezing the data does not make 1E validatable, and the file must say so."""
     assert u'posable' in reference['pourquoi']
     joint = u' '.join(reference['reserves'])
     assert u'Aucun cas' in joint

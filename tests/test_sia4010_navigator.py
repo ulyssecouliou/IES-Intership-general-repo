@@ -136,7 +136,7 @@ class Sia4010NavigatorTests(unittest.TestCase):
         payload = json.loads(Path(paths["json"]).read_text(encoding="utf-8"))
         html = Path(paths["html"]).read_text(encoding="utf-8")
         self.assertEqual(payload["target_class"], "1A")
-        self.assertIn("Navigateur de validation SIA 4010", html)
+        self.assertIn("SIA 4010 validation navigator", html)
         self.assertIn("BLOCKED_OFFICIAL_BUNDLE", html)
 
 

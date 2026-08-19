@@ -656,24 +656,24 @@ class CompleteSpecificationTests(unittest.TestCase):
 
 
 class UsageStandardInputTests(unittest.TestCase):
-    """Tests pour les entrées d'usage SIA 2024 identiques projet/référence.
+    """Tests for SIA 2024 usage inputs identical between project and reference.
 
-    Article de norme : SIA 380/2:2022 §7.2.5.3.
-    Données de référence : refs/reference-data/sia-2024-2021.usage-data.json.
+    Normative article: SIA 380/2:2022 §7.2.5.3.
+    Reference data: refs/reference-data/sia-2024-2021.usage-data.json.
     """
 
     def _room_with_usage(self, code: str) -> RoomData:
-        """Construit une pièce avec sia2024_category positionné.
+        """Build a room with sia2024_category set.
 
-        Reproduit exactement ce que le checker fait à la ligne 726 de
-        swiss_sia/sia380_checker.py : setattr(room, "sia2024_category", ...).
+        Reproduces exactly what the checker does at line 726 of
+        swiss_sia/sia380_checker.py: setattr(room, "sia2024_category", ...).
         """
         r = _room(surfaces=[_surface()])
         setattr(r, "sia2024_category", code)
         return r
 
     def test_resolved_usage_emits_six_substitutions_with_standard_usage_input_status(self):
-        # Usage "1.01" (Wohnen MFH) : 6 grandeurs SIA 2024 émises.
+        # Usage "1.01" (Wohnen MFH): 6 SIA 2024 quantities emitted.
         spec = build_reference_project_specification(
             [self._room_with_usage("1.01")], _Analyzer()
         )
@@ -687,7 +687,7 @@ class UsageStandardInputTests(unittest.TestCase):
             self.assertIn("SIA 2024:2021", item.source)
 
     def test_reference_values_match_json_anchors_for_1_01(self):
-        # Valeurs d'ancrage lues dans le JSON pour usage 1.01.
+        # Anchor values read from the JSON for usage 1.01.
         # theta_i_mean col30=25°C, phi_i col34=60%, A_p col42=35m², M col43=1.2met.
         spec = build_reference_project_specification(
             [self._room_with_usage("1.01")], _Analyzer()
@@ -703,8 +703,8 @@ class UsageStandardInputTests(unittest.TestCase):
         self.assertEqual(by_param["M"].reference_value, 1.2)
 
     def test_theta_i_mean_uses_col30_exploitation_not_col28_design(self):
-        # La norme impose theta_i_mean (col30=25) ; theta_i_design (col28=26)
-        # ne doit jamais être utilisé comme consigne énergie.
+        # The standard requires theta_i_mean (col30=25); theta_i_design (col28=26)
+        # must never be used as the energy setpoint.
         spec = build_reference_project_specification(
             [self._room_with_usage("1.01")], _Analyzer()
         )
@@ -713,12 +713,12 @@ class UsageStandardInputTests(unittest.TestCase):
             for s in spec.substitutions
             if s.scope == "1.01"
         }
-        # 25 = col30 exploitation ; 26 = col28 design (interdit ici)
+        # 25 = col30 operational; 26 = col28 design (not allowed here)
         self.assertEqual(by_param["theta_i_mean"].reference_value, 25.0)
         self.assertNotEqual(by_param["theta_i_mean"].reference_value, 26.0)
 
     def test_dedup_two_rooms_same_usage_emits_one_set_of_six_substitutions(self):
-        # Deux pièces avec le même usage → 1 jeu de 6 substitutions, 2 pièces.
+        # Two rooms with the same usage -> 1 set of 6 substitutions, 2 rooms.
         spec = build_reference_project_specification(
             [self._room_with_usage("1.01"), self._room_with_usage("1.01")],
             _Analyzer(),
@@ -729,7 +729,7 @@ class UsageStandardInputTests(unittest.TestCase):
             self.assertEqual(item.affected_elements, 2)
 
     def test_unresolved_usage_code_emits_one_aggregated_blocker_not_one_per_room(self):
-        # Code inconnu dans le JSON → bloqueur agrégé (pas un par pièce).
+        # Unknown code in the JSON -> aggregated blocker (not one per room).
         r1 = _room(surfaces=[_surface()])
         r2 = _room(surfaces=[_surface()])
         setattr(r1, "sia2024_category", "9.99")
@@ -740,7 +740,7 @@ class UsageStandardInputTests(unittest.TestCase):
         self.assertIn("2 room", usage_blockers[0])
 
     def test_missing_sia2024_category_emits_no_substitution_and_no_blocker(self):
-        # Pièces sans sia2024_category (tests existants) → ignorées silencieusement.
+        # Rooms without sia2024_category (existing tests) -> silently ignored.
         spec = build_reference_project_specification(
             [_room(surfaces=[_surface()])], _Analyzer()
         )
@@ -750,7 +750,7 @@ class UsageStandardInputTests(unittest.TestCase):
         self.assertEqual(usage_blockers, [])
 
     def test_standard_usage_input_does_not_cause_blocked_status(self):
-        # STANDARD_USAGE_INPUT est résolu → le statut global n'est pas BLOCKED.
+        # STANDARD_USAGE_INPUT is resolved -> the global status is not BLOCKED.
         spec = build_reference_project_specification(
             [self._room_with_usage("1.01")], _Analyzer()
         )

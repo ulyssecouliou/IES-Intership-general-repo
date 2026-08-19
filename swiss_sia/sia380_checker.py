@@ -62,6 +62,19 @@ class SIA3802Checker:
             "This is a deviation from a SIA 380/2 reference-project input, "
             "not a standalone component-compliance failure."
         )
+        # SEER (cooling) and SCoP (heating) are seasonal indices defined per
+        # SN EN 14825. That standard is absent from refs/, so the equivalence
+        # between the VE-reported seasonal index and the SIA/SN definition is
+        # unverified. The reference-project path (reference_project.py) already
+        # carries this caveat; the client checker must too, so a signed report
+        # never states "meets the SIA limit" for SEER/SCoP as if it were proven.
+        # The full-load EER rule below is exempt: it compares the directly-named
+        # Table 5 EER, not a seasonal SN EN 14825 index. [TO VERIFY]
+        sn_en_14825_caveat = (
+            " [SEER/SCoP per SN EN 14825 - equivalence with the VE seasonal "
+            "index is unverified (SN EN 14825 absent from refs/); indicative, "
+            "not a proven pass. TO VERIFY]"
+        )
         self.rule_engine.add_rule(Rule(
             name="SIA3802_U_VALUE_EXTERNAL_WALL",
             description=f"External wall U-value differs from the table 3 reference-project limit input of {SIA3802_U_VALUES['external_wall']} W/m2K. {reference_note}",
@@ -205,20 +218,20 @@ class SIA3802Checker:
 
         self.rule_engine.add_rule(Rule(
             name="SIA3802_COOLING_SEER_MIN",
-            description=f"Cooling SEER meets the capacity-banded SIA 380/2 table 5 or 6 limit. {reference_note}",
+            description=f"Cooling SEER meets the capacity-banded SIA 380/2 table 5 or 6 limit. {reference_note}{sn_en_14825_caveat}",
             check=lambda hvac: self._hvac_metric_meets_limit(hvac, "seer"),
             severity=Severity.LOW,
             category=reference_category,
-            recommendation="Check generator classification, rated capacity and seasonal SEER against the applicable reference-project row.",
+            recommendation=f"Check generator classification, rated capacity and seasonal SEER against the applicable reference-project row.{sn_en_14825_caveat}",
         ))
 
         self.rule_engine.add_rule(Rule(
             name="SIA3802_HEATING_SCOP_MIN",
-            description=f"Heat-pump SCOP meets the capacity-banded SIA 380/2 table 8 or 9 limit. {reference_note}",
+            description=f"Heat-pump SCOP meets the capacity-banded SIA 380/2 table 8 or 9 limit. {reference_note}{sn_en_14825_caveat}",
             check=lambda hvac: self._hvac_metric_meets_limit(hvac, "scop"),
             severity=Severity.LOW,
             category=reference_category,
-            recommendation="Check heat-source classification, rated capacity and SCoP against the applicable reference-project row.",
+            recommendation=f"Check heat-source classification, rated capacity and SCoP against the applicable reference-project row.{sn_en_14825_caveat}",
         ))
 
         self.rule_engine.add_rule(Rule(
@@ -409,8 +422,49 @@ class SIA3802Checker:
             or ""
         ).strip()
         if accepted and project_value is not None and reference_value is not None and source:
+            # SIA 380/2:2022 7.2.5.2 -- the global performance requirement is met
+            # only when the project value is LOWER THAN OR EQUAL TO the reference
+            # value. The reviewer's `accepted` flag must not override the figures:
+            # if the two numbers contradict that sense (inverted columns, wrong
+            # unit, or a genuine exceedance), the report must never read COMPLIANT.
+            # `float_eps` is a pure floating-point guard, NOT a normative margin:
+            # it only keeps an exact project == reference equality from being
+            # rejected by rounding noise.
+            float_eps = 1e-9
+            within_reference = (
+                project_value
+                <= reference_value + abs(reference_value) * float_eps
+            )
+            if within_reference:
+                return {
+                    "status": "REVIEWED_RESULT_AVAILABLE",
+                    "project_value": project_value,
+                    "reference_value": reference_value,
+                    "source": source,
+                }
+            self.rule_engine.add_alert(
+                rule="SIA3802_GLOBAL_REFERENCE_DISCREPANCY",
+                description=(
+                    "The reviewed global comparison is marked accepted, but the "
+                    "project value ({0:.4g}) exceeds the reference value "
+                    "({1:.4g}). Per SIA 380/2:2022 7.2.5.2 the project value must "
+                    "be lower than or equal to the reference; reviewer acceptance "
+                    "cannot override the reported figures.".format(
+                        project_value, reference_value
+                    )
+                ),
+                severity=Severity.CRITICAL,
+                category="Global Reference Comparison",
+                recommendation=(
+                    "Reconcile the acceptance with the figures: correct the "
+                    "project/reference values, their column order or units, or "
+                    "withdraw acceptance. 'accepted' must attest that the project "
+                    "meets the reference, not merely that values were entered."
+                ),
+                data=None,
+            )
             return {
-                "status": "REVIEWED_RESULT_AVAILABLE",
+                "status": "REVIEWED_RESULT_CONTRADICTS_ACCEPTANCE",
                 "project_value": project_value,
                 "reference_value": reference_value,
                 "source": source,

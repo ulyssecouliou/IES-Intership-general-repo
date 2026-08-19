@@ -1,22 +1,22 @@
 # -*- coding: utf-8 -*-
-u"""Génère les fiches de saisie ApacheHVAC des tests SIA 5 et 6.
+u"""Generates the ApacheHVAC data entry sheets for SIA tests 5 and 6.
 
-MÊME RAISON QUE POUR LE TEST 4. `HVACNetwork` n'expose aucune méthode de
-création : le réseau se saisit à la main, une fois, dans l'éditeur
-ApacheHVAC. Ensuite le `.asp` se versionne et se recharge par `load_network`.
+SAME REASON AS FOR TEST 4. `HVACNetwork` exposes no creation method:
+the network must be entered manually, once, in the ApacheHVAC editor.
+Afterwards the `.asp` is versioned and reloaded via `load_network`.
 
-CE QUI CHANGE ICI. La fiche du Test 4 est tirée d'un module Python où les
-paramètres avaient été relevés un par un. Celles-ci sont tirées de
-`refs/reference-data/test-{5,6}.reseau.json`, produits par un extracteur qui
-lit le PDF — donc **les trous de la spécification remontent jusqu'à la
-fiche**, nommés, en tête, au lieu d'être comblés en silence.
+WHAT IS DIFFERENT HERE. The Test 4 sheet is drawn from a Python module where
+parameters had been captured one by one. These are drawn from
+`refs/reference-data/test-{5,6}.reseau.json`, produced by an extractor that
+reads the PDF — so **gaps in the specification bubble up to the sheet**,
+named, at the top, instead of being silently filled in.
 
-C'est le point important : sur le Test 5, cinq paramètres dépendent de la
-variante (5A à 5D) et le tableau du PDF porte quatre colonnes pour deux
-cellules. Une fiche qui trancherait ferait construire deux variantes fausses
-sur quatre, sans que rien ne le signale avant la comparaison finale.
+That is the key point: in Test 5, five parameters depend on the variant
+(5A to 5D) and the PDF table has four columns for two cells. A sheet that
+resolved them would build two wrong variants out of four, with nothing
+flagging it before the final comparison.
 
-Usage :
+Usage:
     python scripts/build_fiche_apachehvac_56.py [--ecrire]
 """
 
@@ -40,10 +40,10 @@ _DOCS = os.path.join(_RACINE, 'docs')
 
 TESTS = (5, 6)
 
-#: Blocs de la fiche, dans l'ordre du flux d'air, avec la classe `iesve`
-#: attendue au relevé. Le nom de classe sert à CONFRONTER le réseau saisi à
-#: cette fiche après coup, par `HVACNetwork.components` — ce n'est pas un nom
-#: d'objet à saisir.
+#: Sections of the sheet, in airflow order, with the expected `iesve` class
+#: at survey time. The class name is used to COMPARE the entered network against
+#: this sheet after the fact, via `HVACNetwork.components` — it is not an
+#: object name to enter.
 BLOCS = [
     ('reseau', u'Réseau et conditions générales', None),
     ('ventilateurs', u'Ventilateurs', 'HVACFan'),
@@ -54,7 +54,7 @@ BLOCS = [
     ('humidificateur', u'Humidificateur', None),
 ]
 
-#: Ce que chaque fiche sert à débloquer, et ce qu'elle ne débloque pas.
+#: What each sheet enables, and what it does not.
 PORTEE = {
     5: (u'Quatre variantes (5A à 5D) : type de récupérateur, taux d\'échange, '
         u'part de pression constante et type d\'humidificateur en dépendent.',
@@ -66,16 +66,16 @@ PORTEE = {
 
 
 def charger(numero_test):
-    u"""Charge le référentiel de réseau figé.
+    u"""Loads the frozen network reference data.
 
     Args:
-        numero_test: 5 ou 6.
+        numero_test: 5 or 6.
 
     Returns:
-        dict: Référentiel.
+        dict: Reference data.
 
     Raises:
-        IOError: Si le référentiel n'a pas été figé.
+        IOError: If the reference data has not been frozen.
     """
     chemin = os.path.join(_REFS, 'test-%d.reseau.json' % numero_test)
     if not os.path.exists(chemin):
@@ -88,15 +88,15 @@ def charger(numero_test):
 
 
 def _valeur_lisible(champ):
-    u"""Met en forme la valeur d'un champ.
+    u"""Formats the value of a field.
 
     Args:
-        champ: Entrée du référentiel.
+        champ: Entry from the reference data.
 
     Returns:
-        str: Cellule Markdown. Un champ à confirmer n'affiche JAMAIS de
-        valeur : afficher un tiret laisserait croire à un zéro, afficher une
-        valeur laisserait croire à un relevé.
+        str: Markdown cell. A field to be resolved NEVER shows a value:
+        showing a dash would suggest zero, showing a value would suggest a
+        confirmed reading.
     """
     if champ['statut'] == A_CONFIRMER:
         return u'**À TRANCHER**'
@@ -107,13 +107,13 @@ def _valeur_lisible(champ):
 
 
 def _tableau(bloc):
-    u"""Lignes du tableau d'un bloc de composants.
+    u"""Table rows for a component section.
 
     Args:
-        bloc: Sous-dictionnaire du référentiel.
+        bloc: Sub-dictionary from the reference data.
 
     Returns:
-        list[str]: Lignes Markdown.
+        list[str]: Markdown rows.
     """
     lignes = [u'| Paramètre | Valeur | Source (section du PDF) |',
               u'|---|---|---|']
@@ -127,13 +127,13 @@ def _tableau(bloc):
 
 
 def _tableau_courbes(courbes):
-    u"""Lignes du tableau des consignes glissantes.
+    u"""Table rows for the sliding setpoints.
 
     Args:
-        courbes: Bloc `courbes` du référentiel.
+        courbes: `courbes` block from the reference data.
 
     Returns:
-        list[str]: Lignes Markdown.
+        list[str]: Markdown rows.
     """
     lignes = [u'| Consigne | Points (θ extérieure → consigne) | Lecture |',
               u'|---|---|---|']
@@ -150,13 +150,13 @@ def _tableau_courbes(courbes):
 
 
 def _a_trancher(reference):
-    u"""Rassemble tout ce que la spécification ne permet pas de trancher.
+    u"""Collects everything the specification does not allow to resolve.
 
     Args:
-        reference: Référentiel chargé.
+        reference: Loaded reference data.
 
     Returns:
-        list[tuple]: `(chemin du champ, source, raison)`.
+        list[tuple]: `(field path, source, reason)`.
     """
     trous = []
     for nom_bloc in sorted(reference):
@@ -176,13 +176,13 @@ def _a_trancher(reference):
 
 
 def construire(numero_test):
-    u"""Rédige la fiche d'un test.
+    u"""Writes the data entry sheet for one test.
 
     Args:
-        numero_test: 5 ou 6.
+        numero_test: 5 or 6.
 
     Returns:
-        str: Document Markdown.
+        str: Markdown document.
     """
     reference = charger(numero_test)
     portee, classes = PORTEE[numero_test]
@@ -289,13 +289,13 @@ def construire(numero_test):
 
 
 def main(arguments=()):
-    u"""Point d'entrée.
+    u"""Entry point.
 
     Args:
-        arguments: `--ecrire` pour écrire les fiches.
+        arguments: `--ecrire` to write the sheets.
 
     Returns:
-        int: 0 si les deux fiches ont pu être construites.
+        int: 0 if both sheets were built successfully.
     """
     for numero in TESTS:
         try:

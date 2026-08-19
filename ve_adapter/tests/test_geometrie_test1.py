@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
-u"""Tests de la géométrie de la cellule d'essai (`ve_adapter/geometrie_test1.py`).
+u"""Tests of the trial cell geometry (`ve_adapter/geometrie_test1.py`).
 
-Le danger visé est celui qui a coûté le plus cher cette semaine : une cote mal
-lue produirait une cellule **plausible et fausse**, que la simulation ne
-signalerait pas. C'est ce qui s'est passé avec les épaisseurs de couche à 1 mm,
-sous une sonde verte.
+The danger targeted is the one that proved most costly this week: a mis-read
+dimension would produce a **plausible and wrong** cell, which the simulation
+would not flag. That is what happened with the 1 mm layer thicknesses,
+under a green probe.
 
-Les surfaces sont donc RECALCULÉES depuis les cotes et confrontées à celles que
-la source annonce — deux chemins, une seule vérité.
+Areas are therefore RECOMPUTED from the dimensions and compared against those
+announced by the source -- two paths, one truth.
 """
 
 import pytest
@@ -24,20 +24,20 @@ def cotes():
 
 
 # --------------------------------------------------------------------------
-# Les cotes se tiennent
+# The dimensions are self-consistent
 # --------------------------------------------------------------------------
 
 def test_les_surfaces_recalculees_reproduisent_la_source(cotes):
-    """LE contrôle. Si une cote était mal lue, ce recalcul ne tomberait pas
-    sur les surfaces annoncées."""
+    """THE check. If a dimension were mis-read, this recomputation would not
+    match the announced areas."""
     releve = geometrie.controler_les_cotes(cotes)
     for face, (calculee, annoncee) in releve.items():
         assert abs(calculee - annoncee) < 1e-9, face
 
 
 def test_la_facade_avant_deduit_le_vitrage(cotes):
-    """8 x 2,7 = 21,6 moins 12 m² de vitrage = 9,6. Oublier la déduction
-    donnerait une paroi opaque deux fois trop grande."""
+    """8 x 2.7 = 21.6 minus 12 m² of glazing = 9.6. Forgetting the deduction
+    would give an opaque wall twice too large."""
     surfaces = geometrie.surfaces_attendues(cotes)
     assert surfaces['front_wall'] == pytest.approx(9.6)
     assert surfaces['back_wall'] == pytest.approx(21.6)
@@ -50,7 +50,7 @@ def test_le_volume_est_coherent(cotes):
 
 
 def test_une_cote_falsifiee_est_detectee(cotes):
-    """Le contrôle doit mordre, pas seulement exister."""
+    """The check must bite, not merely exist."""
     faussees = dict(cotes)
     faussees['width_m'] = 9.0
     with pytest.raises(geometrie.GeometrieIncoherente, match='ne se tiennent'):
@@ -65,12 +65,12 @@ def test_un_volume_falsifie_est_detecte(cotes):
 
 
 # --------------------------------------------------------------------------
-# Implantation des fenêtres
+# Window placement
 # --------------------------------------------------------------------------
 
 def test_les_fenetres_remplissent_exactement_la_facade(cotes):
-    """0,5 + 3 + 1 + 3 + 0,5 = 8,0 m. Si la somme ne tombait pas juste, les
-    marges ou l'intervalle auraient été mal lus."""
+    """0.5 + 3 + 1 + 3 + 0.5 = 8.0 m. If the sum were off, the margins or
+    the gap would have been mis-read."""
     fenetres = geometrie.rectangles_des_fenetres(cotes)
     assert len(fenetres) == 2
     assert fenetres[0]['x_min'] == pytest.approx(0.5)
@@ -97,7 +97,7 @@ def test_les_surfaces_vitrees_totalisent_celle_de_la_source(cotes):
 
 
 def test_une_implantation_impossible_est_refusee(cotes):
-    """Marges trop larges : les fenêtres déborderaient du mur."""
+    """Margins too wide: the windows would overflow the wall."""
     faussees = dict(cotes)
     faussees['windows'] = dict(cotes['windows'])
     faussees['windows']['side_margin_m'] = 2.0
@@ -106,12 +106,12 @@ def test_une_implantation_impossible_est_refusee(cotes):
 
 
 # --------------------------------------------------------------------------
-# Repère et orientation
+# Coordinate frame and orientation
 # --------------------------------------------------------------------------
 
 def test_la_facade_avant_est_au_sud(cotes):
-    """L'orientation décide de tout le solaire : la spécification impose une
-    façade sud, donc en Y = 0 dans ce repère."""
+    """Orientation determines the entire solar balance: the specification
+    requires a south facade, so at Y = 0 in this frame."""
     sommets = geometrie.sommets_de_la_cellule(cotes)
     for nom, (_, y, _) in sommets.items():
         if nom.startswith('sud'):
@@ -131,12 +131,12 @@ def test_la_hauteur_separe_le_bas_du_haut(cotes):
 
 
 # --------------------------------------------------------------------------
-# Provenance et pureté
+# Provenance and purity
 # --------------------------------------------------------------------------
 
 def test_aucune_cote_nest_ecrite_dans_le_module():
-    """Toutes viennent de la source. Une cote saisie ici serait invérifiable,
-    et se périmerait sans bruit."""
+    """All come from the source. A dimension entered here would be
+    unverifiable, and would become stale without notice."""
     import io
     import os
     chemin = os.path.abspath(geometrie.__file__).replace('.pyc', '.py')
@@ -155,7 +155,7 @@ def test_une_source_absente_est_signalee(tmp_path):
 
 
 def test_le_module_reste_pur():
-    """Règle 4 : aucun import `iesve`, testable en CI."""
+    """Rule 4: no `iesve` import, testable in CI."""
     import io
     import os
     chemin = os.path.abspath(geometrie.__file__).replace('.pyc', '.py')

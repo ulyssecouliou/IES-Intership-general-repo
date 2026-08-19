@@ -85,6 +85,147 @@ def _assert_subset(expected: Mapping[str, Any], actual: Mapping[str, Any], conte
         )
 
 
+def _normalise_record_type(value: Any) -> str:
+    """Return a stable alphanumeric VE type label."""
+
+    return "".join(character for character in str(value).lower() if character.isalnum())
+
+
+def _selected_record_value(
+    data: Mapping[str, Any], plural_key: str, scalar_key: str
+) -> Any:
+    """Resolve either a scalar value or the value in the selected VE units."""
+
+    if scalar_key in data:
+        return data[scalar_key]
+    values = data.get(plural_key)
+    if not isinstance(values, Mapping):
+        return None
+    try:
+        units = int(data.get("units_val", 0))
+    except (TypeError, ValueError):
+        units = 0
+    return values.get(units, values.get(str(units)))
+
+
+def _gain_record_family(data: Mapping[str, Any]) -> str:
+    """Classify a template gain independently of VE's display name."""
+
+    label = _normalise_record_type(
+        "{} {} {}".format(
+            data.get("type_str", ""),
+            data.get("type_val", ""),
+            data.get("name", ""),
+        )
+    )
+    if "people" in label:
+        return "people"
+    if "light" in label:
+        return "lighting"
+    return "energy"
+
+
+def _gain_record_mismatches(
+    expected: Mapping[str, Any], actual: Mapping[str, Any]
+) -> Dict[str, Dict[str, Any]]:
+    """Compare simulation-relevant gain data while ignoring display names."""
+
+    mismatches: Dict[str, Dict[str, Any]] = {}
+    scalar_to_plural = {
+        "max_power_consumption": "max_power_consumptions",
+        "max_sensible_gain": "max_sensible_gains",
+        "max_latent_gain": "max_latent_gains",
+        "occupancy_density": "occupancies",
+    }
+    for scalar_key, plural_key in scalar_to_plural.items():
+        if scalar_key not in expected:
+            continue
+        actual_value = _selected_record_value(actual, plural_key, scalar_key)
+        if not _values_match(expected[scalar_key], actual_value):
+            mismatches[scalar_key] = {
+                "expected": _serializable(expected[scalar_key]),
+                "actual": _serializable(actual_value),
+            }
+    for key in (
+        "units_val",
+        "radiant_fraction",
+        "pc_convective_gain",
+        "diversity_factor",
+        "variation_profile",
+    ):
+        if key in expected and not _values_match(expected[key], actual.get(key)):
+            mismatches[key] = {
+                "expected": _serializable(expected[key]),
+                "actual": _serializable(actual.get(key)),
+            }
+    return mismatches
+
+
+def _exchange_record_mismatches(
+    expected: Mapping[str, Any], actual: Mapping[str, Any]
+) -> Dict[str, Dict[str, Any]]:
+    """Compare the effective flow, units, boundary and schedule."""
+
+    mismatches: Dict[str, Dict[str, Any]] = {}
+    expected_flow = expected.get("max_flow")
+    actual_flow = _selected_record_value(actual, "max_flows", "max_flow")
+    if expected_flow is not None and not _values_match(expected_flow, actual_flow):
+        mismatches["max_flow"] = {
+            "expected": _serializable(expected_flow),
+            "actual": _serializable(actual_flow),
+        }
+    for key in ("units_val", "variation_profile", "adjacent_condition_val"):
+        if key in expected and not _values_match(expected[key], actual.get(key)):
+            mismatches[key] = {
+                "expected": _serializable(expected[key]),
+                "actual": _serializable(actual.get(key)),
+            }
+    return mismatches
+
+
+def _template_links_semantically_match(
+    expected_records: Iterable[Any], actual_records: Iterable[Any], kind: str
+) -> Tuple[bool, Dict[str, Any]]:
+    """Compare linked template records by physics rather than display names."""
+
+    expected_data = [dict(record.get()) for record in expected_records]
+    actual_data = [dict(record.get()) for record in actual_records]
+    if kind == "gain":
+        key_function = _gain_record_family
+        compare = _gain_record_mismatches
+    else:
+        key_function = lambda data: _normalise_record_type(
+            data.get("type_val", data.get("type_str", data.get("name", "")))
+        )
+        compare = _exchange_record_mismatches
+
+    def index(records: List[Dict[str, Any]]) -> Dict[str, List[Dict[str, Any]]]:
+        result: Dict[str, List[Dict[str, Any]]] = {}
+        for data in records:
+            result.setdefault(key_function(data), []).append(data)
+        return result
+
+    expected_by_key = index(expected_data)
+    actual_by_key = index(actual_data)
+    if set(expected_by_key) != set(actual_by_key):
+        return False, {
+            "expected_keys": sorted(expected_by_key),
+            "actual_keys": sorted(actual_by_key),
+        }
+    details: Dict[str, Any] = {}
+    for key in sorted(expected_by_key):
+        if len(expected_by_key[key]) != 1 or len(actual_by_key[key]) != 1:
+            details[key] = {
+                "expected_count": len(expected_by_key[key]),
+                "actual_count": len(actual_by_key[key]),
+            }
+            continue
+        mismatches = compare(expected_by_key[key][0], actual_by_key[key][0])
+        if mismatches:
+            details[key] = mismatches
+    return not details, details
+
+
 def _canonical_daily_profile_data(value: Any) -> Any:
     """Normalize VE's canonical marker for an unused daily-profile formula.
 
@@ -1102,6 +1243,315 @@ class IesVeAssetProvisioner:
                     "Material creation failed for {}: {}".format(definition.key, exc)
                 ) from exc
         return identifiers
+
+    def reconcile_existing_material(
+        self, manifest: AssetManifest, material_key: str
+    ) -> Dict[str, Any]:
+        """Repair one exact-description CDB material with strict read-back.
+
+        Normal ``reuse_verified`` remains non-mutating and fail-closed. This
+        boundary is only for an explicitly requested recovery when a prior
+        source-manifest revision left one uniquely identifiable material with
+        stale properties.
+        """
+
+        if manifest.on_existing != "reuse_verified":
+            raise VeMutationError(
+                "Controlled material reconciliation requires "
+                "on_existing='reuse_verified'"
+            )
+        definitions = [item for item in manifest.materials if item.key == material_key]
+        if len(definitions) != 1:
+            raise VeMutationError(
+                "Expected exactly one material definition keyed '{}'; found {}".format(
+                    material_key, len(definitions)
+                )
+            )
+        definition = definitions[0]
+        category = self._resolve_enum(
+            ("VECdbProject.material_categories", "material_categories"),
+            (definition.category,),
+            "material category",
+        )
+        expected = definition.raw_properties()
+        description = str(expected.get("description", ""))
+        matches = []
+        for identifier in self.cdb_project.get_material_ids(category):
+            material = self.cdb_project.get_material(identifier)
+            actual = dict(material.get_properties())
+            if str(actual.get("description", "")) == description:
+                matches.append((str(identifier), material, actual))
+        if len(matches) != 1:
+            raise VeMutationError(
+                "Controlled material reconciliation requires exactly one CDB "
+                "match for {!r}; found {}".format(description, len(matches))
+            )
+        identifier, material, before = matches[0]
+        try:
+            self._verify_material_properties(
+                definition,
+                expected,
+                before,
+                "existing reconciled material {}".format(material_key),
+            )
+            return {
+                "status": "ALREADY_MATCHED",
+                "material_key": material_key,
+                "material_id": identifier,
+                "changed": False,
+                "before": _serializable(before),
+                "after": _serializable(before),
+                "compatibility_warnings": list(self._compatibility_warnings),
+            }
+        except VeMutationError:
+            pass
+        try:
+            material.set_properties(expected)
+            after = dict(material.get_properties())
+            self._verify_material_properties(
+                definition,
+                expected,
+                after,
+                "reconciled material {}".format(material_key),
+            )
+        except Exception as exc:
+            if isinstance(exc, (VeMutationError, VeApiUnavailableError)):
+                raise
+            raise VeMutationError(
+                "Controlled material reconciliation failed for {}: {}".format(
+                    material_key, exc
+                )
+            ) from exc
+        return {
+            "status": "RECONCILED_AND_VERIFIED",
+            "material_key": material_key,
+            "material_id": identifier,
+            "changed": True,
+            "before": _serializable(before),
+            "after": _serializable(after),
+            "compatibility_warnings": list(self._compatibility_warnings),
+        }
+
+    def reconcile_existing_construction(
+        self, manifest: AssetManifest, construction_key: str
+    ) -> Dict[str, Any]:
+        """Repair one exact existing construction assembly and verify it.
+
+        The assembly must be uniquely identified by construction class,
+        category, layer count and the exact source-traced material IDs. No
+        construction or layer is created, removed or reassigned here.
+        """
+
+        if manifest.on_existing != "reuse_verified":
+            raise VeMutationError(
+                "Controlled construction reconciliation requires "
+                "on_existing='reuse_verified'"
+            )
+        definitions = [
+            item for item in manifest.constructions if item.key == construction_key
+        ]
+        if len(definitions) != 1:
+            raise VeMutationError(
+                "Expected exactly one construction definition keyed '{}'; "
+                "found {}".format(construction_key, len(definitions))
+            )
+        definition = definitions[0]
+
+        material_ids: Dict[str, str] = {}
+        material_definitions = {item.key: item for item in manifest.materials}
+        for layer_definition in definition.layers:
+            if layer_definition.is_cavity:
+                continue
+            material_definition = material_definitions.get(
+                layer_definition.material_key
+            )
+            if material_definition is None:
+                raise VeMutationError(
+                    "Construction {} references missing material {}".format(
+                        construction_key, layer_definition.material_key
+                    )
+                )
+            category = self._resolve_enum(
+                ("VECdbProject.material_categories", "material_categories"),
+                (material_definition.category,),
+                "material category",
+            )
+            expected_material = material_definition.raw_properties()
+            description = str(expected_material.get("description", ""))
+            matches = []
+            for identifier in self.cdb_project.get_material_ids(category):
+                material = self.cdb_project.get_material(identifier)
+                actual = dict(material.get_properties())
+                if str(actual.get("description", "")) == description:
+                    matches.append((str(identifier), actual))
+            if len(matches) != 1:
+                raise VeMutationError(
+                    "Construction reconciliation requires exactly one material "
+                    "match for {!r}; found {}".format(description, len(matches))
+                )
+            identifier, actual = matches[0]
+            self._verify_material_properties(
+                material_definition,
+                expected_material,
+                actual,
+                "construction reconciliation material {}".format(
+                    material_definition.key
+                ),
+            )
+            material_ids[layer_definition.material_key] = identifier
+
+        category = self._resolve_enum(
+            ("VECdbProject.element_categories", "element_categories"),
+            (definition.category,),
+            "construction category",
+        )
+        construction_class = self._resolve_enum(
+            ("VECdbProject.construction_class", "construction_class"),
+            (definition.construction_class,),
+            "construction class",
+        )
+        expected_material_ids = [
+            "" if layer.is_cavity else material_ids[layer.material_key]
+            for layer in definition.layers
+        ]
+        matches = []
+        for identifier in self.cdb_project.get_construction_ids(construction_class):
+            construction = None
+            for arguments in ((identifier, construction_class), (identifier,)):
+                try:
+                    construction = self.cdb_project.get_construction(*arguments)
+                    if construction is not None:
+                        break
+                except Exception:
+                    continue
+            if construction is None:
+                continue
+            actual_category = getattr(construction, "category", None)
+            if actual_category is None:
+                actual_category = dict(construction.get_properties()).get("category")
+            if not _values_match(category, actual_category):
+                continue
+            layers = list(construction.get_layers())
+            if len(layers) != len(expected_material_ids):
+                continue
+            actual_material_ids = []
+            for layer_definition, layer in zip(definition.layers, layers):
+                if layer_definition.is_cavity:
+                    actual_material_ids.append("")
+                    continue
+                material_id = ""
+                for opaque_flag in (
+                    definition.construction_class == "opaque",
+                    definition.construction_class != "opaque",
+                ):
+                    try:
+                        material = layer.get_material(opaque_flag)
+                    except Exception:
+                        continue
+                    if material is None:
+                        continue
+                    material_properties = (
+                        dict(material.get_properties())
+                        if hasattr(material, "get_properties")
+                        else {}
+                    )
+                    material_id = str(
+                        material_properties.get(
+                            "id", material_properties.get("material_id", "")
+                        )
+                        or getattr(material, "id", "")
+                        or getattr(material, "material_id", "")
+                    )
+                    if material_id:
+                        break
+                actual_material_ids.append(material_id)
+            if actual_material_ids == expected_material_ids:
+                matches.append((str(identifier), construction, layers))
+        if len(matches) != 1:
+            raise VeMutationError(
+                "Controlled construction reconciliation requires exactly one "
+                "matching assembly for {}; found {}".format(
+                    construction_key, len(matches)
+                )
+            )
+        identifier, construction, layers = matches[0]
+        expected = definition.raw_properties()
+        before = dict(construction.get_properties())
+        before_layers = [dict(layer.get_properties()) for layer in layers]
+        already_matched = True
+        try:
+            self._verify_construction_properties(
+                definition,
+                expected,
+                before,
+                "existing reconciled construction {}".format(construction_key),
+            )
+            for index, (layer_definition, layer_data) in enumerate(
+                zip(definition.layers, before_layers)
+            ):
+                self._verify_layer_properties(
+                    definition,
+                    index,
+                    layer_definition.raw_properties(),
+                    layer_data,
+                )
+        except VeMutationError:
+            already_matched = False
+        if already_matched:
+            return {
+                "status": "ALREADY_MATCHED",
+                "construction_key": construction_key,
+                "construction_id": identifier,
+                "changed": False,
+                "before": _serializable(before),
+                "after": _serializable(before),
+                "before_layers": _serializable(before_layers),
+                "after_layers": _serializable(before_layers),
+                "compatibility_warnings": list(self._compatibility_warnings),
+            }
+        try:
+            if expected:
+                construction.set_properties(expected)
+            for layer_definition, layer in zip(definition.layers, layers):
+                layer_properties = layer_definition.raw_properties()
+                if layer_properties:
+                    layer.set_properties(layer_properties)
+            after = dict(construction.get_properties())
+            after_layers = [dict(layer.get_properties()) for layer in layers]
+            self._verify_construction_properties(
+                definition,
+                expected,
+                after,
+                "reconciled construction {}".format(construction_key),
+            )
+            for index, (layer_definition, layer_data) in enumerate(
+                zip(definition.layers, after_layers)
+            ):
+                self._verify_layer_properties(
+                    definition,
+                    index,
+                    layer_definition.raw_properties(),
+                    layer_data,
+                )
+        except Exception as exc:
+            if isinstance(exc, (VeMutationError, VeApiUnavailableError)):
+                raise
+            raise VeMutationError(
+                "Controlled construction reconciliation failed for {}: {}".format(
+                    construction_key, exc
+                )
+            ) from exc
+        return {
+            "status": "RECONCILED_AND_VERIFIED",
+            "construction_key": construction_key,
+            "construction_id": identifier,
+            "changed": True,
+            "before": _serializable(before),
+            "after": _serializable(after),
+            "before_layers": _serializable(before_layers),
+            "after_layers": _serializable(after_layers),
+            "compatibility_warnings": list(self._compatibility_warnings),
+        }
 
     def _create_construction(
         self,
@@ -2139,6 +2589,125 @@ class IesVeAssetProvisioner:
                 )
         return writable
 
+    def _repair_template_link_physics(
+        self,
+        expected_records: Sequence[Any],
+        actual_records: Sequence[Any],
+        kind: str,
+    ) -> List[Dict[str, Any]]:
+        """Synchronize existing one-to-one template links through native setters.
+
+        This recovery never adds, removes or renames a link. It is allowed only
+        when expected and actual records have the same unique physical keys.
+        """
+
+        if kind == "gain":
+            key_function = _gain_record_family
+            writable = (
+                "allow_profile_saturate",
+                "ballast",
+                "dimming_profile",
+                "diversity_factor",
+                "max_illuminance",
+                "max_latent_gain",
+                "max_power_consumption",
+                "max_sensible_gain",
+                "occupancy_density",
+                "pc_convective_gain",
+                "radiant_fraction",
+                "units_val",
+                "variation_profile",
+            )
+        else:
+            key_function = lambda data: _normalise_record_type(
+                data.get("type_val", data.get("type_str", data.get("name", "")))
+            )
+            writable = (
+                "adjacent_condition_val",
+                "max_flow",
+                "offset_temperature",
+                "units_val",
+                "variation_profile",
+            )
+
+        def index(records: Sequence[Any]) -> Dict[str, Tuple[Any, Dict[str, Any]]]:
+            indexed: Dict[str, Tuple[Any, Dict[str, Any]]] = {}
+            for record in records:
+                data = dict(record.get())
+                key = key_function(data)
+                if not key or key in indexed:
+                    raise VeMutationError(
+                        "Template {} link keys are empty or ambiguous: {!r}".format(
+                            kind, key
+                        )
+                    )
+                indexed[key] = (record, data)
+            return indexed
+
+        expected_by_key = index(expected_records)
+        actual_by_key = index(actual_records)
+        if set(expected_by_key) != set(actual_by_key):
+            raise VeMutationError(
+                "Template {} links cannot be synchronized: expected keys {}, "
+                "actual keys {}".format(
+                    kind, sorted(expected_by_key), sorted(actual_by_key)
+                )
+            )
+        changes = []
+        for key in sorted(expected_by_key):
+            _expected_record, expected = expected_by_key[key]
+            actual_record, before = actual_by_key[key]
+            compare = (
+                _gain_record_mismatches
+                if kind == "gain"
+                else _exchange_record_mismatches
+            )
+            mismatches = compare(expected, before)
+            if not mismatches:
+                continue
+            setter = getattr(actual_record, "set", None)
+            if not callable(setter):
+                raise VeMutationError(
+                    "Template {} link {!r} exposes no supported set() method".format(
+                        kind, key
+                    )
+                )
+            payload = {
+                field: expected[field]
+                for field in writable
+                if field in expected and field in mismatches
+            }
+            if not payload:
+                raise VeMutationError(
+                    "Template {} link {!r} mismatch has no controlled writable "
+                    "fields: {}".format(kind, key, mismatches)
+                )
+            try:
+                setter(payload)
+            except Exception as exc:
+                raise VeMutationError(
+                    "Template {} link {!r} synchronization failed: {}".format(
+                        kind, key, exc
+                    )
+                ) from exc
+            after = dict(actual_record.get())
+            remaining = compare(expected, after)
+            if remaining:
+                raise VeMutationError(
+                    "Template {} link {!r} synchronization did not persist: {}".format(
+                        kind, key, remaining
+                    )
+                )
+            changes.append(
+                {
+                    "kind": kind,
+                    "key": key,
+                    "before": mismatches,
+                    "verified_fields": sorted(payload),
+                }
+            )
+        return changes
+
     def _create_template(
         self,
         manifest: AssetManifest,
@@ -2186,25 +2755,24 @@ class IesVeAssetProvisioner:
                 )
             template = matches[0]
 
-            def record_names(records: Iterable[Any]) -> List[str]:
-                """Return the persisted names of a set of VE gain/exchange records."""
-
-                result = []
-                for record in records:
-                    data = dict(record.get())
-                    result.append(
-                        str(data.get("name", getattr(record, "name", "")))
-                    )
-                return sorted(result)
-
-            expected_gain_names = record_names(
-                gains[key] for key in definition.gain_keys
-            )
-            actual_gain_names = record_names(template.get_casual_gains())
-            expected_exchange_names = record_names(
+            expected_gain_records = [gains[key] for key in definition.gain_keys]
+            actual_gain_records = list(template.get_casual_gains())
+            expected_exchange_records = [
                 air_exchanges[key] for key in definition.air_exchange_keys
+            ]
+            actual_exchange_records = list(template.get_air_exchanges())
+            gain_links_match, gain_link_details = (
+                _template_links_semantically_match(
+                    expected_gain_records, actual_gain_records, "gain"
+                )
             )
-            actual_exchange_names = record_names(template.get_air_exchanges())
+            exchange_links_match, exchange_link_details = (
+                _template_links_semantically_match(
+                    expected_exchange_records,
+                    actual_exchange_records,
+                    "air_exchange",
+                )
+            )
             try:
                 _assert_subset(
                     room_conditions,
@@ -2216,13 +2784,15 @@ class IesVeAssetProvisioner:
                     dict(template.get_apache_systems()),
                     "existing thermal template system data",
                 )
-                if expected_gain_names != actual_gain_names:
+                if not gain_links_match:
                     raise VeMutationError(
-                        "Existing thermal template gain links differ from manifest"
+                        "Existing thermal template gain physics differs from "
+                        "manifest: {}".format(gain_link_details)
                     )
-                if expected_exchange_names != actual_exchange_names:
+                if not exchange_links_match:
                     raise VeMutationError(
-                        "Existing thermal template air-exchange links differ from manifest"
+                        "Existing thermal template air-exchange physics differs "
+                        "from manifest: {}".format(exchange_link_details)
                     )
             except VeMutationError:
                 # A failed post-setter read-back can leave either an empty
@@ -2230,13 +2800,55 @@ class IesVeAssetProvisioner:
                 # exactly those declared by the manifest.  Both states are
                 # deterministic to repair.  Partial or divergent links remain
                 # fail-closed because re-adding them could duplicate data.
-                links_empty = not actual_gain_names and not actual_exchange_names
-                links_match = (
-                    expected_gain_names == actual_gain_names
-                    and expected_exchange_names == actual_exchange_names
-                )
+                links_empty = not actual_gain_records and not actual_exchange_records
+                links_match = gain_links_match and exchange_links_match
                 if not (links_empty or links_match):
-                    raise
+                    link_repairs = self._repair_template_link_physics(
+                        expected_gain_records,
+                        actual_gain_records,
+                        "gain",
+                    )
+                    link_repairs.extend(
+                        self._repair_template_link_physics(
+                            expected_exchange_records,
+                            actual_exchange_records,
+                            "air_exchange",
+                        )
+                    )
+                    gain_links_match, gain_link_details = (
+                        _template_links_semantically_match(
+                            expected_gain_records,
+                            actual_gain_records,
+                            "gain",
+                        )
+                    )
+                    exchange_links_match, exchange_link_details = (
+                        _template_links_semantically_match(
+                            expected_exchange_records,
+                            actual_exchange_records,
+                            "air_exchange",
+                        )
+                    )
+                    links_match = gain_links_match and exchange_links_match
+                    if not links_match:
+                        raise VeMutationError(
+                            "Existing thermal template links remain physically "
+                            "divergent; gain_details={}, exchange_details={}".format(
+                                gain_link_details, exchange_link_details
+                            )
+                        )
+                    warning = {
+                        "code": "VE-THERMAL-TEMPLATE-LINK-PHYSICS-RECOVERED",
+                        "message": (
+                            "Existing one-to-one template links had stale physical "
+                            "fields. Only those fields were rewritten through the "
+                            "native record setters and strictly read back."
+                        ),
+                        "template_name": definition.name,
+                        "repairs": link_repairs,
+                    }
+                    if warning not in self._compatibility_warnings:
+                        self._compatibility_warnings.append(warning)
                 warning = {
                     "code": "VE-INCOMPLETE-THERMAL-TEMPLATE-RECOVERED",
                     "message": (
@@ -2279,15 +2891,27 @@ class IesVeAssetProvisioner:
                     dict(template.get_apache_systems()),
                     "recovered thermal template system data",
                 )
-                if expected_gain_names != record_names(template.get_casual_gains()):
+                gains_verified, gain_details_after = _template_links_semantically_match(
+                    expected_gain_records,
+                    template.get_casual_gains(),
+                    "gain",
+                )
+                if not gains_verified:
                     raise VeMutationError(
-                        "Recovered thermal template gain links differ from manifest"
+                        "Recovered thermal template gain physics differs from "
+                        "manifest: {}".format(gain_details_after)
                     )
-                if expected_exchange_names != record_names(
-                    template.get_air_exchanges()
-                ):
+                exchanges_verified, exchange_details_after = (
+                    _template_links_semantically_match(
+                        expected_exchange_records,
+                        template.get_air_exchanges(),
+                        "air_exchange",
+                    )
+                )
+                if not exchanges_verified:
                     raise VeMutationError(
-                        "Recovered thermal template air-exchange links differ from manifest"
+                        "Recovered thermal template air-exchange physics differs "
+                        "from manifest: {}".format(exchange_details_after)
                     )
             return definition.name, self._template_handle(template)
         try:
@@ -2428,3 +3052,128 @@ class IesVeAssetProvisioner:
             apache_system_id=apache_system_id,
             compatibility_warnings=tuple(self._compatibility_warnings),
         )
+
+    def provision_operational_template(self, plan: Any) -> Dict[str, Any]:
+        """Provision only profiles, gains, exchanges and one thermal template.
+
+        Client-model remediation must not create or replace envelope CDB data
+        merely to install a reviewed operational template.  This deliberately
+        narrow boundary reuses the same enum preflight, collision policy and
+        exact VE read-back checks as :meth:`provision`, while excluding all
+        material and construction mutation.
+        """
+
+        if getattr(plan, "on_existing", None) not in {"fail", "reuse_verified"}:
+            raise VeMutationError(
+                "Operational-template on_existing must be 'fail' or "
+                "'reuse_verified'"
+            )
+        profiles = tuple(getattr(plan, "profiles", ()))
+        gains = tuple(getattr(plan, "gains", ()))
+        exchanges = tuple(getattr(plan, "air_exchanges", ()))
+        template = getattr(plan, "thermal_template", None)
+        if template is None or not gains or not exchanges:
+            raise VeMutationError(
+                "Operational-template plan requires a template, gains and air exchanges"
+            )
+        for definition in profiles:
+            if definition.evidence.validation_error() or definition.data.validation_error():
+                raise VeMutationError(
+                    "Operational profile {} has invalid evidence or data".format(
+                        definition.key
+                    )
+                )
+        for label, definitions in (("gain", gains), ("air exchange", exchanges)):
+            for definition in definitions:
+                errors = [
+                    "{}.{}: {}".format(label, name, error)
+                    for name, field in definition.properties.items()
+                    for error in [field.validation_error()]
+                    if error
+                ]
+                if definition.evidence.validation_error() or errors:
+                    raise VeMutationError(
+                        "Operational {} {} is invalid: {}".format(
+                            label, definition.key, "; ".join(errors)
+                        )
+                    )
+        template_errors = []
+        for group in (template.room_conditions, template.system_data):
+            for name, field in group.items():
+                error = field.validation_error()
+                if error:
+                    template_errors.append("{}: {}".format(name, error))
+        gain_keys = {item.key for item in gains}
+        exchange_keys = {item.key for item in exchanges}
+        if set(template.gain_keys) != gain_keys:
+            template_errors.append("template gain keys do not match the plan")
+        if set(template.air_exchange_keys) != exchange_keys:
+            template_errors.append("template air-exchange keys do not match the plan")
+        if template.evidence.validation_error() or template_errors:
+            raise VeMutationError(
+                "Operational thermal template is invalid: {}".format(
+                    "; ".join(template_errors)
+                )
+            )
+
+        required_capabilities = {
+            "VEProject.create_profile": hasattr(self.project, "create_profile"),
+            "VEProject.save_profiles": hasattr(self.project, "save_profiles"),
+            "VEProject.create_casual_gain": hasattr(
+                self.project, "create_casual_gain"
+            ),
+            "VEProject.casual_gains": hasattr(self.project, "casual_gains"),
+            "VEProject.create_air_exchange": hasattr(
+                self.project, "create_air_exchange"
+            ),
+            "VEProject.air_exchanges": hasattr(self.project, "air_exchanges"),
+            "VEProject.create_thermal_template": hasattr(
+                self.project, "create_thermal_template"
+            ),
+        }
+        missing = sorted(
+            name for name, available in required_capabilities.items() if not available
+        )
+        if missing:
+            raise VeApiUnavailableError(
+                "Operational-template provisioning is unavailable: {}".format(missing)
+            )
+
+        self._compatibility_warnings = []
+        self._preflight_runtime_enums(plan)
+        if plan.on_existing == "fail":
+            self._ensure_no_existing_template(template.name)
+        profile_ids = self._create_profiles(plan)
+        apache_system_id, _ = self._create_apache_system(plan)
+        # An earlier fail-closed run may have created a correctly named gain
+        # before a version-specific read-back mismatch stopped the workflow.
+        # Reconcile only exact-name, exact-subtype records declared by this
+        # same source-traced plan; divergent or ambiguous objects still fail.
+        if plan.on_existing == "reuse_verified":
+            for definition in gains:
+                self.reconcile_existing_gain(plan, definition.key)
+        gain_objects, gain_ids = self._create_gains(
+            plan, profile_ids, apache_system_id
+        )
+        if plan.on_existing == "reuse_verified":
+            for definition in exchanges:
+                self.reconcile_existing_air_exchange(plan, definition.key)
+        exchange_objects, exchange_names = self._create_air_exchanges(
+            plan, profile_ids, apache_system_id
+        )
+        template_name, template_handle = self._create_template(
+            plan,
+            profile_ids,
+            apache_system_id,
+            gain_objects,
+            exchange_objects,
+        )
+        return {
+            "status": "OPERATIONAL_TEMPLATE_CREATED_OR_VERIFIED",
+            "profile_ids": dict(profile_ids),
+            "gain_ids": dict(gain_ids),
+            "air_exchange_names": dict(exchange_names),
+            "template_name": template_name,
+            "template_handle": template_handle,
+            "compatibility_warnings": list(self._compatibility_warnings),
+        }

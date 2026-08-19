@@ -1,15 +1,15 @@
 # -*- coding: utf-8 -*-
-"""Tests unitaires du moteur de validation SIA 4010 Test 1 (`engine/test1_engine.py`).
+"""Unit tests for the SIA 4010 Test 1 validation engine (`engine/test1_engine.py`).
 
-Developpement pilote par la reference (CLAUDE.md) : chaque controle charge une
-valeur deja figee et auditee dans `refs/reference-data/test-1.ref.json` et exige
-que le moteur la reproduise dans la tolerance, plutot que d'inventer des fixtures
-synthetiques pour tout. Des cas synthetiques ne sont utilises que pour les
-scenarios hors-bande ou de forme d'entree qu'aucune donnee reelle ne couvre
-(candidat manquant, candidat clairement hors Streubereich, formes invalides).
+Reference-driven development (CLAUDE.md): each check loads a value already
+frozen and audited in `refs/reference-data/test-1.ref.json` and requires
+the engine to reproduce it within tolerance, rather than inventing synthetic
+fixtures for everything. Synthetic cases are only used for out-of-band
+scenarios or input shapes that no real data covers
+(missing candidate, candidate clearly outside Streubereich, invalid shapes).
 
-Aucun `import iesve` ; compatible Python 3.4 (pas de f-string), cf.
-`docs/ADR-001-architecture-MSP.md` §2 et `engine/tests/test_ref_integrity.py`.
+No `import iesve`; compatible with Python 3.4 (no f-strings), cf.
+`docs/ADR-001-architecture-MSP.md` §2 and `engine/tests/test_ref_integrity.py`.
 """
 
 import os
@@ -38,13 +38,13 @@ def _proche(gauche, droite, tolerance=TOLERANCE):
 
 
 # --------------------------------------------------------------------------
-# 1. Chargement de la reference figee
+# 1. Loading the frozen reference
 # --------------------------------------------------------------------------
 
 def test_charger_reference_par_defaut_expose_les_cinq_grandeurs():
-    """Cinq depuis la passe 4 : la Table 31 (charges de pointe horaires du cas
-    1E) a ete ajoutee apres l'audit du loader existant, qui la lisait alors que
-    la reference l'ignorait (AUDIT-swiss-sia-existant.md, element n 3)."""
+    """Five since pass 4: Table 31 (hourly peak loads for case
+    1E) was added after the audit of the existing loader, which was reading it
+    while the reference ignored it (AUDIT-swiss-sia-existant.md, item 3)."""
     ref = moteur.charger_reference()
     assert set(ref['reference_values'].keys()) == {
         'sensible_heating_demand_kwh',
@@ -61,9 +61,9 @@ def test_charger_reference_chemin_explicite_equivaut_au_defaut(reference):
 
 
 # --------------------------------------------------------------------------
-# 2. `calculer_plage_dispersion` -- reproduit EXACTEMENT la formule auditee,
-#    sur TOUTES les periodes reelles (1E, chauffage + refroidissement, 26
-#    periodes comme dans AUDIT.md pt 4 / re-audit passe 3).
+# 2. `calculer_plage_dispersion` -- reproduces EXACTLY the audited formula,
+#    on ALL real periods (1E, heating + cooling, 26
+#    periods as in AUDIT.md pt 4 / re-audit pass 3).
 # --------------------------------------------------------------------------
 
 def _enregistrements_1e(reference, grandeur):
@@ -74,8 +74,8 @@ def _enregistrements_1e(reference, grandeur):
 
 
 def test_plage_dispersion_reproduit_la_reference_sur_toutes_les_periodes(reference):
-    """Chaque `range_min`/`range_max` deja calcule par l'Excel officiel doit etre
-    reproduit par `calculer_plage_dispersion` a partir des 4 programmes bruts."""
+    """Each `range_min`/`range_max` already computed by the official Excel must be
+    reproduced by `calculer_plage_dispersion` from the 4 raw programmes."""
     verifiees = 0
     for grandeur in ('sensible_heating_demand_kwh', 'sensible_cooling_demand_kwh'):
         for _label, enregistrement in _enregistrements_1e(reference, grandeur):
@@ -90,20 +90,20 @@ def test_plage_dispersion_reproduit_la_reference_sur_toutes_les_periodes(referen
             assert _proche(plage_min, attendu_min)
             assert _proche(moyenne, attendu_moyenne)
             verifiees += 1
-    # 12 mois + annuel, pour chauffage et refroidissement = 26 (AUDIT.md pt 4).
+    # 12 months + annual, for heating and cooling = 26 (AUDIT.md pt 4).
     assert verifiees == 26
 
 
 def test_plage_dispersion_nest_pas_le_min_max_brut():
-    """Garde-fou explicite contre l'idee recue corrigee par l'audit (AUDIT.md pt 4) :
-    le Streubereich n'est PAS [min(valeurs), max(valeurs)]."""
+    """Explicit safeguard against the misconception corrected by the audit (AUDIT.md pt 4):
+    the Streubereich is NOT [min(values), max(values)]."""
     valeurs = [10.0, 12.0, 8.0, 50.0]
     moyenne, ecart_max, plage_min, plage_max = moteur.calculer_plage_dispersion(valeurs)
     assert moyenne == 20.0
     assert ecart_max == 30.0  # |50 - 20|
     assert plage_max == 50.0
-    assert plage_min == 0.0  # plancher a 0 (moyenne - ecart_max = -10 < 0)
-    # Le min/max brut des valeurs (8, 50) est different du Streubereich (0, 50) :
+    assert plage_min == 0.0  # floor at 0 (mean - ecart_max = -10 < 0)
+    # The raw min/max of the values (8, 50) differs from the Streubereich (0, 50):
     assert (plage_min, plage_max) != (min(valeurs), max(valeurs))
 
 
@@ -113,13 +113,13 @@ def test_plage_dispersion_leve_si_aucune_valeur():
 
 
 # --------------------------------------------------------------------------
-# 3. `evaluer_periode_1e` -- le seul verdict pass/fail du Test 1
+# 3. `evaluer_periode_1e` -- the only pass/fail verdict of Test 1
 # --------------------------------------------------------------------------
 
 def test_1e_candidat_egal_a_la_moyenne_est_conforme(reference):
-    """La moyenne des programmes est, par construction, toujours dans sa propre
-    plage (AUDIT.md pt 4 : verifie 26/26) : un candidat qui la reproduit doit
-    donc passer le critere."""
+    """The programme mean is, by construction, always within its own
+    band (AUDIT.md pt 4: verified 26/26): a candidate that reproduces it must
+    therefore pass the criterion."""
     enregistrement = reference['reference_values'][
         'sensible_heating_demand_kwh']['1E']['annual']
     moyenne = moteur._valeur_reelle(enregistrement['mean_of_programs'])
@@ -131,9 +131,9 @@ def test_1e_candidat_egal_a_la_moyenne_est_conforme(reference):
 
 
 def test_1e_candidat_egal_a_un_programme_de_reference_est_conforme(reference):
-    """Un candidat identique a UN des 4 programmes de reference doit tomber dans
-    la plage, puisque cette plage encadre justement l'ecart maximal observe entre
-    les programmes et leur moyenne."""
+    """A candidate identical to ONE of the 4 reference programmes must fall within
+    the band, since this band brackets the maximum deviation observed between
+    the programmes and their mean."""
     enregistrement = reference['reference_values'][
         'sensible_cooling_demand_kwh']['1E']['monthly']['month_07']
     valeur_ida = moteur._valeur_reelle(enregistrement['ida_ice_5_0_beta_23'])
@@ -142,8 +142,8 @@ def test_1e_candidat_egal_a_un_programme_de_reference_est_conforme(reference):
 
 
 def test_1e_candidat_sur_la_borne_exacte_est_conforme(reference):
-    """`range_min <= candidat <= range_max` : la borne elle-meme est incluse
-    (AUDIT.md : "range_min <= candidat <= range_max"), pas une inegalite stricte."""
+    """`range_min <= candidat <= range_max`: the bound itself is included
+    (AUDIT.md: "range_min <= candidat <= range_max"), not a strict inequality."""
     enregistrement = reference['reference_values'][
         'sensible_heating_demand_kwh']['1E']['annual']
     plage_max = moteur._valeur_reelle(enregistrement['range_max'])
@@ -153,8 +153,8 @@ def test_1e_candidat_sur_la_borne_exacte_est_conforme(reference):
 
 
 def test_1e_candidat_nettement_hors_bande_est_rejete(reference):
-    """Cas synthetique hors-bande : aucune donnee reelle ne peut couvrir un
-    candidat aberrant puisque le candidat IESVE n'a pas encore ete calcule."""
+    """Synthetic out-of-band case: no real data can cover an
+    aberrant candidate since the IESVE candidate has not yet been computed."""
     enregistrement = reference['reference_values'][
         'sensible_heating_demand_kwh']['1E']['annual']
     plage_max = moteur._valeur_reelle(enregistrement['range_max'])
@@ -167,17 +167,16 @@ def test_1e_candidat_nettement_hors_bande_est_rejete(reference):
     plage_min = moteur._valeur_reelle(enregistrement['range_min'])
     candidat_trop_bas = plage_min - 1000.0
     if candidat_trop_bas < 0:
-        # Le plancher de la plage est 0 (cf. formule) : verifier qu'on rejette
-        # bien un candidat negatif hors plage, pas seulement "en dessous de la
-        # moyenne".
+        # The band floor is 0 (cf. formula): verify that a negative candidate
+        # outside the band is indeed rejected, not just "below the mean".
         resultat_bas = moteur.evaluer_periode_1e(enregistrement, candidat_trop_bas)
         assert resultat_bas['conforme'] is False
         assert resultat_bas['marge_min'] < 0
 
 
 def test_1e_candidat_absent_ne_produit_aucun_verdict(reference):
-    """Un candidat non fourni (VE Script pas encore execute) doit rester
-    `conforme=None` avec un motif explicite -- jamais un `False` invente."""
+    """A candidate not yet provided (VE Script not yet run) must stay
+    `conforme=None` with an explicit reason -- never an invented `False`."""
     enregistrement = reference['reference_values'][
         'sensible_heating_demand_kwh']['1E']['annual']
     resultat = moteur.evaluer_periode_1e(enregistrement, None)
@@ -188,13 +187,13 @@ def test_1e_candidat_absent_ne_produit_aucun_verdict(reference):
 
 
 def test_1e_leve_si_un_programme_de_reference_manque():
-    """Un enregistrement 1E incomplet (programme manquant) doit lever une erreur
-    explicite plutot que de calculer une plage fausse en silence."""
+    """An incomplete 1E record (missing programme) must raise an explicit error
+    rather than silently computing a wrong band."""
     enregistrement_incomplet = {
         'ida_ice_5_0_beta_23': {'value': 100.0, 'unit': 'kWh', 'cell': 'C1'},
         'excel_sia_380_2': {'value': 110.0, 'unit': 'kWh', 'cell': 'D1'},
         'energyplus_openstudio_9_1_0': {'value': 90.0, 'unit': 'kWh', 'cell': 'E1'},
-        # tas_edsl_9_5_2 manquant
+        # tas_edsl_9_5_2 missing
         'range_max': {'value': 120.0, 'unit': 'kWh', 'cell': 'H1'},
         'range_min': {'value': 80.0, 'unit': 'kWh', 'cell': 'I1'},
     }
@@ -203,19 +202,19 @@ def test_1e_leve_si_un_programme_de_reference_manque():
 
 
 def test_1e_coherence_reference_detecte_une_plage_stockee_divergente(reference):
-    """Si les colonnes deja calculees par l'Excel divergeaient du recalcul
-    independant du moteur, `coherence_reference` doit passer a False (garde-fou
-    ADR-001 §4 pt 2). Simule sur une copie modifiee d'un enregistrement reel."""
+    """If the columns already computed by the Excel diverged from the independent
+    recomputation of the engine, `coherence_reference` must switch to False (safeguard
+    ADR-001 §4 pt 2). Simulated on a modified copy of a real record."""
     import copy
     enregistrement = copy.deepcopy(reference['reference_values'][
         'sensible_heating_demand_kwh']['1E']['annual'])
-    enregistrement['range_max']['value'] += 500.0  # divergence volontaire
+    enregistrement['range_max']['value'] += 500.0  # intentional divergence
     resultat = moteur.evaluer_periode_1e(enregistrement, 0.0)
     assert resultat['coherence_reference'] is False
 
 
 # --------------------------------------------------------------------------
-# 4. `comparer_periode_informative` -- AUCUN verdict, pour tous les autres cas
+# 4. `comparer_periode_informative` -- NO verdict, for all other cases
 # --------------------------------------------------------------------------
 
 def test_informatif_ne_produit_jamais_de_verdict(reference):
@@ -234,15 +233,15 @@ def test_informatif_delta_nul_si_candidat_egal_a_un_programme(reference):
     comparaison_iso = resultat['comparaisons']['iso_52016_1_2017_reference']
     assert _proche(comparaison_iso['delta_absolu'], 0.0)
     assert _proche(comparaison_iso['delta_relatif_pct'], 0.0)
-    # Les autres programmes, eux, doivent presenter un delta non nul (donnees
-    # reelles distinctes -- verifie qu'on ne compare pas tout au meme nombre).
+    # The other programmes must show a non-zero delta (distinct real data
+    # -- verifies we are not comparing everything to the same number).
     comparaison_tas = resultat['comparaisons']['tas_edsl_9_5_2']
     assert comparaison_tas['delta_absolu'] != 0.0
 
 
 def test_informatif_candidat_absent_laisse_les_references_visibles(reference):
-    """Meme sans candidat, les valeurs de reference (comparatif informatif)
-    restent exposees -- seul le delta devient None."""
+    """Even without a candidate, the reference values (informative comparison)
+    remain exposed -- only the delta becomes None."""
     enregistrement = reference['reference_values'][
         'operative_temperature_monthly_celsius']['600']['monthly']['month_01']
     resultat = moteur.comparer_periode_informative(enregistrement, None)
@@ -253,8 +252,8 @@ def test_informatif_candidat_absent_laisse_les_references_visibles(reference):
 
 
 def test_informatif_gere_les_cas_600ff_900ff_temperature(reference):
-    """Cas 600FF/900FF (flottement libre) : seule sortie contrôlée = temperature
-    operative, toujours sans verdict (spec §6)."""
+    """Cases 600FF/900FF (free float): only controlled output = operative
+    temperature, always without verdict (spec §6)."""
     enregistrement = reference['reference_values'][
         'operative_temperature_monthly_celsius']['600FF']['monthly']['annual']
     resultat = moteur.comparer_periode_informative(enregistrement, 24.0)
@@ -271,7 +270,7 @@ def test_informatif_gere_les_extremes_table_32(reference):
 
 
 # --------------------------------------------------------------------------
-# 5. `_valeur_candidate` -- tolerance de forme explicite, rejet du reste
+# 5. `_valeur_candidate` -- explicit shape tolerance, rejection of the rest
 # --------------------------------------------------------------------------
 
 @pytest.mark.parametrize('entree,attendu', [
@@ -297,8 +296,8 @@ def test_valeur_candidate_formes_rejetees(entree):
 
 def test_evaluer_cas_1e_toutes_periodes_conformes_si_candidat_egal_a_la_moyenne(
         reference):
-    """Construit un candidat 1E entierement egal a `mean_of_programs` (mois +
-    annuel) : le cas doit ressortir integralement conforme."""
+    """Builds a 1E candidate entirely equal to `mean_of_programs` (monthly +
+    annual): the case must come out fully conforming."""
     noeud_1e = reference['reference_values']['sensible_heating_demand_kwh']['1E']
     candidat_mensuel = {}
     for mois in moteur.MOIS:
@@ -310,7 +309,7 @@ def test_evaluer_cas_1e_toutes_periodes_conformes_si_candidat_egal_a_la_moyenne(
     }
     resultats = moteur.evaluer_cas(
         reference, 'sensible_heating_demand_kwh', '1E', candidat_cas)
-    assert len(resultats) == 13  # 12 mois + annuel
+    assert len(resultats) == 13  # 12 months + annual
     assert all(v['conforme'] is True for v in resultats.values())
 
 
@@ -322,8 +321,8 @@ def test_evaluer_cas_informatif_ne_leve_jamais_meme_sans_candidat(reference):
 
 
 def test_evaluer_test1_structure_et_verdict_global_conforme(reference):
-    """Construit un candidat COMPLET (chauffage + refroidissement, 1E =
-    moyenne des programmes partout) : verdict global du Test 1 = conforme."""
+    """Builds a COMPLETE candidate (heating + cooling, 1E =
+    programme mean everywhere): global verdict of Test 1 = conforming."""
     candidat = {}
     for grandeur in ('sensible_heating_demand_kwh', 'sensible_cooling_demand_kwh'):
         noeud_1e = reference['reference_values'][grandeur]['1E']
@@ -338,9 +337,9 @@ def test_evaluer_test1_structure_et_verdict_global_conforme(reference):
             }
         }
 
-    # Table 31 : troisieme critere pass/fail du cas 1E. Sans lui, le verdict
-    # global reste `None` -- ce qui est le comportement voulu (une periode non
-    # evaluee n'est jamais un succes), mais empeche de tester le cas conforme.
+    # Table 31: third pass/fail criterion for case 1E. Without it, the global
+    # verdict remains `None` -- which is the intended behaviour (an unevaluated
+    # period is never a success), but prevents testing the conforming case.
     noeud_pointe = reference['reference_values']['annual_hourly_peak_load_kwh']['1E']
     candidat['annual_hourly_peak_load_kwh'] = {
         '1E': {
@@ -353,14 +352,14 @@ def test_evaluer_test1_structure_et_verdict_global_conforme(reference):
 
     resultat = moteur.evaluer_test1(reference, candidat)
 
-    # Toutes les grandeurs/cas de la reference doivent apparaitre.
+    # All quantities/cases from the reference must appear.
     cles_attendues = set()
     for grandeur, cas_tous in reference['reference_values'].items():
         for cas in cas_tous:
             cles_attendues.add(grandeur + '/' + cas)
     assert set(resultat['cas'].keys()) == cles_attendues
 
-    # Les cas non-1E restent "informatif", 1E est "critere_pass_fail".
+    # Non-1E cases remain "informatif", 1E is "critere_pass_fail".
     assert resultat['cas']['sensible_heating_demand_kwh/1E']['type_controle'] == \
         'critere_pass_fail'
     assert resultat['cas']['sensible_heating_demand_kwh/600']['type_controle'] == \
@@ -368,23 +367,23 @@ def test_evaluer_test1_structure_et_verdict_global_conforme(reference):
 
     assert resultat['verdict_test1']['conforme'] is True
     assert resultat['classes_concernees'] == list(moteur.CLASSES_REQUERANT_TEST1)
-    assert '5' not in resultat['classes_concernees']  # tab. 63 : classe 5 exclue
+    assert '5' not in resultat['classes_concernees']  # tab. 63: class 5 excluded
 
 
 def test_evaluer_test1_sans_candidat_ne_leve_pas_et_verdict_est_none(reference):
-    """Pipeline complet appelable AVANT que ve-adapter ne fournisse quoi que ce
-    soit : aucune exception, verdict global `None` (rien n'est encore evalue)."""
+    """Full pipeline callable BEFORE ve-adapter provides anything:
+    no exception, global verdict `None` (nothing is yet evaluated)."""
     resultat = moteur.evaluer_test1(reference, None)
     assert resultat['verdict_test1']['conforme'] is None
-    # Toutes les periodes 1E doivent etre non-evaluees, pas fautives.
+    # All 1E periods must be non-evaluated, not faulty.
     bloc_1e = resultat['cas']['sensible_heating_demand_kwh/1E']
     assert all(p['conforme'] is None for p in bloc_1e['periodes'].values())
 
 
 def test_evaluer_test1_un_seul_echec_1e_suffit_a_faire_echouer_le_verdict_global(
         reference):
-    """Une seule periode 1E hors bande doit faire basculer le verdict global,
-    meme si toutes les autres periodes 1E sont conformes."""
+    """A single out-of-band 1E period must flip the global verdict,
+    even if all other 1E periods are conforming."""
     candidat = {}
     for grandeur in ('sensible_heating_demand_kwh', 'sensible_cooling_demand_kwh'):
         noeud_1e = reference['reference_values'][grandeur]['1E']
@@ -398,7 +397,7 @@ def test_evaluer_test1_un_seul_echec_1e_suffit_a_faire_echouer_le_verdict_global
                 'annual': moteur._valeur_reelle(noeud_1e['annual']['mean_of_programs']),
             }
         }
-    # Sabote une seule periode (janvier, chauffage) tres au-dela de la plage.
+    # Sabotage one single period (January, heating) well beyond the band.
     plage_max_janvier = moteur._valeur_reelle(
         reference['reference_values']['sensible_heating_demand_kwh']['1E']
         ['monthly']['month_01']['range_max'])

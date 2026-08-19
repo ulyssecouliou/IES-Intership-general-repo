@@ -5,9 +5,17 @@
 Open and save the target VE project, then run
 `Run_VE_Swiss_Compliance_Hub.py` from the IESVE Scripts window. The scrollable
 hub delegates to the existing read-only client audit, evidence wizard,
-compliance report, reference-model workflow, SIA 4010 Model Builder and
+controlled reviewed-template remediation, compliance report, reference-model
+workflow, SIA 4010 Model Builder and
 eight-class navigator. VE-mutating entries are disabled unless the active
 project name explicitly ends in `_TEST`, `_COPY` or `_DISPOSABLE`.
+
+For a reviewed room-level correction on a disposable client copy, use the hub
+action **Apply reviewed room templates** or run
+`Run_VE_SIA3802_Approved_Template_Remediation.py`. The operation requires named
+approval evidence, creates an immutable preview, verifies VE read-back and then
+requires the read-only audit to be rerun before the copy is saved. It never
+creates or guesses regulatory values.
 
 Hub action 4 first opens `Run_VE_Swiss_Reference_Model_Setup.py`. The setup
 requires an explicitly selected EPW, copies it and the maintained JSON inputs
@@ -109,6 +117,7 @@ The end user does not need PowerShell or command-line access.
 
 - `Run_VE_Swiss_Compliance.py`: IESVE Run-button launcher.
 - `Run_VE_Swiss_Compliance_Remediation_Probe.py`: read-only disposable-copy diagnostic launcher.
+- `Run_VE_SIA3802_Approved_Template_Remediation.py`: checksum-bound assignment of an existing, independently reviewed thermal template to explicitly selected rooms in a disposable copy.
 - `Prepare_SIA4010_Evidence_Folder.py`: IESVE Run-button helper that prepares project-named evidence CSV files.
 - `main.py`: compatibility wrapper for existing shortcuts.
 - `swiss_sia/app.py`: workflow orchestration and timestamped report naming.
@@ -124,6 +133,7 @@ The end user does not need PowerShell or command-line access.
 - `docs/project/`: project notes, handoff material and compliance traceability notes.
 - `docs/project/GLAZING_EVIDENCE_GUIDE.md`: IESVE/CDB glazing evidence retrieval and handoff guide.
 - `docs/project/MODEL_REMEDIATION_PLAYBOOK.md`: practical VE/CDB remediation workflow for the current ZOER_32_C1 findings.
+- `docs/project/SIA3802_CLIENT_TEMPLATE_REMEDIATION_EN.md`: scope, safety contract, approval inputs and runtime procedure for client-template remediation.
 - `docs/project/MANAGER_REFERENCE_INTEGRATION.md`: integration note for the manager-provided register and navigator backlog.
 - `references/standards/`: local PDF standards/reference copies.
 - `references/iesve/`: IESVE API notes and reference PDFs.
@@ -196,16 +206,18 @@ The minimum saleable product should add:
 
 ## Navigateur de validation SIA 4010
 
-La chaine qui produit les rapports par classe de validation -- l objectif du
-MVP -- vit desormais dans ce depot :
+> Verifie 2026-08-16 -- voir `docs/project/AUDIT_COMPLET_2026-08-16.md`.
+> L'outil client de production vit **entierement dans `swiss_sia/`**. Le triptyque
+> `engine/`+`ve_adapter/`+`ui/` ci-dessous n'est PAS le runtime client.
 
-| Couche | Role |
-|---|---|
-| `engine/` | moteurs de validation, Python PUR, sans `iesve` |
-| `ve_adapter/` | extraction depuis IESVE vers JSON normalise |
-| `ui/` | navigateur Tkinter dans VE, exports Excel et PDF |
-| `refs/reference-data/` | valeurs de reference figees, recalculees et confrontees |
-| `traceability/` | matrices clause -> code -> test |
+| Couche | Role | Statut |
+|---|---|---|
+| `swiss_sia/` | extraction VE, regles SIA 380/2 & 4010, scoring, rapports Excel + PDF client, evidence | **PRODUCTION** |
+| `swiss_sia/reference_model/ve_api.py`, `data_extractor.py` | seul acces `iesve` de production | production |
+| `refs/reference-data/` | valeurs de reference figees, recalculees et confrontees | donnees |
+| `engine/` + `ve_adapter/` | recompute SIA 4010 independant + build des references (`scripts/build_*.py`) | outillage, hors runtime client |
+| `ui/` | UI/exports Tkinter herites ; seuls `ui/design.py`+`ui/tk_theme.py` (styles) servent encore | herite |
+| `traceability/` | matrices clause -> code -> test (etat de signature par test) | tracabilite |
 
 Lancer le controle d installation, hors VE :
 

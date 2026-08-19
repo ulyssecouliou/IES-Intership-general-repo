@@ -50,23 +50,23 @@ class Sia4010TemplateStrategyTests(unittest.TestCase):
     def test_unbound_complex_cases_are_blocked(self):
         plans = build_hybrid_case_plans(self.requirements, ())
         blocked = [item for item in plans if item.status == "BLOCKED_TEMPLATE_REQUIRED"]
-        # 23 : tous les cas hors Test 1 dont aucun template VE n'est lie.
+        # 23: all cases outside Test 1 for which no VE template is bound.
         #
-        # La version precedente attendait 27 et rangeait 1A a 1D parmi eux
-        # « faute de template lie ». C'etait le bon compte pour la mauvaise
-        # raison, et l'assertion juste en dessous verifie desormais pourquoi :
-        # le Test 1 ne consomme AUCUN template VE (template_allowed est faux) ;
-        # il utilise le template generique a charges idealisees que son propre
-        # bundle construit. Ces quatre cas etaient donc bloques par l'absence de
-        # generateur, pas de template. Le generateur existe depuis le
-        # 2026-08-13, et leur statut suit celui des cinq autres cas outilles.
+        # The previous version expected 27 and placed 1A through 1D among them
+        # "for lack of a bound template". That was the right count for the wrong
+        # reason, and the assertion just below now verifies why:
+        # Test 1 consumes NO VE template (template_allowed is false);
+        # it uses the generic idealized-load template that its own
+        # bundle builds. Those four cases were therefore blocked by the absence
+        # of a generator, not a template. The generator has existed since
+        # 2026-08-13, and their status follows that of the five other equipped cases.
         self.assertEqual(len(blocked), 23)
         self.assertFalse(self.requirements["1"].template_allowed)
         test1_bloques = {item.case_id for item in blocked
                          if item.base_test_id == "1"}
         self.assertEqual(test1_bloques, set())
-        # Le temoin positif : les quatre suivent bien la voie de qualification,
-        # et 1E reste a la preparation, son generateur n'existant pas.
+        # The positive control: the four correctly follow the qualification path,
+        # and 1E remains at preparation, its generator not existing.
         par_cas = {item.case_id: item.status for item in plans
                    if item.base_test_id == "1"}
         for case_id in ("1A", "1B", "1C", "1D"):

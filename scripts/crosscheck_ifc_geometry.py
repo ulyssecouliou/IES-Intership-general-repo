@@ -1,26 +1,27 @@
 # -*- coding: utf-8 -*-
-"""Confronte la GEOMETRIE de l'IFC aux QUANTITES qu'il declare lui-meme.
+"""Confronts the GEOMETRY of the IFC against the QUANTITIES it declares itself.
 
-LECTURE SEULE. Ne modifie ni l'IFC ni aucun modele VE.
+READ-ONLY. Modifies neither the IFC nor any VE model.
 
-Pourquoi : avant d'importer le batiment exemple dans IESVE, il faut savoir si sa
-geometrie est exploitable. Deux derivations independantes existent dans le
-fichier, et elles doivent concorder :
+Why: before importing the example building into IESVE, it is necessary to know
+if its geometry is usable. Two independent derivations exist in the file, and
+they must agree:
 
-  1. les **quantites declarees** (`IFCQUANTITYAREA('GrossFloorArea', ...)`,
-     `GrossVolume`, `AverageHeight`), lues par
-     `scripts/inspect_ifc_example_building.py` ;
-  2. la **geometrie reelle** (profils fermes extrudes verticalement), lue par
-     `AbstractBimIfcSpaceExtractor` du depot `IES-Intership-general-repo`, qui
-     calcule l'aire de chaque polygone et le volume du prisme.
+  1. the **declared quantities** (`IFCQUANTITYAREA('GrossFloorArea', ...)`,
+     `GrossVolume`, `AverageHeight`), read by
+     `scripts/inspect_ifc_example_building.py`;
+  2. the **actual geometry** (closed profiles extruded vertically), read by
+     `AbstractBimIfcSpaceExtractor` from the `IES-Intership-general-repo`
+     repository, which computes the area of each polygon and the volume of
+     the prism.
 
-Si les deux concordent, la geometrie est saine et importable. Si elles divergent,
-il faut l'elucider AVANT l'import : une surface fausse se propagerait dans tous
-les resultats des Tests 4 a 7 sans etre visible.
+If the two agree, the geometry is sound and importable. If they diverge, this
+must be elucidated BEFORE the import: a wrong surface would propagate into all
+results of Tests 4 to 7 without being visible.
 
-L'extracteur du depot existant est deliberement *fail-closed* : il refuse les
-rotations et les extrusions non verticales plutot que de les approximer. Ce
-script ne fait que l'executer et comparer ; il n'implemente aucune geometrie.
+The extractor from the existing repository is deliberately *fail-closed*: it
+refuses rotations and non-vertical extrusions rather than approximating them.
+This script only runs it and compares; it implements no geometry.
 
 Usage :
     python scripts/crosscheck_ifc_geometry.py [chemin_depot_existant]
@@ -35,10 +36,10 @@ sys.path.insert(0, RACINE)
 DEPOT_DEFAUT = os.path.join(
     os.path.dirname(RACINE), 'IES Internship', 'IES-Intership-general-repo')
 
-# Tolerances de comparaison. Elles ne sont PAS normatives : ce sont des seuils de
-# controle interne, choisis larges pour ne signaler que de vrais desaccords.
-# L'aire d'un polygone et une quantite arrondie a 2 decimales dans le fichier ne
-# peuvent pas coincider exactement.
+# Comparison tolerances. These are NOT normative: they are internal control
+# thresholds, chosen wide so as to flag only genuine disagreements.
+# A polygon area and a quantity rounded to 2 decimal places in the file
+# cannot coincide exactly.
 TOL_SURFACE_M2 = 0.05
 TOL_VOLUME_M3 = 1.0
 TOL_HAUTEUR_M = 0.02
@@ -50,9 +51,9 @@ def main():
         sys.stderr.write('Depot existant introuvable : ' + depot + '\n')
         return 1
 
-    # ⚠ ORDRE DES IMPORTS : le depot existant possede aussi un paquet `scripts`.
-    # Importer le notre AVANT d'ajouter son chemin a `sys.path`, sinon `scripts`
-    # y resout et `inspect_ifc_example_building` devient introuvable.
+    # ⚠ IMPORT ORDER: the existing repository also has a `scripts` package.
+    # Import ours BEFORE adding its path to `sys.path`, otherwise `scripts`
+    # resolves there and `inspect_ifc_example_building` becomes unreachable.
     from scripts.inspect_ifc_example_building import IFC_DEFAUT, inventaire
 
     sys.path.insert(0, depot)

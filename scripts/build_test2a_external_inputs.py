@@ -1,32 +1,30 @@
 # -*- coding: utf-8 -*-
-u"""Prépare le manifeste d'entrées déléguées du Test 2A, sans rien attester.
+u"""Prepares the Test 2A delegated-inputs manifest without attesting anything.
 
-POURQUOI. La probe runtime du Test 2A rend `SOURCE_BINDINGS_REQUIRED`, et on
-pouvait croire qu'il manquait des données. C'est faux : les trois entrées que le
-cas exige sont dans le dépôt. Ce qui manque est la **déclaration** que nous
-sommes autorisés à les utiliser comme sources normatives, et un contrôle de
-transcription pour l'une des trois.
+WHY. The Test 2A runtime probe returns `SOURCE_BINDINGS_REQUIRED`, and one might
+think data was missing. That is wrong: all three inputs the case requires are in
+the repository. What is missing is the **declaration** that we are authorised to
+use them as normative sources, and a transcription check for one of the three.
 
-CE QUE CE SCRIPT REMPLIT. Tout ce qui se vérifie sur les fichiers : chemin,
-empreinte SHA-256 recalculée, identité du jeu de données, format, portée
-sémantique, autorité et référence de licence, et le rapport de validation
-technique quand il existe.
+WHAT THIS SCRIPT FILLS IN. Everything that is verifiable from the files: path,
+recalculated SHA-256 fingerprint, dataset identity, format, semantic scope,
+authority and licence reference, and the technical validation report when it
+exists.
 
-CE QU'IL NE REMPLIT PAS, ET C'EST LE POINT.
-`normative_authorization_status` reste `UNCONFIRMED` pour les trois. Ce champ
-n'est pas une donnée technique : c'est une attestation que l'usage de la source
-est autorisé. Pour ISO EN 52016-1:2017 et SIA 2028, c'est une question de
-licence, et un script n'a pas qualité à y répondre. Le mettre à `CONFIRMED`
-ferait basculer `ready_for_binding` et ouvrirait la génération du modèle sur une
-autorisation que personne n'a donnée.
+WHAT IT DOES NOT FILL IN, AND THAT IS THE POINT.
+`normative_authorization_status` remains `UNCONFIRMED` for all three. This field
+is not technical data: it is an attestation that the use of the source is
+authorised. For ISO EN 52016-1:2017 and SIA 2028, this is a licensing question,
+and a script has no standing to answer it. Setting it to `CONFIRMED` would flip
+`ready_for_binding` and open model generation on an authorisation nobody has given.
 
-De même, `technical_validation` ne passe à `PASS` que si un rapport existe
-réellement et que son empreinte concorde. L'entrée ISO 52016 n'en a aucun — le
-catalogue exige « independently checked transcription » et ce contrôle n'a pas
-été produit — donc elle sort en `PENDING` avec la raison, pas en `PASS`.
+Likewise, `technical_validation` only reaches `PASS` if a report genuinely exists
+and its fingerprint matches. The ISO 52016 entry has none — the catalogue requires
+« independently checked transcription » and that check has not been produced —
+so it comes out as `PENDING` with the reason, not as `PASS`.
 
-USAGE. Le fichier produit est un modèle : l'opérateur le copie dans son projet
-VE sous `sia4010_external_inputs.json`, après avoir tranché l'autorisation.
+USAGE. The file produced is a template: the operator copies it into their VE
+project as `sia4010_external_inputs.json`, after resolving the authorisation.
 """
 
 from __future__ import print_function
@@ -40,15 +38,15 @@ import sys
 
 _RACINE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 _MODELE = os.path.join(_RACINE, 'config', 'sia4010_external_inputs.example.json')
-#: Version de schéma qu'un rapport de validation doit porter, telle que le
-#: lecteur du manifeste l'exige (`VALIDATION_REPORT_SCHEMA_VERSION`).
+#: Schema version a validation report must carry, as the manifest reader
+#: requires it (`VALIDATION_REPORT_SCHEMA_VERSION`).
 _SCHEMA_RAPPORT = '1.0'
 _SORTIE = os.path.join(
     _RACINE, 'config', 'sia4010_external_inputs.test2a_prepared.json')
 
-#: Les trois entrées que `required_external_input_ids("test_2A", "2A")` exige.
-#: Chaque entrée décrit sa source, son rapport de validation et ce qui la
-#: caractérise. `provenance` doit appartenir à `PROVENANCE_STATUSES`.
+#: The three inputs that `required_external_input_ids("test_2A", "2A")` requires.
+#: Each entry describes its source, its validation report, and what characterises it.
+#: `provenance` must belong to `PROVENANCE_STATUSES`.
 ENTREES = {
     'iso52016_2017_chapter7_test_cell': {
         'source': os.path.join('config', 'iso52016_chapter7_confirmed_inputs.json'),
@@ -102,10 +100,10 @@ ENTREES = {
         ),
         'identite': u'SIA 2028 DRY normal, Zürich-Kloten, 8760 heures',
         'format': 'text/tab-separated-values',
-        # Le raisonnement est celui déjà documenté pour l'entrée SIA 2024 :
-        # fourniture directe par le responsable de la validation, pour cette
-        # validation. L'absence de licence générale ne l'annule pas, mais elle
-        # borne l'usage à ce cadre — et la borne est inscrite, pas supposée.
+        # The reasoning is the same as already documented for the SIA 2024 entry:
+        # direct supply by the validation contact, for this validation.
+        # The absence of a general licence does not cancel it, but it bounds
+        # the use to this context — and the bound is stated, not assumed.
         'autorisation': {
             'base': (
                 u"Autorisé par Ulysse Couliou le 2026-08-13, après examen avec "
@@ -133,14 +131,14 @@ ENTREES = {
     },
 }
 
-#: Entrée déjà préparée par une personne, à REPRENDRE et non à refaire.
+#: Entry already prepared by a person, to be REUSED, not rebuilt.
 #: `sia4010_evidence/source_audits/.../sia4010_external_inputs.office_3_1.json`
-#: porte l'entrée SIA 2024 complète, autorisation comprise, avec sa
-#: justification écrite : fourniture directe par courriel du 2026-08-10,
-#: conservée comme preuve contrôlée et non redistribuable. Cette décision
-#: appartient à un humain ; la reconstruire l'écraserait par une version moins
-#: informée. Seuls les chemins sont recalculés en absolu, parce qu'ils y sont
-#: relatifs au dossier de preuves alors que ce manifeste vit ailleurs.
+#: carries the complete SIA 2024 entry, including authorisation, with its
+#: written justification: direct supply by email of 2026-08-10, retained as
+#: controlled evidence and not redistributable. This decision belongs to a
+#: human; rebuilding it would overwrite it with a less informed version.
+#: Only the paths are recalculated as absolute, because they are relative to
+#: the evidence folder whereas this manifest lives elsewhere.
 FRAGMENT_PREPARE = {
     'sia2024_office_3_1_standard_profiles': os.path.join(
         'sia4010_evidence', 'source_audits', 'sia2024_3_1_authority_20260810',
@@ -149,13 +147,13 @@ FRAGMENT_PREPARE = {
 
 
 def _empreinte(chemin):
-    u"""Renvoie le SHA-256 d'un fichier.
+    u"""Returns the SHA-256 of a file.
 
     Args:
-        chemin: Chemin absolu du fichier.
+        chemin: Absolute path to the file.
 
     Returns:
-        str: Empreinte hexadécimale minuscule.
+        str: Lowercase hexadecimal fingerprint.
     """
     digest = hashlib.sha256()
     with open(chemin, 'rb') as flux:
@@ -165,34 +163,34 @@ def _empreinte(chemin):
 
 
 def _relatif(chemin_relatif):
-    u"""Renvoie le chemin absolu d'une source du dépôt.
+    u"""Returns the absolute path of a repository source.
 
     Args:
-        chemin_relatif: Chemin relatif à la racine du dépôt.
+        chemin_relatif: Path relative to the repository root.
 
     Returns:
-        str: Chemin absolu.
+        str: Absolute path.
     """
     return os.path.join(_RACINE, chemin_relatif)
 
 
 def _rapport_conforme(chemin, identifiant, source_sha256):
-    u"""Dit si un rapport de validation satisfait vraiment le contrat.
+    u"""Says whether a validation report genuinely satisfies the contract.
 
-    Vérifier qu'un fichier existe ne suffit pas : le lecteur du manifeste exige
-    un schéma précis, l'identifiant de l'entrée et l'empreinte exacte de la
-    source. `KLO_dry.provenance.json` existe et décrit bien la provenance du
-    climat, mais ce n'est pas un rapport de validation — le déclarer `PASS`
-    faisait lever le lecteur à l'exécution au lieu de sortir un `PENDING`
-    honnête ici.
+    Checking that a file exists is not enough: the manifest reader requires
+    a specific schema, the entry identifier, and the exact fingerprint of the
+    source. `KLO_dry.provenance.json` exists and describes the climate
+    provenance well, but it is not a validation report — declaring it `PASS`
+    was causing the reader to raise at runtime instead of outputting an honest
+    `PENDING` here.
 
     Args:
-        chemin: Chemin absolu du rapport, ou `None`.
-        identifiant: Identifiant de l'entrée déléguée.
-        source_sha256: Empreinte de la source, à laquelle le rapport doit être lié.
+        chemin: Absolute path to the report, or `None`.
+        identifiant: Delegated-input identifier.
+        source_sha256: Fingerprint of the source the report must be linked to.
 
     Returns:
-        tuple[bool, unicode]: Conformité, et la raison du refus le cas échéant.
+        tuple[bool, unicode]: Compliance, and the reason for refusal if applicable.
     """
     if not chemin:
         return False, u'aucun rapport de validation technique déclaré'
@@ -222,17 +220,17 @@ def _rapport_conforme(chemin, identifiant, source_sha256):
 
 
 def construire():
-    u"""Assemble le manifeste préparé, en laissant l'autorisation ouverte.
+    u"""Assembles the prepared manifest, leaving the authorisation open.
 
     Returns:
-        tuple[dict, list]: Manifeste et journal des décisions par entrée.
+        tuple[dict, list]: Manifest and per-entry decision log.
     """
     with io.open(_MODELE, encoding='utf-8') as flux:
         manifeste = json.load(flux)
 
     journal = []
 
-    # D'abord les entrées déjà préparées : on les reprend telles quelles.
+    # First the already-prepared entries: reuse them as-is.
     for identifiant, fragment_relatif in sorted(FRAGMENT_PREPARE.items()):
         chemin = _relatif(fragment_relatif)
         if not os.path.exists(chemin):
@@ -247,8 +245,8 @@ def construire():
         validation['report_path'] = os.path.join(
             dossier, prepare['technical_validation']['report_path'])
         entree['technical_validation'] = validation
-        # Les empreintes du fragment sont VÉRIFIÉES, pas recopiées : un fichier
-        # modifié depuis sa préparation doit se voir ici, pas à l'exécution.
+        # The fragment fingerprints are VERIFIED, not copied: a file modified
+        # since its preparation must show up here, not at runtime.
         divergence = None
         for chemin_verifie, attendu, etiquette in (
             (entree['source_path'], prepare['source_sha256'], 'source'),
@@ -279,8 +277,8 @@ def construire():
         entree['machine_readable_format'] = plan['format']
         entree['semantic_scope'] = list(plan['portee'])
 
-        # L'autorisation vient d'une personne, jamais du script. Ce qui est
-        # inscrit ici est la décision prise et sa base, telles qu'énoncées.
+        # The authorisation comes from a person, never from the script. What is
+        # recorded here is the decision taken and its basis, as stated.
         autorisation = plan.get('autorisation')
         if autorisation is None:
             entree['normative_authorization_status'] = 'UNCONFIRMED'
@@ -332,13 +330,13 @@ def construire():
 
 
 def main(arguments=()):
-    u"""Point d'entrée en ligne de commande.
+    u"""Command-line entry point.
 
     Args:
-        arguments: Arguments sans le nom du script. `--ecrire` écrit le JSON.
+        arguments: Arguments without the script name. `--ecrire` writes the JSON.
 
     Returns:
-        int: 0 si tout s'est bien passé.
+        int: 0 if everything went well.
     """
     manifeste, journal = construire()
 

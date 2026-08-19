@@ -1,0 +1,145 @@
+"""Contract tests for the client SIA 380/2 compliance-criteria manifest + evaluator.
+
+Guards that the manifest stays faithful to the live config (regulatory values
+come from config, every criterion states its data source and VE capability, the
+.aps-driven criteria name the quantities the .aps must yield, and the two
+criteria VE cannot produce stay flagged), and that the runtime evaluator fills a
+fail-closed per-criterion verdict against a model + its .aps results.
+"""
+
+from __future__ import annotations
+
+import unittest
+
+from swiss_sia import config
+from swiss_sia.compliance_criteria import CAPABILITY_LEGEND, build_manifest
+from swiss_sia.compliance_criteria_evaluator import evaluate_client_compliance
+
+
+class _Room:
+    surfaces = []
+    openings = []
+
+
+class ManifestContractTests(unittest.TestCase):
+    def setUp(self):
+        self.manifest = build_manifest()
+        self.by_id = {c["id"]: c for c in self.manifest["criteria"]}
+
+    def test_every_criterion_has_the_analysable_fields(self):
+        required = {
+            "id", "domain", "criterion", "data_source", "ve_capability",
+            "aps_quantities", "runtime_status", "article_source", "coverage_key",
+        }
+        self.assertTrue(self.manifest["criteria"])
+        for crit in self.manifest["criteria"]:
+            self.assertTrue(required.issubset(crit), crit["id"])
+            self.assertEqual(crit["runtime_status"], "TO_BE_EVALUATED")
+            self.assertIn(crit["ve_capability"], CAPABILITY_LEGEND, crit["id"])
+            self.assertTrue(crit["data_source"], crit["id"])
+
+    def test_regulatory_thresholds_come_from_config_not_the_builder(self):
+        opaque = self.by_id["SIA3802_OPAQUE_U_VALUES"]
+        self.assertEqual(
+            opaque["thresholds"]["limit"],
+            config.SIA3802_LIMIT_VALUES["external_wall_u"],
+        )
+        self.assertEqual(
+            opaque["thresholds"]["target"],
+            config.SIA3802_TARGET_VALUES["external_wall_u"],
+        )
+
+    def test_decisive_gate_is_reviewer_evidence_not_computed_by_ve(self):
+        gate = self.manifest["decisive_gate"]
+        self.assertEqual(gate["article"], "SIA 380/2:2022 §7.2.5.2")
+        self.assertEqual(gate["data_source"], ["reviewer_or_external_evidence"])
+        self.assertEqual(gate["ve_capability"], "EXTERNAL_EVIDENCE")
+
+    def test_aps_driven_criteria_name_the_required_aps_quantities(self):
+        for cid in (
+            "SIA3802_DYNAMIC_APS_RESULTS",
+            "SIA3802_HOURLY_TEMPERATURES",
+            "SIA3802_HEATING_COOLING_DEMANDS",
+        ):
+            crit = self.by_id[cid]
+            self.assertIn("aps_simulation_results", crit["data_source"], cid)
+            self.assertTrue(crit["aps_quantities"], cid)
+
+    def test_the_two_things_ve_cannot_produce_stay_flagged(self):
+        for cid in ("SIA3802_THERMAL_BRIDGES", "SIA3802_DESIGN_POWER_DAYS"):
+            self.assertEqual(self.by_id[cid]["ve_capability"], "NOT_AVAILABLE", cid)
+
+    def test_seasonal_efficiency_criteria_carry_the_sn_en_14825_caveat(self):
+        for cid in ("SIA3802_COOLING_EER_SEER", "SIA3802_HEATING_SCOP"):
+            self.assertIn("SN EN 14825", self.by_id[cid]["ve_capability_note"], cid)
+
+
+class EvaluatorTests(unittest.TestCase):
+    def _base_sia3802(self, comparison_status):
+        return {
+            "envelope": {}, "openings": {}, "ventilation": {}, "gains": {},
+            "setpoints": {}, "hvac": {}, "alerts": [],
+            "global_reference_comparison": {"status": comparison_status},
+        }
+
+    def test_missing_evidence_never_becomes_ok(self):
+        """Empty rooms -> criteria are NOT_CHECKABLE, never OK."""
+        manifest = evaluate_client_compliance(
+            self._base_sia3802("NOT_CHECKABLE"), {}, {}, [_Room()], [],
+        )
+        by_id = {c["id"]: c for c in manifest["criteria"]}
+        self.assertEqual(by_id["SIA3802_OPAQUE_U_VALUES"]["runtime_status"], "NOT_CHECKABLE")
+        # Rooms are extracted, so geometry is OK; nothing is silently PASS.
+        self.assertEqual(by_id["SIA3802_ROOM_GEOMETRY"]["runtime_status"], "OK")
+
+    def test_things_ve_cannot_do_are_reported_as_such(self):
+        manifest = evaluate_client_compliance(
+            self._base_sia3802("NOT_CHECKABLE"), {}, {}, [_Room()], [],
+        )
+        by_id = {c["id"]: c for c in manifest["criteria"]}
+        self.assertEqual(
+            by_id["SIA3802_THERMAL_BRIDGES"]["runtime_status"], "NOT_AVAILABLE_IN_VE"
+        )
+        self.assertEqual(
+            by_id["SIA3802_DESIGN_POWER_DAYS"]["runtime_status"], "NOT_AVAILABLE_IN_VE"
+        )
+
+    def test_decisive_gate_reflects_the_global_comparison(self):
+        missing = evaluate_client_compliance(
+            self._base_sia3802("NOT_CHECKABLE"), {}, {}, [_Room()], [],
+        )
+        self.assertEqual(
+            missing["decisive_gate"]["runtime_status"], "NEEDS_REVIEWER_EVIDENCE"
+        )
+        available = evaluate_client_compliance(
+            self._base_sia3802("REVIEWED_RESULT_AVAILABLE"), {}, {}, [_Room()], [],
+        )
+        self.assertEqual(available["decisive_gate"]["runtime_status"], "OK")
+        contradiction = evaluate_client_compliance(
+            self._base_sia3802("REVIEWED_RESULT_CONTRADICTS_ACCEPTANCE"),
+            {}, {}, [_Room()], [],
+        )
+        self.assertEqual(contradiction["decisive_gate"]["runtime_status"], "NOT_OK")
+
+    def test_client_scope_drops_sia4010_criteria(self):
+        manifest = evaluate_client_compliance(
+            self._base_sia3802("NOT_CHECKABLE"), {}, {}, [_Room()], [],
+            scope="sia3802",
+        )
+        self.assertFalse([
+            c for c in manifest["criteria"]
+            if str(c.get("standard") or "").startswith("SIA 4010")
+        ])
+
+    def test_evaluation_block_matches_the_authoritative_verdict(self):
+        manifest = evaluate_client_compliance(
+            self._base_sia3802("NOT_CHECKABLE"), {}, {}, [_Room()], [],
+        )
+        evaluation = manifest["evaluation"]
+        self.assertEqual(evaluation["overall_sia3802_status"], "NOT_DETERMINED")
+        self.assertIn("global_reference_comparison", evaluation["outstanding"])
+        self.assertEqual(evaluation["rooms_analysed"], 1)
+
+
+if __name__ == "__main__":
+    unittest.main()

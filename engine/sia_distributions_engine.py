@@ -1,23 +1,22 @@
 # -*- coding: utf-8 -*-
-u"""Critère de distribution de fréquence des tests SIA 4010.
+u"""Frequency distribution criterion for SIA 4010 tests.
 
-Les spécifications de ces trois tests énoncent **deux** critères. Le premier —
-la somme annuelle dans la bande — est traité par `sia_bandes_engine`. Le
-second est celui-ci :
+The specifications of these three tests state **two** criteria. The first --
+the annual sum within the band -- is handled by `sia_bandes_engine`. The
+second is this one:
 
-    « Die Häufigkeitsverteilung muss im Streubereich der Referenzprogramme
-      liegen. »   (Spezifikation_Test2/3/5.pdf, section Testkriterien)
+    "Die Häufigkeitsverteilung muss im Streubereich der Referenzprogramme
+      liegen."   (Spezifikation_Test2/3/5.pdf, section Testkriterien)
 
-Une clarification écrite de Prof. Gerhard Zweifel, reçue le 2026-08-10,
-confirme que `Streubereich` signifie l'**enveloppe min/max des programmes de
-référence, classe par classe**. La bande moyenne ± écart maximal reste calculée
-uniquement pour la comparaison avec les anciens audits ; elle ne décide plus le
-verdict. L'autorité a aussi confirmé que les totaux de classes inférieurs à
-8 760 ne signalent pas des séries incomplètes : certaines valeurs horaires sont
-hors des bornes définies. Elles sont comptées séparément et ne sont jamais
-absorbées silencieusement par la dernière classe.
+A written clarification from Prof. Gerhard Zweifel, received on 2026-08-10,
+confirms that `Streubereich` means the **min/max envelope of the reference
+programs, class by class**. The mean +/- max-deviation band is still computed
+only for comparison with older audits; it no longer decides the verdict.
+The authority also confirmed that class totals below 8 760 do not indicate
+incomplete series: some hourly values fall outside the defined bounds.
+They are counted separately and are never silently absorbed by the last class.
 
-Python pur : aucun import `iesve`, testable en intégration continue.
+Pure Python: no `iesve` import, testable in continuous integration.
 """
 
 from __future__ import print_function
@@ -30,14 +29,14 @@ _ICI = os.path.dirname(os.path.abspath(__file__))
 _RACINE = os.path.abspath(os.path.join(_ICI, os.pardir))
 _DOSSIER_REFERENCES = os.path.join(_RACINE, 'refs', 'reference-data')
 
-#: Référentiels JSON actuellement construits. Les classeurs des Tests 4 et 6
-#: contiennent eux aussi des classes et distributions ; leur portée exacte comme
-#: gate d'acceptation reste à confirmer avant ajout à cette liste exécutable.
+#: JSON references currently built. The workbooks of Tests 4 and 6
+#: also contain classes and distributions; their exact scope as an
+#: acceptance gate remains to be confirmed before adding them to this executable list.
 TESTS_SUPPORTES = (2, 3, 5)
 
-#: Statut du critère. Plus faible qu'`INFERE` des sommes annuelles : là, une
-#: formule existait dans le classeur et se laissait retrouver. Ici, il n'y en a
-#: aucune.
+#: Criterion status. Weaker than `INFERE` from the annual sums: there, a
+#: formula existed in the workbook and could be recovered. Here, there is
+#: none.
 STATUT_CRITERE = 'CONFIRME_AUTORITE_2026-08-10'
 
 JUSTIFICATION_CRITERE = (
@@ -45,7 +44,7 @@ JUSTIFICATION_CRITERE = (
     u'des programmes de référence pour chaque classe de fréquence.'
 )
 
-#: Lectures possibles du `Streubereich`, calculées toutes les deux.
+#: Both possible readings of the `Streubereich`, computed together.
 LECTURE_ENVELOPPE = 'enveloppe_min_max'
 LECTURE_BANDE = 'moyenne_plus_ecart_max'
 LECTURES = (LECTURE_ENVELOPPE, LECTURE_BANDE)
@@ -56,35 +55,35 @@ VERDICT_PASS = 'PASS'
 VERDICT_FAIL = 'FAIL'
 
 class ReferenceIntrouvable(IOError):
-    u"""Levée quand le référentiel de distributions d'un test manque."""
+    u"""Raised when the distribution reference for a test is missing."""
 
 
 def chemin_reference(numero_test):
-    u"""Chemin du référentiel de distributions d'un test.
+    u"""Path of the distribution reference for a test.
 
     Args:
-        numero_test: Numéro du test SIA.
+        numero_test: SIA test number.
 
     Returns:
-        str: Chemin absolu.
+        str: Absolute path.
     """
     return os.path.join(_DOSSIER_REFERENCES,
                         'test-%d.distributions.ref.json' % numero_test)
 
 
 def charger_reference(numero_test, chemin=None):
-    u"""Charge le référentiel de distributions d'un test.
+    u"""Load the distribution reference for a test.
 
     Args:
-        numero_test: Numéro du test SIA.
-        chemin: Chemin explicite, sinon l'emplacement figé.
+        numero_test: SIA test number.
+        chemin: Explicit path, otherwise the frozen location.
 
     Returns:
-        dict: Référentiel.
+        dict: Reference data.
 
     Raises:
-        ValueError: Si le test n'a pas de critère de distribution.
-        ReferenceIntrouvable: Si le fichier manque.
+        ValueError: If the test has no distribution criterion.
+        ReferenceIntrouvable: If the file is missing.
     """
     if numero_test not in TESTS_SUPPORTES:
         raise ValueError(
@@ -105,22 +104,22 @@ def charger_reference(numero_test, chemin=None):
 # include values above the last declared boundary. Such values are not missing
 # hours; classer_avec_hors_classes reports them separately for audit.
 def classer(serie, bornes):
-    u"""Répartit une série horaire dans les classes du classeur.
+    u"""Distribute an hourly series into the workbook's classes.
 
-    Les bornes sont des bornes SUPÉRIEURES. Les valeurs qui dépassent la
-    dernière restent hors des classes affichées ; utiliser
-    :func:`classer_avec_hors_classes` pour obtenir leur compte d'audit.
+    The bounds are UPPER bounds. Values exceeding the last one remain
+    outside the displayed classes; use
+    :func:`classer_avec_hors_classes` to obtain their audit count.
 
     Args:
-        serie: Valeurs horaires ; les non-numériques sont écartées.
-        bornes: Bornes supérieures, croissantes.
+        serie: Hourly values; non-numeric values are excluded.
+        bornes: Upper bounds, in ascending order.
 
     Returns:
-        list[int]: Effectif par classe, de même longueur que `bornes`.
+        list[int]: Class count, same length as `bornes`.
 
     Raises:
-        ValueError: Si les bornes sont vides ou désordonnées — auquel cas tout
-            classement serait arbitraire.
+        ValueError: If bounds are empty or unordered -- in which case any
+            classification would be arbitrary.
     """
     if not bornes:
         raise ValueError(u'aucune borne de classe fournie')
@@ -142,11 +141,11 @@ def classer(serie, bornes):
 
 
 def classer_avec_hors_classes(serie, bornes):
-    u"""Classe les valeurs et audite celles au-dessus de la derniere borne.
+    u"""Classify values and audit those above the last bound.
 
-    La reponse d'autorite du 2026-08-10 confirme que ces valeurs expliquent les
-    totaux affiches inferieurs a 8 760. Elles ne sont ni manquantes, ni absorbees
-    silencieusement par la derniere classe.
+    The 2026-08-10 authority response confirms that these values explain the
+    displayed totals below 8 760. They are neither missing nor silently
+    absorbed by the last class.
     """
     effectifs = classer(serie, bornes)
     numeriques = [
@@ -161,14 +160,14 @@ def classer_avec_hors_classes(serie, bornes):
 
 
 def _effectifs_contributeurs(bloc, classe):
-    u"""Effectifs des programmes de référence pour une classe.
+    u"""Counts of the reference programs for a class.
 
     Args:
-        bloc: Bloc de distribution.
-        classe: Entrée d'effectifs d'une classe.
+        bloc: Distribution block.
+        classe: Class count entry.
 
     Returns:
-        list[int]: Effectifs, les colonnes non renseignées écartées.
+        list[int]: Counts, with unfilled columns excluded.
     """
     valeurs = []
     for contributeur in bloc['contributeurs']:
@@ -179,35 +178,35 @@ def _effectifs_contributeurs(bloc, classe):
 
 
 def bornes_des_lectures(effectifs):
-    u"""Calcule les deux lectures du `Streubereich` pour une classe.
+    u"""Compute the two readings of the `Streubereich` for a class.
 
     Args:
-        effectifs: Effectifs des programmes de référence.
+        effectifs: Counts of the reference programs.
 
     Returns:
-        dict: `{lecture: (basse, haute)}`, vide si aucun effectif.
+        dict: `{reading: (lower, upper)}`, empty if no counts.
     """
     if not effectifs:
         return {}
     moyenne = float(sum(effectifs)) / len(effectifs)
     ecart_max = max(abs(v - moyenne) for v in effectifs)
     return {
-        # Un effectif ne peut pas être négatif : le plancher à zéro est une
-        # propriété de la grandeur, pas du critère.
+        # A count cannot be negative: the floor at zero is a
+        # property of the quantity, not of the criterion.
         LECTURE_ENVELOPPE: (float(min(effectifs)), float(max(effectifs))),
         LECTURE_BANDE: (max(0.0, moyenne - ecart_max), moyenne + ecart_max),
     }
 
 
 def evaluer_bloc(bloc, effectifs_candidats=None):
-    u"""Confronte une distribution candidate à celles des programmes.
+    u"""Compare a candidate distribution against those of the programs.
 
     Args:
-        bloc: Bloc de distribution du référentiel.
-        effectifs_candidats: Effectif par classe produit par VE, ou `None`.
+        bloc: Distribution block from the reference data.
+        effectifs_candidats: Per-class count produced by VE, or `None`.
 
     Returns:
-        dict: Résultat, jamais `None`. L'enveloppe min/max est contraignante.
+        dict: Result, never `None`. The min/max envelope is binding.
     """
     classes = []
     hors = dict((lecture, 0) for lecture in LECTURES)
@@ -225,7 +224,7 @@ def evaluer_bloc(bloc, effectifs_candidats=None):
             if candidat is None:
                 dedans[lecture] = None
             else:
-                # Bornes INCLUSES, comme pour les sommes annuelles.
+                # Bounds INCLUSIVE, as for annual sums.
                 dedans[lecture] = basse <= candidat <= haute
                 if not dedans[lecture]:
                     hors[lecture] += 1
@@ -279,16 +278,16 @@ def evaluer_bloc(bloc, effectifs_candidats=None):
 
 
 def evaluer(reference, candidat=None):
-    u"""Évalue toutes les distributions d'un test.
+    u"""Evaluate all distributions for a test.
 
     Args:
-        reference: Référentiel chargé.
-        candidat: `{(cas, grandeur): [effectifs par classe]}`, ou `None`.
-            Une clé absente laisse la distribution NON ÉVALUABLE — jamais
-            conforme, jamais en échec.
+        reference: Loaded reference data.
+        candidat: `{(cas, grandeur): [counts per class]}`, or `None`.
+            A missing key leaves the distribution NOT EVALUABLE -- never
+            conformant, never failing.
 
     Returns:
-        dict: Résultat d'ensemble.
+        dict: Overall result.
     """
     index = dict(candidat or {})
     resultats, ignorees = [], []
@@ -330,13 +329,13 @@ def evaluer(reference, candidat=None):
 
 
 def resumer(resultat):
-    u"""Rend le résultat lisible en console.
+    u"""Render the result in a human-readable console format.
 
     Args:
-        resultat: Ce que rend `evaluer`.
+        resultat: Output of `evaluer`.
 
     Returns:
-        str: Tableau texte.
+        str: Text table.
     """
     lignes = [u'Test %d — distributions de fréquence' % resultat['test'],
               u'critère : %s' % resultat['critere']['statut'], u'']

@@ -162,10 +162,9 @@ class ExcelReportGenerator:
         self._write_ve_g_values_audit_xlsxwriter(rooms_data or [])
         self._write_assumptions_limits_xlsxwriter(score_result, sia4010_results, rooms_data or [])
         self._write_audit_log_xlsxwriter(score_result, sia4010_results, rooms_data or [], preflight_checks or [], dynamic_results or {})
-        # Legacy sheets SUMMARY, ACTION PLAN, COMPLIANCE RESULTS and SIA
-        # REQUIREMENTS were removed: their content is fully covered by the
-        # newer CLIENT SUMMARY, ACTION DASHBOARD / P1 REMEDIATION, the domain
-        # scores on the dashboards, and SIA DATA COVERAGE respectively.
+        # The legacy SUMMARY and ACTION PLAN sheet builders were deleted: their
+        # content is fully covered by the newer CLIENT SUMMARY, ACTION DASHBOARD /
+        # P1 REMEDIATION and the domain scores on the dashboards.
         self._write_compliance_results_xlsxwriter(sia3802_results, sia4010_results)
         self._write_reference_project_xlsxwriter(sia3802_results)
         self._write_sia_requirements_xlsxwriter(sia3802_results, sia4010_results)
@@ -2279,49 +2278,6 @@ class ExcelReportGenerator:
         worksheet.set_column("C:F", 40)
         worksheet.freeze_panes(5, 0)
 
-    def _write_summary_xlsxwriter(self, score_result: ScoreResult):
-        """Write the SUMMARY sheet with xlsxwriter."""
-        worksheet = self.workbook.add_worksheet("SUMMARY")
-
-        # Styles
-        header_format = self.workbook.add_format(SHARED_FORMATS["header"])
-        subheader_format = self.workbook.add_format(SHARED_FORMATS["subheader"])
-        score_format = self.workbook.add_format(SHARED_FORMATS["score"])
-        cell_format = self.workbook.add_format({"border": 1})
-
-        # Title
-        worksheet.merge_range("A1:F1", "Swiss Compliance Checker - Compliance Report", header_format)
-        worksheet.merge_range("A2:F2", f"Generated on {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}", subheader_format)
-
-        # KPI
-        worksheet.write("A4", "KPI", header_format)
-        worksheet.write("A5", "SIA 380/2 Automated Precheck Indicator:", subheader_format)
-        worksheet.write("B5", score_result.compliance_score, score_format)
-        worksheet.write("A6", "Health Score (Model Quality):", subheader_format)
-        worksheet.write("B6", score_result.health_score, score_format)
-
-        # Detailed scores
-        worksheet.write("A8", "Detailed Scores by Category", header_format)
-        row = 9
-        for category, score in score_result.detailed_scores.items():
-            worksheet.write(row, 0, category, subheader_format)
-            worksheet.write(row, 1, score, cell_format)
-            row += 1
-
-        # Alert count
-        alerts_count = self._count_alerts_by_severity(score_result.alerts)
-        row += 1
-        worksheet.write(row, 0, "Critical errors:", subheader_format)
-        worksheet.write(row, 1, alerts_count.get("Critical", 0), cell_format)
-        worksheet.write(row + 1, 0, "Warnings:", subheader_format)
-        worksheet.write(row + 1, 1, alerts_count.get("High", 0) + alerts_count.get("Medium", 0), cell_format)
-        worksheet.write(row + 2, 0, "Information alerts:", subheader_format)
-        worksheet.write(row + 2, 1, alerts_count.get("Low", 0), cell_format)
-
-        # Adjust column widths.
-        worksheet.set_column("A:A", 30)
-        worksheet.set_column("B:B", 20)
-
     def _write_compliance_results_xlsxwriter(self, sia3802_results: Dict[str, Any], sia4010_results: Dict[str, Any]):
         """Write the COMPLIANCE RESULTS sheet with xlsxwriter."""
         worksheet = self.workbook.add_worksheet("COMPLIANCE RESULTS")
@@ -4097,81 +4053,6 @@ class ExcelReportGenerator:
         worksheet.set_column("E:E", 32)
         worksheet.set_column("F:F", 46)
         worksheet.set_column("G:G", 42)
-
-    def _write_action_plan_xlsxwriter(self, alert_groups: List[Dict[str, Any]]):
-        """Write a prioritized action plan based on grouped alerts."""
-        worksheet = self.workbook.add_worksheet("ACTION PLAN")
-
-        header_format = self.workbook.add_format(SHARED_FORMATS["header"])
-        subheader_format = self.workbook.add_format(SHARED_FORMATS["subheader"])
-        cell_format = self.workbook.add_format({"border": 1, "text_wrap": True, "valign": "top"})
-        p1_format = self.workbook.add_format(SHARED_FORMATS["critical"])
-        p2_format = self.workbook.add_format(report_style.xw_status("warning"))
-        p3_format = self.workbook.add_format(report_style.xw_status("not_evaluated"))
-        area_format = self.workbook.add_format({"border": 1, "num_format": "#,##0.0"})
-        number_format = self.workbook.add_format({"border": 1, "num_format": "#,##0"})
-
-        worksheet.merge_range("A1:L1", "Action Plan - Prioritised Compliance Follow-up", header_format)
-        worksheet.merge_range(
-            "A2:L2",
-            "This sheet converts alerts into auditable actions. Scores remain unchanged.",
-            cell_format,
-        )
-
-        worksheet.write("A4", "KPI", header_format)
-        worksheet.write("A5", "Action groups", subheader_format)
-        worksheet.write("B5", len(alert_groups), number_format)
-        worksheet.write("A6", "Raw alerts represented", subheader_format)
-        worksheet.write("B6", sum(group["count"] for group in alert_groups), number_format)
-        worksheet.write("A7", "P1 groups", subheader_format)
-        worksheet.write("B7", sum(1 for group in alert_groups if group["priority"] == "P1"), number_format)
-
-        headers = [
-            "Priority",
-            "Priority score",
-            "Category",
-            "Construction",
-            "Type",
-            "Rule",
-            "Issue count",
-            "Max severity",
-            "Affected area (m2)",
-            "Action",
-            "Evidence samples",
-            "Status",
-        ]
-        start_row = 10
-        worksheet.write_row(start_row, 0, headers, header_format)
-
-        row = start_row + 1
-        for group in alert_groups:
-            priority_format = p1_format if group["priority"] == "P1" else p2_format if group["priority"] == "P2" else p3_format
-            worksheet.write(row, 0, group["priority"], priority_format)
-            worksheet.write(row, 1, group["priority_score"], number_format)
-            worksheet.write(row, 2, group["category"], cell_format)
-            worksheet.write(row, 3, group["construction"], cell_format)
-            worksheet.write(row, 4, group["object_type"], cell_format)
-            worksheet.write(row, 5, group["rule"], cell_format)
-            worksheet.write(row, 6, group["count"], number_format)
-            worksheet.write(row, 7, group["max_severity"], cell_format)
-            worksheet.write(row, 8, group["affected_area"], area_format)
-            worksheet.write(row, 9, self._action_for_alert_group(group), cell_format)
-            worksheet.write(row, 10, "; ".join(group["evidence_samples"]), cell_format)
-            worksheet.write(row, 11, self._status_for_alert_group(group), cell_format)
-            row += 1
-
-        worksheet.autofilter(start_row, 0, max(start_row, row - 1), len(headers) - 1)
-        worksheet.freeze_panes(start_row + 1, 0)
-        worksheet.set_column("A:A", 12)
-        worksheet.set_column("B:B", 14)
-        worksheet.set_column("C:C", 16)
-        worksheet.set_column("D:D", 24)
-        worksheet.set_column("E:E", 16)
-        worksheet.set_column("F:F", 30)
-        worksheet.set_column("G:I", 16)
-        worksheet.set_column("J:J", 52)
-        worksheet.set_column("K:K", 58)
-        worksheet.set_column("L:L", 18)
 
     def _write_alert_summary_xlsxwriter(self, alert_groups: List[Dict[str, Any]]):
         """Write grouped alerts to reduce repetitive raw alert rows."""

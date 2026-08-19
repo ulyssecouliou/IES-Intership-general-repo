@@ -1,23 +1,23 @@
 # -*- coding: utf-8 -*-
-"""Interface VEScripts de collecte des preuves SIA 380/2.
+"""VEScripts interface for SIA 380/2 evidence collection.
 
-Ne fait QUE de l affichage et de la saisie. Toute la logique — validation,
-refus d acceptation, ecriture — vit dans `swiss_sia/evidence_wizard.py`, en
-Python pur et teste. Ce module ne decide de rien.
+Does NOTHING but display and data entry. All logic — validation,
+rejection of acceptance, writing — lives in `swiss_sia/evidence_wizard.py`, in
+pure Python and tested. This module decides nothing.
 
-CONTRAINTES D EXECUTION, tenues explicitement :
-    - Python 3.12 embarque dans IESVE ;
-    - ecran de taille limitee : fenetre 980x680, redimensionnable, et TOUT le
-      formulaire est dans une zone defilante ;
-    - aucun droit administrateur : rien n est ecrit hors du projet VE et du
-      dossier de preuves ;
-    - AUCUNE mutation VE : le modele est lu, jamais modifie ;
-    - fail-closed : le statut `accepted` est RECALCULE, jamais repris de la
-      saisie.
+EXECUTION CONSTRAINTS, explicitly maintained:
+    - Python 3.12 embedded in IESVE;
+    - limited screen size: 980x680 window, resizable, with ALL the
+      form in a scrollable area;
+    - no administrator rights: nothing is written outside the VE project and
+      the evidence folder;
+    - NO VE MUTATION: the model is read, never modified;
+    - fail-closed: the `accepted` status is RECALCULATED, never taken from
+      the input.
 
-CE QUE L INTERFACE NE FAIT PAS. Elle ne prononce ni conformite SIA 380/2 ni
-validation SIA 4010, et ne prend aucune decision a la place du reviseur. Un
-champ vide reste vide : il n est jamais comble par une valeur par defaut.
+WHAT THE INTERFACE DOES NOT DO. It pronounces neither SIA 380/2 compliance
+nor SIA 4010 validation, and takes no decision in place of the reviewer. An
+empty field remains empty: it is never filled with a default value.
 """
 
 from __future__ import annotations
@@ -36,8 +36,8 @@ except ImportError:  # pragma: no cover -- hors environnement graphique
     ttk = None
     messagebox = None
 
-#: Couleurs de marque IES. Importees si disponibles ; sinon des valeurs
-#: neutres, pour que l assistant reste utilisable meme si `ui/` manque.
+#: IES brand colours. Imported when available; otherwise neutral values,
+#: so the wizard remains usable even if `ui/` is missing.
 try:
     from ui import design as _design
     NAVY = _design.NAVY
@@ -59,11 +59,44 @@ except ImportError:  # pragma: no cover -- paquet ui absent
 
 POLICE = 'Segoe UI'
 
-#: Fenetre volontairement modeste : l assistant doit tenir sur un portable.
+#: Deliberately modest window: the wizard must fit on a laptop.
 LARGEUR = 980
 HAUTEUR = 680
 
-#: Couleur associee a chaque categorie de constat.
+# English client-facing copy. The evidence schema and persisted field names
+# remain unchanged so existing CSV/JSON audit files stay compatible.
+FIELD_COPY_EN = {
+    'project_id': ('Project identifier', 'Must match the active VE project folder.'),
+    'building_status': ('Building status', 'Selects the applicable 100 h / 400 h comfort limit.'),
+    'weather_basis': ('Climate basis', 'For example SIA 2028 DRY. Cite an approved source.'),
+    'weather_file': ('Reviewed weather file', 'The file the reviewer declares correct for this project.'),
+    'location': ('Location', 'Municipality or station; never inferred from a filename.'),
+    'altitude_m': ('Altitude (m)', 'Project altitude in metres.'),
+    'review_status': ('Review status', 'Remains pending until all evidence is complete.'),
+    'reviewer': ('Reviewer', 'Person taking responsibility for the supplied evidence.'),
+    'review_date': ('Review date (YYYY-MM-DD)', 'Date on which the reviewer approved the evidence.'),
+    'source_document': ('Source document', 'Reviewed brief, specification or approval document.'),
+    'source_reference': ('Source reference', 'Clause, page or approval reference.'),
+    'notes': ('Notes', 'Information useful to a later reviewer.'),
+    'ventilation_strategy': ('Ventilation strategy', 'What the project actually provides.'),
+    'ventilation_justification': ('Ventilation justification', 'Explain the declared strategy; required before acceptance.'),
+    'ventilation_flow_source': ('Ventilation flow-rate source', 'Where the flow rates come from; never inferred.'),
+    'lighting_scope': ('Lighting assessment scope', 'State whether lighting is included in the assessment.'),
+    'lighting_power_source': ('Lighting power source', 'Required when lighting is in scope.'),
+    'aps_outputs_required': ('Fan/pump/auxiliary/coil outputs required?', 'Select NO only when justified by the model scope.'),
+    'aps_outputs_justification': ('APS output justification', 'Required when the answer above is NO.'),
+}
+
+FACT_COPY_EN = {
+    'project_id': ('Project identifier', 'Read from the active VE project folder.'),
+    'aps_file': ('Selected APS file', 'Results file selected by the read-only audit.'),
+    'detected_weather_file': ('Detected weather file', 'Technical VE/APS match only; this is not climate approval.'),
+    'total_area_m2': ('Total room area (m2)', 'Sum of room floor areas.'),
+    'total_heating_kwh': ('Total heating (kWh)', 'Extracted from Room units heating load, not a steady-state series.'),
+    'total_cooling_kwh': ('Total cooling (kWh)', 'Extracted from Room units cooling load.'),
+}
+
+#: Colour associated with each finding category.
 COULEUR_PAR_CATEGORIE = {
     noyau.DEFAUT_MODELE: ROUGE,
     noyau.DONNEE_CLIENT_MANQUANTE: ORANGE,
@@ -78,29 +111,29 @@ COULEUR_PAR_CATEGORIE = {
 
 
 class AssistantIndisponible(RuntimeError):
-    """Levee quand l assistant ne peut pas s ouvrir."""
+    """Raised when the wizard cannot be opened."""
 
 
 class AssistantDePreuves(object):
-    """Fenetre de saisie des preuves SIA 380/2.
+    """SIA 380/2 evidence entry window.
 
     Attributes:
-        detecte: Faits releves dans VE, affiches mais jamais recopies dans
-            les reponses.
-        chemin_csv: CSV de preuves a ecrire.
-        dossier_audit: Dossier du JSON d audit.
+        detecte: Facts gathered in VE, displayed but never copied into
+            the responses.
+        chemin_csv: Evidence CSV to write.
+        dossier_audit: Audit JSON folder.
     """
 
     def __init__(self, detecte: Optional[Dict[str, Any]] = None,
                  chemin_csv: str = '', dossier_audit: str = '') -> None:
         if tk is None:
             raise AssistantIndisponible(
-                "tkinter indisponible : cet assistant doit s executer depuis "
-                "le Python Scripts navigator de VE.")
+                "tkinter is unavailable: run this wizard from the VE Python "
+                "Scripts navigator.")
         if not chemin_csv or not dossier_audit:
             raise AssistantIndisponible(
-                "chemin du CSV de preuves et dossier d audit exiges : "
-                "l assistant refuse d ecrire a un emplacement devine.")
+                "Evidence CSV path and audit folder are required; the wizard "
+                "will not write to an inferred location.")
 
         self.detecte = dict(detecte or {})
         self.chemin_csv = chemin_csv
@@ -109,7 +142,7 @@ class AssistantDePreuves(object):
         self._resultat: Optional[Dict[str, Any]] = None
 
         self._racine = tk.Tk()
-        self._racine.title('IES — Preuves SIA 380/2')
+        self._racine.title('IES - SIA 380/2 Evidence Collection')
         self._racine.geometry('%dx%d' % (LARGEUR, HAUTEUR))
         self._racine.minsize(760, 520)
         self._appliquer_charte()
@@ -118,10 +151,10 @@ class AssistantDePreuves(object):
     # -- Presentation ------------------------------------------------------
 
     def _appliquer_charte(self) -> None:
-        """Applique les couleurs IES.
+        """Apply IES brand colours.
 
-        Le theme `clam` est le seul qui honore `background` sous Windows : les
-        autres delegent au systeme et ignorent la charte.
+        The `clam` theme is the only one that honours `background` on Windows:
+        the others delegate to the system and ignore the brand theme.
         """
         style = ttk.Style(self._racine)
         if 'clam' in style.theme_names():
@@ -153,14 +186,14 @@ class AssistantDePreuves(object):
         style.configure('W.TEntry', fieldbackground=BLANC)
 
     def _construire(self) -> None:
-        """Monte le bandeau, la zone defilante et la barre d actions."""
+        """Build the banner, the scrollable area and the action bar."""
         self._construire_bandeau()
 
         corps = ttk.Frame(self._racine, style='W.TFrame', padding=8)
         corps.pack(side='top', fill='both', expand=True)
 
-        # ZONE DEFILANTE. Sans elle, les 19 champs debordent d un portable et
-        # les derniers — dont la confirmation — deviennent inatteignables.
+        # SCROLLABLE AREA. Without it, the 19 fields overflow a laptop screen
+        # and the last ones — including the confirmation — become unreachable.
         toile = tk.Canvas(corps, background=BLANC, highlightthickness=1,
                           highlightbackground=GRIS_BORDURE)
         ascenseur = ttk.Scrollbar(corps, orient='vertical',
@@ -185,57 +218,59 @@ class AssistantDePreuves(object):
         self._construire_actions(self._racine)
 
     def _construire_bandeau(self) -> None:
-        """Bandeau navy : le projet VE actif, et ce que l assistant n est pas."""
+        """Navy banner: the active VE project, and what the wizard is not."""
         bandeau = ttk.Frame(self._racine, style='WBandeau.TFrame',
                             padding=(16, 10))
         bandeau.pack(side='top', fill='x')
         ttk.Label(bandeau, style='WTitre.TLabel',
-                  text='Preuves SIA 380/2 — collecte').pack(anchor='w')
+                  text='SIA 380/2 - Evidence Collection').pack(anchor='w')
         ttk.Label(
             bandeau, style='WSous.TLabel',
-            text='Projet VE actif : %s'
-                 % (self.detecte.get('project_id') or 'NON DETECTE')
+            text='Active VE project: %s'
+                 % (self.detecte.get('project_id') or 'NOT DETECTED')
         ).pack(anchor='w', pady=(3, 0))
         ttk.Label(
             bandeau, style='WSous.TLabel', wraplength=LARGEUR - 60,
-            text=('Cet assistant NE modifie aucune donnee VE, NE prononce '
-                  'aucune conformite SIA 380/2 et NE vaut pas validation '
-                  'SIA 4010 du logiciel. Il collecte des preuves.')
+            text=('This wizard does not modify VE data, does not certify '
+                  'SIA 380/2 compliance, and is not an SIA 4010 software '
+                  'validation. It collects traceable review evidence.')
         ).pack(anchor='w', pady=(6, 0))
 
     def _construire_faits(self, parent) -> None:
-        """Faits releves dans VE, presentes sans etre melanges aux reponses."""
+        """Facts gathered in VE, displayed without being mixed with the responses."""
         ttk.Label(parent, style='WSection.TLabel',
-                  text='Faits releves dans VE (lecture seule)').pack(
+                  text='Facts detected in VE (read-only)').pack(
                       anchor='w', pady=(0, 6))
         for cle, fait in sorted(noyau.faits_techniques(self.detecte).items()):
+            label, note = FACT_COPY_EN.get(cle, (cle, 'Read from VE.'))
             ligne = ttk.Frame(parent, style='WCarte.TFrame')
             ligne.pack(fill='x', pady=1)
             ttk.Label(ligne, style='W.TLabel', width=26,
-                      text=cle).pack(side='left')
+                      text=label).pack(side='left')
             ttk.Label(ligne, style='W.TLabel', width=34,
                       text='%s' % fait['valeur']).pack(side='left')
             ttk.Label(ligne, style='WAide.TLabel', wraplength=420,
-                      text='[%s] %s' % (fait['statut'], fait['note'])
+                      text='[%s] %s' % (fait['statut'], note)
                       ).pack(side='left', fill='x', expand=True)
         ttk.Label(
             parent, style='WAide.TLabel', wraplength=LARGEUR - 80,
-            text=('Le fichier meteo detecte n est PAS recopie dans le champ '
-                  '« Fichier meteo revu » : ce champ porte ce que VOUS '
-                  'declarez correct. Une correspondance technique ne vaut pas '
-                  'approbation du climat.')
+            text=('The detected weather file is not copied into the reviewed '
+                  'weather field. That field records what the reviewer '
+                  'declares correct. A technical match is not climate approval.')
         ).pack(anchor='w', pady=(6, 12))
 
     def _construire_champs(self, parent) -> None:
-        """Monte un widget par champ, pre-rempli seulement si demontre."""
+        """Build one widget per field, pre-filled only when demonstrated."""
         ttk.Label(parent, style='WSection.TLabel',
-                  text='Preuves a completer').pack(anchor='w', pady=(0, 6))
+                  text='Evidence to complete').pack(anchor='w', pady=(0, 6))
         prefill = noyau.prefill(self.detecte)
 
         for definition in noyau.CHAMPS:
             bloc = ttk.Frame(parent, style='WCarte.TFrame')
             bloc.pack(fill='x', pady=3)
-            etiquette = definition['libelle']
+            etiquette, aide = FIELD_COPY_EN.get(
+                definition['nom'],
+                (definition['nom'].replace('_', ' ').title(), ''))
             if definition['obligatoire_pour_accepter']:
                 etiquette += '  *'
             ttk.Label(bloc, style='W.TLabel', width=38,
@@ -254,69 +289,79 @@ class AssistantDePreuves(object):
                                    style='W.TEntry')
             widget.pack(side='left', padx=(0, 8))
             ttk.Label(bloc, style='WAide.TLabel', wraplength=300,
-                      text=definition['aide']).pack(side='left',
+                      text=aide).pack(side='left',
                                                     fill='x', expand=True)
             self._widgets[definition['nom']] = valeur
 
         ttk.Label(parent, style='WAide.TLabel',
-                  text='*  exige pour passer le statut a « accepted »'
+                  text='*  required before status can become accepted'
                   ).pack(anchor='w', pady=(4, 10))
 
         self._confirmation = tk.BooleanVar(value=False)
         ttk.Checkbutton(
             parent, style='W.TCheckbutton', variable=self._confirmation,
-            text=('Je confirme avoir verifie ces informations et engager ma '
-                  'responsabilite de reviseur.')).pack(anchor='w')
+            text=('I confirm that I reviewed this information and accept '
+                  'responsibility as the named reviewer.')).pack(anchor='w')
 
     def _construire_actions(self, parent) -> None:
-        """Barre du bas : controle a blanc, et enregistrement."""
+        """Bottom bar: dry-run check, and save."""
         barre = ttk.Frame(parent, style='W.TFrame', padding=(8, 8))
         barre.pack(side='bottom', fill='x')
         self._etat = ttk.Label(barre, background=GRIS_CLAIR,
                                foreground=TEXTE, font=(POLICE, 9),
                                wraplength=LARGEUR - 320,
-                               text='Statut : pending')
+                               text='Status: pending')
         self._etat.pack(side='left', fill='x', expand=True)
-        ttk.Button(barre, style='W.TButton', text='Controler',
+        ttk.Button(barre, style='W.TButton', text='Validate',
                    command=self._controler).pack(side='right', padx=(6, 0))
-        ttk.Button(barre, style='WAccent.TButton', text='Enregistrer',
+        ttk.Button(barre, style='WAccent.TButton', text='Save evidence',
                    command=self._enregistrer).pack(side='right')
 
-    # -- Comportement ------------------------------------------------------
+    # -- Behaviour ----------------------------------------------------------
 
     def reponses(self) -> Dict[str, str]:
-        """Valeurs saisies, sans aucune substitution.
+        """Entered values, with no substitution.
 
         Returns:
-            dict: Champ -> valeur telle que saisie.
+            dict: Field -> value as entered.
         """
         return dict((nom, variable.get())
                     for nom, variable in self._widgets.items())
 
     def _controler(self) -> Dict[str, Any]:
-        """Evalue sans rien ecrire, et affiche le motif de refus.
+        """Evaluate without writing anything, and display the rejection reason.
 
         Returns:
-            dict: Ce que rend `evaluer_acceptation`.
+            dict: What `evaluer_acceptation` returns.
         """
         acceptation = noyau.evaluer_acceptation(
             self.reponses(), bool(self._confirmation.get()))
         if acceptation['accepte']:
             self._etat.configure(
-                text='Statut : accepted — toutes les preuves sont completes.',
+                text='Status: accepted - all required evidence is complete.',
                 foreground=VERT)
         else:
+            summary = []
+            if acceptation.get('manquants'):
+                summary.append('%d required field(s) missing'
+                               % len(acceptation['manquants']))
+            if acceptation.get('erreurs'):
+                summary.append('%d invalid value(s)'
+                               % len(acceptation['erreurs']))
+            if not self._confirmation.get():
+                summary.append('reviewer confirmation missing')
+            if not summary:
+                summary.append('conditional evidence is incomplete')
             self._etat.configure(
-                text='Statut : pending — %s'
-                     % ' ; '.join(acceptation['motifs_de_refus']),
+                text='Status: pending - %s' % '; '.join(summary),
                 foreground=ORANGE)
         return acceptation
 
     def _enregistrer(self) -> Optional[Dict[str, Any]]:
-        """Ecrit le CSV et le JSON d audit, sans toucher au modele VE.
+        """Write the CSV and audit JSON, without touching the VE model.
 
         Returns:
-            dict | None: Chemins ecrits, ou `None` si l ecriture a echoue.
+            dict | None: Written paths, or `None` if writing failed.
         """
         acceptation = self._controler()
         horodatage = datetime.now().strftime('%Y%m%d_%H%M%S')
@@ -334,7 +379,7 @@ class AssistantDePreuves(object):
                 self.reponses().get('project_id') or 'UNKNOWN', horodatage)
         except OSError as erreur:
             if messagebox is not None:
-                messagebox.showerror('Enregistrement', '%s' % erreur)
+                messagebox.showerror('Save evidence', '%s' % erreur)
             return None
 
         self._resultat = {'csv': ecriture['chemin'],
@@ -343,18 +388,18 @@ class AssistantDePreuves(object):
                           'statut': acceptation['statut_effectif']}
         if messagebox is not None:
             messagebox.showinfo(
-                'Enregistrement',
-                'Statut ecrit : %s\n\nCSV : %s\nAudit : %s\n\n'
-                'Aucune donnee VE n a ete modifiee.'
+                'Evidence saved',
+                'Recorded status: %s\n\nCSV: %s\nAudit: %s\n\n'
+                'No VE data was modified.'
                 % (acceptation['statut_effectif'], ecriture['chemin'],
                    chemin_audit))
         return self._resultat
 
     def lancer(self) -> Optional[Dict[str, Any]]:
-        """Ouvre la fenetre et rend le resultat apres fermeture.
+        """Open the window and return the result after closing.
 
         Returns:
-            dict | None: Chemins ecrits, ou `None` si rien n a ete enregistre.
+            dict | None: Written paths, or `None` if nothing was saved.
         """
         self._racine.mainloop()
         return self._resultat
@@ -362,17 +407,17 @@ class AssistantDePreuves(object):
 
 def chemins_du_projet(dossier_projet: str, project_id: str
                       ) -> Dict[str, str]:
-    """Compose les emplacements d ecriture, sous le projet VE.
+    """Compose the write locations, under the VE project.
 
-    Rien n est ecrit ailleurs : ni dans le depot, ni dans un dossier systeme.
-    C est ce qui rend l assistant utilisable sans droits administrateur.
+    Nothing is written elsewhere: not in the repository, not in a system folder.
+    This is what makes the wizard usable without administrator rights.
 
     Args:
-        dossier_projet: Racine du projet VE.
-        project_id: Identifiant du projet.
+        dossier_projet: VE project root.
+        project_id: Project identifier.
 
     Returns:
-        dict: `csv` et `audit`.
+        dict: `csv` and `audit`.
     """
     identifiant = (project_id or 'UNKNOWN').strip() or 'UNKNOWN'
     return {

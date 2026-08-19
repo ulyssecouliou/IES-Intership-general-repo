@@ -1,54 +1,53 @@
 # -*- coding: utf-8 -*-
-u"""Extrait les distributions de fréquence de référence — tests SIA 2, 3 et 5.
+u"""Extracts the reference frequency distributions — SIA tests 2, 3 and 5.
 
-POURQUOI CE FICHIER EXISTE. Les spécifications des tests 2, 3 et 5 énoncent
-**deux** critères, pas un :
+WHY THIS FILE EXISTS. The specifications for tests 2, 3 and 5 state **two**
+criteria, not one:
 
   1. « Jahressumme : Mittelwert +/- max. Abweichung der Referenzprogramme » —
-     c'est la bande annuelle, déjà figée par `build_sia_reference.py` ;
+     that is the annual band, already frozen by `build_sia_reference.py`;
   2. « Die Häufigkeitsverteilung muss im Streubereich der Referenzprogramme
-     liegen » — la distribution horaire doit rester dans la dispersion des
-     programmes de référence.
+     liegen » — the hourly distribution must stay within the dispersion of the
+     reference programmes.
 
-Le second n'avait jamais été extrait. Sans lui, un verdict « conforme » ne
-porterait que sur la moitié des critères du test.
+The second had never been extracted. Without it, a "compliant" verdict would
+only cover half the test criteria.
 
-CE PARAGRAPHE AFFIRMAIT LE CONTRAIRE, ET IL ÉTAIT FAUX. Il disait que les
-tests 4 et 6 n'ont ni feuille de classes ni feuille de distribution, « et
-c'est un constat, pas un oubli ». C'était un oubli, et il tenait à une seule
-lettre : leurs classeurs écrivent la feuille `Haeufigkeitskassen`, sans le
-« l » de `Haeufigkeitsklassen` que portent les tests 2, 3 et 5. Une faute de
-frappe dans les fichiers officiels, prise pour une absence.
+THIS PARAGRAPH CLAIMED THE OPPOSITE, AND IT WAS WRONG. It stated that tests 4
+and 6 have neither a class sheet nor a distribution sheet, "and that is an
+observation, not an omission". It was an omission, and it came down to a
+single letter: their workbooks name the sheet `Haeufigkeitskassen`, without
+the « l » of `Haeufigkeitsklassen` that tests 2, 3 and 5 use. A typo in the
+official files, mistaken for an absence.
 
-CE QUI EST VÉRIFIÉ, le 2026-08-10, en ouvrant les classeurs :
+WHAT WAS VERIFIED, on 2026-08-10, by opening the workbooks:
 
-  * `Resultaterfassung Test4.xlsx` et `Resultaterfassung_Test6.xlsx` portent
-    tous deux une feuille `Haeufigkeitskassen` de 23 lignes, structurée comme
-    celle du Test 2 : un index de classe, puis une borne par grandeur ;
-  * leur `Zusammenfassung` porte une section
-    « Stündliche Häufigkeitsverteilung » (Test 4 : ligne 19) suivie de blocs
-    par grandeur — nom, unité et programmes, ligne `Klassen`, puis les
-    effectifs de chaque programme de référence. C'est exactement la structure
-    que ce script sait déjà lire.
+  * `Resultaterfassung Test4.xlsx` and `Resultaterfassung_Test6.xlsx` both
+    carry a 23-row `Haeufigkeitskassen` sheet, structured like Test 2's: a
+    class index, then one bound per quantity;
+  * their `Zusammenfassung` carries a « Stündliche Häufigkeitsverteilung »
+    section (Test 4: row 19) followed by blocks per quantity — name, unit and
+    programmes, a `Klassen` row, then the counts for each reference programme.
+    This is exactly the structure this script already knows how to read.
 
-La clarification de l'autorité du 2026-08-10
-(`traceability/sia4010-authority-clarification-2026-08-10.json`, décision
-`SIA4010-TEST4-6-DISTRIBUTION-PRESENCE`) dit la même chose.
+The authority clarification of 2026-08-10
+(`traceability/sia4010-authority-clarification-2026-08-10.json`, decision
+`SIA4010-TEST4-6-DISTRIBUTION-PRESENCE`) says the same.
 
-Ces deux tests sont donc À PORTÉE et restent À FAIRE : leur disposition n'est
-pas encore relevée dans `DISPOSITIONS`, et ce script ne devine jamais une
-disposition — voir le commentaire de cette table. `TESTS_AVEC_DISTRIBUTION`
-les exclut encore pour cette raison, et pour cette raison seulement.
+These two tests are therefore WITHIN REACH and remain TO DO: their layout has
+not yet been read in `DISPOSITIONS`, and this script never guesses a layout —
+see the comment on that table. `TESTS_AVEC_DISTRIBUTION` still excludes them
+for this reason, and for this reason only.
 
-CE QUE LE CLASSEUR NE FAIT PAS, ET QUE CE SCRIPT NE FERA DONC PAS NON PLUS.
-Les feuilles « Verteilung » sont des **graphiques**, pas des tableaux : elles
-tracent les 8 variantes de référence plus le programme testé, et **aucune
-bande n'est calculée nulle part**. Le jugement est visuel dans le classeur
-officiel. Ce script fige donc les EFFECTIFS par classe — des faits — et laisse
-le critère explicitement non établi. Choisir une formule de bande ici
-reviendrait à inventer le critère.
+WHAT THE WORKBOOK DOES NOT DO, AND WHAT THIS SCRIPT WILL THEREFORE NOT DO
+EITHER. The « Verteilung » sheets are **charts**, not tables: they plot the 8
+reference variants plus the tested programme, and **no band is calculated
+anywhere**. The judgement is visual in the official workbook. This script
+therefore freezes COUNTS per class — facts — and leaves the criterion
+explicitly undetermined. Choosing a band formula here would amount to
+inventing the criterion.
 
-Usage :
+Usage:
     python scripts/build_sia_distribution_reference.py [numero...] [--ecrire]
 """
 
@@ -70,56 +69,54 @@ _DOSSIER_SIA = os.environ.get(
 
 _SORTIE = os.path.join(_RACINE, 'refs', 'reference-data')
 
-#: Tests dont la disposition a été RELEVÉE dans `DISPOSITIONS`, et dont les
-#: effectifs sont donc extractibles. Les tests 4, 6 et 7 ont rejoint cette
-#: liste le 2026-08-12, quand leur disposition a été lue.
+#: Tests whose layout has been READ in `DISPOSITIONS`, and whose counts are
+#: therefore extractable. Tests 4, 6 and 7 joined this list on 2026-08-12,
+#: when their layout was read.
 #:
-#: EXTRACTIBLE N'EST PAS OPPOSABLE. Cette liste dit d'où l'on sait lire des
-#: effectifs, pas où un critère de distribution s'applique. Les spécifications
-#: des tests 4, 6 et 7 ne comportent aucune section « Testkriterien » — zéro
-#: occurrence de `Testkriterien`, `Streubereich`, `Abweichung` ni
-#: `Häufigkeitsverteilung`, vérifié le 2026-08-12 après s'être assuré que le
-#: texte des trois PDF s'extrait bien. La question de savoir si le critère de
-#: distribution leur est opposable est posée à la sous-commission et n'a pas
-#: de réponse. Le moteur `sia_distributions_engine` garde donc sa propre
-#: liste : figer un fait n'autorise pas à en tirer un verdict.
+#: EXTRACTABLE IS NOT THE SAME AS ENFORCEABLE. This list says from where we
+#: know how to read counts, not where a distribution criterion applies. The
+#: specifications for tests 4, 6 and 7 contain no « Testkriterien » section —
+#: zero occurrences of `Testkriterien`, `Streubereich`, `Abweichung` or
+#: `Häufigkeitsverteilung`, verified on 2026-08-12 after confirming that the
+#: text of all three PDFs extracts correctly. Whether the distribution
+#: criterion is enforceable for them is a question put to the sub-commission
+#: and has no answer yet. The `sia_distributions_engine` therefore keeps its
+#: own list: freezing a fact does not authorise drawing a verdict from it.
 TESTS_AVEC_DISTRIBUTION = (2, 3, 4, 5, 6, 7)
 
-#: Tests dont les classeurs portent des distributions, disposition relevée
-#: ou non. Sert à distinguer « pas de distribution » de « pas encore
-#: extraite » — la confusion des deux est ce qui a fait écrire pendant
-#: des semaines que les tests 4 et 6 n'en avaient pas, et l'a fait écrire
-#: à la SIA le 2026-08-07, qui l'a relevé.
+#: Tests whose workbooks carry distributions, whether the layout has been read
+#: or not. Used to distinguish "no distribution" from "not yet extracted" —
+#: confusing the two is what led to weeks of writing that tests 4 and 6 had
+#: none, and to writing to the SIA on 2026-08-07, who flagged it.
 TESTS_PORTANT_DES_DISTRIBUTIONS = (2, 3, 4, 5, 6, 7)
 
-#: Heures d'une année. Le classeur totalise par colonne ; les écarts d'une ou
-#: deux heures observés (8759, 8732) sont RÉELS et conservés tels quels.
+#: Hours in a year. The workbook totals by column; the discrepancies of one or
+#: two hours observed (8759, 8732) are REAL and preserved as-is.
 HEURES_ANNEE = 8760
 
-#: Disposition LUE sur chaque classeur, jamais supposée. Les trois diffèrent —
-#: c'est en les croyant semblables qu'on s'est trompé quatre fois sur les
-#: sommes annuelles.
+#: Layout READ from each workbook, never assumed. They all differ —
+#: believing them to be alike is what caused four errors on annual sums.
 #:
-#:   ligne_cas        : ligne portant l'identifiant de cas, en tête de bloc
-#:   ligne_grandeur   : ligne portant « grandeur, unité »
-#:   ligne_unite      : ligne portant l'unité SEULE, quand le classeur ne la
-#:                      met pas dans la cellule de grandeur. Absente pour les
-#:                      tests 2, 3 et 5, où l'unité suit la virgule.
-#:   ligne_programmes : ligne portant les noms de programmes
-#:   ligne_classes    : ligne portant le mot « Klassen »
-#:   colonne_index    : colonne d'index de classe commune à tous les blocs,
-#:                      ou None si chaque bloc porte ses propres bornes
+#:   ligne_cas        : row carrying the case identifier, at the top of a block
+#:   ligne_grandeur   : row carrying « quantity, unit »
+#:   ligne_unite      : row carrying the unit ALONE, when the workbook does not
+#:                      include it in the quantity cell. Absent for tests 2, 3
+#:                      and 5, where the unit follows the comma.
+#:   ligne_programmes : row carrying programme names
+#:   ligne_classes    : row carrying the word « Klassen »
+#:   colonne_index    : class index column common to all blocks, or None if
+#:                      each block carries its own bounds
 #:
-#: TROIS FAMILLES DE DISPOSITION, relevées le 2026-08-12 :
+#: THREE LAYOUT FAMILIES, identified on 2026-08-12:
 #:
-#:   tests 2, 3, 5 : « Grandeur, unité » dans UNE cellule, et une ligne de cas
-#:                   portant un identifiant (« Alle », « Test 3 A »...) ;
-#:   tests 4, 6    : grandeur et unité sur DEUX lignes, la ligne d'unité
-#:                   portant aussi les noms de programmes. Aucun identifiant
-#:                   de cas : ces tests n'ont qu'un cas ;
-#:   test 7        : comme 4 et 6, mais la cellule de grandeur répète l'unité
-#:                   après une virgule. Les deux sources sont lues et doivent
-#:                   concorder — un désaccord fait refuser l'extraction.
+#:   tests 2, 3, 5 : « Quantity, unit » in ONE cell, and a case row carrying
+#:                   an identifier (« Alle », « Test 3 A »...);
+#:   tests 4, 6    : quantity and unit on TWO rows, the unit row also carrying
+#:                   programme names. No case identifier: these tests have
+#:                   only one case;
+#:   test 7        : like 4 and 6, but the quantity cell repeats the unit after
+#:                   a comma. Both sources are read and must agree — a
+#:                   disagreement causes the extraction to be refused.
 DISPOSITIONS = {
     2: {
         'fichier': os.path.join('Test2', 'Resultaterfassung_Test2.xlsx'),
@@ -148,15 +145,15 @@ DISPOSITIONS = {
         'ligne_grandeur': 21,
         'ligne_programmes': 22,
         'ligne_classes': 23,
-        # Test 5 porte l'index de classe en colonne A, commune a tous les
-        # blocs, et la borne dans la 1re colonne de chaque bloc.
+        # Test 5 carries the class index in column A, common to all blocks,
+        # and the bound in the 1st column of each block.
         'colonne_index': 1,
         'classes_sia': ['3', '4A', '4B'],
     },
-    # Relevés le 2026-08-12 en ouvrant les classeurs. La section porte le titre
-    # « Stündliche Häufigkeitsverteilung » en colonne A : Test 4 ligne 19,
-    # Test 6 ligne 22, Test 7 ligne 31. Aucune ligne de cas : ces trois tests
-    # n'ont qu'un cas, et `_reserves` le dira au lieu de le déduire.
+    # Identified on 2026-08-12 by opening the workbooks. The section carries
+    # the title « Stündliche Häufigkeitsverteilung » in column A: Test 4 row
+    # 19, Test 6 row 22, Test 7 row 31. No case row: these three tests have
+    # only one case, and `_reserves` will say so rather than inferring it.
     4: {
         'fichier': os.path.join('Test4', 'Resultaterfassung Test4.xlsx'),
         'feuille': u'Zusammenfassung',
@@ -192,27 +189,27 @@ DISPOSITIONS = {
     },
 }
 
-#: Mot qui marque, sur `ligne_classes`, la première colonne d'un bloc.
+#: Word that marks, on `ligne_classes`, the first column of a block.
 MARQUEUR_BLOC = u'Klassen'
 
-#: Libellé de la ligne de contrôle, sous les classes.
+#: Label for the control row, below the classes.
 MARQUEUR_TOTAL = u'Total'
 
 
 class ExtractionRefusee(RuntimeError):
-    u"""Levée dès qu'une valeur ne peut pas être établie avec certitude."""
+    u"""Raised as soon as a value cannot be established with certainty."""
 
 
 def _texte(feuille, ligne, colonne):
-    u"""Valeur texte d'une cellule, nettoyée.
+    u"""Text value of a cell, cleaned.
 
     Args:
-        feuille: Feuille openpyxl.
-        ligne: Numéro de ligne.
-        colonne: Index de colonne.
+        feuille: openpyxl sheet.
+        ligne: Row number.
+        colonne: Column index.
 
     Returns:
-        str | None: Texte nettoyé, ou `None` si la cellule n'en porte pas.
+        str | None: Cleaned text, or `None` if the cell carries none.
     """
     valeur = feuille.cell(ligne, colonne).value
     if isinstance(valeur, str) and valeur.strip():
@@ -221,15 +218,15 @@ def _texte(feuille, ligne, colonne):
 
 
 def _entier(feuille, ligne, colonne):
-    u"""Valeur entière d'une cellule, ou `None`.
+    u"""Integer value of a cell, or `None`.
 
     Args:
-        feuille: Feuille openpyxl.
-        ligne: Numéro de ligne.
-        colonne: Index de colonne.
+        feuille: openpyxl sheet.
+        ligne: Row number.
+        colonne: Column index.
 
     Returns:
-        int | None: Effectif, ou `None` si la cellule n'est pas numérique.
+        int | None: Count, or `None` if the cell is not numeric.
     """
     valeur = feuille.cell(ligne, colonne).value
     if isinstance(valeur, bool) or valeur is None:
@@ -242,20 +239,19 @@ def _entier(feuille, ligne, colonne):
 
 
 def _colonnes_de_bloc(feuille, disposition):
-    u"""Repère les colonnes qui ouvrent un bloc de distribution.
+    u"""Locates the columns that open a distribution block.
 
     Args:
-        feuille: Feuille `Zusammenfassung`.
-        disposition: Entrée de `DISPOSITIONS`.
+        feuille: `Zusammenfassung` sheet.
+        disposition: Entry from `DISPOSITIONS`.
 
     Returns:
-        list[int]: Index des colonnes portant « Klassen », dans l'ordre.
+        list[int]: Indices of columns carrying « Klassen », in order.
 
     Raises:
-        ExtractionRefusee: Si aucun bloc n'est trouvé — la disposition
-            déclarée ne correspond alors pas au classeur, et poursuivre
-            produirait un référentiel vide qui se lirait comme « pas de
-            distribution ».
+        ExtractionRefusee: If no block is found — the declared layout does
+            not match the workbook, and continuing would produce an empty
+            reference dataset that reads as "no distribution".
     """
     ligne = disposition['ligne_classes']
     blocs = [c for c in range(1, feuille.max_column + 1)
@@ -268,26 +264,25 @@ def _colonnes_de_bloc(feuille, disposition):
 
 
 def _bornes_du_bloc(feuille, disposition, colonne_bloc):
-    u"""Lit les bornes de classe d'un bloc, et la ligne de contrôle.
+    u"""Reads the class bounds of a block, and the control row.
 
     Args:
-        feuille: Feuille `Zusammenfassung`.
-        disposition: Entrée de `DISPOSITIONS`.
-        colonne_bloc: Colonne portant « Klassen ».
+        feuille: `Zusammenfassung` sheet.
+        disposition: Entry from `DISPOSITIONS`.
+        colonne_bloc: Column carrying « Klassen ».
 
-    LA LIGNE DE CONTRÔLE N'EST PAS TOUJOURS ÉTIQUETÉE. Le Test 2 écrit
-    « Total » en colonne A ; le Test 3 laisse la cellule vide et pose
-    simplement les totaux sous la dernière classe. On la repère donc par
-    position — la ligne qui suit la dernière classe — et la **vérification par
-    la somme** (`_controler_totaux`) valide cette détection : si la ligne
-    retenue n'est pas la bonne, les sommes ne tomberont pas juste et
-    l'extraction sera refusée. Aucune détection n'est crue sur parole.
+    THE CONTROL ROW IS NOT ALWAYS LABELLED. Test 2 writes « Total » in
+    column A; Test 3 leaves the cell empty and simply places totals below the
+    last class. It is therefore located by position — the row following the
+    last class — and the **sum check** (`_controler_totaux`) validates this
+    detection: if the retained row is wrong, the sums will not add up and
+    extraction will be refused. No detection is taken on faith.
 
     Returns:
         tuple: `(lignes_de_classe, bornes, ligne_total)`.
 
     Raises:
-        ExtractionRefusee: Si aucune classe n'est trouvée sous le bloc.
+        ExtractionRefusee: If no class is found below the block.
     """
     depart = disposition['ligne_classes'] + 1
     colonne_libelle = disposition.get('colonne_index') or colonne_bloc
@@ -313,22 +308,22 @@ def _bornes_du_bloc(feuille, disposition, colonne_bloc):
 
 def _contributeurs(feuille, disposition, colonne_bloc, colonne_fin,
                    ligne_total):
-    u"""Repère les colonnes de programmes ayant réellement soumis ce cas.
+    u"""Locates programme columns that actually submitted this case.
 
-    LE PIÈGE. Une colonne peut être pleine de zéros parce que le programme
-    n'a pas soumis ce cas, pas parce qu'il a compté zéro heure. La ligne
-    « Total » tranche : elle vaut ~8760 pour un contributeur réel, 0 sinon.
-    Compter les zéros comme des mesures fausserait toute la dispersion.
+    THE PITFALL. A column may be full of zeros because the programme did not
+    submit this case, not because it counted zero hours. The « Total » row
+    resolves this: it is ~8760 for a real contributor, 0 otherwise. Counting
+    zeros as measurements would skew the entire dispersion.
 
     Args:
-        feuille: Feuille `Zusammenfassung`.
-        disposition: Entrée de `DISPOSITIONS`.
-        colonne_bloc: Colonne portant « Klassen ».
-        colonne_fin: Première colonne du bloc suivant (exclue).
-        ligne_total: Ligne de contrôle.
+        feuille: `Zusammenfassung` sheet.
+        disposition: Entry from `DISPOSITIONS`.
+        colonne_bloc: Column carrying « Klassen ».
+        colonne_fin: First column of the next block (excluded).
+        ligne_total: Control row.
 
     Returns:
-        list[dict]: Un descripteur par colonne contributrice.
+        list[dict]: One descriptor per contributing column.
     """
     ligne_programmes = disposition['ligne_programmes']
     retenus = []
@@ -350,13 +345,13 @@ def _contributeurs(feuille, disposition, colonne_bloc, colonne_fin,
 
 
 def _grandeur_et_unite(libelle):
-    u"""Sépare « Grandeur, unité » en deux.
+    u"""Splits « Quantity, unit » into two parts.
 
     Args:
-        libelle: Texte de la ligne de grandeur.
+        libelle: Text of the quantity row.
 
     Returns:
-        tuple[str, str | None]: Grandeur et unité, l'unité pouvant manquer.
+        tuple[str, str | None]: Quantity and unit, where the unit may be absent.
     """
     if libelle and ',' in libelle:
         grandeur, unite = libelle.rsplit(',', 1)
@@ -365,17 +360,17 @@ def _grandeur_et_unite(libelle):
 
 
 def extraire(numero_test):
-    u"""Extrait les distributions de référence d'un test.
+    u"""Extracts the reference distributions for a test.
 
     Args:
-        numero_test: 2, 3 ou 5.
+        numero_test: 2, 3 or 5.
 
     Returns:
-        dict: Structure prête à figer.
+        dict: Structure ready to freeze.
 
     Raises:
-        ExtractionRefusee: Sur toute incohérence entre le relevé et les
-            contrôles du classeur.
+        ExtractionRefusee: On any inconsistency between the extraction and the
+            workbook checks.
     """
     if numero_test not in DISPOSITIONS:
         raise ExtractionRefusee(
@@ -426,17 +421,16 @@ def extraire(numero_test):
 
 
 def _lignes_de_structure(disposition):
-    u"""Consigne les lignes réellement lues, pour que la source soit rejouable.
+    u"""Records the rows actually read, so the source is reproducible.
 
-    `unite` n'apparaît que pour les dispositions qui en ont une : la clé
-    absente signifie « l'unité suit la virgule dans la cellule de grandeur »,
-    pas « on ne sait pas ».
+    `unite` only appears for layouts that have one: the absent key means
+    "the unit follows the comma in the quantity cell", not "unknown".
 
     Args:
-        disposition: Entrée de `DISPOSITIONS`.
+        disposition: Entry from `DISPOSITIONS`.
 
     Returns:
-        dict: Numéros de ligne, par rôle.
+        dict: Row numbers, by role.
     """
     lignes = {
         u'cas': disposition['ligne_cas'],
@@ -450,17 +444,17 @@ def _lignes_de_structure(disposition):
 
 
 def _reserves(distributions):
-    u"""Rédige les réserves à partir des données extraites, pas de mémoire.
+    u"""Drafts reservations from the extracted data, not from memory.
 
-    Une réserve écrite à la main se périme dès que le classeur change. Celles-ci
-    sont recalculées à chaque extraction : si le motif disparaît, la réserve
-    disparaît avec lui.
+    A hand-written reservation becomes stale as soon as the workbook changes.
+    These are recalculated at each extraction: if the pattern disappears, the
+    reservation disappears with it.
 
     Args:
-        distributions: Blocs extraits.
+        distributions: Extracted blocks.
 
     Returns:
-        list[str]: Réserves, éventuellement vide.
+        list[str]: Reservations, possibly empty.
     """
     reserves = []
 
@@ -507,21 +501,21 @@ def _reserves(distributions):
 
 
 def _extraire_bloc(feuille, disposition, colonne_bloc, colonne_fin):
-    u"""Extrait un bloc de distribution.
+    u"""Extracts one distribution block.
 
     Args:
-        feuille: Feuille `Zusammenfassung`.
-        disposition: Entrée de `DISPOSITIONS`.
-        colonne_bloc: Colonne portant « Klassen ».
-        colonne_fin: Première colonne du bloc suivant (exclue).
+        feuille: `Zusammenfassung` sheet.
+        disposition: Entry from `DISPOSITIONS`.
+        colonne_bloc: Column carrying « Klassen ».
+        colonne_fin: First column of the next block (excluded).
 
     Returns:
-        dict: Distribution d'un couple (cas, grandeur).
+        dict: Distribution for one (case, quantity) pair.
 
     Raises:
-        ExtractionRefusee: Si la somme des effectifs d'un contributeur ne
-            reproduit pas son total déclaré. C'est le garde-fou : il a déjà
-            attrapé quatre hypothèses fausses sur les sommes annuelles.
+        ExtractionRefusee: If the sum of counts for a contributor does not
+            reproduce its declared total. This is the safeguard: it has already
+            caught four false assumptions about annual sums.
     """
     lignes, bornes, ligne_total = _bornes_du_bloc(
         feuille, disposition, colonne_bloc)
@@ -535,17 +529,17 @@ def _extraire_bloc(feuille, disposition, colonne_bloc, colonne_fin):
     if ligne_unite is not None:
         unite_propre = _texte(feuille, ligne_unite, colonne_bloc)
         if unite is None:
-            # Tests 4 et 6 : la cellule de grandeur ne porte pas l'unité.
+            # Tests 4 and 6: the quantity cell does not carry the unit.
             unite = unite_propre
         elif unite_propre and unite_propre != unite:
-            # Test 7, bloc W au 2026-08-12 : la cellule de grandeur annonce
-            # « kW » et la ligne d'unité « °C ». Un seul bloc sur dix-sept.
+            # Test 7, block W on 2026-08-12: the quantity cell announces
+            # « kW » and the unit row « °C ». Only one block out of seventeen.
             #
-            # Les EFFECTIFS ne dépendent pas de cette étiquette : refuser le
-            # bloc perdrait des faits pour un désaccord de métadonnée. Choisir
-            # l'une des deux sources reviendrait à trancher un défaut du
-            # classeur officiel à la place de son auteur. L'unité reste donc
-            # nulle et le conflit remonte en réserve, nommé.
+            # The COUNTS do not depend on this label: refusing the block would
+            # lose facts over a metadata disagreement. Choosing one of the two
+            # sources would mean correcting a defect in the official workbook
+            # in place of its author. The unit therefore remains null and the
+            # conflict surfaces as a named reservation.
             conflit_unite = {
                 'colonne_bloc': get_column_letter(colonne_bloc),
                 'unite_cellule_grandeur': unite,
@@ -579,25 +573,25 @@ def _extraire_bloc(feuille, disposition, colonne_bloc, colonne_fin):
         'contributeurs': contributeurs,
         'effectifs': effectifs,
     }
-    # Clé ajoutée seulement quand il y a un conflit : les référentiels des
-    # tests 2, 3 et 5 restent ainsi identiques au bit près, aucun n'ayant de
-    # ligne d'unité. Une preuve figée ne se réécrit pas pour une clé nulle.
+    # Key added only when there is a conflict: the reference datasets for
+    # tests 2, 3 and 5 thus remain bit-for-bit identical, none of them having
+    # a unit row. A frozen proof is not rewritten for a null key.
     if conflit_unite is not None:
         bloc['conflit_unite'] = conflit_unite
     return bloc
 
 
 def _controler_totaux(contributeurs, effectifs, colonne_bloc):
-    u"""Confronte la somme des effectifs au total déclaré par le classeur.
+    u"""Compares the sum of counts to the total declared by the workbook.
 
     Args:
-        contributeurs: Descripteurs de colonnes.
-        effectifs: Effectifs par classe.
-        colonne_bloc: Colonne du bloc, pour le message.
+        contributeurs: Column descriptors.
+        effectifs: Counts per class.
+        colonne_bloc: Block column, for the error message.
 
     Raises:
-        ExtractionRefusee: Sur le moindre écart. Un effectif mal lu donnerait
-            une distribution plausible et fausse.
+        ExtractionRefusee: On the slightest discrepancy. A misread count would
+            yield a plausible but incorrect distribution.
     """
     for contributeur in contributeurs:
         lettre = contributeur['colonne']
@@ -612,25 +606,25 @@ def _controler_totaux(contributeurs, effectifs, colonne_bloc):
 
 
 def _chemin_sortie(numero_test):
-    u"""Chemin du référentiel figé d'un test.
+    u"""Path for the frozen reference dataset of a test.
 
     Args:
-        numero_test: Numéro du test SIA.
+        numero_test: SIA test number.
 
     Returns:
-        str: Chemin absolu.
+        str: Absolute path.
     """
     return os.path.join(_SORTIE, 'test-%d.distributions.ref.json' % numero_test)
 
 
 def main(arguments):
-    u"""Point d'entrée en ligne de commande.
+    u"""Command-line entry point.
 
     Args:
-        arguments: Numéros de tests, et `--ecrire`.
+        arguments: Test numbers, and `--ecrire`.
 
     Returns:
-        int: 0 si tout s'est bien passé, 1 sinon.
+        int: 0 if everything went well, 1 otherwise.
     """
     demandes = [int(a) for a in arguments if a.isdigit()]
     tests = demandes or list(TESTS_AVEC_DISTRIBUTION)

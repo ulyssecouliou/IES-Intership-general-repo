@@ -43,11 +43,11 @@ FEATURE_IDS = (
     "audit_report",
 )
 TEST_CASES: Dict[str, Tuple[str, ...]] = {
-    # 1A à 1D sont les cas diagnostiques de transition Test 1 → Test 2. Ils
-    # étaient absents alors que 1E y était : or la spécification définit 1E
-    # comme « Diagnosefall 1D, jedoch mit Stoffmarkisen-Sonnenschutz », donc 1E
-    # sans 1D est un cas sans base. Ils précèdent 1E ici parce que la chaîne se
-    # lit dans cet ordre. Chaîne et paramètres figés dans
+    # 1A to 1D are the diagnostic transition cases Test 1 → Test 2. They
+    # were absent while 1E was present: yet the specification defines 1E
+    # as "Diagnosefall 1D, jedoch mit Stoffmarkisen-Sonnenschutz", so 1E
+    # without 1D is a case without a base. They precede 1E here because the
+    # chain is read in that order. Chain and parameters frozen in
     # refs/reference-data/test-1.diagnostics.ref.json.
     "test_1": (
         "600", "640", "600FF", "900", "940", "900FF",

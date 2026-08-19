@@ -75,7 +75,10 @@ QUALIFICATION_REPORT_SPECS = {
     },
     "fixed_closed_optical_storage": {
         "pattern": "sia2a_2e1_optical_setter_*.json",
-        "required_true": ("fixed_closed_storage_qualified",),
+        "required_true": (
+            "fixed_closed_storage_qualified",
+            "combined_threshold_optical_storage_qualified",
+        ),
         "required_false": (
             "fixed_closed_optical_mapping_qualified",
             "diagnostic_candidate_generation_authorized",

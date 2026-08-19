@@ -33,7 +33,6 @@ WORKSHEET_CALL = re.compile(r"add_worksheet\(\"([A-Z0-9 /]+)\"\)")
 #: this is now the full list rather than a growing subset.
 CONVERTED_SHEETS = (
     "ACTION DASHBOARD",
-    "ACTION PLAN",
     "ALERT SUMMARY",
     "ALERTS",
     "ASSUMPTIONS LIMITS",
@@ -63,7 +62,6 @@ CONVERTED_SHEETS = (
     "SIA4010 PREVALIDATION",
     "SIA4010 READINESS",
     "SIA4010 SOFTWARE REGISTER",
-    "SUMMARY",
 )
 
 #: The ratchet reached zero. It stays as an equality rather than being deleted:

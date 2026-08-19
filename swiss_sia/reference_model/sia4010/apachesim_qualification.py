@@ -41,6 +41,10 @@ SIMULATION_QUALIFICATION_CASES: Tuple[str, ...] = (
     "900",
     "940",
     "900FF",
+    "1A",
+    "1B",
+    "1C",
+    "1D",
 )
 FREE_FLOATING_CASES = frozenset({"600FF", "900FF"})
 ISO_TEST1_CONTROL_TEMPERATURE_RADIANT_FRACTION = 0.5

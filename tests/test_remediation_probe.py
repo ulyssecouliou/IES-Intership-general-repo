@@ -143,7 +143,7 @@ class RemediationProbeTests(unittest.TestCase):
 
         controls = {control.control_id: control for control in diagnosis.controls}
         self.assertEqual(controls["MODEL-001"].status, "PASS")
-        self.assertIn("1 residu(s) numerique(s) ignore(s)", controls["MODEL-001"].observed)
+        self.assertIn("1 numerical residue(s) ignored", controls["MODEL-001"].observed)
 
     def test_runtime_evidence_classifies_missing_inputs_and_inactive_heating(self) -> None:
         """Raw VE/APS evidence must replace generic extraction warnings."""
@@ -175,8 +175,8 @@ class RemediationProbeTests(unittest.TestCase):
         self.assertEqual(controls["MODEL-003"].category, "VE_MODEL_EVIDENCE")
         self.assertIn("infiltration", controls["MODEL-003"].observed)
         self.assertEqual(controls["MODEL-004"].category, "VE_MODEL_EVIDENCE")
-        self.assertIn("aucun gain VE de type Lighting", controls["MODEL-004"].observed)
-        self.assertIn("profils de chauffage", controls["SIM-002"].observed)
+        self.assertIn("no VE Lighting gain", controls["MODEL-004"].observed)
+        self.assertIn("heating profiles", controls["SIM-002"].observed)
         self.assertIn("lighting, fan", controls["SIM-003"].observed)
 
 

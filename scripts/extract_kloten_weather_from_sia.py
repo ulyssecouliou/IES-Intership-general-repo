@@ -1,34 +1,34 @@
 # -*- coding: utf-8 -*-
-u"""Extrait la température extérieure de Zürich-Kloten des classeurs OFFICIELS SIA.
+u"""Extracts the Zürich-Kloten outdoor temperature from the OFFICIAL SIA workbooks.
 
-DÉCOUVERTE DU 2026-08-05. Le classeur d'évaluation officiel du Test 4,
-`Resultaterfassung Test4.xlsx`, contient une feuille **`Wetterdaten`** restée
-inaperçue jusqu'ici. Elle porte 8760 valeurs horaires :
+DISCOVERY OF 2026-08-05. The official evaluation workbook for Test 4,
+`Resultaterfassung Test4.xlsx`, contains a **`Wetterdaten`** sheet that
+had gone unnoticed until now. It carries 8760 hourly values:
 
-    colonne 1 : « Site Outdoor Air Drybulb Temperature [C](Hourly) »
-    colonne 2 : « EMS Two Day Average OA Temp [C](Hourly) »
+    column 1: "Site Outdoor Air Drybulb Temperature [C](Hourly)"
+    column 2: "EMS Two Day Average OA Temp [C](Hourly)"
 
-La colonne 1 est la **température d'air extérieur horaire de Zürich-Kloten**
-telle que le programme de référence EnergyPlus l'a lue dans le fichier SIA 2028
-d'origine. La colonne 2 est la **moyenne glissante sur 48 heures**, déjà
-calculée — c'est-à-dire exactement l'abscisse de la figure 1 de SIA 380/2.
+Column 1 is the **hourly outdoor air temperature for Zürich-Kloten** as
+the reference program EnergyPlus read it from the original SIA 2028 file.
+Column 2 is the **48-hour running mean**, already calculated — that is
+exactly the x-axis of figure 1 of SIA 380/2.
 
-PORTÉE ET LIMITES — à lire avant de s'en servir.
+SCOPE AND LIMITATIONS — read before using.
 
-Ce que cela donne : une série de températures d'origine officielle SIA, sans
-achat. Suffisant pour tout ce qui ne dépend que de la température d'air —
-notamment le refroidisseur sec et l'échangeur sur air extérieur du Test 7.
+What this gives: a temperature series of official SIA origin, without
+purchase. Sufficient for anything that depends only on air temperature —
+in particular the dry cooler and the outdoor-air heat exchanger of Test 7.
 
-Ce que cela ne donne PAS : le rayonnement solaire. Le fichier SIA 2028 d'origine
-contient l'irradiance sur les surfaces verticales des orientations principales
-(rapport EXCEL du Test 2) ; rien de tout cela n'est ici. Les tests 1E, 2, 3, 4,
-5, 6 en dépendent, et le Test 7 en dépend pour sa grandeur obligatoire n° 14
-« Elektrische Energie PV ».
+What this does NOT give: solar radiation. The original SIA 2028 file
+contains irradiance on vertical surfaces for the main orientations
+(from the Test 2 EXCEL report); none of that is here. Tests 1E, 2, 3, 4,
+5, 6 depend on it, and Test 7 depends on it for its mandatory quantity n° 14
+"Elektrische Energie PV".
 
-Ce n'est donc PAS un substitut au jeu SIA 2028 complet. C'est une pièce
-authentique et vérifiable du puzzle, et elle vient d'une source officielle.
+This is therefore NOT a substitute for the full SIA 2028 dataset. It is
+an authentic and verifiable piece of the puzzle, from an official source.
 
-Usage :
+Usage:
     python scripts/extract_kloten_weather_from_sia.py [--ecrire]
 """
 
@@ -44,7 +44,7 @@ import openpyxl
 _ICI = os.path.dirname(os.path.abspath(__file__))
 _RACINE = os.path.abspath(os.path.join(_ICI, os.pardir))
 
-# Le dossier officiel vit dans l'autre dépôt (118 Mo, hors dépôt par .gitignore).
+# The official folder lives in the other repository (118 MB, excluded by .gitignore).
 _DOSSIER_SIA = os.environ.get(
     'SIA_4010_DOSSIER',
     os.path.join(os.path.expanduser('~'), 'Documents', 'IES Internship',
@@ -60,9 +60,9 @@ _SORTIE_CSV = os.path.join(_RACINE, 'refs', 'reference-data',
 
 HEURES = 8760
 
-# Bornes de vraisemblance pour Zürich-Kloten (année de référence DRY).
-# Elles ne valident pas la valeur exacte : elles interceptent une extraction
-# qui aurait attrapé la mauvaise colonne ou la mauvaise feuille.
+# Plausibility bounds for Zürich-Kloten (DRY reference year).
+# They do not validate the exact value: they catch an extraction that
+# picked the wrong column or the wrong sheet.
 MOYENNE_ATTENDUE = (8.0, 11.0)
 MIN_ATTENDU = (-25.0, -5.0)
 MAX_ATTENDU = (28.0, 40.0)

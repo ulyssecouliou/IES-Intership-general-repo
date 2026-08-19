@@ -1,40 +1,39 @@
 # -*- coding: utf-8 -*-
-u"""Construit un système de ventilation dans VE, d'après la spécification du Test 4.
+u"""Builds a ventilation system in VE, based on the Test 4 specification.
 
-BUT : RELEVER DES NOMS DE VARIABLES, PAS VALIDER. Ce modèle sert à découvrir
-quelles grandeurs VE expose pour une centrale de traitement d'air — batteries
-chaude et froide, récupérateur, ventilateurs. C'est le seul moyen de lever les
-18 liaisons manquantes des tests SIA 4 à 6.
+PURPOSE: READING VARIABLE NAMES, NOT VALIDATING. This model is used to
+discover which quantities VE exposes for an air-handling unit — heating and
+cooling coils, heat-recovery unit, fans. It is the only way to resolve the
+18 missing bindings for SIA tests 4 to 6.
 
-Il **ne peut pas** être un cas de validation SIA, et trois entrées obligatoires
-manquent au dépôt pour cela (cf. `MANQUANTS`). Aucun résultat issu de ce modèle
-ne doit être présenté comme un candidat SIA.
+It **cannot** be a SIA validation case, and three mandatory inputs are
+missing from the repository for that purpose (see `MANQUANTS`). No result
+from this model must be presented as a SIA candidate.
 
-CE QUE LA RECONNAISSANCE A ÉTABLI, le 2026-08-07. Les signatures sont
-connues : tous les setters de `VEApacheSystem` prennent un **dictionnaire**,
-dont les clés sont relevées dans `CLES_DES_SETTERS`.
+WHAT THE RECOGNITION ESTABLISHED on 2026-08-07. The signatures are
+known: all setters of `VEApacheSystem` take a **dictionary**, whose keys are
+recorded in `CLES_DES_SETTERS`.
 
-Et ces clés répondent à une question plus large que la leur. `SFP`, `SEER`,
-`SCoP`, `gen_seasonal_eff`, `CHP_ranking`, `meter_cef` : **ApacheSystems est
-un modèle de rendements saisonniers**, orienté conformité NCM. Ce n'est pas un
-modèle de composants.
+And those keys answer a broader question than their own. `SFP`, `SEER`,
+`SCoP`, `gen_seasonal_eff`, `CHP_ranking`, `meter_cef`: **ApacheSystems is
+a seasonal-efficiency model**, oriented towards NCM compliance. It is not a
+component model.
 
-Cinq exigences du Test 4 n'y ont donc aucune expression — puissance des
-batteries, bypass du récupérateur, protection antigel, consigne de soufflage
-régulée, débit variable piloté par le CO2 (cf.
-`INEXPRIMABLE_EN_APACHESYSTEMS`). `construire()` refuse pour cette raison, qui
-est un résultat et non un report.
+Five Test 4 requirements therefore have no expression in it — coil capacities,
+heat-recovery bypass, frost protection, regulated supply-air setpoint, CO2-
+controlled variable flow (see `INEXPRIMABLE_EN_APACHESYSTEMS`). `construire()`
+refuses for this reason, which is a result, not a deferral.
 
-CONSÉQUENCE POUR LE PROJET. Les tests 4, 5 et 6 exigent un réseau
-**ApacheHVAC**. Or `HVACNetwork` n'expose que `components`, `systems`,
-`controllers`, `get_component_by_id`, `load_network` et `path` — aucune
-méthode de création. Le réseau doit être construit **à la main** dans VE, une
-fois, puis son fichier `.asp` versionné et rechargé par `load_network`.
+CONSEQUENCE FOR THE PROJECT. Tests 4, 5 and 6 require an **ApacheHVAC**
+network. Yet `HVACNetwork` only exposes `components`, `systems`,
+`controllers`, `get_component_by_id`, `load_network` and `path` — no creation
+method. The network must be built **by hand** in VE, once, then its `.asp`
+file versioned and reloaded via `load_network`.
 
-UN PIÈGE DE L'API, relevé au passage. `set_heating()` appelé **sans argument**
-ne lève pas : il rend `None`. Un appel fautif ne se signale donc pas. Toute
-configuration écrite ici devra être **relue** après écriture, comme le fait
-déjà `test1_adapter` pour les matériaux.
+AN API TRAP, noted in passing. `set_heating()` called **without argument**
+does not raise: it returns `None`. A faulty call therefore goes unnoticed.
+Any configuration written here must be **read back** after writing, as
+`test1_adapter` already does for materials.
 """
 
 from __future__ import print_function
@@ -56,8 +55,8 @@ CHEMIN_RAPPORT = os.path.join(_RACINE, 'outputs', 'reconnaissance_test4.json')
 
 _SPEC = u'Spezifikation_Test4.pdf'
 
-#: Paramètres de la centrale, TOUS lus dans la spécification du Test 4. Chaque
-#: entrée porte sa source ; aucune n'est arrondie, complétée ni convertie.
+#: Central-unit parameters, ALL read from the Test 4 specification. Each
+#: entry carries its source; none is rounded, completed or converted.
 PARAMETRES = {
     u'debit_nominal_m3_h': {'valeur': 1700.0, 'source': _SPEC + u', Volumenstrom'},
     u'debit_variable_pourcent': {'valeur': (20.0, 100.0),
@@ -101,9 +100,9 @@ PARAMETRES = {
                            'source': _SPEC + u', Sollwerte / CO2'},
 }
 
-#: Entrées obligatoires pour un CAS DE VALIDATION, absentes du dépôt. Elles
-#: n'empêchent pas de relever des noms de variables ; elles interdisent de
-#: présenter un résultat comme un candidat SIA.
+#: Mandatory inputs for a VALIDATION CASE, absent from the repository. They
+#: do not prevent reading variable names; they prohibit presenting a result
+#: as a SIA candidate.
 MANQUANTS = {
     u'climat': u'SIA 2028 DRY normal, Zürich Kloten — fichier non disponible. '
                u'Le relevé de variables fonctionne avec un autre climat ; le '
@@ -115,15 +114,15 @@ MANQUANTS = {
               u'action utilisateur).',
 }
 
-#: Méthodes de `VEApacheSystem` dont la signature doit être relevée avant de
-#: pouvoir appliquer les paramètres.
+#: `VEApacheSystem` methods whose signature must be read before the
+#: parameters can be applied.
 SETTERS_A_RELEVER = (
     'set_air_supply', 'set_auxiliary_energy', 'set_control', 'set_cooling',
     'set_heating', 'set_name', 'set_ventilation_ncm',
 )
 
-#: Propriétés à relever telles qu'elles sortent d'un système neuf : elles
-#: montrent les structures que les setters attendent en retour.
+#: Properties to read as they come out of a new system: they show the
+#: structures the setters expect in return.
 PROPRIETES_A_RELEVER = (
     'air_supply', 'auxiliary_energy', 'control', 'cooling', 'heating',
     'hot_water', 'id', 'name', 'ventilation_ncm',
@@ -131,17 +130,17 @@ PROPRIETES_A_RELEVER = (
 
 
 class ConstructionRefusee(RuntimeError):
-    u"""Levée quand la construction ne peut pas se faire sans supposer."""
+    u"""Raised when the construction cannot proceed without guessing."""
 
 
 def reconnaitre():
-    u"""Crée un système ApacheSystems et relève ce que son API attend.
+    u"""Creates an ApacheSystems system and reads what its API expects.
 
-    Ne configure RIEN : le système créé reste aux valeurs par défaut de VE.
-    C'est un relevé, pas une construction.
+    Configures NOTHING: the created system remains at VE default values.
+    This is a reading, not a construction.
 
     Returns:
-        dict: Rapport, écrit aussi sur disque.
+        dict: Report, also written to disk.
     """
     rapport = {
         'dans_ve': _dans_ve(),
@@ -160,14 +159,14 @@ def reconnaitre():
     }
 
     def etape(nom, fonction):
-        u"""Exécute une étape en consignant son issue.
+        u"""Executes a step recording its outcome.
 
         Args:
-            nom: Libellé de l'étape.
-            fonction: Appelable sans argument.
+            nom: Step label.
+            fonction: Callable taking no argument.
 
         Returns:
-            Any: Résultat, ou `None` en cas d'échec.
+            Any: Result, or `None` on failure.
         """
         try:
             valeur = fonction()
@@ -206,10 +205,10 @@ def reconnaitre():
 
     etape(u'attributs du systeme', lambda: _membres(systeme))
 
-    # CORRIGE le 2026-08-07. `heating`, `cooling`, `air_supply`... sont des
-    # METHODES, pas des attributs : le premier releve n a capture que des
-    # `<bound method ...>` et n a donc jamais obtenu les dictionnaires par
-    # defaut. Ce sont eux qui montrent les types attendus par les setters.
+    # CORRECTED on 2026-08-07. `heating`, `cooling`, `air_supply`... are
+    # METHODS, not attributes: the first reading only captured
+    # `<bound method ...>` values and therefore never obtained the default
+    # dictionaries. Those are what show the types the setters expect.
     for nom in PROPRIETES_A_RELEVER:
         etape(u'%s() (valeur par defaut)' % nom,
               lambda n=nom: _appeler_si_possible(getattr(systeme, n)))
@@ -223,17 +222,17 @@ def reconnaitre():
 
 
 def _appeler_si_possible(valeur):
-    u"""Rend la valeur, ou le résultat de son appel si c'est une méthode.
+    u"""Returns the value, or the result of calling it if it is a method.
 
-    `VEApacheSystem` expose `heating`, `cooling`, `air_supply`… en méthodes et
-    non en attributs. Les relever sans les appeler ne donne qu'un
-    `<bound method …>` — c'est l'erreur du premier relevé.
+    `VEApacheSystem` exposes `heating`, `cooling`, `air_supply`... as methods,
+    not attributes. Reading them without calling them only yields a
+    `<bound method ...>` — that was the first reading's error.
 
     Args:
-        valeur: Attribut relevé sur l'objet.
+        valeur: Attribute read from the object.
 
     Returns:
-        Any: Le résultat de l'appel, ou la valeur telle quelle.
+        Any: The result of the call, or the value as-is.
     """
     if not callable(valeur):
         return valeur
@@ -241,28 +240,28 @@ def _appeler_si_possible(valeur):
 
 
 def _signature(methode):
-    u"""Décrit une méthode : docstring et signature si elle en expose une.
+    u"""Describes a method: docstring and signature if it exposes one.
 
     Args:
-        methode: Méthode liée.
+        methode: Bound method.
 
     Returns:
-        dict: Ce qui a pu être relevé.
+        dict: What could be discovered.
     """
     import inspect
     releve = {'doc': (getattr(methode, '__doc__', None) or u'')[:400]}
     try:
         releve['signature'] = u'%s' % (inspect.signature(methode),)
     except (TypeError, ValueError) as erreur:
-        # Les methodes natives n exposent souvent pas de signature : c est le
-        # cas normal, pas une anomalie.
+        # Native methods often do not expose a signature: that is the normal
+        # case, not an anomaly.
         releve['signature'] = u'non exposee (%s)' % type(erreur).__name__
     return releve
 
 
-#: Clés que chaque setter accepte, RELEVÉES dans leur docstring le
-#: 2026-08-07. Elles disent ce qu'ApacheSystems est : un modèle de RENDEMENTS
-#: saisonniers, orienté conformité NCM.
+#: Keys each setter accepts, READ from their docstring on 2026-08-07. They
+#: show what ApacheSystems is: a SEASONAL-EFFICIENCY model, oriented towards
+#: NCM compliance.
 CLES_DES_SETTERS = {
     'set_heating': ('fuel', 'gen_seasonal_eff', 'SCoP', 'gen_size',
                     'HR_effectiveness', 'HR_return_temp', 'used_with_CHP',
@@ -281,8 +280,8 @@ CLES_DES_SETTERS = {
                             'variable_heat_recovery'),
 }
 
-#: Exigences de la spécification du Test 4 qu'AUCUNE clé ci-dessus ne permet
-#: d'exprimer. C'est la raison pour laquelle ApacheSystems ne convient pas.
+#: Test 4 specification requirements that NO key above can express. This is
+#: why ApacheSystems is not suitable.
 INEXPRIMABLE_EN_APACHESYSTEMS = {
     u'puissance des batteries':
         u'Luftkühler 12,8 kW et Lufterhitzer 11,4 kW. `gen_size` dimensionne '
@@ -304,26 +303,25 @@ INEXPRIMABLE_EN_APACHESYSTEMS = {
 
 
 def construire(projet=None):
-    u"""Applique les paramètres de la spécification à un système.
+    u"""Applies the specification parameters to a system.
 
     Args:
-        projet: `VEProject`, ou `None` pour le projet courant.
+        projet: `VEProject`, or `None` for the current project.
 
     Raises:
-        ConstructionRefusee: Toujours. La raison a CHANGÉ le 2026-08-07, et
-            c'est un résultat, pas un report.
+        ConstructionRefusee: Always. The reason CHANGED on 2026-08-07, and
+            it is a result, not a deferral.
 
-            Les signatures sont désormais connues : tous les setters prennent
-            un dictionnaire, dont les clés sont relevées dans
-            `CLES_DES_SETTERS`. Ces clés montrent qu'ApacheSystems est un
-            modèle de **rendements saisonniers** orienté conformité NCM — SFP,
-            SEER, SCoP, rendement de génération — et non un modèle de
-            composants.
+            The signatures are now known: all setters take a dictionary,
+            whose keys are recorded in `CLES_DES_SETTERS`. Those keys show
+            that ApacheSystems is a **seasonal-efficiency** model oriented
+            towards NCM compliance — SFP, SEER, SCoP, generation efficiency
+            — and not a component model.
 
-            Cinq exigences de la spécification du Test 4 n'y ont aucune
-            expression (cf. `INEXPRIMABLE_EN_APACHESYSTEMS`). Construire quand
-            même produirait un système qui simule, qui donne des nombres, et
-            qui ne représente pas le test — le pire des trois cas.
+            Five specification requirements for Test 4 have no expression in
+            it (see `INEXPRIMABLE_EN_APACHESYSTEMS`). Constructing anyway
+            would produce a system that simulates, that gives numbers, and
+            that does not represent the test — the worst of the three cases.
     """
     raise ConstructionRefusee(
         u'construction refusée : ApacheSystems ne peut pas représenter le '
@@ -338,10 +336,10 @@ def construire(projet=None):
 
 
 def _ecrire(rapport):
-    u"""Écrit le rapport et dit où le trouver.
+    u"""Writes the report and says where to find it.
 
     Args:
-        rapport: Rapport de reconnaissance.
+        rapport: Recognition report.
     """
     dossier = os.path.dirname(CHEMIN_RAPPORT)
     if not os.path.isdir(dossier):
@@ -355,13 +353,13 @@ def _ecrire(rapport):
 
 
 def main(arguments=()):
-    u"""Point d'entrée.
+    u"""Entry point.
 
     Args:
-        arguments: `--construire` pour tenter la construction.
+        arguments: `--construire` to attempt the construction.
 
     Returns:
-        int: 0 si le rapport a pu être écrit, 1 sinon.
+        int: 0 if the report could be written, 1 otherwise.
     """
     if '--construire' in arguments:
         try:

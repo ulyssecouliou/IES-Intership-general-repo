@@ -1,25 +1,25 @@
 # -*- coding: utf-8 -*-
-u"""Écrit l'artefact de liaison normalisé de la cellule d'essai du chapitre 7.
+u"""Writes the normalised binding artefact for the chapter 7 test cell.
 
-POURQUOI CE SCRIPT EXISTE. Le manifeste d'entrées déléguées ne consomme jamais
-la source primaire : il consomme un artefact normalisé, lié à l'empreinte exacte
-de cette source. Cet artefact doit donc être **reproductible** — reconstructible
-à l'identique depuis la source — sinon la chaîne de preuve s'arrête à un fichier
-que personne ne sait refaire.
+WHY THIS SCRIPT EXISTS. The delegated-inputs manifest never consumes the
+primary source directly: it consumes a normalised artefact linked to the exact
+fingerprint of that source. This artefact must therefore be **reproducible** —
+reconstructible identically from the source — otherwise the proof chain stops
+at a file nobody knows how to remake.
 
-CE QU'IL NE FAIT PAS. Il ne convertit pas d'unités, ne complète aucune valeur
-absente et ne choisit aucune convention. Il transcrit, réordonne les couches dans
-le sens que le contrat attend, et **déclare** le seul champ que la source ne
-porte pas.
+WHAT IT DOES NOT DO. It does not convert units, complete any missing value,
+or choose any convention. It transcribes, reorders the layers in the direction
+the contract expects, and **declares** the single field the source does not
+carry.
 
-LA VALEUR PROVISOIRE. `config/iso52016_chapter7_confirmed_inputs.json` ne porte
-aucune émissivité infrarouge, que le contrat exige. Plutôt que d'en inventer une,
-le script la dérive des coefficients radiatifs que la source porte déjà, puis la
-déclare dans `declared_provisional_values` avec sa dérivation, son hypothèse et
-ce qui la lève. Le chargeur refuse une telle déclaration si l'artefact
-n'interdit pas simultanément toute revendication de conformité, et le contrat
-générateur du Test 2A la transforme en bloqueur de verdict. Une valeur
-provisoire rend la chaîne exécutable ; elle ne fonde jamais un résultat.
+THE PROVISIONAL VALUE. `config/iso52016_chapter7_confirmed_inputs.json` carries
+no infrared emissivity, which the contract requires. Rather than inventing one,
+the script derives it from the radiative coefficients the source already carries,
+then declares it in `declared_provisional_values` with its derivation, its
+assumption, and what clears it. The loader rejects such a declaration if the
+artefact does not simultaneously prohibit any compliance claim, and the Test 2A
+generating contract turns it into a verdict blocker. A provisional value makes
+the chain executable; it never underpins a result.
 """
 
 from __future__ import print_function
@@ -35,27 +35,27 @@ import sys
 _RACINE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, _RACINE)
 
-#: Constante de Stefan-Boltzmann, W/(m2 K4).
+#: Stefan-Boltzmann constant, W/(m2 K4).
 SIGMA = 5.670374419e-8
 
-#: Températures de référence supposées pour les coefficients radiatifs de la
-#: source. La source ne les énonce pas : c'est l'hypothèse à confirmer.
+#: Reference temperatures assumed for the source's radiative coefficients.
+#: The source does not state them: this is the assumption to confirm.
 T_INTERIEUR_K = 293.15
 T_EXTERIEUR_K = 273.15
 
-#: Identifiants attendus par le contrat normalisé.
+#: Identifiers expected by the normalised contract.
 SCHEMA_ID = 'sia4010.iso52016_chapter7_test_cell.v1'
 SCHEMA_VERSION = '1.0'
 
 
 def _empreinte(chemin):
-    u"""Renvoie le SHA-256 d'un fichier.
+    u"""Returns the SHA-256 of a file.
 
     Args:
-        chemin: Chemin absolu du fichier.
+        chemin: Absolute path to the file.
 
     Returns:
-        str: Empreinte hexadécimale minuscule.
+        str: Lowercase hexadecimal fingerprint.
     """
     digest = hashlib.sha256()
     with open(chemin, 'rb') as flux:
@@ -65,37 +65,36 @@ def _empreinte(chemin):
 
 
 def emissivite_derivee(coefficient_radiatif, temperature_k):
-    u"""Dérive une émissivité d'un coefficient radiatif linéarisé.
+    u"""Derives an emissivity from a linearised radiative coefficient.
 
-    La linéarisation usuelle du transfert radiatif s'écrit
-    h_r = 4 epsilon sigma T^3, d'où epsilon = h_r / (4 sigma T^3).
+    The standard linearisation of radiative transfer is written
+    h_r = 4 epsilon sigma T^3, giving epsilon = h_r / (4 sigma T^3).
 
     Args:
-        coefficient_radiatif: h_r en W/(m2 K).
-        temperature_k: Température de référence supposée, en K.
+        coefficient_radiatif: h_r in W/(m2 K).
+        temperature_k: Assumed reference temperature, in K.
 
     Returns:
-        float: Émissivité dérivée, sans unité.
+        float: Derived emissivity, dimensionless.
     """
     return coefficient_radiatif / (4.0 * SIGMA * temperature_k ** 3)
 
 
 def _construction(identifiant, couches_interieur_vers_exterieur, emissivite,
                   absorptance):
-    u"""Transcrit une construction opaque dans le sens attendu par le contrat.
+    u"""Transcribes an opaque construction in the direction expected by the contract.
 
-    La source liste les couches de l'intérieur vers l'extérieur ; le contrat
-    normalisé les attend de l'extérieur vers l'intérieur. Le renversement est
-    le seul traitement appliqué.
+    The source lists layers from inside to outside; the normalised contract
+    expects them from outside to inside. Reversal is the only processing applied.
 
     Args:
-        identifiant: Identifiant stable de la construction.
-        couches_interieur_vers_exterieur: Couches telles que la source les liste.
-        emissivite: Émissivité provisoire dérivée, appliquée aux deux faces.
-        absorptance: Absorptance solaire que la source énonce.
+        identifiant: Stable construction identifier.
+        couches_interieur_vers_exterieur: Layers as the source lists them.
+        emissivite: Derived provisional emissivity, applied to both faces.
+        absorptance: Solar absorptance stated by the source.
 
     Returns:
-        dict: Bloc de construction normalisé.
+        dict: Normalised construction block.
     """
     return {
         'construction_id': identifiant,
@@ -119,17 +118,17 @@ def _construction(identifiant, couches_interieur_vers_exterieur, emissivite,
 
 
 def construire(chemin_source):
-    u"""Construit la charge utile de l'artefact de liaison.
+    u"""Builds the binding artefact payload.
 
     Args:
-        chemin_source: Chemin absolu de `iso52016_chapter7_confirmed_inputs.json`.
+        chemin_source: Absolute path to `iso52016_chapter7_confirmed_inputs.json`.
 
     Returns:
-        dict: Charge utile prête à écrire.
+        dict: Payload ready to write.
 
     Raises:
-        AssertionError: Si les deux dérivations d'émissivité ne convergent pas,
-            plutôt que d'écrire une valeur qu'un seul calcul soutient.
+        AssertionError: If the two emissivity derivations do not converge,
+            rather than writing a value only one calculation supports.
     """
     with io.open(chemin_source, encoding='utf-8') as flux:
         source = json.load(flux)
@@ -141,19 +140,18 @@ def construire(chemin_source):
     detail = bornes['surface_coefficients_w_m2k']
     absorptance = bornes['opaque_solar_absorptance']
 
-    # La source donne les parts radiatives par orientation. Elles sont égales
-    # sur les trois, et la dérivation ne tient que si elles le restent : une
-    # source révisée qui les différencierait invaliderait l'émissivité unique.
+    # The source gives the radiative shares by orientation. They are equal
+    # across all three, and the derivation only holds if they remain so: a
+    # revised source that differentiates them would invalidate the single emissivity.
     radiatifs = {}
     for face in ('internal', 'external'):
         valeurs = set(detail['%s_radiative' % face].values())
         assert len(valeurs) == 1, (face, valeurs)
         radiatifs[face] = valeurs.pop()
 
-    # Vérification de cohérence de la source elle-même : chaque coefficient
-    # combiné doit valoir la somme de sa part convective et de sa part
-    # radiative. Les quatre tombent exactement ; un écart signalerait une
-    # transcription fautive avant qu'elle ne se propage.
+    # Consistency check of the source itself: each combined coefficient must
+    # equal the sum of its convective and radiative parts. All four match
+    # exactly; a discrepancy would flag a transcription error before it propagates.
     for cle_combinee, face, orientation in (
         ('wall_internal_horizontal', 'internal', 'horizontal'),
         ('roof_internal_upwards', 'internal', 'upwards'),
@@ -175,9 +173,9 @@ def construire(chemin_source):
         'schema_id': SCHEMA_ID,
         'schema_version': SCHEMA_VERSION,
         'primary_source_sha256': _empreinte(chemin_source),
-        # Relatif à la racine du dépôt : l'empreinte est ce qui lie
-        # réellement l'artefact à sa source, le chemin n'est qu'un repère,
-        # et un chemin absolu porterait le nom d'utilisateur d'une machine.
+        # Relative to the repository root: the fingerprint is what genuinely
+        # links the artefact to its source; the path is only a landmark,
+        # and an absolute path would carry one machine's username.
         'primary_source_path': os.path.relpath(
             chemin_source, _RACINE).replace(os.sep, '/'),
         'source_locator': cellule['source_locator'],
@@ -273,13 +271,13 @@ def construire(chemin_source):
 
 
 def main(argv=None):
-    u"""Point d'entrée.
+    u"""Entry point.
 
     Args:
-        argv: Arguments, `sys.argv[1:]` par défaut.
+        argv: Arguments, `sys.argv[1:]` by default.
 
     Returns:
-        int: 0 en succès.
+        int: 0 on success.
     """
     analyseur = argparse.ArgumentParser(description=__doc__)
     analyseur.add_argument(

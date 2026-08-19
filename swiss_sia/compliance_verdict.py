@@ -203,13 +203,26 @@ def build_compliance_verdict(
 
     # SIA 380/2 decides on the reviewed global project/reference comparison.
     comparison = sia3802.get("global_reference_comparison", {}) or {}
-    comparison_available = (
-        str(comparison.get("status") or "") == "REVIEWED_RESULT_AVAILABLE"
+    comparison_status = str(comparison.get("status") or "")
+    comparison_available = comparison_status == "REVIEWED_RESULT_AVAILABLE"
+    # A reviewed comparison whose figures contradict the reviewer's acceptance
+    # (project value above the reference, against SIA 380/2:2022 7.2.5.2) is a
+    # DETERMINED non-compliance, not missing evidence: acceptance never overrides
+    # the numbers. The checker raises SIA3802_GLOBAL_REFERENCE_DISCREPANCY, but
+    # its category sits outside the six scored domains, so the verdict must act on
+    # the status explicitly here rather than through blocking_total.
+    comparison_contradicts = (
+        comparison_status == "REVIEWED_RESULT_CONTRADICTS_ACCEPTANCE"
     )
     if not rooms_analysed:
         sia3802_status, sia3802_reason = NOT_DETERMINED, "no_room_analysed"
     elif blocking_total:
         sia3802_status, sia3802_reason = NOT_COMPLIANT, "blocking_findings"
+    elif comparison_contradicts:
+        sia3802_status, sia3802_reason = (
+            NOT_COMPLIANT,
+            "global_comparison_contradicts_acceptance",
+        )
     elif domain_evidence_incomplete:
         sia3802_status, sia3802_reason = (
             NOT_DETERMINED,

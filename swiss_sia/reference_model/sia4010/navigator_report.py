@@ -26,7 +26,7 @@ def render_navigator_html(evaluation: NavigatorEvaluation) -> str:
         variants = ""
         affected = gate.failed_variants or gate.missing_variants
         if affected:
-            variants = "<p><strong>Variantes :</strong> {}</p>".format(
+            variants = "<p><strong>Variants:</strong> {}</p>".format(
                 html.escape(", ".join(affected))
             )
         gate_cards.append(
@@ -36,7 +36,7 @@ def render_navigator_html(evaluation: NavigatorEvaluation) -> str:
               <div>
                 <div class="gate-head"><h2>{label}</h2><span>{status}</span></div>
                 <p>{message}</p>{variants}
-                <p class="action"><strong>Action :</strong> {action}</p>
+                <p class="action"><strong>Action:</strong> {action}</p>
               </div>
             </section>
             """.format(
@@ -51,11 +51,11 @@ def render_navigator_html(evaluation: NavigatorEvaluation) -> str:
         )
 
     return """<!doctype html>
-<html lang="fr">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Navigateur SIA 4010 — classe {target}</title>
+  <title>SIA 4010 navigator - class {target}</title>
   <style>
     :root {{ color-scheme: light; --ink:#17202a; --muted:#5f6b76;
       --pass:#197447; --pass-bg:#e9f7ef; --fail:#a32929; --fail-bg:#fff0f0;
@@ -90,12 +90,12 @@ def render_navigator_html(evaluation: NavigatorEvaluation) -> str:
 </head>
 <body><main>
   <header>
-    <h1>Navigateur de validation SIA 4010</h1>
-    <p>Classe cible : {target} — variantes requises : {variants}</p>
+    <h1>SIA 4010 validation navigator</h1>
+    <p>Target class: {target} - required variants: {variants}</p>
   </header>
   <div class="summary">
-    <div><small>État global</small><strong>{overall}</strong></div>
-    <div><small>État technique</small><strong>{technical}</strong></div>
+    <div><small>Overall status</small><strong>{overall}</strong></div>
+    <div><small>Technical status</small><strong>{technical}</strong></div>
   </div>
   {gates}
   <footer>{guardrail}</footer>

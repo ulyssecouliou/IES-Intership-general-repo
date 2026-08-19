@@ -37,24 +37,24 @@ class Sia4010AllClassesCoverageTests(unittest.TestCase):
         self.assertEqual(summary["required_exact_variants"], 24)
         self.assertEqual(summary["parsed_exact_variants"], 24)
         self.assertEqual(summary["registered_scenarios"], 24)
-        # 34 et non 30 depuis l'enregistrement des cas diagnostiques 1A à 1D
-        # du Test 1 : la spécification définit 1E comme « Diagnosefall 1D,
-        # jedoch mit Stoffmarkisen-Sonnenschutz », donc 1E existait sans sa
-        # base. Le nombre de VARIANTES est inchangé (24) : ce sont des cas de
-        # `test_1`, pas de nouvelles variantes.
+        # 34 not 30 since the registration of diagnostic cases 1A through 1D
+        # of Test 1: the specification defines 1E as « Diagnosefall 1D,
+        # jedoch mit Stoffmarkisen-Sonnenschutz », so 1E existed without its
+        # base. The number of VARIANTS is unchanged (24): these are cases of
+        # `test_1`, not new variants.
         self.assertEqual(summary["registered_exact_cases"], 34)
         self.assertEqual(summary["preparation_ready_cases"], 34)
-        # 27 et non 23 : `geometry_artifact_supported` dépend du test de base,
-        # et la géométrie des quatre nouveaux cas est la même cellule ISO 52016
-        # chapitre 7 que le cas 600 dont ils dérivent.
+        # 27 not 23: `geometry_artifact_supported` depends on the base test,
+        # and the geometry of the four new cases is the same ISO 52016
+        # chapter 7 cell as case 600 from which they derive.
         self.assertEqual(summary["deterministic_geometry_artifact_cases"], 27)
-        # 5 -> 9 : les quatre cas diagnostiques du Test 1
+        # 5 -> 9: the four diagnostic cases of Test 1
         self.assertEqual(summary["runtime_qualification_cases"], 9)
         self.assertEqual(summary["runtime_discovery_cases"], 20)
         self.assertEqual(summary["source_bound_bundle_cases"], 13)
-        # 6 -> 10 : le livrable de 1A a 1D est le jeu annuel horaire
+        # 6 -> 10: the deliverable for 1A through 1D is the annual hourly dataset
         self.assertEqual(summary["apachesim_qualification_cases"], 10)
-        # 11 -> 15 : evaluation du livrable, sans critere ni reference
+        # 11 -> 15: deliverable evaluation, without criterion or reference
         self.assertEqual(summary["qualified_aps_evaluation_cases"], 15)
         self.assertEqual(
             summary["qualified_aps_complete_evaluation_cases"], 11

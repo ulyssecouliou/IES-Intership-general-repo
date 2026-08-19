@@ -11,6 +11,8 @@ replaces rooms and never switches an active project to a different case.
 """
 
 import importlib
+import json
+import re
 import sys
 from pathlib import Path
 
@@ -19,7 +21,18 @@ PROJECT_ROOT = Path(__file__).resolve().parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-TEST1_CASES = {"600", "640", "600FF", "900", "940", "900FF"}
+TEST1_CASES = {
+    "600",
+    "640",
+    "600FF",
+    "900",
+    "940",
+    "900FF",
+    "1A",
+    "1B",
+    "1C",
+    "1D",
+}
 
 
 def _reload_reference_model_package():
@@ -92,6 +105,63 @@ def _outcome_failed(outcome):
     if not status:
         status = str(getattr(outcome, "status", ""))
     return "FAIL" in status.upper()
+
+
+def _exact_floor_insulation_mismatch(project_path):
+    """Recognize only the superseded Test 1 zero-mass floor material state."""
+
+    report_path = (
+        Path(project_path)
+        / "reference_model_artifacts"
+        / "reports"
+        / "reference_model_report.json"
+    )
+    try:
+        payload = json.loads(report_path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return False
+    failed_messages = [
+        str(item.get("message", ""))
+        for item in payload.get("validation_results", ())
+        if str(item.get("status", "")).upper() == "FAIL"
+    ]
+    if len(failed_messages) != 1:
+        return False
+    message = failed_messages[0]
+    required_fragments = (
+        "existing material xps_ground",
+        "SIA600_FLOOR_INSULATION",
+        "'expected': 0.0, 'actual': 10.0",
+        "'expected': 0.0, 'actual': 1400.0",
+    )
+    return all(fragment in message for fragment in required_fragments)
+
+
+def _exact_stale_construction_key(project_path):
+    """Return the sole construction key named by an exact reuse mismatch."""
+
+    report_path = (
+        Path(project_path)
+        / "reference_model_artifacts"
+        / "reports"
+        / "reference_model_report.json"
+    )
+    try:
+        payload = json.loads(report_path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return ""
+    failed_messages = [
+        str(item.get("message", ""))
+        for item in payload.get("validation_results", ())
+        if str(item.get("status", "")).upper() == "FAIL"
+    ]
+    if len(failed_messages) != 1:
+        return ""
+    match = re.search(
+        r"existing construction ([A-Za-z0-9_.-]+)(?: read-back| layer)",
+        failed_messages[0],
+    )
+    return match.group(1) if match else ""
 
 
 def _build_resume_and_calibrate_if_required(resume_after_import):
@@ -173,6 +243,40 @@ def run():
         )
         outcome = _build_resume_and_calibrate_if_required(True)
 
+    recovered_states = set()
+    while _outcome_failed(outcome):
+        if (
+            _exact_floor_insulation_mismatch(project_path)
+            and "floor_insulation" not in recovered_states
+        ):
+            print(
+                "Automatic recovery - reconcile the exact stale Test 1 "
+                "zero-mass floor insulation and resume"
+            )
+            repair = _reload_launcher(
+                "Run_VE_SIA4010_Test1_Reconcile_Floor_Insulation"
+            )
+            repair.run()
+            recovered_states.add("floor_insulation")
+            model_builder = _reload_launcher("Run_VE_SIA_Model_Builder")
+            outcome = model_builder.run(resume_after_import=True)
+            continue
+        construction_key = _exact_stale_construction_key(project_path)
+        recovery_key = "construction:{}".format(construction_key)
+        if construction_key and recovery_key not in recovered_states:
+            print(
+                "Automatic recovery - reconcile exact stale Test 1 "
+                "construction {!r} and resume".format(construction_key)
+            )
+            repair = _reload_launcher(
+                "Run_VE_SIA4010_Test1_Reconcile_Construction"
+            )
+            repair.run(construction_key)
+            recovered_states.add(recovery_key)
+            model_builder = _reload_launcher("Run_VE_SIA_Model_Builder")
+            outcome = model_builder.run(resume_after_import=True)
+            continue
+        break
     if _outcome_failed(outcome):
         raise RuntimeError(
             "Model workflow failed controls={}; see its audit report before "

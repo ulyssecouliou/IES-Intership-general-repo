@@ -32,7 +32,7 @@ from .ve_field_policy import ReadbackStatus
 
 
 class ProbeStatus(Enum):
-    """Per-capability outcome."""
+    """Represent the outcome of one probed VE runtime capability."""
 
     PASS = "PASS"
     WARNING = "WARNING"
@@ -41,7 +41,7 @@ class ProbeStatus(Enum):
 
 @dataclass(frozen=True)
 class CapabilityFinding:
-    """One probe row."""
+    """Record the evidence and outcome for one probed capability."""
 
     capability_id: str
     status: ProbeStatus
@@ -51,7 +51,7 @@ class CapabilityFinding:
 
 @dataclass(frozen=True)
 class ProbeReport:
-    """Aggregated probe outcome."""
+    """Aggregate capability findings into one immutable probe report."""
 
     generated_at_utc: str
     project_id: Optional[str]

@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
-u"""Tests du gbXML de la cellule d'essai (`ve_adapter/gbxml_test1.py`).
+u"""Tests of the trial cell gbXML (`ve_adapter/gbxml_test1.py`).
 
-Le danger vise est celui qui a coûté le plus cher cette semaine : une
-géométrie **plausible et fausse**, importée sans erreur, simulée sans
-avertissement. Deux erreurs la produisent, et aucune ne se voit à l'œil :
+The danger targeted is the one that proved most costly this week: a
+**plausible and wrong** geometry, imported without error, simulated without
+warning. Two errors produce it, and neither is visible to the eye:
 
-* une **coordonnée fautive** — les aires ne tombent plus juste ;
-* une **normale retournée** — les aires tombent juste, et tout le bilan
-  solaire est faux. C'est la plus dangereuse des deux, et c'est pourquoi le
-  sens des polylignes est testé au même titre que leur aire.
+* a **faulty coordinate** -- areas no longer come out right;
+* a **flipped normal** -- areas come out right, and the entire solar
+  balance is wrong. This is the more dangerous of the two, which is why
+  the winding of the polylines is tested on a par with their area.
 """
 
 from xml.etree import ElementTree
@@ -28,21 +28,21 @@ def cotes():
 
 
 # --------------------------------------------------------------------------
-# Les aires, recalculées depuis la géométrie écrite
+# Areas, recomputed from the written geometry
 # --------------------------------------------------------------------------
 
 def test_chaque_polyligne_reproduit_laire_de_la_source(cotes):
-    """Ce contrôle ne relit pas les cotes : il MESURE la géométrie écrite.
-    Une coordonnée fautive y apparaît, là où relire les cotes ne verrait
-    rien."""
+    """This check does not re-read the dimensions: it MEASURES the written
+    geometry. A faulty coordinate shows up here, whereas re-reading the
+    dimensions would see nothing."""
     for face, (mesuree, source) in gbxml.controler_les_polylignes(
             cotes).items():
         assert abs(mesuree - source) < 1e-9, face
 
 
 def test_la_facade_avant_deduit_bien_son_vitrage(cotes):
-    """Sa polyligne décrit le mur ENTIER — 21,6 m² — et l'aire opaque s'en
-    déduit. Confondre les deux doublerait la paroi opaque."""
+    """Its polyline describes the ENTIRE wall -- 21.6 m² -- and the opaque
+    area is derived from it. Confusing the two would double the opaque wall."""
     entier = gbxml.aire(gbxml.polylignes(cotes)['front_wall'])
     assert entier == pytest.approx(cotes['width_m'] * cotes['height_m'])
     assert gbxml.controler_les_polylignes(cotes)['front_wall'][0] == \
@@ -64,7 +64,7 @@ def test_une_cote_falsifiee_est_detectee(cotes):
 
 
 # --------------------------------------------------------------------------
-# Le sens des polylignes — l'erreur qui ne se voit pas
+# Polyline winding -- the error that is invisible
 # --------------------------------------------------------------------------
 
 @pytest.mark.parametrize('face,sens', [
@@ -84,7 +84,7 @@ def test_chaque_normale_pointe_vers_lexterieur(cotes, face, sens):
 
 
 def test_une_normale_retournee_est_refusee(cotes, monkeypatch):
-    """Les aires resteraient justes : seul le contrôle de sens l'attrape."""
+    """Areas would remain correct: only the winding check catches it."""
     vraies = gbxml.polylignes(cotes)
 
     def retournee(_cotes):
@@ -98,8 +98,8 @@ def test_une_normale_retournee_est_refusee(cotes, monkeypatch):
 
 
 def test_la_normale_ne_depend_pas_du_sommet_de_depart(cotes):
-    """La méthode de Newell doit être invariante par rotation des sommets ;
-    un simple produit vectoriel de deux arêtes ne l'est pas."""
+    """Newell's method must be invariant under rotation of vertices;
+    a simple cross-product of two edges is not."""
     polyligne = gbxml.polylignes(cotes)['ceiling']
     pivotee = polyligne[2:] + polyligne[:2]
     for attendu, obtenu in zip(gbxml.normale(polyligne),
@@ -108,7 +108,8 @@ def test_la_normale_ne_depend_pas_du_sommet_de_depart(cotes):
 
 
 def test_les_fenetres_suivent_le_sens_de_leur_mur(cotes):
-    """Une ouverture au sens inverse de son mur retournerait sa normale."""
+    """An opening wound in the opposite direction to its wall would flip its
+    normal."""
     mur = gbxml.normale(gbxml.polylignes(cotes)['front_wall'])
     for fenetre in gbxml.polylignes_des_fenetres(cotes):
         vitre = gbxml.normale(fenetre['polyligne'])
@@ -117,19 +118,19 @@ def test_les_fenetres_suivent_le_sens_de_leur_mur(cotes):
 
 
 # --------------------------------------------------------------------------
-# Orientation et localisation
+# Orientation and location
 # --------------------------------------------------------------------------
 
 def test_la_facade_avant_est_bien_au_sud(cotes):
-    """L'orientation décide de tout le solaire."""
+    """Orientation determines the entire solar balance."""
     for _, y, _ in gbxml.polylignes(cotes)['front_wall']:
         assert y == 0.0
 
 
 def test_aucune_localisation_nest_ecrite(cotes):
-    """Ni latitude, ni longitude, ni altitude : le Test 1 se définit par son
-    fichier climatique. Des coordonnées inventées donneraient un modèle
-    plausible dont le solaire serait faux."""
+    """No latitude, no longitude, no altitude: Test 1 is defined by its
+    climate file. Invented coordinates would give a plausible model whose
+    solar would be wrong."""
     racine = gbxml.construire_arbre(cotes)
     texte = ElementTree.tostring(racine, encoding='unicode')
     for interdit in ('Latitude', 'Longitude', 'Elevation',
@@ -138,15 +139,15 @@ def test_aucune_localisation_nest_ecrite(cotes):
 
 
 def test_lazimut_est_ecrit_car_il_est_etabli(cotes):
-    """Contrairement à la localisation, l'orientation est imposée par la
-    spécification : elle, on l'écrit."""
+    """Unlike the location, the orientation is imposed by the specification:
+    that one is written."""
     racine = gbxml.construire_arbre(cotes)
     texte = ElementTree.tostring(racine, encoding='unicode')
     assert 'CADModelAzimuth' in texte
 
 
 # --------------------------------------------------------------------------
-# Structure du document
+# Document structure
 # --------------------------------------------------------------------------
 
 def test_la_coque_fermee_porte_les_six_faces(cotes):
@@ -192,7 +193,7 @@ def test_chaque_sommet_a_trois_coordonnees(cotes):
 
 
 # --------------------------------------------------------------------------
-# Écriture
+# Writing
 # --------------------------------------------------------------------------
 
 def test_le_fichier_ecrit_se_relit(tmp_path):
@@ -205,8 +206,8 @@ def test_le_fichier_ecrit_se_relit(tmp_path):
 
 
 def test_lecriture_refuse_une_geometrie_incoherente(tmp_path, monkeypatch):
-    """Mieux vaut ne rien ecrire qu ecrire un fichier faux : il serait
-    importe sans erreur."""
+    """Better to write nothing than to write a wrong file: it would be
+    imported without error."""
     import os
     monkeypatch.setattr(
         gbxml, 'controler_les_polylignes',
@@ -218,7 +219,7 @@ def test_lecriture_refuse_une_geometrie_incoherente(tmp_path, monkeypatch):
 
 
 def test_le_module_reste_pur():
-    """Règle 4 : aucun import `iesve`."""
+    """Rule 4: no `iesve` import."""
     import io
     import os
     chemin = os.path.abspath(gbxml.__file__).replace('.pyc', '.py')
@@ -229,7 +230,7 @@ def test_le_module_reste_pur():
 
 
 def test_aucune_cote_nest_ecrite_en_dur():
-    """Toutes viennent de `geometrie_test1`, qui les tient de la source."""
+    """All come from `geometrie_test1`, which holds them from the source."""
     import io
     import os
     chemin = os.path.abspath(gbxml.__file__).replace('.pyc', '.py')

@@ -12,7 +12,6 @@ import csv
 from typing import List, Dict, Optional, Any
 
 from .config import (
-    EMISSION_FACTORS,
     PROJECT_ROOT,
     SIA4010_EVIDENCE_DIR,
     SIA4010_CLASS_MANIFEST_ACCEPTED_REVIEW_STATUSES,
@@ -1406,34 +1405,6 @@ class SIA4010Checker:
     def _calculate_cooling_demand(self, rooms_data: List[RoomData]) -> Optional[float]:
         """Return annual cooling demand if an official source is available."""
         return None
-
-    def _calculate_co2_emissions(self, energy_sources: Dict[str, Any], total_area: float) -> float:
-        """Calculate project CO2 emissions as a separate non-SIA4010 indicator.
-
-        Uses INDICATIVE / UNVERIFIED emission factors (see
-        ``config.EMISSION_FACTORS_STATUS``); the result is a labelled indicator
-        only and never drives a compliance PASS/FAIL.
-        """
-        total_co2 = 0.0
-        for source in energy_sources.values():
-            try:
-                consumption = source.get_annual_consumption()
-                emission_factor = EMISSION_FACTORS.get(source.type, 0.0)
-                total_co2 += consumption * emission_factor
-            except Exception as e:
-                logger.error("Error while calculating CO2 emissions: %s", e)
-        return total_co2 / total_area if total_area > 0 else 0.0
-
-    def _calculate_renewable_energy_share(self, energy_sources: Dict[str, Any], total_energy: float) -> float:
-        """Calculate renewable energy share as a separate project indicator."""
-        renewable_energy = 0.0
-        for source in energy_sources.values():
-            try:
-                if source.type in ["solar", "wind", "biomass"]:
-                    renewable_energy += source.get_annual_consumption()
-            except Exception as e:
-                logger.error("Error while calculating renewable energy share: %s", e)
-        return renewable_energy / total_energy if total_energy > 0 else 0.0
 
     def _run_sia4010_tests(self, evidence_summary: Dict[str, Any]) -> Dict[str, Any]:
         """Return the seven SIA 4010 test statuses from official evidence state."""

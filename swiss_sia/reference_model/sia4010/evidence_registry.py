@@ -996,14 +996,14 @@ def build_all_class_navigators(
     )
     global_html.write_text(
         (
-            "<!doctype html><html lang='fr'><meta charset='utf-8'>"
-            "<title>SIA 4010 — huit classes</title>"
+            "<!doctype html><html lang='en'><meta charset='utf-8'>"
+            "<title>SIA 4010 - eight validation classes</title>"
             "<style>body{{font:15px Segoe UI,Arial;margin:32px;color:#17202a}}"
             "table{{border-collapse:collapse;width:100%}}th,td{{padding:10px;"
             "border:1px solid #d9e0e6;text-align:left}}th{{background:#17324d;"
-            "color:white}}</style><h1>Navigateur SIA 4010 — huit classes</h1>"
-            "<table><thead><tr><th>Classe</th><th>État</th>"
-            "<th>Rapport</th></tr></thead><tbody>{}</tbody></table>"
+            "color:white}}</style><h1>SIA 4010 - eight validation classes</h1>"
+            "<table><thead><tr><th>Class</th><th>Status</th>"
+            "<th>Report</th></tr></thead><tbody>{}</tbody></table>"
             "<p>{}</p></html>"
         ).format(rows, html.escape(global_payload["claim_guardrail"])),
         encoding="utf-8",

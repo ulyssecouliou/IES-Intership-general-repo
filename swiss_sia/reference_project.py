@@ -76,10 +76,11 @@ UNCLASSIFIED = "UNCLASSIFIED"
 # "valeur limite"/"valeur cible" identical and prescriptive). No project value
 # is compared, so a directive is resolved, never a blocker.
 REFERENCE_DIRECTIVE = "REFERENCE_DIRECTIVE"
-# SIA 380/2:2022 §7.2.5.3 : les paramètres d'usage SIA 2024 sont IDENTIQUES
-# au projet et au projet de référence. Ces grandeurs ne font pas l'objet d'une
-# substitution différenciante ; elles sont donc résolues (jamais un bloqueur)
-# avec project_value=None et reference_value = valeur du tableau SIA 2024.
+# SIA 380/2:2022 §7.2.5.3: the SIA 2024 usage parameters are IDENTICAL
+# for the project and the reference project. These quantities are not subject
+# to a differentiating substitution; they are therefore resolved (never a
+# blocker) with project_value=None and reference_value = value from the
+# SIA 2024 table.
 STANDARD_USAGE_INPUT = "STANDARD_USAGE_INPUT"
 
 # Table 2 covers the complete reference-project model.  The current automated
@@ -94,8 +95,8 @@ IMPLEMENTED_REFERENCE_INPUT_FAMILIES: Tuple[str, ...] = (
     "cooling_generation_and_auxiliaries",
     "heating_generation",
     "emission_system_and_unlimited_capacity",
-    # SIA 380/2:2022 §7.2.5.3 : consignes et gains internes identiques
-    # projet/référence — résolus depuis le JSON SIA 2024:2021.
+    # SIA 380/2:2022 §7.2.5.3: SIA 2024 setpoints and internal gains identical
+    # project/reference — resolved from the SIA 2024:2021 JSON.
     "sia2024_internal_gains_profiles_and_setpoints",
 )
 MISSING_REFERENCE_INPUT_FAMILIES: Tuple[str, ...] = (
@@ -108,12 +109,12 @@ MISSING_REFERENCE_INPUT_FAMILIES: Tuple[str, ...] = (
 )
 
 # ---------------------------------------------------------------------------
-# Données SIA 2024 : loader lazy + cache module-level
+# SIA 2024 data: lazy loader + module-level cache
 # ---------------------------------------------------------------------------
 
-# Chemin absolu vers le fichier JSON SIA 2024 dans le dépôt.
-# Ne dépend d'aucun import iesve ; le fichier fait partie du dépôt et est
-# lisible en CI Python pur.
+# Absolute path to the SIA 2024 JSON file in the repository.
+# Does not depend on any iesve import; the file is part of the repository and is
+# readable in pure Python CI.
 _SIA2024_JSON_PATH: str = os.path.normpath(
     os.path.join(
         os.path.dirname(os.path.abspath(__file__)),
@@ -122,27 +123,27 @@ _SIA2024_JSON_PATH: str = os.path.normpath(
     )
 )
 
-# Locateur source inséré dans chaque substitution STANDARD_USAGE_INPUT.
+# Source locator inserted in each STANDARD_USAGE_INPUT substitution.
 _SIA2024_SOURCE: str = (
     "SIA 2024:2021 Raumdatenblätter V221"
     " | refs/reference-data/sia-2024-2021.usage-data.json"
 )
 
-# Symboles extraits pour chaque usage résolu.
-# (paramètre engine, colonne JSON, unité de repli si colonne absente)
-# Article de norme : SIA 380/2:2022 §7.2.5.3 + SIA 2024 Table 2.
-# IMPORTANT : on utilise col30 (theta_i_mean, exploitation) et jamais
-# col28 (theta_i_design) — cf. note du norm-analyst.
+# Symbols extracted for each resolved usage.
+# (engine parameter, JSON column, fallback unit if column absent)
+# Norm article: SIA 380/2:2022 §7.2.5.3 + SIA 2024 Table 2.
+# IMPORTANT: col30 (theta_i_mean, operational setpoint) is used, never
+# col28 (theta_i_design) — see norm-analyst note.
 _SIA2024_USAGE_SYMBOLS: Tuple[Tuple[str, str, str], ...] = (
-    ("theta_i_mean", "30", "°C"),   # Consigne exploitation (col30 — PAS col28)
-    ("phi_i",        "34", "%"),    # Humidité relative
-    ("A_p",          "42", "m²"),   # Surface par personne
-    ("M",            "43", "met"),  # Activité métabolique
-    ("p_Be",         "51", "W/m2"), # Puissance électrique équipements
-    ("E_vm",         "64", "lx"),   # Éclairement moyen
+    ("theta_i_mean", "30", "°C"),   # Operational setpoint (col30 — NOT col28)
+    ("phi_i",        "34", "%"),    # Relative humidity
+    ("A_p",          "42", "m²"),   # Floor area per person
+    ("M",            "43", "met"),  # Metabolic activity
+    ("p_Be",         "51", "W/m2"), # Electrical equipment power
+    ("E_vm",         "64", "lx"),   # Mean illuminance
 )
 
-# Cache module-level : chargé au premier appel de _load_sia2024_usage_data.
+# Module-level cache: loaded on the first call to _load_sia2024_usage_data.
 _SIA2024_DATA_CACHE: Optional[Dict[str, Any]] = None
 
 
@@ -756,12 +757,12 @@ def _collect_reference_directives(
 
 
 def _load_sia2024_usage_data() -> Dict[str, Any]:
-    """Charge le JSON SIA 2024 une seule fois (lazy + caché).
+    """Load the SIA 2024 JSON once (lazy + cached).
 
-    Le fichier est lu depuis le dépôt ; aucun import iesve n'est requis.
-    En cas d'absence du fichier (CI partiel), retourne un dict vide : les
-    codes d'usage ne pourront pas être résolus et les pièces avec une
-    catégorie définie seront comptées comme non résolues.
+    The file is read from the repository; no iesve import is required.
+    If the file is absent (partial CI), returns an empty dict: usage codes
+    cannot be resolved and rooms with a defined category will be counted
+    as unresolved.
     """
 
     global _SIA2024_DATA_CACHE
@@ -777,43 +778,43 @@ def _load_sia2024_usage_data() -> Dict[str, Any]:
 def _collect_usage_standard_inputs(
     rooms: Sequence[RoomData],
 ) -> Tuple[List[ReferenceSubstitution], List[str]]:
-    """Émet les entrées SIA 2024 identiques projet et référence (§7.2.5.3).
+    """Emit the SIA 2024 inputs that are identical for project and reference (§7.2.5.3).
 
-    Conformément à SIA 380/2:2022 §7.2.5.3, les consignes de température
-    (theta_i_mean col30 — exploitation, jamais col28 design), d'humidité,
-    les surfaces par personne, l'activité métabolique, la puissance équipements
-    et l'éclairement sont définis par l'usage SIA 2024 et s'appliquent de manière
-    IDENTIQUE au projet ET au projet de référence. Ces grandeurs ne font donc
-    pas l'objet d'une substitution différenciante.
+    Per SIA 380/2:2022 §7.2.5.3, the temperature setpoints
+    (theta_i_mean col30 — operational, never col28 design), humidity,
+    floor area per person, metabolic activity, equipment power
+    and illuminance are defined by the SIA 2024 usage and apply
+    IDENTICALLY to the project AND the reference project. These quantities
+    are therefore not subject to a differentiating substitution.
 
-    Statut STANDARD_USAGE_INPUT :
-    - project_value = None (identité → pas de comparaison projet/référence)
-    - reference_value = valeur du tableau SIA 2024 pour l'usage résolu
-    - jamais un bloqueur individuel
+    Status STANDARD_USAGE_INPUT:
+    - project_value = None (identity -> no project/reference comparison)
+    - reference_value = value from the SIA 2024 table for the resolved usage
+    - never an individual blocker
 
-    La déduplication est faite par code d'usage : un jeu de 6 substitutions
-    est émis par usage distinct présent, pas une par pièce.
+    Deduplication is done by usage code: one set of 6 substitutions is emitted
+    per distinct usage present, not one per room.
 
-    Si des pièces ont une ``sia2024_category`` définie mais non reconnue dans
-    le JSON, un bloqueur agrégé unique est émis. Les pièces sans attribut
-    ``sia2024_category`` (ou attribut vide) sont ignorées silencieusement :
-    elles n'ont pas encore été traitées par le checker.
+    If rooms have a defined ``sia2024_category`` not recognised in the JSON,
+    a single aggregated blocker is emitted. Rooms with no ``sia2024_category``
+    attribute (or empty attribute) are silently ignored: they have not yet been
+    processed by the checker.
     """
 
     data = _load_sia2024_usage_data()
     usages_data = data.get("usages", {})
 
-    # Déduplication : code_usage -> nombre de pièces portant cet usage
+    # Deduplication: usage_code -> number of rooms carrying that usage
     seen_codes: Dict[str, int] = {}
     unresolved_count = 0
 
     for room in rooms:
         code = (getattr(room, "sia2024_category", "") or "").strip()
         if not code:
-            # Attribut absent ou vide → ignoré silencieusement
+            # Attribute absent or empty → silently ignored
             continue
         if code not in usages_data:
-            # Catégorie définie mais inconnue du JSON SIA 2024
+            # Category defined but unknown in the SIA 2024 JSON
             unresolved_count += 1
             continue
         seen_codes[code] = seen_codes.get(code, 0) + 1
@@ -885,7 +886,7 @@ def build_reference_project_specification(
     generation_items, generation_blockers = _collect_generation_substitutions(rooms)
     ventilation_items, ventilation_blockers = _collect_ventilation_substitutions(rooms)
     directive_items = _collect_reference_directives(rooms)
-    # SIA 380/2:2022 §7.2.5.3 : consignes et gains SIA 2024 identiques projet/référence.
+    # SIA 380/2:2022 §7.2.5.3: SIA 2024 setpoints and gains identical project/reference.
     usage_items, usage_blockers = _collect_usage_standard_inputs(rooms)
     substitutions = tuple(
         surface_items + opening_items + infiltration_items + generation_items

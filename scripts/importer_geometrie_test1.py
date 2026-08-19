@@ -1,29 +1,29 @@
 # -*- coding: utf-8 -*-
-u"""Importe la géométrie du Test 1 dans VE, et RELIT ce que VE en a fait.
+u"""Imports the Test 1 geometry into VE, and READS BACK what VE made of it.
 
-POURQUOI UN SCRIPT SÉPARÉ DE LA SONDE. Un import **modifie le modèle**. La
-sonde du Test 1 est un relevé : elle crée des matériaux d'essai et les
-supprime. Y glisser un import ferait qu'un simple relevé muterait le modèle
-sans qu'on l'ait demandé — exactement le genre d'effet de bord qu'on ne
-remarque qu'une fois le mal fait. Cet import se lance donc **explicitement**,
-sur un projet jetable.
+WHY A SEPARATE SCRIPT FROM THE PROBE. An import **modifies the model**. The
+Test 1 probe is a reading: it creates test materials and deletes them. Slipping
+an import into it would mean a simple reading mutates the model without being
+asked — exactly the kind of side effect that only becomes apparent once the
+damage is done. This import is therefore launched **explicitly**, on a
+throwaway project.
 
-CE QUE FAIT CE SCRIPT, DANS L'ORDRE :
+WHAT THIS SCRIPT DOES, IN ORDER:
 
-    1. écrit le gbXML depuis `ve_adapter/gbxml_test1.py` — qui refuse déjà
-       d'écrire une géométrie incohérente ;
-    2. l'importe par `ImportGBXML.import_file`, dont la signature n'est pas
-       introspectable : plusieurs formes d'appel sont essayées, et celle qui
-       répond est CONSIGNÉE ;
-    3. **relit `get_bodies()` puis `get_areas()`** et confronte les surfaces
-       à celles de la source.
+    1. writes the gbXML from `ve_adapter/gbxml_test1.py` — which already
+       refuses to write an inconsistent geometry;
+    2. imports it via `ImportGBXML.import_file`, whose signature is not
+       introspectable: several call forms are tried, and the one that responds
+       is RECORDED;
+    3. **reads back `get_bodies()` then `get_areas()`** and compares the
+       surfaces against the source.
 
-L'ÉTAPE 3 EST LA SEULE QUI PROUVE QUELQUE CHOSE. Un import qui ne lève pas ne
-dit rien : les épaisseurs de couche à 1 mm ont été créées sans la moindre
-erreur, et valaient un R quarante-sept fois trop faible. Une géométrie
-importée de travers se comporterait pareil.
+STEP 3 IS THE ONLY ONE THAT PROVES ANYTHING. An import that does not raise
+says nothing: the 1 mm layer thicknesses were created without the slightest
+error, and their R-value was forty-seven times too low. A wrongly imported
+geometry would behave the same way.
 
-Il écrit `outputs/import_geometrie_test1.json`.
+It writes `outputs/import_geometrie_test1.json`.
 """
 
 from __future__ import print_function
@@ -44,12 +44,12 @@ from scripts.run_test1_dans_ve import (  # noqa: E402
 CHEMIN_RAPPORT = os.path.join(_RACINE, 'outputs', 'import_geometrie_test1.json')
 CHEMIN_GBXML = os.path.join(_RACINE, 'outputs', 'test1_cellule.xml')
 
-#: Formes d'appel essayées pour `import_file`, de la plus complète à la plus
-#: simple. La documentation annonce `(file_name, heal_geometry, cap_mode,
-#: cap_height)` mais s'est déjà trompée sur la casse ; la docstring réelle se
-#: réduit à « cap_height ». On essaie donc, et on consigne ce qui répond.
+#: Call forms tried for `import_file`, from most complete to simplest. The
+#: documentation announces `(file_name, heal_geometry, cap_mode, cap_height)`
+#: but has already been wrong on capitalisation; the actual docstring reduces
+#: to "cap_height". We therefore try, and record what responds.
 #:
-#: Chaque entrée est `(libellé, arguments après le nom de fichier)`.
+#: Each entry is `(label, arguments after the file name)`.
 FORMES_DAPPEL = (
     (u'file_name seul', ()),
     (u'file_name + heal_geometry', (True,)),
@@ -57,14 +57,14 @@ FORMES_DAPPEL = (
     (u'file_name + heal + cap_mode + cap_height', (True, 0, 0.0)),
 )
 
-#: Tolérance de comparaison des surfaces relues, en m². Assez large pour
-#: absorber le flottant 32 bits de VE, assez serrée pour attraper une face
-#: manquante ou une cote fausse.
+#: Comparison tolerance for read-back surfaces, in m². Wide enough to absorb
+#: VE's 32-bit float, tight enough to catch a missing face or a wrong dimension.
 TOLERANCE_M2 = 1e-3
 
-#: Correspondance entre nos faces et les clés de `get_areas()`. Elle n'est PAS
-#: établie : `get_areas()` rend des agrégats (`ext_wall_area`), pas une entrée
-#: par face. La comparaison porte donc sur les TOTAUX, seuls comparables.
+#: Mapping between our faces and the keys of `get_areas()`. It is NOT
+#: established: `get_areas()` returns aggregates (`ext_wall_area`), not one
+#: entry per face. Comparison therefore applies to TOTALS, the only
+#: comparable quantities.
 CLES_DE_SURFACE = {
     'murs_exterieurs': ('ext_wall_area',),
     'vitrage_exterieur': ('ext_wall_glazed',),
@@ -74,18 +74,18 @@ CLES_DE_SURFACE = {
 
 
 def totaux_attendus(cotes):
-    u"""Totaux de surface attendus, agrégés comme `get_areas()` les rend.
+    u"""Expected surface totals, aggregated as `get_areas()` returns them.
 
-    `get_areas()` ne donne pas une entrée par face : il agrège les murs
-    extérieurs, le vitrage, le plancher, la toiture. La comparaison se fait
-    donc sur ces mêmes agrégats — comparer face à face serait comparer ce que
-    VE ne sépare pas.
+    `get_areas()` does not give one entry per face: it aggregates external
+    walls, glazing, floor and roof. Comparison is therefore made on these
+    same aggregates — comparing face by face would compare what VE does not
+    separate.
 
     Args:
-        cotes: Bloc `geometry` de la source.
+        cotes: `geometry` block from the source.
 
     Returns:
-        dict: `{poste: surface en m²}`.
+        dict: `{item: surface in m²}`.
     """
     from ve_adapter import geometrie_test1 as geometrie
     surfaces = geometrie.surfaces_attendues(cotes)
@@ -99,13 +99,13 @@ def totaux_attendus(cotes):
 
 
 def totaux_releves(corps):
-    u"""Additionne les surfaces relues sur tous les corps du modèle.
+    u"""Sums the surfaces read back from all bodies in the model.
 
     Args:
-        corps: Liste de `VEBody`.
+        corps: List of `VEBody` objects.
 
     Returns:
-        dict: `{poste: surface}`, un poste absent restant à `None`.
+        dict: `{item: surface}`, an absent item remaining as `None`.
     """
     cumul = dict((poste, None) for poste in CLES_DE_SURFACE)
     for objet in corps:
@@ -123,15 +123,15 @@ def totaux_releves(corps):
 
 
 def comparer(attendus, releves):
-    u"""Confronte les surfaces relues aux surfaces attendues.
+    u"""Confronts the read-back surfaces against the expected surfaces.
 
     Args:
-        attendus: Ce que rend `totaux_attendus`.
-        releves: Ce que rend `totaux_releves`.
+        attendus: What `totaux_attendus` returns.
+        releves: What `totaux_releves` returns.
 
     Returns:
-        dict: Un verdict par poste — jamais un booléen global, qui masquerait
-        quel poste diverge.
+        dict: One verdict per item — never a global boolean, which would hide
+        which item diverges.
     """
     verdicts = {}
     for poste, attendu in sorted(attendus.items()):
@@ -156,19 +156,18 @@ def comparer(attendus, releves):
 
 
 def _essayer_import(importeur, chemin):
-    u"""Essaie les formes d'appel connues jusqu'à ce que l'une réponde.
+    u"""Tries the known call forms until one responds.
 
-    La signature n'est pas introspectable : sa docstring se réduit à
-    « cap_height ». On essaie donc, du plus complet au plus simple, et on
-    consigne ce qui a marché — ce relevé vaudra pour tous les imports
-    suivants.
+    The signature is not introspectable: its docstring reduces to "cap_height".
+    We therefore try, from most complete to simplest, and record what worked —
+    this reading will be valid for all subsequent imports.
 
     Args:
         importeur: `iesve.ImportGBXML`.
-        chemin: Fichier gbXML.
+        chemin: gbXML file.
 
     Returns:
-        dict: Forme retenue et résultat, ou les échecs de chaque essai.
+        dict: Retained form and result, or the failures for each attempt.
     """
     essais = []
     for libelle, arguments in FORMES_DAPPEL:
@@ -186,13 +185,13 @@ def _essayer_import(importeur, chemin):
 
 
 def importer(chemin_gbxml=None):
-    u"""Déroule l'import et la relecture.
+    u"""Runs the import and the readback.
 
     Args:
-        chemin_gbxml: gbXML à importer ; écrit depuis la source si absent.
+        chemin_gbxml: gbXML to import; written from the source if absent.
 
     Returns:
-        dict: Rapport, écrit aussi sur disque.
+        dict: Report, also written to disk.
     """
     from ve_adapter import gbxml_test1 as gbxml
     from ve_adapter import geometrie_test1 as geometrie
@@ -260,13 +259,13 @@ def importer(chemin_gbxml=None):
 
 
 def _corps_apres_import(module_iesve):
-    u"""Relit les corps du modèle courant.
+    u"""Reads back the bodies of the current model.
 
     Args:
         module_iesve: Module `iesve`.
 
     Returns:
-        list: Corps du premier modèle.
+        list: Bodies of the first model.
     """
     projet = module_iesve.VEProject.get_current_project()
     modeles = list(projet.models or [])
@@ -276,10 +275,10 @@ def _corps_apres_import(module_iesve):
 
 
 def _ecrire(rapport):
-    u"""Écrit le rapport et dit où le trouver.
+    u"""Writes the report and says where to find it.
 
     Args:
-        rapport: Rapport d'import.
+        rapport: Import report.
     """
     dossier = os.path.dirname(CHEMIN_RAPPORT)
     if not os.path.isdir(dossier):
@@ -292,13 +291,13 @@ def _ecrire(rapport):
 
 
 def main(arguments=()):
-    u"""Point d'entrée.
+    u"""Entry point.
 
     Args:
-        arguments: Chemin gbXML explicite, facultatif.
+        arguments: Explicit gbXML path, optional.
 
     Returns:
-        int: 0 si le rapport a pu être écrit, 1 sinon.
+        int: 0 if the report could be written, 1 otherwise.
     """
     chemins = [a for a in arguments if not a.startswith('--')]
     rapport = importer(chemins[0] if chemins else None)

@@ -1,34 +1,34 @@
 # -*- coding: utf-8 -*-
-u"""Adaptateur IESVE des tests SIA 4010 à bandes — tests 2 à 6.
+u"""IESVE adapter for SIA 4010 band tests -- tests 2 to 6.
 
-Un seul module pour cinq tests : leurs références partagent la forme
-« grandeur → cas » (cf. `engine/sia_bandes_engine.py`), et leur extraction
-partage la même mécanique — ouvrir le `.aps`, lire une série, l'agréger,
-assembler le candidat.
+A single module for five tests: their references share the form
+"quantity -> case" (cf. `engine/sia_bandes_engine.py`), and their extraction
+shares the same mechanics -- open the `.aps`, read a series, aggregate it,
+assemble the candidate.
 
-CE QUI EST VÉRIFIÉ, ET COMMENT. Les symboles `iesve` utilisés ici sont
-présents dans `ve_adapter/ve_api_surface.json`, une introspection d'une
-VE 2025 réellement installée (309 symboles, Python 3.12.3). `verifier_api()`
-le contrôle à l'exécution et échoue bruyamment si un symbole a disparu — ce
-qui est déjà arrivé : `element_categories` avait été cherché sur
-`VECdbProject` alors qu'il appartient au MODULE `iesve`, et la sonde du
-Test 1 l'a révélé.
+WHAT IS VERIFIED, AND HOW. The `iesve` symbols used here are
+present in `ve_adapter/ve_api_surface.json`, an introspection of a
+real VE 2025 installation (309 symbols, Python 3.12.3). `verifier_api()`
+checks this at runtime and fails loudly if a symbol has disappeared --
+which has already happened: `element_categories` had been sought on
+`VECdbProject` whereas it belongs to the MODULE `iesve`, and the Test 1
+probe revealed it.
 
-CE QUI N'EST PAS VÉRIFIABLE ICI, ET N'EST DONC PAS DEVINÉ. Les
-**`aps_varname`** — les noms de variables de résultat — ne sont pas des
-symboles de l'API : ce sont des données de runtime, propres au modèle simulé.
-Aucun ne peut être établi depuis le poste de développement. Les liaisons de
-`LIAISONS` sont donc déclarées **non résolues**, et l'adaptateur REFUSE de
-produire une valeur pour une liaison non résolue plutôt que d'en inventer une.
+WHAT CANNOT BE VERIFIED HERE, AND IS THEREFORE NOT GUESSED. The
+**`aps_varname`** -- result variable names -- are not API symbols: they are
+runtime data, specific to the simulated model.
+None can be established from the development workstation. The bindings in
+`LIAISONS` are therefore declared **unresolved**, and the adapter REFUSES to
+produce a value for an unresolved binding rather than inventing one.
 
-    Marche à suivre, dans VE :
-        1. `decouvrir_variables(results_file)` liste ce que le `.aps` contient.
-        2. On y relève le nom exact correspondant à chaque grandeur du SIA.
-        3. On le déclare dans `LIAISONS`, avec sa source.
-        4. `extraire_candidat()` devient alors exploitable.
+    Procedure, in VE:
+        1. `decouvrir_variables(results_file)` lists what the `.aps` contains.
+        2. Identify the exact name corresponding to each SIA quantity.
+        3. Declare it in `LIAISONS`, with its source.
+        4. `extraire_candidat()` then becomes usable.
 
-Python pur au chargement : `iesve` n'est importé qu'à l'appel, de sorte que
-ce module reste importable en intégration continue, sans licence VE.
+Pure Python at load time: `iesve` is only imported on call, so that
+this module remains importable in continuous integration, without a VE licence.
 """
 
 from __future__ import print_function
@@ -40,12 +40,12 @@ import os
 _ICI = os.path.dirname(os.path.abspath(__file__))
 _RACINE = os.path.abspath(os.path.join(_ICI, os.pardir))
 
-#: Introspection d'une VE 2025 réellement installée. Sert de garde-fou : on
-#: n'écrit pas contre la documentation, on écrit contre ce qui existe.
+#: Introspection of a real VE 2025 installation. Acts as a guard: we write
+#: against what exists, not against the documentation.
 CHEMIN_SURFACE_API = os.path.join(_ICI, 've_api_surface.json')
 
-#: Méthodes de `ResultsReader` que cet adaptateur emploie. Toutes présentes
-#: dans la surface relevée ; `verifier_api()` le confirme à l'exécution.
+#: `ResultsReader` methods used by this adapter. All present
+#: in the recorded surface; `verifier_api()` confirms this at runtime.
 METHODES_REQUISES = (
     'close',
     'get_all_room_results',
@@ -57,23 +57,23 @@ METHODES_REQUISES = (
 
 TESTS_COUVERTS = (2, 3, 4, 5, 6)
 
-#: Niveaux de résultat de l'API, tels que nommés par `get_variables`.
+#: Result levels from the API, as named by `get_variables`.
 NIVEAU_LOCAL = 'z'      # room / zone
 NIVEAU_SYSTEME = 'v'    # apache system
 NIVEAU_METEO = 'w'      # weather
-NIVEAU_ENERGIE = 'e'    # postes de consommation, tous vecteurs
-NIVEAU_SURFACE = 's'    # surface d'enveloppe
+NIVEAU_ENERGIE = 'e'    # consumption items, all energy vectors
+NIVEAU_SURFACE = 's'    # envelope surface
 
-#: Niveaux relevés le 2026-08-06 sur `ZOER_C1.aps`, avec leur effectif BRUT —
-#: tel que `get_variables()` l'a rendu, doublons compris. Le catalogue figé
-#: `refs/reference-data/iesve-aps-variables-ve2025.json` en écarte 11 doublons
-#: exacts et compte donc un peu moins (c=178, e=269) : les deux chiffres sont
-#: justes, ils ne comptent pas la même chose.
+#: Levels recorded on 2026-08-06 from `ZOER_C1.aps`, with their RAW count --
+#: as `get_variables()` returned them, duplicates included. The frozen catalogue
+#: `refs/reference-data/iesve-aps-variables-ve2025.json` removes 11 exact
+#: duplicates and therefore counts slightly less (c=178, e=269): both figures are
+#: correct, they just count different things.
 #:
-#: Il y a DOUZE niveaux, pas trois : `c` (carbone), `j`, `l`, `n`, `o`, `r` et
-#: `t` existent aussi. Aucun code ne doit supposer que les constantes ci-dessus
-#: épuisent la liste — c'est en la croyant limitée à z/v/w qu'on a manqué
-#: l'éclairage (niveau `e`) et le solaire incident (niveau `s`).
+#: There are TWELVE levels, not three: `c` (carbon), `j`, `l`, `n`, `o`, `r` and
+#: `t` also exist. No code must assume that the constants above
+#: exhaust the list -- it was by believing it limited to z/v/w that lighting
+#: (level `e`) and incident solar (level `s`) were missed.
 NIVEAUX_RELEVES = {
     'c': 184, 'e': 274, 'j': 15, 'l': 88, 'n': 9, 'o': 6,
     'r': 15, 's': 22, 't': 6, 'v': 35, 'w': 14, 'z': 151,
@@ -81,32 +81,31 @@ NIVEAUX_RELEVES = {
 
 
 class LiaisonNonResolue(RuntimeError):
-    u"""Levée quand une grandeur n'a pas de nom de variable établi.
+    u"""Raised when a quantity has no established variable name.
 
-    Volontairement une erreur : produire `None` en silence laisserait croire
-    que la grandeur a été cherchée et n'existe pas, alors qu'elle n'a jamais
-    été cherchée.
+    Intentionally an error: returning `None` silently would suggest
+    the quantity was looked up and not found, whereas it was never
+    looked up.
     """
 
 
 class ApiIncompatible(RuntimeError):
-    u"""Levée quand l'API `iesve` ne présente pas les symboles attendus."""
+    u"""Raised when the `iesve` API does not present the expected symbols."""
 
 
 # ---------------------------------------------------------------------------
-# Liaisons grandeur -> variable de résultat
+# Quantity -> result variable bindings
 # ---------------------------------------------------------------------------
 #
-# `None` signifie NON RÉSOLU, pas « absent ». Chaque entrée porte le libellé
-# EXACT du classeur SIA, qui sert de clé d'appariement avec la référence
-# figée : il est en allemand et doit le rester, sinon l'appariement casse.
+# `None` means UNRESOLVED, not "absent". Each entry carries the EXACT label
+# from the SIA workbook, which serves as the matching key against the frozen
+# reference: it is in German and must remain so, otherwise matching breaks.
 #
-# Le champ `piste` dit où chercher dans le `.aps`. C'est une indication de
-# recherche, PAS une valeur : il ne doit jamais être utilisé comme nom de
-# variable.
-# Genere depuis les references figees par un script, JAMAIS retape a la
-# main : les libelles allemands sont les cles d appariement, et une
-# espace de trop suffit a rendre une liaison introuvable une fois resolue.
+# The `piste` field says where to look in the `.aps`. It is a search hint,
+# NOT a value: it must never be used as a variable name.
+# Generated from frozen references by a script, NEVER retyped by
+# hand: German labels are the matching keys, and a single extra space
+# is enough to make a binding unfindable once resolved.
 LIAISONS = {
     2: {
         u'Jahresenergie solarer Wärmeeintrag': {
@@ -222,45 +221,45 @@ LIAISONS = {
 
 
 # ---------------------------------------------------------------------------
-# Candidats issus d'une sonde APS antérieure — À CONFIRMER, jamais employés
+# Candidates from a prior APS probe -- TO CONFIRM, never used
 # ---------------------------------------------------------------------------
 #
-# `config/sia4010_aps_bindings_ve_runtime.json` porte cinq liaisons relevées
-# le 2026-07-28 sur un `.aps` réel (projet « test », 8760 pas horaires). Elles
-# ne sont PAS reprises dans `LIAISONS` : ce sont des noms de variables VE
-# relevés pour le Test 1, et rien n'établit qu'ils portent la grandeur que le
-# classeur SIA désigne. Confondre les deux, c'est exactement produire un
-# nombre plausible et faux.
+# `config/sia4010_aps_bindings_ve_runtime.json` carries five bindings recorded
+# on 2026-07-28 from a real `.aps` file (project "test", 8760 hourly steps).
+# They are NOT included in `LIAISONS`: these are VE variable names recorded
+# for Test 1, and nothing establishes that they carry the quantity the SIA
+# workbook designates. Conflating the two is exactly how a plausible but wrong
+# number gets produced.
 #
-# Deux niveaux de preuve, qu'il ne faut pas mélanger :
+# Two levels of evidence, which must not be mixed:
 #
-#   * `room_air_temperature` et `operative_temperature` sont étayés par
+#   * `room_air_temperature` and `operative_temperature` are supported by
 #     `references/iesve/probes/sia4010_aps_temperature_binding_evidence.json`,
-#     qui contient les séries complètes. Leur authenticité se recoupe : min
-#     19,999998 °C / max 27,000002 °C sur le cas 600, soit exactement les
-#     consignes 20/27 d'ASHRAE 140. Aucun des deux ne sert aux tests 2 à 6.
-#   * les trois autres ne sont adossés qu'à une métadonnée
-#     `RUNTIME_METADATA_CONFIRMED`. **Le rapport de sonde d'origine
-#     (`sia4010_aps_probe_20260728_154627.json`, sha256 F3E1338C…) est ABSENT
-#     du dépôt** : la trace ne peut pas être rejouée. Statut : allégation.
+#     which contains the full series. Their authenticity is cross-checked: min
+#     19.999998 °C / max 27.000002 °C on case 600, exactly the
+#     ASHRAE 140 setpoints of 20/27. Neither is used for tests 2 to 6.
+#   * the three others are backed only by a
+#     `RUNTIME_METADATA_CONFIRMED` metadata. **The original probe report
+#     (`sia4010_aps_probe_20260728_154627.json`, sha256 F3E1338C…) is ABSENT
+#     from the repository**: the trace cannot be replayed. Status: allegation.
 #
-# DEPUIS LE RELEVÉ DU 2026-08-06 sur `ZOER_C1.aps` (819 variables, cf.
-# `outputs/sonde_aps.json`), la plupart des pistes ci-dessous sont adossées à
-# une variable RÉELLEMENT PRÉSENTE dans un `.aps` — nom, niveau, libellé
-# d'affichage et famille d'unités vérifiés contre le relevé par un test.
+# SINCE THE 2026-08-06 RECORDING on `ZOER_C1.aps` (819 variables, cf.
+# `outputs/sonde_aps.json`), most of the hints below are backed by a variable
+# ACTUALLY PRESENT in a `.aps` -- name, level, display label and unit family
+# verified against the recording by a test.
 #
-# Ce qui reste à établir n'est donc plus « ce nom existe-t-il » mais
-# « désigne-t-il la grandeur que le classeur SIA désigne ». Cette seconde
-# question ne se tranche pas dans VE : elle exige la définition SIA. C'est
-# pourquoi rien n'est lié.
+# What remains to be established is therefore no longer "does this name exist"
+# but "does it designate the quantity the SIA workbook designates". This second
+# question cannot be settled in VE: it requires the SIA definition. That is
+# why nothing is bound.
 #
-#   RELEVE     — la variable existe, confrontée au rapport de sonde.
-#   ALLEGATION — annoncée par un fichier de configuration dont la trace
-#                d'origine est absente du dépôt.
+#   RELEVE     -- the variable exists, cross-checked against the probe report.
+#   ALLEGATION -- announced by a configuration file whose original trace
+#                 is absent from the repository.
 #
-# Table indexée par GRANDEUR, pas par test : « Wärmezufuhr Lufterwärmer »
-# figure dans les tests 4, 5 et 6 et y désigne la même chose. Indexer par test
-# obligerait à répéter la piste trois fois, donc à la laisser diverger.
+# Table indexed by QUANTITY, not by test: "Wärmezufuhr Lufterwärmer"
+# appears in tests 4, 5 and 6 and designates the same thing there. Indexing by
+# test would force repeating the hint three times, hence letting them diverge.
 CANDIDATS_PAR_GRANDEUR = {
     u'Jahresenergie solarer Wärmeeintrag': {
         'aps_varname_candidat': u'Window solar gains',
@@ -340,9 +339,9 @@ CANDIDATS_PAR_GRANDEUR = {
     },
 }
 
-#: Grandeurs pour lesquelles le relevé du 2026-08-06 n'a montré AUCUNE piste.
-#: Les consigner vaut mieux que de laisser croire qu'on n'a pas cherché : le
-#: silence se lit comme « pas encore regardé », ce qui serait faux.
+#: Quantities for which the 2026-08-06 recording showed NO hint.
+#: Recording them is better than letting it seem they were never looked for:
+#: silence reads as "not yet checked", which would be false.
 SANS_CANDIDAT = {
     u'Jahresenergie total transmittierte Solarstrahlung':
         u'Au niveau surface, VE expose « Total short wave transmittance » (un '
@@ -374,43 +373,43 @@ SANS_CANDIDAT = {
 
 
 def candidats_a_confirmer(numero_test):
-    u"""Pistes relevées dans un `.aps` réel, à confirmer contre la norme.
+    u"""Hints recorded from a real `.aps`, to confirm against the standard.
 
-    Ce ne sont PAS des liaisons. `extraire_candidat` les ignore intégralement.
-    Elles n'existent que pour qu'un opérateur devant une VE ouverte sache quoi
-    contrôler en premier, au lieu de reparcourir 819 variables.
+    These are NOT bindings. `extraire_candidat` ignores them entirely.
+    They exist only so that an operator in front of an open VE knows what to
+    check first, instead of browsing 819 variables.
 
     Args:
-        numero_test: Numéro du test SIA.
+        numero_test: SIA test number.
 
     Returns:
-        dict: `{libellé allemand: piste}` pour les grandeurs de ce test,
-            vide si aucune.
+        dict: `{German label: hint}` for the quantities of this test,
+            empty if none.
     """
     return _projeter(CANDIDATS_PAR_GRANDEUR, numero_test)
 
 
 def sans_candidat(numero_test):
-    u"""Grandeurs de ce test pour lesquelles le relevé n'a montré aucune piste.
+    u"""Quantities of this test for which the recording showed no hint.
 
     Args:
-        numero_test: Numéro du test SIA.
+        numero_test: SIA test number.
 
     Returns:
-        dict: `{libellé allemand: motif}`, vide si aucune.
+        dict: `{German label: reason}`, empty if none.
     """
     return _projeter(SANS_CANDIDAT, numero_test)
 
 
 def _projeter(table_par_grandeur, numero_test):
-    u"""Restreint une table indexée par grandeur aux grandeurs d'un test.
+    u"""Restrict a table indexed by quantity to the quantities of a test.
 
     Args:
-        table_par_grandeur: `{libellé: valeur}`.
-        numero_test: Numéro du test SIA.
+        table_par_grandeur: `{label: value}`.
+        numero_test: SIA test number.
 
     Returns:
-        dict: Sous-ensemble correspondant aux grandeurs déclarées du test.
+        dict: Subset corresponding to the declared quantities of the test.
     """
     grandeurs = LIAISONS.get(numero_test, {})
     return dict((libelle, valeur)
@@ -419,18 +418,17 @@ def _projeter(table_par_grandeur, numero_test):
 
 
 def verifier_api(symboles=None):
-    u"""Contrôle que l'API `iesve` présente les symboles employés ici.
+    u"""Check that the `iesve` API presents the symbols used here.
 
     Args:
-        symboles: Surface d'API déjà chargée ; sinon lue sur disque.
+        symboles: API surface already loaded; otherwise read from disk.
 
     Returns:
-        dict: `{methode: True}` pour chaque méthode requise et présente.
+        dict: `{method: True}` for each required and present method.
 
     Raises:
-        ApiIncompatible: Si la surface est illisible ou s'il manque une
-            méthode. Mieux vaut échouer au chargement qu'au milieu d'une
-            extraction, sur un modèle ouvert.
+        ApiIncompatible: If the surface is unreadable or a method is missing.
+            Better to fail at load time than mid-extraction, on an open model.
     """
     if symboles is None:
         if not os.path.isfile(CHEMIN_SURFACE_API):
@@ -452,31 +450,31 @@ def verifier_api(symboles=None):
     return dict((m, True) for m in METHODES_REQUISES)
 
 
-#: Champs d'une entrée de `get_variables()` où chercher un motif. `name`
-#: n'existe pas : c'était une supposition, corrigée le 2026-08-06.
+#: Fields of a `get_variables()` entry where to search for a pattern. `name`
+#: does not exist: that was an assumption, corrected on 2026-08-06.
 CHAMPS_NOMMANTS = ('aps_varname', 'display_name')
 
 
 def decouvrir_variables(results_file, niveau=None, motif=None):
-    u"""Liste les variables disponibles dans un `.aps`, pour établir les liaisons.
+    u"""List the variables available in a `.aps`, to establish bindings.
 
-    C'est l'outil qui remplace la devinette : on lit ce que le fichier
-    contient réellement, puis on renseigne `LIAISONS`.
+    This is the tool that replaces guesswork: read what the file actually
+    contains, then populate `LIAISONS`.
 
-    CORRIGÉ le 2026-08-06, contre une VE réelle (`ZOER_C1.aps`). Cette
-    fonction appelait `get_variables(niveau)` ; VE répond `ArgumentError`.
-    **`get_variables()` ne prend aucun argument** et rend TOUTES les variables,
-    chacune portant son niveau dans `model_level`. Le filtrage est donc fait
-    ici, pas par l'API.
+    CORRECTED on 2026-08-06, against a real VE (`ZOER_C1.aps`). This
+    function was calling `get_variables(niveau)`; VE responds `ArgumentError`.
+    **`get_variables()` takes no argument** and returns ALL variables,
+    each carrying its level in `model_level`. Filtering is therefore done
+    here, not by the API.
 
     Args:
-        results_file: Objet `ResultsReader` déjà ouvert.
-        niveau: Niveau à retenir (`'z'` local, `'v'` système, `'w'` météo).
-            `None` les rend tous.
-        motif: Sous-chaîne filtrante sur le nom, insensible à la casse.
+        results_file: Already-open `ResultsReader` object.
+        niveau: Level to retain (`'z'` room, `'v'` system, `'w'` weather).
+            `None` returns all.
+        motif: Filtering substring on the name, case-insensitive.
 
     Returns:
-        list[dict]: Variables, telles que l'API les décrit.
+        list[dict]: Variables, as described by the API.
     """
     variables = list(results_file.get_variables() or [])
     if niveau is not None:
@@ -488,13 +486,13 @@ def decouvrir_variables(results_file, niveau=None, motif=None):
 
 
 def _niveau_de(variable):
-    u"""Niveau de modèle porté par une entrée de `get_variables()`.
+    u"""Model level carried by a `get_variables()` entry.
 
     Args:
-        variable: Entrée de l'API.
+        variable: API entry.
 
     Returns:
-        str | None: Valeur de `model_level`, ou `None` si absente.
+        str | None: Value of `model_level`, or `None` if absent.
     """
     if not isinstance(variable, dict):
         return None
@@ -502,13 +500,13 @@ def _niveau_de(variable):
 
 
 def _nom_de(variable):
-    u"""Texte où chercher un motif, pour une entrée de `get_variables()`.
+    u"""Text to search for a pattern, for a `get_variables()` entry.
 
     Args:
-        variable: Entrée de l'API.
+        variable: API entry.
 
     Returns:
-        str: Nom APS et libellé d'affichage concaténés.
+        str: APS name and display label concatenated.
     """
     if not isinstance(variable, dict):
         return u'%s' % (variable,)
@@ -517,25 +515,25 @@ def _nom_de(variable):
 
 
 def agreger(serie, methode):
-    u"""Agrège une série horaire selon la méthode demandée.
+    u"""Aggregate an hourly series according to the requested method.
 
     Args:
-        serie: Valeurs horaires.
-        methode: `'somme_annuelle'`, `'moyenne'`, `'maximum'` ou `'minimum'`.
+        serie: Hourly values.
+        methode: `'somme_annuelle'`, `'moyenne'`, `'maximum'` or `'minimum'`.
 
     Returns:
-        float | None: Valeur agrégée, `None` si la série est vide.
+        float | None: Aggregated value, `None` if the series is empty.
 
     Raises:
-        ValueError: Si la méthode est inconnue -- jamais un repli silencieux
-            sur la somme, qui donnerait un nombre plausible et faux.
+        ValueError: If the method is unknown -- never a silent fallback
+            to sum, which would give a plausible but wrong number.
     """
     valeurs = [float(v) for v in (serie or []) if v is not None]
     if not valeurs:
         return None
     if methode == 'somme_annuelle':
-        # Les puissances de VE sont en W au pas horaire : la somme des W sur
-        # 8760 h vaut des Wh, que le SIA attend en kWh.
+        # VE powers are in W at the hourly step: the sum of W over
+        # 8760 h equals Wh, which SIA expects in kWh.
         return sum(valeurs) / 1000.0
     if methode == 'moyenne':
         return sum(valeurs) / len(valeurs)
@@ -547,13 +545,13 @@ def agreger(serie, methode):
 
 
 def liaisons_resolues(numero_test):
-    u"""Grandeurs dont le nom de variable est établi.
+    u"""Quantities whose variable name is established.
 
     Args:
-        numero_test: Numéro du test SIA.
+        numero_test: SIA test number.
 
     Returns:
-        dict: Sous-ensemble de `LIAISONS[numero_test]`.
+        dict: Subset of `LIAISONS[numero_test]`.
     """
     return dict((libelle, liaison)
                 for libelle, liaison in LIAISONS.get(numero_test, {}).items()
@@ -561,16 +559,16 @@ def liaisons_resolues(numero_test):
 
 
 def liaisons_manquantes(numero_test, reference=None):
-    u"""Grandeurs du test dont la liaison reste à établir.
+    u"""Quantities of the test whose binding remains to be established.
 
     Args:
-        numero_test: Numéro du test SIA.
-        reference: Référentiel figé, pour confronter la liste des grandeurs à
-            celle des liaisons. Sans lui, seules les liaisons déclarées sont
-            examinées.
+        numero_test: SIA test number.
+        reference: Frozen reference, to compare the list of quantities with
+            that of the bindings. Without it, only the declared bindings are
+            examined.
 
     Returns:
-        list[str]: Libellés non résolus, triés.
+        list[str]: Unresolved labels, sorted.
     """
     declarees = LIAISONS.get(numero_test, {})
     attendues = set(declarees)
@@ -582,24 +580,24 @@ def liaisons_manquantes(numero_test, reference=None):
 
 def extraire_candidat(numero_test, results_file, reference,
                       resolveur_local=None):
-    u"""Assemble le candidat d'un test, au format attendu par le moteur.
+    u"""Assemble the candidate of a test, in the format expected by the engine.
 
     Args:
-        numero_test: Numéro du test SIA, entre 2 et 6.
-        results_file: `ResultsReader` ouvert sur le `.aps` du cas.
-        reference: Référentiel figé du test.
-        resolveur_local: Appelable `(cas) -> room_id`, quand le test porte sur
-            plusieurs locaux. `None` si un seul local est concerné.
+        numero_test: SIA test number, between 2 and 6.
+        results_file: `ResultsReader` open on the case `.aps`.
+        reference: Frozen reference of the test.
+        resolveur_local: Callable `(cas) -> room_id`, when the test covers
+            several rooms. `None` if only one room is involved.
 
     Returns:
-        dict: `{libellé grandeur: {cas: valeur}}`, ne contenant QUE les
-        grandeurs dont la liaison est résolue et la lecture réussie.
+        dict: `{quantity label: {case: value}}`, containing ONLY the
+        quantities whose binding is resolved and whose reading succeeded.
 
     Raises:
-        ValueError: Si le test n'est pas couvert par cet adaptateur.
-        LiaisonNonResolue: Si AUCUNE liaison n'est résolue -- retourner un
-            candidat vide se lirait comme « rien ne passe », alors que rien
-            n'a été cherché.
+        ValueError: If the test is not covered by this adapter.
+        LiaisonNonResolue: If NO binding is resolved -- returning an
+            empty candidate would read as "nothing passes", whereas nothing
+            was looked up.
     """
     if numero_test not in TESTS_COUVERTS:
         raise ValueError(
@@ -632,16 +630,16 @@ def extraire_candidat(numero_test, results_file, reference,
 
 
 def _lire_un_cas(results_file, liaison, cas, resolveur_local):
-    u"""Lit et agrège la série d'un cas.
+    u"""Read and aggregate the series of a case.
 
     Args:
-        results_file: `ResultsReader` ouvert.
-        liaison: Entrée de `LIAISONS`.
-        cas: Entrée de cas du référentiel.
-        resolveur_local: Appelable `(cas) -> room_id`, ou `None`.
+        results_file: Open `ResultsReader`.
+        liaison: `LIAISONS` entry.
+        cas: Case entry from the reference.
+        resolveur_local: Callable `(cas) -> room_id`, or `None`.
 
     Returns:
-        float | None: Valeur agrégée, `None` si la série est absente.
+        float | None: Aggregated value, `None` if the series is absent.
     """
     room_id = resolveur_local(cas) if resolveur_local else None
     try:
@@ -652,16 +650,16 @@ def _lire_un_cas(results_file, liaison, cas, resolveur_local):
             serie = results_file.get_room_results(
                 room_id, liaison['aps_varname'],
                 liaison.get('niveau', NIVEAU_LOCAL))
-    except Exception:  # noqa: BLE001 -- une série absente n'est pas un plantage
+    except Exception:  # noqa: BLE001 -- an absent series is not a crash
         return None
     return agreger(serie, liaison.get('agregation', 'somme_annuelle'))
 
 
 def etat_des_liaisons():
-    u"""Résumé de ce qui est prêt et de ce qui ne l'est pas.
+    u"""Summary of what is ready and what is not.
 
     Returns:
-        str: Tableau texte, lisible dans la console de VEScripts.
+        str: Text table, readable in the VEScripts console.
     """
     lignes = [u'Liaisons grandeur -> variable de resultat', u'']
     for numero in TESTS_COUVERTS:
@@ -683,19 +681,19 @@ def etat_des_liaisons():
 
 
 def _mention(libelle, candidats, muettes):
-    u"""Complément de ligne décrivant l'état d'une grandeur non résolue.
+    u"""Suffix line describing the state of an unresolved quantity.
 
-    Trois états, distincts et à ne pas confondre : une piste existe ; on a
-    cherché et rien ne correspond ; on n'a pas encore cherché. Le troisième ne
-    doit jamais se lire comme le deuxième.
+    Three states, distinct and not to be confused: a hint exists; we looked
+    and nothing matches; we have not looked yet. The third must never read
+    as the second.
 
     Args:
-        libelle: Libellé allemand de la grandeur.
-        candidats: Pistes du test.
-        muettes: Grandeurs du test sans piste, avec leur motif.
+        libelle: German label of the quantity.
+        candidats: Hints for the test.
+        muettes: Quantities of the test with no hint, and their reason.
 
     Returns:
-        str: Texte à concaténer, éventuellement vide.
+        str: Text to concatenate, possibly empty.
     """
     piste = candidats.get(libelle)
     if piste:
@@ -709,24 +707,24 @@ def _mention(libelle, candidats, muettes):
 
 
 # ---------------------------------------------------------------------------
-# Second critère : la série horaire, et sa distribution
+# Second criterion: the hourly series, and its distribution
 # ---------------------------------------------------------------------------
 #
-# Les spécifications des tests 2, 3 et 5 exigent des « Jahresdatensätze in
-# stündlicher Auflösung » : le classeur calcule LUI-MÊME la somme annuelle et
-# la distribution à partir des 8760 valeurs. Livrer un agrégat ne satisfait
-# donc que la moitié des critères.
+# The specifications of tests 2, 3 and 5 require "Jahresdatensätze in
+# stündlicher Auflösung": the workbook calculates ITSELF the annual sum and
+# the distribution from the 8760 values. Delivering an aggregate only satisfies
+# half the criteria.
 #
-# LES DEUX CRITÈRES NE NOMMENT PAS LES GRANDEURS PAREIL. Le bloc annuel parle
-# d'ÉNERGIE (« Jahresenergie solarer Wärmeeintrag », kWh) ; le bloc de
-# distribution parle de PUISSANCE (« Solarer Wärmeeintrag gesamt », W). C'est
-# la même grandeur physique à deux stades : le classeur somme la puissance
-# horaire pour obtenir l'énergie annuelle. La correspondance est donc établie
-# ici, explicitement, plutôt que devinée par ressemblance de chaîne.
+# THE TWO CRITERIA DO NOT NAME THE QUANTITIES THE SAME WAY. The annual block
+# talks about ENERGY ("Jahresenergie solarer Wärmeeintrag", kWh); the
+# distribution block talks about POWER ("Solarer Wärmeeintrag gesamt", W).
+# It is the same physical quantity at two stages: the workbook sums the hourly
+# power to obtain the annual energy. The correspondence is therefore established
+# here, explicitly, rather than guessed by string similarity.
 #
-# `None` signale une grandeur de DIAGNOSTIC : elle a une distribution dans le
-# classeur mais aucune contrepartie annuelle, et les spécifications la rangent
-# sous « Diagnoseresultate » / « Diagnosegrössen ». Ce n'est pas un critère.
+# `None` signals a DIAGNOSTIC quantity: it has a distribution in the
+# workbook but no annual counterpart, and the specifications classify it
+# under "Diagnoseresultate" / "Diagnosegrössen". It is not a criterion.
 CORRESPONDANCE_DISTRIBUTIONS = {
     2: {
         u'Solarer Wärmeeintrag gesamt':
@@ -752,30 +750,29 @@ CORRESPONDANCE_DISTRIBUTIONS = {
     },
 }
 
-#: Grandeurs annuelles SANS distribution correspondante. Leur seul critère est
-#: la somme annuelle — non par oubli du classeur, mais parce qu'il ne porte
-#: aucune feuille de distribution pour elles.
+#: Annual quantities WITHOUT a corresponding distribution. Their only criterion
+#: is the annual sum -- not because the workbook forgot, but because it carries
+#: no distribution sheet for them.
 SANS_DISTRIBUTION = {
     5: (u'Befeuchtungsenergie', u'Hilfsenergie WRG'),
 }
 
 
 def libelle_annuel(numero_test, grandeur_distribution):
-    u"""Grandeur annuelle correspondant à une grandeur de distribution.
+    u"""Annual quantity corresponding to a distribution quantity.
 
     Args:
-        numero_test: Numéro du test SIA.
-        grandeur_distribution: Libellé tel qu'il figure dans le référentiel de
-            distributions.
+        numero_test: SIA test number.
+        grandeur_distribution: Label as it appears in the distribution reference.
 
     Returns:
-        str | None: Libellé de `LIAISONS`, ou `None` si la grandeur est un
+        str | None: Label from `LIAISONS`, or `None` if the quantity is a
             diagnostic.
 
     Raises:
-        KeyError: Si la grandeur n'est pas déclarée. Rendre `None` en silence
-            la confondrait avec un diagnostic, et ferait disparaître un
-            critère sans le dire.
+        KeyError: If the quantity is not declared. Returning `None` silently
+            would confuse it with a diagnostic, and would drop a criterion
+            without saying so.
     """
     correspondance = CORRESPONDANCE_DISTRIBUTIONS.get(numero_test, {})
     if grandeur_distribution not in correspondance:
@@ -788,23 +785,23 @@ def libelle_annuel(numero_test, grandeur_distribution):
 
 
 def extraire_serie(numero_test, results_file, libelle, room_id=None):
-    u"""Lit la série horaire BRUTE d'une grandeur, sans l'agréger.
+    u"""Read the RAW hourly series of a quantity, without aggregating it.
 
-    C'est ce que les spécifications exigent : le classeur veut les 8760
-    valeurs et calcule lui-même la somme annuelle et la distribution.
+    This is what the specifications require: the workbook wants the 8760
+    values and calculates the annual sum and distribution itself.
 
     Args:
-        numero_test: Numéro du test SIA.
-        results_file: `ResultsReader` ouvert.
-        libelle: Libellé allemand de la grandeur, clé de `LIAISONS`.
-        room_id: Local, pour une grandeur de niveau local.
+        numero_test: SIA test number.
+        results_file: Open `ResultsReader`.
+        libelle: German label of the quantity, key of `LIAISONS`.
+        room_id: Room, for a room-level quantity.
 
     Returns:
-        list | None: Série horaire, ou `None` si la lecture échoue.
+        list | None: Hourly series, or `None` if reading fails.
 
     Raises:
-        LiaisonNonResolue: Si la grandeur n'a pas de nom de variable établi.
-            Rendre une série vide se lirait comme « la grandeur vaut zéro ».
+        LiaisonNonResolue: If the quantity has no established variable name.
+            Returning an empty series would read as "the quantity equals zero".
     """
     liaison = LIAISONS.get(numero_test, {}).get(libelle)
     if liaison is None:
@@ -818,20 +815,20 @@ def extraire_serie(numero_test, results_file, libelle, room_id=None):
 
 
 def _lire_serie(results_file, liaison, room_id):
-    u"""Lit une série, au niveau local ou global selon la liaison.
+    u"""Read a series, at room or global level according to the binding.
 
     Args:
-        results_file: `ResultsReader` ouvert.
-        liaison: Entrée de `LIAISONS` résolue.
-        room_id: Local, si la grandeur est de niveau local.
+        results_file: Open `ResultsReader`.
+        liaison: Resolved `LIAISONS` entry.
+        room_id: Room, if the quantity is room-level.
 
     Returns:
-        list | None: Série, ou `None` si l'API refuse.
+        list | None: Series, or `None` if the API refuses.
     """
     varname, niveau = liaison['aps_varname'], liaison['niveau']
     try:
         if room_id is not None and niveau == NIVEAU_LOCAL:
             return results_file.get_room_results(room_id, varname, niveau)
         return results_file.get_results(varname, niveau)
-    except Exception:  # noqa: BLE001 -- l'absence est un resultat, pas un plantage
+    except Exception:  # noqa: BLE001 -- absence is a result, not a crash
         return None

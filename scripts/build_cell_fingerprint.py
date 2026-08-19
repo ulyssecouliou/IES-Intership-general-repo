@@ -1,40 +1,40 @@
 # -*- coding: utf-8 -*-
-"""Genere l'empreinte de cellules brutes du classeur d'evaluation du Test 1.
+"""Generates the raw-cell fingerprint of the Test 1 evaluation workbook.
 
-POURQUOI CE FICHIER EXISTE
---------------------------
-Les deux controles les plus forts de `engine/tests/test_ref_integrity.py` --
-fidelite valeur<->cellule et correspondance libelle<->colonne -- exigent le
-classeur officiel. Celui-ci pese 14 Mo (130 Mo pour les sept) et reste hors
-depot. En CI il est donc absent, et la mesure par mutation l'a prouve :
+WHY THIS FILE EXISTS
+--------------------
+The two strongest checks in `engine/tests/test_ref_integrity.py` --
+value<->cell fidelity and label<->column matching -- require the official
+workbook. It weighs 14 MB (130 MB for all seven) and is kept out of the
+repository. In CI it is therefore absent, and mutation testing proved it:
 
-    mutation injectee                          avec classeur   sans classeur
-    decalage de colonnes (+1), Table 30            detectee      NON DETECTEE
-    cas fantome "600" en Table 32                  detectee        detectee
-    erreur Excel convertie en 0                    detectee      NON DETECTEE
-    fausse formule Streubereich (min/max)          detectee        detectee
+    injected mutation                              with workbook   without workbook
+    column shift (+1), Table 30                      detected      NOT DETECTED
+    phantom case "600" in Table 32                   detected        detected
+    Excel error converted to 0                       detected      NOT DETECTED
+    wrong Streubereich formula (min/max)             detected        detected
 
-Autrement dit, la CI ne pouvait pas attraper la classe de bug qui s'est
-reellement produite (cf. AUDIT.md, defauts n 1 et n 3).
+In other words, CI could not catch the class of bug that actually occurred
+(see AUDIT.md, defects no. 1 and no. 3).
 
-CE QUE L'EMPREINTE RESOUT
--------------------------
-Elle fige les cellules BRUTES (adresse -> valeur telle quelle, erreurs Excel
-comprises) plus les lignes d'en-tete, en quelques dizaines de Ko versionnables.
-Le test s'en sert comme substitut du classeur quand celui-ci est absent.
+WHAT THE FINGERPRINT SOLVES
+----------------------------
+It freezes the RAW cells (address -> value as-is, Excel errors included)
+plus the header rows, in a few dozen KB that can be versioned.
+The test uses it as a substitute for the workbook when the latter is absent.
 
-Ce n'est PAS circulaire : l'empreinte contient les valeurs brutes, le
-`test-1.ref.json` contient leur INTERPRETATION (quel programme, quelle grandeur,
-quelle colonne). C'est l'interpretation qui etait fausse dans les defauts n 1
-et n 2, pas les valeurs. Et quand le classeur est present, le test verifie
-l'empreinte CONTRE lui, donc elle ne peut pas deriver en silence.
+This is NOT circular: the fingerprint contains the raw values, while
+`test-1.ref.json` contains their INTERPRETATION (which programme, which
+quantity, which column). The interpretation is what was wrong in defects no. 1
+and no. 2, not the values. And when the workbook is present, the test checks
+the fingerprint AGAINST it, so it cannot silently drift.
 
 USAGE
 -----
     python scripts/build_cell_fingerprint.py
 
-A relancer apres toute regeneration de `test-1.ref.json`. Le test echoue en
-signalant ce fichier si l'empreinte ne couvre plus toutes les cellules citees.
+Re-run after any regeneration of `test-1.ref.json`. The test fails pointing
+to this file if the fingerprint no longer covers all the cells it cites.
 """
 
 import collections
@@ -52,16 +52,18 @@ CLASSEUR = os.path.join(RACINE, 'SIA_4010_geteilter_Link', 'Test1',
                         'Resultaterfassung_Test1.xlsx')
 FEUILLE = u'Zusammenfassung Testf\xe4lle'
 
-# Lignes d'en-tete des tables extraites, reconstruites contre la source et
-# confirmees par l'audit independant (AUDIT.md).
+# Header rows of the extracted tables, reconstructed against the source and
+# confirmed by the independent audit (AUDIT.md).
 LIGNES_ENTETE = (15, 36, 57, 81, 104)
 
 
 def _cellules_citees(reference):
-    """Toutes les adresses {value, cell} presentes dans le JSON de reference."""
+    """Return every source-cell address cited by the reference JSON."""
     adresses = set()
 
     def parcourir(noeud):
+        """Recursively collect cited cell addresses from one JSON node."""
+
         if isinstance(noeud, dict):
             if 'value' in noeud and 'cell' in noeud:
                 adresses.add(noeud['cell'])
@@ -74,6 +76,8 @@ def _cellules_citees(reference):
 
 
 def main():
+    """Generate the immutable Test 1 workbook-cell fingerprint."""
+
     if not os.path.exists(CLASSEUR):
         sys.stderr.write('Classeur source absent : ' + CLASSEUR + '\n'
                          "L'empreinte ne peut etre generee que depuis la source figee.\n")
@@ -92,8 +96,8 @@ def main():
     cellules = collections.OrderedDict()
     for adresse in sorted(adresses, key=lambda a: (len(a), a)):
         valeur = feuille[adresse].value
-        # Les erreurs Excel sont conservees telles quelles ('#DIV/0!') : c'est
-        # exactement ce qui distingue une erreur d'un zero invente.
+        # Excel errors are kept as-is ('#DIV/0!'): that is exactly what
+        # distinguishes a real error from an invented zero.
         cellules[adresse] = valeur
 
     entetes = collections.OrderedDict()

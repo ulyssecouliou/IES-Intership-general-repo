@@ -12,6 +12,7 @@ from swiss_sia.reference_model.results import ValidationStatus
 from swiss_sia.reference_model.ve_api import VeGateway
 from swiss_sia.reference_model.ve_asset_provisioner import (
     IesVeAssetProvisioner,
+    _template_links_semantically_match,
     _values_match,
 )
 from swiss_sia.reference_model.workflow import ReferenceModelWorkflow
@@ -1793,6 +1794,64 @@ class ReferenceModelAssetProvisioningTests(unittest.TestCase):
         with self.assertRaises(VeMutationError):
             provisioner.provision(manifest)
 
+    def test_controlled_material_reconciliation_repairs_and_verifies_one_match(self):
+        """An explicit repair may update one stale exact-description material."""
+
+        payload = _valid_manifest_payload()
+        payload["on_existing"] = "reuse_verified"
+        properties = payload["materials"][0]["properties"]
+        properties["density"] = _field(0.0, "number", 0.0, 30000.0)
+        properties["specific_heat_capacity"] = _field(
+            0.0, "number", 0.0, 10000.0
+        )
+        manifest = load_asset_manifest(
+            _write_manifest("reconcile_zero_mass_material", payload)
+        )
+        project = _Project()
+        cdb = _CdbProject()
+        material = cdb.create_material("other")
+        expected = manifest.materials[0].raw_properties()
+        stale = dict(expected)
+        stale.update({"density": 10.0, "specific_heat_capacity": 1400.0})
+        material.set_properties(stale)
+        provisioner = IesVeAssetProvisioner(_iesve_namespace(), project, cdb)
+
+        receipt = provisioner.reconcile_existing_material(
+            manifest, manifest.materials[0].key
+        )
+
+        self.assertEqual(receipt["status"], "RECONCILED_AND_VERIFIED")
+        self.assertTrue(receipt["changed"])
+        self.assertEqual(receipt["before"]["density"], 10.0)
+        self.assertEqual(receipt["after"]["density"], 0.0)
+        self.assertEqual(receipt["after"]["specific_heat_capacity"], 0.0)
+
+    def test_controlled_construction_reconciliation_repairs_exact_assembly(self):
+        """An explicit repair updates one uniquely matched layered assembly."""
+
+        payload = _valid_manifest_payload()
+        payload["on_existing"] = "reuse_verified"
+        manifest = load_asset_manifest(
+            _write_manifest("reconcile_exact_construction", payload)
+        )
+        project = _Project()
+        cdb = _CdbProject()
+        provisioner = IesVeAssetProvisioner(_iesve_namespace(), project, cdb)
+        provisioner.provision(manifest)
+        definition = manifest.constructions[0]
+        construction = cdb.constructions[0]
+        expected = definition.layers[0].raw_properties()["thickness"]
+        construction.get_layers()[0]._properties["thickness"] = expected * 2.0
+
+        receipt = provisioner.reconcile_existing_construction(
+            manifest, definition.key
+        )
+
+        self.assertEqual(receipt["status"], "RECONCILED_AND_VERIFIED")
+        self.assertTrue(receipt["changed"])
+        self.assertEqual(receipt["before_layers"][0]["thickness"], expected * 2.0)
+        self.assertEqual(receipt["after_layers"][0]["thickness"], expected)
+
     def test_reuse_verified_audits_surface_resistance_rounding_to_four_decimals(
         self,
     ):
@@ -1872,6 +1931,79 @@ class ReferenceModelAssetProvisioningTests(unittest.TestCase):
             if warning["code"] == "VE-INCOMPLETE-THERMAL-TEMPLATE-RECOVERED"
         ]
         self.assertEqual(len(warnings), 1)
+
+    def test_template_link_comparison_ignores_only_display_gain_name(self):
+        """VE-renamed linked copies pass only when their physics still matches."""
+
+        expected = _Record("expected")
+        expected.set(
+            {
+                "name": "SIA600_EQUIPMENT_200W",
+                "type_str": "Computers",
+                "units_val": 0,
+                "max_power_consumption": 4.166666666666667,
+                "radiant_fraction": 0.6,
+                "variation_profile": "ON",
+            }
+        )
+        actual = _Record("actual")
+        actual.set(
+            {
+                "name": "250 - 8 till 6 - 150",
+                "type_str": "Computers",
+                "units_val": 0,
+                "max_power_consumption": 4.166666666666667,
+                "radiant_fraction": 0.6,
+                "variation_profile": "ON",
+            }
+        )
+        matches, details = _template_links_semantically_match(
+            [expected], [actual], "gain"
+        )
+        self.assertTrue(matches)
+        self.assertEqual(details, {})
+        actual._data["max_power_consumption"] = 5.0
+        matches, details = _template_links_semantically_match(
+            [expected], [actual], "gain"
+        )
+        self.assertFalse(matches)
+        self.assertIn("max_power_consumption", details["energy"])
+
+    def test_template_link_repair_updates_only_stale_exchange_physics(self):
+        """A unique linked infiltration can be synchronized and read back."""
+
+        expected = _Record("expected")
+        expected.set(
+            {
+                "name": "SIA600_INFILTRATION_0P41ACH",
+                "type_val": "infiltration",
+                "max_flow": 0.3075,
+                "units_val": 2,
+                "variation_profile": "ON",
+                "adjacent_condition_val": "external_air",
+            }
+        )
+        actual = _Record("actual")
+        actual.set(
+            {
+                "name": "Infiltration",
+                "type_val": "infiltration",
+                "max_flow": 0.375,
+                "units_val": 2,
+                "variation_profile": "ON",
+                "adjacent_condition_val": "external_air",
+            }
+        )
+        provisioner = IesVeAssetProvisioner(
+            _iesve_namespace(), _Project(), _CdbProject()
+        )
+
+        changes = provisioner._repair_template_link_physics(
+            [expected], [actual], "air_exchange"
+        )
+
+        self.assertEqual(actual.get()["max_flow"], 0.3075)
+        self.assertEqual(changes[0]["verified_fields"], ["max_flow"])
 
     def test_reuse_recovers_exactly_linked_template_after_readback_failure(self):
         """Reapply typed data without duplicating exact manifest links."""

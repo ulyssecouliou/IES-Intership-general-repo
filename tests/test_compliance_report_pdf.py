@@ -244,6 +244,23 @@ class VerdictEngineTests(unittest.TestCase):
         )
         self.assertEqual(verdict.sia3802_status, COMPLIANT)
 
+    def test_contradicting_comparison_is_not_compliant_despite_acceptance(self):
+        """A reviewed comparison whose figures contradict the reviewer's
+        acceptance (project value above the reference) must yield NOT_COMPLIANT,
+        never a compliant statement, even with no other blocker."""
+        verdict = build_compliance_verdict(
+            self._sia3802(
+                comparison_status="REVIEWED_RESULT_CONTRADICTS_ACCEPTANCE"
+            ),
+            {},
+            rooms_analysed=3,
+        )
+        self.assertEqual(verdict.sia3802_status, NOT_COMPLIANT)
+        self.assertEqual(
+            verdict.sia3802_reason, "global_comparison_contradicts_acceptance"
+        )
+        self.assertEqual(verdict.overall_status, NOT_COMPLIANT)
+
     def test_sia4010_never_reports_compliant_without_attestation(self):
         # Even with every official test recorded, the strongest SIA 4010 status
         # this report may carry is NOT_DETERMINED: attestation is external.

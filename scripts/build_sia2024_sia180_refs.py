@@ -1,22 +1,21 @@
 # -*- coding: utf-8 -*-
-u"""Fige en JSON les référentiels transmis par le SIA le 2026-08-04.
+u"""Freezes in JSON the reference data transmitted by SIA on 2026-08-04.
 
-SOURCES (captures d'écran fournies par Yiqiao Yang, SIA, 2026-08-04) :
-  - SIA 2024:2021, tableau 11 (p. 54-55) — valeurs de dimensionnement
-  - SIA 2024:2021, annexe B (normative), tableau 13 (p. 58-59)
-  - SIA 180:2014, chiffre 2.3.1 — exigences de confort
-  - SIA 180:2014, chiffre 2.3.2 et figure 4 — plage de température ressentie
-  - SIA 387/4:2017, tableau 9 et chiffre 3.4.3.5 — commande de stores à lamelles
+SOURCES (screenshots provided by Yiqiao Yang, SIA, 2026-08-04):
+  - SIA 2024:2021, tableau 11 (p. 54-55) — design values
+  - SIA 2024:2021, annex B (normative), tableau 13 (p. 58-59)
+  - SIA 180:2014, chiffre 2.3.1 — comfort requirements
+  - SIA 180:2014, chiffre 2.3.2 and figure 4 — perceived-temperature range
+  - SIA 387/4:2017, tableau 9 and chiffre 3.4.3.5 — slat blind control
 
-Ces captures « reflètent les versions publiées à l'origine et peuvent ne pas
-inclure les rectificatifs ultérieurs » (Yiqiao Yang, 2026-08-04). Des
-rectificatifs EXISTENT pour SIA 2024 et SIA 180 → cf. champ `corrigenda` de
-chaque fichier produit. **Aucune valeur de ce script n'est confirmée
-post-rectificatif.**
+These screenshots « reflect the originally published versions and may not
+include subsequent corrigenda » (Yiqiao Yang, 2026-08-04). Corrigenda
+DO EXIST for SIA 2024 and SIA 180 → see the `corrigenda` field of each
+produced file. **No value in this script is confirmed post-corrigendum.**
 
-Le script ne se contente pas de recopier : il VÉRIFIE la règle de décalage des
-courbes de consigne de SIA 380/2:2022 §5.2.2.5 contre les sept décalages
-énumérés par SIA 4010:2023 §3.1.4. Si un seul ne se reproduit pas, il échoue.
+The script does not merely copy: it VERIFIES the setpoint-curve offset rule
+of SIA 380/2:2022 §5.2.2.5 against the seven offsets enumerated by
+SIA 4010:2023 §3.1.4. If any one fails to reproduce, it exits with an error.
 """
 
 from __future__ import print_function
@@ -33,17 +32,17 @@ _SORTIE = os.path.join(_RACINE, 'refs', 'reference-data')
 # SIA 2024:2021, tableau 11 — « Auslegungswerte für Heizungs-, Kälte- und
 # lufttechnische Anlagen », p. 54-55.
 #
-# Colonnes, dans l'ordre du tableau :
+# Columns, in table order:
 #   0 theta_h  Raumtemperatur-Auslegungswert, Heizfall (Auslegung Norm-Heizlast), °C
 #   1 theta_c  Raumtemperatur-Auslegungswert, Kühlfall (Auslegung Klimakälteleistung), °C
 #   2 hr_h     Relative Raumluftfeuchte, Heizfall (Auslegung Befeuchtung), %
 #   3 hr_c     Relative Raumluftfeuchte, Kühlfall (Auslegung Entfeuchtung), %
-#   4 va_hyg   Hygienebedingter Aussenluft-Volumenstrom, m3/h par personne (jour)
-#   5 va_nuit  idem, exploitation de nuit à débit réduit (valeur entre parenthèses)
+#   4 va_hyg   Hygienebedingter Aussenluft-Volumenstrom, m3/h per person (day)
+#   5 va_nuit  idem, reduced-flow night operation (value in parentheses)
 #   6 va_proc  Prozessbedingter Aussenluft-Volumenstrom, m3/(h.m2)
-#   7 notes    renvois de bas de tableau
+#   7 notes    table footnote references
 #
-# `None` = « – » (nicht relevant) dans le tableau.
+# `None` = « – » (nicht relevant) in the table.
 # --------------------------------------------------------------------------
 TABLEAU_11 = [
     (u'1.01', u'Wohnen MFH',                  21, 26,   30, 60, 29,   15,   None, [1, 2]),
@@ -113,7 +112,7 @@ NOTES_TABLEAU_11 = {
 }
 
 # --------------------------------------------------------------------------
-# SIA 2024:2021, annexe B (NORMATIVE), tableau 13 — « Mittlere Raumtemperaturen
+# SIA 2024:2021, annex B (NORMATIVE), tableau 13 — « Mittlere Raumtemperaturen
 # für die Berechnung des jährlichen Klimakälte- und Heizwärmebedarfs », p. 58-59.
 # (usage, theta_h_moy, theta_c_moy)
 # --------------------------------------------------------------------------
@@ -136,40 +135,42 @@ TABLEAU_13 = [
 ]
 
 # --------------------------------------------------------------------------
-# CONTRÔLE — la règle de décalage de SIA 380/2:2022 §5.2.2.5 :
-#   « les limites seront décalées suivant la différence entre les valeurs de
-#     dimensionnement de l'utilisation correspondante et les utilisations
-#     1.01 à 3.03 selon SIA 2024:2021, tableau 11 »
-# confrontée aux sept décalages CHIFFRÉS de SIA 4010:2023 §3.1.4 (p. 10).
+# CHECK — the offset rule of SIA 380/2:2022 §5.2.2.5:
+#   « the limits shall be offset by the difference between the design values
+#     of the corresponding usage and usages 1.01 to 3.03 per SIA 2024:2021,
+#     tableau 11 »
+# compared against the seven EXPLICIT offsets of SIA 4010:2023 §3.1.4 (p. 10).
 # --------------------------------------------------------------------------
 GROUPE_REFERENCE = [u'1.01', u'1.02', u'2.01', u'2.02', u'3.01', u'3.02', u'3.03']
 
-# (usage, décalage attendu de la courbe INFÉRIEURE, vers le bas, en K)
+# (usage, expected offset of the LOWER curve, downwards, in K)
 DECALAGES_4010_INFERIEURE = [
     (u'3.04', 1), (u'5.01', 1), (u'5.02', 1), (u'5.03', 1),
     (u'6.03', 1), (u'6.04', 1), (u'9.01', 3),
 ]
-# (usage, décalage attendu de la courbe SUPÉRIEURE, vers le haut, en K)
+# (usage, expected offset of the UPPER curve, upwards, in K)
 DECALAGES_4010_SUPERIEURE = [
     (u'6.03', 2), (u'6.04', 2), (u'9.01', 4),
 ]
 
 
 def _par_usage():
+    """Index the SIA 2024 design-value rows by usage code."""
+
     return dict((l[0], l) for l in TABLEAU_11)
 
 
 def verifier_regle_de_decalage():
-    u"""Reproduit les sept décalages de SIA 4010 §3.1.4 à partir du tableau 11.
+    u"""Reproduces the seven offsets of SIA 4010 §3.1.4 from tableau 11.
 
-    Lève `AssertionError` au premier écart : ce contrôle est la seule preuve
-    que notre transcription du tableau 11 est bonne ET que notre lecture de la
-    règle de §5.2.2.5 est bonne.
+    Raises `AssertionError` on the first discrepancy: this check is the only
+    proof that our transcription of tableau 11 is correct AND that our reading
+    of rule §5.2.2.5 is correct.
     """
     t11 = _par_usage()
 
-    # Le groupe de référence doit être unanime, sans quoi « la différence avec
-    # les utilisations 1.01 à 3.03 » n'aurait pas de sens comme scalaire.
+    # The reference group must be unanimous, otherwise "the difference from
+    # usages 1.01 to 3.03" would not make sense as a scalar.
     th = set(t11[u][2] for u in GROUPE_REFERENCE)
     tc = set(t11[u][3] for u in GROUPE_REFERENCE)
     assert th == set([21]), u'groupe de référence non unanime en chauffage : %r' % th
@@ -195,6 +196,8 @@ def verifier_regle_de_decalage():
 
 
 def construire_sia2024():
+    """Build the source-traced SIA 2024 reference payload."""
+
     lignes_11 = []
     for (usage, libelle, th, tc, hrh, hrc, vah, van, vap, notes) in TABLEAU_11:
         lignes_11.append({
@@ -316,6 +319,8 @@ def construire_sia2024():
 
 
 def construire_sia180():
+    """Build the source-traced SIA 180 reference payload."""
+
     return {
         u'norme': u'SIA 180:2014',
         u'titre': u"Protection thermique, protection contre l'humidité et climat "
@@ -404,6 +409,8 @@ def construire_sia180():
 
 
 def construire_sia387_4():
+    """Build the source-traced SIA 387/4 solar-control payload."""
+
     return {
         u'norme': u'SIA 387/4:2017',
         u'titre': u"Éclairage — Calcul et exigences (partie protection solaire)",
@@ -520,6 +527,8 @@ def construire_sia387_4():
 
 
 def _ecrire(nom, donnees):
+    """Write one generated reference payload as formatted UTF-8 JSON."""
+
     chemin = os.path.join(_SORTIE, nom)
     with io.open(chemin, 'w', encoding='utf-8') as f:
         f.write(json.dumps(donnees, ensure_ascii=False, indent=2, sort_keys=False))
@@ -528,6 +537,8 @@ def _ecrire(nom, donnees):
 
 
 def main():
+    """Validate cross-standard offsets and write all reference payloads."""
+
     controles = verifier_regle_de_decalage()
     print(u'Règle de décalage SIA 380/2 §5.2.2.5 vs SIA 4010 §3.1.4 :')
     for courbe, usage, attendu, calcule in controles:

@@ -432,11 +432,11 @@ class NativeModelBuilderControllerTests(unittest.TestCase):
                 )
 
     def test_prepared_manifest_is_opt_in_and_declares_whose_decisions(self):
-        """Le manifeste préparé porte des décisions humaines.
+        """The prepared manifest carries human decisions.
 
-        Il ne doit donc jamais être le défaut : un projet neuf hériterait
-        d'autorisations que personne dans ce projet n'a prises. Cette action est
-        l'alternative explicite, et elle doit rendre visible ce qu'elle installe.
+        It must therefore never be the default: a new project would inherit
+        authorizations that no one in that project has made. This action is
+        the explicit alternative, and it must make visible what it installs.
         """
 
         project = ROOT / ".codex_tmp" / "ui_prepared_manifest"
@@ -463,15 +463,14 @@ class NativeModelBuilderControllerTests(unittest.TestCase):
                     "sia2028_dry_normal_zurich_kloten",
                 ],
             )
-            # Chaque base affichée vient de `license_reference`, le champ que le
-            # lecteur strict refuse vide. Une base vide ici signifierait qu'on
-            # affiche un champ que rien ne garantit.
+            # Each displayed basis comes from `license_reference`, the field the
+            # strict reader rejects when empty. An empty basis here would mean
+            # displaying a field that nothing guarantees.
             for item in authorizations:
                 with self.subTest(input_id=item["input_id"]):
                     self.assertTrue(item["basis"])
 
-            # Jamais d'écrasement : une autorisation ou une édition locale ne
-            # nous appartient pas.
+            # Never overwrite: a local authorization or edit does not belong to us.
             payload = json.loads(path.read_text(encoding="utf-8"))
             payload["operator_note"] = "preserve me"
             path.write_text(
@@ -492,7 +491,7 @@ class NativeModelBuilderControllerTests(unittest.TestCase):
                 shutil.rmtree(project)
 
     def test_prepared_manifest_install_refuses_a_missing_project(self):
-        """Écrire un contrat de preuve hors d'un projet sauvegardé n'a pas de sens."""
+        """Writing a proof contract outside a saved project makes no sense."""
 
         with self.assertRaises(FileNotFoundError):
             self.controller.install_prepared_external_input_manifest(

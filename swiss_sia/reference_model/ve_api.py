@@ -424,6 +424,14 @@ class IesVeGateway(VeGateway):
         )
         return provisioner.provision(manifest)
 
+    def provision_operational_template(self, plan: Any) -> Dict[str, Any]:
+        """Create or verify a source-traced operational template only."""
+
+        provisioner = IesVeAssetProvisioner(
+            self.iesve, self.project, self._cdb_project()
+        )
+        return provisioner.provision_operational_template(plan)
+
     @staticmethod
     def _is_off_profile(value: Any) -> bool:
         """Return whether a VE room-control profile is the built-in OFF profile."""
@@ -486,6 +494,28 @@ class IesVeGateway(VeGateway):
             self.iesve, self.project, self._cdb_project()
         )
         return provisioner.reconcile_existing_gain(manifest, gain_key)
+
+    def reconcile_existing_material(
+        self, manifest: AssetManifest, material_key: str
+    ) -> Dict[str, Any]:
+        """Run one explicitly requested, read-back-verified material repair."""
+
+        provisioner = IesVeAssetProvisioner(
+            self.iesve, self.project, self._cdb_project()
+        )
+        return provisioner.reconcile_existing_material(manifest, material_key)
+
+    def reconcile_existing_construction(
+        self, manifest: AssetManifest, construction_key: str
+    ) -> Dict[str, Any]:
+        """Run one explicitly requested, verified construction repair."""
+
+        provisioner = IesVeAssetProvisioner(
+            self.iesve, self.project, self._cdb_project()
+        )
+        return provisioner.reconcile_existing_construction(
+            manifest, construction_key
+        )
 
     def reconcile_existing_air_exchange(
         self, manifest: AssetManifest, exchange_key: str

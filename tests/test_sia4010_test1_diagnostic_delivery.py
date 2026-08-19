@@ -28,6 +28,7 @@ from swiss_sia.reference_model.sia4010.active_case_evaluation import (
     QUALIFIED_ACTIVE_CASES,
     evaluate_qualified_active_case,
 )
+from swiss_sia.reference_model.sia4010 import apachesim_qualification
 from swiss_sia.reference_model.sia4010.case_registry import (
     TEST1_DIAGNOSTIC_CASES,
     get_case_capability,
@@ -298,15 +299,40 @@ class Test1DiagnosticLauncherTests(unittest.TestCase):
         self.module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(self.module)
 
+        active_spec = importlib.util.spec_from_file_location(
+            "_active_case",
+            ROOT / "Run_VE_SIA4010_Test1_Active_Case_One_Click.py",
+        )
+        self.active_module = importlib.util.module_from_spec(active_spec)
+        active_spec.loader.exec_module(self.active_module)
+
+        qualifier_spec = importlib.util.spec_from_file_location(
+            "_runtime_qualifier",
+            ROOT / "Run_VE_SIA4010_Test1_Qualify_Runtime_Inputs.py",
+        )
+        self.qualifier_module = importlib.util.module_from_spec(qualifier_spec)
+        qualifier_spec.loader.exec_module(self.qualifier_module)
+
     def test_launcher_accepts_the_four_diagnostic_cases_but_not_1e(self):
         for case_id in TEST1_DIAGNOSTIC_CASES:
             with self.subTest(case_id=case_id):
                 self.assertIn(case_id, self.module.TEST1_CASES)
+                self.assertIn(case_id, self.active_module.TEST1_CASES)
+                self.assertIn(case_id, self.qualifier_module.TEST1_CASES)
+                self.assertIn(
+                    case_id,
+                    apachesim_qualification.SIMULATION_QUALIFICATION_CASES,
+                )
                 self.assertEqual(
                     self.module._execution_mode(case_id),
                     "QUALIFY_IN_ACTIVE_VE_PROJECT",
                 )
         self.assertNotIn("1E", self.module.TEST1_CASES)
+        self.assertNotIn("1E", self.active_module.TEST1_CASES)
+        self.assertNotIn("1E", self.qualifier_module.TEST1_CASES)
+        self.assertNotIn(
+            "1E", apachesim_qualification.SIMULATION_QUALIFICATION_CASES
+        )
 
     def test_folder_name_selection_stays_unambiguous(self):
         class _Path:

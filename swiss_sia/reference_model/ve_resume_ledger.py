@@ -63,7 +63,7 @@ class LedgerEntry:
 
 @dataclass(frozen=True)
 class LedgerConsultation:
-    """Result of ``ResumeLedger.consult``."""
+    """Describe one immutable result from ``ResumeLedger.consult``."""
 
     decision: ReuseDecision
     step_id: str

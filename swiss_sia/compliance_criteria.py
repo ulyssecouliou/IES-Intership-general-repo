@@ -1,0 +1,279 @@
+# -*- coding: utf-8 -*-
+"""Machine-readable client SIA 380/2 compliance-criteria manifest (pure).
+
+Builds the single structured checklist that both the engine and an analyst read
+to answer, for a client VE model + its ApacheSim ``.aps``:
+
+  1. Which criteria must a client model meet to be fully SIA 380/2 compliant?
+  2. From the VE model and its .aps results, what can be evaluated (and how)?
+  3. What can VE NOT provide, so the criterion cannot be auto-decided?
+
+Every regulatory value comes from ``swiss_sia/config.py`` (itself sourced), never
+from this module: it only joins the requirement matrix (verdict-bearing criteria)
+with the data-coverage matrix (inputs each criterion needs) and adds a capability
+layer derived from the code's own ``automation`` signals.
+
+Pure Python, no ``iesve`` import. The runtime fill lives in
+``swiss_sia/compliance_criteria_evaluator.py``; the JSON writer lives in
+``scripts/build_client_compliance_criteria.py``.
+"""
+
+from __future__ import annotations
+
+from typing import Any, Dict, List
+
+from swiss_sia import config
+
+# ---------------------------------------------------------------------------
+# Capability layer -- derived from the code, not invented.
+# ---------------------------------------------------------------------------
+# `automation` in the config matrices already records how far the toolchain can
+# go for each input. Map it to a plain capability verdict the analyst reads
+# directly. A few criteria carry a stronger, code-grounded caveat (no ingestion
+# path in VE at all, or a missing normative source): those override the generic
+# mapping via _CAPABILITY_OVERRIDES below.
+_AUTOMATION_TO_CAPABILITY = {
+    "AUTOMATED": "VE_AVAILABLE",
+    "PARTIAL": "VE_PARTIAL",
+    "REFERENCE_DIAGNOSTIC": "VE_PARTIAL",
+    "EVIDENCE_SCAN": "EXTERNAL_EVIDENCE",
+    "READINESS_ONLY": "EXTERNAL_EVIDENCE",
+    "NOT_IMPLEMENTED": "NOT_AVAILABLE",
+}
+
+CAPABILITY_LEGEND = {
+    "VE_AVAILABLE": "VE exposes this directly; the Run-button script extracts it automatically.",
+    "VE_PARTIAL": "VE can expose it, but the value may be missing/ambiguous per model; it then falls to NOT_CHECKABLE (never a silent pass) and may need a reviewer confirmation.",
+    "EXTERNAL_EVIDENCE": "VE does not produce this; it is supplied as reviewer/official evidence files under sia4010_evidence/.",
+    "NOT_AVAILABLE": "No path in VE (or in the current toolchain) produces this today; it cannot be auto-decided and must never be inferred.",
+}
+
+# Code-grounded caveats that override or annotate the generic mapping.
+_CAPABILITY_OVERRIDES = {
+    "SIA3802_THERMAL_BRIDGES": {
+        "ve_capability": "NOT_AVAILABLE",
+        "ve_capability_note": (
+            "VE exposes no psi/chi thermal-bridge quantity to read; an empty field "
+            "must NOT be read as zero, and the reference-model 0.0 is a placeholder, "
+            "not evidence. Requires a reviewed external thermal-bridge calculation."
+        ),
+    },
+    "SIA3802_DESIGN_POWER_DAYS": {
+        "ve_capability": "NOT_AVAILABLE",
+        "ve_capability_note": (
+            "The prescribed heating/cooling design-day workflow is NOT_IMPLEMENTED; "
+            "annual room peaks must never be substituted for it."
+        ),
+    },
+    "SIA3802_COOLING_EER_SEER": {
+        "ve_capability_note": (
+            "Generator type/EER extractable, but the seasonal SEER equivalence rests "
+            "on SN EN 14825, which is absent from refs/: the SEER verdict stays "
+            "indicative [TO VERIFY], not a proven pass."
+        ),
+    },
+    "SIA3802_HEATING_SCOP": {
+        "ve_capability_note": (
+            "Heat-pump type/SCOP extractable, but the seasonal SCoP equivalence rests "
+            "on SN EN 14825 (absent from refs/): the SCoP verdict stays indicative "
+            "[TO VERIFY], not a proven pass."
+        ),
+    },
+    "SIA3802_LIGHTING_CONTROL": {
+        "ve_capability_note": (
+            "Lighting power/schedules extractable, but SIA 387/4 (control reference) "
+            "is absent from refs/: the control verdict cannot be closed without it."
+        ),
+    },
+}
+
+# The concrete quantities the ApacheSim .aps must yield, per aps-sourced
+# criterion. These are the fields swiss_sia/simulation_results.py::DynamicResults
+# reads through iesve.ResultsReader inside VE -- listed here so the manifest states
+# exactly what the .aps has to expose for each criterion to be decidable.
+_APS_QUANTITIES = {
+    "SIA3802_DYNAMIC_APS_RESULTS": [
+        "readable .aps in the project Vista folder",
+        "results_per_hour / timestep metadata",
+        "room and system variable list via get_variables()",
+        "EPW/weather provenance of the run",
+    ],
+    "SIA3802_HOURLY_TEMPERATURES": [
+        "hourly room temperature series (dry resultant temperature)",
+        "hourly occupancy series",
+        "SIA 180 upper/lower comfort-limit curves",
+        "occupied_hours_above_sia180_upper",
+        "occupied_hours_below_sia180_lower",
+        "annual_comfort_period_complete (full-year coverage flag)",
+    ],
+    "SIA3802_HEATING_COOLING_DEMANDS": [
+        "heating_kwh (annual)",
+        "cooling_kwh (annual)",
+        "coil_heating_kwh / coil_cooling_kwh",
+        "room area for kWh/m2 normalisation",
+        "peak_heating_w / peak_cooling_w where available",
+    ],
+    "SIA3802_DESIGN_POWER_DAYS": [
+        "dedicated design-day .aps result files (NOT annual peaks)",
+        "15-minute load series over the prescribed heating/cooling design days",
+        "traceable weather/setup metadata for the design-day run",
+    ],
+}
+
+
+def classify_data_source(expected_source: str) -> List[str]:
+    """Infer the data source(s) that feed a criterion from the coverage wording.
+
+    Keeps the answer to "static model vs .aps vs reviewer" explicit per row.
+    """
+    text = (expected_source or "").lower()
+    aps = "aps" in text or "vista" in text or "resultsreader" in text
+    static = ("model api" in text or "cdb" in text or "construction" in text
+              or "opening" in text or "air-exchange" in text or "apache systems" in text
+              or "plant data" in text or "templates" in text or "shading" in text
+              or "profiles" in text or "system data" in text)
+    reviewer = ("reviewer" in text or "csv" in text or "official" in text
+                or "manufacturer" in text or "authority" in text
+                or "evidence" in text or "sub-commission" in text
+                or "decision" in text or "schedule" in text or "export" in text
+                or "note" in text or "data sheet" in text or "metadata" in text)
+    project = "project settings" in text or "weather" in text or "location" in text
+    sources: List[str] = []
+    if project:
+        sources.append("ve_project_settings")
+    if aps:
+        sources.append("aps_simulation_results")
+    if static:
+        sources.append("ve_static_model")
+    if reviewer:
+        sources.append("reviewer_or_external_evidence")
+    return sources or ["ve_static_model"]
+
+
+def _key_match(cov: Dict[str, Any], req: Dict[str, Any]) -> bool:
+    """Loose match between a coverage input and a verdict-bearing requirement."""
+    cov_crit = (cov.get("criterion") or "").lower()
+    req_crit = (req.get("criterion") or "").lower()
+    if not cov_crit or not req_crit:
+        return False
+    tokens = ("u-value", "uw", "solar factor", "transmittance", "frame",
+              "infiltration", "eer", "scop", "ventilation control", "dynamic")
+    for token in tokens:
+        if token in cov_crit and token in req_crit:
+            return True
+    return cov_crit == req_crit
+
+
+def build_manifest() -> Dict[str, Any]:
+    """Return the full static compliance-criteria manifest (runtime_status unset)."""
+    requirement_by_domain: Dict[Any, List[Dict[str, Any]]] = {}
+    for req in config.SIA_COMPLIANCE_REQUIREMENT_MATRIX:
+        requirement_by_domain.setdefault(req.get("domain"), []).append(req)
+
+    criteria: List[Dict[str, Any]] = []
+    for cov in config.SIA_DATA_COVERAGE_MATRIX:
+        automation = cov.get("automation", "PARTIAL")
+        capability = _AUTOMATION_TO_CAPABILITY.get(automation, "VE_PARTIAL")
+        note = ""
+        override = _CAPABILITY_OVERRIDES.get(cov["id"])
+        if override:
+            capability = override.get("ve_capability", capability)
+            note = override.get("ve_capability_note", "")
+
+        thresholds: Dict[str, Any] = {}
+        for req in requirement_by_domain.get(cov.get("domain"), []):
+            if _key_match(cov, req):
+                thresholds = {
+                    "limit": req.get("limit"),
+                    "target": req.get("target"),
+                    "unit": req.get("unit"),
+                }
+                break
+
+        criteria.append({
+            "id": cov["id"],
+            "standard": cov.get("standard"),
+            "domain": cov.get("domain"),
+            "criterion": cov.get("criterion"),
+            "expected_value": cov.get("expected_value"),
+            "article_source": cov.get("source"),
+            "thresholds": thresholds,
+            "data_needed": cov.get("data_needed"),
+            "expected_source": cov.get("expected_source"),
+            "data_source": classify_data_source(cov.get("expected_source")),
+            "aps_quantities": _APS_QUANTITIES.get(cov["id"], []),
+            "automation": automation,
+            "ve_capability": capability,
+            "ve_capability_note": note,
+            "coverage_key": cov.get("coverage_key", ""),
+            "preferred_format": cov.get("preferred_format"),
+            "destination": cov.get("destination"),
+            "owner": cov.get("owner"),
+            "runtime_status": "TO_BE_EVALUATED",
+            "runtime_evidence": "",
+            "next_action": cov.get("next_action"),
+        })
+
+    return {
+        "meta": {
+            "title": "Client SIA 380/2 compliance criteria -- machine-readable manifest",
+            "purpose": (
+                "Single structured checklist to evaluate a client VE model + .aps "
+                "against SIA 380/2:2022. runtime_status is filled per model by "
+                "swiss_sia/compliance_criteria_evaluator.py. Missing evidence never "
+                "becomes PASS."
+            ),
+            "generated_from": (
+                "swiss_sia/config.py: SIA_COMPLIANCE_REQUIREMENT_MATRIX + "
+                "SIA_DATA_COVERAGE_MATRIX (regulatory values sourced there, not here)"
+            ),
+            "builder": "swiss_sia/compliance_criteria.py::build_manifest",
+            "standard": "SIA 380/2:2022",
+            "verdict_logic": {
+                "reference": "swiss_sia/compliance_verdict.py",
+                "compliant_requires_all": [
+                    "at least one room analysed",
+                    "no determined blocking (CRITICAL/HIGH) finding in the six domains",
+                    "the reviewed global comparison does not contradict acceptance (project <= reference)",
+                    "no domain left NOT_DETERMINED (no MISSING / NOT_CHECKABLE / placeholder)",
+                    "the decisive global comparison is present and REVIEWED_RESULT_AVAILABLE",
+                ],
+                "note": (
+                    "Component criteria are diagnostics; they do not decide compliance. "
+                    "SIA 380/2 decides on the global project/reference comparison "
+                    "(the decisive_gate below)."
+                ),
+            },
+            "runtime_status_legend": {
+                "TO_BE_EVALUATED": "Static template value; not yet run against a model.",
+                "OK": "Evidence present from the model/.aps; no blocking finding.",
+                "PARTIAL": "Some evidence present; at least one input still missing.",
+                "NOT_OK": "A determined blocking finding (value out of range / contradiction).",
+                "NOT_CHECKABLE": "Required model/.aps evidence missing or placeholder; never a pass.",
+                "NOT_AVAILABLE_IN_VE": "VE structurally cannot produce this; not auto-decidable.",
+                "NEEDS_REVIEWER_EVIDENCE": "Requires reviewer/official evidence files.",
+            },
+            "data_source_legend": {
+                "ve_project_settings": "VE project location/altitude/weather settings.",
+                "ve_static_model": "VE static model via the model/CDB API (geometry, constructions, systems).",
+                "aps_simulation_results": "ApacheSim .aps/Vista results via ResultsReader (dynamic needs, temperatures, energy). The .aps is the required source for every dynamic criterion; it is read at runtime inside VE (iesve.ResultsReader, binary format), by swiss_sia/simulation_results.py, and its quantities fill each aps criterion's runtime_status. See each aps criterion's aps_quantities.",
+                "reviewer_or_external_evidence": "Reviewer CSV or official/manufacturer files under sia4010_evidence/.",
+            },
+            "ve_capability_legend": CAPABILITY_LEGEND,
+        },
+        "decisive_gate": {
+            "id": "SIA3802_GLOBAL_REFERENCE_COMPARISON",
+            "article": "SIA 380/2:2022 §7.2.5.2",
+            "criterion": "Project global energy-expenditure index <= reference-project index",
+            "data_source": ["reviewer_or_external_evidence"],
+            "ve_capability": "EXTERNAL_EVIDENCE",
+            "ve_capability_note": (
+                "Not computed automatically (the reference project is not simulated "
+                "client-side). Provide the accepted reviewer record: see "
+                "docs/project/GUIDE_COMPARAISON_GLOBALE_SIA3802.md and its CSV template."
+            ),
+            "runtime_status": "TO_BE_EVALUATED",
+            "runtime_evidence": "",
+        },
+        "criteria": criteria,
+    }

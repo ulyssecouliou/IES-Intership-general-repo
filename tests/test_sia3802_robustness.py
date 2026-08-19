@@ -203,7 +203,27 @@ class Sia3802GlobalReferenceComparisonRobustnessTests(unittest.TestCase):
         )
 
     def test_valid_reviewed_comparison_is_still_accepted(self):
-        """Success path: a complete reviewed comparison is unchanged."""
+        """Success path: a complete reviewed comparison in the compliant sense
+        (project value at or below the reference) is unchanged."""
+        results = self._run(
+            {
+                "global_reference_comparison": {
+                    "accepted": True,
+                    "project_value_numeric": 40.0,
+                    "reference_value_numeric": 42.0,
+                    "source_document": "Reviewed calc.pdf",
+                }
+            }
+        )
+        comparison = results["global_reference_comparison"]
+        self.assertEqual(comparison["status"], "REVIEWED_RESULT_AVAILABLE")
+        self.assertEqual(comparison["project_value"], 40.0)
+
+    def test_accepted_but_project_exceeds_reference_is_a_contradiction(self):
+        """Acceptance must never override the figures. When an accepted
+        comparison reports a project value ABOVE the reference (SIA 380/2:2022
+        7.2.5.2 requires project <= reference), the gate must NOT read as a
+        reviewed pass and must raise a discrepancy blocker."""
         results = self._run(
             {
                 "global_reference_comparison": {
@@ -215,8 +235,15 @@ class Sia3802GlobalReferenceComparisonRobustnessTests(unittest.TestCase):
             }
         )
         comparison = results["global_reference_comparison"]
-        self.assertEqual(comparison["status"], "REVIEWED_RESULT_AVAILABLE")
-        self.assertEqual(comparison["project_value"], 42.0)
+        self.assertEqual(
+            comparison["status"], "REVIEWED_RESULT_CONTRADICTS_ACCEPTANCE"
+        )
+        self.assertTrue(
+            any(
+                "GLOBAL_REFERENCE_DISCREPANCY" in str(alert.rule)
+                for alert in results["alerts"]
+            )
+        )
 
     def test_non_dict_comparison_value_degrades_to_not_checkable(self):
         """Invalid data: a string where a comparison dict is expected."""

@@ -1,14 +1,13 @@
 # -*- coding: utf-8 -*-
-u"""Tests des parties PURES de `scripts/construire_test4_dans_ve.py`.
+u"""Tests of the PURE parts of `scripts/construire_test4_dans_ve.py`.
 
-Ce script construit dans VE, donc l'essentiel n'est pas testable ici. Le sont
-les trois choses qui pourraient tromper :
+This script builds in VE, so most of it is not testable here. What is:
 
-* les **paramètres** doivent tous venir de la spécification, et le dire ;
-* la **construction** doit refuser, et pour la bonne raison — depuis le
-  2026-08-07 ce n'est plus « signatures inconnues » mais « ApacheSystems
-  modélise des rendements, pas des composants » ;
-* le script ne doit jamais se présenter comme produisant un cas de validation.
+* the **parameters** must all come from the specification, and say so;
+* the **construction** must refuse, and for the right reason — since
+  2026-08-07 it is no longer 'unknown signatures' but 'ApacheSystems
+  models efficiencies, not components';
+* the script must never present itself as producing a validation case.
 """
 
 import os
@@ -19,23 +18,23 @@ from scripts import construire_test4_dans_ve as construction
 
 
 # --------------------------------------------------------------------------
-# Le refus de construire sans savoir
+# The refusal to build without knowing
 # --------------------------------------------------------------------------
 
 def test_construire_refuse_parce_quapachesystems_ne_convient_pas():
-    """LE test central, et sa raison a CHANGE le 2026-08-07.
+    """THE central test, and its reason CHANGED on 2026-08-07.
 
-    Les signatures sont desormais connues. Ce qui bloque n est plus
-    l ignorance : c est qu ApacheSystems modelise des RENDEMENTS saisonniers,
-    pas des composants. Construire quand meme produirait un systeme qui
-    simule, qui donne des nombres, et qui ne represente pas le test."""
+    Signatures are now known. What blocks is no longer
+    ignorance: it is that ApacheSystems models seasonal EFFICIENCIES,
+    not components. Building anyway would produce a system that
+    simulates, gives numbers, and does not represent the test."""
     with pytest.raises(construction.ConstructionRefusee,
                        match='ne peut pas représenter'):
         construction.construire()
 
 
 def test_le_refus_nomme_ce_qui_est_inexprimable():
-    """Un refus sans issue n aide personne : il doit dire quoi faire."""
+    """A refusal without a way forward helps no one: it must say what to do."""
     with pytest.raises(construction.ConstructionRefusee) as capture:
         construction.construire()
     message = u'%s' % capture.value
@@ -46,7 +45,7 @@ def test_le_refus_nomme_ce_qui_est_inexprimable():
 
 
 def test_les_cles_des_setters_viennent_du_releve():
-    """Relevees dans les docstrings d une VE reelle, pas supposees."""
+    """Recorded in the docstrings of a real VE, not assumed."""
     assert 'SFP' in construction.CLES_DES_SETTERS['set_auxiliary_energy']
     assert 'SEER' in construction.CLES_DES_SETTERS['set_cooling']
     assert 'SCoP' in construction.CLES_DES_SETTERS['set_heating']
@@ -55,8 +54,8 @@ def test_les_cles_des_setters_viennent_du_releve():
 
 
 def test_aucune_cle_nexprime_une_puissance_de_batterie():
-    """`gen_size` dimensionne le GENERATEUR, pas la batterie de traitement
-    d air. La confusion ferait construire un systeme plausible et faux."""
+    """`gen_size` sizes the GENERATOR, not the air-handling battery.
+    The confusion would build a plausible and wrong system."""
     toutes = set()
     for cles in construction.CLES_DES_SETTERS.values():
         toutes.update(cles)
@@ -71,12 +70,12 @@ def test_chaque_exigence_inexprimable_est_justifiee():
 
 
 # --------------------------------------------------------------------------
-# Les paramètres viennent tous de la spécification
+# Parameters all come from the specification
 # --------------------------------------------------------------------------
 
 def test_chaque_parametre_cite_sa_source():
-    """Règle 3 : chaque valeur cite son origine. Un paramètre sans source
-    finit par être pris pour un choix d'implémentation."""
+    """Rule 3: each value cites its origin. A parameter without a source
+    ends up being taken for an implementation choice."""
     for cle, entree in construction.PARAMETRES.items():
         assert entree['source'], cle
         assert 'Spezifikation_Test4.pdf' in entree['source'], cle
@@ -98,24 +97,24 @@ def test_aucun_parametre_nest_vide():
     ('occupants', 55),
 ])
 def test_les_valeurs_sont_celles_de_la_spec(cle, attendu):
-    """Recopiées telles quelles : ni arrondies, ni converties, ni complétées."""
+    """Copied as-is: neither rounded, nor converted, nor filled in."""
     assert construction.PARAMETRES[cle]['valeur'] == attendu
 
 
 def test_le_recuperateur_est_sans_echange_dhumidite():
-    """Détail décisif : un échangeur à plaques SANS échange d'humidité ne
-    produit aucune récupération latente. Le confondre avec un roue
-    enthalpique changerait le résultat de « Wärmezufuhr WRG latent »."""
+    """Decisive detail: a plate exchanger WITHOUT moisture exchange does
+    not produce any latent recovery. Confusing it with an enthalpy wheel
+    would change the result of 'Wärmezufuhr WRG latent'."""
     assert 'SANS' in construction.PARAMETRES['recuperateur_type']['valeur']
 
 
 # --------------------------------------------------------------------------
-# Ce modèle n'est pas un cas de validation
+# This model is not a validation case
 # --------------------------------------------------------------------------
 
 def test_les_entrees_manquantes_sont_nommees():
-    """Les taire laisserait croire qu'un résultat issu de ce modèle vaut
-    quelque chose au sens SIA."""
+    """Silencing them would make one believe that a result from this model means
+    something in the SIA sense."""
     assert set(construction.MANQUANTS) == {'climat', 'constructions', 'usage'}
     for motif in construction.MANQUANTS.values():
         assert motif
@@ -128,18 +127,18 @@ def test_le_climat_manquant_est_celui_de_la_norme():
 
 def test_le_module_annonce_quil_ne_valide_pas():
     doc = construction.__doc__
-    assert 'PAS VALIDER' in doc or 'ne doit être présenté' in doc
+    assert 'NOT VALIDATING' in doc or 'must be presented as a SIA candidate' in doc
 
 
 def test_le_rapport_va_sous_outputs():
-    """Jamais dans refs/ : ce n'est pas un référentiel figé."""
+    """Never in refs/: it is not a frozen reference."""
     normalise = construction.CHEMIN_RAPPORT.replace(os.sep, '/')
     assert '/outputs/' in normalise
     assert '/refs/' not in normalise
 
 
 # --------------------------------------------------------------------------
-# Reconnaissance hors VE
+# Recognition outside VE
 # --------------------------------------------------------------------------
 
 def test_hors_ve_rien_nest_releve(monkeypatch):
@@ -150,8 +149,8 @@ def test_hors_ve_rien_nest_releve(monkeypatch):
 
 
 def test_le_rapport_porte_les_parametres_et_les_manques(monkeypatch):
-    """Le relevé doit être lisible seul : les signatures d'un côté, ce qu'on
-    veut leur appliquer de l'autre."""
+    """The survey must be readable on its own: signatures on one side, what we
+    want to apply to them on the other."""
     monkeypatch.setattr(construction, '_dans_ve', lambda: False)
     rapport = construction.reconnaitre()
     assert set(rapport['parametres_de_la_spec']) == set(construction.PARAMETRES)
@@ -165,17 +164,17 @@ def test_main_hors_ve_rend_un_entier(monkeypatch):
 
 
 def test_main_avec_construire_refuse_proprement(monkeypatch):
-    """Depuis le bouton Run, une exception n'affiche qu'une trace."""
+    """Since the Run button, an exception only displays a trace."""
     monkeypatch.setattr(construction, '_dans_ve', lambda: False)
     assert construction.main(('--construire',)) == 1
 
 
 # --------------------------------------------------------------------------
-# Les setters relevés couvrent ce qu'on veut configurer
+# The surveyed setters cover what we want to configure
 # --------------------------------------------------------------------------
 
 def test_les_setters_releves_existent_dans_lapi():
-    """Écrit contre la surface introspectée, pas contre la documentation."""
+    """Written against the introspected surface, not against the documentation."""
     import io
     import json
     chemin = os.path.join(
@@ -191,9 +190,9 @@ def test_les_setters_releves_existent_dans_lapi():
 
 
 def test_le_reseau_apachehvac_nest_pas_scriptable():
-    """Constat mesuré sur la surface d'API : HVACNetwork n'expose aucune
-    methode de creation. Si une version future en ajoutait une, ce test doit
-    echouer pour qu'on en profite."""
+    """Measured finding on the API surface: HVACNetwork exposes no
+    creation method. If a future version added one, this test must
+    fail so we can take advantage."""
     import io
     import json
     chemin = os.path.join(
@@ -204,6 +203,6 @@ def test_le_reseau_apachehvac_nest_pas_scriptable():
     membres = surface['symbols']['HVACNetwork']['members']
     assert not [m for m in membres
                 if m.startswith(('create_', 'add_', 'new_', 'remove_'))]
-    # Ce qui EXISTE, et qui ouvre la voie du .asp construit a la main.
+    # What EXISTS, and which opens the path to the manually built .asp.
     assert 'load_network' in membres
     assert 'path' in membres

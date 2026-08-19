@@ -1,22 +1,23 @@
 # -*- coding: utf-8 -*-
-u"""Génère les matrices de traçabilité des tests SIA à bandes (2 à 6).
+u"""Generates the traceability matrices for band-based SIA tests (2 to 6).
 
-POURQUOI ELLES SONT GÉNÉRÉES ET NON RÉDIGÉES. Une matrice de traçabilité est
-un document de contrôle : elle affirme que telle clause est couverte par tel
-code et tel test. Rédigée à la main, elle se périme au premier changement du
-dépôt — et une matrice périmée est pire qu'absente, puisqu'elle affirme une
-couverture qui n'existe plus.
+WHY THEY ARE GENERATED AND NOT HAND-WRITTEN. A traceability matrix is a
+control document: it asserts that a given clause is covered by a given piece
+of code and a given test. Written by hand, it becomes stale at the first
+repository change — and a stale matrix is worse than none, since it asserts
+coverage that no longer exists.
 
-Tout ce qui est vérifiable est donc LU : les grandeurs et les bandes viennent
-des référentiels figés, l'état des liaisons vient de l'adaptateur, l'existence
-des fichiers de test est contrôlée sur le disque. Le jugement normatif — ce
-que la norme exige, ce qui reste à prouver — est écrit ici, en clair, et daté.
+Everything that is verifiable is therefore READ: quantities and bands come from
+the frozen reference datasets, the linkage status comes from the adapter, the
+existence of test files is checked on disk. The normative judgement — what the
+standard requires, what remains to be proven — is written here, explicitly,
+and dated.
 
-CE QUE CE SCRIPT NE FAIT PAS. Il ne signe rien. La règle 5 du projet demande
-une signature `qa-auditor` indépendante, et un script qui se signerait
-lui-même ne vaudrait rien.
+WHAT THIS SCRIPT DOES NOT DO. It does not sign anything. Project rule 5
+requires an independent `qa-auditor` signature, and a script that signed
+itself would be worthless.
 
-Usage :
+Usage:
     python scripts/build_traceability_matrix.py [numero...] [--ecrire]
 """
 
@@ -39,9 +40,9 @@ _SORTIE = os.path.join(_RACINE, 'traceability')
 
 TESTS = (2, 3, 4, 5, 6)
 
-#: Ancrage normatif de chaque test, relevé dans les documents officiels. Le
-#: numéro de page renvoie au PDF cité ; l'énoncé des critères est repris de la
-#: section « Testkriterien » de la spécification, quand elle existe.
+#: Normative anchor for each test, read from the official documents. The page
+#: number refers to the cited PDF; the criterion statement is taken from the
+#: « Testkriterien » section of the specification, where it exists.
 ANCRAGE = {
     2: {
         'spec': 'SIA_4010_geteilter_Link/Test2/Spezifikation_Test2.pdf',
@@ -74,11 +75,11 @@ ANCRAGE = {
         'criteres_dans_la_spec': True,
         'batiment': u'Bâtiment exemple',
         'climat': u'SIA 2028 DRY normal, Zürich Kloten',
-        # « contact 5A-5C, vapeur 5D » était écrit ici. L'extraction du PDF
-        # (build_reseau_ventilation_reference) montre que le tableau porte
-        # QUATRE colonnes de variantes pour DEUX cellules fusionnées : le
-        # point de partage n'est pas dans la couche texte. On décrit donc les
-        # deux types sans leur affecter de variantes.
+        # « contact 5A-5C, vapeur 5D » was written here. PDF extraction
+        # (build_reseau_ventilation_reference) shows that the table has FOUR
+        # variant columns for TWO merged cells: the split point is not in the
+        # text layer. The two types are therefore described without assigning
+        # variants to them.
         'objet': u'ventilation mécanique : batteries chaude et froide, '
                  u'récupération rotative, humidification par contact ou par '
                  u'vapeur selon la variante (répartition 5A-5D à confirmer)',
@@ -88,18 +89,18 @@ ANCRAGE = {
         'criteres_dans_la_spec': False,
         'batiment': u'Bâtiment exemple',
         'climat': u'SIA 2028 DRY normal, Zürich Kloten',
-        # « variantes de récupération de chaleur » était écrit ici. Le PDF
-        # décrit UNE configuration — boucle à eau glycolée — et le référentiel
-        # figé ne porte qu'un cas, « (ensemble) ». Annoncer des variantes
-        # ferait chercher des cas qui n'existent pas.
+        # « variantes de récupération de chaleur » was written here. The PDF
+        # describes ONE configuration — glycol-water loop — and the frozen
+        # reference dataset has only one case, « (ensemble) ». Announcing
+        # variants would cause a search for cases that do not exist.
         'objet': u'ventilation mécanique à trois étages, récupération par '
                  u'boucle à eau glycolée (« Kreislaufverbund »), configuration '
                  u'unique',
     },
 }
 
-#: Fichiers de code et de test attendus. Leur existence est CONTRÔLÉE : une
-#: matrice qui citerait un fichier absent serait un faux témoignage.
+#: Expected code and test files. Their existence is CHECKED: a matrix that
+#: cited a missing file would be a false testimony.
 CHAINE = {
     'moteur (somme annuelle)': 'engine/sia_bandes_engine.py',
     'moteur (distribution)': 'engine/sia_distributions_engine.py',
@@ -116,26 +117,26 @@ CHAINE = {
 
 
 def _existe(chemin_relatif):
-    u"""Vrai si un fichier du dépôt existe.
+    u"""True if a repository file exists.
 
     Args:
-        chemin_relatif: Chemin relatif à la racine.
+        chemin_relatif: Path relative to the root.
 
     Returns:
-        bool: Présence sur le disque.
+        bool: Presence on disk.
     """
     return os.path.exists(os.path.join(_RACINE, chemin_relatif))
 
 
 def _etat_liaison(numero_test, libelle):
-    u"""État d'une grandeur dans la chaîne d'extraction.
+    u"""Status of a quantity in the extraction chain.
 
     Args:
-        numero_test: Numéro du test SIA.
-        libelle: Libellé allemand de la grandeur.
+        numero_test: SIA test number.
+        libelle: German label of the quantity.
 
     Returns:
-        str: Description, en une ligne de tableau.
+        str: Description, as one table row.
     """
     liaison = adaptateur.LIAISONS.get(numero_test, {}).get(libelle, {})
     if liaison.get('aps_varname'):
@@ -154,14 +155,14 @@ def _etat_liaison(numero_test, libelle):
 
 
 def _tableau_grandeurs(numero_test, reference):
-    u"""Lignes du tableau grandeur → bande → extraction.
+    u"""Rows for the quantity → band → extraction table.
 
     Args:
-        numero_test: Numéro du test SIA.
-        reference: Référentiel des sommes annuelles.
+        numero_test: SIA test number.
+        reference: Annual-sum reference dataset.
 
     Returns:
-        list[str]: Lignes Markdown.
+        list[str]: Markdown rows.
     """
     lignes = [u'| Grandeur (libellé du classeur) | Unité | Cas | Chaîne VE |',
               u'|---|---|---|---|']
@@ -175,13 +176,13 @@ def _tableau_grandeurs(numero_test, reference):
 
 
 def _tableau_distributions(distributions):
-    u"""Lignes du tableau des distributions.
+    u"""Rows for the distributions table.
 
     Args:
-        distributions: Référentiel des distributions, ou `None`.
+        distributions: Distribution reference dataset, or `None`.
 
     Returns:
-        list[str]: Lignes Markdown.
+        list[str]: Markdown rows.
     """
     if distributions is None:
         return []
@@ -195,10 +196,10 @@ def _tableau_distributions(distributions):
 
 
 def _tableau_chaine():
-    u"""Lignes du tableau de la chaîne logicielle, existence contrôlée.
+    u"""Rows for the software chain table, existence checked.
 
     Returns:
-        list[str]: Lignes Markdown.
+        list[str]: Markdown rows.
     """
     lignes = [u'| Rôle | Fichier | Présent |', u'|---|---|---|']
     for role, chemin in sorted(CHAINE.items()):
@@ -208,16 +209,16 @@ def _tableau_chaine():
 
 
 def construire(numero_test):
-    u"""Construit la matrice d'un test.
+    u"""Builds the traceability matrix for a test.
 
     Args:
-        numero_test: Numéro du test SIA.
+        numero_test: SIA test number.
 
     Returns:
-        str: Document Markdown.
+        str: Markdown document.
 
     Raises:
-        ValueError: Si le test n'est pas un test à bandes.
+        ValueError: If the test is not a band test.
     """
     if numero_test not in TESTS:
         raise ValueError(
@@ -283,16 +284,15 @@ def construire(numero_test):
         lignes.append(u'La spécification énonce **deux** critères, dans sa '
                       u'section *Testkriterien*.')
     else:
-        # CE TEXTE DISAIT LE CONTRAIRE, ET IL ÉTAIT FAUX. Il affirmait que le
-        # classeur ne porte « ni classes de fréquence ni feuille de
-        # distribution », donc que la somme annuelle est le seul critère,
-        # « un constat, pas une lacune ». Vérifié le 2026-08-10 en ouvrant les
-        # classeurs : les tests 4 et 6 portent une feuille
-        # `Haeufigkeitskassen` — sans le « l » de `Haeufigkeitsklassen », une
-        # faute de frappe des fichiers officiels prise pour une absence — et
-        # une section « Stündliche Häufigkeitsverteilung » dans leur
-        # `Zusammenfassung`. La clarification de l'autorité du même jour dit
-        # de même.
+        # THIS TEXT SAID THE OPPOSITE, AND IT WAS WRONG. It claimed that the
+        # workbook carried "neither frequency classes nor a distribution
+        # sheet", therefore that the annual sum was the only criterion,
+        # "an observation, not a gap". Verified on 2026-08-10 by opening the
+        # workbooks: tests 4 and 6 carry a `Haeufigkeitskassen` sheet —
+        # without the « l » of `Haeufigkeitsklassen`, a typo in the official
+        # files taken for an absence — and a « Stündliche
+        # Häufigkeitsverteilung » section in their `Zusammenfassung`. The
+        # authority clarification of the same day says the same.
         lignes.append(u'La spécification ne comporte **aucune** section '
                       u'*Testkriterien* : SIA 4010:2023 §4.4 délègue au '
                       u'classeur d\'évaluation.')
@@ -383,16 +383,16 @@ def construire(numero_test):
 
 
 def _ce_qui_manque(numero_test, distributions, resolues, declarees):
-    u"""Énumère ce qui empêche la signature.
+    u"""Lists what prevents signing.
 
     Args:
-        numero_test: Numéro du test SIA.
-        distributions: Référentiel des distributions, ou `None`.
-        resolues: Liaisons résolues.
-        declarees: Liaisons déclarées.
+        numero_test: SIA test number.
+        distributions: Distribution reference dataset, or `None`.
+        resolues: Resolved linkages.
+        declarees: Declared linkages.
 
     Returns:
-        list[str]: Lignes Markdown.
+        list[str]: Markdown rows.
     """
     lignes = []
     lignes.append(u'1. **Aucune valeur candidate.** %d liaison(s) sur %d sont '
@@ -421,14 +421,14 @@ def _ce_qui_manque(numero_test, distributions, resolues, declarees):
 
 
 # ---------------------------------------------------------------------------
-# Tests 1 et 7 — moteurs et formes de référence propres
+# Tests 1 and 7 — dedicated engines and reference shapes
 # ---------------------------------------------------------------------------
 #
-# Ils ne passent pas par `sia_bandes_engine` et leurs résultats n'ont pas la
-# même forme : le Test 1 rend `cas` indexé par « grandeur/cas » et ne porte ni
-# `grandeurs` ni `critere` ; le Test 7 ajoute `source_irradiance` et
-# `grandeurs_verrouillees`. Les forcer dans le gabarit des tests 2 à 6
-# produirait des matrices qui parlent de champs inexistants.
+# They do not go through `sia_bandes_engine` and their results do not have the
+# same shape: Test 1 returns `cas` indexed by « quantity/case » and carries
+# neither `grandeurs` nor `critere`; Test 7 adds `source_irradiance` and
+# `grandeurs_verrouillees`. Forcing them into the Test 2–6 template would
+# produce matrices that reference non-existent fields.
 
 TESTS_DEDIES = (1, 7)
 
@@ -452,19 +452,19 @@ ANCRAGE_DEDIE = {
 
 
 def _tableau_cas_test1(resultat):
-    u"""Lignes du tableau des cas du Test 1.
+    u"""Rows for the Test 1 case table.
 
-    La colonne qui compte est `type_controle` : seule une minorité d'entrées
-    porte le critère pass/fail, les autres sont informatives. Une matrice qui
-    les présenterait à égalité laisserait croire que toutes décident du
-    verdict. Leur nombre est COMPTÉ, jamais écrit : la première rédaction
-    annonçait « un seul cas » là où le moteur en rend trois.
+    The column that matters is `type_controle`: only a minority of entries
+    carry the pass/fail criterion, the others are informative. A matrix that
+    presented them equally would suggest that all of them decide the verdict.
+    Their count is COMPUTED, never written: the first draft announced "a single
+    case" where the engine returns three.
 
     Args:
-        resultat: Ce que rend `evaluer_test1`.
+        resultat: What `evaluer_test1` returns.
 
     Returns:
-        list[str]: Lignes Markdown.
+        list[str]: Markdown rows.
     """
     lignes = [u'| Grandeur | Cas | Nature du contrôle | Périodes | Évaluées |',
               u'|---|---|---|---|---|']
@@ -483,13 +483,13 @@ def _tableau_cas_test1(resultat):
 
 
 def _tableau_grandeurs_test7(resultat):
-    u"""Lignes du tableau des grandeurs du Test 7.
+    u"""Rows for the Test 7 quantities table.
 
     Args:
-        resultat: Ce que rend `evaluer_test7`.
+        resultat: What `evaluer_test7` returns.
 
     Returns:
-        list[str]: Lignes Markdown.
+        list[str]: Markdown rows.
     """
     lignes = [u'| Grandeur | Unité | Statut | Candidat |', u'|---|---|---|---|']
     for grandeur in resultat.get('grandeurs') or []:
@@ -503,16 +503,16 @@ def _tableau_grandeurs_test7(resultat):
 
 
 def construire_dedie(numero_test):
-    u"""Construit la matrice d'un test à moteur propre (1 ou 7).
+    u"""Builds the traceability matrix for a test with a dedicated engine (1 or 7).
 
     Args:
-        numero_test: 1 ou 7.
+        numero_test: 1 or 7.
 
     Returns:
-        str: Document Markdown.
+        str: Markdown document.
 
     Raises:
-        ValueError: Si le test n'a pas de moteur dédié.
+        ValueError: If the test has no dedicated engine.
     """
     if numero_test not in TESTS_DEDIES:
         raise ValueError(
@@ -578,8 +578,8 @@ def construire_dedie(numero_test):
     if numero_test == 1:
         lignes.append(u'## 3. Cas et nature du contrôle')
         lignes.append(u'')
-        # Ce compte était ÉCRIT à la main — et faux : le moteur rend trois
-        # entrées porteuses, pas une. On le calcule, comme tout le reste.
+        # This count was WRITTEN by hand — and wrong: the engine returns three
+        # carrying entries, not one. We compute it, like everything else.
         porteuses = [entree for entree in resultat['cas'].values()
                      if entree.get('type_controle') == 'critere_pass_fail']
         cas_porteurs = sorted(set(e.get('cas') for e in porteuses))
@@ -621,8 +621,8 @@ def construire_dedie(numero_test):
         u'simulé dans IESVE.',
     ])
     if numero_test == 1:
-        # Quel cas porte le critère est LU dans le moteur : l'écrire ferait
-        # de la matrice une affirmation, non un relevé.
+        # Which case carries the criterion is READ from the engine: writing it
+        # would make the matrix an assertion, not a record.
         lignes.append(
             u'3. **Les cas diagnostiques 1A à 1E sont hors de portée** : ils '
             u'exigent le climat de Zürich-Kloten, absent du dépôt. Or le '
@@ -654,13 +654,13 @@ def construire_dedie(numero_test):
 
 
 def _tableau_chaine_dediee(numero_test):
-    u"""Chaîne logicielle d'un test à moteur propre, existence contrôlée.
+    u"""Software chain for a test with a dedicated engine, existence checked.
 
     Args:
-        numero_test: 1 ou 7.
+        numero_test: 1 or 7.
 
     Returns:
-        list[str]: Lignes Markdown.
+        list[str]: Markdown rows.
     """
     fichiers = {
         u'moteur': 'engine/test%d_engine.py' % numero_test,
@@ -681,25 +681,26 @@ def _tableau_chaine_dediee(numero_test):
     return lignes
 
 
-#: Marque qui reconnaît nos propres sorties — et donc ce qu'il est permis
-#: d'écraser. C'est la LIGNE DE SIGNATURE, seule chaîne écrite à l'identique
-#: par `construire` et par `construire_dedie` : la bannière d'en-tête, elle,
-#: est formulée différemment dans les deux, et un marqueur pris là prenait les
-#: tests 2 à 6 pour des rédactions à la main.
+#: Marker that identifies our own outputs — and therefore what may be
+#: overwritten. It is the SIGNATURE LINE, the only string written identically
+#: by both `construire` and `construire_dedie`: the header banner is worded
+#: differently in each, and a marker taken from there was classifying tests 2
+#: to 6 as hand-written documents.
 MARQUE_GENEREE = u'| Producteur | `build_traceability_matrix.py` (généré) |'
 
 
 def chemin_de_sortie(numero_test):
-    u"""Où écrire la matrice d'un test, sans jamais écraser une rédaction.
+    u"""Where to write the matrix for a test, without ever overwriting a draft.
 
-    Le Test 7 porte une matrice RÉDIGÉE à la main : trois cents lignes d'audit
-    indépendant, renvoyées non signées. Un générateur ne sait pas produire ce
-    jugement, et l'écraser le détruirait sans trace. La règle est donc
-    générale : **si le fichier attendu n'a pas été écrit par ce script**, le
-    relevé va dans un fichier voisin et la rédaction reste intacte.
+    Test 7 carries a HAND-WRITTEN matrix: three hundred lines of independent
+    audit, returned unsigned. A generator cannot produce that judgement, and
+    overwriting it would destroy it without trace. The rule is therefore
+    general: **if the expected file was not written by this script**, the
+    generated content goes into a neighbouring file and the draft remains
+    intact.
 
     Args:
-        numero_test: Numéro du test SIA.
+        numero_test: SIA test number.
 
     Returns:
         tuple: `(chemin, une_redaction_existe)`.
@@ -716,19 +717,19 @@ def chemin_de_sortie(numero_test):
 
 
 def main(arguments):
-    u"""Point d'entrée en ligne de commande.
+    u"""Command-line entry point.
 
     Args:
-        arguments: Numéros de tests, et `--ecrire`.
+        arguments: Test numbers, and `--ecrire`.
 
     Returns:
-        int: 0 si tout s'est bien passé.
+        int: 0 if everything went well.
     """
     demandes = [int(a) for a in arguments if a.isdigit()]
     for numero in (demandes or (list(TESTS) + list(TESTS_DEDIES))):
-        # Les tests 1 et 7 ont leurs propres moteurs et formes de référence :
-        # les forcer dans le gabarit des tests à bandes produirait des
-        # matrices qui parlent de champs inexistants.
+        # Tests 1 and 7 have their own engines and reference shapes: forcing
+        # them into the band-test template would produce matrices that reference
+        # non-existent fields.
         document = (construire_dedie(numero) if numero in TESTS_DEDIES
                     else construire(numero))
         chemin, redigee = chemin_de_sortie(numero)

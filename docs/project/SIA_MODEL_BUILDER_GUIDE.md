@@ -149,6 +149,13 @@ doit donc jamais être présenté comme un modèle Test 2A exécuté.
 Pour qualifier séparément le graphe de profils et les setters CDB du store dans
 un projet jetable :
 
+La voie recommandée est désormais le script unique
+`Run_VE_SIA4010_Test2A_Qualification_One_Click.py`. Il enchaîne les étapes
+ci-dessous, calibre aussi une couche thermique équivalente sur le facteur U ISO
+du vitrage de base, puis affecte temporairement ce même candidat à une baie et
+vérifie la restauration de l'affectation initiale. Aucun PASS de cette chaîne
+ne constitue un verdict de conformité.
+
 1. préparer le scénario officiel `test_2A/2A` ;
 2. exécuter `Sonder le runtime Test 2A` ;
 3. attendre le statut
@@ -156,6 +163,12 @@ un projet jetable :
 4. cliquer `Qualifier les profils Test 2A` ;
 5. dans le même écran, cliquer `Qualifier les setters du store Test 2A` ;
 6. après son PASS, cliquer `Qualifier l’optique fixe 2E1`.
+
+La calibration thermique équivalente cible uniquement le facteur U du vitrage
+de base confirmé dans le contrat Test 2. Elle ne qualifie ni la composition
+fabricant 4/14/4/14/4, ni le facteur U combiné vitrage-store, ni la commande
+dynamique, ni les résultats APS. Ces frontières restent explicitement fermées
+dans le rapport de chaîne.
 
 Le second bouton demeure désactivé jusqu’au PASS de la sonde en lecture seule.
 Il appelle

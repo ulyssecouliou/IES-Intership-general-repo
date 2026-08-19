@@ -379,6 +379,7 @@ class Test2ASourceBundleTests(unittest.TestCase):
             "sia2a_2e1_optical_setter_controlled.json",
             {
                 "fixed_closed_storage_qualified": True,
+                "combined_threshold_optical_storage_qualified": True,
                 "fixed_closed_optical_mapping_qualified": False,
                 "diagnostic_candidate_generation_authorized": False,
                 "compliance_claim_allowed": False,

@@ -1,30 +1,30 @@
 # -*- coding: utf-8 -*-
-u"""Écrit la cellule d'essai du Test 1 en gbXML, pour import dans VE.
+u"""Writes the Test 1 trial cell as gbXML, for import into VE.
 
-POURQUOI CE FICHIER. L'API `iesve` n'expose aucun constructeur de géométrie :
-ni pièce, ni corps, ni surface. La seule voie est `ImportGBXML.import_file`
-(minuscule — la casse documentée `Import_file` n'existe pas, confirmé par
-introspection le 2026-08-07). La géométrie doit donc être décrite dans un
-fichier.
+WHY THIS FILE. The `iesve` API exposes no geometry constructor:
+no room, no body, no surface. The only path is `ImportGBXML.import_file`
+(lowercase -- the documented casing `Import_file` does not exist, confirmed by
+introspection on 2026-08-07). The geometry must therefore be described in a
+file.
 
-TOUTES LES COTES VIENNENT DE `geometrie_test1`, qui les tient lui-même de
-`config/iso52016_chapter7_confirmed_inputs.json` — clause 7.2.2.2, Figure 2 et
-Table 22, page 123 de BS EN ISO 52016-1:2017. Aucune n'est saisie ici.
+ALL DIMENSIONS COME FROM `geometrie_test1`, which itself holds them from
+`config/iso52016_chapter7_confirmed_inputs.json` -- clause 7.2.2.2, Figure 2 and
+Table 22, page 123 of BS EN ISO 52016-1:2017. None are entered here.
 
-CE QUI N'EST DÉLIBÉRÉMENT PAS ÉCRIT. Aucune **localisation** : ni latitude, ni
-longitude, ni code postal, ni altitude. Le Test 1 se définit par son fichier
-climatique, pas par un site, et inventer des coordonnées produirait un modèle
-plausible dont le solaire serait faux. Le champ `CADModelAzimuth` est en
-revanche écrit à 0 : c'est lui qui fixe l'orientation SUD de la façade avant,
-et elle, la spécification l'impose.
+WHAT IS DELIBERATELY NOT WRITTEN. No **location**: no latitude, no
+longitude, no postal code, no altitude. Test 1 is defined by its climate
+file, not by a site, and inventing coordinates would produce a plausible model
+whose solar would be wrong. The `CADModelAzimuth` field is however written
+at 0: it is what fixes the SOUTH orientation of the front facade, and the
+specification requires it.
 
-REPÈRE. X vers l'est, Y vers le nord, Z vers le haut ; façade avant au sud,
-donc en Y = 0. Les polylignes tournent dans le sens **anti-horaire vu de
-l'extérieur**, convention gbXML : un sens inversé retournerait la normale et
-fausserait tout le bilan solaire, sans qu'aucun contrôle de surface ne le voie.
-C'est pourquoi les tests vérifient AUSSI le sens, pas seulement l'aire.
+COORDINATE FRAME. X towards east, Y towards north, Z upwards; front facade
+faces south, so at Y = 0. Polylines turn **counter-clockwise seen from the
+outside**, gbXML convention: a reversed winding would flip the normal and
+corrupt the entire solar balance, without any surface area check detecting it.
+That is why the tests also verify the winding, not only the area.
 
-Python pur : ni `iesve`, ni écriture dans VE. Testable en intégration continue.
+Pure Python: no `iesve`, no writing into VE. Testable in continuous integration.
 """
 
 from __future__ import print_function
@@ -35,22 +35,22 @@ from xml.etree import ElementTree
 
 from ve_adapter import geometrie_test1 as geometrie
 
-#: Espace de noms gbXML. Repris tel quel du schéma public.
+#: gbXML namespace. Taken verbatim from the public schema.
 NAMESPACE = 'http://www.gbxml.org/schema'
 
-#: Version de schéma déclarée. Choisie pour sa large compatibilité ; à ajuster
-#: si l'importeur de VE s'en plaint — le message d'erreur le dira.
+#: Schema version declared. Chosen for broad compatibility; adjust
+#: if VE's importer complains -- the error message will say so.
 VERSION_SCHEMA = '0.37'
 
-#: Azimut du modèle. Zéro place la façade avant (Y = 0) au SUD, comme
-#: l'impose la spécification. Ce n'est pas une localisation : c'est une
-#: orientation, et elle est établie.
+#: Model azimuth. Zero places the front facade (Y = 0) to the SOUTH, as
+#: required by the specification. This is not a location: it is an
+#: orientation, and it is established.
 AZIMUT_MODELE = 0.0
 
-#: Types de surface gbXML, par face. `SlabOnGrade` pour le plancher est le
-#: type le plus proche de la cellule ASHRAE 140, dont le plancher est isolé
-#: d'un isolant idéal plutôt que posé sur terre-plein — À VÉRIFIER contre le
-#: comportement réel de l'importeur.
+#: gbXML surface types, by face. `SlabOnGrade` for the floor is the
+#: closest type to the ASHRAE 140 cell, whose floor is insulated
+#: with an ideal insulator rather than on a ground slab -- TO VERIFY against
+#: the actual behaviour of the importer.
 TYPE_DE_SURFACE = {
     'front_wall': 'ExteriorWall',
     'back_wall': 'ExteriorWall',
@@ -60,8 +60,8 @@ TYPE_DE_SURFACE = {
     'ceiling': 'Roof',
 }
 
-#: Identifiants stables. Les figer permet de retrouver chaque surface dans le
-#: modèle importé, et de confronter son aire à celle de la source.
+#: Stable identifiers. Freezing them allows each surface to be found in the
+#: imported model, and its area to be compared against the source.
 IDENTIFIANT_ESPACE = 'TEST1-CELL'
 IDENTIFIANT_ZONE = 'TEST1-ZONE'
 IDENTIFIANT_BATIMENT = 'TEST1-BUILDING'
@@ -69,14 +69,14 @@ IDENTIFIANT_CAMPUS = 'TEST1-CAMPUS'
 
 
 class GbxmlIncoherent(ValueError):
-    u"""Levée quand la géométrie écrite ne reproduit pas la source."""
+    u"""Raised when the written geometry does not reproduce the source."""
 
 
 def polylignes(cotes):
-    u"""Polyligne de chaque face, dans le sens anti-horaire vu de l'extérieur.
+    u"""Polyline of each face, counter-clockwise seen from the outside.
 
     Args:
-        cotes: Bloc `geometry` de la source.
+        cotes: `geometry` block from the source.
 
     Returns:
         dict: `{face: [(x, y, z), ...]}`.
@@ -85,38 +85,38 @@ def polylignes(cotes):
     profondeur = cotes['depth_m']
     hauteur = cotes['height_m']
     return {
-        # Façade SUD (avant), extérieur en -Y : vu du sud, l'est est à droite.
+        # SOUTH facade (front), exterior at -Y: seen from the south, east is on the right.
         'front_wall': [(0.0, 0.0, 0.0), (largeur, 0.0, 0.0),
                        (largeur, 0.0, hauteur), (0.0, 0.0, hauteur)],
-        # Façade NORD, extérieur en +Y : vu du nord, l'est passe à gauche.
+        # NORTH facade, exterior at +Y: seen from the north, east moves to the left.
         'back_wall': [(largeur, profondeur, 0.0), (0.0, profondeur, 0.0),
                       (0.0, profondeur, hauteur), (largeur, profondeur, hauteur)],
-        # Pignon OUEST, extérieur en -X.
+        # WEST gable, exterior at -X.
         'left_wall': [(0.0, profondeur, 0.0), (0.0, 0.0, 0.0),
                       (0.0, 0.0, hauteur), (0.0, profondeur, hauteur)],
-        # Pignon EST, extérieur en +X.
+        # EAST gable, exterior at +X.
         'right_wall': [(largeur, 0.0, 0.0), (largeur, profondeur, 0.0),
                        (largeur, profondeur, hauteur), (largeur, 0.0, hauteur)],
-        # Plancher, extérieur en -Z : anti-horaire vu de DESSOUS.
+        # Floor, exterior at -Z: counter-clockwise seen from BELOW.
         'floor': [(0.0, 0.0, 0.0), (0.0, profondeur, 0.0),
                   (largeur, profondeur, 0.0), (largeur, 0.0, 0.0)],
-        # Toiture, extérieur en +Z : anti-horaire vu de DESSUS.
+        # Roof, exterior at +Z: counter-clockwise seen from ABOVE.
         'ceiling': [(0.0, 0.0, hauteur), (largeur, 0.0, hauteur),
                     (largeur, profondeur, hauteur), (0.0, profondeur, hauteur)],
     }
 
 
 def polylignes_des_fenetres(cotes):
-    u"""Polyligne de chaque fenêtre, dans le plan de la façade sud.
+    u"""Polyline of each window, in the plane of the south facade.
 
-    Même sens que la façade qui les porte : une ouverture au sens inverse de
-    son mur retournerait sa normale.
+    Same winding as the wall that carries them: an opening wound in the
+    opposite direction to its wall would flip its normal.
 
     Args:
-        cotes: Bloc `geometry`.
+        cotes: `geometry` block.
 
     Returns:
-        list[dict]: `{'rang', 'polyligne', 'surface_m2'}` par fenêtre.
+        list[dict]: `{'rang', 'polyligne', 'surface_m2'}` per window.
     """
     fenetres = []
     for rectangle in geometrie.rectangles_des_fenetres(cotes):
@@ -132,16 +132,16 @@ def polylignes_des_fenetres(cotes):
 
 
 def normale(polyligne):
-    u"""Normale non normalisée d'un polygone, par la méthode de Newell.
+    u"""Unnormalised normal of a polygon, using Newell's method.
 
-    Robuste aux polygones non plans et indépendante du sommet de départ, ce
-    qu'un simple produit vectoriel de deux arêtes n'est pas.
+    Robust to non-planar polygons and independent of the starting vertex,
+    which a simple cross-product of two edges is not.
 
     Args:
-        polyligne: Sommets `(x, y, z)`.
+        polyligne: Vertices `(x, y, z)`.
 
     Returns:
-        tuple[float, float, float]: Vecteur normal.
+        tuple[float, float, float]: Normal vector.
     """
     nx = ny = nz = 0.0
     nombre = len(polyligne)
@@ -155,33 +155,33 @@ def normale(polyligne):
 
 
 def aire(polyligne):
-    u"""Aire d'un polygone défini par ses sommets.
+    u"""Area of a polygon defined by its vertices.
 
     Args:
-        polyligne: Sommets `(x, y, z)`.
+        polyligne: Vertices `(x, y, z)`.
 
     Returns:
-        float: Aire en m².
+        float: Area in m².
     """
     nx, ny, nz = normale(polyligne)
     return (nx * nx + ny * ny + nz * nz) ** 0.5
 
 
 def controler_les_polylignes(cotes):
-    u"""Recalcule chaque aire depuis sa polyligne et la confronte à la source.
+    u"""Recomputes each area from its polyline and compares it to the source.
 
-    C'est le contrôle qui compte : il ne relit pas les cotes, il mesure la
-    géométrie effectivement écrite. Une coordonnée fautive y apparaît, là où
-    une simple relecture des cotes ne verrait rien.
+    This is the check that counts: it does not re-read the dimensions, it
+    measures the geometry actually written. A faulty coordinate shows up here,
+    whereas simply re-reading the dimensions would see nothing.
 
     Args:
-        cotes: Bloc `geometry`.
+        cotes: `geometry` block.
 
     Returns:
-        dict: `{face: (aire_recalculee, aire_source)}`.
+        dict: `{face: (recomputed_area, source_area)}`.
 
     Raises:
-        GbxmlIncoherent: Au moindre écart, ou sur une normale mal orientée.
+        GbxmlIncoherent: On any discrepancy, or on a wrongly oriented normal.
     """
     attendues = geometrie.surfaces_attendues(cotes)
     faces = polylignes(cotes)
@@ -190,8 +190,8 @@ def controler_les_polylignes(cotes):
     ecarts, releve = [], {}
     for face, polyligne in faces.items():
         mesuree = aire(polyligne)
-        # La façade avant porte les fenêtres : sa polyligne décrit le mur
-        # ENTIER, l'aire opaque s'en déduit en retirant le vitrage.
+        # The front facade carries the windows: its polyline describes the
+        # ENTIRE wall, the opaque area is derived by subtracting glazing.
         opaque = mesuree - aire_vitrage if face == 'front_wall' else mesuree
         attendue = attendues[face]
         releve[face] = (opaque, attendue)
@@ -222,10 +222,10 @@ def controler_les_polylignes(cotes):
 
 
 def _point(parent, sommet):
-    u"""Ajoute un `CartesianPoint` à un élément.
+    u"""Adds a `CartesianPoint` to an element.
 
     Args:
-        parent: Élément d'accueil.
+        parent: Host element.
         sommet: `(x, y, z)`.
     """
     point = ElementTree.SubElement(parent, 'CartesianPoint')
@@ -234,11 +234,11 @@ def _point(parent, sommet):
 
 
 def _polyloop(parent, polyligne):
-    u"""Ajoute une `PolyLoop` à un élément.
+    u"""Adds a `PolyLoop` to an element.
 
     Args:
-        parent: Élément d'accueil.
-        polyligne: Sommets.
+        parent: Host element.
+        polyligne: Vertices.
     """
     boucle = ElementTree.SubElement(parent, 'PolyLoop')
     for sommet in polyligne:
@@ -246,16 +246,16 @@ def _polyloop(parent, polyligne):
 
 
 def construire_arbre(cotes=None):
-    u"""Construit l'arbre gbXML de la cellule.
+    u"""Builds the gbXML tree of the cell.
 
     Args:
-        cotes: Bloc `geometry` ; chargé depuis la source si absent.
+        cotes: `geometry` block; loaded from the source if absent.
 
     Returns:
-        xml.etree.ElementTree.Element: Racine `gbXML`.
+        xml.etree.ElementTree.Element: Root `gbXML` element.
 
     Raises:
-        GbxmlIncoherent: Si la géométrie écrite ne reproduit pas la source.
+        GbxmlIncoherent: If the written geometry does not reproduce the source.
     """
     cotes = cotes or geometrie.charger_cotes()
     controler_les_polylignes(cotes)
@@ -275,9 +275,9 @@ def construire_arbre(cotes=None):
 
     campus = ElementTree.SubElement(racine, 'Campus',
                                     {'id': IDENTIFIANT_CAMPUS})
-    # AUCUNE localisation n est ecrite : ni latitude, ni longitude, ni
-    # altitude. Le Test 1 se definit par son fichier climatique. Seul le nom
-    # est pose, et il dit ce que la cellule est.
+    # NO location is written: no latitude, no longitude, no altitude.
+    # Test 1 is defined by its climate file. Only the name is set,
+    # and it says what the cell is.
     lieu = ElementTree.SubElement(campus, 'Location')
     ElementTree.SubElement(lieu, 'Name').text = (
         'EN ISO 52016-1 clause 7.2.2 test cell — location intentionally '
@@ -332,14 +332,14 @@ def construire_arbre(cotes=None):
 
 
 def ecrire(chemin, cotes=None):
-    u"""Écrit le gbXML sur disque.
+    u"""Writes the gbXML to disk.
 
     Args:
-        chemin: Fichier à écrire.
-        cotes: Bloc `geometry` ; chargé depuis la source si absent.
+        chemin: File to write.
+        cotes: `geometry` block; loaded from the source if absent.
 
     Returns:
-        str: Chemin écrit.
+        str: Path written.
     """
     racine = construire_arbre(cotes)
     dossier = os.path.dirname(chemin)

@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
-u"""Tests de l'auto-test de chaîne (`scripts/autotest_chaine.py`).
+u"""Tests of the chain self-test (`scripts/autotest_chaine.py`).
 
-Ce script a une propriété qu'il faut verrouiller : il doit **échouer** si la
-chaîne se casse, et ne **jamais** laisser croire qu'il valide quoi que ce soit.
-Un auto-test qui passerait toujours ne servirait à rien ; un auto-test qu'on
-prendrait pour une validation serait pire qu'inutile.
+This script has a property that must be locked: it must **fail** if the
+chain breaks, and must **never** make anyone believe it validates anything.
+A self-test that always passed would be useless; a self-test taken for a
+validation would be worse than useless.
 """
 
 import pytest
@@ -22,7 +22,7 @@ def rendus():
 
 
 # --------------------------------------------------------------------------
-# La chaîne tient
+# The chain holds
 # --------------------------------------------------------------------------
 
 def test_les_sept_tests_passent_la_chaine(rendus):
@@ -31,8 +31,8 @@ def test_les_sept_tests_passent_la_chaine(rendus):
 
 
 def test_chaque_test_rejoue_au_moins_un_cas(rendus):
-    """Zéro cas rejoué se lirait comme « chaîne verte » alors que rien
-    n'aurait été évalué."""
+    """Zero replayed cases would read as 'chain green' while nothing
+    would have been evaluated."""
     for rendu in rendus:
         assert rendu['bandes']['nb_cas_rejoues'] > 0, rendu['bandes']['test']
 
@@ -52,7 +52,7 @@ def test_les_distributions_sont_evaluees_quand_elles_existent(rendus):
 
 @pytest.mark.parametrize('numero', (4, 6))
 def test_les_tests_sans_referentiel_distribution_executable_le_declarent(numero):
-    """Leur présence est confirmée, mais le gate exact reste en revue."""
+    """Their presence is confirmed, but the exact gate is still under review."""
     assert auto.verifier_distributions(numero) is None
 
 
@@ -69,15 +69,15 @@ def test_tests_1_et_7_passent_par_leurs_moteurs_dedies(rendus):
 
 
 # --------------------------------------------------------------------------
-# Il ne prétend rien valider
+# It claims to validate nothing
 # --------------------------------------------------------------------------
 
 def test_le_module_dit_ce_quil_ne_prouve_pas():
-    assert 'ne prouve **rien** sur IESVE' in auto.__doc__
+    assert 'proves **nothing** about IESVE' in auto.__doc__
 
 
 def test_les_distributions_rejouees_passent_enveloppe_confirmee(rendus):
-    """Un programme de référence doit rester dans sa propre enveloppe min/max."""
+    """A reference programme must remain within its own min/max envelope."""
     for rendu in rendus:
         if rendu['distributions']:
             assert rendu['distributions']['verdict'] == 'PASS'
@@ -87,8 +87,8 @@ def test_les_distributions_rejouees_passent_enveloppe_confirmee(rendus):
 
 
 def test_le_statut_du_critere_remonte_tel_quel(rendus):
-    """ENONCE_DANS_LA_SPEC pour 2, 3 et 5 ; INFERE pour 4 et 6. L'auto-test ne
-    doit pas uniformiser ce que la norme distingue."""
+    """ENONCE_DANS_LA_SPEC for 2, 3 and 5; INFERE for 4 and 6. The self-test
+    must not flatten what the norm distinguishes."""
     par_test = dict((r['bandes']['test'], r['bandes']['critere'])
                     for r in rendus)
     assert par_test[2] == moteur.STATUT_CRITERE_ENONCE
@@ -98,12 +98,12 @@ def test_le_statut_du_critere_remonte_tel_quel(rendus):
 
 
 # --------------------------------------------------------------------------
-# Il échoue quand la chaîne se casse
+# It fails when the chain breaks
 # --------------------------------------------------------------------------
 
 def test_un_candidat_hors_bande_fait_echouer(monkeypatch):
-    """Le seul moyen d'y arriver est de casser la chaîne : un contributeur
-    tombe dans sa propre bande par construction."""
+    """The only way to get there is to break the chain: a contributor
+    falls within its own band by construction."""
     vrai = auto.candidat_depuis_contributeur
 
     def fausse(reference, lettre):
@@ -139,7 +139,7 @@ def test_main_rend_un_quand_elle_casse(monkeypatch):
 
 
 # --------------------------------------------------------------------------
-# Choix du programme rejoué
+# Choice of the replayed programme
 # --------------------------------------------------------------------------
 
 def test_le_programme_retenu_est_le_plus_present():
@@ -149,7 +149,7 @@ def test_le_programme_retenu_est_le_plus_present():
 
 
 def test_a_egalite_le_choix_est_deterministe():
-    """Un choix instable rendrait deux exécutions incomparables."""
+    """An unstable choice would make two runs incomparable."""
     reference = {'grandeurs': [{'cas': [{'contributeurs': ['Z', 'A']}]}]}
     assert auto.choisir_contributeur(reference) == 'A'
 
@@ -159,7 +159,7 @@ def test_sans_contributeur_aucun_programme_nest_choisi():
 
 
 def test_les_cas_ou_le_programme_est_absent_sont_ecartes():
-    """Le compter à zéro déplacerait la moyenne, donc la bande."""
+    """Counting it as zero would shift the mean, hence the band."""
     reference = {'grandeurs': [{'libelle_de': 'G', 'cas': [
         {'cas': 'avec', 'contributeurs': ['A'],
          'par_colonne': {'A': {'valeur': 1.0}}},

@@ -33,6 +33,7 @@ import Run_VE_SIA4010_Test2A_Profile_Qualification as test2a_profile_qualifier
 import Run_VE_SIA4010_Test2A_2E1_Optical_Setter_Qualification as test2a_optical_qualifier
 import Run_VE_SIA4010_Test2A_Runtime_Capability_Probe as test2a_runtime_probe
 import Run_VE_SIA4010_Test2A_Shading_Setter_Qualification as test2a_shading_qualifier
+import Run_VE_SIA4010_Test2A_Qualification_One_Click as test2a_qualification_chain
 import Run_VE_SIA4010_Test3_Runtime_Capability_Probe as test3_runtime_probe
 import Run_VE_SIA4010_Tests4_7_Runtime_Capability_Probe as hvac_plant_runtime_probe
 
@@ -58,6 +59,7 @@ def run():
         test2a_profile_qualifier=test2a_profile_qualifier.run,
         test2a_shading_qualifier=test2a_shading_qualifier.run,
         test2a_optical_qualifier=test2a_optical_qualifier.run,
+        test2a_qualification_chain=test2a_qualification_chain.run,
         test3_runtime_probe=test3_runtime_probe.run,
         hvac_plant_runtime_probe=hvac_plant_runtime_probe.run,
     )

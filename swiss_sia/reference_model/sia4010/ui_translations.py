@@ -665,6 +665,12 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
         "fr": "Sonder le runtime Test 2A",
         "it": "Sonda runtime Test 2A",
     },
+    "btn_run_test2a_chain": {
+        "en": "Run guarded Test 2A chain",
+        "de": "Geschuetzte Test-2A-Kette starten",
+        "fr": "Lancer la chaîne gardée Test 2A",
+        "it": "Avvia catena protetta Test 2A",
+    },
     "btn_probe_active_aps": {
         "en": "Probe active APS outputs",
         "de": "Aktive APS-Ausgaben pruefen",
@@ -1122,6 +1128,97 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
         "de": "Test-2A-Laufzeitpruefung (nur Lesen): {status} - {report}",
         "fr": "Sonde runtime Test 2A en lecture seule : {status} - {report}",
         "it": "Sonda runtime Test 2A in sola lettura: {status} - {report}",
+    },
+    "dlg_test2a_chain_title": {
+        "en": "Guarded Test 2A qualification chain",
+        "de": "Geschuetzte Test-2A-Qualifikationskette",
+        "fr": "Chaîne de qualification gardée Test 2A",
+        "it": "Catena di qualifica protetta Test 2A",
+    },
+    "dlg_test2a_chain_unavailable": {
+        "en": (
+            "Select official test_2A / 2A in a fresh saved disposable project "
+            "containing at least one glazed opening."
+        ),
+        "de": (
+            "Waehlen Sie test_2A / 2A in einem frischen gespeicherten "
+            "Wegwerfprojekt mit mindestens einer verglasten Oeffnung."
+        ),
+        "fr": (
+            "Sélectionnez test_2A / 2A dans un projet jetable neuf et "
+            "enregistré contenant au moins une ouverture vitrée."
+        ),
+        "it": (
+            "Seleziona test_2A / 2A in un nuovo progetto usa e getta salvato "
+            "con almeno un'apertura vetrata."
+        ),
+    },
+    "dlg_test2a_chain_body": {
+        "en": (
+            "Project: {project}\n\nThis creates the exact Test 2A profile graph "
+            "and two CDB probe constructions, calibrates an equivalent base-"
+            "glazing U-value, then transiently assigns one "
+            "opening and verifies restoration. It does not simulate, validate "
+            "Test 2A or authorize compliance. "
+            "If a setter fails, discard this project. Continue?"
+        ),
+        "de": (
+            "Projekt: {project}\n\nDie exakten Test-2A-Profile und zwei nicht "
+            "zugewiesene CDB-Pruefkonstruktionen werden erstellt. Der "
+            "Basisglas-U-Wert wird ueber eine aequivalente Schicht kalibriert. Eine "
+            "Oeffnung wird voruebergehend zugewiesen und danach geprueft "
+            "wiederhergestellt; keine Konformitaet wird behauptet. Bei "
+            "einem Setter-Fehler dieses Projekt verwerfen. Fortfahren?"
+        ),
+        "fr": (
+            "Projet : {project}\n\nCette action crée le graphe exact des profils "
+            "Test 2A et deux constructions CDB de qualification non affectées, "
+            "puis calibre un facteur U équivalent du vitrage de base. "
+            "Elle affecte temporairement une ouverture puis vérifie sa "
+            "restauration ; elle ne simule pas, ne valide pas le "
+            "Test 2A et n'autorise aucune conformité. En cas d'échec d'un "
+            "setter, jetez ce projet. Continuer ?"
+        ),
+        "it": (
+            "Progetto: {project}\n\nQuesta azione crea il grafo esatto dei "
+            "profili Test 2A e due costruzioni CDB di prova non assegnate e "
+            "calibra un valore U equivalente del vetro base. Non "
+            "lascia aperture assegnate: una prova transitoria viene ripristinata "
+            "e verificata. Non simula e non autorizza conformita. In caso "
+            "di errore di un setter, scarta il progetto. Continuare?"
+        ),
+    },
+    "dlg_test2a_chain_complete": {
+        "en": (
+            "Status: {status}\n\nAudit: {report}\n\nStorage, equivalent base "
+            "glazing U-value, and restored "
+            "opening assignment are qualified; final model generation and APS "
+            "equivalence remain required."
+        ),
+        "de": (
+            "Status: {status}\n\nAudit: {report}\n\nSpeicher, aequivalenter "
+            "Basisglas-U-Wert und "
+            "wiederhergestellte Oeffnungszuweisung sind qualifiziert; "
+            "Modellgenerierung und APS-Aequivalenz bleiben erforderlich."
+        ),
+        "fr": (
+            "Statut : {status}\n\nAudit : {report}\n\nLe stockage, le facteur U "
+            "équivalent du vitrage de base et "
+            "l'affectation restaurée d'une ouverture sont qualifiés ; la "
+            "génération finale et l'équivalence APS restent nécessaires."
+        ),
+        "it": (
+            "Stato: {status}\n\nAudit: {report}\n\nMemorizzazione, valore U "
+            "equivalente del vetro base e "
+            "assegnazione ripristinata dell'apertura sono qualificate; restano "
+            "necessarie la generazione finale e l'equivalenza APS."
+        ),
+    },
+    "status_test2a_chain": {
+        "en": "Test 2A guarded chain: {status} - {report}",
+        "de": "Geschuetzte Test-2A-Kette: {status} - {report}",
+        "fr": "Chaîne gardée Test 2A : {status} - {report}",
+        "it": "Catena protetta Test 2A: {status} - {report}",
     },
     "dlg_test3_probe_title": {
         "en": "Test 3 lighting runtime capability",

@@ -1,37 +1,37 @@
 # -*- coding: utf-8 -*-
-"""Integrite des donnees de reference du Test SIA 4010 n^1.
+"""Integrity of the reference data for SIA 4010 Test 1.
 
-Ce fichier transcrit en assertions executables l'audit manuel consigne dans
-`AUDIT.md` (qa-auditor, 2026-07-30). Objectif : ne plus jamais depenser une passe
-d'audit humaine sur ce fichier. Toute regeneration de
-`refs/reference-data/test-1.ref.json` est re-auditee ici en moins d'une seconde.
+This file transcribes into executable assertions the manual audit recorded in
+`AUDIT.md` (qa-auditor, 2026-07-30). Objective: never spend a human audit pass
+on this file again. Any regeneration of
+`refs/reference-data/test-1.ref.json` is re-audited here in under a second.
 
-Deux familles de controles :
+Two families of checks:
 
-* **Sans le classeur source** (toujours executes, y compris en CI ou les binaires
-  de `SIA_4010_geteilter_Link/` sont absents) : coherence interne, forme des
-  noeuds, garde-fous contre les defauts n^2 et n^3 d'`AUDIT.md`, et la formule du
-  `Streubereich` du cas 1E.
-* **Avec le classeur source** (ignores si absent, avec un motif explicite) :
-  fidelite valeur<->cellule et correspondance libelle<->colonne contre les vraies
-  lignes d'en-tete. C'est ce second bloc qui garde contre le defaut n^1
-  (decalage de colonnes en Table 30).
+* **Without the source workbook** (always run, including in CI where the binaries
+  of `SIA_4010_geteilter_Link/` are absent): internal consistency, node shape,
+  safeguards against defects 2 and 3 from `AUDIT.md`, and the Streubereich formula
+  for case 1E.
+* **With the source workbook** (skipped if absent, with an explicit reason):
+  value<->cell fidelity and label<->column correspondence against the real
+  header rows. This second block guards against defect 1
+  (column shift in Table 30).
 
-ANGLE MORT CONNU (mesure par mutation, cf. ADR-001 §7bis) : sans le classeur
-source, deux corruptions sur quatre passent inapercues — le decalage de colonnes
-(defaut n^1) et la conversion silencieuse d'une erreur Excel en 0. La CI ne peut
-donc pas, en l'etat, attraper la classe de bug qui s'est reellement produite. Le
-correctif prevu est une empreinte de cellules brutes versionnee dans
-`refs/reference-data/`. Ne pas confondre "CI verte" et "donnees auditees".
+KNOWN BLIND SPOT (measured by mutation, cf. ADR-001 §7bis): without the source
+workbook, two of four corruptions go undetected — the column shift
+(defect 1) and the silent conversion of an Excel error to 0. CI cannot,
+as it stands, catch the class of bug that actually occurred. The planned fix is
+a raw-cell fingerprint versioned in `refs/reference-data/`. Do not confuse
+"CI green" and "audited data".
 
-`openpyxl` n'est utilise que par les controles optionnels et reste une dependance
-de developpement / CI (il est de toute facon present dans VE, en 3.1.2). Aucun
-`import iesve` : c'est ce qui garde le moteur testable en CI sans licence VE.
+`openpyxl` is only used by the optional checks and remains a development / CI
+dependency (it is present in VE anyway, as 3.1.2). No `import iesve`:
+that is what keeps the engine testable in CI without a VE licence.
 
-Le style sans f-string est un reliquat : la version de Python de VEScripts a
-depuis ete mesuree a **3.12.3** (VE 2025, sonde du 2026-07-31, ADR-001 §2).
-Aucune contrainte de compatibilite ne s'applique plus ; ce fichier n'a simplement
-pas besoin d'etre reecrit pour autant.
+The no-f-string style is a remnant: the Python version of VEScripts has since
+been measured at **3.12.3** (VE 2025, probe from 2026-07-31, ADR-001 §2).
+No compatibility constraint applies anymore; this file simply does not need
+to be rewritten for that.
 """
 
 import json
@@ -47,42 +47,42 @@ except ImportError:  # environnement sans dependance de test
 
 
 # --------------------------------------------------------------------------
-# Localisation des fichiers
+# File locations
 # --------------------------------------------------------------------------
 
 _ICI = os.path.dirname(os.path.abspath(__file__))
 RACINE = os.path.abspath(os.path.join(_ICI, os.pardir, os.pardir))
 
-# Surchargeable pour les tests de mutation : on verifie que ces controles
-# ECHOUENT bien sur un fichier volontairement corrompu (cf. docs/ADR-001 §7).
+# Overridable for mutation tests: we verify that these checks
+# FAIL on an intentionally corrupted file (cf. docs/ADR-001 §7).
 REF_JSON = os.environ.get(
     'SIA_REF_JSON',
     os.path.join(RACINE, 'refs', 'reference-data', 'test-1.ref.json'))
 
-# Source brute figee. Volontairement hors depot (130 Mo pour les 7 classeurs) :
-# les controles qui en dependent sont ignores plutot qu'echoues quand elle manque.
+# Frozen raw source. Deliberately outside the repository (130 MB for the 7 workbooks):
+# checks that depend on it are skipped rather than failed when it is missing.
 CLASSEUR = os.environ.get(
     'SIA_TEST1_XLSX',
     os.path.join(RACINE, 'SIA_4010_geteilter_Link', 'Test1',
                  'Resultaterfassung_Test1.xlsx'))
 FEUILLE = u'Zusammenfassung Testf\xe4lle'  # « Zusammenfassung Testfälle »
 
-# Empreinte des cellules brutes, versionnee (38 Ko) : substitut du classeur
-# quand la source figee est absente, typiquement en CI. Generee par
-# `scripts/build_cell_fingerprint.py`. Sans elle, la mesure par mutation montre
-# que deux corruptions sur quatre passent inapercues (ADR-001 §7bis).
+# Versioned raw-cell fingerprint (38 KB): substitute for the workbook
+# when the frozen source is absent, typically in CI. Generated by
+# `scripts/build_cell_fingerprint.py`. Without it, mutation measurement shows
+# that two of four corruptions go undetected (ADR-001 §7bis).
 EMPREINTE = os.environ.get(
     'SIA_TEST1_CELLS',
     os.path.join(RACINE, 'refs', 'reference-data', 'test-1.cells.json'))
 
 
 # --------------------------------------------------------------------------
-# Structure attendue du classeur SIA
+# Expected workbook structure
 #
-# Lignes d'en-tete et plages de lignes de donnees reconstruites contre la source
-# et confirmees par l'audit independant (`AUDIT.md`, section "Ce qui a ete
-# VERIFIE ET CONFIRME", pt 1). Ce ne sont PAS des suppositions : elles sont
-# re-verifiees par `test_correspondance_libelle_colonne` des que le classeur est
+# Header rows and data row ranges reconstructed against the source
+# and confirmed by the independent audit (`AUDIT.md`, section "What was
+# VERIFIED AND CONFIRMED", pt 1). These are NOT assumptions: they are
+# re-verified by `test_correspondance_libelle_colonne` whenever the workbook is
 # present.
 # --------------------------------------------------------------------------
 
@@ -95,14 +95,14 @@ GRANDEURS = {
         'table': 30, 'ligne_entete': 57, 'lignes_donnees': (58, 70)},
     'operative_temperature_annual_extremes_celsius': {
         'table': 32, 'ligne_entete': 104, 'lignes_donnees': (105, 107)},
-    # Table 31 : troisieme critere pass/fail du cas 1E (charges de pointe
-    # horaires annuelles). Ajoutee en passe 4 apres l'audit du loader existant.
+    # Table 31: third pass/fail criterion for case 1E (annual hourly peak loads).
+    # Added in pass 4 after the audit of the existing loader.
     'annual_hourly_peak_load_kwh': {
         'table': 31, 'ligne_entete': 81, 'lignes_donnees': (82, 83)},
 }
 
-# Libelle exact porte par l'en-tete de la colonne declaree, par champ.
-# Releve sur la source (lignes 15 / 36 / 57 / 104) le 2026-07-30.
+# Exact label carried by the header of the declared column, per field.
+# Recorded from the source (rows 15 / 36 / 57 / 104) on 2026-07-30.
 CHAMP_VERS_ENTETE = {
     'testprogramm': 'Testprogramm',
     'iso_52016_1_2017': 'Daten Norm EN ISO 52016-1',
@@ -115,14 +115,14 @@ CHAMP_VERS_ENTETE = {
     'range_min': 'untere Grenze',
 }
 
-# Les noeuds de donnees nomment deux champs autrement que les metadonnees.
+# Data nodes name two fields differently from the metadata.
 CHAMP_DONNEE_VERS_COLONNE = {
     'testprogramm_candidate': 'testprogramm',
     'iso_52016_1_2017_reference': 'iso_52016_1_2017',
 }
 
-# Les quatre programmes de reference qui fondent la plage de dispersion du cas 1E.
-# Le cas 1E n'a pas de colonne ISO 52016-1 (en-tete C15 = 'IDA ICE'), cf. AUDIT.md pt 3.
+# The four reference programmes that form the dispersion band for case 1E.
+# Case 1E has no ISO 52016-1 column (header C15 = 'IDA ICE'), cf. AUDIT.md pt 3.
 PROGRAMMES_1E = (
     'ida_ice_5_0_beta_23',
     'excel_sia_380_2',
@@ -130,9 +130,9 @@ PROGRAMMES_1E = (
     'tas_edsl_9_5_2',
 )
 
-# Nombre de couples {value, cell} mesure sur la passe 4 (2026-07-31 : 1336 en
-# passe 3, + 16 pour la Table 31 = 2 lignes x 8 colonnes). Garde-fou contre une
-# regeneration qui perdrait silencieusement des donnees.
+# Number of {value, cell} pairs measured in pass 4 (2026-07-31: 1336 in
+# pass 3, + 16 for Table 31 = 2 rows x 8 columns). Safeguard against a
+# regeneration that would silently lose data.
 CELLULES_MINIMUM = 1352
 
 TOLERANCE = 1e-6
@@ -141,7 +141,7 @@ _MOTIF_CELLULE = re.compile(r'^([A-Z]{1,3})([0-9]{1,5})$')
 
 
 # --------------------------------------------------------------------------
-# Outils
+# Tools
 # --------------------------------------------------------------------------
 
 def _charger_reference():
@@ -157,7 +157,7 @@ def reference():
 
 
 class _SourceClasseur(object):
-    """Acces direct au classeur officiel : la verite de premiere main."""
+    """Direct access to the official workbook: the primary truth."""
 
     origine = 'classeur officiel'
 
@@ -172,11 +172,11 @@ class _SourceClasseur(object):
 
 
 class _SourceEmpreinte(object):
-    """Acces aux cellules brutes figees : substitut quand le classeur manque.
+    """Access to frozen raw cells: substitute when the workbook is missing.
 
-    Ne connait que les cellules citees par le JSON de reference et les lignes
-    d'en-tete. Une adresse inconnue leve, plutot que de rendre `None` — sinon un
-    controle passerait pour cause d'ignorance.
+    Only knows the cells cited by the reference JSON and the header rows.
+    An unknown address raises, rather than returning `None` — otherwise a
+    check would pass through ignorance.
     """
 
     origine = 'empreinte figee'
@@ -198,10 +198,10 @@ class _SourceEmpreinte(object):
 
 @pytest.fixture(scope='module')
 def source():
-    """Source des cellules brutes : le classeur s'il est la, sinon l'empreinte.
+    """Source of raw cells: the workbook if present, otherwise the fingerprint.
 
-    Quand les deux sont presents, l'empreinte est verifiee CONTRE le classeur :
-    elle ne peut donc pas deriver en silence et devenir un faux temoin.
+    When both are present, the fingerprint is verified AGAINST the workbook:
+    it cannot drift silently and become a false witness.
     """
     empreinte = None
     if os.path.exists(EMPREINTE):
@@ -249,11 +249,10 @@ def _decouper_cellule(ref):
 
 
 def _iterer_enregistrements(noeud, chemin=''):
-    """Rend les (chemin, enregistrement).
+    """Yields (path, record) pairs.
 
-    Un *enregistrement* est un dict dont toutes les valeurs utiles sont des
-    feuilles {value, cell} : une ligne du tableau SIA (un mois, une annee, un
-    extreme). `_metadata` est ignore.
+    A *record* is a dict whose useful values are all leaves {value, cell}:
+    one row of the SIA table (a month, a year, an extreme). `_metadata` is ignored.
     """
     if not isinstance(noeud, dict):
         return
@@ -283,11 +282,11 @@ def _colonnes_declarees(noeud_cas):
 
 
 # --------------------------------------------------------------------------
-# 1. Controles structurels — sans le classeur source
+# 1. Structural checks — without the source workbook
 # --------------------------------------------------------------------------
 
 def test_grandeurs_attendues_presentes(reference):
-    """Les quatre tables auditees sont la. Une disparition doit casser le build."""
+    """The four audited tables are present. A disappearance must break the build."""
     presentes = set(reference['reference_values'].keys())
     attendues = set(GRANDEURS.keys())
     manquantes = attendues - presentes
@@ -295,7 +294,7 @@ def test_grandeurs_attendues_presentes(reference):
 
 
 def test_forme_des_feuilles_de_valeur(reference):
-    """Chaque feuille porte une valeur, une unite et une reference de cellule valide."""
+    """Each leaf carries a value, a unit and a valid cell reference."""
     fautifs = []
     for grandeur, cas, chemin, champ, feuille_valeur in _iterer_feuilles(reference):
         localisation = '/'.join([grandeur, cas, chemin.strip('/'), champ])
@@ -309,7 +308,7 @@ def test_forme_des_feuilles_de_valeur(reference):
 
 
 def test_volume_de_donnees_non_regresse(reference):
-    """Une regeneration ne doit pas perdre de cellules en silence."""
+    """A regeneration must not silently lose cells."""
     total = sum(1 for _ in _iterer_feuilles(reference))
     assert total >= CELLULES_MINIMUM, (
         'Regression de volume : {0} cellules extraites contre {1} auditees le '
@@ -318,10 +317,10 @@ def test_volume_de_donnees_non_regresse(reference):
 
 
 def test_valeurs_nulles_documentees(reference):
-    """Une valeur nulle vient d'une cellule d'erreur Excel : elle doit porter une note.
+    """A null value comes from an Excel error cell: it must carry a note.
 
-    AUDIT.md pt 7 : aucune erreur Excel ne doit etre silencieusement convertie en 0.
-    Une note obligatoire rend la conversion silencieuse impossible a cacher.
+    AUDIT.md pt 7: no Excel error must be silently converted to 0.
+    A mandatory note makes silent conversion impossible to hide.
     """
     sans_note = []
     for grandeur, cas, chemin, champ, feuille_valeur in _iterer_feuilles(reference):
@@ -333,10 +332,10 @@ def test_valeurs_nulles_documentees(reference):
 
 
 def test_enregistrement_sur_une_seule_ligne(reference):
-    """Toutes les cellules d'un enregistrement partagent la meme ligne Excel.
+    """All cells of a record share the same Excel row.
 
-    Garde-fou contre un decalage de lignes : un mois ne peut pas melanger des
-    valeurs prises sur deux lignes differentes.
+    Safeguard against a row shift: a month cannot mix values taken from
+    two different rows.
     """
     fautifs = []
     for grandeur, cas_tous in reference['reference_values'].items():
@@ -351,7 +350,7 @@ def test_enregistrement_sur_une_seule_ligne(reference):
 
 
 def test_lignes_dans_la_plage_de_leur_table(reference):
-    """Les cellules citees tombent dans la plage de donnees de la table concernee."""
+    """The cited cells fall within the data range of the relevant table."""
     fautifs = []
     for grandeur, cas_tous in reference['reference_values'].items():
         if grandeur not in GRANDEURS:
@@ -370,11 +369,11 @@ def test_lignes_dans_la_plage_de_leur_table(reference):
 
 
 def test_colonnes_des_donnees_conformes_aux_metadonnees(reference):
-    """La colonne de chaque cellule correspond a la colonne declaree pour son champ.
+    """The column of each cell corresponds to the column declared for its field.
 
-    Premiere moitie du garde-fou contre le DEFAUT n^1 d'`AUDIT.md` : le JSON ne
-    doit pas se contredire lui-meme. La seconde moitie (le libelle reel de la
-    colonne) exige le classeur, cf. `test_correspondance_libelle_colonne`.
+    First half of the safeguard against DEFECT 1 from `AUDIT.md`: the JSON must
+    not contradict itself. The second half (the real label of the column) requires
+    the workbook, cf. `test_correspondance_libelle_colonne`.
     """
     fautifs = []
     for grandeur, cas_tous in reference['reference_values'].items():
@@ -403,13 +402,13 @@ def test_colonnes_des_donnees_conformes_aux_metadonnees(reference):
 
 
 def test_table_32_ne_contient_que_les_cas_flottement_libre(reference):
-    """Garde-fou contre le DEFAUT n^2 d'`AUDIT.md`.
+    """Safeguard against DEFECT 2 from `AUDIT.md`.
 
-    La Table 32 (extremes annuels de temperature operative, zone compacte
-    lignes 105-107) ne contient que deux blocs : 600FF (B-G) et 900FF (J-O).
-    Les entrees '600' et '640' etaient des doublons mal etiquetes. Preuve
-    physique : un maximum de 63.5 degres et un minimum de -16.9 n'appartiennent
-    qu'a un cas en flottement libre.
+    Table 32 (annual operative temperature extremes, compact zone
+    rows 105-107) contains only two blocks: 600FF (B-G) and 900FF (J-O).
+    Entries '600' and '640' were mis-labelled duplicates. Physical proof:
+    a maximum of 63.5 degrees and a minimum of -16.9 belong only to a
+    free-floating case.
     """
     cas = set(reference['reference_values'][
         'operative_temperature_annual_extremes_celsius'].keys())
@@ -420,9 +419,9 @@ def test_table_32_ne_contient_que_les_cas_flottement_libre(reference):
 
 
 def test_donnees_manquantes_ne_contredisent_pas_le_contenu(reference):
-    """Garde-fou contre le DEFAUT n^3 d'`AUDIT.md`.
+    """Safeguard against DEFECT 3 from `AUDIT.md`.
 
-    `data_missing` ne doit pas declarer manquante une table pourtant extraite.
+    `data_missing` must not declare missing a table that has nonetheless been extracted.
     """
     extraites = set(reference['extraction_completeness']['tables_extracted'])
     contradictions = []
@@ -437,7 +436,7 @@ def test_donnees_manquantes_ne_contredisent_pas_le_contenu(reference):
 
 
 def test_cas_declares_correspondent_au_contenu(reference):
-    """`extraction_completeness.cases_covered` doit refleter les cas reellement la."""
+    """`extraction_completeness.cases_covered` must reflect the cases actually present."""
     declares = set(reference['extraction_completeness']['cases_covered'])
     reels = set()
     for cas_tous in reference['reference_values'].values():
@@ -450,11 +449,11 @@ def test_cas_declares_correspondent_au_contenu(reference):
 
 
 # --------------------------------------------------------------------------
-# 2. Critere pass/fail du cas 1E — la seule regle de verdict du Test 1
+# 2. Pass/fail criterion for case 1E — the only verdict rule of Test 1
 #
-# `Spezifikation_Test1.pdf`, section Testkriterien : seul le cas 1E porte un
-# critere d'acceptation (plage de dispersion). Les cas 600/640/900/940/600FF/900FF
-# n'en ont aucun (cf. traceability/test-1.spec.md §6).
+# `Spezifikation_Test1.pdf`, section Testkriterien: only case 1E carries an
+# acceptance criterion (dispersion band). Cases 600/640/900/940/600FF/900FF
+# have none (cf. traceability/test-1.spec.md §6).
 # --------------------------------------------------------------------------
 
 def _enregistrements_1e(reference, grandeur):
@@ -463,7 +462,7 @@ def _enregistrements_1e(reference, grandeur):
 
 
 def test_1e_moyenne_est_la_moyenne_arithmetique(reference):
-    """`Mittelwert` = moyenne arithmetique des 4 programmes de reference."""
+    """`Mittelwert` = arithmetic mean of the 4 reference programmes."""
     verifies = 0
     for grandeur in ('sensible_heating_demand_kwh', 'sensible_cooling_demand_kwh'):
         for chemin, enreg in _enregistrements_1e(reference, grandeur):
@@ -481,18 +480,17 @@ def test_1e_moyenne_est_la_moyenne_arithmetique(reference):
 
 
 def test_1e_plage_de_dispersion(reference):
-    """`obere/untere Grenze` = bande symetrique autour de la moyenne, plancher a 0.
+    """`obere/untere Grenze` = symmetric band around the mean, floor at 0.
 
-    CORRECTION D'UNE IDEE RECUE, etablie par l'audit (AUDIT.md pt 4) : le
-    `Streubereich` n'est PAS le min/max des programmes. La formule reelle du
-    classeur est
+    CORRECTION OF A MISCONCEPTION established by the audit (AUDIT.md pt 4): the
+    Streubereich is NOT the min/max of the programmes. The real workbook formula is
 
-        ecart_max = max |programme - moyenne|
-        range_max = moyenne + ecart_max
-        range_min = max(0, moyenne - ecart_max)
+        ecart_max = max |programme - mean|
+        range_max = mean + ecart_max
+        range_min = max(0, mean - ecart_max)
 
-    Verifiee 26/26. Ce test existe pour que le moteur n'implemente jamais la
-    version fausse : c'est lui qui definit le critere pass/fail du cas 1E.
+    Verified 26/26. This test exists so that the engine never implements the
+    wrong version: it defines the pass/fail criterion for case 1E.
     """
     verifies = 0
     for grandeur in ('sensible_heating_demand_kwh', 'sensible_cooling_demand_kwh'):
@@ -518,7 +516,7 @@ def test_1e_plage_de_dispersion(reference):
 
 
 def test_1e_moyenne_dans_sa_propre_plage(reference):
-    """Coherence physique : la moyenne tombe toujours dans la plage de dispersion."""
+    """Physical consistency: the mean always falls within the dispersion band."""
     for grandeur in ('sensible_heating_demand_kwh', 'sensible_cooling_demand_kwh'):
         for chemin, enreg in _enregistrements_1e(reference, grandeur):
             moyenne = enreg['mean_of_programs']['value']
@@ -532,15 +530,15 @@ def test_1e_moyenne_dans_sa_propre_plage(reference):
 
 
 # --------------------------------------------------------------------------
-# 3. Controles contre la source figee — ignores si le classeur est absent
+# 3. Checks against the frozen source — skipped if the workbook is absent
 # --------------------------------------------------------------------------
 
 def test_fidelite_valeur_cellule(reference, source):
-    """Chaque valeur stockee est exactement celle de la cellule Excel citee.
+    """Each stored value is exactly that of the cited Excel cell.
 
-    C'est le controle central de l'audit : 1336/1336 concordances le 2026-07-30.
-    Une valeur nulle doit correspondre a une cellule non numerique (erreur Excel
-    du type #DIV/0! ou #REF!), jamais a un zero invente.
+    This is the central audit check: 1336/1336 concordances on 2026-07-30.
+    A null value must correspond to a non-numeric cell (Excel error such as
+    #DIV/0! or #REF!), never to an invented zero.
     """
     divergences = []
     total = 0
@@ -552,9 +550,9 @@ def test_fidelite_valeur_cellule(reference, source):
         try:
             obtenue = source.valeur(feuille_valeur['cell'])
         except KeyError:
-            # Cellule inconnue de l'empreinte : soit le JSON cite une cellule
-            # qu'il ne citait pas (decalage de colonnes), soit l'empreinte n'a
-            # pas ete regeneree. Les deux doivent echouer, pas passer.
+            # Cell unknown to the fingerprint: either the JSON cites a cell
+            # it did not cite before (column shift), or the fingerprint has not
+            # been regenerated. Both must fail, not pass.
             divergences.append(localisation + " : cellule absente de la source "
                                "(" + source.origine + ")")
             continue
@@ -573,11 +571,11 @@ def test_fidelite_valeur_cellule(reference, source):
 
 
 def test_correspondance_libelle_colonne(reference, source):
-    """Chaque colonne declaree porte bien, dans l'en-tete reel, le libelle revendique.
+    """Each declared column carries, in the real header, the claimed label.
 
-    Seconde moitie du garde-fou contre le DEFAUT n^1 d'`AUDIT.md` : c'est
-    exactement ce controle qui avait revele 286 incoherences en Table 30 pour les
-    cas 600/640/900/940 (donnees decalees d'une colonne, EDSL-Tas perdu).
+    Second half of the safeguard against DEFECT 1 from `AUDIT.md`: this is
+    exactly the check that revealed 286 inconsistencies in Table 30 for
+    cases 600/640/900/940 (data shifted by one column, EDSL-Tas lost).
     """
     divergences = []
     for grandeur, cas_tous in reference['reference_values'].items():
@@ -603,7 +601,7 @@ def test_correspondance_libelle_colonne(reference, source):
 
 
 def test_source_declaree_est_la_source_utilisee(reference, source):
-    """La feuille citee dans le JSON est celle qui a reellement ete lue."""
+    """The sheet cited in the JSON is the one that was actually read."""
     declaree = reference['excel_source']['sheet']
     assert declaree == FEUILLE, (
         'Le JSON declare la feuille ' + repr(declaree) + ' mais les controles '
@@ -611,11 +609,11 @@ def test_source_declaree_est_la_source_utilisee(reference, source):
 
 
 def test_empreinte_couvre_toutes_les_cellules_citees(reference):
-    """L'empreinte doit suivre le JSON, sinon la CI redevient aveugle.
+    """The fingerprint must follow the JSON, otherwise CI goes blind again.
 
-    Une regeneration du JSON qui cite de nouvelles cellules sans regenerer
-    l'empreinte laisserait ces cellules non verifiees en CI. On l'interdit
-    explicitement plutot que de le decouvrir plus tard.
+    A JSON regeneration citing new cells without regenerating the fingerprint
+    would leave those cells unchecked in CI. We forbid this explicitly rather
+    than discovering it later.
     """
     if not os.path.exists(EMPREINTE):
         pytest.skip('Empreinte absente : ' + EMPREINTE)

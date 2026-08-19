@@ -1,24 +1,24 @@
 # -*- coding: utf-8 -*-
-u"""Extrait la FIGURE 1 de SIA 380/2:2022 (p. 27) depuis le dessin vectoriel.
+u"""Extracts FIGURE 1 of SIA 380/2:2022 (p. 27) from the vector drawing.
 
-Pourquoi cette voie plutôt qu'une lecture à l'œil : la figure 1 est un dessin
-vectoriel, pas une image. Les sommets des polylignes sont donc dans le PDF au
-format exact. Après calibration sur les LIGNES DE GRILLE (exactes par
-construction, pas sur les étiquettes de texte qui sont décalées de ~0,8 pt),
-le résidu est inférieur à 0,001 °C sur les quatre courbes.
+Why this approach rather than reading by eye: figure 1 is a vector drawing,
+not an image. The polyline vertices are therefore present in the PDF at exact
+precision. After calibration on the GRID LINES (exact by construction, not on
+the text labels which are offset by ~0.8 pt), the residual is below 0.001 °C
+on all four curves.
 
-Cela ferme le point ouvert O2 de traceability/batiment-exemple-zonage.spec.md
-(« valeurs exactes de SIA 380/2 figure 1 ») à coût nul, le document étant déjà
-dans /refs.
+This closes open point O2 of traceability/batiment-exemple-zonage.spec.md
+("exact values from SIA 380/2 figure 1") at zero cost, since the document is
+already in /refs.
 
-CONTRÔLE CROISÉ : SIA 380/2:2022 §5.2.2.5 affirme que les limites supérieure et
-inférieure de la figure 1 « correspondent à celles de SIA 180:2014, figure 4,
-pour les locaux d'habitation et les bureaux ». Les sommets extraits ici sont
-donc confrontés à la capture de la figure 4 fournie par le SIA le 2026-08-04.
+CROSS-CHECK: SIA 380/2:2022 §5.2.2.5 states that the upper and lower limits
+of figure 1 "correspond to those of SIA 180:2014, figure 4, for residential
+and office spaces". The vertices extracted here are therefore compared against
+the figure 4 capture provided by SIA on 2026-08-04.
 
-Usage :
-    python scripts/extract_sia380_2_figure1.py            # affiche
-    python scripts/extract_sia380_2_figure1.py --ecrire    # + écrit le JSON
+Usage:
+    python scripts/extract_sia380_2_figure1.py            # display
+    python scripts/extract_sia380_2_figure1.py --ecrire    # + write JSON
 """
 
 from __future__ import print_function
@@ -40,23 +40,23 @@ _PDF = os.path.join(_RACINE, 'refs', 'SIA-380-2-2022.pdf')
 _SORTIE = os.path.join(_RACINE, 'refs', 'reference-data',
                        'sia-380-2-2022.figure1.json')
 
-PAGE_FIGURE_1 = 27  # numérotation imprimée == index+1
+PAGE_FIGURE_1 = 27  # printed page number == index+1
 
-# Calibration : coordonnées PDF des lignes de grille extrêmes du cadre.
-# x = 10 °C à px 145.21 ; x = 25 °C à px 513.89
-# y = 20 °C à py 378.61 ; y = 27 °C à py 176.35
+# Calibration: PDF coordinates of the extreme grid lines of the frame.
+# x = 10 °C at px 145.21 ; x = 25 °C at px 513.89
+# y = 20 °C at py 378.61 ; y = 27 °C at py 176.35
 GRILLE = {u'x_min_px': 145.21, u'x_max_px': 513.89, u'x_min_val': 10.0, u'x_max_val': 25.0,
           u'y_min_px': 378.61, u'y_max_px': 176.35, u'y_min_val': 20.0, u'y_max_val': 27.0}
 
-# Signatures de style de trait, telles que présentes dans le PDF. Les libellés
-# sont ceux du texte normatif de §5.2.2.3 (édition française).
+# Line-style signatures as present in the PDF. The labels are those from the
+# normative text of §5.2.2.3 (French edition).
 STYLES = {
     u'[] 0':               u'trait plein',
     u'[ 6.75 9 ] 0':       u'pointillé',        # consignes VARIABLES
     u'[ 6.75 9 0 9 ] 0':   u'traits mixtes',    # consignes CONSTANTES
 }
 
-TOLERANCE_RESIDU = 0.005  # °C — au-delà, on refuse de conclure
+TOLERANCE_RESIDU = 0.005  # °C — beyond this, we refuse to conclude
 
 
 def _transformation():
@@ -74,7 +74,7 @@ def _transformation():
 
 
 def _sommets(chemin, vers_x, vers_y):
-    u"""Sommets d'un chemin, dédupliqués en conservant l'ordre de tracé."""
+    u"""Vertices of a path, deduplicated while preserving drawing order."""
     bruts = []
     for item in chemin[u'items']:
         if item[0] == 'l':
@@ -87,7 +87,7 @@ def _sommets(chemin, vers_x, vers_y):
 
 
 def _courbes_epaisses(page, vers_x, vers_y):
-    u"""Les quatre courbes de données : trait épais (2,25), dans le cadre."""
+    u"""The four data curves: thick stroke (2.25), within the frame."""
     trouvees = []
     for index, chemin in enumerate(page.get_drawings()):
         largeur = chemin.get(u'width') or 0.0
@@ -107,11 +107,11 @@ def _courbes_epaisses(page, vers_x, vers_y):
 
 
 def _segmenter(sommets):
-    u"""Découpe une liste de sommets en polylignes monotones en x.
+    u"""Splits a vertex list into x-monotone polylines.
 
-    Un chemin PDF peut contenir DEUX courbes distinctes (le chemin « pointillé »
-    porte à la fois la consigne de chauffage et celle de refroidissement) : la
-    rupture se repère à un retour en arrière sur l'abscisse.
+    A PDF path may contain TWO distinct curves (the "dashed" path carries both
+    the heating and cooling setpoint curves): the break is detected by a
+    reversal along the x-axis.
     """
     groupes, courant = [], []
     for sommet in sommets:
@@ -125,7 +125,7 @@ def _segmenter(sommets):
 
 
 def _residu_max(polyligne, pas):
-    u"""Écart maximal entre les valeurs extraites et le multiple de `pas`."""
+    u"""Maximum discrepancy between extracted values and a multiple of `pas`."""
     pire = 0.0
     for x, y in polyligne:
         pire = max(pire, abs(x - round(x / pas) * pas),
@@ -153,8 +153,8 @@ def extraire():
                 u'y_max': max(y for _, y in groupe),
             })
 
-    # Nommage par style + altitude : les limites sont en trait plein, la plus
-    # haute est la supérieure ; idem pour chaque paire de consignes.
+    # Naming by style + altitude: the limits are in solid stroke, the highest
+    # is the upper one; similarly for each pair of setpoint curves.
     def nommer(style, roles):
         lot = sorted((p for p in polylignes if p[u'style'] == style),
                      key=lambda p: p[u'y_max'])
@@ -174,8 +174,8 @@ def extraire():
 
     par_role = dict((p[u'role'], p) for p in polylignes)
 
-    # Contrôle de qualité : les limites doivent tomber sur des demi-degrés et
-    # les consignes sur des dixièmes.
+    # Quality check: the limits must fall on half-degrees and the setpoints
+    # on tenths.
     residus = {}
     for role, pas in ((u'limite_inferieure', 0.5), (u'limite_superieure', 0.5),
                       (u'consigne_chauffage_variable', 0.1),
@@ -189,7 +189,7 @@ def extraire():
                 u'%s : résidu %.4f °C au pas de %.1f — extraction refusée'
                 % (role, residu, pas))
 
-    # Écart de régulation Δθctr, mesuré et non supposé.
+    # Control deviation Δθctr, measured not assumed.
     ctr_chaud = round(
         min(y for _, y in par_role[u'consigne_chauffage_variable'][u'sommets'])
         - min(y for _, y in par_role[u'limite_inferieure'][u'sommets']), 4)

@@ -6,7 +6,7 @@ ws = wb["Zusammenfassung Testfälle"]
 
 print("=== Zone 3 : En-têtes et structure (colonnes BH onwards) ===\n")
 
-# En-tête : chercher la ligne d'en-tête
+# Header: find the header row
 print("Cherche en-têtes (lignes 100-110, colonnes BH-BM) :")
 for row in range(100, 112):
     bh_val = ws[f'BH{row}'].value
@@ -15,7 +15,7 @@ for row in range(100, 112):
     if bh_val or bi_val or bj_val:
         print(f"Row {row}: BH={repr(bh_val)}, BI={repr(bi_val)}, BJ={repr(bj_val)}")
 
-# Vérifier les en-têtes pour la zone A-G (structure 1)
+# Check the headers for zone A-G (structure 1)
 print("\n\n=== Zone 2 : En-têtes (lignes 100-110, colonnes A-G et I-O) ===")
 for row in range(100, 112):
     a_val = ws[f'A{row}'].value
@@ -27,7 +27,7 @@ for row in range(100, 112):
     if a_val or b_val or c_val or i_val or j_val or k_val:
         print(f"Row {row}: A={repr(a_val)}, B={repr(b_val)}, C={repr(c_val)}, I={repr(i_val)}, J={repr(j_val)}, K={repr(k_val)}")
 
-# Vérifier s'il y a des données sous les en-têtes (lignes 113-130)
+# Check whether there is data below the headers (rows 113-130)
 print("\n\n=== Zone 3 : Données possibles (lignes 113-130, colonnes BH-BM) ===")
 for row in range(113, 131):
     bh_val = ws[f'BH{row}'].value

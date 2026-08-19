@@ -144,12 +144,12 @@ def build_remediation_diagnosis(
             "RUN-001",
             "PASS" if disposable else "WARNING",
             "RUN_GUARD",
-            "Projet jetable actif",
-            project_path or "Chemin de projet indisponible",
+            "Active disposable project",
+            project_path or "Project path unavailable",
             (
-                "Continuer sur cette copie jetable."
+                "Continue on this disposable copy."
                 if disposable
-                else "Ouvrir une copie jetable avant toute future correction VE."
+                else "Open a disposable copy before making any future VE correction."
             ),
             "Model reviewer",
         )
@@ -189,17 +189,17 @@ def build_remediation_diagnosis(
             "MODEL-001",
             "FAIL" if unclassified else "PASS",
             "VE_MODEL",
-            "Classification des surfaces exterieures",
+            "External surface classification",
             (
-                f"{len(unclassified)} surface(s) exterieure(s) non classee(s) "
-                f"sur {len(external_surfaces)} surface(s) significative(s); "
-                f"{len(ignored_surface_residues)} residu(s) numerique(s) ignore(s)."
+                f"{len(unclassified)} unclassified external surface(s) out of "
+                f"{len(external_surfaces)} significant surface(s); "
+                f"{len(ignored_surface_residues)} numerical residue(s) ignored."
             ),
             (
-                "Dans ModelIT, corriger le type ou l'adjacence des surfaces listees "
-                "puis verifier leur construction."
+                "In ModelIT, correct the type or adjacency of the listed surfaces, "
+                "then verify their construction."
                 if unclassified
-                else "Aucune action."
+                else "No action required."
             ),
             "Model reviewer",
             unclassified,
@@ -238,16 +238,16 @@ def build_remediation_diagnosis(
             "MODEL-002",
             "FAIL" if invalid_windows else "PASS",
             "VE_MODEL",
-            "Proprietes thermiques des fenetres",
+            "Window thermal properties",
             (
-                f"{len(invalid_windows)} fenetre(s) sans Uw total ou fraction de cadre "
-                f"sur {len(windows)}."
+                f"{len(invalid_windows)} window(s) without whole-window U-value or "
+                f"frame fraction out of {len(windows)}."
             ),
             (
-                "Dans Apache Constructions, affecter une construction vitree complete "
-                "aux ouvertures listees; ne pas inventer Uw ni la fraction de cadre."
+                "In Apache Constructions, assign a complete glazed construction to "
+                "the listed openings; do not invent Uw or the frame fraction."
                 if invalid_windows
-                else "Aucune action."
+                else "No action required."
             ),
             "Facade / model reviewer",
             invalid_windows,
@@ -294,22 +294,22 @@ def build_remediation_diagnosis(
             "MODEL-003",
             "WARNING" if missing_ventilation else "PASS",
             "VE_MODEL_EVIDENCE" if ventilation_runtime_confirmed else "VE_OR_EXTRACTION",
-            "Debit de ventilation par local",
+            "Room ventilation flow",
             (
-                f"{len(missing_ventilation)} local(aux) ne contiennent qu'une infiltration; "
-                "aucun Air Exchange de ventilation n'est defini."
+                f"{len(missing_ventilation)} room(s) contain infiltration only; no "
+                "ventilation Air Exchange is defined."
                 if ventilation_runtime_confirmed
-                else f"{len(missing_ventilation)} local(aux) sans debit exploitable sur {len(rooms)}."
+                else f"{len(missing_ventilation)} room(s) without a usable flow out of {len(rooms)}."
             ),
             (
-                "Confirmer la strategie de ventilation du projet. Si une ventilation "
-                "mecanique est prevue, renseigner ses debits et profils dans VE; sinon, "
-                "documenter explicitement l'hypothese de ventilation naturelle ou nulle."
+                "Confirm the project ventilation strategy. If mechanical ventilation "
+                "is intended, enter its flows and profiles in VE; otherwise document "
+                "the natural-ventilation or zero-ventilation assumption explicitly."
                 if ventilation_runtime_confirmed
-                else "Verifier les Air Exchanges / Apache Systems. Si VE contient deja les "
-                "debits, conserver le modele et qualifier ensuite le chemin d'extraction."
+                else "Review Air Exchanges / Apache Systems. If VE already contains the "
+                "flows, preserve the model and qualify the extraction path."
                 if missing_ventilation
-                else "Aucune action."
+                else "No action required."
             ),
             "HVAC engineer / developer",
             missing_ventilation,
@@ -346,22 +346,21 @@ def build_remediation_diagnosis(
             "MODEL-004",
             "WARNING" if missing_lighting else "PASS",
             "VE_MODEL_EVIDENCE" if lighting_runtime_confirmed else "VE_OR_EXTRACTION",
-            "Puissance d'eclairage par local",
+            "Room lighting power",
             (
-                f"{len(missing_lighting)} local(aux) ne contiennent aucun gain VE de type Lighting; "
-                "seuls d'autres types de gains sont presents."
+                f"{len(missing_lighting)} room(s) contain no VE Lighting gain; only "
+                "other gain types are present."
                 if lighting_runtime_confirmed
-                else f"{len(missing_lighting)} local(aux) sans puissance d'eclairage sur {len(rooms)}."
+                else f"{len(missing_lighting)} room(s) without lighting power out of {len(rooms)}."
             ),
             (
-                "Ajouter ou affecter un gain Lighting source et profile dans le thermal "
-                "template uniquement si l'eclairage fait partie du perimetre du projet; "
-                "sinon documenter explicitement son exclusion."
+                "Add or assign a source-traced, profiled Lighting gain in the thermal "
+                "template only if lighting is in scope; otherwise document its exclusion."
                 if lighting_runtime_confirmed
-                else "Verifier les gains Lighting du thermal template. Si une puissance est "
-                "presente dans VE, conserver le modele et qualifier l'extraction."
+                else "Review Lighting gains in the thermal template. If power is present "
+                "in VE, preserve the model and qualify its extraction."
                 if missing_lighting
-                else "Aucune action."
+                else "No action required."
             ),
             "Lighting engineer / developer",
             missing_lighting,
@@ -382,13 +381,13 @@ def build_remediation_diagnosis(
             "API-001",
             "WARNING" if unresolved_profiles else "PASS",
             "VESCRIPT_EXTRACTION",
-            "Resolution des profils de gains",
-            f"{len(unresolved_profiles)} local(aux) sans integration journaliere des profils.",
+            "Internal-gain profile resolution",
+            f"{len(unresolved_profiles)} room(s) without daily profile integration.",
             (
-                "Verifier les identifiants des profils journaliers/hebdomadaires et leur "
-                "read-back VEScripts; ne pas remplacer un profil absent par ON."
+                "Verify daily/weekly profile identifiers and their VEScripts read-back; "
+                "do not replace a missing profile with ON."
                 if unresolved_profiles
-                else "Aucune action."
+                else "No action required."
             ),
             "Developer",
             unresolved_profiles,
@@ -401,11 +400,11 @@ def build_remediation_diagnosis(
             "SIM-001",
             "PASS" if aps_available else "WARNING",
             "SIMULATION_OUTPUT",
-            "Fichier APS lisible",
-            str(dynamic.get("selected_aps_file") or "Aucun APS selectionne"),
-            "Relancer ApacheSim sur la copie et conserver le fichier APS actif."
+            "Readable APS file",
+            str(dynamic.get("selected_aps_file") or "No APS selected"),
+            "Run ApacheSim again on the copy and retain the active APS file."
             if not aps_available
-            else "Aucune action.",
+            else "No action required.",
             "Simulation engineer",
         )
     )
@@ -428,25 +427,25 @@ def build_remediation_diagnosis(
             "SIM-002",
             "PASS" if heating_available else "WARNING",
             "SIMULATION_OUTPUT",
-            "Besoin annuel de chauffage",
+            "Annual heating need",
             (
                 f"{dynamic.get('total_heating_kwh')} kWh"
                 if heating_available
                 else (
-                    "Variable APS trouvee, mais les profils de chauffage des locaux sont OFF; "
-                    "aucune energie positive n'est disponible."
+                    "APS variable found, but room heating profiles are OFF; no positive "
+                    "energy value is available."
                     if heating_bound_but_inactive
-                    else "Variable APS de chauffage non resolue"
+                    else "APS heating variable unresolved"
                 )
             ),
             (
-                "Confirmer que l'absence de chauffage est intentionnelle. Si un besoin annuel "
-                "de chauffage est requis, affecter le profil de chauffage correct puis resimuler."
+                "Confirm that the absence of heating is intentional. If annual heating "
+                "need is required, assign the correct heating profile and resimulate."
                 if heating_bound_but_inactive
-                else "Activer/exporter le besoin de chauffage dans ApacheSim/Vista puis resimuler."
+                else "Enable/export heating need in ApacheSim/Vista and resimulate."
             )
             if not heating_available
-            else "Aucune action.",
+            else "No action required.",
             "Simulation engineer / developer",
         )
     )
@@ -466,19 +465,19 @@ def build_remediation_diagnosis(
             "SIM-003",
             "WARNING" if missing_end_uses else "PASS",
             "SIMULATION_OUTPUT",
-            "Energies terminales et auxiliaires APS",
-            "Manquantes: " + ", ".join(missing_end_uses)
+            "APS end-use and auxiliary energy",
+            "Missing: " + ", ".join(missing_end_uses)
             + (
-                "; variables APS non presentes: " + ", ".join(unresolved_aps_bindings)
+                "; APS variables not present: " + ", ".join(unresolved_aps_bindings)
                 if unresolved_aps_bindings
                 else ""
             )
             if missing_end_uses
-            else "Toutes les familles attendues sont disponibles.",
-            "Activer les sorties ApacheSim/Vista requises par le perimetre, resimuler, puis "
-            "qualifier leurs noms, unites et signes; ne pas creer une valeur nulle de substitution."
+            else "All expected output families are available.",
+            "Enable the ApacheSim/Vista outputs required by the scope, resimulate, then "
+            "qualify their names, units and signs; do not create zero-value substitutes."
             if missing_end_uses
-            else "Aucune action.",
+            else "No action required.",
             "Simulation engineer / developer",
         )
     )
@@ -491,11 +490,11 @@ def build_remediation_diagnosis(
             "EVID-001",
             "PASS" if metadata_ready else "WARNING",
             "REVIEWER_EVIDENCE",
-            "Metadonnees climatiques revues",
+            "Reviewed climate metadata",
             f"metadata={metadata_status}; weather_match={weather_match}",
-            "Completer le CSV project_metadata avec les donnees reelles et une revue acceptee."
+            "Complete project_metadata.csv with actual data and an accepted review."
             if not metadata_ready
-            else "Aucune action.",
+            else "No action required.",
             "Compliance reviewer",
         )
     )

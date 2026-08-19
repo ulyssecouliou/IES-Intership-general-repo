@@ -1,0 +1,2 @@
+project_id,comparison_scope,comparison_metric,project_value,reference_value,unit,comparison_result,review_status,reviewer,review_date,source_document,source_reference,notes
+EXAMPLE_ProjectLabel,complete_sia3802_project,global_energy_expenditure_index_sia380,38.0,42.0,MJ/m2a,pass,accepted,Nom du réviseur,2026-08-19,calcul_SIA3802_projet_vs_reference.pdf,SIA 380/2:2022 §7.2.5.2,Projet <= reference : exigence globale satisfaite

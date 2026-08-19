@@ -274,11 +274,25 @@ class Test2AShadingQualificationTests(unittest.TestCase):
         payload = json.loads(report_path.read_text(encoding="utf-8"))
         self.assertEqual(payload["status"], "PASS")
         self.assertTrue(payload["fixed_closed_storage_qualified"])
+        self.assertTrue(
+            payload["combined_threshold_optical_storage_qualified"]
+        )
         self.assertFalse(payload["fixed_closed_optical_mapping_qualified"])
         self.assertFalse(
             payload["diagnostic_candidate_generation_authorized"]
         )
         written = payload["setter_result"]["written_properties"]
+        self.assertTrue(
+            payload["setter_result"][
+                "threshold_and_optical_fields_co_stored"
+            ]
+        )
+        self.assertEqual(
+            written["external_shade_radiation_to_lower"], 150.0
+        )
+        self.assertEqual(
+            written["external_shade_radiation_to_raise"], 150.0
+        )
         self.assertEqual(written["external_shade_profile"], "ON")
         self.assertAlmostEqual(
             written["external_shade_transmittance_0"],

@@ -1,29 +1,28 @@
 # -*- coding: utf-8 -*-
-u"""Auto-test de bout en bout : référence → moteur → verdict → vue.
+u"""End-to-end self-test: reference → engine → verdict → view.
 
-CE QUE CE SCRIPT PROUVE, ET CE QU'IL NE PROUVE PAS.
+WHAT THIS SCRIPT PROVES, AND WHAT IT DOES NOT PROVE.
 
-Il resoumet à la chaîne les valeurs d'un **programme de référence** comme si
-elles venaient de VE, et vérifie que la chaîne les déclare conformes. Cela
-prouve que la **mécanique** est correcte : le référentiel se charge, le moteur
-apparie les grandeurs et les cas, la bande se calcule, le verdict se compose,
-la vue s'assemble.
+It replays through the chain the values of a **reference program** as if
+they had come from VE, and checks that the chain declares them conforming.
+This proves that the **mechanics** are correct: the reference data loads,
+the engine matches the quantities and cases, the band is computed, the verdict
+is assembled, the view is put together.
 
-Cela ne prouve **rien** sur IESVE. Un programme contributeur tombe dans sa
-propre bande par construction — la bande vaut `moyenne ± max|programme −
-moyenne|`, et l'écart maximal est par définition supérieur ou égal à celui de
-chaque contributeur. Le succès est donc arithmétiquement garanti : c'est
-précisément ce qui en fait un test de la plomberie, et pas un résultat de
-validation.
+This proves **nothing** about IESVE. A contributing program falls within its
+own acceptance envelope by construction — the envelope equals `mean ± max|program −
+mean|`, and the maximum discrepancy is by definition greater than or equal to
+that of each contributor. Success is therefore arithmetically guaranteed: that
+is precisely what makes this a test of the plumbing, and not a validation result.
 
-    Une classe « fonctionnelle » au sens de ce script = la chaîne tourne.
-    Une classe « validée » au sens de la SIA = IESVE a simulé les cas et ses
-    résultats tombent dans les bandes. Aucune classe n'est validée à ce jour.
+    A "functional" class in the sense of this script = the chain runs.
+    A "validated" class in the sense of SIA = IESVE has simulated the cases and
+    its results fall within the bands. No class is validated to date.
 
-Le script échoue bruyamment si un contributeur ressort NON conforme : cela ne
-peut venir que d'un défaut de la chaîne, jamais des données.
+The script fails loudly if a contributor comes out NON-conforming: this can only
+come from a fault in the chain, never from the data.
 
-Usage :
+Usage:
     python scripts/autotest_chaine.py [numero...]
 """
 
@@ -48,21 +47,21 @@ TESTS_A_BANDES = (2, 3, 4, 5, 6)
 
 
 class ChaineDefaillante(RuntimeError):
-    u"""Levée quand un contributeur ne ressort pas conforme.
+    u"""Signal an internally inconsistent replay of reference evidence.
 
-    Arithmétiquement impossible si la chaîne est correcte : l'erreur est
-    forcément dans le code, jamais dans les données de référence.
+    A reference contributor cannot fall outside its own acceptance envelope
+    when the evaluation chain is internally consistent.
     """
 
 
 def choisir_contributeur(reference):
-    u"""Choisit la colonne présente dans le plus de cas.
+    u"""Select the contributor column represented in the most cases.
 
     Args:
-        reference: Référentiel des sommes annuelles.
+        reference: Annual-sum reference payload.
 
     Returns:
-        str | None: Lettre de colonne, ou `None` si le test n'en a aucune.
+        str | None: Contributor column letter, or ``None`` when absent.
     """
     comptes = {}
     for grandeur in reference['grandeurs']:
@@ -75,14 +74,14 @@ def choisir_contributeur(reference):
 
 
 def candidat_depuis_contributeur(reference, lettre):
-    u"""Construit un candidat à partir des valeurs d'un programme.
+    u"""Build a candidate dataset from one reference program column.
 
     Args:
-        reference: Référentiel des sommes annuelles.
-        lettre: Colonne du programme à rejouer.
+        reference: Annual-sum reference payload.
+        lettre: Contributor column to replay.
 
     Returns:
-        dict: `{libellé grandeur: {nom de cas: valeur}}`.
+        dict: Mapping of metric labels to case values.
     """
     candidat = {}
     for grandeur in reference['grandeurs']:
@@ -99,10 +98,10 @@ def candidat_depuis_contributeur(reference, lettre):
 
 
 def candidat_test1_depuis_moyennes(reference):
-    u"""Rejoue uniquement les 28 valeurs du cas 1E soumises au critere.
+    u"""Replay only the 28 Test 1E values subject to a criterion.
 
-    Les autres cas du Test 1 sont informatifs selon la specification et ne
-    doivent donc pas etre artificiellement transformes en controles PASS/FAIL.
+    Other Test 1 cases are informative and must not be converted into an
+    artificial PASS/FAIL decision.
     """
     candidat = {}
     for grandeur in ('sensible_heating_demand_kwh',
@@ -127,7 +126,7 @@ def candidat_test1_depuis_moyennes(reference):
 
 
 def verifier_test1():
-    u"""Exerce le critere explicite du Test 1 et sa vue, sans simulation VE."""
+    u"""Exercise the explicit Test 1 criterion and view without VE."""
     from ui import verdict_view as vue
 
     reference = moteur_test1.charger_reference()
@@ -160,13 +159,13 @@ def verifier_test1():
 
 
 def candidat_test7_depuis_moyennes(reference):
-    u"""Construit le temoin positif Test 7 au centre des bandes officielles."""
+    u"""Build the positive Test 7 witness at official band centers."""
     return dict((grandeur['libelle_de'], grandeur['moyenne'])
                 for grandeur in reference['grandeurs'])
 
 
 def verifier_test7():
-    u"""Exerce les 11 bandes Test 7 et le verrou de provenance PV."""
+    u"""Exercise all Test 7 bands and the PV provenance guardrail."""
     from ui import verdict_view as vue
 
     reference = moteur_test7.charger_reference()
@@ -201,16 +200,16 @@ def verifier_test7():
 
 
 def verifier_bandes(numero_test):
-    u"""Rejoue un programme de référence dans le moteur des sommes annuelles.
+    u"""Replay one reference program through the annual-sum engine.
 
     Args:
-        numero_test: Numéro du test SIA.
+        numero_test: SIA test number.
 
     Returns:
-        dict: Compte rendu.
+        dict: Structured replay report.
 
     Raises:
-        ChaineDefaillante: Si un cas rejoué ressort non conforme.
+        ChaineDefaillante: If a replayed case falls outside its own band.
     """
     reference = moteur_bandes.charger_reference(numero_test)
     lettre = choisir_contributeur(reference)
@@ -229,9 +228,9 @@ def verifier_bandes(numero_test):
                 continue
             evalues += 1
             if not scatter_band.is_passing(ligne['statut']):
-                # `libelle`, pas `libelle_de` : le RESULTAT du moteur renomme
-                # la cle du referentiel. Le chemin d echec n avait jamais ete
-                # exerce, et son propre test l a demasque.
+                # `libelle`, not `libelle_de`: the engine RESULT renames
+                # the reference data key. The failure path had never been
+                # exercised, and its own test unmasked it.
                 echecs.append((grandeur['libelle'], ligne['cas'],
                                ligne['statut']))
     if echecs:
@@ -253,16 +252,16 @@ def verifier_bandes(numero_test):
 
 
 def verifier_distributions(numero_test):
-    u"""Rejoue un programme de référence dans le moteur des distributions.
+    u"""Replay one reference program through the distribution engine.
 
     Args:
-        numero_test: Numéro du test SIA.
+        numero_test: SIA test number.
 
     Returns:
-        dict | None: Compte rendu, ou `None` si le test n'a pas ce critère.
+        dict | None: Report, or ``None`` when no criterion applies.
 
     Raises:
-        ChaineDefaillante: Si une classe rejouée sort de l'enveloppe.
+        ChaineDefaillante: If a replayed class falls outside its envelope.
     """
     if numero_test not in moteur_distrib.TESTS_SUPPORTES:
         return None
@@ -299,13 +298,13 @@ def verifier_distributions(numero_test):
 
 
 def verifier_vue(numero_test):
-    u"""Assemble la vue du navigateur, pour vérifier qu'elle tient debout.
+    u"""Assemble the navigator view as an end-to-end rendering check.
 
     Args:
-        numero_test: Numéro du test SIA.
+        numero_test: SIA test number.
 
     Returns:
-        dict: Compte rendu de la vue.
+        dict: Structured view summary.
     """
     from ui import verdict_view as vue
 
@@ -322,13 +321,13 @@ def verifier_vue(numero_test):
 
 
 def executer(tests=TESTS):
-    u"""Déroule l'auto-test complet.
+    u"""Run the complete offline evaluation-chain self-test.
 
     Args:
-        tests: Numéros de tests à contrôler.
+        tests: Test numbers to check.
 
     Returns:
-        list[dict]: Un compte rendu par test.
+        list[dict]: One structured report per test.
     """
     comptes_rendus = []
     for numero in tests:
@@ -348,13 +347,13 @@ def executer(tests=TESTS):
 
 
 def main(arguments=()):
-    u"""Point d'entrée en ligne de commande.
+    u"""Run the evaluation-chain self-test from command-line arguments.
 
     Args:
-        arguments: Numéros de tests.
+        arguments: Optional test numbers.
 
     Returns:
-        int: 0 si la chaîne tient, 1 sinon.
+        int: Zero when the chain is consistent, otherwise one.
     """
     demandes = [int(a) for a in arguments if a.isdigit()]
     print(u'AUTO-TEST DE LA CHAINE — reference -> moteur -> verdict -> vue')

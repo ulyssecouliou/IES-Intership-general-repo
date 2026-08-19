@@ -1,26 +1,26 @@
 # -*- coding: utf-8 -*-
-"""Tests de `ve_adapter/test7_adapter.py` -- Test SIA 4010 n° 7, classe 5.
+"""Tests of `ve_adapter/test7_adapter.py` -- SIA 4010 Test no. 7, class 5.
 
-Même esprit que `test_test1_adapter.py` :
+Same spirit as `test_test1_adapter.py`:
 
-1. **Confrontation aux valeurs normatives figées** (`Spezifikation_Test7.pdf`,
-   lu intégralement) -- les constantes codées en dur ne dérivent pas.
-2. **Concordance verbatim des 11 libellés allemands** avec
-   `refs/reference-data/test-7.ref.json` -- une faute de frappe romprait
-   silencieusement l'appariement fait par `engine/test7_engine.py`.
-3. **Résistance à la mutation** sur la lecture/agrégation horaire (mêmes
-   pièges qu'au Test 1 : décalage de curseur, décimation au lieu de
-   moyenne, pas de simulation non entier).
-4. **Refus explicites** : `PV-Ertrag` ne doit jamais pouvoir entrer dans un
-   plan d'extraction ; une grandeur absente du plan reste absente du
-   candidat (jamais 0, jamais None fabriqué) ; une unité qui ne concorde
-   pas avec ce que le fichier `.aps` déclare doit bloquer l'extraction.
-5. **Bout en bout sans VE** : la fixture, une fois passée dans
-   `engine.test7_engine.evaluer_test7`, doit produire exactement le
-   comportement réel attendu (PV manquant -> NOT_CHECKABLE, jamais PASS).
+1. **Confrontation with frozen normative values** (`Spezifikation_Test7.pdf`,
+   read in full) -- hard-coded constants do not drift.
+2. **Verbatim agreement of the 11 German labels** with
+   `refs/reference-data/test-7.ref.json` -- a typo would silently break
+   the matching done by `engine/test7_engine.py`.
+3. **Mutation resistance** on hourly read/aggregation (same
+   traps as Test 1: cursor shift, decimation instead of averaging,
+   non-integer simulation step).
+4. **Explicit refusals**: `PV-Ertrag` must never be able to enter an
+   extraction plan; a quantity absent from the plan stays absent from the
+   candidate (never 0, never fabricated None); a unit that does not match
+   what the `.aps` file declares must block extraction.
+5. **End to end without VE**: the fixture, once passed into
+   `engine.test7_engine.evaluer_test7`, must produce exactly the expected
+   real behaviour (PV missing -> NOT_CHECKABLE, never PASS).
 
-Aucun `iesve` n'est requis : import paresseux (`_iesve()`), et tout ce qui
-est testé ici est du calcul pur ou du dialogue avec un double.
+No `iesve` is required: lazy import (`_iesve()`), and everything tested
+here is pure computation or dialogue with a double.
 """
 
 import calendar
@@ -42,7 +42,7 @@ from engine import scatter_band  # noqa: E402
 
 
 def _charger_adaptateur():
-    """Charge le module par chemin : `ve_adapter/` n'est pas un paquet."""
+    """Loads the module by path: `ve_adapter/` is not a package."""
     chemin = os.path.join(RACINE, 've_adapter', 'test7_adapter.py')
     spec = importlib.util.spec_from_file_location('test7_adapter_sous_test', chemin)
     module = importlib.util.module_from_spec(spec)
@@ -65,16 +65,15 @@ def reference():
 
 
 # ==========================================================================
-# 1. Confrontation aux valeurs normatives figées -- Spezifikation_Test7.pdf
+# 1. Confrontation with frozen normative values -- Spezifikation_Test7.pdf
 # ==========================================================================
 
 def test_annee_de_simulation_est_2022_pas_2011():
     """Spezifikation_Test7.pdf p.1 : « 1.1.2022 bis 31.12.2022 ».
 
-    Différent du Test 1 (2011) -- une confusion entre les deux modules
-    romprait silencieusement l'agrégation mensuelle/annuelle (aucune des
-    deux années n'est bissextile, donc l'erreur ne se verrait pas sur la
-    seule longueur de la série).
+    Different from Test 1 (2011) -- a confusion between the two modules
+    would silently break monthly/annual aggregation (neither year is a
+    leap year, so the error would not show up from series length alone).
     """
     assert adaptateur.ANNEE_SIMULATION == 2022
     assert not calendar.isleap(adaptateur.ANNEE_SIMULATION)
@@ -90,8 +89,8 @@ def test_climaveneta_puissances_nominales():
 
 
 def test_distribution_froid_et_chaud_conformes_a_la_spec():
-    """Spezifikation_Test7.pdf p.1 : pertes 5 %, auxiliaire 2 %, dont 50 %
-    récupéré/reporté sur l'autre circuit -- pour le froid ET le chaud."""
+    """Spezifikation_Test7.pdf p.1 : losses 5 %, auxiliary 2 %, of which 50 %
+    recovered/transferred to the other circuit -- for both cold AND heat."""
     froid = adaptateur.DISTRIBUTION_FROID
     chaud = adaptateur.DISTRIBUTION_CHAUD
     assert froid['pertes_pct_de_la_chaleur_absorbee'] == 5.0
@@ -103,28 +102,28 @@ def test_distribution_froid_et_chaud_conformes_a_la_spec():
 
 
 def test_stockage_deux_ballons_de_2000_litres():
-    """Spezifikation_Test7.pdf p.1 : « Volumen 2'000 l » pour les DEUX
-    ballons (froid et chaud)."""
+    """Spezifikation_Test7.pdf p.1 : « Volumen 2'000 l » for BOTH
+    tanks (cold and hot)."""
     assert adaptateur.STOCKAGE_FROID_LITRES == 2000
     assert adaptateur.STOCKAGE_CHAUD_LITRES == 2000
 
 
 def test_appareils_sur_air_exterieur_conformes_a_la_spec():
-    """Spezifikation_Test7.pdf p.4 : refroidisseur sec 70 kW, échangeur air
-    extérieur 76 kW, ventilateur 0.045 kW/kW."""
+    """Spezifikation_Test7.pdf p.4 : dry cooler 70 kW, outdoor air heat
+    exchanger 76 kW, fan 0.045 kW/kW."""
     assert adaptateur.AEROREFROIDISSEUR_SEC_KW == 70.0
     assert adaptateur.ECHANGEUR_AIR_EXTERIEUR_KW == 76.0
     assert adaptateur.VENTILATEUR_PUISSANCE_SPECIFIQUE_KW_PAR_KW == 0.045
 
 
 def test_circuit_glycol_conforme_a_la_spec_et_garde_sa_reserve():
-    """Spezifikation_Test7.pdf p.4 : 19'000 kg/h, spread 4 K, ΔT air-fluide
-    4 K à pleine charge, 50 % de la chaleur de pompe utile, pertes 5 %.
+    """Spezifikation_Test7.pdf p.4 : 19'000 kg/h, spread 4 K, ΔT air-fluid
+    4 K at full load, 50 % of pump heat useful, losses 5 %.
 
-    Le « ? » du taux de glycol est VERBATIM dans la source SIA elle-même
-    (« Wasser-Glykol-Gemisch 30%? ») -- ce test s'assure que personne ne le
-    retire silencieusement en "nettoyant" la constante, ce qui masquerait
-    une incertitude qui n'est pas de notre fait.
+    The "?" in the glycol concentration is VERBATIM in the SIA source itself
+    ("Wasser-Glykol-Gemisch 30%?") -- this test ensures that nobody silently
+    removes it while "cleaning up" the constant, which would hide an
+    uncertainty that is not of our making.
     """
     circuit = adaptateur.CIRCUIT_GLYCOL
     assert circuit['massflow_kg_par_h'] == 19000.0
@@ -145,8 +144,8 @@ def test_bivalence_chaudiere_gaz_rendement_09():
 
 
 def test_pv_systeme_nombre_de_modules_et_puissances_declarees():
-    """Spezifikation_Test7.pdf p.4 : toit 18x7+6x4=150 modules, 45 kWc,
-    10°, est/ouest ; façade sud 13x4=52 modules, 15.6 kWc."""
+    """Spezifikation_Test7.pdf p.4 : roof 18x7+6x4=150 modules, 45 kWp,
+    10°, east/west; south facade 13x4=52 modules, 15.6 kWp."""
     pv = adaptateur.PV_SYSTEME
     assert pv['toit_modules'] == 18 * 7 + 6 * 4 == 150
     assert pv['toit_kwp_declare'] == 45.0
@@ -158,15 +157,15 @@ def test_pv_systeme_nombre_de_modules_et_puissances_declarees():
 
 
 def test_reserve_puissance_pv_documentee_et_non_masquee():
-    """150 x 310 W = 46.5 kWc et 52 x 310 W = 16.12 kWc NE concordent PAS
-    avec les 45 / 15.6 kWc déclarés par la source -- alors que 300 W/module
-    concorde exactement des deux côtés. Ce test vérifie que
-    `verifier_coherence_puissance_pv()` DÉTECTE et REND VISIBLE cet écart,
-    plutôt que de le corriger silencieusement (on ne sait pas laquelle des
-    deux lectures est la bonne sans relire la page 4 du PDF source).
+    """150 x 310 W = 46.5 kWp and 52 x 310 W = 16.12 kWp do NOT match
+    the 45 / 15.6 kWp declared by the source -- whereas 300 W/module
+    matches exactly on both sides. This test verifies that
+    `verifier_coherence_puissance_pv()` DETECTS and MAKES VISIBLE this
+    discrepancy, rather than silently correcting it (it is unknown which
+    of the two readings is correct without re-reading page 4 of the source PDF).
 
-    Aucune incidence fonctionnelle : `PV-Ertrag` n'est jamais calculé par ce
-    module quelle que soit l'issue de ce contrôle.
+    No functional impact: `PV-Ertrag` is never computed by this module
+    whatever the outcome of this check.
     """
     rapport = adaptateur.verifier_coherence_puissance_pv()
     assert rapport['toit_coherent_a_310w'] is False
@@ -176,7 +175,7 @@ def test_reserve_puissance_pv_documentee_et_non_masquee():
 
 
 # ==========================================================================
-# 2. Concordance verbatim avec test-7.ref.json
+# 2. Verbatim agreement with test-7.ref.json
 # ==========================================================================
 
 def test_onze_grandeurs_dont_pv_ertrag(reference):
@@ -187,9 +186,9 @@ def test_onze_grandeurs_dont_pv_ertrag(reference):
 
 
 def test_libelles_concordent_verbatim_avec_la_reference_figee(reference):
-    """Si un libellé diffère d'un seul caractère (accent, espace), la
-    grandeur correspondante deviendrait silencieusement NOT_CHECKABLE côté
-    moteur -- ce test l'attraperait avant que ça n'arrive en pratique.
+    """If a label differs by a single character (accent, space), the
+    corresponding quantity would silently become NOT_CHECKABLE on the
+    engine side -- this test catches it before it happens in practice.
     """
     libelles_reference = set(g['libelle_de'] for g in reference['grandeurs'])
     libelles_module = set(g['libelle_de'] for g in adaptateur.GRANDEURS_TEST7)
@@ -203,7 +202,7 @@ def test_seul_pv_ertrag_est_exclu_du_jeu_verifiable(reference):
 
 
 # ==========================================================================
-# 3. Température extérieure de Kloten -- source figée, résistance mutation
+# 3. Kloten outdoor temperature -- frozen source, mutation resistance
 # ==========================================================================
 
 def test_temperature_kloten_8760_heures_contigues():
@@ -213,9 +212,9 @@ def test_temperature_kloten_8760_heures_contigues():
 
 
 def test_temperature_kloten_concorde_avec_les_agregats_figes():
-    """Contrôle croisé contre `sia-2028-kloten-temperature.json` (mêmes
-    agrégats déjà calculés et figés par `reference-data-engineer`) :
-    min -13.0167, max 34.1, moyenne 9.4692 °C."""
+    """Cross-check against `sia-2028-kloten-temperature.json` (same
+    aggregates already computed and frozen by `reference-data-engineer`):
+    min -13.0167, max 34.1, mean 9.4692 °C."""
     serie = adaptateur.charger_temperature_exterieure_kloten()
     assert abs(min(serie) - (-13.0167)) < 1e-3
     assert abs(max(serie) - 34.1) < 1e-3
@@ -233,10 +232,10 @@ def test_temperature_kloten_refuse_un_fichier_tronque(tmp_path):
 
 
 def test_temperature_kloten_refuse_des_heures_non_contigues(tmp_path):
-    """Mutation plausible : un export trié par valeur au lieu de par heure."""
+    """Plausible mutation: an export sorted by value instead of by hour."""
     lignes = ['heure,theta_e_air_c,moyenne_glissante_48h_c']
     heures = list(range(1, HEURES_PAR_AN + 1))
-    heures[0], heures[1] = heures[1], heures[0]  # une seule permutation suffit
+    heures[0], heures[1] = heures[1], heures[0]  # a single permutation suffices
     for h in heures:
         lignes.append('%d,%f,%f' % (h, 0.0, 0.0))
     chemin = tmp_path / 'kloten_permute.csv'
@@ -255,8 +254,8 @@ def test_verification_temperature_simulee_identique_est_coherente():
 
 
 def test_verification_temperature_simulee_detecte_un_decalage():
-    """Mutation réaliste : la VE simule avec un fichier météo décalé d'1 h ;
-    le contrôle doit le voir, pas le laisser passer en silence."""
+    """Realistic mutation: VE simulates with a weather file shifted by 1 h;
+    the check must catch it, not let it pass silently."""
     reference_serie = adaptateur.charger_temperature_exterieure_kloten()
     decalee = reference_serie[1:] + reference_serie[:1]
     rapport = adaptateur.verifier_temperature_exterieure_simulee(
@@ -273,12 +272,12 @@ def test_verification_temperature_simulee_refuse_longueur_differente():
 
 
 # ==========================================================================
-# 4. Lecture des séries de composants HVAC -- avec un double du ResultsReader
+# 4. Reading HVAC component series -- with a ResultsReader double
 # ==========================================================================
 
 class FauxResultsReader(object):
-    """Double minimal de `iesve.ResultsReader` (§6.1.14), étendu au niveau
-    `h` (HVAC component) par rapport à celui de `test_test1_adapter.py`."""
+    """Minimal double of `iesve.ResultsReader` (§6.1.14), extended to level
+    `h` (HVAC component) compared to the one in `test_test1_adapter.py`."""
 
     def __init__(self, variables=None, unites=None, serie=None, results_per_day=24):
         self._variables = variables if variables is not None else []
@@ -330,8 +329,8 @@ def test_unite_declaree_leve_si_variable_absente():
 
 
 def test_unite_declaree_exige_le_bon_niveau_de_modele():
-    """Même nom de variable, mauvais niveau : ne doit jamais être confondue
-    avec une variable de zone ou de système homonyme."""
+    """Same variable name, wrong level: must never be confused with a
+    zone or system variable of the same name."""
     lecteur = _lecteur_avec_variable(niveau='z')
     with pytest.raises(RuntimeError):
         adaptateur._valeur_unite_declaree(lecteur, 'Var HVAC test', 'h')
@@ -347,11 +346,11 @@ def test_serie_horaire_composant_passe_telle_quelle_a_pas_horaire():
 
 
 def test_serie_horaire_composant_semi_horaire_est_moyennee():
-    """Même défaut métrologique documenté pour le Test 1 : un pas de 30 min
-    doit MOYENNER, jamais décimer."""
+    """Same metrological defect documented for Test 1: a 30-min step
+    must AVERAGE, never decimate."""
     serie = []
     for heure in range(HEURES_PAR_AN):
-        serie.extend([float(heure), float(heure) + 2.0])  # moyenne = heure+1
+        serie.extend([float(heure), float(heure) + 2.0])  # mean = heure+1
     lecteur = FauxResultsReader(serie=serie)
     horaire = adaptateur._serie_horaire_composant(lecteur, 'C1', 'TYPE', 'Var', 48)
     assert len(horaire) == HEURES_PAR_AN
@@ -378,13 +377,13 @@ def test_energie_annuelle_kwh_somme_la_serie_horaire():
 
 
 def test_energie_annuelle_kwh_distingue_somme_de_moyenne():
-    """Mutation classique : moyenner au lieu de sommer donne un nombre
-    plausible (même ordre de grandeur qu'une puissance) mais faux."""
+    """Classic mutation: averaging instead of summing gives a plausible
+    number (same order of magnitude as a power) but a wrong one."""
     serie = [float(i) for i in range(HEURES_PAR_AN)]
     somme = adaptateur._energie_annuelle_kwh(serie)
     moyenne = sum(serie) / len(serie)
     assert abs(somme - sum(serie)) < 1e-9
-    assert abs(somme - moyenne) > 1.0  # très largement différent
+    assert abs(somme - moyenne) > 1.0  # very much different
 
 
 def test_energie_annuelle_kwh_refuse_longueur_invalide():
@@ -393,7 +392,7 @@ def test_energie_annuelle_kwh_refuse_longueur_invalide():
 
 
 # ==========================================================================
-# 5. Refus explicites de l'extraction par grandeur
+# 5. Explicit extraction refusals by quantity
 # ==========================================================================
 
 def test_pv_ertrag_ne_peut_jamais_entrer_dans_un_plan_dextraction():
@@ -421,8 +420,8 @@ def test_plan_incomplet_leve_key_error():
 
 
 def test_unite_incoherente_bloque_lextraction():
-    """Le plan attend 'kW' mais le fichier .aps déclare 'kWh' pour cette
-    variable -- refus plutôt qu'une lecture silencieusement fausse."""
+    """The plan expects 'kW' but the .aps file declares 'kWh' for this
+    variable -- refusal rather than a silently wrong read."""
     lecteur = _lecteur_avec_variable(display_name='kWh')
     libelle = adaptateur.GRANDEURS_TEST7[0]['libelle_de']
     with pytest.raises(RuntimeError):
@@ -440,7 +439,7 @@ def test_extraction_reussie_dune_grandeur():
 
 
 def test_grandeur_absente_du_plan_reste_absente_du_candidat():
-    """Jamais 0.0, jamais None fabriqué : la clé n'existe simplement pas."""
+    """Never 0.0, never fabricated None: the key simply does not exist."""
     libelle_present = adaptateur.GRANDEURS_TEST7[0]['libelle_de']
     lecteur = _lecteur_avec_variable(serie=[1.0] * HEURES_PAR_AN)
     plan = {libelle_present: _plan_valide()}
@@ -469,7 +468,7 @@ def test_plan_extraction_avec_pv_ertrag_leve_avant_toute_lecture():
 
 
 # ==========================================================================
-# 6. Découverte (lecture seule, jamais invoquée automatiquement)
+# 6. Discovery (read-only, never invoked automatically)
 # ==========================================================================
 
 def test_decouverte_filtre_par_niveau_et_par_jeton():
@@ -486,8 +485,8 @@ def test_decouverte_filtre_par_niveau_et_par_jeton():
 
 
 def test_decouverte_ne_leve_jamais_de_verdict():
-    """Cette fonction n'est qu'une aide manuelle : elle ne doit jamais être
-    appelée par le chemin d'extraction de confiance."""
+    """This function is only a manual aid: it must never be called by the
+    trusted extraction path."""
     import inspect
     source_extraction = inspect.getsource(adaptateur.extraire_candidat_test7_depuis_fichier)
     source_extraction += inspect.getsource(adaptateur.extraire_grandeur_test7)
@@ -495,13 +494,13 @@ def test_decouverte_ne_leve_jamais_de_verdict():
 
 
 # ==========================================================================
-# 7. Aucun chemin de code vers PV / VERenewables / EnergyUse -- refus
-#    délibéré, pas une lacune API (docstring de module, point 5).
+# 7. No code path towards PV / VERenewables / EnergyUse -- deliberate
+#    refusal, not an API gap (module docstring, point 5).
 # ==========================================================================
 
 def test_aucun_appel_reel_vers_les_symboles_pv_non_verifies():
-    """Les symboles cités en PROSE (pour expliquer le refus) ne doivent
-    jamais apparaître comme un appel exécutable dans le code."""
+    """Symbols cited IN PROSE (to explain the refusal) must never appear
+    as an executable call in the code."""
     chemin = os.path.join(RACINE, 've_adapter', 'test7_adapter.py')
     with io.open(chemin, encoding='utf-8') as f:
         source = f.read()
@@ -517,7 +516,7 @@ def test_aucun_appel_reel_vers_les_symboles_pv_non_verifies():
 
 
 # ==========================================================================
-# 8. Bout en bout avec le moteur -- sans VE
+# 8. End to end with the engine -- without VE
 # ==========================================================================
 
 def test_fixture_se_charge_et_ne_contient_jamais_pv_ertrag():
@@ -529,8 +528,8 @@ def test_fixture_se_charge_et_ne_contient_jamais_pv_ertrag():
 
 
 def test_fixture_passee_dans_le_moteur_est_not_checkable_a_cause_du_pv(reference):
-    """C'est le scénario réel : tout est simulé sauf le PV, faute
-    d'irradiance. Le verdict global ne doit JAMAIS être PASS."""
+    """This is the real scenario: everything is simulated except PV, for lack
+    of irradiance. The overall verdict must NEVER be PASS."""
     fixture = adaptateur.charger_fixture_test7()
     resultat = moteur.evaluer_test7(reference, fixture)
     assert resultat['verdict'] == scatter_band.VERDICT_NOT_CHECKABLE
@@ -545,9 +544,9 @@ def test_fixture_passee_dans_le_moteur_est_not_checkable_a_cause_du_pv(reference
 
 
 def test_fixture_est_dans_la_bande_pour_les_dix_grandeurs_verifiables(reference):
-    """Les dix grandeurs simulées (fixture = moyenne +1 %) doivent tomber
-    dans la bande recalculée -- sinon la fixture ne servirait à rien pour
-    développer l'UI en régime "tout va bien"."""
+    """The ten simulated quantities (fixture = mean +1 %) must fall within
+    the recomputed dispersion band -- otherwise the fixture would be useless
+    for developing the UI in "all good" mode."""
     fixture = adaptateur.charger_fixture_test7()
     resultat = moteur.evaluer_test7(reference, fixture)
     for g in resultat['grandeurs']:
@@ -557,9 +556,9 @@ def test_fixture_est_dans_la_bande_pour_les_dix_grandeurs_verifiables(reference)
 
 
 def test_no_iesve_import_au_niveau_module():
-    """Même garde-fou que pour `test1_adapter.py` : `iesve` ne doit être
-    importé qu'à la demande, à l'INTÉRIEUR de `_iesve()` (donc indenté),
-    jamais au niveau module (donc en colonne 0)."""
+    """Same safeguard as for `test1_adapter.py`: `iesve` must only be
+    imported on demand, INSIDE `_iesve()` (i.e. indented), never at module
+    level (i.e. at column 0)."""
     chemin = os.path.join(RACINE, 've_adapter', 'test7_adapter.py')
     with io.open(chemin, encoding='utf-8') as f:
         for numero, ligne in enumerate(f, 1):

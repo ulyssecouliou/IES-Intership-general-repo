@@ -9,15 +9,15 @@ specification names:
 
 The portal holds exactly ONE file:
 `ISO_52016_1_BESTEST_ClimData_2016.08.24.xls`. It is NOT a weather file
-brut mais un tableau horaire converti, et il porte deux avertissements en clair
+but a converted hourly table, and it carries two explicit warnings
 that change how Test 1 must be run -- see `avertissements_du_fichier`.
 
 WHY THIS SCRIPT EXISTS. The Codex repository carried a file
 `DRYCOLD_TMY_ISO_SOURCE_VERIFICATION.json` declaring
-`{"status": "PASS", "source_identity_supported": true}` avec une empreinte
-sha256 that is the digest of a 30-BYTE TEST STUB, not of the real file
-de 8760 heures. L'attestation ne certifiait rien. On repart donc de la source
-public source, with its digest recomputed here.
+`{"status": "PASS", "source_identity_supported": true}` with a SHA-256 digest
+that is the digest of a 30-BYTE TEST STUB, not of the real file
+of 8760 hours. The attestation certified nothing. This file therefore starts
+from the public source, with its digest recomputed here.
 
 That is the failure this whole repository is built against: a document that
 LOOKS like verification, carrying a real algorithm and a real-looking digest,
@@ -46,7 +46,7 @@ _SORTIE = os.path.join(_RACINE, 'refs', 'reference-data',
 URL = ('https://standards.iso.org/iso/52016/-1/ed-1/'
        'ISO_52016_1_BESTEST_ClimData_2016.08.24.xls')
 
-# Les huit surfaces sur lesquelles le fichier donne l'irradiance, dans l'ordre
+# The eight surfaces on which the file gives irradiance, in the order
 # of columns 6 to 13. Labels read from row 4 of the sheet.
 SURFACES = ('NV', 'EV', 'SV', 'WV', 'N45', 'S45', 'VOID', 'H')
 

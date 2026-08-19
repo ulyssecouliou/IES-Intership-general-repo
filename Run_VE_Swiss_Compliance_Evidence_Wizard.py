@@ -179,9 +179,9 @@ def main(arguments=()):
 
     faits = relever_les_faits()
     if not faits.get('project_path'):
-        print('Aucun projet VE actif detecte.')
-        print('Cet assistant doit etre lance depuis VE, sur une COPIE du')
-        print('modele client. Il ne modifie rien, mais il lit le projet actif.')
+        print('No active VE project was detected.')
+        print('Run this wizard from VE on a COPY of the client model.')
+        print('The wizard is read-only with respect to the VE model.')
         return 1
 
     faits = _completer_depuis_la_sonde(
@@ -192,10 +192,10 @@ def main(arguments=()):
 
     chemins = interface.chemins_du_projet(faits['project_path'],
                                           faits.get('project_id') or '')
-    print('Projet VE actif : %s' % faits.get('project_id'))
-    print('CSV de preuves  : %s' % chemins['csv'])
-    print('Audit JSON      : %s' % chemins['audit'])
-    print('Aucune donnee VE ne sera modifiee.')
+    print('Active VE project: %s' % faits.get('project_id'))
+    print('Evidence CSV: %s' % chemins['csv'])
+    print('Audit JSON: %s' % chemins['audit'])
+    print('No VE data will be modified.')
 
     assistant = interface.AssistantDePreuves(
         detecte=faits, chemin_csv=chemins['csv'],
@@ -203,13 +203,12 @@ def main(arguments=()):
     resultat = assistant.lancer()
 
     if resultat is None:
-        print('Ferme sans enregistrer. Aucun fichier ecrit.')
+        print('Closed without saving. No evidence file was written.')
         return 0
-    print('Statut ecrit : %s' % resultat['statut'])
+    print('Recorded status: %s' % resultat['statut'])
     if resultat.get('sauvegarde'):
-        print('Sauvegarde de l ancien CSV : %s' % resultat['sauvegarde'])
-    print('Rappel : %s' % noyau.EXPLICATION_DES_CATEGORIES[
-        noyau.PASS_TECHNIQUE])
+        print('Previous CSV backup: %s' % resultat['sauvegarde'])
+    print('Reminder: a technical PASS is not an SIA certification decision.')
     return 0
 
 
@@ -218,4 +217,4 @@ if __name__ == '__main__':
     # erreur dans sa fenetre de script alors que tout s est bien passe.
     _code = main(tuple(getattr(sys, 'argv', ())[1:]))
     print()
-    print('--- termine (code %d) ---' % _code)
+    print('--- finished (code %d) ---' % _code)

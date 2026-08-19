@@ -47,10 +47,10 @@ class Sia4010CaseRegistryTests(unittest.TestCase):
             for item in all_case_capabilities()
             if item.runtime_qualification_supported
         ]
-        # Les quatre cas diagnostiques ont rejoint la liste le 2026-08-13 :
-        # `test1_diagnostic_bundle` applique leurs maillons figés, donc ils
-        # passent par la même qualification en projet jetable. Ils suivent les
-        # six ISO dans l'ordre du registre.
+        # The four diagnostic cases joined the list on 2026-08-13:
+        # `test1_diagnostic_bundle` applies their frozen links, so they
+        # go through the same qualification in a disposable project. They follow
+        # the six ISO cases in registry order.
         self.assertEqual(
             probes,
             [
@@ -136,9 +136,9 @@ class Sia4010CaseRegistryTests(unittest.TestCase):
             for item in all_case_capabilities()
             if item.variant == "test_1" and item.aps_evaluation_supported
         ]
-        # 1A à 1D évaluent un livrable horaire, sans critère ni référence : ils
-        # sont donc « supported » sans être comparés. La portée le dit, et le
-        # test ci-dessous vérifie qu'elle n'emprunte pas celle du cas 600.
+        # 1A through 1D evaluate an hourly deliverable, without criterion or
+        # reference: they are therefore "supported" without being compared. The
+        # scope says so, and the test below verifies it does not borrow case 600's.
         self.assertEqual(
             supported,
             [
@@ -182,9 +182,9 @@ class Sia4010CaseRegistryTests(unittest.TestCase):
             for item in all_case_capabilities()
             if item.apachesim_qualification_supported
         ]
-        # Les diagnostiques ont besoin de l'ApacheSim annuel comme les autres :
-        # leur livrable EST le jeu de 8760 heures. 1E reste dehors, son
-        # générateur n'existe pas.
+        # The diagnostic cases need the annual ApacheSim like the others:
+        # their deliverable IS the 8760-hour dataset. 1E stays out, its
+        # generator does not exist.
         self.assertEqual(
             supported,
             [
@@ -312,14 +312,14 @@ class Sia4010PreparationBundleTests(unittest.TestCase):
         ), mock.patch(
             "swiss_sia.reference_model.sia4010.preparation_bundle._write_json"
         ) as write_json:
-            # Attention au homonyme : "1A" ici est une CLASSE de validation,
-            # pas le cas diagnostique 1A du Test 1. La classe 1A exige
-            # `test_1` et `test_2A`.
+            # Note the homonym: "1A" here is a validation CLASS,
+            # not the diagnostic case 1A of Test 1. Class 1A requires
+            # `test_1` and `test_2A`.
             receipt = prepare_class(ROOT, ROOT, "1A")
             self.assertEqual(receipt.target_class, "1A")
-            # 12 et non 8 : `test_1` porte maintenant 11 cas au lieu de 7,
-            # depuis l'enregistrement des cas diagnostiques 1A a 1D, plus le
-            # cas unique de `test_2A`.
+            # 12 not 8: `test_1` now carries 11 cases instead of 7,
+            # since the registration of diagnostic cases 1A through 1D, plus
+            # the single case of `test_2A`.
             self.assertEqual(len(receipt.cases), 12)
             self.assertGreater(receipt.blocked_cases, 0)
             payload = write_json.call_args.args[1]
@@ -340,12 +340,12 @@ class Sia4010PreparationBundleTests(unittest.TestCase):
         ):
             receipt = prepare_all_classes(ROOT, ROOT)
         self.assertEqual(len(receipt.classes), 8)
-        # 34 depuis l'enregistrement des cas diagnostiques 1A a 1D du
-        # Test 1. Le nombre de classes reste 8 : ce sont des cas, pas
-        # des variantes, et la matrice des classes est inchangee.
+        # 34 since the registration of diagnostic cases 1A through 1D of
+        # Test 1. The number of classes remains 8: these are cases, not
+        # variants, and the class matrix is unchanged.
         self.assertEqual(receipt.unique_exact_cases, 34)
-        # 27 : meme cellule ISO 52016 chapitre 7 pour les quatre cas
-        # diagnostiques, qui derivent tous du cas 600.
+        # 27: same ISO 52016 chapter 7 cell for the four diagnostic
+        # cases, which all derive from case 600.
         self.assertEqual(receipt.unique_geometry_artifact_cases, 27)
         geometry_paths = {
             item.geometry_artifact_path
@@ -353,8 +353,8 @@ class Sia4010PreparationBundleTests(unittest.TestCase):
             for item in class_receipt.cases
             if item.geometry_artifact_path is not None
         }
-        # 27 et non 23 : les quatre cas diagnostiques du Test 1 partagent la
-        # cellule ISO 52016 chapitre 7 du cas 600 dont ils derivent.
+        # 27 not 23: the four diagnostic cases of Test 1 share the
+        # ISO 52016 chapter 7 cell of case 600 from which they derive.
         self.assertEqual(len(geometry_paths), 27)
         self.assertGreater(receipt.exact_case_occurrences, 30)
         self.assertGreater(receipt.blocked_occurrences, 0)

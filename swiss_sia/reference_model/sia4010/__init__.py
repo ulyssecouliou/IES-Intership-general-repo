@@ -106,6 +106,12 @@ from .test2a_optical_workflow import (
     Test2A2E1OpticalWorkflowReceipt,
     run_test2a_2e1_optical_workflow,
 )
+from .test2a_opening_assignment_qualification import (
+    qualify_test2a_opening_assignment,
+)
+from .test2a_thermal_glazing_qualification import (
+    qualify_test2a_base_glazing_thermal_storage,
+)
 from .test3_runtime_capability import (
     build_test3_runtime_capability_report,
     write_test3_runtime_capability_report,
@@ -226,6 +232,8 @@ __all__ = [
     "qualify_test2a_profile_graph",
     "qualify_test2a_shading_setters",
     "qualify_test2a_2e1_optical_setters",
+    "qualify_test2a_opening_assignment",
+    "qualify_test2a_base_glazing_thermal_storage",
     "Test2A2E1OpticalWorkflowReceipt",
     "run_test2a_2e1_optical_workflow",
     "build_test3_runtime_capability_report",

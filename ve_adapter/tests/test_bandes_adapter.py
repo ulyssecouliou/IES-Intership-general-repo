@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
-"""Tests de l'adaptateur des tests a bandes (2 a 6), SANS VE.
+"""Tests of the dispersion-band adapter (tests 2 to 6), WITHOUT VE.
 
-Un double de `ResultsReader` remplace l'API : tout ce qui compte ici est
-testable sans licence. Les tests visent surtout ce qu'une implementation
-plausible mais fausse ferait -- deviner un nom de variable, replier une
-agregation inconnue sur la somme, ou renvoyer un candidat vide qui se lirait
-comme « rien ne passe ».
+A `ResultsReader` double replaces the API: everything that matters here is
+testable without a licence. The tests target especially what a plausible but
+wrong implementation would do -- guessing a variable name, falling back an
+unknown aggregation to sum, or returning an empty candidate that would read
+as "nothing passes".
 """
 
 import io
@@ -18,18 +18,18 @@ from ve_adapter import bandes_adapter as adaptateur
 
 
 class FauxResultsReader(object):
-    """Double minimal de `iesve.ResultsReader`.
+    """Minimal double of `iesve.ResultsReader`.
 
-    CALQUE SUR L'API REELLE, pas sur ce qu'on en supposait. La version
-    precedente de ce double prenait un `niveau` en argument de
-    `get_variables` et rendait des chaines : elle VALIDAIT l'erreur qu'elle
-    aurait du signaler. VE, sur `ZOER_C1.aps` le 2026-08-06, refuse
-    l'argument (`ArgumentError`) et rend des dictionnaires portant
-    `aps_varname`, `display_name` et `model_level`.
+    MODELLED ON THE REAL API, not on what was assumed about it. The previous
+    version of this double took a `niveau` argument to `get_variables` and
+    returned strings: it was VALIDATING the error it should have flagged. VE,
+    on `ZOER_C1.aps` on 2026-08-06, rejects the argument (`ArgumentError`)
+    and returns dictionaries carrying `aps_varname`, `display_name` and
+    `model_level`.
 
     Attributes:
         series: `{(varname, niveau): serie}`.
-        variables: Liste d'entrees, chacune un dict comme l'API en rend.
+        variables: List of entries, each a dict as the API returns.
     """
 
     def __init__(self, series=None, variables=None):
@@ -38,7 +38,7 @@ class FauxResultsReader(object):
         self.ferme = False
 
     def get_variables(self):
-        # Aucun argument : c'est le contrat reel de l'API.
+        # No argument: that is the real API contract.
         return list(self.variables)
 
     def get_results(self, varname, niveau):
@@ -62,18 +62,18 @@ def _ref(numero):
 
 
 # --------------------------------------------------------------------------
-# Garde-fou d'API
+# API safeguard
 # --------------------------------------------------------------------------
 
 def test_lapi_reelle_presente_toutes_les_methodes_employees():
-    """Ecrit contre une VE 2025 introspectee, pas contre la documentation."""
+    """Written against an introspected VE 2025, not against the documentation."""
     assert adaptateur.verifier_api() == dict(
         (m, True) for m in adaptateur.METHODES_REQUISES)
 
 
 def test_une_methode_disparue_est_signalee():
-    """Le cas s'est deja produit : `element_categories` etait cherche sur
-    `VECdbProject` alors qu'il appartient au module `iesve`."""
+    """This has already happened: `element_categories` was sought on
+    `VECdbProject` whereas it belongs to the `iesve` module."""
     amputee = {'ResultsReader': {'members': ['close']}}
     with pytest.raises(adaptateur.ApiIncompatible, match='get_results'):
         adaptateur.verifier_api(amputee)
@@ -85,13 +85,13 @@ def test_une_surface_vide_est_signalee():
 
 
 # --------------------------------------------------------------------------
-# Liaisons : rien n'est devine
+# Bindings: nothing is guessed
 # --------------------------------------------------------------------------
 
 @pytest.mark.parametrize('numero', adaptateur.TESTS_COUVERTS)
 def test_les_liaisons_couvrent_exactement_les_grandeurs(numero):
-    """Une espace de trop dans un libelle allemand rendrait la liaison
-    introuvable une fois resolue. Les cles sont generees, pas retapees."""
+    """A stray space in a German label would make the binding unfindable
+    once resolved. Keys are generated, not retyped."""
     reference = _ref(numero)
     attendues = set(g['libelle_de'] for g in reference['grandeurs'])
     assert set(adaptateur.LIAISONS[numero]) == attendues
@@ -99,13 +99,13 @@ def test_les_liaisons_couvrent_exactement_les_grandeurs(numero):
 
 @pytest.mark.parametrize('numero', adaptateur.TESTS_COUVERTS)
 def test_aucune_liaison_nest_resolue_par_defaut(numero):
-    """Aucun `aps_varname` ne peut etre etabli hors d'un `.aps` reel."""
+    """No `aps_varname` can be established outside a real `.aps` file."""
     assert adaptateur.liaisons_resolues(numero) == {}
 
 
 def test_extraire_refuse_quand_rien_nest_resolu():
-    """Retourner un candidat vide se lirait comme « rien ne passe », alors que
-    rien n'a ete cherche."""
+    """Returning an empty candidate would read as "nothing passes", whereas
+    nothing was looked for."""
     with pytest.raises(adaptateur.LiaisonNonResolue, match='decouvrir_variables'):
         adaptateur.extraire_candidat(2, FauxResultsReader(), _ref(2))
 
@@ -116,11 +116,11 @@ def test_un_test_hors_perimetre_est_refuse():
 
 
 # --------------------------------------------------------------------------
-# Agregation
+# Aggregation
 # --------------------------------------------------------------------------
 
 def test_somme_annuelle_convertit_les_watts_en_kwh():
-    """8760 h a 1000 W valent 8760 kWh, pas 8 760 000."""
+    """8760 h at 1000 W equals 8760 kWh, not 8 760 000."""
     assert adaptateur.agreger([1000.0] * 8760, 'somme_annuelle') == 8760.0
 
 
@@ -131,14 +131,14 @@ def test_les_autres_agregations(methode, attendu):
 
 
 def test_une_methode_inconnue_est_refusee():
-    """Jamais de repli silencieux sur la somme : ce serait un nombre plausible
-    et faux."""
+    """Never a silent fallback to sum: that would be a plausible and wrong
+    number."""
     with pytest.raises(ValueError, match='inconnue'):
         adaptateur.agreger([1.0], 'mediane')
 
 
 def test_une_serie_vide_donne_none_pas_zero():
-    """Zero est une mesure ; l'absence n'en est pas une."""
+    """Zero is a measurement; absence is not."""
     assert adaptateur.agreger([], 'somme_annuelle') is None
     assert adaptateur.agreger(None, 'moyenne') is None
 
@@ -148,11 +148,11 @@ def test_les_trous_sont_ecartes_pas_comptes_comme_zero():
 
 
 # --------------------------------------------------------------------------
-# Extraction, une fois une liaison resolue
+# Extraction, once a binding is resolved
 # --------------------------------------------------------------------------
 
 def _resoudre(monkeypatch, numero, libelle, varname, niveau):
-    """Resout UNE liaison, sans toucher au module d'origine."""
+    """Resolves ONE binding, without touching the original module."""
     liaisons = dict(
         (cle, dict((k, dict(v)) for k, v in valeur.items()))
         for cle, valeur in adaptateur.LIAISONS.items())
@@ -171,9 +171,9 @@ def test_une_liaison_resolue_produit_un_candidat_exploitable(monkeypatch):
     candidat = adaptateur.extraire_candidat(3, lecteur, reference)
 
     assert libelle in candidat
-    # Tous les cas partagent la meme serie dans ce double : tous a 8760 kWh.
+    # All cases share the same series in this double: all at 8760 kWh.
     assert set(candidat[libelle].values()) == {8760.0}
-    # Et le moteur doit savoir le consommer.
+    # And the engine must be able to consume it.
     assert moteur.evaluer(reference, candidat)['nb_non_evaluables'] == 0
 
 
@@ -185,8 +185,8 @@ def test_une_serie_absente_ne_fabrique_pas_de_valeur(monkeypatch):
 
 
 def test_les_grandeurs_non_resolues_restent_absentes(monkeypatch):
-    """Elles ne doivent pas apparaitre a zero : le moteur les traite en
-    NOT_CHECKABLE, ce qui est la verite."""
+    """They must not appear as zero: the engine treats them as
+    NOT_CHECKABLE, which is the truth."""
     reference = _ref(2)
     libelle = reference['grandeurs'][0]['libelle_de']
     _resoudre(monkeypatch, 2, libelle, 'SOLAR', adaptateur.NIVEAU_LOCAL)
@@ -201,11 +201,11 @@ def test_les_grandeurs_non_resolues_restent_absentes(monkeypatch):
 
 
 # --------------------------------------------------------------------------
-# Decouverte
+# Discovery
 # --------------------------------------------------------------------------
 
 def _variable(varname, niveau, display=None):
-    """Entree de `get_variables()`, dans la forme reelle de l'API."""
+    """Entry from `get_variables()`, in the real API form."""
     return {'aps_varname': varname, 'display_name': display or varname,
             'model_level': niveau, 'units_type': 'Power'}
 
@@ -224,8 +224,8 @@ def test_la_decouverte_liste_tout_le_fichier_sans_filtre():
 
 
 def test_le_niveau_se_lit_sur_la_variable_pas_sur_lappel():
-    """`get_variables('z')` leve ArgumentError dans VE : le niveau est porte
-    par `model_level`, entree par entree. Le filtrage est fait chez nous."""
+    """`get_variables('z')` raises ArgumentError in VE: the level is carried
+    by `model_level`, entry by entry. Filtering is done on our side."""
     lecteur = FauxResultsReader(variables=_VARIABLES)
     trouvees = adaptateur.decouvrir_variables(lecteur, adaptateur.NIVEAU_LOCAL)
     assert [v['aps_varname'] for v in trouvees] == ['A', 'B_SOLAR']
@@ -239,17 +239,17 @@ def test_la_decouverte_filtre_sans_tenir_compte_de_la_casse():
 
 
 def test_le_motif_cherche_aussi_dans_le_libelle_daffichage():
-    """« Window solar gains » est le display_name ; l'aps_varname peut etre
-    tout autre. Ne chercher que dans l'un rendrait la decouverte aveugle."""
+    """'Window solar gains' is the display_name; the aps_varname can be
+    anything. Searching only in one would make discovery blind."""
     lecteur = FauxResultsReader(variables=_VARIABLES)
     trouvees = adaptateur.decouvrir_variables(lecteur, motif='window')
     assert [v['aps_varname'] for v in trouvees] == ['B_SOLAR']
 
 
 def test_la_cle_name_nexiste_pas_dans_lapi():
-    """L'ancienne version filtrait sur `variable.get('name', ...)`. Ce champ
-    n'existe pas : le filtre retombait sur le dict entier, donc matchait
-    a peu pres n'importe quoi."""
+    """The old version filtered on `variable.get('name', ...)`. This field
+    does not exist: the filter fell back to the whole dict, so it matched
+    almost anything."""
     assert 'name' not in adaptateur.CHAMPS_NOMMANTS
     lecteur = FauxResultsReader(variables=_VARIABLES)
     assert adaptateur.decouvrir_variables(lecteur, motif='units_type') == []
@@ -262,7 +262,7 @@ def test_letat_des_liaisons_nomme_ce_qui_manque():
 
 
 def test_pas_dimport_iesve_au_chargement():
-    """Regle 4 : le module doit rester importable en CI, sans licence."""
+    """Rule 4: the module must remain importable in CI, without a licence."""
     chemin = os.path.abspath(adaptateur.__file__).replace('.pyc', '.py')
     with io.open(chemin, encoding='utf-8') as flux:
         for numero, ligne in enumerate(flux, 1):
@@ -272,29 +272,29 @@ def test_pas_dimport_iesve_au_chargement():
 
 
 # --------------------------------------------------------------------------
-# Candidats de sonde : des pistes, jamais des liaisons
+# Probe candidates: leads, never bindings
 # --------------------------------------------------------------------------
 
 import json as _json  # noqa: E402
 
 _RACINE = os.path.abspath(os.path.join(
     os.path.dirname(os.path.abspath(__file__)), os.pardir, os.pardir))
-#: Catalogue FIGE, versionne. On ne lit PAS `outputs/sonde_aps.json` : ce
-#: dossier est ignore par Git, donc absent d'un clone neuf -- ces tests
-#: s'ignoreraient en silence, laissant croire que les candidats sont verifies
-#: alors que plus rien ne les controlerait.
+#: FROZEN, versioned catalogue. We do NOT read `outputs/sonde_aps.json`:
+#: that directory is ignored by Git, so absent from a fresh clone -- these
+#: tests would skip silently, giving the false impression that candidates
+#: are verified when nothing controls them anymore.
 _CATALOGUE = os.path.join(_RACINE, 'refs', 'reference-data',
                           'iesve-aps-variables-ve2025.json')
 
 
 @pytest.fixture(scope='module')
 def variables_relevees():
-    """Variables telles qu'un .aps reel les a rendues, le 2026-08-06.
+    """Variables as a real .aps file returned them, on 2026-08-06.
 
     Returns:
-        dict: `{(aps_varname, model_level): entree}`. Un meme couple peut
-            porter plusieurs display_name : on garde le premier, l'ordre du
-            catalogue etant deterministe.
+        dict: `{(aps_varname, model_level): entry}`. The same pair may
+            carry several display_names: we keep the first, the catalogue
+            order being deterministic.
     """
     if not os.path.exists(_CATALOGUE):
         pytest.skip(u'catalogue absent : scripts/freeze_aps_variables.py')
@@ -309,8 +309,8 @@ def variables_relevees():
 
 
 def test_le_catalogue_est_versionne():
-    """S'il retombait sous outputs/, tous les tests de cette section
-    s'ignoreraient sans que personne ne le remarque."""
+    """If it fell back under outputs/, all tests in this section would skip
+    without anyone noticing."""
     assert os.path.exists(_CATALOGUE), _CATALOGUE
     normalise = _CATALOGUE.replace(os.sep, '/')
     assert '/refs/reference-data/' in normalise
@@ -322,9 +322,9 @@ def test_le_catalogue_couvre_les_douze_niveaux(variables_relevees):
 
 
 def test_aucun_candidat_ne_resout_de_liaison():
-    """Le risque exact que cette separation existe pour ecarter : « Window
-    solar gains » est un nom de variable VE. Le reprendre sans avoir confronte
-    sa definition a celle du classeur produirait un nombre plausible et faux.
+    """The exact risk this separation exists to eliminate: 'Window solar
+    gains' is a VE variable name. Re-using it without having compared its
+    definition to the workbook would produce a plausible and wrong number.
     """
     for numero in adaptateur.TESTS_COUVERTS:
         assert adaptateur.liaisons_resolues(numero) == {}
@@ -336,20 +336,20 @@ def test_extraire_ignore_integralement_les_candidats():
         adaptateur.extraire_candidat(2, FauxResultsReader(), _ref(2))
 
 
-# --- Les noms sont confrontes au releve, pas retapes de memoire ------------
+# --- Names are compared against the probe, not retyped from memory --------
 
 def test_chaque_candidat_existe_vraiment_dans_un_aps(variables_relevees):
-    """Un nom retape de memoire est un nom faux."""
+    """A name retyped from memory is a wrong name."""
     for libelle, piste in adaptateur.CANDIDATS_PAR_GRANDEUR.items():
         nom = piste['aps_varname_candidat']
         if nom is None:
-            continue  # cas « aucune variable unique », traite plus bas
+            continue  # case "no unique variable", handled below
         assert (nom, piste['niveau']) in variables_relevees, libelle
 
 
 def test_le_libelle_et_lunite_du_candidat_sont_les_bons(variables_relevees):
-    """Le display_name sert a reconnaitre la grandeur dans l'interface de VE :
-    s'il est faux, la verification humaine part sur une mauvaise piste."""
+    """The display_name is used to identify the quantity in the VE interface:
+    if wrong, human verification goes down the wrong track."""
     for piste in adaptateur.CANDIDATS_PAR_GRANDEUR.values():
         if piste['aps_varname_candidat'] is None:
             continue
@@ -360,18 +360,18 @@ def test_le_libelle_et_lunite_du_candidat_sont_les_bons(variables_relevees):
 
 
 def test_les_deux_termes_de_la_somme_existent(variables_relevees):
-    """« Warmeabfuhr Luftkuhler total » n'a pas de variable unique, mais les
-    deux termes de la somme doivent exister, sinon la reserve est vaine."""
+    """'Warmeabfuhr Luftkuhler total' has no unique variable, but both
+    terms of the sum must exist, otherwise the reservation is pointless."""
     for nom in ('Sys Mech vent cooling load', 'Sys Mech vent dehum load'):
         assert (nom, adaptateur.NIVEAU_SYSTEME) in variables_relevees
 
 
 def test_la_recuperation_sur_lair_neuf_nexpose_quune_temperature(
         variables_relevees):
-    """Constat structurel. Il existe deux variables de recuperation en Power au
-    meme niveau — « Sys Process heat recovered » et « Sys Process heat recovery
-    heat pump » — mais elles portent sur les PROCESS, pas sur l'air neuf. Les
-    confondre donnerait un nombre credible et faux."""
+    """Structural observation. There are two heat-recovery variables in Power
+    at the same level -- 'Sys Process heat recovered' and 'Sys Process heat
+    recovery heat pump' -- but they relate to PROCESSES, not to outdoor air.
+    Confusing them would give a plausible and wrong number."""
     ventilation = variables_relevees[
         ('Sys Mech vent heat recovery temp', adaptateur.NIVEAU_SYSTEME)]
     assert ventilation['units_type'] == 'Temperature'
@@ -379,8 +379,8 @@ def test_la_recuperation_sur_lair_neuf_nexpose_quune_temperature(
                 'Sys Process heat recovery heat pump'):
         assert variables_relevees[
             (nom, adaptateur.NIVEAU_SYSTEME)]['units_type'] == 'Power'
-    # Si une energie de recuperation sur l'air neuf apparaissait, ce test doit
-    # echouer pour qu'on la lie.
+    # If an outdoor-air heat recovery energy appeared, this test must fail
+    # so that it gets bound.
     ventilation_wrg = sorted(
         nom for (nom, niveau) in variables_relevees
         if niveau == adaptateur.NIVEAU_SYSTEME
@@ -389,18 +389,18 @@ def test_la_recuperation_sur_lair_neuf_nexpose_quune_temperature(
     assert ventilation_wrg == ['Sys Mech vent heat recovery temp']
 
 
-# --- Coherence des tables --------------------------------------------------
+# --- Table consistency -----------------------------------------------------
 
 def test_chaque_piste_declare_sa_preuve_et_sa_reserve():
-    """Une piste sans provenance ni reserve finit par etre prise pour un
-    resultat."""
+    """A lead without provenance or reservation ends up being taken for a
+    result."""
     for piste in adaptateur.CANDIDATS_PAR_GRANDEUR.values():
         assert piste['preuve'] and piste['niveau_de_preuve']
         assert piste['a_confirmer']
 
 
 def test_toutes_les_grandeurs_citees_existent_dans_les_liaisons():
-    """Une cle qui ne correspond a aucune grandeur serait une piste morte."""
+    """A key matching no quantity would be a dead lead."""
     connues = set()
     for grandeurs in adaptateur.LIAISONS.values():
         connues |= set(grandeurs)
@@ -415,8 +415,8 @@ def test_aucune_grandeur_nest_a_la_fois_pistee_et_muette():
 
 
 def test_une_grandeur_partagee_porte_la_meme_piste_dans_tous_ses_tests():
-    """« Warmezufuhr Lufterwarmer » figure aux tests 4, 5 et 6. Une table
-    indexee par test aurait laisse ces trois copies diverger."""
+    """'Warmezufuhr Lufterwarmer' appears in tests 4, 5 and 6. A table
+    indexed by test would have let these three copies diverge."""
     pistes = [adaptateur.candidats_a_confirmer(n).get(
         u'Wärmezufuhr Lufterwärmer') for n in (4, 5, 6)]
     assert all(p is not None for p in pistes)
@@ -424,8 +424,8 @@ def test_une_grandeur_partagee_porte_la_meme_piste_dans_tous_ses_tests():
 
 
 def test_le_candidat_solaire_est_passe_dallegation_a_releve():
-    """Il n'etait adosse qu'a une metadonnee dont la trace manquait. Le releve
-    du 2026-08-06 a trouve la variable dans un .aps reel, independamment."""
+    """It was backed only by metadata whose trace was missing. The probe
+    of 2026-08-06 found the variable in a real .aps file, independently."""
     piste = adaptateur.candidats_a_confirmer(2)[
         u'Jahresenergie solarer Wärmeeintrag']
     assert piste['niveau_de_preuve'] == 'RELEVE'
@@ -433,18 +433,18 @@ def test_le_candidat_solaire_est_passe_dallegation_a_releve():
 
 
 def test_le_test_6_na_de_piste_que_par_grandeurs_partagees():
-    """Ses six grandeurs sont des postes WRG, ventilateurs, ou la somme du
-    Luftkuhler. Seules celles partagees avec le test 4 ont une piste."""
+    """Its six quantities are heat-recovery items, fans, or the Luftkuhler
+    sum. Only those shared with test 4 have a lead."""
     assert set(adaptateur.candidats_a_confirmer(6)) == {
         u'Wärmezufuhr Lufterwärmer',
         u'Wärmeabfuhr Luftkühler total'}
 
 
-# --- Etat affiche ----------------------------------------------------------
+# --- Status display --------------------------------------------------------
 
 def test_letat_distingue_les_trois_situations():
-    """« pas encore cherche » et « cherche, rien ne correspond » ne doivent
-    jamais se lire pareil."""
+    """'not yet searched' and 'searched, nothing matches' must never read the
+    same."""
     texte = adaptateur.etat_des_liaisons()
     assert 'candidat a confirmer : Window solar gains' in texte
     assert 'cherche, aucune variable ne correspond' in texte
@@ -460,15 +460,15 @@ def test_letat_ne_compte_aucun_candidat_comme_resolu():
 
 
 def test_les_niveaux_releves_depassent_les_trois_nommes():
-    """Croire que z/v/w epuisent les niveaux a fait manquer l'eclairage
-    (niveau e) et le solaire incident (niveau s)."""
+    """Believing that z/v/w exhaust the levels caused missing lighting
+    (level e) and incident solar (level s)."""
     for niveau in (adaptateur.NIVEAU_ENERGIE, adaptateur.NIVEAU_SURFACE):
         assert niveau in adaptateur.NIVEAUX_RELEVES
     assert len(adaptateur.NIVEAUX_RELEVES) == 12
 
 
 # --------------------------------------------------------------------------
-# Second critere : la serie horaire, et la correspondance des libelles
+# Second criterion: the hourly series and label correspondence
 # --------------------------------------------------------------------------
 
 from engine import sia_distributions_engine as moteur_distributions  # noqa: E402
@@ -483,9 +483,8 @@ def _ref_distributions(numero):
 
 @pytest.mark.parametrize('numero', moteur_distributions.TESTS_SUPPORTES)
 def test_toute_grandeur_de_distribution_est_declaree(numero):
-    """Une grandeur non declaree ferait lever `libelle_annuel`, ce qui est le
-    comportement voulu — mais mieux vaut le savoir ici qu'en pleine
-    extraction."""
+    """An undeclared quantity would raise `libelle_annuel`, which is the
+    intended behaviour -- but better to know here than mid-extraction."""
     reference = _ref_distributions(numero)
     relevees = set(b['grandeur'] for b in reference['distributions'])
     declarees = set(adaptateur.CORRESPONDANCE_DISTRIBUTIONS[numero])
@@ -494,27 +493,27 @@ def test_toute_grandeur_de_distribution_est_declaree(numero):
 
 @pytest.mark.parametrize('numero', moteur_distributions.TESTS_SUPPORTES)
 def test_toute_cible_annuelle_existe_dans_les_liaisons(numero):
-    """Une cible mal orthographiee serait introuvable une fois la liaison
-    resolue — le meme piege que les libelles allemands retapes."""
+    """A mis-spelt target would be unfindable once the binding is resolved --
+    the same trap as the retyped German labels."""
     for cible in adaptateur.CORRESPONDANCE_DISTRIBUTIONS[numero].values():
         if cible is not None:
             assert cible in adaptateur.LIAISONS[numero], (numero, cible)
 
 
 def test_les_diagnostics_sont_declares_comme_tels():
-    """« Einstrahlung auf Fensterebene », « Beleuchtungsstarke »,
-    « Zulufttemperatur » : le classeur en trace la distribution, mais les
-    specifications les rangent sous Diagnoseresultate. Ce ne sont pas des
-    criteres."""
+    """'Einstrahlung auf Fensterebene', 'Beleuchtungsstarke',
+    'Zulufttemperatur': the workbook traces their distribution, but the
+    specifications classify them under Diagnoseresultate. They are not
+    criteria."""
     assert adaptateur.libelle_annuel(2, u'Einstrahlung auf Fensterebene gesamt') is None
     assert adaptateur.libelle_annuel(3, u'Beleuchtungsstärke') is None
     assert adaptateur.libelle_annuel(5, u'Zulufttemperatur im Betrieb') is None
 
 
 def test_une_grandeur_de_puissance_pointe_vers_son_energie_annuelle():
-    """Les deux criteres ne nomment pas les grandeurs pareil : puissance (W)
-    pour la distribution, energie (kWh) pour la somme annuelle. C'est la meme
-    grandeur physique a deux stades."""
+    """The two criteria do not name the quantities the same way: power (W)
+    for the distribution, energy (kWh) for the annual sum. It is the same
+    physical quantity at two stages."""
     assert adaptateur.libelle_annuel(3, u'Beleuchtungsleistung') == \
         u'Beleuchtungsenergie'
     assert adaptateur.libelle_annuel(5, u'Leistung Lufterwärmer') == \
@@ -522,16 +521,16 @@ def test_une_grandeur_de_puissance_pointe_vers_son_energie_annuelle():
 
 
 def test_une_grandeur_inconnue_leve_au_lieu_de_rendre_none():
-    """Rendre `None` la confondrait avec un diagnostic, et ferait disparaitre
-    un critere sans le dire."""
+    """Returning `None` would confuse it with a diagnostic, and would make
+    a criterion disappear silently."""
     with pytest.raises(KeyError, match='non déclarée'):
         adaptateur.libelle_annuel(3, u'Grandeur inventee')
 
 
 def test_deux_grandeurs_annuelles_nont_pas_de_distribution():
-    """Befeuchtungsenergie et Hilfsenergie WRG : le classeur ne porte aucune
-    feuille de distribution pour elles. Leur seul critere est la somme
-    annuelle — constat, pas oubli."""
+    """Befeuchtungsenergie and Hilfsenergie WRG: the workbook carries no
+    distribution sheet for them. Their only criterion is the annual sum --
+    an observation, not an oversight."""
     cibles = set(v for v in adaptateur.CORRESPONDANCE_DISTRIBUTIONS[5].values()
                  if v is not None)
     for libelle in adaptateur.SANS_DISTRIBUTION[5]:
@@ -540,8 +539,8 @@ def test_deux_grandeurs_annuelles_nont_pas_de_distribution():
 
 
 def test_la_couverture_annuelle_est_complete():
-    """Toute grandeur de LIAISONS a soit une distribution, soit une declaration
-    explicite qu'elle n'en a pas. Le silence se lirait comme un oubli."""
+    """Every quantity in LIAISONS has either a distribution or an explicit
+    declaration that it has none. Silence would read as an oversight."""
     for numero in moteur_distributions.TESTS_SUPPORTES:
         cibles = set(v for v in
                      adaptateur.CORRESPONDANCE_DISTRIBUTIONS[numero].values()
@@ -550,11 +549,11 @@ def test_la_couverture_annuelle_est_complete():
         assert set(adaptateur.LIAISONS[numero]) == cibles | sans, numero
 
 
-# --- Lecture de la serie brute --------------------------------------------
+# --- Reading the raw series -----------------------------------------------
 
 def test_la_serie_est_rendue_brute_sans_agregation(monkeypatch):
-    """Le classeur veut les 8760 valeurs et calcule lui-meme la somme et la
-    distribution. Livrer un agregat ne satisfait que la moitie des criteres."""
+    """The workbook wants the 8760 values and computes the sum and distribution
+    itself. Delivering an aggregate satisfies only half the criteria."""
     libelle = u'Beleuchtungsenergie'
     _resoudre(monkeypatch, 3, libelle, 'LIGHT', adaptateur.NIVEAU_LOCAL)
     serie = [float(i) for i in range(8760)]
@@ -564,7 +563,7 @@ def test_la_serie_est_rendue_brute_sans_agregation(monkeypatch):
 
 
 def test_une_liaison_non_resolue_refuse_la_serie():
-    """Rendre une serie vide se lirait comme « la grandeur vaut zero »."""
+    """Returning an empty series would read as 'the quantity equals zero'."""
     with pytest.raises(adaptateur.LiaisonNonResolue, match='non résolue'):
         adaptateur.extraire_serie(3, FauxResultsReader(), u'Beleuchtungsenergie')
 
@@ -582,8 +581,8 @@ def test_une_serie_absente_donne_none_pas_une_liste_vide(monkeypatch):
 
 
 def test_la_serie_brute_se_classe_avec_le_moteur(monkeypatch):
-    """Bout en bout : lire la serie dans VE, la classer avec les bornes du
-    classeur, la confronter aux programmes de reference."""
+    """End to end: read the series from VE, classify it with the workbook
+    bounds, compare against the reference programmes."""
     reference = _ref_distributions(3)
     bloc = reference['distributions'][0]
     bornes = [e['borne_superieure'] for e in bloc['effectifs']]
@@ -601,14 +600,14 @@ def test_la_serie_brute_se_classe_avec_le_moteur(monkeypatch):
     resultat = moteur_distributions.evaluer(
         reference, {(bloc['cas'], bloc['grandeur']): effectifs})
     assert resultat['nb_evaluees'] == 1
-    # Toute l annee dans la premiere classe : hors de l enveloppe.
+    # Entire year in the first class: outside the envelope.
     assert resultat['distributions'][0]['nb_hors_lecture'][
         moteur_distributions.LECTURE_ENVELOPPE] > 0
-    # CE TEST ATTENDAIT NON_ETABLI, et c etait juste jusqu au 2026-08-10 : la
-    # lecture du mot `Streubereich` n etait pas tranchee, donc aucun verdict
-    # ne pouvait etre rendu. La clarification ecrite de l autorite
+    # THIS TEST EXPECTED NON_ETABLI, and that was correct until 2026-08-10:
+    # the reading of the word `Streubereich` was not settled, so no verdict
+    # could be rendered. The written clarification from the authority
     # (traceability/sia4010-authority-clarification-2026-08-10.json, decision
-    # SIA4010-DISTRIBUTION-BAND) retient l enveloppe min/max classe par
-    # classe. Le critere est donc etabli, et une serie hors enveloppe est un
-    # FAIL -- ce qu il fallait justement s interdire de dire avant.
+    # SIA4010-DISTRIBUTION-BAND) retains the class-by-class min/max envelope.
+    # The criterion is therefore established, and a series outside the
+    # envelope is a FAIL -- which is precisely what was forbidden to say before.
     assert resultat['verdict'] == moteur_distributions.VERDICT_FAIL

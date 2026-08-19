@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Tests du moteur generique des tests a bandes (2 et 3)."""
+"""Tests of the generic band-test engine (tests 2 and 3)."""
 
 import pytest
 
@@ -63,7 +63,7 @@ def test_une_valeur_hors_bande_fait_echouer(ref2):
 
 
 def test_un_cas_manquant_bloque_sans_faire_echouer(ref2):
-    """Le cas reel : tout passe sauf une bande non simulee."""
+    """The real case: everything passes except one unrun band."""
     candidat = _candidat_au_centre(ref2)
     grandeur = ref2['grandeurs'][0]
     del candidat[grandeur['libelle_de']][grandeur['cas'][0]['cas']]
@@ -92,7 +92,7 @@ def test_les_bornes_sont_inclusives(ref2):
 
 
 def test_une_cle_non_appariee_est_signalee(ref2):
-    """Une faute de frappe cote adaptateur ne doit pas passer inapercue."""
+    """A typo on the adapter side must not go unnoticed."""
     candidat = _candidat_au_centre(ref2)
     candidat['Grandeur Inexistante'] = {'Test 2 A': 1.0}
     assert moteur.evaluer(ref2, candidat)['cles_candidat_ignorees']
@@ -110,11 +110,11 @@ def test_appariement_insensible_a_la_casse(ref2):
 
 @pytest.mark.parametrize('numero', [4, 6])
 def test_le_critere_est_annonce_comme_infere(numero):
-    """CORRIGE le 2026-08-07. Ce test portait sur les tests 2 et 3, sur la
-    croyance que seul le Test 1 enoncait ses criteres. Relecture faite, les
-    specifications 2, 3 et 5 enoncent la bande annuelle mot pour mot : leur
-    statut est desormais ENONCE_DANS_LA_SPEC (voir plus bas). Seuls 4 et 6
-    n'ont aucune section « Testkriterien », et pour eux INFERE reste exact."""
+    """CORRECTED on 2026-08-07. This test covered tests 2 and 3, under the
+    belief that only Test 1 stated its criteria. After re-reading, specifications
+    2, 3 and 5 each state the annual band word for word: their status is now
+    ENONCE_DANS_LA_SPEC (see below). Only 4 and 6 have no "Testkriterien"
+    section, and for them INFERE remains correct."""
     r = moteur.evaluer(_ref(numero), None)
     assert r['critere']['statut'] == 'INFERE'
     assert all(c['critere_statut'] == 'INFERE'
@@ -122,8 +122,8 @@ def test_le_critere_est_annonce_comme_infere(numero):
 
 
 def test_les_variantes_de_programme_remontent(ref2):
-    """Les colonnes sont des variantes : la variante retenue doit rester
-    lisible dans le resultat, sinon on ne sait plus quoi comparer."""
+    """Columns are variants: the retained variant must remain readable in the
+    result, otherwise one no longer knows what to compare."""
     r = moteur.evaluer(ref2, None)
     cas = r['grandeurs'][0]['cas'][0]
     assert cas['programmes']
@@ -139,7 +139,7 @@ def test_un_contributeur_absent_nest_pas_compte_comme_zero(ref2):
 
 
 def test_le_test_7_est_refuse_par_ce_moteur():
-    """Sa reference a une autre forme ; le message doit le dire."""
+    """Its reference has a different shape; the message must say so."""
     with pytest.raises(ValueError, match='Test 7'):
         moteur.charger_reference(7)
 
@@ -152,7 +152,7 @@ def test_resume_mentionne_chaque_cas(ref3):
 
 
 # --------------------------------------------------------------------------
-# Statut du critere : enonce ou infere, selon le test
+# Criterion status: stated or inferred, per test
 # --------------------------------------------------------------------------
 
 import pytest as _pytest  # noqa: E402
@@ -162,10 +162,10 @@ from engine import sia_bandes_engine as _moteur  # noqa: E402
 
 @_pytest.mark.parametrize('numero', (2, 3, 5))
 def test_les_specs_2_3_et_5_enoncent_leur_critere(numero):
-    """CORRIGE le 2026-08-07. On avait cru que seul le Test 1 enoncait ses
-    criteres. Les specifications 2, 3 et 5 portent chacune une section
-    « Testkriterien » qui enonce la bande annuelle mot pour mot. Les marquer
-    INFERE affaiblissait a tort trois tests."""
+    """CORRECTED on 2026-08-07. It had been believed that only Test 1 stated
+    its criteria. Specifications 2, 3 and 5 each carry a "Testkriterien"
+    section that states the annual band word for word. Marking them INFERE
+    wrongly weakened three tests."""
     statut, justification = _moteur.critere_du_test(numero)
     assert statut == _moteur.STATUT_CRITERE_ENONCE
     assert 'Testkriterien' in justification
@@ -174,15 +174,15 @@ def test_les_specs_2_3_et_5_enoncent_leur_critere(numero):
 
 @_pytest.mark.parametrize('numero', (4, 6))
 def test_les_specs_4_et_6_ne_fixent_aucun_critere(numero):
-    """Elles n'ont aucune section « Testkriterien » : SIA 4010 §4.4 delegue au
-    classeur. Le statut INFERE reste exact pour elles."""
+    """They have no "Testkriterien" section: SIA 4010 §4.4 delegates to the
+    workbook. The INFERE status remains correct for them."""
     statut, justification = _moteur.critere_du_test(numero)
     assert statut == _moteur.STATUT_CRITERE
     assert '4.4' in justification
 
 
 def test_un_test_inconnu_retombe_sur_le_statut_le_plus_faible():
-    """Mieux vaut sous-estimer la force d'un critere que la surestimer."""
+    """Better to understate the strength of a criterion than to overstate it."""
     assert _moteur.critere_du_test(99)[0] == _moteur.STATUT_CRITERE
 
 
@@ -201,7 +201,7 @@ def test_le_resultat_porte_le_statut_du_test(numero):
 
 
 def test_la_docstring_ne_dit_plus_que_seul_le_test_1_enonce_ses_criteres():
-    """Elle l'affirmait, et c'etait faux. Une docstring fausse est une
-    affirmation fausse de plus dans un dossier de validation."""
+    """It claimed so, and it was false. A false docstring is one more false
+    assertion in a validation dossier."""
     assert 'only Test 1 states its criteria' not in _moteur.__doc__
     assert 'ENONCE_DANS_LA_SPEC' in _moteur.__doc__

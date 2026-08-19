@@ -17,11 +17,11 @@ PREPARATION_READY = "PREPARATION_READY"
 GUARDED_MUTATION_READY = "GUARDED_MUTATION_READY"
 RUNTIME_QUALIFICATION_READY = "RUNTIME_QUALIFICATION_READY"
 
-#: Cas diagnostiques de la transition Test 1 → Test 2. La spécification exige
-#: pour eux des jeux annuels de puissance horaire et n'énonce AUCUN critère de
-#: comparaison ; `refs/reference-data/test-1.ref.json` ne porte donc aucune
-#: bande pour eux, et il ne faut pas en inventer. Ce sont des livrables, pas des
-#: cas jugés. Le cas 1E, lui, est jugé : il est traité à part.
+#: Diagnostic cases of the Test 1 → Test 2 transition. The specification
+#: requires annual hourly power datasets for them and states NO comparison
+#: criterion; `refs/reference-data/test-1.ref.json` therefore carries no
+#: band for them, and none may be invented. They are deliverables, not
+#: judged cases. Case 1E, however, is judged: it is handled separately.
 TEST1_DIAGNOSTIC_CASES = ("1A", "1B", "1C", "1D")
 
 

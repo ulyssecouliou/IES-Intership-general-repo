@@ -1,18 +1,17 @@
 # -*- coding: utf-8 -*-
-u"""Tests du générateur de matrices (`scripts/build_traceability_matrix.py`).
+u"""Tests of the matrix generator (`scripts/build_traceability_matrix.py`).
 
-Une matrice de traçabilité est un document de CONTRÔLE : elle affirme qu'une
-clause est couverte. Deux façons de la rendre nuisible, toutes deux vécues
-dans ce dépôt :
+A traceability matrix is a CONTROL document: it asserts that a clause is
+covered. Two ways to make it harmful, both experienced in this repository:
 
-* **écrire un chiffre au lieu de le compter.** La première version annonçait
-  « un seul cas porte le critère pass/fail » — le moteur en rend trois. Le
-  document affirmait donc, avec l'autorité d'un relevé, quelque chose de faux ;
-* **écraser une rédaction.** La matrice du Test 7 est un audit indépendant de
-  trois cents lignes, renvoyé non signé. Un générateur ne sait pas produire ce
-  jugement ; l'écraser le détruit sans trace.
+* **writing a number instead of counting it.** The first version announced
+  "only one case carries the pass/fail criterion" — the engine returns three. The
+  document was asserting, with the authority of a record, something false;
+* **overwriting a draft.** The Test 7 matrix is an independent audit of
+  three hundred lines, returned unsigned. A generator cannot produce that
+  judgement; overwriting it destroys it without a trace.
 
-Ces deux dangers sont ce que ces tests surveillent.
+These two dangers are what these tests guard against.
 """
 
 import io
@@ -24,7 +23,7 @@ from scripts import build_traceability_matrix as generateur
 
 
 # --------------------------------------------------------------------------
-# Ne jamais écraser une rédaction
+# Never overwrite a draft
 # --------------------------------------------------------------------------
 
 @pytest.fixture
@@ -63,10 +62,10 @@ def test_le_releve_va_a_cote_sans_toucher_a_la_redaction(sortie):
 
 @pytest.mark.parametrize('numero', [1, 2, 3, 4, 5, 6, 7])
 def test_une_sortie_du_script_est_bien_reconnue_comme_sienne(sortie, numero):
-    u"""LA RÉGRESSION VÉCUE. Le marqueur avait été pris dans la bannière
-    d'en-tête — formulée différemment par `construire` et `construire_dedie`.
-    Les tests 2 à 6 passaient donc pour des rédactions à la main, et leur
-    matrice partait dans un fichier voisin à chaque exécution."""
+    u"""THE REGRESSION EXPERIENCED. The marker had been taken from the header
+    banner — worded differently by `construire` and `construire_dedie`.
+    Tests 2 to 6 therefore appeared as hand-written drafts, and their
+    matrix was placed in a neighbouring file on every run."""
     document = (generateur.construire_dedie(numero)
                 if numero in generateur.TESTS_DEDIES
                 else generateur.construire(numero))
@@ -77,19 +76,19 @@ def test_une_sortie_du_script_est_bien_reconnue_comme_sienne(sortie, numero):
 
 
 def test_le_marqueur_est_present_dans_les_deux_generateurs():
-    u"""Contrôle direct de l'invariant dont dépend le test précédent."""
+    u"""Direct check of the invariant on which the previous test depends."""
     assert generateur.MARQUE_GENEREE in generateur.construire(2)
     assert generateur.MARQUE_GENEREE in generateur.construire_dedie(1)
     assert generateur.MARQUE_GENEREE in generateur.construire_dedie(7)
 
 
 # --------------------------------------------------------------------------
-# Tests 1 et 7 : moteurs propres
+# Tests 1 and 7: dedicated engines
 # --------------------------------------------------------------------------
 
 def test_les_tests_a_bandes_ne_passent_pas_par_le_generateur_dedie():
-    u"""Leurs résultats n'ont pas la même forme : le forcer produirait une
-    matrice qui parle de champs inexistants."""
+    u"""Their results do not have the same shape: forcing it would produce a
+    matrix that talks about non-existent fields."""
     for numero in generateur.TESTS:
         with pytest.raises(ValueError):
             generateur.construire_dedie(numero)
@@ -106,12 +105,12 @@ def test_les_sept_tests_sont_couverts():
 
 
 # --------------------------------------------------------------------------
-# Le compte des porteuses est CALCULÉ
+# The carrying count is COMPUTED
 # --------------------------------------------------------------------------
 
 def test_le_nombre_dentrees_porteuses_vient_du_moteur():
-    u"""Le chiffre écrit à la main était faux : trois entrées portent le
-    critère, sur le seul cas 1E."""
+    u"""The hand-written figure was wrong: three entries carry the
+    criterion, on the single case 1E."""
     from engine import test1_engine as moteur
     resultat = moteur.evaluer_test1(moteur.charger_reference())
     porteuses = [e for e in resultat['cas'].values()
@@ -122,8 +121,8 @@ def test_le_nombre_dentrees_porteuses_vient_du_moteur():
 
 
 def test_aucun_nombre_de_cas_nest_ecrit_en_toutes_lettres():
-    u"""« un seul cas », « les dix-huit autres » : ces formulations sont
-    exactement celles qui se sont périmées."""
+    u"""'un seul cas', 'les dix-huit autres': these wordings are
+    exactly the ones that became stale."""
     chemin = os.path.abspath(generateur.__file__).replace('.pyc', '.py')
     with io.open(chemin, encoding='utf-8') as flux:
         source = flux.read()
@@ -143,13 +142,13 @@ def test_le_cas_porteur_est_lu_et_non_affirme():
 
 
 # --------------------------------------------------------------------------
-# Ce que la matrice ne doit jamais dire
+# What the matrix must never say
 # --------------------------------------------------------------------------
 
 @pytest.mark.parametrize('numero', [1, 7])
 def test_aucune_matrice_ne_se_signe_elle_meme(numero):
-    u"""Règle 5 : la signature est indépendante. Un script qui se signerait
-    ne vaudrait rien."""
+    u"""Rule 5: the signature is independent. A script that signs itself
+    would be worthless."""
     document = generateur.construire_dedie(numero)
     assert u'**non signé**' in document
     assert u'NON SIGNÉE' in document
@@ -173,14 +172,14 @@ def test_la_matrice_du_test_1_dit_combien_de_controles_restent_non_evalues():
 
 
 def test_la_matrice_du_test_7_nomme_sa_source_dirradiance():
-    u"""Sans irradiance de Kloten, aucune grandeur du Test 7 n'est calculable.
-    Le taire donnerait une matrice qui semble complète."""
+    u"""Without Kloten irradiance, no Test 7 quantity is computable.
+    Hiding this would produce a matrix that appears complete."""
     document = generateur.construire_dedie(7)
     assert u'Source d\'irradiance' in document
 
 
 def test_les_classes_concernees_viennent_du_moteur():
-    u"""SIA 4010:2023, tableau 63. Les retaper les périmerait."""
+    u"""SIA 4010:2023, tableau 63. Retyping them would make them stale."""
     from engine import test7_engine as moteur
     classes = moteur.evaluer_test7(
         moteur.charger_reference()).get('classes_concernees') or []
@@ -189,7 +188,7 @@ def test_les_classes_concernees_viennent_du_moteur():
 
 
 # --------------------------------------------------------------------------
-# Chaîne logicielle : l'existence est contrôlée
+# Software chain: existence is checked
 # --------------------------------------------------------------------------
 
 @pytest.mark.parametrize('numero', [1, 7])
@@ -201,8 +200,8 @@ def test_un_fichier_absent_est_signale_et_non_tu(numero):
 
 
 def test_la_chaine_du_test_1_cite_le_gbxml_et_limport():
-    u"""Ce sont les deux maillons ajoutés cette semaine ; une matrice qui les
-    ignorerait sous-déclarerait la couverture."""
+    u"""These are the two links added this week; a matrix that ignored them
+    would under-declare the coverage."""
     lignes = u'\n'.join(generateur._tableau_chaine_dediee(1))
     assert 've_adapter/gbxml_test1.py' in lignes
     assert 'scripts/importer_geometrie_test1.py' in lignes

@@ -45,6 +45,7 @@ from .preparation_bundle import (
 )
 from .scenario_preflight import is_temporary_ve_project
 from .test2a_source_bundle import build_test2a_source_bound_bundle
+from .test2a_qualification_chain import FINAL_STATUS as TEST2A_CHAIN_FINAL_STATUS
 from .test3_source_bundle import (
     TEST3_VARIANTS,
     build_test3_source_bound_bundle,
@@ -638,6 +639,7 @@ class NativeModelBuilderWindow(tk.Frame):
         test2a_profile_qualifier: Optional[Callable[[], Any]] = None,
         test2a_shading_qualifier: Optional[Callable[[], Any]] = None,
         test2a_optical_qualifier: Optional[Callable[[], Any]] = None,
+        test2a_qualification_chain: Optional[Callable[[], Any]] = None,
         test3_runtime_probe: Optional[Callable[[], Any]] = None,
         hvac_plant_runtime_probe: Optional[Callable[[], Any]] = None,
         language: Optional[str] = None,
@@ -662,6 +664,7 @@ class NativeModelBuilderWindow(tk.Frame):
         self.test2a_profile_qualifier = test2a_profile_qualifier
         self.test2a_shading_qualifier = test2a_shading_qualifier
         self.test2a_optical_qualifier = test2a_optical_qualifier
+        self.test2a_qualification_chain = test2a_qualification_chain
         self.test3_runtime_probe = test3_runtime_probe
         self.hvac_plant_runtime_probe = hvac_plant_runtime_probe
         self.test2a_profile_qualification_authorized = False
@@ -1424,8 +1427,16 @@ class NativeModelBuilderWindow(tk.Frame):
         )
         self.test2a_probe_button = ttk.Button(
             actions,
-            text=self.t("btn_probe_test2a_runtime"),
-            command=self.probe_test2a_runtime,
+            text=self.t(
+                "btn_run_test2a_chain"
+                if self.test2a_qualification_chain is not None
+                else "btn_probe_test2a_runtime"
+            ),
+            command=(
+                self.run_test2a_qualification_chain
+                if self.test2a_qualification_chain is not None
+                else self.probe_test2a_runtime
+            ),
             style="Secondary.TButton",
         )
         self.test2a_probe_button.grid(
@@ -1705,7 +1716,10 @@ class NativeModelBuilderWindow(tk.Frame):
         test2a_probe_ready = (
             profile == "SIA4010_OFFICIAL"
             and not self.temporary_project
-            and self.test2a_runtime_probe is not None
+            and (
+                self.test2a_qualification_chain is not None
+                or self.test2a_runtime_probe is not None
+            )
             and self.variant_var.get() == "test_2A"
             and self.case_var.get() == "2A"
         )
@@ -2744,6 +2758,85 @@ class NativeModelBuilderWindow(tk.Frame):
                 parent=self.master,
             )
 
+    def run_test2a_qualification_chain(self) -> None:
+        """Run the fail-closed Test 2A preparation and setter probe chain."""
+
+        if (
+            self.test2a_qualification_chain is None
+            or self.variant_var.get() != "test_2A"
+            or self.case_var.get() != "2A"
+            or self.temporary_project
+        ):
+            messagebox.showwarning(
+                self.t("dlg_test2a_chain_title"),
+                self.t("dlg_test2a_chain_unavailable"),
+                parent=self.master,
+            )
+            return
+        confirmed = messagebox.askyesno(
+            self.t("dlg_test2a_chain_title"),
+            self.t("dlg_test2a_chain_body").format(project=self.project_name),
+            parent=self.master,
+            icon="warning",
+        )
+        if not confirmed:
+            return
+        try:
+            result = self.test2a_qualification_chain()
+            if not isinstance(result, Mapping):
+                raise RuntimeError(
+                    "Test 2A qualification chain returned no audit receipt"
+                )
+            status = str(result.get("status", ""))
+            report = Path(str(result.get("report_path", "")))
+            if (
+                status != TEST2A_CHAIN_FINAL_STATUS
+                or not report.is_file()
+                or result.get("mutation_supported") is not False
+                or result.get("compliance_claim_allowed") is not False
+            ):
+                raise RuntimeError(
+                    "Test 2A qualification chain returned an incomplete or "
+                    "overclaiming receipt"
+                )
+            self.test2a_profile_qualification_authorized = False
+            self.test2a_shading_qualification_authorized = False
+            self.test2a_optical_qualification_authorized = False
+            self._sync_case()
+            detail = self.t("status_test2a_chain").format(
+                status=status,
+                report=report,
+            )
+            self._append_log(detail)
+            self._set_status(
+                "warning",
+                self.t("dlg_test2a_chain_title"),
+                detail,
+            )
+            messagebox.showinfo(
+                self.t("dlg_test2a_chain_title"),
+                self.t("dlg_test2a_chain_complete").format(
+                    status=status,
+                    report=report,
+                ),
+                parent=self.master,
+            )
+        except Exception as exc:
+            self.test2a_profile_qualification_authorized = False
+            self.test2a_shading_qualification_authorized = False
+            self.test2a_optical_qualification_authorized = False
+            self._sync_case()
+            self._set_status(
+                "error",
+                self.t("dlg_test2a_chain_title"),
+                str(exc),
+            )
+            messagebox.showerror(
+                self.t("dlg_test2a_chain_title"),
+                str(exc),
+                parent=self.master,
+            )
+
     def qualify_test2a_shading(self) -> None:
         """Run the one-object shade setter probe after the read-only gate."""
 
@@ -3092,6 +3185,7 @@ def launch_native_ui(
     test2a_profile_qualifier: Optional[Callable[[], Any]] = None,
     test2a_shading_qualifier: Optional[Callable[[], Any]] = None,
     test2a_optical_qualifier: Optional[Callable[[], Any]] = None,
+    test2a_qualification_chain: Optional[Callable[[], Any]] = None,
     test3_runtime_probe: Optional[Callable[[], Any]] = None,
     hvac_plant_runtime_probe: Optional[Callable[[], Any]] = None,
 ) -> None:
@@ -3113,6 +3207,7 @@ def launch_native_ui(
         test2a_profile_qualifier=test2a_profile_qualifier,
         test2a_shading_qualifier=test2a_shading_qualifier,
         test2a_optical_qualifier=test2a_optical_qualifier,
+        test2a_qualification_chain=test2a_qualification_chain,
         test3_runtime_probe=test3_runtime_probe,
         hvac_plant_runtime_probe=hvac_plant_runtime_probe,
     )

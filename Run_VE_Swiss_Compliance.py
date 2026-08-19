@@ -1,9 +1,13 @@
 """
-Client launcher for the Swiss SIA compliance checker.
+Client launcher for the Swiss SIA 380/2 compliance checker.
 
-Use this file from the IESVE Scripts window with the Run button.
-It delegates to main.py so the production workflow has one clear entry point
-without requiring PowerShell or command-line arguments.
+Use this file from the IESVE Scripts window with the Run button. It is the
+default client deliverable: an SIA 380/2-only report. SIA 4010 validation
+classes qualify the toolchain, not a client building, so they never appear
+here (only the protective disclaimers and provenance citations remain).
+
+For the full internal report (SIA 380/2 + SIA 4010 readiness), use
+Run_VE_Swiss_Compliance_Internal_SIA4010.py instead.
 """
 
 import os

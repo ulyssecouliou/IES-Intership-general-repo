@@ -21,30 +21,30 @@ residual below 0.001 degC. Frozen in
     cooling setpoint   upper limit - 0.7 K   (23.8 -> 25.8)
 
 CROSS-CHECK, two independent documents. SIA 380/2 §5.2.2.5 states the limits
-"correspondent a celles de SIA 180:2014, figure 4, pour les locaux d'habitation
-et les bureaux". The SIA supplied that figure on 2026-08-04; all eight values
+"correspond to those of SIA 180:2014, figure 4, for residential and office
+spaces". The SIA supplied that figure on 2026-08-04; all eight values
 agree -- ordinates 20.5 / 22.0 / 24.5 / 26.5, abscissa breaks 12 / 17.5 / 19 /
 23.5. See `refs/reference-data/sia-180-2014.comfort.json`.
 
 WHICH CURVE APPLIES -- SIA 380/2 §5.2.2.3, on the emission-control class of
 SN EN ISO 52120-1:2022 table 5:
   - class 1 or 2 (no communication), or the user can influence the room:
-        CONSTANT setpoints, at "le maximum de la courbe de la valeur de consigne
-        pour le chauffage" (22.7) and "le minimum de la courbe [...] pour le
-        refroidissement" (23.8). Drawn dash-dot in the figure.
+        CONSTANT setpoints, at "the maximum of the heating setpoint curve"
+        (22.7) and "the minimum of the [...] cooling setpoint curve" (23.8).
+        Drawn dash-dot in the figure.
   - class 3 or 4 (with communication) and no user influence:
         the VARIABLE curves. Drawn dotted.
 
-USAGE SHIFT -- SIA 380/2 §5.2.2.5: "Sans determination plus detaillee des
-conditions de confort, les limites seront decalees suivant la difference entre
-les valeurs de dimensionnement de l'utilisation correspondante et les
-utilisations 1.01 a 3.03 selon SIA 2024:2021, tableau 11." Usages 1.01 to 3.03
+USAGE SHIFT -- SIA 380/2 §5.2.2.5: "Without more detailed determination of
+comfort conditions, the limits shall be shifted according to the difference
+between the design values of the corresponding usage and usages 1.01 to 3.03
+per SIA 2024:2021, table 11." Usages 1.01 to 3.03
 are unanimous at 21 degC / 26 degC in table 11, which is what makes that
 "difference" a scalar. Hence:
 
     lower shift = theta_h_design(usage) - 21     upper shift = theta_c_design(usage) - 26
 
-"Pour d'autres utilisations, les courbes se deplacent, mais gardent leur forme."
+"For other usages, the curves shift but retain their shape."
 The shift is applied to the ordinate only; abscissa breaks are untouched.
 
 THE RULE IS VERIFIED, NOT ASSUMED. SIA 4010:2023 §3.1.4 (printed page 10)
@@ -53,9 +53,9 @@ are reproduced from table 11 by the formula above; see
 `engine/tests/test_setpoint_curves.py`. That single check validates both our
 transcription of table 11 and our reading of §5.2.2.5.
 
-WHAT THIS MODULE DOES NOT DECIDE. §5.2.2.1: "Les valeurs de consigne peuvent
-etre fixees pour la temperature moyenne de l'air interieur OU pour la
-temperature operative simplifiee. Le choix est a discuter avec le mandant."
+WHAT THIS MODULE DOES NOT DECIDE. §5.2.2.1: "The setpoints may be fixed for
+the mean indoor air temperature OR for the simplified operative temperature.
+The choice is to be discussed with the client."
 The curves are identical either way; only the simulated quantity they are
 compared against changes. That choice belongs to the caller.
 
@@ -77,8 +77,8 @@ LOWER_LIMIT = ((10.0, 20.5), (19.0, 20.5), (23.5, 22.0), (25.0, 22.0))
 UPPER_LIMIT = ((10.0, 24.5), (12.0, 24.5), (17.5, 26.5), (25.0, 26.5))
 
 # Emission-control deviation, SIA 380/2 §5.2.2.2: the gap between a setpoint and
-# its limit "correspond a l'ecart de regulation pour l'emission de chaleur et de
-# froid delta_theta_ctr selon SN EN 15316-2:2017".
+# its limit "corresponds to the control deviation for heat and cold emission
+# delta_theta_ctr per SN EN 15316-2:2017".
 #
 # 0.7 K is what figure 1 DRAWS, measured on both sides. SN EN 15316-2:2017 --
 # which defines the quantity -- is not in our possession, so we cannot tell
@@ -115,12 +115,12 @@ DESIGN_TEMPERATURES = {
 }
 
 # Usages for which seasonal clothing does not apply, so the limits are constant
-# -- SIA 380/2 §5.2.2.5: "salles de gymnastique, salles de fitness, piscines
-# couvertes, vestiaires, douches [...] valeurs limites superieures (pas de
-# diminution lorsque les temperatures exterieures sont basses) et valeurs
-# limites inferieures (pas d'augmentation lorsque les temperatures exterieures
-# sont elevees) constantes". SIA 4010 §3.1.4: the curve "prend la forme d'une
-# ligne droite".
+# -- SIA 380/2 §5.2.2.5: "Without more detailed determination of comfort
+# conditions, the limits shall be shifted according to the difference between
+# the design values of the corresponding usage and usages 1.01 to 3.03 per
+# SIA 2024:2021, table 11." Usages 1.01 to 3.03
+# are unanimous at 21 degC / 26 degC in table 11, which is what makes that
+# "difference" a scalar. Hence:
 #
 # # -- A VERIFIER: the standards name the LABELS, not the usage numbers. Mapping
 # them onto SIA 2024 numbers is our reading. "12.06 WC, Bad, Dusche" arguably
@@ -192,9 +192,9 @@ def _shifted(vertices, shift):
 def _flattened(vertices, keep):
     """Collapse a curve to a constant, for the non-seasonal-clothing usages.
 
-    `keep` is `min` for the lower limit ("pas d'augmentation lorsque les
-    temperatures exterieures sont elevees") and `max` for the upper limit ("pas
-    de diminution lorsque les temperatures exterieures sont basses").
+    `keep` is `min` for the lower limit ("no increase when outdoor temperatures
+    are high") and `max` for the upper limit ("no decrease when outdoor
+    temperatures are low").
     """
     value = keep(y for _, y in vertices)
     return tuple((x, value) for x, y in vertices)
@@ -235,10 +235,9 @@ def setpoint_curves(usage, shift=True):
 def constant_setpoints(usage, shift=True):
     """The two constant setpoints, for emission-control class 1 or 2.
 
-    SIA 380/2 §5.2.2.3: "valeurs constantes au MAXIMUM de la courbe de la valeur
-    de consigne pour le chauffage ou au MINIMUM de la courbe de la valeur de
-    consigne pour le refroidissement". Unshifted, that is 22.7 and 23.8 -- the
-    dash-dot lines drawn in figure 1.
+    SIA 380/2 §5.2.2.3: "constant values at the MAXIMUM of the heating setpoint
+    curve or at the MINIMUM of the cooling setpoint curve". Unshifted, that is
+    22.7 and 23.8 -- the dash-dot lines drawn in figure 1.
     """
     heating, cooling = setpoint_curves(usage, shift=shift)
     return (None if heating is None else max(y for _, y in heating),
@@ -294,8 +293,8 @@ def within_limits(usage, theta_rm, temperature):
 def running_mean_48h(hourly_outdoor, index):
     """48-hour running mean of outdoor temperature ending at `index`, in degC.
 
-    The abscissa of figure 1 is "Temperature exterieure moyenne glissante sur
-    48 heures". The standard does not say how the first 47 hours of a run are
+    The abscissa of figure 1 is the "48-hour sliding mean outdoor temperature".
+    The standard does not say how the first 47 hours of a run are
     handled; averaging over what is available is our choice, and it is the only
     hour range where the abscissa is ambiguous.
 

@@ -1,29 +1,29 @@
 # -*- coding: utf-8 -*-
-u"""Géométrie de la cellule d'essai du Test 1, en gbXML.
+u"""Geometry of the Test 1 trial cell, in gbXML.
 
-POURQUOI UN FICHIER, ET PAS DES APPELS D'API. L'API `iesve` n'expose **aucun
-constructeur de géométrie** : ni pièce, ni corps, ni surface. La seule voie est
-`ImportGBXML.import_file`. La géométrie doit donc être décrite dans un fichier,
-puis importée.
+WHY A FILE, AND NOT API CALLS. The `iesve` API exposes **no geometry
+constructor**: no room, no body, no surface. The only path is
+`ImportGBXML.import_file`. The geometry must therefore be described in a file,
+then imported.
 
-LE POINT QUE L'AUDIT LAISSAIT OUVERT EST TRANCHÉ. `AUDIT.md` §D signalait que
-la documentation écrit `Import_file` (I majuscule) là où le dépôt externe
-appelait `import_file`, sans qu'aucun des deux n'ait jamais vu l'appel
-s'exécuter. L'introspection de VE 2025 donne **`import_file`, en minuscule** :
-c'est la documentation qui se trompe.
+THE POINT LEFT OPEN BY THE AUDIT IS SETTLED. `AUDIT.md` §D noted that the
+documentation writes `Import_file` (capital I) where the external repository
+called `import_file`, without either having ever seen the call execute.
+Introspection of VE 2025 gives **`import_file`, in lowercase**: it is the
+documentation that is wrong.
 
-CE QUI A CHANGÉ DEPUIS LE REFUS DE L'AUDIT. `AUDIT.md` refusait d'écrire un
-gbXML « non vérifiable contre une VE réelle ». Il l'est désormais : une fois
-importé, `VEModel.get_bodies()` et `VEBody.get_areas()` rendent les surfaces
-réelles, qu'on confronte à celles de la source. C'est la même boucle
-écrire → relire → vérifier qui a servi aux matériaux et aux couches, et qui a
-démasqué les épaisseurs à 1 mm.
+WHAT HAS CHANGED SINCE THE AUDIT REFUSAL. `AUDIT.md` refused to write a
+gbXML "not verifiable against a real VE". It now is: once imported,
+`VEModel.get_bodies()` and `VEBody.get_areas()` return the actual surfaces,
+which can be compared against those from the source. This is the same
+write -> read back -> verify loop that served for materials and layers, and
+that exposed the 1 mm thicknesses.
 
-TOUTES LES COTES VIENNENT DE LA SOURCE, aucune n'est saisie ici :
-`config/iso52016_chapter7_confirmed_inputs.json`, clause 7.2.2.2, Figure 2 et
-Table 22, page 123 de BS EN ISO 52016-1:2017.
+ALL DIMENSIONS COME FROM THE SOURCE, none are entered here:
+`config/iso52016_chapter7_confirmed_inputs.json`, clause 7.2.2.2, Figure 2 and
+Table 22, page 123 of BS EN ISO 52016-1:2017.
 
-Python pur : ni `iesve`, ni écriture dans VE. Testable en intégration continue.
+Pure Python: no `iesve`, no writing into VE. Testable in continuous integration.
 """
 
 from __future__ import print_function
@@ -38,36 +38,36 @@ _RACINE = os.path.abspath(os.path.join(_ICI, os.pardir))
 CHEMIN_SOURCE = os.path.join(_RACINE, 'config',
                              'iso52016_chapter7_confirmed_inputs.json')
 
-#: Tolérance de comparaison des surfaces, en m². Les cotes sont exactes au
-#: centimètre ; un écart supérieur signale une erreur de construction, pas un
-#: arrondi.
+#: Surface comparison tolerance, in m². Dimensions are exact to the
+#: centimetre; a larger discrepancy signals a construction error, not a
+#: rounding issue.
 TOLERANCE_SURFACE_M2 = 1e-6
 
-#: Noms des faces, tels que la source les nomme. L'ordre est celui du repère :
-#: la façade avant est au sud, orientation imposée par la spécification.
+#: Face names, as the source names them. Order follows the coordinate frame:
+#: the front facade faces south, orientation imposed by the specification.
 FACES = ('front_wall', 'back_wall', 'left_wall', 'right_wall',
          'floor', 'ceiling')
 
 
 class GeometrieIndisponible(IOError):
-    u"""Levée quand les cotes de référence ne sont pas lisibles."""
+    u"""Raised when the reference dimensions cannot be read."""
 
 
 class GeometrieIncoherente(ValueError):
-    u"""Levée quand les surfaces calculées ne reproduisent pas la source."""
+    u"""Raised when the computed areas do not reproduce the source."""
 
 
 def charger_cotes(chemin=None):
-    u"""Charge les cotes de la cellule depuis la source figée.
+    u"""Loads the cell dimensions from the frozen source.
 
     Args:
-        chemin: Chemin explicite, sinon la source du dépôt.
+        chemin: Explicit path, otherwise the repository source.
 
     Returns:
-        dict: Bloc `geometry` de la source.
+        dict: `geometry` block from the source.
 
     Raises:
-        GeometrieIndisponible: Si la source manque ou ne porte pas la cellule.
+        GeometrieIndisponible: If the source is missing or does not carry the cell.
     """
     chemin = chemin or CHEMIN_SOURCE
     if not os.path.exists(chemin):
@@ -83,16 +83,16 @@ def charger_cotes(chemin=None):
 
 
 def surfaces_attendues(cotes):
-    u"""Calcule les surfaces opaques depuis les seules cotes.
+    u"""Computes the opaque areas from the dimensions alone.
 
-    Elles sont RECALCULÉES et non recopiées : c'est ce recalcul, confronté
-    aux valeurs de la source, qui prouve que les cotes se tiennent.
+    They are RECOMPUTED and not copied: it is this recomputation, compared
+    against the source values, that proves the dimensions are self-consistent.
 
     Args:
-        cotes: Bloc `geometry`.
+        cotes: `geometry` block.
 
     Returns:
-        dict: `{face: surface en m²}`, plus `windows`.
+        dict: `{face: area in m²}`, plus `windows`.
     """
     largeur = cotes['width_m']
     profondeur = cotes['depth_m']
@@ -112,18 +112,18 @@ def surfaces_attendues(cotes):
 
 
 def controler_les_cotes(cotes):
-    u"""Confronte les surfaces recalculées à celles que la source annonce.
+    u"""Compares the recomputed areas against those announced by the source.
 
     Args:
-        cotes: Bloc `geometry`.
+        cotes: `geometry` block.
 
     Returns:
-        dict: `{face: (recalculee, annoncee)}` pour information.
+        dict: `{face: (recomputed, announced)}` for information.
 
     Raises:
-        GeometrieIncoherente: Au moindre écart. Une cote mal lue produirait
-            une cellule plausible et fausse — et la simulation qui suit ne le
-            dirait pas.
+        GeometrieIncoherente: On any discrepancy. A mis-read dimension would
+            produce a plausible and wrong cell -- and the simulation that
+            follows would not say so.
     """
     calculees = surfaces_attendues(cotes)
     annoncees = dict(cotes['opaque_areas_m2'])
@@ -152,17 +152,17 @@ def controler_les_cotes(cotes):
 
 
 def sommets_de_la_cellule(cotes):
-    u"""Sommets du parallélépipède, en mètres.
+    u"""Vertices of the rectangular box, in metres.
 
-    Repère : X vers l'est, Y vers le nord, Z vers le haut. La façade **avant
-    est au sud**, donc en Y = 0 — c'est l'orientation qu'impose la
-    spécification, et elle décide de tout le solaire.
+    Coordinate frame: X towards east, Y towards north, Z upwards. The **front
+    facade faces south**, so at Y = 0 -- this is the orientation imposed by the
+    specification, and it determines the entire solar balance.
 
     Args:
-        cotes: Bloc `geometry`.
+        cotes: `geometry` block.
 
     Returns:
-        dict: `{nom: (x, y, z)}` pour les huit sommets.
+        dict: `{name: (x, y, z)}` for the eight vertices.
     """
     largeur = cotes['width_m']
     profondeur = cotes['depth_m']
@@ -180,21 +180,20 @@ def sommets_de_la_cellule(cotes):
 
 
 def rectangles_des_fenetres(cotes):
-    u"""Rectangles des deux fenêtres, dans le plan de la façade sud.
+    u"""Rectangles of the two windows, in the plane of the south facade.
 
-    Disposition imposée par la source : marge latérale, puis fenêtre,
-    intervalle, fenêtre, marge latérale. L'implantation est RECALCULÉE et
-    contrôlée : si les marges et l'intervalle ne remplissent pas la largeur,
-    c'est que la source a été mal lue.
+    Layout imposed by the source: side margin, then window, gap, window, side
+    margin. The placement is RECOMPUTED and checked: if the margins and gap do
+    not fill the width, the source has been mis-read.
 
     Args:
-        cotes: Bloc `geometry`.
+        cotes: `geometry` block.
 
     Returns:
-        list[dict]: Un rectangle par fenêtre, en coordonnées (x, z).
+        list[dict]: One rectangle per window, in (x, z) coordinates.
 
     Raises:
-        GeometrieIncoherente: Si l'implantation ne remplit pas la façade.
+        GeometrieIncoherente: If the placement does not fill the facade.
     """
     fenetres = cotes['windows']
     largeur_mur = cotes['width_m']
@@ -227,13 +226,13 @@ def rectangles_des_fenetres(cotes):
 
 
 def resumer(cotes=None):
-    u"""Résumé lisible des cotes et de leur contrôle.
+    u"""Human-readable summary of the dimensions and their check.
 
     Args:
-        cotes: Bloc `geometry`, chargé depuis la source si absent.
+        cotes: `geometry` block, loaded from the source if absent.
 
     Returns:
-        str: Texte.
+        str: Text.
     """
     cotes = cotes or charger_cotes()
     releve = controler_les_cotes(cotes)

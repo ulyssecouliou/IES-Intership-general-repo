@@ -1,24 +1,23 @@
 # -*- coding: utf-8 -*-
-u"""Écrit les deux rapports de validation technique qui manquaient au Test 2A.
+u"""Writes the two technical validation reports that were missing from Test 2A.
 
-POURQUOI. Le manifeste d'entrées déléguées exige, pour chaque source, un rapport
-de validation d'un schéma précis, lié à l'empreinte exacte de la source et à un
-artefact de liaison. L'entrée SIA 2024 en avait un ; les deux autres non, et
-`ready_for_binding` restait faux pour cette raison technique, distincte de la
-question d'autorisation.
+WHY. The delegated-inputs manifest requires, for each source, a validation
+report with a precise schema, linked to the exact fingerprint of the source and
+to a binding artefact. The SIA 2024 entry had one; the other two did not, and
+`ready_for_binding` remained false for this technical reason, distinct from the
+authorisation question.
 
-CE QUI EST CONTRÔLÉ N'EST PAS DÉCLARÉ, IL EST MESURÉ. Chaque contrôle de ces
-rapports est recalculé à l'exécution, ici, sur les fichiers réels. Aucun chiffre
-n'est recopié depuis une note antérieure : un rapport de validation qui répète
-une mesure sans la refaire ne valide rien.
+WHAT IS CHECKED IS NOT DECLARED, IT IS MEASURED. Every check in these reports
+is recalculated at runtime, here, against the real files. No figure is copied
+from a prior note: a validation report that repeats a measurement without redoing
+it validates nothing.
 
-CE QU'UN `PASS` NE DIT PAS. Il porte sur l'intégrité et la cohérence interne de
-la transcription, et sur la fidélité de la conversion. Il ne dit rien de
-l'autorisation d'usage de la source, qui est un champ distinct du manifeste et
-une décision humaine. Il ne dit rien non plus de la complétude de chaque colonne :
-le jeu de Kloten porte des colonnes non identifiées et une couverture nuageuse
-absente sur la majorité des heures, et les contrôles concernés l'énoncent au lieu
-de le taire.
+WHAT A `PASS` DOES NOT SAY. It covers the integrity and internal consistency of
+the transcription, and the fidelity of the conversion. It says nothing about the
+authorisation to use the source, which is a separate field of the manifest and a
+human decision. Nor does it say anything about the completeness of each column:
+the Kloten dataset carries unidentified columns and cloud cover absent on the
+majority of hours, and the relevant checks state that rather than concealing it.
 """
 
 from __future__ import print_function
@@ -34,18 +33,18 @@ import sys
 _RACINE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, _RACINE)
 
-#: Schéma qu'un rapport doit porter pour être lu par le manifeste.
+#: Schema a report must carry to be read by the manifest.
 SCHEMA_RAPPORT = '1.0'
 
 
 def _empreinte(chemin):
-    u"""Renvoie le SHA-256 d'un fichier.
+    u"""Returns the SHA-256 of a file.
 
     Args:
-        chemin: Chemin absolu.
+        chemin: Absolute path.
 
     Returns:
-        str: Empreinte hexadécimale minuscule.
+        str: Lowercase hexadecimal fingerprint.
     """
     digest = hashlib.sha256()
     with open(chemin, 'rb') as flux:
@@ -55,45 +54,45 @@ def _empreinte(chemin):
 
 
 def _absolu(*morceaux):
-    u"""Renvoie un chemin absolu depuis la racine du dépôt.
+    u"""Returns an absolute path from the repository root.
 
     Args:
-        *morceaux: Segments relatifs.
+        *morceaux: Relative segments.
 
     Returns:
-        str: Chemin absolu.
+        str: Absolute path.
     """
     return os.path.join(_RACINE, *morceaux)
 
 
 def _charger(chemin):
-    u"""Charge un JSON du dépôt.
+    u"""Loads a JSON file from the repository.
 
     Args:
-        chemin: Chemin absolu.
+        chemin: Absolute path.
 
     Returns:
-        dict: Contenu.
+        dict: Contents.
     """
     with io.open(chemin, encoding='utf-8') as flux:
         return json.load(flux)
 
 
 def controles_iso52016(source):
-    u"""Recalcule la cohérence interne de la transcription du chapitre 7.
+    u"""Recalculates the internal consistency of the chapter 7 transcription.
 
-    Le catalogue exige une « transcription vérifiée indépendamment ». Ce qui est
-    vérifiable sans la norme sous les yeux est la cohérence des grandeurs
-    dérivées avec les grandeurs primitives : une résistance doit valoir épaisseur
-    sur conductivité, une capacité surfacique masse volumique fois chaleur
-    massique fois épaisseur, et la somme des couches le total déclaré. Une
-    transcription fautive casse presque toujours l'une des trois.
+    The catalogue requires « independently checked transcription ». What is
+    verifiable without the standard in hand is the consistency of derived
+    quantities against primitive ones: a resistance must equal thickness over
+    conductivity, an areal capacity density times specific heat times thickness,
+    and the layer sum must match the declared total. A faulty transcription
+    almost always breaks one of the three.
 
     Args:
-        source: Contenu de `iso52016_chapter7_confirmed_inputs.json`.
+        source: Contents of `iso52016_chapter7_confirmed_inputs.json`.
 
     Returns:
-        list[dict]: Contrôles au format du rapport.
+        list[dict]: Checks in report format.
     """
     cellule = source['hourly_test_cell']
     ecart_total = ecart_r = ecart_c = 0.0
@@ -120,9 +119,9 @@ def controles_iso52016(source):
                     * couche['thickness_m']
                     - couche['areal_heat_capacity_j_m2k']))
 
-    # Troisième grandeur dérivée vérifiable sans la norme sous les yeux : chaque
-    # coefficient de surface combiné doit valoir la somme de sa part convective
-    # et de sa part radiative, que la source publie séparément.
+    # Third derived quantity verifiable without the standard in hand: each
+    # combined surface coefficient must equal the sum of its convective and
+    # radiative parts, which the source publishes separately.
     bornes = cellule['solar_and_boundary_conditions']
     detail = bornes['surface_coefficients_w_m2k']
     combines = bornes['combined_surface_coefficients_w_m2k']
@@ -216,17 +215,17 @@ def controles_iso52016(source):
 
 
 def controles_sia2028(chemin_source, derivation):
-    u"""Recalcule la cohérence physique du jeu de Kloten et sa conversion.
+    u"""Recalculates the physical consistency of the Kloten dataset and its conversion.
 
     Args:
-        chemin_source: Chemin absolu de `KLO_dry.txt`.
-        derivation: Contenu de la fiche de dérivation de l'EPW.
+        chemin_source: Absolute path to `KLO_dry.txt`.
+        derivation: Contents of the EPW derivation sheet.
 
     Returns:
-        list[dict]: Contrôles au format du rapport.
+        list[dict]: Checks in report format.
 
     Raises:
-        AssertionError: Si un contrôle échoue, plutôt que d'écrire un PASS faux.
+        AssertionError: If a check fails, rather than writing a false PASS.
     """
     from swiss_sia.reference_model.sia_dry_weather_import import (
         parse_sia_dry_file,
@@ -271,7 +270,7 @@ def controles_sia2028(chemin_source, derivation):
         ecart_global = max(ecart_global, abs(
             int(float(champs[13])) - ligne_source.global_horizontal_wh_m2))
 
-    # Un rapport ne doit pas pouvoir conclure PASS sur un controle en echec.
+    # A report must not be able to conclude PASS on a failing check.
     assert len(lignes) == 8760, len(lignes)
     assert diffus_sup == 0 and rosee_sup == 0 and humidite_hors == 0
     assert len(donnees) == 8760, len(donnees)
@@ -354,28 +353,26 @@ def controles_sia2028(chemin_source, derivation):
     ]
 
 
-#: Les deux rapports à produire.
+#: The two reports to produce.
 RAPPORTS = (
     {
         'input_id': 'iso52016_2017_chapter7_test_cell',
         'source': _absolu('config', 'iso52016_chapter7_confirmed_inputs.json'),
         'sortie': _absolu('refs', 'reference-data',
                           'iso52016_chapter7_test_cell.validation.json'),
-        # PAS d'artefact de liaison : le consommateur exige une transcription
-        # NORMALISEE portant quatre proprietes de surface par construction, dont
-        # les emissivites infrarouges interieure et exterieure. Le fichier
-        # d'entrees confirmees ne les porte pas -- il ne donne qu'un
-        # `opaque_solar_absorptance` global, sans distinction de face. Les
-        # coefficients radiatifs y sont (5.13 et 4.14), mais en deduire une
-        # emissivite exige la formule ISO et ses hypotheses : c'est une
-        # inference sur une valeur normative, pas une mise en forme.
+        # NO binding artefact: the consumer requires a NORMALISED transcription
+        # carrying four surface properties per construction, including infrared
+        # emissivities for inside and outside. The confirmed-inputs file does not
+        # carry them -- it only gives a global `opaque_solar_absorptance` without
+        # face distinction. The radiative coefficients are there (5.13 and 4.14),
+        # but deriving an emissivity requires the ISO formula and its assumptions:
+        # that is an inference on a normative value, not a reformatting.
         #
-        # Une premiere version de ce rapport declarait ce fichier comme artefact
-        # de liaison du schema `sia4010.iso52016_chapter7_test_cell.v1`. Le
-        # lecteur du manifeste l'acceptait, parce qu'il ne verifie que la
-        # declaration ; le consommateur le rejetait. C'etait une fausse
-        # declaration dans un artefact de tracabilite, exactement ce que ces
-        # rapports existent pour empecher.
+        # An earlier version of this report declared that file as a binding
+        # artefact for schema `sia4010.iso52016_chapter7_test_cell.v1`. The
+        # manifest reader accepted it, because it only checks the declaration;
+        # the downstream consumer rejected it. That was a false declaration in a
+        # traceability artefact, exactly what these reports exist to prevent.
         'binding': _absolu('refs', 'reference-data',
                            'iso52016_chapter7_test_cell.binding.json'),
         'binding_schema': 'sia4010.iso52016_chapter7_test_cell.v1',
@@ -407,15 +404,15 @@ RAPPORTS = (
         'source': _absolu('references', 'standards', 'sia2028', 'KLO_dry.txt'),
         'sortie': _absolu('references', 'standards', 'sia2028',
                           'KLO_dry.validation.json'),
-        # L'artefact de liaison est la transcription NORMALISEE, pas la fiche
-        # de derivation : le consommateur en aval exige que le fichier porte
-        # lui-meme `schema_id`, ce que la fiche ne fait pas. Le lecteur du
-        # manifeste, lui, ne verifiait que la declaration -- d'ou une premiere
-        # version de ce rapport qui passait le manifeste et cassait a l'usage.
+        # The binding artefact is the NORMALISED transcription, not the
+        # derivation sheet: the downstream consumer requires the file itself
+        # to carry `schema_id`, which the sheet does not. The manifest reader,
+        # however, only checked the declaration -- hence an earlier version that
+        # passed the manifest and broke at use.
         'binding': _absolu('references', 'standards', 'sia2028',
                            'KLO_SIA2028_DRY_NORMAL.binding.json'),
-        # La fiche de derivation reste la source des controles mesures ; elle
-        # n'est plus l'artefact de liaison declare. Deux roles, deux fichiers.
+        # The derivation sheet remains the source for the measured checks;
+        # it is no longer the declared binding artefact. Two roles, two files.
         'derivation': _absolu('generated_weather', 'KLO',
                               'KLO_SIA2028_DRY_NORMAL_IESVE_DERIVATION.json'),
         'binding_schema': 'sia4010.sia2028_hourly_weather.v1',
@@ -439,10 +436,10 @@ RAPPORTS = (
 
 
 def construire():
-    u"""Assemble les deux rapports, contrôles recalculés.
+    u"""Assembles both reports with recalculated checks.
 
     Returns:
-        list[tuple]: Chemin de sortie et charge de chaque rapport.
+        list[tuple]: Output path and payload for each report.
     """
     sorties = []
     for plan in RAPPORTS:
@@ -453,8 +450,8 @@ def construire():
             controles = controles_sia2028(
                 plan['source'], _charger(plan['derivation']))
         if plan.get('binding') is None:
-            # Sans artefact de liaison conforme, le rapport ne peut pas
-            # conclure : il consigne le blocage et sort en PENDING.
+            # Without a conforming binding artefact, the report cannot conclude:
+            # it records the blocker and exits as PENDING.
             sorties.append((plan['sortie'], {
                 'schema_version': SCHEMA_RAPPORT,
                 'input_id': plan['input_id'],
@@ -485,10 +482,10 @@ def construire():
             'validation_method': plan['method'],
             'checks': controles,
             'binding_artifact': {
-                # Relatif au répertoire du rapport : c'est la base que
-                # `_validate_technical_report` applique, et rapport et liaison
-                # vivent ensemble dans un emplacement suivi. Un chemin absolu
-                # rendrait l'artefact inutilisable sur une autre machine.
+                # Relative to the report's directory: that is the base
+                # `_validate_technical_report` applies, and report and binding
+                # live together in a tracked location. An absolute path would
+                # make the artefact unusable on another machine.
                 'path': os.path.relpath(
                     plan['binding'], os.path.dirname(plan['sortie'])
                 ).replace(os.sep, '/'),
@@ -501,13 +498,13 @@ def construire():
 
 
 def main(arguments=()):
-    u"""Point d'entrée en ligne de commande.
+    u"""Command-line entry point.
 
     Args:
-        arguments: Arguments sans le nom du script. `--ecrire` écrit les JSON.
+        arguments: Arguments without the script name. `--ecrire` writes the JSON files.
 
     Returns:
-        int: 0 si tout s'est bien passé.
+        int: 0 if everything went well.
     """
     sorties = construire()
     for chemin, charge in sorties:

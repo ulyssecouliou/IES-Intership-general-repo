@@ -1,46 +1,46 @@
 # -*- coding: utf-8 -*-
-u"""Fige la chaîne des cas diagnostiques 1A à 1E du Test 1, depuis les PDF.
+u"""Freezes the diagnostic case chain 1A to 1E for Test 1, from their PDFs.
 
-POURQUOI CE FICHIER EXISTE. Le cas **1E** est le seul cas du Test 1 à porter un
-critère pass/fail, et il n'est pas générable : la spécification le définit comme
-« Diagnosefall 1D, jedoch mit Stoffmarkisen-Sonnenschutz », et 1D est lui-même
-au bout d'une chaîne 1A → 1B → 1C → 1D. Rien de tout cela n'était figé, donc
-personne ne pouvait construire 1E sans deviner. Ce producteur relève la chaîne
-et ses paramètres là où ils sont écrits.
+WHY THIS FILE EXISTS. Case **1E** is the only Test 1 case carrying a pass/fail
+criterion, and it cannot be generated: the specification defines it as
+« Diagnosefall 1D, jedoch mit Stoffmarkisen-Sonnenschutz », and 1D is itself at
+the end of a chain 1A → 1B → 1C → 1D. None of this was frozen, so nobody
+could build 1E without guessing. This producer extracts the chain and its
+parameters from where they are written.
 
-QUATRE SOURCES, QUATRE RÔLES.
+FOUR SOURCES, FOUR ROLES.
 
-* `Spezifikation_Test1.pdf` énonce la chaîne elle-même (Diag 1A à 1D) et la
-  définition de 1E. Le texte allemand est relevé **verbatim** : une
-  paraphrase française dans un référentiel serait une interprétation déguisée
-  en donnée.
-* `Spezifikation_Test2.pdf` porte ce que chaque maillon ajoute — la fenêtre,
-  l'infiltration, l'usage SIA 2024, la régulation du store.
-* `Dokumentation_Beispielgebäude_V5.pdf` porte les propriétés de la fenêtre
-  entière, store déployé et store rentré — sous DEUX familles de normes, ce qui
-  compte : le U n'y a pas la même valeur selon la norme, et comparer au mauvais
-  bloc fait passer une différence de norme pour une contradiction entre
-  documents. C'est l'erreur qu'une version antérieure de ce producteur a
-  commise, et que `_concordance_du_u` empêche désormais.
-* l'extrait d'autorité SIA 2024 du 2026-08-10, hors du lien partagé : la
-  spécification renvoie à la fiche sans la reproduire, et c'est elle qui donne
-  le gain sensible des occupants.
+* `Spezifikation_Test1.pdf` states the chain itself (Diag 1A to 1D) and the
+  definition of 1E. The German text is extracted **verbatim**: a French
+  paraphrase in a reference dataset would be an interpretation disguised as
+  data.
+* `Spezifikation_Test2.pdf` carries what each link adds — the window,
+  infiltration, the SIA 2024 occupancy profile, blind control.
+* `Dokumentation_Beispielgebäude_V5.pdf` carries the properties of the whole
+  window, blind deployed and retracted — under TWO standard families, which
+  matters: the U value is not the same under every standard, and comparing
+  against the wrong block causes a difference in standards to appear as a
+  contradiction between documents. This is the error an earlier version of
+  this producer made, and that `_concordance_du_u` now prevents.
+* the SIA 2024 authority extract of 2026-08-10, outside the shared link: the
+  specification refers to the profile sheet without reproducing it, and it is
+  that extract which gives the sensible heat gain of occupants.
 
-CE QUI N'EST PAS TROUVÉ N'EST PAS COMBLÉ. Chaque champ sort avec son statut :
-`RELEVE` s'il a été trouvé tel quel dans la couche texte, `A_CONFIRMER` avec la
-raison sinon. Un `null` explicite vaut mieux qu'une valeur plausible.
+WHAT IS NOT FOUND IS NOT FILLED IN. Each field comes out with its status:
+`RELEVE` if found as-is in the text layer, `A_CONFIRMER` with the reason
+otherwise. An explicit `null` is better than a plausible value.
 
-LE PIÈGE DE L'ORDRE DES COLONNES. Le tableau optique donne deux nombres par
-ligne, sans les nommer : « Total solar energy transmittance gtot 0.545 0.059 ».
-L'ordre vient d'un en-tête séparé, « Without shading With shading ». Si cet
-en-tête est absent du texte extrait, **toutes** les propriétés optiques sortent
-en `A_CONFIRMER` plutôt que sur une hypothèse d'ordre : les intervertir
-donnerait un store qui laisse passer dix fois trop de soleil, et le résultat
-resterait crédible.
+THE COLUMN ORDER PITFALL. The optical table gives two numbers per row, unnamed:
+« Total solar energy transmittance gtot 0.545 0.059 ». The order comes from a
+separate header, « Without shading With shading ». If this header is absent
+from the extracted text, **all** optical properties come out as `A_CONFIRMER`
+rather than resting on an assumed order: swapping them would give a blind that
+transmits ten times too much solar radiation, and the result would still appear
+plausible.
 
-CE QUE CE FICHIER NE FAIT PAS. Il ne construit aucun modèle VE, n'enregistre
-aucun cas, et ne prétend pas que 1E est validable. Il fournit la donnée tracée
-sans laquelle cette question ne peut même pas être posée.
+WHAT THIS FILE DOES NOT DO. It builds no VE model, registers no case, and does
+not claim that 1E is validatable. It provides the traced data without which
+that question cannot even be asked.
 """
 
 from __future__ import print_function
@@ -57,13 +57,13 @@ _RACINE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 _SPECS = os.path.join(_RACINE, 'SIA_4010_geteilter_Link')
 _SORTIE = os.path.join(_RACINE, 'refs', 'reference-data')
 
-#: Statuts d'un champ. `A_CONFIRMER` n'est pas une variante polie de « ok ».
+#: Field statuses. `A_CONFIRMER` is not a polite variant of "ok".
 RELEVE = 'RELEVE'
 A_CONFIRMER = 'A_CONFIRMER'
 
 _NOMBRE = r'(-?\d+(?:[.,]\d+)?)'
 
-#: Les trois sources, avec leur rôle. Le chemin est relatif à `_SPECS`.
+#: The three sources, with their role. The path is relative to `_SPECS`.
 SOURCES = (
     ('specification_test_1', os.path.join('Test1', 'Spezifikation_Test1.pdf'),
      u"Énonce la chaîne Diag 1A à 1D et la définition du cas 1E."),
@@ -75,17 +75,17 @@ SOURCES = (
      u"Porte les propriétés de la fenêtre entière, store déployé et rentré."),
 )
 
-#: Quatrième source, hors du lien partagé : l'extrait d'autorité SIA 2024 reçu
-#: le 2026-08-10. La spécification renvoie à SIA 2024:2021 sans reproduire la
-#: fiche ; c'est cet extrait qui donne le gain sensible des occupants et les
-#: horaires. Sans lui, le maillon 1D resterait bloqué sur une conversion
-#: met → watts — or aucune conversion n'est nécessaire, la fiche donne
-#: directement des W/m².
+#: Fourth source, outside the shared link: the SIA 2024 authority extract
+#: received on 2026-08-10. The specification refers to SIA 2024:2021 without
+#: reproducing the profile sheet; this extract provides the sensible heat gain
+#: of occupants and the schedules. Without it, link 1D would remain blocked on
+#: a met → watts conversion — but no conversion is needed, the sheet directly
+#: gives W/m².
 SOURCE_SIA_2024 = os.path.join(
     'sia4010_evidence', 'source_audits', 'sia2024_3_1_authority_20260810',
     'sia2024_office_3_1_standard_profiles.binding.json')
 
-#: Valeurs lues dans l'extrait : `(bloc, clé, chemin dans standard_values)`.
+#: Values read from the extract: `(bloc, key, path in standard_values)`.
 CHAMPS_SIA_2024 = (
     ('apports', 'personnes_gain_sensible_w_m2',
      ('people', 'sensible_heat_gain_at_24c_w_m2')),
@@ -97,10 +97,10 @@ CHAMPS_SIA_2024 = (
      ('people', 'use_days_per_year_d')),
 )
 
-#: Maillons de la chaîne. Le motif relève la définition allemande verbatim dans
-#: `Spezifikation_Test1.pdf`. `ajoute` nomme, en français, ce que le maillon
-#: ajoute au précédent — c'est un index de lecture, pas une donnée normative :
-#: la donnée est la citation allemande.
+#: Chain links. The pattern extracts the German definition verbatim from
+#: `Spezifikation_Test1.pdf`. `ajoute` names, in French, what the link adds to
+#: the previous one — it is a reading index, not normative data: the data is
+#: the German citation.
 CHAINE = (
     ('1A', r'Diag\s*1A\s*(.*?)\s*Diag\s*1\s*B', u'climat Zürich-Kloten'),
     ('1B', r'Diag\s*1\s*B\s*(.*?)\s*Diag\s*1C', u'nouvelle fenêtre'),
@@ -110,8 +110,8 @@ CHAINE = (
      u'store tissu (Stoffmarkise)'),
 )
 
-#: Paramètres relevés dans `Spezifikation_Test2.pdf`.
-#: `(bloc, clé, motif, conversion, localisation)`.
+#: Parameters extracted from `Spezifikation_Test2.pdf`.
+#: `(bloc, key, pattern, conversion, location)`.
 PARAMETRES_TEST_2 = (
     ('usage', 'categorie_sia_2024',
      r'Standardnutzung\s*"([^"]+)"\s*gem[äa]ss\s*SIA\s*2024:2021',
@@ -128,20 +128,21 @@ PARAMETRES_TEST_2 = (
     ('consignes', 'refroidissement_celsius',
      r'Ideales\s*K[üu]hlelement,\s*Raumtemperatur-Sollwert\s*' + _NOMBRE + r'\s*°C',
      'nombre', u'Kälteabgabe'),
-    # Le type porte une espace (« Soltis 92-2048-Alu »), donc pas de `\S+` sur
-    # le premier groupe : il ne relevait que « Soltis ».
+    # The type contains a space (« Soltis 92-2048-Alu »), so `\S+` cannot be
+    # used for the first group: it would only extract « Soltis ».
     ('store', 'produit',
      r'Test\s*2A\s*Stoffmarkise\s*Typ\s*(.+?)\s+von\s+(\S+)',
      'produit', u'Sonnenschutz / Test 2A Stoffmarkise'),
     ('store', 'seuil_activation_w_m2',
      r'Aktivierung\s*→?\s*Schwellenwert\s*' + _NOMBRE + r'\s*W/m2',
      'nombre', u'Sonnenschutz Extern / Aktivierung'),
-    # La fenêtre du maillon 1B. La spécification la chiffre elle-même, ce qui
-    # tranche une question que la documentation du bâtiment exemple laisse
-    # ouverte : celle-ci donne deux g totaux, en conditions d'été (0,545) et de
-    # référence (0,542). La spécification retient 0,545. On relève donc la
-    # spécification, qui définit le cas, et non la documentation.
-    # Le type porte des espaces, comme le store : `\S+` ne relevait que « SGG ».
+    # The glazing for link 1B. The specification quantifies it directly, which
+    # resolves a question left open by the example building documentation:
+    # that document gives two total g values, under summer (0.545) and
+    # reference (0.542) conditions. The specification retains 0.545. We
+    # therefore extract from the specification, which defines the case, not
+    # from the documentation.
+    # The type contains spaces, like the blind: `\S+` would only extract « SGG ».
     ('vitrage', 'type',
      r'Verglasung\s*Typ\s*(.+?)\s*Gesamtenergie',
      None, u'Verglasung / Typ'),
@@ -151,20 +152,20 @@ PARAMETRES_TEST_2 = (
     ('vitrage', 'u_vitrage_w_m2k',
      r'U-Wert\s*Ug\s*→?\s*' + _NOMBRE + r'\s*W/m2K',
      'nombre', u'Verglasung / U-Wert Ug'),
-    # Les symboles grecs de ces deux lignes ne sont PAS des caractères Unicode
-    # grecs : l'extraction rend « τv » et « ρv » comme  et , des
-    # glyphes de zone privée de la police Symbol. Un motif écrit avec le vrai
-    # τ ne mordrait jamais, et le champ sortirait en A_CONFIRMER en laissant
-    # croire que la spécification ne donne pas la valeur. D'où le joker.
+    # The Greek symbols in these two lines are NOT Unicode Greek characters:
+    # extraction renders them as private-use-area glyphs from the Symbol font.
+    # A pattern written with the real Greek letters would never match, and the
+    # field would come out as A_CONFIRMER, suggesting that the specification
+    # does not give the value. Hence the wildcard.
     ('vitrage', 'transmission_visible',
      r'Transmission\s*v\s*\S*:\s*→?\s*' + _NOMBRE,
      'nombre', u'Verglasung / Transmission v'),
     ('vitrage', 'reflexion_visible',
      r'Reflexion\s*v\s*\S*:\s*→?\s*' + _NOMBRE,
      'nombre', u'Verglasung / Reflexion v'),
-    # Les apports du maillon 1D. Les densités de puissance sont dans la
-    # spécification ; seuls les HORAIRES renvoient à SIA 2024:2021, et pour la
-    # catégorie 3.1 nous détenons l'extrait d'autorité du 2026-08-10.
+    # Internal gains for link 1D. Power densities are in the specification;
+    # only the SCHEDULES refer to SIA 2024:2021, and for category 3.1 we hold
+    # the authority extract of 2026-08-10.
     ('apports', 'personnes_m2_par_personne',
      r'\(' + _NOMBRE + r'\s*m2\s*pro\s*Person\)',
      'nombre', u'Wärmeeinträge / Personen'),
@@ -182,7 +183,7 @@ PARAMETRES_TEST_2 = (
      'nombre', u'Wärmeeinträge / Beleuchtung / Anschlusswert'),
 )
 
-#: Paramètres relevés dans la documentation du bâtiment exemple.
+#: Parameters extracted from the example building documentation.
 PARAMETRES_BATIMENT = (
     ('store', 'lame_d_air_cm',
      r'Luftspalt\s*von\s*' + _NOMBRE + r'\s*cm',
@@ -190,12 +191,12 @@ PARAMETRES_BATIMENT = (
     ('store', 'seuil_fermeture_w_m2',
      r'bei\s*einer\s*Solarstrahlung\s*von\s*' + _NOMBRE + r'\s*W/m2',
      'nombre', u'2.2.2 Verschattung'),
-    # Épaisseur de la couche de store, première ligne du tableau de couches de
-    # la fenêtre ombragée. En millimètres dans le document.
+    # Thickness of the blind layer, first row of the shaded window layer table.
+    # In millimetres in the document.
     ('store', 'epaisseur_couche_mm',
      r'1\.\s*Generic\s*screen\s*shade\s*' + _NOMBRE,
      'nombre', u'Tabelle 3 / Layer 1 Generic screen shade'),
-    # Le cadre, que le maillon 1B porte aussi.
+    # The frame, which link 1B also carries.
     ('cadre', 'part_pourcent',
      r'Rahmenanteil\s*' + _NOMBRE + r'\s*%',
      'nombre', u'2.2.3 Fensterrahmen'),
@@ -204,13 +205,13 @@ PARAMETRES_BATIMENT = (
      'nombre', u'2.2.3 Fensterrahmen'),
 )
 
-#: En-tête qui FIXE l'ordre des deux colonnes du tableau optique. Sans lui,
-#: aucune propriété optique n'est relevée.
+#: Header that FIXES the order of the two columns in the optical table.
+#: Without it, no optical property is extracted.
 ORDRE_COLONNES = re.compile(r'Without\s+shading\s+With\s+shading')
 
-#: Blocs du tableau optique : `(clé, début, fin)`. Les bornes sont les
-#: en-têtes imprimés ; elles évitent de confondre les deux lignes `gtot`, qui
-#: portent des valeurs différentes en conditions d'été et de référence.
+#: Optical table blocks: `(key, start, end)`. Bounds are the printed headers;
+#: they avoid confusing the two `gtot` rows, which carry different values
+#: under summer and reference conditions.
 BLOCS_OPTIQUES = (
     ('en_iso_52022_3_conditions_ete',
      r'EN\s*ISO\s*52022-3\s*\(summer\s*conditions\)\s*:',
@@ -219,13 +220,13 @@ BLOCS_OPTIQUES = (
      r'EN\s*ISO\s*52022-3\s*\(reference\s*conditions\)\s*:',
      r'EN\s*410\s*:'),
     ('en_410', r'EN\s*410\s*:', r'Layer\s*d\s*\[mm\]'),
-    # La documentation décrit la MÊME fenêtre sous deux familles de normes, dans
-    # deux tableaux successifs : EN ISO 52022-3 avec EN 410 d'abord, ISO 15099
-    # ensuite. Le U n'y est pas le même — 0,646 en conditions de référence
-    # EN ISO 52022-3, 0,654 en conditions d'hiver ISO 15099 — et c'est cette
-    # seconde valeur que la spécification reprend. Omettre ces deux blocs
-    # faisait passer une différence de norme pour une contradiction entre
-    # documents ; voir `_concordance_du_u`.
+    # The documentation describes the SAME window under two standard families,
+    # in two successive tables: EN ISO 52022-3 with EN 410 first, ISO 15099
+    # next. The U value is not the same — 0.646 under EN ISO 52022-3 reference
+    # conditions, 0.654 under ISO 15099 winter conditions — and the
+    # specification uses the second value. Omitting these two blocks caused a
+    # difference in standards to appear as a contradiction between documents;
+    # see `_concordance_du_u`.
     ('iso_15099_conditions_ete',
      r'ISO\s*15099\s*\(summer\s*conditions\)\s*:',
      r'ISO\s*15099\s*\(winter\s*conditions\)\s*:'),
@@ -234,8 +235,8 @@ BLOCS_OPTIQUES = (
      r'Tabelle'),
 )
 
-#: Grandeurs cherchées dans chaque bloc optique, par leur symbole imprimé.
-#: `(clé, motif du libellé et du symbole, unité)`.
+#: Quantities sought in each optical block, by their printed symbol.
+#: `(key, pattern of the label and symbol, unit)`.
 GRANDEURS_OPTIQUES = (
     ('g_total', r'Total\s*solar\s*energy\s*transmittance\s*gtot', u'-'),
     ('facteur_convection_gc', r'Convection\s*factor\s*gc', u'-'),
@@ -260,26 +261,26 @@ GRANDEURS_OPTIQUES = (
 
 
 def _nombre(texte):
-    u"""Convertit un nombre du PDF en valeur numérique.
+    u"""Converts a number from the PDF to a numeric value.
 
     Args:
-        texte: Nombre tel qu'écrit dans le PDF.
+        texte: Number as written in the PDF.
 
     Returns:
-        float | int: Valeur numérique.
+        float | int: Numeric value.
     """
     valeur = float(texte.replace(u',', u'.'))
     return int(valeur) if valeur == int(valeur) else valeur
 
 
 def _empreinte(chemin):
-    u"""Renvoie le SHA-256 d'un fichier source.
+    u"""Returns the SHA-256 of a source file.
 
     Args:
-        chemin: Chemin du fichier.
+        chemin: File path.
 
     Returns:
-        str: Empreinte hexadécimale.
+        str: Hexadecimal digest.
     """
     digest = hashlib.sha256()
     with open(chemin, 'rb') as flux:
@@ -289,20 +290,20 @@ def _empreinte(chemin):
 
 
 def _texte_normalise(chemin):
-    u"""Extrait la couche texte d'un PDF, espaces normalisés.
+    u"""Extracts the text layer from a PDF, with normalised whitespace.
 
-    La normalisation est nécessaire : l'extraction coupe les lignes du tableau
-    à des endroits qui varient, et un motif écrit sur le texte brut mordrait
-    ou non selon la mise en page.
+    Normalisation is necessary: extraction cuts table rows at varying points,
+    and a pattern written against raw text would match or not depending on the
+    layout.
 
     Args:
-        chemin: Chemin du PDF.
+        chemin: PDF path.
 
     Returns:
-        str: Texte, espaces réduits à un seul.
+        str: Text with whitespace collapsed to single spaces.
 
     Raises:
-        IOError: Si le PDF est absent.
+        IOError: If the PDF is missing.
     """
     if not os.path.exists(chemin):
         raise IOError(u'source absente : %s' % chemin)
@@ -316,30 +317,30 @@ def _texte_normalise(chemin):
 
 
 def _champ_absent(source, raison):
-    u"""Renvoie un champ non relevé, avec la raison de son absence.
+    u"""Returns an unextracted field, with the reason for its absence.
 
     Args:
-        source: Localisation cherchée dans le document.
-        raison: Pourquoi la valeur n'a pas été relevée.
+        source: Location sought in the document.
+        raison: Why the value was not extracted.
 
     Returns:
-        dict: Champ en `A_CONFIRMER`.
+        dict: Field in `A_CONFIRMER`.
     """
     return {'valeur': None, 'statut': A_CONFIRMER, 'source': source,
             'raison': raison}
 
 
 def _chercher(texte, motif, conversion, source):
-    u"""Relève un champ par son motif, ou explique pourquoi il manque.
+    u"""Extracts a field by its pattern, or explains why it is missing.
 
     Args:
-        texte: Texte normalisé du document.
-        motif: Expression régulière à un ou deux groupes.
-        conversion: `'nombre'`, `'produit'` ou `None` pour du texte brut.
-        source: Localisation dans le document, citée dans le référentiel.
+        texte: Normalised document text.
+        motif: Regular expression with one or two capture groups.
+        conversion: `'nombre'`, `'produit'` or `None` for raw text.
+        source: Location in the document, cited in the reference dataset.
 
     Returns:
-        dict: Champ relevé ou en `A_CONFIRMER`.
+        dict: Extracted field or field in `A_CONFIRMER`.
     """
     trouve = re.search(motif, texte)
     if trouve is None:
@@ -358,18 +359,18 @@ def _chercher(texte, motif, conversion, source):
 
 
 def _proprietes_optiques(texte):
-    u"""Relève le tableau de la fenêtre entière, store rentré et déployé.
+    u"""Extracts the whole-window table, blind retracted and deployed.
 
-    L'ordre des deux colonnes n'est pas déductible des lignes : il vient de
-    l'en-tête « Without shading With shading ». Sans cet en-tête, rien n'est
-    relevé — une interversion donnerait un store dix fois trop transparent
-    sans que le résultat cesse d'être crédible.
+    The order of the two columns cannot be deduced from the rows: it comes
+    from the header « Without shading With shading ». Without this header,
+    nothing is extracted — swapping the columns would give a blind ten times
+    too transparent, without the result becoming implausible.
 
     Args:
-        texte: Texte normalisé de la documentation du bâtiment exemple.
+        texte: Normalised text from the example building documentation.
 
     Returns:
-        dict: Blocs normatifs, chacun portant ses grandeurs.
+        dict: Normative blocks, each carrying its quantities.
     """
     en_tete = ORDRE_COLONNES.search(texte)
     if en_tete is None:
@@ -384,10 +385,10 @@ def _proprietes_optiques(texte):
     blocs = {}
     for cle_bloc, debut, fin in BLOCS_OPTIQUES:
         borne_debut = re.search(debut, texte)
-        # La borne de fin est cherchée APRÈS la borne de début, et pas dans le
-        # document entier : « Layer d [mm] » apparaît deux fois, et la première
-        # occurrence précède « EN 410: ». La chercher globalement donnait un
-        # segment de longueur négative, donc un bloc vide, sans erreur visible.
+        # The end bound is searched AFTER the start bound, and not in the
+        # whole document: « Layer d [mm] » appears twice, and the first
+        # occurrence precedes « EN 410: ». Searching globally gave a segment
+        # of negative length, hence an empty block, with no visible error.
         borne_fin = (re.compile(fin).search(texte, borne_debut.end())
                      if borne_debut is not None else None)
         if borne_debut is None or borne_fin is None:
@@ -426,26 +427,26 @@ def _proprietes_optiques(texte):
 
 
 def _concordance_du_u(parametres, fenetre):
-    u"""Identifie sous QUELLE norme le U de la spécification se retrouve.
+    u"""Identifies UNDER WHICH standard the U value from the specification is found.
 
-    Une version antérieure de ce producteur annonçait une « divergence entre
-    sources » : 0,654 dans la spécification contre 0,646 dans la documentation.
-    C'était faux, et l'erreur était la mienne. La documentation décrit la même
-    fenêtre sous deux familles de normes, et le U n'y a pas la même valeur —
-    0,646 en conditions de référence EN ISO 52022-3, 0,654 en conditions d'hiver
-    ISO 15099. La spécification reprend la seconde, à l'unité près. Les deux
-    documents concordent ; c'est la comparaison qui portait sur le mauvais bloc.
+    An earlier version of this producer reported a "divergence between sources":
+    0.654 in the specification against 0.646 in the documentation. That was
+    wrong, and the mistake was mine. The documentation describes the same window
+    under two families of standards, and the U value is not the same — 0.646
+    under EN ISO 52022-3 reference conditions, 0.654 under ISO 15099 winter
+    conditions. The specification uses the second, to the last digit. Both
+    documents agree; it was the comparison that targeted the wrong block.
 
-    Le garder sous forme de contrôle plutôt que de le supprimer a une raison :
-    l'erreur avait failli partir dans un courrier à l'auteur de ces documents,
-    comme signalement de coquille.
+    Keeping this as a check rather than removing it has a reason: the error had
+    nearly been sent in a message to the author of these documents as a
+    notification of a typo.
 
     Args:
-        parametres: Paramètres relevés dans la spécification Test 2.
-        fenetre: Blocs optiques relevés dans la documentation.
+        parametres: Parameters extracted from the Test 2 specification.
+        fenetre: Optical blocks extracted from the documentation.
 
     Returns:
-        dict: Norme sous laquelle la valeur concorde, ou l'écart s'il subsiste.
+        dict: Standard under which the value agrees, or the discrepancy if it remains.
     """
     spec = parametres.get('vitrage', {}).get('u_vitrage_w_m2k', {})
     if spec.get('statut') != RELEVE:
@@ -487,10 +488,10 @@ def _concordance_du_u(parametres, fenetre):
 
 
 def construire():
-    u"""Assemble le référentiel de la chaîne 1A à 1E.
+    u"""Assembles the reference dataset for the chain 1A to 1E.
 
     Returns:
-        dict: Référentiel tracé, prêt à être figé en JSON.
+        dict: Traced reference dataset, ready to be frozen to JSON.
     """
     sources = {}
     textes = {}
@@ -516,9 +517,9 @@ def construire():
             'raison': releve.get('raison'),
         })
 
-    # L'extrait d'autorité SIA 2024, s'il est présent. Son absence ne fait pas
-    # échouer la production : les champs concernés sortent en `A_CONFIRMER`,
-    # comme n'importe quelle valeur non trouvée.
+    # The SIA 2024 authority extract, if present. Its absence does not cause
+    # production to fail: the affected fields come out as `A_CONFIRMER`,
+    # like any value that was not found.
     chemin_sia_2024 = os.path.join(_RACINE, SOURCE_SIA_2024)
     extrait_sia_2024 = None
     if os.path.exists(chemin_sia_2024):
@@ -592,13 +593,13 @@ def construire():
 
 
 def bilan(reference):
-    u"""Compte les champs relevés et ceux à confirmer.
+    u"""Counts the fields that were extracted and those to confirm.
 
     Args:
-        reference: Référentiel construit.
+        reference: Built reference dataset.
 
     Returns:
-        tuple[int, int]: Nombre de champs relevés, nombre à confirmer.
+        tuple[int, int]: Number of extracted fields, number to confirm.
     """
     releves = [0]
     a_confirmer = [0]
@@ -621,13 +622,13 @@ def bilan(reference):
 
 
 def main(arguments=()):
-    u"""Point d'entrée en ligne de commande.
+    u"""Command-line entry point.
 
     Args:
-        arguments: Arguments sans le nom du script. `--ecrire` fige le JSON.
+        arguments: Arguments without the script name. `--ecrire` freezes the JSON.
 
     Returns:
-        int: 0 si tout s'est bien passé.
+        int: 0 if everything went well.
     """
     reference = construire()
     releves, a_confirmer = bilan(reference)

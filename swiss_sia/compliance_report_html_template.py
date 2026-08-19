@@ -94,6 +94,19 @@ TEMPLATE = r'''<title>__PAGE_TITLE__</title>
   .verdict .vt{font-weight:700; font-size:15px;}
   .verdict .vd{color:var(--header-ink-2); font-size:12.5px; margin-top:2px;}
 
+  .outstanding{margin-top:24px; background:var(--surface); border:1px solid var(--border); border-left:4px solid var(--accent-2); border-radius:var(--r); padding:16px 18px; box-shadow:var(--shadow);}
+  .outstanding h2{margin:0 0 4px; font-family:var(--font-display); font-size:15px; font-weight:700; color:var(--ink); letter-spacing:-.01em;}
+  .outstanding .lead{color:var(--ink-3); font-size:12px; margin:0 0 12px;}
+  .outstanding ol{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:9px; counter-reset:oi;}
+  .outstanding li{counter-increment:oi; display:grid; grid-template-columns:26px 1fr; gap:11px; align-items:start;}
+  .outstanding li::before{content:counter(oi); grid-row:1/3; width:24px; height:24px; border-radius:50%; background:var(--accent-soft); color:var(--accent); font-size:12px; font-weight:700; display:flex; align-items:center; justify-content:center;}
+  .outstanding li.crit::before{background:var(--crit-bg); color:var(--crit);}
+  .outstanding li.warn::before{background:var(--warn-bg); color:var(--warn);}
+  .outstanding .oi-label{font-weight:650; font-size:13px; color:var(--ink);}
+  .outstanding .oi-detail{font-size:12.5px; color:var(--ink-2); line-height:1.45; margin-top:1px;}
+  .outstanding.clear{border-left-color:var(--ok);}
+  .outstanding.clear .none{display:flex; align-items:center; gap:9px; color:var(--ok); font-size:13px; font-weight:600;}
+
   .summary{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin-top:24px;}
   .tile{background:var(--surface); border:1px solid var(--border); border-radius:var(--r); padding:14px 16px; box-shadow:var(--shadow); position:relative; overflow:hidden; cursor:pointer; text-align:left; transition:transform .12s ease, border-color .12s ease;}
   .tile:hover{transform:translateY(-2px); border-color:var(--border-strong);}
@@ -202,6 +215,7 @@ TEMPLATE = r'''<title>__PAGE_TITLE__</title>
 </div></div>
 
 <div class="wrap">
+  <section class="outstanding" id="outstanding" hidden></section>
   <div class="summary" id="summary"></div>
   <div class="controls">
     <div class="search">
@@ -242,6 +256,7 @@ window.__SIA_DATA__ = __DATA_JSON__;
     }).join("");
     var v=M.verdict||{}; var box=$("verdictBox"); box.className="verdict "+(v.tone||"warn");
     $("verdictTitle").textContent=v.title||""; $("verdictDetail").innerHTML=v.detail||"";
+    outstanding();
     $("search").placeholder=UI.search||""; $("sortLbl").textContent=UI.sort||""; $("reset").textContent=UI.reset||"";
     $("foot").innerHTML=UI.scope||"";
     var so=[["section",UI.sort_section],["status",UI.sort_status],["severity",UI.sort_severity],["name",UI.sort_name],["type",UI.sort_type]];
@@ -252,6 +267,25 @@ window.__SIA_DATA__ = __DATA_JSON__;
       '<div class="sortable" data-sort="type">'+esc(UI.type)+'</div>'+
       '<div>'+esc(UI.measured_ref)+'</div>'+
       '<div class="sortable" data-sort="status">'+esc(UI.status)+'</div><div></div>';
+  }
+
+  function outstanding(){
+    var el=$("outstanding"); if(!el)return;
+    var items=M.outstanding||[];
+    if(!items.length){
+      el.className="outstanding clear"; el.hidden=false;
+      el.innerHTML='<h2>'+esc(UI.outstanding_title||"")+'</h2>'+
+        '<div class="none"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6 9 17l-5-5"/></svg>'+
+        esc(UI.outstanding_none||"")+'</div>';
+      return;
+    }
+    el.className="outstanding"; el.hidden=false;
+    el.innerHTML='<h2>'+esc(UI.outstanding_title||"")+'</h2>'+
+      '<ol>'+items.map(function(it){
+        return '<li class="'+esc(it.tone||"warn")+'">'+
+          '<div class="oi-label">'+esc(it.label||"")+'</div>'+
+          '<div class="oi-detail">'+esc(it.detail||"")+'</div></li>';
+      }).join("")+'</ol>';
   }
 
   function filtered(){

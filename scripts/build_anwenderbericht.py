@@ -75,6 +75,8 @@ def _load_facts(path):
 
 
 def main() -> int:
+    """Build one source-traced Anwenderbericht from command-line arguments."""
+
     from swiss_sia.reference_model.sia4010.anwenderbericht import (
         AnwenderberichtError,
         ProgramIdentity,

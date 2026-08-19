@@ -1,25 +1,25 @@
 # -*- coding: utf-8 -*-
-u"""Fige le réseau de ventilation des tests SIA 5 et 6, depuis leurs PDF.
+u"""Freezes the ventilation network for SIA Tests 5 and 6, from their PDFs.
 
-POURQUOI UN EXTRACTEUR, ET PAS UN FICHIER ÉCRIT À LA MAIN. La règle 2 du
-projet fait de la spécification publiée la seule vérité. Un JSON retapé ne
-prouve rien : il affirme, avec l'autorité d'un référentiel, ce que quelqu'un a
-cru lire. Ici chaque valeur est TROUVÉE dans la couche texte du PDF par un
-motif nommé, et **ce qui n'est pas trouvé n'est pas comblé** : le champ sort à
-`null`, en `A_CONFIRMER`, avec la raison.
+WHY AN EXTRACTOR, AND NOT A HAND-WRITTEN FILE. Project rule 2 makes the
+published specification the sole truth. A retyped JSON proves nothing: it
+asserts, with the authority of a reference dataset, what someone believed they
+read. Here every value is FOUND in the PDF text layer by a named pattern, and
+**what is not found is not filled in**: the field comes out as `null`, in
+`A_CONFIRMER`, with the reason.
 
-CE QUE LA COUCHE TEXTE NE DONNE PAS. Deux familles, et elles portent des
-valeurs qui décident du résultat :
+WHAT THE TEXT LAYER DOES NOT PROVIDE. Two families, and they carry values that
+decide the result:
 
-* **les graphiques.** Les consignes glissantes sont dessinées. Leurs étiquettes
-  de données (« 12; 20 ») sont dans le texte et sont donc relevées — mais les
-  PALIERS au-delà des points étiquetés ne le sont pas. La courbe
-  caractéristique des ventilateurs n'a aucune étiquette : elle sort vide.
-* **les tableaux de variantes.** Le Test 5 porte quatre colonnes (5A à 5D) et
-  souvent deux cellules fusionnées. Le point de partage n'est pas dans le
-  texte. Deviner reviendrait à construire deux variantes sur quatre fausses.
+* **charts.** Sliding setpoints are drawn. Their data labels (« 12; 20 »)
+  are in the text and are therefore extracted — but the STEPS beyond the
+  labelled points are not. The fan characteristic curve has no label at all:
+  it comes out empty.
+* **variant tables.** Test 5 has four columns (5A to 5D) and often two merged
+  cells. The split point is not in the text. Guessing would mean building two
+  variants out of four incorrectly.
 
-Usage :
+Usage:
     python scripts/build_reseau_ventilation_reference.py [--ecrire]
 """
 
@@ -39,27 +39,27 @@ if _RACINE not in sys.path:
 _SPECS = os.path.join(_RACINE, 'SIA_4010_geteilter_Link')
 _SORTIE = os.path.join(_RACINE, 'refs', 'reference-data')
 
-#: Statuts possibles d'une valeur. `RELEVE` veut dire « trouvé tel quel dans
-#: la couche texte ». Les deux autres disent exactement pourquoi on ne peut pas
-#: aller plus loin — ils ne sont PAS des variantes polies de « ok ».
+#: Possible statuses of a value. `RELEVE` means "found as-is in the text
+#: layer". The other two say exactly why we cannot go further — they are NOT
+#: polite variants of "ok".
 RELEVE = 'RELEVE'
 SUR_GRAPHIQUE = 'RELEVE_SUR_GRAPHIQUE'
 A_CONFIRMER = 'A_CONFIRMER'
 
-#: Motif d'une étiquette de données de graphique : « abscisse; ordonnée ».
+#: Pattern for a chart data label: « abscissa; ordinate ».
 _ETIQUETTE = re.compile(r'(-?\d+(?:\.\d+)?); ?(-?\d+(?:\.\d+)?)')
 
 _NOMBRE = r'([\d\'’]+(?:\.\d+)?)'
 
 
 def _nombre(texte):
-    u"""Convertit un nombre du PDF, séparateurs de milliers compris.
+    u"""Converts a number from the PDF, including thousand separators.
 
     Args:
-        texte: Nombre tel qu'écrit dans le PDF (« 1'040 »).
+        texte: Number as written in the PDF (« 1'040 »).
 
     Returns:
-        float | int: Valeur numérique.
+        float | int: Numeric value.
     """
     net = texte.replace(u"'", u'').replace(u'’', u'')
     valeur = float(net)
@@ -67,16 +67,16 @@ def _nombre(texte):
 
 
 def _texte_du_pdf(numero_test):
-    u"""Extrait la couche texte d'une spécification.
+    u"""Extracts the text layer from a specification PDF.
 
     Args:
-        numero_test: 5 ou 6.
+        numero_test: 5 or 6.
 
     Returns:
-        str: Texte concaténé.
+        str: Concatenated text.
 
     Raises:
-        IOError: Si le PDF est absent.
+        IOError: If the PDF is missing.
     """
     chemin = os.path.join(_SPECS, 'Test%d' % numero_test,
                           'Spezifikation_Test%d.pdf' % numero_test)
@@ -90,9 +90,9 @@ def _texte_du_pdf(numero_test):
     return u'\n'.join((page.extract_text() or u'') for page in lecteur.pages)
 
 
-#: Champs cherchés, par test. Chaque entrée est
-#: `(bloc, clé, motif, conversion, source)`. Le motif est appliqué au texte
-#: entier ; s'il ne mord pas, le champ sort en `A_CONFIRMER`.
+#: Fields to extract, per test. Each entry is
+#: `(bloc, clé, motif, conversion, source)`. The pattern is applied to the
+#: full text; if it does not match, the field comes out as `A_CONFIRMER`.
 CHAMPS = {
     5: [
         ('reseau', 'debit_nominal_m3_h',
@@ -270,9 +270,8 @@ CHAMPS = {
     ],
 }
 
-#: Graphiques cherchés, par test : `(clé, titre dans le PDF, ordonnée)`. Les
-#: points viennent des ÉTIQUETTES DE DONNÉES, seule partie d'un graphique
-#: présente dans la couche texte.
+#: Charts to extract, per test: `(clé, titre dans le PDF, ordonnée)`. Points
+#: come from DATA LABELS, the only part of a chart present in the text layer.
 COURBES = {
     5: [('temperature_soufflage', u'Zulufttemperatur', u'Zulufttemperatur'),
         ('temperature_eau_glacee', u'Kaltwassertemperatur',
@@ -286,9 +285,9 @@ COURBES = {
          u'Heizwassertemperatur')],
 }
 
-#: Champs que la couche texte ne peut PAS trancher, avec la raison. Ils sont
-#: déclarés ici plutôt que devinés : un référentiel muet sur ses trous est plus
-#: dangereux qu'un référentiel incomplet.
+#: Fields that the text layer CANNOT resolve, with the reason. They are
+#: declared here rather than guessed: a reference dataset silent about its
+#: gaps is more dangerous than an incomplete one.
 TROUS = {
     5: [
         ('ventilateurs', 'kennfeld', u'Ventilatoren / Kennfeld',
@@ -337,21 +336,21 @@ TROUS = {
 
 
 def _chercher(texte, motif, conversion, source, depuis=None):
-    u"""Cherche un champ dans la couche texte.
+    u"""Searches for a field in the text layer.
 
     Args:
-        texte: Texte du PDF.
-        motif: Expression régulière à un groupe.
-        conversion: Fonction de conversion, ou `None` pour du texte brut.
-        source: Section du PDF, pour la traçabilité.
-        depuis: Titre de section à partir duquel chercher. Sans lui, les
-            libellés partagés — `Auslegungsleistung`, `Austrittstemperatur` —
-            mordent sur le premier appareil venu : la batterie chaude
-            hériterait des valeurs du refroidisseur, en silence.
+        texte: PDF text.
+        motif: Regular expression with one capture group.
+        conversion: Conversion function, or `None` for raw text.
+        source: PDF section, for traceability.
+        depuis: Section title from which to start searching. Without it,
+            shared labels — `Auslegungsleistung`, `Austrittstemperatur` —
+            match the first equipment encountered: the heating coil would
+            silently inherit the cooler's values.
 
     Returns:
-        dict: Valeur et statut. `null` + `A_CONFIRMER` si le motif ne mord pas
-        — jamais une valeur par défaut.
+        dict: Value and status. `null` + `A_CONFIRMER` if the pattern does
+        not match — never a default value.
     """
     if depuis is not None:
         debut = texte.find(depuis)
@@ -370,30 +369,30 @@ def _chercher(texte, motif, conversion, source, depuis=None):
             'statut': RELEVE, 'source': source}
 
 
-#: Distance maximale, en caractères, entre une étiquette de données et le
-#: titre du graphique auquel elle appartient. Au-delà, l'étiquette est
-#: orpheline : mieux vaut ne pas l'attribuer que l'attribuer au hasard.
+#: Maximum distance, in characters, between a data label and the title of the
+#: chart it belongs to. Beyond this, the label is an orphan: better to leave
+#: it unattributed than to attribute it at random.
 PORTEE_ETIQUETTE = 400
 
-#: Écart maximal, en caractères, entre deux étiquettes d'un MÊME
-#: graphique. Au-delà, elles viennent de graphiques différents.
+#: Maximum gap, in characters, between two labels of the SAME chart. Beyond
+#: this, they come from different charts.
 ECART_MEME_GRAPHIQUE = 60
 
-#: Nombre isolé, pour relever les graduations d'un axe.
+#: Isolated number pattern, for reading axis tick marks.
 _GRADUATION = re.compile(r'-?\d+(?:\.\d+)?')
 
 
 def _attribuer_les_etiquettes(texte, titres):
-    u"""Rattache chaque étiquette de données au graphique le PLUS PROCHE.
+    u"""Assigns each data label to the CLOSEST chart.
 
-    Une simple recherche « le titre apparaît-il dans les N caractères qui
-    suivent » ne suffit pas : deux graphiques se succèdent dans le flux, et
-    les points de l'eau glacée se retrouvaient aussi rangés sous l'eau chaude.
-    Le graphique le plus proche gagne.
+    A simple search "does the title appear within the next N characters" is
+    not enough: two charts follow one another in the stream, and chilled-water
+    points were also ending up under the hot-water chart. The closest chart
+    wins.
 
     Args:
-        texte: Texte du PDF.
-        titres: Titres des graphiques cherchés.
+        texte: PDF text.
+        titres: Titles of the charts to extract.
 
     Returns:
         dict: `{titre: [(couple, position, fin_du_graphique)]}`.
@@ -418,21 +417,21 @@ def _attribuer_les_etiquettes(texte, titres):
 
 
 def _courbe(texte, titre, ordonnee, attribution):
-    u"""Relève les étiquettes de données d'un graphique de consigne glissante.
+    u"""Extracts data labels from a sliding setpoint chart.
 
-    Un point dont l'ordonnée sort des graduations de l'axe n'est pas corrigé :
-    il fait ÉCHOUER la courbe entière. « 20; 2018 » vient d'une graduation
-    collée à la valeur ; deviner que 2018 voulait dire 20 serait exactement
-    l'invention que la règle 1 interdit.
+    A point whose ordinate falls outside the axis tick marks is not corrected:
+    it causes the entire curve to FAIL. « 20; 2018 » comes from a tick mark
+    concatenated with the value; guessing that 2018 meant 20 would be exactly
+    the kind of invention that rule 1 forbids.
 
     Args:
-        texte: Texte du PDF.
-        titre: Titre du graphique.
-        ordonnee: Libellé de l'ordonnée.
-        attribution: Ce que rend `_attribuer_les_etiquettes`.
+        texte: PDF text.
+        titre: Chart title.
+        ordonnee: Y-axis label.
+        attribution: What `_attribuer_les_etiquettes` returns.
 
     Returns:
-        dict: Points relevés et réserves de lecture.
+        dict: Extracted points and reading reservations.
     """
     retenues, suspects = [], []
     for brut, couple, debut, fin in attribution.get(titre, []):
@@ -450,11 +449,11 @@ def _courbe(texte, titre, ordonnee, attribution):
         return {'points': None, 'statut': A_CONFIRMER, 'ordonnee': ordonnee,
                 'a_confirmer': u' '.join(suspects)}
 
-    # Les étiquettes d'un même graphique se suivent dans le flux. Un saut
-    # révèle un graphique VOISIN, capté parce qu'il n'a pas de titre à lui —
-    # cas du Test 6, où trois points d'une autre consigne se rangeaient sous
-    # la température de soufflage. On ne choisit pas : on refuse et on montre
-    # les groupes, pour que la lecture du PDF prenne dix secondes.
+    # Labels from the same chart follow one another in the stream. A gap
+    # reveals a NEIGHBOURING chart, captured because it has no title of its
+    # own — as in Test 6, where three points from another setpoint were grouped
+    # under the supply-air temperature. We do not choose: we refuse and display
+    # the groups, so that reading the PDF takes ten seconds.
     groupes = []
     for brut, couple, debut in retenues:
         if groupes and debut - groupes[-1][-1][2] <= ECART_MEME_GRAPHIQUE:
@@ -494,16 +493,16 @@ def _courbe(texte, titre, ordonnee, attribution):
 
 
 def construire(numero_test):
-    u"""Extrait le réseau de ventilation d'un test.
+    u"""Extracts the ventilation network for a test.
 
     Args:
-        numero_test: 5 ou 6.
+        numero_test: 5 or 6.
 
     Returns:
-        dict: Référentiel figé.
+        dict: Frozen reference dataset.
 
     Raises:
-        ValueError: Si le test n'a pas de réseau décrit ici.
+        ValueError: If the test has no ventilation network described here.
     """
     if numero_test not in CHAMPS:
         raise ValueError(u'test %r sans réseau de ventilation décrit ici. '
@@ -538,16 +537,16 @@ def construire(numero_test):
 
 
 def bilan(reference):
-    u"""Compte ce qui est relevé et ce qui ne l'est pas.
+    u"""Counts what has been extracted and what has not.
 
-    Un référentiel dont on ne sait pas combien de champs sont vides invite à
-    le croire complet.
+    A reference dataset where we do not know how many fields are empty invites
+    us to believe it is complete.
 
     Args:
-        reference: Référentiel construit.
+        reference: Built reference dataset.
 
     Returns:
-        dict: Effectifs par statut, et liste des champs à confirmer.
+        dict: Counts by status, and list of fields to confirm.
     """
     effectifs, a_confirmer = {}, []
     for nom_bloc, bloc in sorted(reference.items()):
@@ -564,13 +563,13 @@ def bilan(reference):
 
 
 def main(arguments=()):
-    u"""Point d'entrée.
+    u"""Entry point.
 
     Args:
-        arguments: `--ecrire` pour figer les fichiers.
+        arguments: `--ecrire` to freeze the files.
 
     Returns:
-        int: 0 si les deux tests ont pu être extraits.
+        int: 0 if both tests could be extracted.
     """
     for numero in sorted(CHAMPS):
         try:

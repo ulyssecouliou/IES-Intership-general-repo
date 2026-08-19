@@ -50,8 +50,8 @@ class Sia4010EvidenceRegistryTests(unittest.TestCase):
         self.test_root.mkdir(parents=True, exist_ok=True)
 
     def test_empty_ledger_contains_every_exact_case_and_no_claim(self):
-        # 34 depuis l'enregistrement des cas diagnostiques 1A a 1D du
-        # Test 1 : 1E existait sans la base que sa definition exige.
+        # 34 since the registration of diagnostic cases 1A through 1D of
+        # Test 1: 1E existed without the base its definition requires.
         self.assertEqual(len(self.cases), 34)
         self.assertTrue(
             all(
@@ -335,7 +335,7 @@ class Sia4010EvidenceRegistryTests(unittest.TestCase):
         self.assertTrue(
             all(item["status"] == "NOT_STARTED" for item in summaries.values())
         )
-        # 11 : les six cas ISO, les quatre diagnostiques 1A a 1D et 1E.
+        # 11: the six ISO cases, the four diagnostic cases 1A through 1D, and 1E.
         self.assertEqual(summaries["1"]["exact_cases"], 11)
         self.assertEqual(summaries["3"]["exact_cases"], 12)
 

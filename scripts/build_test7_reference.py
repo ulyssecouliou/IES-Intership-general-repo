@@ -1,48 +1,48 @@
 # -*- coding: utf-8 -*-
-u"""Fige les valeurs de référence du Test 7 (classe de validation 5).
+u"""Freezes the Test 7 reference values (validation class 5).
 
-SOURCE : `SIA_4010_geteilter_Link/Test7/Resultaterfassung Test7.xlsx`,
-feuille `Zusammenfassung`, telle que livrée par le SIA.
+SOURCE: `SIA_4010_geteilter_Link/Test7/Resultaterfassung Test7.xlsx`,
+sheet `Zusammenfassung`, as delivered by SIA.
 
-DISPOSITION LUE, non supposée :
-    ligne 6   : noms des programmes — F = Testprogramm (à nous), puis
-                G = IDA ICE, H = Excel, I = Energy+/OpenStudio, J = EDSL Tas
-    ligne 7   : versions ; K = unité, L = Mittelwert, M = Obere Grenze,
-                N = Untere Grenze
-    lignes 8-12  : grandeurs du mode FROID
-    lignes 14-18 : grandeurs du mode CHAUD
-    ligne 20  : PV-Ertrag
-    lignes 21-26 : Diagnosegrössen — SANS bande (L/M/N vides)
+LAYOUT READ, not assumed:
+    row 6    : programme names — F = Testprogramm (us), then
+               G = IDA ICE, H = Excel, I = Energy+/OpenStudio, J = EDSL Tas
+    row 7    : versions; K = unit, L = Mittelwert, M = Obere Grenze,
+               N = Untere Grenze
+    rows 8-12  : quantities in COOLING mode
+    rows 14-18 : quantities in HEATING mode
+    row 20   : PV-Ertrag
+    rows 21-26 : Diagnosegrössen — WITHOUT band (L/M/N empty)
 
-DEUX PIÈGES, traités explicitement.
+TWO TRAPS, handled explicitly.
 
-1. **Le jeu de contributeurs varie ligne par ligne.** `M8` exclut `I8`, `M14`
-   exclut `J14` : un programme qui n'a pas livré une grandeur sort de la bande
-   et n'est jamais compté comme zéro. Le jeu qui fait foi est celui de la liste
-   `MAX(ABS(...))`, PAS la plage de l'`AVERAGE` — l'`AVERAGE` porte sur une
-   plage `G:J` dont Excel écarte les vides à l'évaluation, ce qui est
-   équivalent mais illisible statiquement.
+1. **The contributor set varies row by row.** `M8` excludes `I8`, `M14`
+   excludes `J14`: a programme that has not delivered a quantity drops out of
+   the band and is never counted as zero. The authoritative set is the one in
+   the `MAX(ABS(...))` list, NOT the `AVERAGE` range — the `AVERAGE` covers a
+   `G:J` range from which Excel drops blanks at evaluation, which is equivalent
+   but not statically readable.
 
-2. **Des cellules contiennent du TEXTE qui ressemble à une formule.**
-   `I8`, `I10`, `I11`, `J14`, `J17`, `J18`, `J20` portent la chaîne
-   `='Daten EnergyPlus'!G6` — mais dans le XML elles sont marquées `t="s"`,
-   c'est-à-dire **chaîne partagée**, pas formule (`<f>` absent). Excel les
-   traite donc comme du texte, et `AVERAGE` les ignore : c'est bien ainsi que
-   le SIA a exclu ces programmes.
+2. **Some cells contain TEXT that looks like a formula.**
+   `I8`, `I10`, `I11`, `J14`, `J17`, `J18`, `J20` carry the string
+   `='Daten EnergyPlus'!G6` — but in the XML they are marked `t="s"`,
+   i.e. **shared string**, not a formula (`<f>` absent). Excel therefore
+   treats them as text, and `AVERAGE` ignores them: that is exactly how
+   SIA excluded those programmes.
 
-   Correction apportée le 2026-08-06 après audit indépendant : une version
-   antérieure de ce script **déréférençait** ces chaînes et inscrivait le
-   nombre obtenu dans `par_programme`, laissant croire que le programme avait
-   livré une valeur alors que le classeur l'exclut. Les bandes restaient
-   justes — les contributeurs sont lus sur la liste `MAX(ABS(...))`, qui ne
-   les mentionne pas — mais le JSON était trompeur à la lecture.
-   **On ne déréférence plus rien : une chaîne vaut `None`, comme pour Excel.**
+   Correction applied on 2026-08-06 after independent audit: an earlier
+   version of this script **dereferenced** those strings and wrote the
+   resulting number into `par_programme`, creating the false impression that
+   the programme had delivered a value when the workbook excludes it. The
+   bands remained correct — contributors are read from the `MAX(ABS(...))` list,
+   which does not mention them — but the JSON was misleading.
+   **We no longer dereference anything: a string equals `None`, as in Excel.**
 
-CONTRÔLE : chaque bande est RECALCULÉE par `engine.scatter_band` et confrontée
-au trio L/M/N du classeur. Un seul écart et le script échoue. C'est la preuve
-que notre moteur reproduit le critère d'acceptation du SIA.
+CHECK: each band is RECALCULATED by `engine.scatter_band` and compared against
+the L/M/N triplet from the workbook. Any single discrepancy and the script fails.
+This is proof that our engine reproduces the SIA acceptance criterion.
 
-Usage :
+Usage:
     python scripts/build_test7_reference.py [--ecrire]
 """
 
@@ -77,14 +77,14 @@ LIGNE_VERSIONS = 7
 COL_LIBELLE = 2      # B
 COL_GROUPE = 1       # A
 COL_PROGRAMMES = (7, 8, 9, 10)   # G, H, I, J
-COL_NOTRE = 6        # F — Testprogramm, vide tant que VE n'a pas tourné
+COL_NOTRE = 6        # F — Testprogramm, empty until VE has run
 COL_UNITE = 11       # K
 COL_MOYENNE = 12     # L
 COL_HAUT = 13        # M
 COL_BAS = 14         # N
 
-# Tolérance de recalcul. Les valeurs du classeur sont en pleine précision ;
-# ce seuil n'absorbe qu'un arrondi binaire.
+# Recalculation tolerance. Workbook values are at full precision;
+# this threshold absorbs only binary rounding.
 TOLERANCE = 1e-6
 
 _CONTRIB = re.compile(r'ABS\(\s*([A-Z]+)(\d+)\s*-')
@@ -104,13 +104,13 @@ class ExtractionRefusee(RuntimeError):
 
 
 def _valeur_numerique(valeurs, feuille, ligne, colonne):
-    u"""Valeur d'une cellule si et seulement si elle est numérique.
+    u"""Value of a cell if and only if it is numeric.
 
-    Toute autre chose — texte, cellule vide, chaîne ressemblant à une formule —
-    vaut `None`, exactement comme Excel la traite dans un `AVERAGE`. On ne
-    déréférence RIEN : une chaîne `='Daten EnergyPlus'!G6` marquée `t="s"` est
-    du texte, pas une référence, et la transformer en nombre inventerait une
-    valeur que le classeur exclut délibérément (cf. piège 2 de l'en-tête).
+    Anything else — text, blank cell, string resembling a formula —
+    returns `None`, exactly as Excel treats it in an `AVERAGE`. We dereference
+    NOTHING: a string `='Daten EnergyPlus'!G6` marked `t="s"` is text, not a
+    reference, and converting it to a number would invent a value the workbook
+    deliberately excludes (see trap 2 in the module header).
     """
     brut = valeurs[feuille].cell(row=ligne, column=colonne).value
     if isinstance(brut, bool):
@@ -121,7 +121,7 @@ def _valeur_numerique(valeurs, feuille, ligne, colonne):
 
 
 def _contributeurs(formule_haut):
-    u"""Colonnes contributrices, lues sur la liste MAX(ABS(...)) de la borne."""
+    u"""Contributing columns, read from the MAX(ABS(...)) list of the upper bound."""
     if not isinstance(formule_haut, str):
         return []
     return [m.group(1) for m in _CONTRIB.finditer(formule_haut)]

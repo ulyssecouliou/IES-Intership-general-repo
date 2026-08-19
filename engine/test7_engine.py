@@ -60,39 +60,39 @@ _RACINE = os.path.abspath(os.path.join(_ICI, os.pardir))
 CHEMIN_REFERENCE_DEFAUT = os.path.join(
     _RACINE, 'refs', 'reference-data', 'test-7.ref.json')
 
-# SIA 4010:2023, tableau 63 -- les classes qui EXIGENT le Test 7 :
-#   4A : tests 1, 2A, 3A a F, 4 a 7
-#   4B : tests 1 a 7
-#   5  : test 7 SEUL
-# La classe 5 est la seule dont le Test 7 suffise ; pour 4A et 4B il n'est
-# qu'un test parmi d'autres. Omettre 4A/4B ferait sous-estimer la portee d'un
-# echec du Test 7 dans le navigateur.
+# SIA 4010:2023, tableau 63 -- classes that REQUIRE Test 7:
+#   4A: tests 1, 2A, 3A to F, 4 to 7
+#   4B: tests 1 to 7
+#   5 : test 7 ONLY
+# Class 5 is the only one for which Test 7 alone is sufficient; for 4A and 4B
+# it is just one test among others. Omitting 4A/4B would understate the impact
+# of a Test 7 failure in the navigator.
 CLASSES_CONCERNEES = ('4A', '4B', '5')
 
-# La seule classe dont le Test 7 constitue a lui seul la validation.
+# The only class for which Test 7 alone constitutes validation.
 CLASSE_SATISFAITE_PAR_CE_SEUL_TEST = '5'
 
-# Les Diagnosegroessen ne portent aucune bande dans le classeur : elles sont
-# rapportees pour information et n'entrent jamais dans le verdict.
+# Diagnosegroessen carry no band in the workbook: they are
+# reported for information only and never enter the verdict.
 GROUPE_AVEC_CRITERE = u'Testgr\xf6ssen'
 
 TOLERANCE_DEFAUT = 1e-6
 
-# VERROU D'IRRADIANCE -- ajoute le 2026-08-06 apres audit independant.
+# IRRADIANCE LOCK -- added 2026-08-06 after independent audit.
 #
-# L'audit a etabli qu'aucun verrou n'existait : fournir une valeur pour
-# `PV-Ertrag` suffisait a obtenir PASS et `classe_5_validee = True`. Or le
-# calcul du PV exige l'irradiance sur le plan des modules, qu'AUCUNE source
-# officielle en notre possession ne fournit (cf.
-# `traceability/classes-de-validation.spec.md`). Le scenario dangereux est
-# concret : un adaptateur calculant le PV sur un climat de substitution --
-# CH2018 2035, station voisine -- produirait un nombre plausible que rien ne
-# signalerait.
+# The audit established that no lock existed: supplying a value for
+# `PV-Ertrag` was sufficient to obtain PASS and `classe_5_validee = True`. Yet
+# computing PV requires irradiance on the module plane, which NO official
+# source in our possession provides (cf.
+# `traceability/classes-de-validation.spec.md`). The dangerous scenario is
+# concrete: an adapter computing PV against a substitute climate --
+# CH2018 2035, a neighbouring station -- would produce a plausible number
+# that nothing would flag.
 #
-# Le verrou n'interdit pas la valeur : il exige que l'appelant DECLARE d'ou
-# vient son irradiance. Un blocage en dur serait faux le jour ou nous aurons
-# la donnee ; une declaration obligatoire reste juste dans les deux cas, et
-# la source declaree remonte dans tous les rapports.
+# The lock does not forbid the value: it requires the caller to DECLARE where
+# their irradiance comes from. A hard block would be wrong the day we have
+# the data; a mandatory declaration remains correct in both cases, and
+# the declared source propagates into all reports.
 GRANDEURS_EXIGEANT_IRRADIANCE = ('PV-Ertrag',)
 
 MOTIF_VERROU_IRRADIANCE = (
@@ -111,19 +111,27 @@ JUSTIFICATION_CRITERE = (
     "conditionnelle compare bien la borne basse a la borne haute. Cette "
     "evaluation logicielle ne remplace pas l'attestation de la sous-commission.")
 
+# The active criterion comes from the corrected workbook (STATUT_CRITERE), verified by
+# checksum and XML inspection, but NEVER confirmed by the SIA sub-commission
+# (art. 4.6.2). While this flag remains False, a "validated class 5" from this
+# engine is a SOFTWARE conformity, not an official validation. When the
+# sub-commission confirms the criterion, setting this flag to True (and updating
+# STATUT_CRITERE) is sufficient to lift the reservation in all reports.
+CRITERE_ATTESTE_PAR_SOUS_COMMISSION = False
+
 
 def charger_reference(chemin=None):
-    """Charge les references figees du Test 7."""
+    """Load the frozen reference data for Test 7."""
     chemin = chemin or CHEMIN_REFERENCE_DEFAUT
     with io.open(chemin, encoding='utf-8') as flux:
         return json.load(flux)
 
 
 def valeurs_contributrices(grandeur):
-    """Valeurs des seuls programmes contributeurs, dans l'ordre du classeur.
+    """Values of the contributing programs only, in workbook order.
 
-    Un programme absent de `contributeurs_noms` est ECARTE, pas mis a zero :
-    le compter comme zero deplacerait la moyenne et donc la bande.
+    A program absent from `contributeurs_noms` is EXCLUDED, not set to zero:
+    counting it as zero would shift the mean and therefore the dispersion band.
     """
     par_programme = grandeur['par_programme']
     valeurs = []
@@ -135,22 +143,22 @@ def valeurs_contributrices(grandeur):
 
 
 def exige_irradiance(grandeur):
-    """La grandeur exige-t-elle l'irradiance solaire pour etre calculee ?"""
+    """Does this quantity require solar irradiance to be computed?"""
     return grandeur['libelle_de'].strip() in GRANDEURS_EXIGEANT_IRRADIANCE
 
 
 def evaluer_grandeur(grandeur, valeur_candidate, tolerance=TOLERANCE_DEFAUT,
                      source_irradiance=None):
-    """Verdict d'une grandeur : le candidat tombe-t-il dans la bande ?
+    """Verdict for a quantity: does the candidate fall inside the dispersion band?
 
-    Le champ `critere_statut` conserve l'identité de la source corrigée utilisée
-    et permet au rapport de distinguer l'évaluation logicielle de l'attestation
-    délivrée par la sous-commission.
+    The `critere_statut` field retains the identity of the corrected source used
+    and allows the report to distinguish software evaluation from the attestation
+    issued by the sub-commission.
 
-    `source_irradiance` : description de l'origine de l'irradiance, obligatoire
-    pour soumettre une grandeur de `GRANDEURS_EXIGEANT_IRRADIANCE`. Sans elle,
-    la valeur est REFUSEE et la grandeur reste non evaluable -- jamais un
-    succes obtenu sur une irradiance de substitution silencieuse.
+    `source_irradiance`: description of the irradiance origin, mandatory to
+    submit a quantity from `GRANDEURS_EXIGEANT_IRRADIANCE`. Without it,
+    the value is REFUSED and the quantity remains non-evaluable -- never a
+    pass obtained on a silently substituted irradiance.
     """
     verrou = None
     if (valeur_candidate is not None and exige_irradiance(grandeur)
@@ -183,13 +191,13 @@ def evaluer_grandeur(grandeur, valeur_candidate, tolerance=TOLERANCE_DEFAUT,
         'conforme': (True if scatter_band.is_passing(statut)
                      else (False if statut == scatter_band.VERDICT_FAIL
                            else None)),
-        # Rappel du statut du critere sur CHAQUE ligne : `evaluer_grandeur` est
-        # publique et peut etre appelee sans passer par `evaluer_test7`.
+        # Criterion status recalled on EVERY row: `evaluer_grandeur` is
+        # public and may be called without going through `evaluer_test7`.
         'critere_statut': STATUT_CRITERE,
         'exige_irradiance': exige_irradiance(grandeur),
         'source_irradiance': source_irradiance,
-        # Non `None` quand une valeur a ete REFUSEE faute de provenance
-        # declaree : le motif doit remonter jusqu'a l'utilisateur.
+        # Non-`None` when a value was REFUSED due to missing declared origin:
+        # the reason must surface to the user.
         'verrou': verrou,
     }
 
@@ -200,21 +208,20 @@ def _cle(libelle):
 
 def evaluer_test7(reference, candidat=None, tolerance=TOLERANCE_DEFAUT,
                   source_irradiance=None):
-    """Evalue le Test 7 complet, donc la classe de validation 5.
+    """Evaluate the full Test 7, and therefore validation class 5.
 
-    `candidat` : dict {libelle de la grandeur: valeur annuelle}. Les libelles
-    sont apparies sans tenir compte de la casse ni des espaces de bord. Une
-    grandeur absente du candidat reste NOT_CHECKABLE -- jamais un succes par
-    defaut.
+    `candidat`: dict {quantity label: annual value}. Labels are matched
+    case-insensitively, ignoring leading/trailing whitespace. A quantity
+    absent from the candidate remains NOT_CHECKABLE -- never a pass by default.
     """
     candidat = candidat or {}
     index = dict((_cle(k), v) for k, v in candidat.items())
 
-    # Clés du candidat qui ne correspondent à AUCUNE grandeur de référence.
-    # Sans ce contrôle, une faute de frappe dans l'adaptateur serait
-    # silencieusement ignorée et la grandeur apparaîtrait NOT_CHECKABLE sans
-    # que rien n'indique pourquoi. Les clés préfixées par « _ » sont des
-    # métadonnées assumées (`_provenance`) et ne sont pas signalées.
+    # Candidate keys that do not match ANY reference quantity.
+    # Without this check, a typo in the adapter would be
+    # silently ignored and the quantity would appear NOT_CHECKABLE with
+    # no indication as to why. Keys prefixed with "_" are assumed
+    # metadata (`_provenance`) and are not flagged.
     attendues = set(_cle(g['libelle_de']) for g in reference['grandeurs'])
     cles_ignorees = sorted(
         k for k in candidat
@@ -227,9 +234,9 @@ def evaluer_test7(reference, candidat=None, tolerance=TOLERANCE_DEFAUT,
             grandeur, valeur, tolerance, source_irradiance))
 
     soumises = [r for r in resultats if r['groupe'] == GROUPE_AVEC_CRITERE]
-    # Repli : si l'etiquette de groupe du classeur changeait, mieux vaut juger
-    # toutes les grandeurs a bande que de n'en juger aucune et annoncer un
-    # succes vide.
+    # Fallback: if the workbook's group label changes, it is better to evaluate
+    # all quantities with a band than to evaluate none and announce an
+    # empty pass.
     if not soumises:
         soumises = resultats
 
@@ -256,13 +263,13 @@ def evaluer_test7(reference, candidat=None, tolerance=TOLERANCE_DEFAUT,
             'formule': reference['critere']['formule'],
         },
         'grandeurs': resultats,
-        # Clés fournies par l'appelant et appariées à aucune grandeur : une
-        # liste non vide signale presque toujours une faute de frappe côté
-        # adaptateur. N'influence PAS le verdict, mais doit être affichée.
+        # Keys supplied by the caller and matched to no quantity: a
+        # non-empty list almost always signals a typo on the adapter side.
+        # Does NOT affect the verdict, but must be displayed.
         'cles_candidat_ignorees': cles_ignorees,
-        # Provenance de l'irradiance declaree par l'appelant, `None` si aucune.
-        # Doit apparaitre dans tout rapport : c'est la seule trace de ce sur
-        # quoi le PV a ete calcule.
+        # Irradiance origin declared by the caller, `None` if none.
+        # Must appear in every report: it is the sole record of what
+        # the PV was computed against.
         'source_irradiance': source_irradiance,
         'grandeurs_verrouillees': [r['libelle'] for r in resultats if r['verrou']],
         'grandeurs_soumises_au_critere': len(soumises),
@@ -270,23 +277,29 @@ def evaluer_test7(reference, candidat=None, tolerance=TOLERANCE_DEFAUT,
         'nb_non_evaluables': len(inconnues),
         'nb_reserves': len(reserves),
         'verdict': verdict_global,
-        # Vrai UNIQUEMENT pour la classe 5, seule classe que le Test 7 valide
-        # a lui seul. Les classes 4A et 4B exigent d'autres tests en plus :
-        # ce drapeau ne dit rien d'elles.
+        # True ONLY for class 5, the only class that Test 7 validates
+        # on its own. Classes 4A and 4B require additional tests:
+        # this flag says nothing about them.
         'classe_5_validee': verdict_global in (
             scatter_band.VERDICT_PASS,
             scatter_band.VERDICT_PASS_WITH_RESERVATION),
-        # Alias historique conservÃ© pour les consommateurs existants. Depuis
-        # rÃ©ception du classeur corrigÃ©, il porte la mÃªme valeur que le drapeau
-        # principal et ne signifie plus que le critÃ¨re est provisoire.
+        # Historical alias kept for existing consumers. Since
+        # receipt of the corrected workbook, it carries the same value as the
+        # main flag and no longer implies the criterion is provisional.
         'classe_5_provisoirement_conforme': verdict_global in (
             scatter_band.VERDICT_PASS,
             scatter_band.VERDICT_PASS_WITH_RESERVATION),
+        # Honesty safeguard: even a full PASS remains a software conformity
+        # until the sub-commission confirms the criterion (art. 4.6.2).
+        # A consumer that reads only `classe_5_validee` must not be able to
+        # present it as an official validation.
+        'attestation_sous_commission_requise': (
+            not CRITERE_ATTESTE_PAR_SOUS_COMMISSION),
     }
 
 
 def resumer(resultat):
-    """Resume texte, une ligne par grandeur. Pour la console et les rapports."""
+    """Text summary, one line per quantity. For the console and reports."""
     lignes = ['Test 7 -- classe de validation 5',
               'critere : %s (%s)' % (resultat['critere']['formule'],
                                      resultat['critere']['statut']),

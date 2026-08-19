@@ -1,22 +1,22 @@
 # -*- coding: utf-8 -*-
-u"""Fige le catalogue de variables de résultats relevé dans une VE réelle.
+u"""Freezes the result-variable catalogue read from a real VE instance.
 
-POURQUOI CE FICHIER EXISTE. `outputs/` est ignoré par Git. Le rapport de sonde
-`outputs/sonde_aps.json` est donc absent d'un clone neuf — et avec lui, la
-preuve contre laquelle `ve_adapter/tests/test_bandes_adapter.py` confronte
-chaque nom de variable candidat. Ces tests se seraient **ignorés en silence**,
-laissant croire que les candidats étaient vérifiés alors que plus rien ne les
-contrôlait.
+WHY THIS FILE EXISTS. `outputs/` is ignored by Git. The probe report
+`outputs/sonde_aps.json` is therefore absent from a fresh clone — and with it,
+the evidence against which `ve_adapter/tests/test_bandes_adapter.py` checks
+every candidate variable name. Those tests would have **silently ignored
+themselves**, giving the impression that the candidates were verified while
+nothing controlled them any longer.
 
-CE QUE CE FICHIER EST, ET N'EST PAS. C'est un **catalogue de noms** : ce que
-VE 2025 sait produire. Ce n'est ni une valeur de référence SIA, ni une liaison,
-ni un résultat de simulation. Aucune série n'y figure.
+WHAT THIS FILE IS, AND IS NOT. It is a **name catalogue**: what VE 2025 can
+produce. It is neither a SIA reference value, nor a binding, nor a simulation
+result. No series appears in it.
 
-Usage :
+Usage:
     python scripts/freeze_aps_variables.py [chemin_du_rapport] [--ecrire]
 
-Le rapport est produit par `Run_VE_SIA4010_Sonde_APS.py`, au bouton Run depuis
-VE, sur un projet dont une simulation a déjà tourné.
+The report is produced by `Run_VE_SIA4010_Sonde_APS.py`, via the Run button
+from VE, on a project that has already been simulated.
 """
 
 from __future__ import print_function
@@ -34,8 +34,8 @@ _SORTIE = os.path.join(_RACINE, 'refs', 'reference-data',
 
 RAPPORT_PAR_DEFAUT = os.path.join(_RACINE, 'outputs', 'sonde_aps.json')
 
-#: Champs conservés. Tout ce qui sert à reconnaître une grandeur et à convertir
-#: son unité, rien de plus.
+#: Fields retained. Everything needed to recognise a quantity and convert its
+#: unit, nothing more.
 CHAMPS = ('aps_varname', 'display_name', 'model_level', 'units_type')
 
 RESERVES = [
@@ -53,22 +53,23 @@ RESERVES = [
 
 
 class RapportInexploitable(RuntimeError):
-    u"""Levée quand le rapport de sonde ne porte pas le relevé complet."""
+    u"""Raised when the probe report does not carry the complete reading."""
 
 
 def _lire_rapport(chemin):
-    u"""Charge un rapport de sonde APS.
+    u"""Loads an APS probe report.
 
     Args:
-        chemin: Chemin explicite, ou `None` pour l'emplacement par défaut.
+        chemin: Explicit path, or `None` for the default location.
 
     Returns:
-        dict: Contenu du rapport.
+        dict: Report content.
 
     Raises:
-        RapportInexploitable: Si le fichier manque ou ne porte pas la clé
-            `variables` — auquel cas il vient d'une sonde antérieure au relevé
-            complet, et figer sa liste tronquée serait pire que ne rien figer.
+        RapportInexploitable: If the file is missing or does not carry the
+            `variables` key — in which case it comes from a probe predating the
+            complete reading, and freezing its truncated list would be worse
+            than freezing nothing.
     """
     chemin = chemin or RAPPORT_PAR_DEFAUT
     if not os.path.isfile(chemin):
@@ -87,14 +88,14 @@ def _lire_rapport(chemin):
 
 
 def _normaliser(variables):
-    u"""Réduit et ordonne les entrées relevées.
+    u"""Reduces and orders the recorded entries.
 
     Args:
-        variables: Entrées du rapport.
+        variables: Entries from the report.
 
     Returns:
-        list[dict]: Entrées réduites aux champs utiles, triées par niveau puis
-            par nom, doublons exacts écartés.
+        list[dict]: Entries reduced to useful fields, sorted by level then
+            name, exact duplicates removed.
     """
     vues = set()
     retenues = []
@@ -113,13 +114,13 @@ def _normaliser(variables):
 
 
 def _compter_par_niveau(variables):
-    u"""Compte les entrées par niveau de modèle.
+    u"""Counts entries by model level.
 
     Args:
-        variables: Entrées normalisées.
+        variables: Normalised entries.
 
     Returns:
-        dict: `{niveau: nombre}`, trié.
+        dict: `{level: count}`, sorted.
     """
     comptes = {}
     for variable in variables:
@@ -129,13 +130,13 @@ def _compter_par_niveau(variables):
 
 
 def construire(chemin_rapport=None):
-    u"""Construit la structure à figer.
+    u"""Builds the structure to freeze.
 
     Args:
-        chemin_rapport: Chemin explicite du rapport.
+        chemin_rapport: Explicit report path.
 
     Returns:
-        dict: Structure prête à écrire.
+        dict: Structure ready to write.
     """
     rapport = _lire_rapport(chemin_rapport)
     brutes = rapport['variables']
@@ -163,13 +164,13 @@ def construire(chemin_rapport=None):
 
 
 def main(arguments):
-    u"""Point d'entrée en ligne de commande.
+    u"""Command-line entry point.
 
     Args:
-        arguments: Arguments sans le nom du script.
+        arguments: Arguments without the script name.
 
     Returns:
-        int: 0 si tout s'est bien passé.
+        int: 0 if everything went well.
     """
     chemins = [a for a in arguments if not a.startswith('--')]
     donnees = construire(chemins[0] if chemins else None)

@@ -1,4 +1,4 @@
-"""Read-only six-case Test 1 campaign navigator for VEScripts."""
+"""Read-only ten-case Test 1 campaign navigator for VEScripts."""
 
 import json
 import sys
@@ -45,9 +45,17 @@ def run():
     if report["next_case"] is not None:
         item = report["next_case"]
         print("NEXT CASE: {}".format(item["case_id"]))
-        print("Create a fresh saved VE project named: {}".format(
-            item["recommended_project_name"]
-        ))
+        action = item["next_action"]
+        if action["requires_fresh_project"]:
+            print("Create a fresh saved VE project named: {}".format(
+                item["recommended_project_name"]
+            ))
+        elif action["project_path"]:
+            print("Open existing VE project: {}".format(action["project_path"]))
+        print("Run VEScript: {}".format(action["script"]))
+        if action.get("follow_up_script"):
+            print("Then run: {}".format(action["follow_up_script"]))
+        print("Action: {}".format(action["instruction"]))
     print("Report: {}".format(report_path))
     print("No VE model, APS file or official source was changed.")
     return report_path

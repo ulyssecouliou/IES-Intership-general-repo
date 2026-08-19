@@ -7,15 +7,23 @@ automatically for token-cost reasons.
 
 ## Layout
 
+> **Which architecture is live (verified 2026-08-16, see `docs/project/AUDIT_COMPLET_2026-08-16.md`).**
+> The production client tool is entirely in `swiss_sia/` (100% of client entry
+> points). The top-level `engine/` + `ve_adapter/` + `ui/` triptych below is NOT
+> the client runtime: `engine/`+`ve_adapter/` are the independent reference-data
+> build & cross-check toolchain, `ui/` is legacy (only `ui/design.py` +
+> `ui/tk_theme.py` style tokens are still imported by `swiss_sia`), and `core/`
+> is dead. ADR-001 (D2) removed the web UI in favour of the in-VE Tkinter dialog.
+
 - `Run_VE_Swiss_Compliance.py` — production compliance-checker Run-button launcher.
 - `Run_VE_Swiss_Reference_Model.py` — programmatic reference-model Run-button launcher.
 - `swiss_sia/` — compliance extraction, rules, reports, evidence, orchestration.
 - `swiss_sia/reference_model/` — config, geometry, gbXML, VE gateways, asset provisioning, validation, reporting, SIA 4010 hooks.
 - `config/` — source-traced example inputs; examples intentionally fail closed until completed.
 - `schemas/` — machine-readable configuration contracts.
-- `engine/` — SIA 4010 validation engines. Pure Python, no `iesve`, CI-testable.
-- `ve_adapter/` — IESVE extraction into normalised JSON. All `iesve` access lives here.
-- `ui/` — Tkinter navigator inside VE, plus Excel (official SIA workbook) and PDF exports. `ui/i18n.py` holds every user-facing string.
+- `engine/` — **tooling, not client runtime.** Independent SIA 4010 recompute + reference-data build logic (pure Python, no `iesve`, CI-testable). Consumed by `scripts/build_*.py` to regenerate `refs/reference-data/` and by its own tests as a cross-check; not imported by `swiss_sia`. Keep; do not wire into the client path without an ADR.
+- `ve_adapter/` — **legacy Test 1/7 VE adapter** (gbXML, geometry, APS) feeding the `engine/` recompute via `scripts/`. NOTE: this is NOT the only place `iesve` is accessed — production VE access is `swiss_sia/reference_model/ve_api.py` + the `swiss_sia/data_extractor.py` boundary.
+- `ui/` — **legacy parallel UI/exports.** The live Tkinter navigator, Excel workbook and PDF exports are in `swiss_sia/` (`*_ui.py`, `excel_report.py`, `compliance_report_pdf.py`); only `ui/design.py` + `ui/tk_theme.py` (style tokens) are still used. The live translation table is `swiss_sia/reference_model/sia4010/ui_translations.py`; `ui/i18n.py` is a legacy copy.
 - `refs/reference-data/` — frozen reference values, recomputed and checked against source before being written. Edits blocked by `.claude/hooks/garde_refs.py`; fix the extractor that produces the file, never the output file itself.
 - `traceability/` — clause -> code -> test matrices, signed by an independent audit (`qa-auditor`).
 - `tests/` — pure-Python regression and API-double tests.

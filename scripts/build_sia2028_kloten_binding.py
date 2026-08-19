@@ -1,28 +1,27 @@
 # -*- coding: utf-8 -*-
-u"""Écrit l'artefact de liaison normalisé du climat d'essai SIA 2028 Kloten.
+u"""Writes the normalised binding artefact for the SIA 2028 Kloten test climate.
 
-POURQUOI CE SCRIPT EXISTE. Cet artefact avait été écrit à la main, ce qui laissait
-la chaîne de preuve se terminer sur un fichier que personne ne savait refaire, et
-avec des chemins absolus portant le nom d'utilisateur d'une machine. Il est
-désormais produit, donc reproductible et portable.
+WHY THIS SCRIPT EXISTS. This artefact had been written by hand, which left the
+proof chain ending at a file nobody knew how to remake, and with absolute paths
+carrying one machine's username. It is now generated, hence reproducible and
+portable.
 
-DEUX PROPRIÉTÉS QUI COMPTENT ICI.
+TWO PROPERTIES THAT MATTER HERE.
 
-1. **Chemins relatifs.** Le consommateur résout `weather_file.path` relativement
-   au répertoire de l'artefact de liaison lui-même, et le manifeste résout le
-   chemin de liaison relativement au répertoire du rapport. Des chemins relatifs
-   sont donc à la fois portables et exacts ; un chemin absolu ne survivrait pas à
-   un autre clone.
+1. **Relative paths.** The consumer resolves `weather_file.path` relative to
+   the binding artefact's own directory, and the manifest resolves the binding
+   path relative to the report's directory. Relative paths are therefore both
+   portable and exact; an absolute path would not survive another clone.
 
-2. **L'EPW n'est pas dans le dépôt, et c'est voulu.** `.gitignore` exclut
-   `generated_weather/` : ce sont des artefacts dérivés, régénérables depuis les
-   sources officielles suivies. L'artefact déclare donc explicitement la commande
-   qui régénère l'EPW, pour qu'un clone frais sache quoi lancer au lieu de
-   découvrir un fichier manquant.
+2. **The EPW is not in the repository, and that is intentional.** `.gitignore`
+   excludes `generated_weather/`: these are derived artefacts, regenerable from
+   the tracked official sources. The artefact therefore explicitly declares the
+   command that regenerates the EPW, so a fresh clone knows what to run instead
+   of discovering a missing file.
 
-CE QU'IL NE FAIT PAS. Il ne convertit rien : la conversion est le travail de
-`swiss_sia.sia_dry_epw`, dont la fiche de dérivation est relue ici pour en
-reprendre les contrôles au lieu de les recopier de mémoire.
+WHAT IT DOES NOT DO. It converts nothing: conversion is the work of
+`swiss_sia.sia_dry_epw`, whose derivation sheet is re-read here to carry
+its checks forward rather than copying them from memory.
 """
 
 from __future__ import print_function
@@ -41,20 +40,20 @@ sys.path.insert(0, _RACINE)
 SCHEMA_ID = 'sia4010.sia2028_hourly_weather.v1'
 SCHEMA_VERSION = '1.0'
 
-#: Commande qui régénère l'EPW depuis la source officielle suivie.
+#: Command that regenerates the EPW from the tracked official source.
 COMMANDE_REGENERATION = (
     'python Convert_MeteoSwiss_Station_Weather.py --station KLO'
 )
 
 
 def _empreinte(chemin):
-    u"""Renvoie le SHA-256 d'un fichier.
+    u"""Returns the SHA-256 of a file.
 
     Args:
-        chemin: Chemin absolu.
+        chemin: Absolute path.
 
     Returns:
-        str: Empreinte hexadécimale minuscule.
+        str: Lowercase hexadecimal fingerprint.
     """
     digest = hashlib.sha256()
     with open(chemin, 'rb') as flux:
@@ -64,32 +63,33 @@ def _empreinte(chemin):
 
 
 def _relatif(chemin, base):
-    u"""Renvoie un chemin relatif à séparateurs POSIX.
+    u"""Returns a relative path with POSIX separators.
 
     Args:
-        chemin: Chemin absolu de la cible.
-        base: Répertoire de référence.
+        chemin: Absolute path to the target.
+        base: Reference directory.
 
     Returns:
-        str: Chemin relatif portable.
+        str: Portable relative path.
     """
     return os.path.relpath(chemin, base).replace(os.sep, '/')
 
 
 def construire(racine, repertoire_sortie):
-    u"""Construit la charge utile de la liaison météo.
+    u"""Builds the weather binding payload.
 
     Args:
-        racine: Racine du dépôt.
-        repertoire_sortie: Répertoire où l'artefact sera écrit ; sert de base aux
-            chemins relatifs, parce que c'est la base que le consommateur applique.
+        racine: Repository root.
+        repertoire_sortie: Directory where the artefact will be written; used as
+            the base for relative paths, because that is the base the consumer
+            applies.
 
     Returns:
-        dict: Charge utile prête à écrire.
+        dict: Payload ready to write.
 
     Raises:
-        AssertionError: Si l'EPW ou la fiche de dérivation manquent, plutôt que
-            d'écrire une liaison qui pointe dans le vide.
+        AssertionError: If the EPW or derivation sheet are missing, rather than
+            writing a binding that points into a void.
     """
     source = os.path.join(racine, 'references', 'standards', 'sia2028',
                           'KLO_dry.txt')
@@ -107,8 +107,8 @@ def construire(racine, repertoire_sortie):
     with io.open(derivation_path, encoding='utf-8') as flux:
         derivation = json.load(flux)
 
-    # Le nombre d'heures est compté sur le fichier, pas déclaré : un EPW
-    # tronqué doit faire échouer la liaison, pas la traverser.
+    # The hour count is measured from the file, not declared: a truncated EPW
+    # must cause the binding to fail, not pass through.
     with io.open(epw, encoding='utf-8', errors='replace') as flux:
         lignes = [ligne for ligne in flux if ligne.strip()]
     heures = len(lignes) - 8
@@ -178,13 +178,13 @@ def construire(racine, repertoire_sortie):
 
 
 def main(argv=None):
-    u"""Point d'entrée.
+    u"""Entry point.
 
     Args:
-        argv: Arguments, `sys.argv[1:]` par défaut.
+        argv: Arguments, `sys.argv[1:]` by default.
 
     Returns:
-        int: 0 en succès.
+        int: 0 on success.
     """
     analyseur = argparse.ArgumentParser(description=__doc__)
     analyseur.add_argument(

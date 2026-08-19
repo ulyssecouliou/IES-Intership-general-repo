@@ -432,12 +432,12 @@ def _action_cell(row):
         return u'Confirmer dans VE que cette variable mesure bien : %s' \
             % (row.get('piste') or u'la grandeur attendue')
     if row['etat'] == CANDIDATE_WRONG_LEVEL:
-        # NE PAS dire « corriger le niveau ». Le niveau d'une variable VE
-        # décide de son PÉRIMÈTRE — local, système, bâtiment. Déplacer la
-        # déclaration pour faire coïncider les deux reviendrait à changer ce
-        # qu'on mesure pour que ça tombe juste, ce qui est l'inverse du
-        # travail. La question est de savoir quel périmètre le classeur
-        # demande, et elle se tranche sur la spécification.
+        # DO NOT say "fix the level". The level of a VE variable decides its
+        # SCOPE — room, system, building. Moving the declaration to make the
+        # two coincide amounts to changing what is measured so that it comes
+        # out right, which is the inverse of the work. The question is which
+        # scope the workbook requires, and that is settled against the
+        # specification.
         return (u'**Incohérence de périmètre.** La variable existe, mais au '
                 u'niveau `%s` et non `%s`. Le niveau décide du périmètre '
                 u'(local / système / bâtiment) : lire la spécification pour '

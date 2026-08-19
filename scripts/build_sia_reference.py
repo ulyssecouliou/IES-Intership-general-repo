@@ -1,35 +1,34 @@
 # -*- coding: utf-8 -*-
-u"""Fige les valeurs de référence d'un test SIA 4010, quel qu'il soit.
+u"""Freezes the reference values for any SIA 4010 test.
 
-Généralise `build_test7_reference.py` et `build_test2_reference.py`. La
-disposition des classeurs varie d'un test à l'autre — le Test 7 empile ses
-grandeurs verticalement, le Test 2 les juxtapose en blocs horizontaux, le
-Test 3 n'en a qu'une sur douze cas répartis en lignes non contiguës — mais le
-CRITÈRE, lui, ne varie pas :
+Generalises `build_test7_reference.py` and `build_test2_reference.py`. The
+workbook layout varies from test to test — Test 7 stacks its quantities
+vertically, Test 2 juxtaposes them in horizontal blocks, Test 3 has only one
+over twelve non-contiguous rows — but the CRITERION itself does not vary:
 
-    moyenne = AVERAGE(programmes contributeurs)
-    haut    = moyenne + MAX(ABS(programme − moyenne))
-    bas     = moyenne − MAX(...)          parfois plancher à MAX(0, …)
+    mean  = AVERAGE(contributing programmes)
+    upper = mean + MAX(ABS(programme − mean))
+    lower = mean − MAX(...)          sometimes floored at MAX(0, …)
 
-Ce script ne suppose donc aucune position : il repère les bandes par leurs
-FORMULES, ce qui reste vrai si le SIA réorganise une feuille.
+This script therefore assumes no fixed position: it locates bands by their
+FORMULAE, which remains correct even if the SIA reorganises a sheet.
 
-LES TROIS PIÈGES, traités pour tous les tests.
+THE THREE PITFALLS, handled for all tests.
 
-1. **Le jeu contributeur varie ligne par ligne**, et les colonnes ne sont pas
-   des programmes mais des VARIANTES de programme (IDA_ICE « Fe det Spec »,
-   « Fe det noSpec », « Fe einf »…). Le SIA retient une variante par
-   programme, pas la même d'un programme à l'autre. On lit la formule.
-2. **Des cellules portent du TEXTE ressemblant à une formule**
-   (`=Daten_TAS!E11`, `='Daten EnergyPlus'!G6`) : ce sont des chaînes
-   partagées qu'Excel ignore dans un `AVERAGE`. On ne déréférence rien.
-3. **Le plancher à zéro est ponctuel**, jamais une propriété du critère.
+1. **The contributing set varies row by row**, and columns are not programmes
+   but PROGRAMME VARIANTS (IDA_ICE « Fe det Spec », « Fe det noSpec »,
+   « Fe einf »…). The SIA retains one variant per programme, not the same one
+   across programmes. We read the formula.
+2. **Some cells carry TEXT that looks like a formula**
+   (`=Daten_TAS!E11`, `='Daten EnergyPlus'!G6`): these are shared strings
+   that Excel ignores in an `AVERAGE`. We dereference nothing.
+3. **The zero floor is punctual**, never a property of the criterion.
 
-CONTRÔLE : chaque bande est recalculée par `engine.scatter_band` et confrontée
-au trio du classeur, tolérance 1e-6. Un seul écart et le script échoue — c'est
-ce contrôle qui donne sa valeur au fichier figé.
+CHECK: each band is recalculated by `engine.scatter_band` and compared to the
+workbook trio, tolerance 1e-6. A single discrepancy causes the script to fail
+— this check is what gives the frozen file its value.
 
-Usage :
+Usage:
     python scripts/build_sia_reference.py 2 [--ecrire]
     python scripts/build_sia_reference.py 3 [--ecrire]
 """
@@ -61,23 +60,23 @@ _REFERENCE_CELLULE = re.compile(r'([A-Z]{1,3})(\d{1,5})')
 _PLAGE = re.compile(r'([A-Z]{1,3})(\d{1,5})\s*:\s*([A-Z]{1,3})(\d{1,5})')
 _PLANCHER = re.compile(r'^=\s*MAX\(\s*0\s*,', re.I)
 
-#: Disposition propre à chaque test, LUE sur le classeur et non supposée.
-#: `lignes` borne le balayage ; `meta` nomme les colonnes de contexte.
+#: Layout specific to each test, READ from the workbook and never assumed.
+#: `lignes` bounds the scan; `meta` names the context columns.
 #
-# `libelle`, `cas` et `unite` disent OU lire chaque etiquette :
-#     ('ligne', n)   -> colonne n de la ligne de la bande
-#     ('bloc', n)    -> ligne n, dans la 1re colonne du bloc de contributeurs
-#     ('colonne', n) -> ligne n, dans la colonne de la moyenne
-#     ('contributeur', n) -> ligne n, au-dessus du 1er contributeur
-#     ('cellule', (r, c)) -> cellule fixe, quand l etiquette ne suit aucune
-#                            regle relative (Test 3 : unite en H7, libelle F7)
-#     None           -> non applicable
+# `libelle`, `cas` and `unite` say WHERE to read each label:
+#     ('ligne', n)   -> column n of the band row
+#     ('bloc', n)    -> row n, in the 1st column of the contributor block
+#     ('colonne', n) -> row n, in the mean column
+#     ('contributeur', n) -> row n, above the 1st contributor
+#     ('cellule', (r, c)) -> fixed cell, when the label follows no relative
+#                            rule (Test 3: unit in H7, label in F7)
+#     None           -> not applicable
 #
-# Trois semantiques coexistent dans les classeurs officiels, et il faut les
-# distinguer sous peine d etiqueter des bandes n importe comment :
-#   tests 2 et 3 : une grandeur par BLOC, un cas par ligne ;
-#   tests 4 et 6 : une grandeur par LIGNE, pas de cas ;
-#   test 5       : une MATRICE, grandeur en ligne et cas en colonne.
+# Three semantics coexist in the official workbooks, and they must be
+# distinguished to avoid labelling bands incorrectly:
+#   tests 2 and 3: one quantity per BLOCK, one case per row;
+#   tests 4 and 6: one quantity per ROW, no cases;
+#   test 5:        a MATRIX, quantity in row and case in column.
 DISPOSITIONS = {
     2: {
         'fichier': os.path.join('Test2', 'Resultaterfassung_Test2.xlsx'),
@@ -99,8 +98,8 @@ DISPOSITIONS = {
         'ligne_variantes': 10,
         'libelle': ('bloc', 7),
         'cas': ('ligne', 1),
-        # F7 porte le libelle, H7 l unite : deux colonnes plus loin, sans
-        # regle relative exploitable. On la designe donc explicitement.
+        # F7 carries the label, H7 the unit: two columns further, with no
+        # usable relative rule. It is therefore designated explicitly.
         'unite': ('cellule', (7, 8)),
         'meta': {'protection_solaire': 2, 'regulation_eclairage': 3},
         'classes': ['2A', '2B', '4A', '4B'],
@@ -145,20 +144,20 @@ DISPOSITIONS = {
 
 
 class ExtractionRefusee(RuntimeError):
-    u"""Levée dès qu'une valeur ne peut pas être établie avec certitude."""
+    u"""Raised as soon as a value cannot be established with certainty."""
 
 
 def _valeur_numerique(feuille, ligne, colonne):
-    u"""Valeur d'une cellule si et seulement si elle est numérique.
+    u"""Value of a cell if and only if it is numeric.
 
     Args:
-        feuille: Feuille en mode valeurs.
-        ligne: Numéro de ligne.
-        colonne: Numéro de colonne.
+        feuille: Sheet in values mode.
+        ligne: Row number.
+        colonne: Column number.
 
     Returns:
-        float | None: La valeur, ou `None` pour toute autre chose — texte
-        compris, comme Excel la traite dans un `AVERAGE`.
+        float | None: The value, or `None` for anything else — including text,
+        as Excel handles it in an `AVERAGE`.
     """
     brut = feuille.cell(row=ligne, column=colonne).value
     if isinstance(brut, bool) or not isinstance(brut, (int, float)):
@@ -167,13 +166,13 @@ def _valeur_numerique(feuille, ligne, colonne):
 
 
 def _colonnes_citees(formule):
-    u"""Lettres de colonnes citées par une formule.
+    u"""Column letters referenced by a formula.
 
     Args:
-        formule: Formule Excel, ou toute autre valeur.
+        formule: Excel formula, or any other value.
 
     Returns:
-        list[str]: Lettres, dans l'ordre d'apparition ; vide si non-formule.
+        list[str]: Letters in order of appearance; empty if not a formula.
     """
     if not isinstance(formule, str) or '(' not in formule:
         return []
@@ -182,17 +181,17 @@ def _colonnes_citees(formule):
 
 
 def _colonnes_dune_plage(formule):
-    u"""Développe les plages d'une formule en colonnes individuelles.
+    u"""Expands ranges in a formula into individual columns.
 
-    `AVERAGE(E10:H10)` cite E et H ; les contributeurs réels sont E, F, G, H.
-    Ne pas développer ferait échouer le contrôle de cohérence sur les tests
-    dont l'AVERAGE porte sur une plage (4 et 6) et non sur une liste (2, 3).
+    `AVERAGE(E10:H10)` references E and H; the actual contributors are E, F,
+    G, H. Not expanding would cause the consistency check to fail on tests
+    where AVERAGE covers a range (4 and 6) rather than a list (2, 3).
 
     Args:
-        formule: Formule Excel.
+        formule: Excel formula.
 
     Returns:
-        list[str] | None: Colonnes développées, `None` si aucune plage.
+        list[str] | None: Expanded columns, `None` if no range.
     """
     if not isinstance(formule, str):
         return None
@@ -205,24 +204,23 @@ def _colonnes_dune_plage(formule):
 
 
 def _bornes_de_la_moyenne(feuille_formules, ligne, colonne_moyenne):
-    u"""Trouve les colonnes des bornes en lisant les formules de la ligne.
+    u"""Finds the bound columns by reading the row's formulae.
 
-    Les classeurs ne placent PAS les bornes au même décalage : le Test 2 les
-    met en moyenne+1 et +2, le Test 5 en +4 et +8, avec quatre grandeurs
-    entrelacées. Supposer un décalage donnerait des bornes fausses, et pour le
-    Test 5 la « borne haute » serait en réalité la moyenne d'une autre
-    grandeur.
+    Workbooks do NOT place bounds at the same offset: Test 2 puts them at
+    mean+1 and +2, Test 5 at +4 and +8, with four interleaved quantities.
+    Assuming an offset would give wrong bounds, and for Test 5 the "upper
+    bound" would actually be the mean of another quantity.
 
-    On repère donc la borne haute à sa formule `<moyenne>+MAX(` et la borne
-    basse à `<moyenne>-MAX(`, plancher compris.
+    The upper bound is therefore identified by its formula `<mean>+MAX(` and
+    the lower bound by `<mean>-MAX(`, floor included.
 
     Args:
-        feuille_formules: Feuille en mode formules.
-        ligne: Ligne de la bande.
-        colonne_moyenne: Indice de colonne de la moyenne.
+        feuille_formules: Sheet in formulas mode.
+        ligne: Band row.
+        colonne_moyenne: Mean column index.
 
     Returns:
-        tuple[int | None, int | None]: Colonnes (haute, basse).
+        tuple[int | None, int | None]: Columns (upper, lower).
     """
     reference = '%s%d' % (get_column_letter(colonne_moyenne), ligne)
     haut = bas = None
@@ -239,14 +237,14 @@ def _bornes_de_la_moyenne(feuille_formules, ligne, colonne_moyenne):
 
 
 def _bandes_du_classeur(feuille_formules, plage_lignes):
-    u"""Repère les bandes par leur formule AVERAGE.
+    u"""Locates bands by their AVERAGE formula.
 
     Args:
-        feuille_formules: Feuille en mode formules.
-        plage_lignes: Couple (première, dernière) ligne à balayer.
+        feuille_formules: Sheet in formulas mode.
+        plage_lignes: (first, last) row pair to scan.
 
     Returns:
-        list[tuple[int, int]]: Couples (ligne, colonne de la moyenne).
+        list[tuple[int, int]]: (row, mean column) pairs.
     """
     debut, fin = plage_lignes
     trouvees = []
@@ -259,19 +257,19 @@ def _bandes_du_classeur(feuille_formules, plage_lignes):
 
 
 def _controler_coherence(ligne, lettres_moyenne, lettres_haut, colonne_moyenne):
-    u"""Vérifie que le MAX porte sur les mêmes colonnes que l'AVERAGE.
+    u"""Verifies that the MAX covers the same columns as the AVERAGE.
 
-    Une divergence signalerait que le classeur pondère la moyenne et la
-    déviation sur des jeux différents — cas qu'on refuse d'interpréter.
+    A discrepancy would mean that the workbook weights the mean and the
+    deviation on different sets — a case we refuse to interpret.
 
     Args:
-        ligne: Numéro de ligne, pour le message.
-        lettres_moyenne: Colonnes citées par l'AVERAGE.
-        lettres_haut: Colonnes citées par la borne haute.
-        colonne_moyenne: Indice de la colonne de moyenne, à écarter.
+        ligne: Row number, for the error message.
+        lettres_moyenne: Columns referenced by AVERAGE.
+        lettres_haut: Columns referenced by the upper bound.
+        colonne_moyenne: Mean column index, to exclude.
 
     Raises:
-        ExtractionRefusee: Si les deux jeux diffèrent.
+        ExtractionRefusee: If the two sets differ.
     """
     attendues = set(lettres_moyenne)
     observees = set(lettres_haut) - {get_column_letter(colonne_moyenne)}
@@ -282,21 +280,21 @@ def _controler_coherence(ligne, lettres_moyenne, lettres_haut, colonne_moyenne):
 
 
 def _unite_apres(feuille, ligne, col_libelle, col_moyenne):
-    u"""Unité d'une grandeur, cherchée À DROITE de son libellé.
+    u"""Unit of a quantity, searched TO THE RIGHT of its label.
 
-    Les classeurs ne la placent pas au même endroit : le Test 2 la met sur la
-    ligne suivant le libellé, le Test 3 sur la MÊME ligne, deux colonnes plus
-    loin. Une colonne fixe donnerait « Mittelwert » comme unité — erreur
-    silencieuse dans un référentiel figé.
+    Workbooks do not place it at the same position: Test 2 puts it on the row
+    following the label, Test 3 on the SAME row, two columns further. A fixed
+    column would give « Mittelwert » as the unit — a silent error in a frozen
+    reference dataset.
 
     Args:
-        feuille: Feuille en mode valeurs.
-        ligne: Ligne où chercher.
-        col_libelle: Colonne du libellé ; la recherche commence juste après.
-        col_moyenne: Colonne de la moyenne, borne de la recherche.
+        feuille: Sheet in values mode.
+        ligne: Row to search.
+        col_libelle: Label column; search starts just after.
+        col_moyenne: Mean column, upper bound of the search.
 
     Returns:
-        str | None: Première valeur texte non vide trouvée.
+        str | None: First non-empty text value found.
     """
     for colonne in range(col_libelle + 1, max(col_libelle + 2, col_moyenne) + 1):
         valeur = feuille.cell(row=ligne, column=colonne).value
@@ -307,20 +305,20 @@ def _unite_apres(feuille, ligne, col_libelle, col_moyenne):
 
 def _etiquette(feuille, origine, ligne, col_moyenne, col_bloc,
                col_contributeur=None):
-    u"""Lit une étiquette selon l'origine déclarée par la disposition.
+    u"""Reads a label according to the origin declared by the layout.
 
     Args:
-        feuille: Feuille en mode valeurs.
-        origine: Couple `('ligne'|'bloc'|'colonne', n)`, ou `None`.
-        ligne: Ligne de la bande.
-        col_moyenne: Colonne de la moyenne.
-        col_bloc: Première colonne du bloc de contributeurs.
-        col_contributeur: Colonne du premier contributeur. Le Test 5 y porte
-            le nom du cas -- « Test 5A » surmonte la colonne J, et la moyenne
-            correspondante est en Z, huit colonnes plus loin, sans en-tête.
+        feuille: Sheet in values mode.
+        origine: Pair `('ligne'|'bloc'|'colonne', n)`, or `None`.
+        ligne: Band row.
+        col_moyenne: Mean column.
+        col_bloc: First column of the contributor block.
+        col_contributeur: Column of the first contributor. Test 5 carries the
+            case name there -- « Test 5A » heads column J, and the
+            corresponding mean is in Z, eight columns further, with no header.
 
     Returns:
-        str | None: L'étiquette, élaguée, ou `None`.
+        str | None: The label, stripped, or `None`.
     """
     if not origine:
         return None
@@ -340,20 +338,20 @@ def _etiquette(feuille, origine, ligne, col_moyenne, col_bloc,
     return valeur.strip() if isinstance(valeur, str) else valeur
 
 
-#: Statut du critère de somme annuelle, par test, **lu dans la spécification**.
+#: Annual-sum criterion status, per test, **read from the specification**.
 #
-# Ce bloc portait un `INFERE` uniforme et cette phrase : « seul le Test 1 énonce
-# ses critères dans sa spécification ». C'est faux, et les PDF officiels le
-# disent : les spécifications des tests 2, 3 et 5 comportent une section
-# `Testkriterien` qui énonce la bande annuelle mot pour mot, dans la formule
-# même que le moteur applique. Les spécifications des tests 4 et 6 n'en
-# comportent aucune — vérifié par recherche plein texte, zéro occurrence — donc
-# pour eux `INFERE` reste exact.
+# This block formerly carried a uniform `INFERE` and this phrase: "only Test 1
+# states its criteria in its specification". That is false, and the official
+# PDFs say so: the specifications for tests 2, 3 and 5 contain a
+# `Testkriterien` section that states the annual band word for word, in the
+# same formula the engine applies. The specifications for tests 4 and 6
+# contain none — verified by full-text search, zero occurrences — so for them
+# `INFERE` remains correct.
 #
-# Cette table est délibérément indépendante de `engine/sia_bandes_engine.py` :
-# la référence figée est la preuve contre laquelle le moteur est jugé, elle ne
-# peut pas dériver de lui. Les deux sont confrontées par
-# `engine/tests/test_references_bandes.py`, qui échoue si elles divergent.
+# This table is deliberately independent of `engine/sia_bandes_engine.py`:
+# the frozen reference is the evidence against which the engine is judged; it
+# cannot derive from the engine. The two are compared by
+# `engine/tests/test_references_bandes.py`, which fails if they diverge.
 _CRITERE_ENONCE = u'ENONCE_DANS_LA_SPEC'
 _CRITERE_INFERE = u'INFERE'
 _CRITERE_PAR_TEST = {
@@ -391,13 +389,13 @@ _CRITERE_DELEGUE = (
 
 
 def _critere_du_test(numero_test):
-    u"""Renvoie le bloc `critere` d'un test, statut et origine compris.
+    u"""Returns the `critere` block for a test, including status and origin.
 
     Args:
-        numero_test: Numéro du test SIA.
+        numero_test: SIA test number.
 
     Returns:
-        dict: Formule, statut et origine sourcée.
+        dict: Formula, status and sourced origin.
     """
 
     statut, origine = _CRITERE_PAR_TEST.get(
@@ -411,16 +409,16 @@ def _critere_du_test(numero_test):
 
 
 def extraire(numero_test):
-    u"""Extrait et vérifie toutes les bandes d'un test.
+    u"""Extracts and verifies all bands for a test.
 
     Args:
-        numero_test: Numéro du test SIA, ex. 2.
+        numero_test: SIA test number, e.g. 2.
 
     Returns:
-        dict: Structure figée, prête à écrire.
+        dict: Frozen structure, ready to write.
 
     Raises:
-        ExtractionRefusee: Au premier écart avec le classeur.
+        ExtractionRefusee: On the first discrepancy with the workbook.
     """
     if numero_test not in DISPOSITIONS:
         raise ExtractionRefusee(
@@ -446,11 +444,11 @@ def extraire(numero_test):
         formule_moy = sf.cell(row=ligne, column=col_moy).value
         citees = (_colonnes_dune_plage(formule_moy)
                   or _colonnes_citees(formule_moy))
-        # Plage OU liste, Excel ignore les cellules non numeriques dans un
-        # AVERAGE -- typiquement une chaine « ='Daten EnergyPlus'!G11 » laissee
-        # la par le SIA pour signaler un programme qui n a pas livre. Les
-        # contributeurs reels sont donc les cellules NUMERIQUES citees, et
-        # c est exactement ce que la liste du MAX enumere de son cote.
+        # Range OR list, Excel ignores non-numeric cells in an AVERAGE --
+        # typically a string like « ='Daten EnergyPlus'!G11 » left there by
+        # the SIA to flag a programme that did not submit. The actual
+        # contributors are therefore the NUMERIC cells referenced, which is
+        # exactly what the MAX list enumerates on its side.
         lettres = [l for l in citees
                    if _valeur_numerique(
                        sv, ligne, column_index_from_string(l)) is not None]
@@ -522,8 +520,8 @@ def extraire(numero_test):
             entree[nom_meta] = valeur.strip() if isinstance(valeur, str) else valeur
         par_bloc.setdefault((libelle, unite), []).append(entree)
 
-    # Regroupement par (libellé, unité) : c'est la grandeur, quelle que soit
-    # la façon dont le classeur la présente -- en bloc de colonnes ou en ligne.
+    # Grouping by (label, unit): that is the quantity, regardless of how the
+    # workbook presents it -- as a column block or as a row.
     grandeurs = []
     for cle in sorted(par_bloc, key=lambda c: (u'%s' % c[0], u'%s' % c[1])):
         libelle, unite = cle
@@ -553,13 +551,13 @@ def extraire(numero_test):
 
 
 def main(arguments):
-    u"""Point d'entrée en ligne de commande.
+    u"""Command-line entry point.
 
     Args:
-        arguments: Arguments sans le nom du script.
+        arguments: Arguments excluding the script name.
 
     Returns:
-        int: 0 si tout s'est bien passé.
+        int: 0 if everything went well.
     """
     numeros = [int(a) for a in arguments if a.isdigit()]
     if not numeros:

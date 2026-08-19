@@ -1,43 +1,40 @@
 # -*- coding: utf-8 -*-
-u"""Fige les énumérés du module `iesve`, relevés dans une VE réellement ouverte.
+u"""Freezes the `iesve` module enumerated types, read from a real open VE instance.
 
-POURQUOI CE FICHIER EXISTE. La documentation `refs/VEScripts-API-VE2023.pdf`
-§6.1.32.4 liste bien les MEMBRES de ces énumérés, et le relevé les confirme un
-par un. Ce qu'elle ne donne pas :
+WHY THIS FILE EXISTS. The documentation `refs/VEScripts-API-VE2023.pdf`
+§6.1.32.4 does list the MEMBERS of these enums, and the reading confirms them
+one by one. What it does not give:
 
-  * les **valeurs numériques** — aucune n'y figure ;
-  * les **alias** — `struct_fram` (= 26, à côté de `struct_frame`) est absent
-    de la documentation, et rien n'y indique que `ceiling` et `int_floor`
-    partagent la valeur 1 ;
-  * un **membre ajouté depuis** — `surface_tile` (= 37) n'existe pas en
-    VE 2023 ;
-  * le **conteneur réel**, sur lequel elle est contradictoire (voir ci-dessous).
+  * the **numeric values** — none appear;
+  * the **aliases** — `struct_fram` (= 26, alongside `struct_frame`) is absent
+    from the documentation, and nothing indicates that `ceiling` and `int_floor`
+    share the value 1;
+  * a **member added since** — `surface_tile` (= 37) does not exist in VE 2023;
+  * the **actual container**, on which it is contradictory (see below).
 
-La documentation vise VE 2023 et le relevé une VE 2025. Leur concordance a été
-vérifiée membre par membre (`ve_adapter/tests/test_enums_iesve.py`) : à part
-les deux noms ci-dessus, elles sont identiques et rien n'a disparu.
+The documentation targets VE 2023 and the reading a VE 2025. Their agreement
+was verified member by member (`ve_adapter/tests/test_enums_iesve.py`): apart
+from the two names above, they are identical and nothing has disappeared.
 
-CE QUE LE RELEVÉ A PERMIS DE CORRIGER. La sonde du Test 1 échouait sur
-« Enum 'iesve.<class 'iesve.VECdbProject'>.element_categories' introuvable ».
-Deux erreurs cumulées, aucune imputable à la documentation :
+WHAT THE READING ALLOWED TO CORRECT. The Test 1 probe was failing with
+"Enum 'iesve.<class 'iesve.VECdbProject'>.element_categories' not found".
+Two cumulated errors, neither attributable to the documentation:
 
-  1. ces énumérés appartiennent au **module** `iesve`, pas à la classe
-     `VECdbProject`. Le titre « 6.1.32.4 Enums Defined Here » les range sous
-     `VECdbProject` et nous a induits en erreur — mais la prose de la même
-     section écrit `'iesve.construction_class.none'`, c'est-à-dire le chemin
-     module. L'indice était là ; il n'a pas été lu. Un titre de section n'est
-     pas une preuve de conteneur d'exécution ;
-  2. `material_categories` n'a **aucun** membre `opaque` — et la documentation
-     ne l'a jamais prétendu : elle liste 20 familles de bibliothèque (`all`,
-     `concretes`, `insulating`, `timber`…). `opaque` appartient à
-     `construction_class`. Les deux énumérés avaient été confondus par
-     inattention.
+  1. these enums belong to the **module** `iesve`, not to the class
+     `VECdbProject`. The heading "6.1.32.4 Enums Defined Here" places them under
+     `VECdbProject` and misled us — but the prose of the same section writes
+     `'iesve.construction_class.none'`, i.e. the module path. The clue was there;
+     it was not read. A section heading is not proof of a runtime container;
+  2. `material_categories` has **no** member `opaque` — and the documentation
+     never claimed it did: it lists 20 library families (`all`, `concretes`,
+     `insulating`, `timber`...). `opaque` belongs to `construction_class`. The
+     two enums had been confused through inattention.
 
-Usage :
+Usage:
     python scripts/freeze_iesve_enums.py [chemin_du_rapport] [--ecrire]
 
-Le rapport est produit par `Run_VE_SIA4010_Sonde_Test1.py`, au bouton Run
-depuis VE.
+The report is produced by `Run_VE_SIA4010_Sonde_Test1.py`, via the Run button
+from VE.
 """
 
 from __future__ import print_function
@@ -53,16 +50,16 @@ _RACINE = os.path.abspath(os.path.join(_ICI, os.pardir))
 _SORTIE = os.path.join(_RACINE, 'refs', 'reference-data',
                        'iesve-enums-ve2025.json')
 
-#: Rapports de sonde cherchés par défaut, dans l'ordre. Le second couvre le
-#: dépôt d'origine, avant la consolidation du 2026-08-06.
+#: Probe reports searched by default, in order. The second covers the original
+#: repository, before the 2026-08-06 consolidation.
 RAPPORTS_PAR_DEFAUT = (
     os.path.join(_RACINE, 'outputs', 'sonde_test1_600.json'),
     os.path.join(os.path.expanduser('~'), 'Documents', 'SIA_Compliance_Scripts',
                  'outputs', 'sonde_test1_600.json'),
 )
 
-#: Énumérés que le projet utilise réellement. On ne fige pas les 149 : seuls
-#: ceux dont dépend du code, pour que le fichier reste relisable.
+#: Enums the project actually uses. Not all 149 are frozen: only those that
+#: code depends on, so the file remains readable.
 ENUMS_RETENUS = (
     'element_categories',
     'construction_class',
@@ -70,7 +67,7 @@ ENUMS_RETENUS = (
     'AirExchange_type',
 )
 
-#: Membres hérités d'`int` par les IntEnum, à écarter du relevé.
+#: Members inherited from `int` by IntEnums, to exclude from the reading.
 BRUIT_INT = frozenset((
     'as_integer_ratio', 'bit_count', 'bit_length', 'ceiling_', 'conjugate',
     'denominator', 'から', 'from_bytes', 'imag', 'is_integer', 'name', 'names',
@@ -103,20 +100,20 @@ RESERVES = [
 
 
 class RapportInexploitable(RuntimeError):
-    u"""Levée quand le rapport de sonde ne contient pas les énumérés."""
+    u"""Raised when the probe report does not contain the enumerated types."""
 
 
 def _trouver_rapport(chemin=None):
-    u"""Localise un rapport de sonde exploitable.
+    u"""Locates a usable probe report.
 
     Args:
-        chemin: Chemin explicite, sinon les emplacements par défaut.
+        chemin: Explicit path, otherwise the default locations.
 
     Returns:
-        str: Chemin du rapport.
+        str: Report path.
 
     Raises:
-        RapportInexploitable: Si aucun rapport n'est trouvé.
+        RapportInexploitable: If no report is found.
     """
     candidats = (chemin,) if chemin else RAPPORTS_PAR_DEFAUT
     for candidat in candidats:
@@ -129,18 +126,18 @@ def _trouver_rapport(chemin=None):
 
 
 def _enums_du_rapport(rapport):
-    u"""Extrait la table des énumérés du rapport de sonde.
+    u"""Extracts the enum table from the probe report.
 
     Args:
-        rapport: Contenu JSON du rapport.
+        rapport: JSON content of the report.
 
     Returns:
-        dict: `{nom d'enum: {membre: valeur}}`.
+        dict: `{enum name: {member: value}}`.
 
     Raises:
-        RapportInexploitable: Si l'étape d'introspection est absente ou a
-            échoué — auquel cas il n'y a rien à figer, et inventer les valeurs
-            serait exactement ce que ce fichier existe pour éviter.
+        RapportInexploitable: If the introspection step is absent or failed —
+            in which case there is nothing to freeze, and inventing the values
+            would be exactly what this file exists to prevent.
     """
     for etape in rapport.get('etapes', []):
         if etape.get('nom') == 'enums du module iesve':
@@ -155,13 +152,13 @@ def _enums_du_rapport(rapport):
 
 
 def _nettoyer(membres):
-    u"""Retire le bruit hérité d'`int` et ne garde que les valeurs entières.
+    u"""Removes `int`-inherited noise and keeps only integer values.
 
     Args:
-        membres: `{nom: valeur}` tel que relevé.
+        membres: `{name: value}` as read.
 
     Returns:
-        dict: Membres réels de l'énuméré, triés par valeur puis par nom.
+        dict: Actual enum members, sorted by value then name.
     """
     retenus = dict(
         (nom, valeur) for nom, valeur in membres.items()
@@ -171,16 +168,16 @@ def _nettoyer(membres):
 
 
 def construire(chemin_rapport=None):
-    u"""Construit la structure à figer depuis un rapport de sonde.
+    u"""Builds the structure to freeze from a probe report.
 
     Args:
-        chemin_rapport: Chemin explicite du rapport.
+        chemin_rapport: Explicit report path.
 
     Returns:
-        dict: Structure prête à écrire.
+        dict: Structure ready to write.
 
     Raises:
-        RapportInexploitable: Si un énuméré attendu manque au relevé.
+        RapportInexploitable: If an expected enum is missing from the reading.
     """
     chemin = _trouver_rapport(chemin_rapport)
     with io.open(chemin, encoding='utf-8') as flux:
@@ -221,13 +218,13 @@ def construire(chemin_rapport=None):
 
 
 def main(arguments):
-    u"""Point d'entrée en ligne de commande.
+    u"""Command-line entry point.
 
     Args:
-        arguments: Arguments sans le nom du script.
+        arguments: Arguments without the script name.
 
     Returns:
-        int: 0 si tout s'est bien passé.
+        int: 0 if everything went well.
     """
     chemins = [a for a in arguments if not a.startswith('--')]
     donnees = construire(chemins[0] if chemins else None)

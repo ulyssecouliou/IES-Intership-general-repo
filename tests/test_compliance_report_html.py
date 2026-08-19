@@ -109,6 +109,16 @@ class BuildCriteriaTests(unittest.TestCase):
         for r in rows:
             self.assertNotEqual(r["status"], STATUS_CONFORME)
 
+    def test_client_scope_omits_sia4010_criteria_entirely(self):
+        """The client 380/2 report must carry no SIA 4010 row at all."""
+        sia4010 = {"tests": {"test_1": {"status": "OFFICIAL_RESULTS_RECORDED"}}}
+        both = build_criteria({"alerts": []}, sia4010, scope="both")
+        client = build_criteria({"alerts": []}, sia4010, scope="sia3802")
+        self.assertTrue([c for c in both if c["section"] == "sia4010"])
+        self.assertEqual([c for c in client if c["section"] == "sia4010"], [])
+        # The decisive SIA 380/2 global comparison stays in the client scope.
+        self.assertTrue([c for c in client if c["id"] == "SIA3802_GLOBAL_REFERENCE_COMPARISON"])
+
     # helpers to locate specific criteria
     def _window(self, criteria):
         return next(c for c in criteria if "Window Uw" in c["name"])
@@ -230,6 +240,71 @@ class RenderTests(unittest.TestCase):
         finally:
             scoped_out.unlink(missing_ok=True)
             combined_out.unlink(missing_ok=True)
+
+    def test_client_scope_drops_the_sia4010_section_from_the_order(self):
+        scoped_out = Path(__file__).with_name("_sia_dashboard_sect_client.html")
+        combined_out = Path(__file__).with_name("_sia_dashboard_sect_both.html")
+        base = {"alerts": [], "global_reference_comparison": {"status": "NOT_CHECKABLE"}}
+        sia4010 = {"tests": {"test_1": {"status": "EVIDENCE_INCOMPLETE"}}}
+        try:
+            render_compliance_report_html(
+                scoped_out, project_label="Demo", rooms_data=[],
+                sia3802_results=base, sia4010_results=sia4010,
+                language="fr", model_name="Demo.mit", scope="sia3802",
+            )
+            render_compliance_report_html(
+                combined_out, project_label="Demo", rooms_data=[],
+                sia3802_results=base, sia4010_results=sia4010,
+                language="fr", model_name="Demo.mit", scope="both",
+            )
+            _, scoped = self._payload(scoped_out)
+            _, combined = self._payload(combined_out)
+            self.assertNotIn("sia4010", scoped["meta"]["sectionOrder"])
+            self.assertIn("sia4010", combined["meta"]["sectionOrder"])
+        finally:
+            scoped_out.unlink(missing_ok=True)
+            combined_out.unlink(missing_ok=True)
+
+    def test_outstanding_panel_names_the_missing_global_comparison(self):
+        out = Path(__file__).with_name("_sia_dashboard_outstanding.html")
+        try:
+            render_compliance_report_html(
+                out, project_label="Demo", rooms_data=[object()],
+                sia3802_results={
+                    "envelope": {}, "openings": {}, "ventilation": {},
+                    "gains": {}, "setpoints": {}, "hvac": {}, "alerts": [],
+                    "global_reference_comparison": {"status": "NOT_CHECKABLE"},
+                },
+                sia4010_results={},
+                language="fr", model_name="Demo.mit", scope="sia3802",
+            )
+            _, payload = self._payload(out)
+            outstanding = payload["meta"]["outstanding"]
+            self.assertTrue(outstanding)
+            self.assertTrue(
+                any("7.2.5.2" in item["label"] for item in outstanding),
+                outstanding,
+            )
+        finally:
+            out.unlink(missing_ok=True)
+
+    def test_outstanding_panel_is_empty_when_sia3802_is_compliant(self):
+        out = Path(__file__).with_name("_sia_dashboard_clear.html")
+        sia3802 = {
+            "envelope": {}, "openings": {}, "ventilation": {}, "gains": {},
+            "setpoints": {}, "hvac": {}, "alerts": [],
+            "global_reference_comparison": {"status": "REVIEWED_RESULT_AVAILABLE"},
+        }
+        try:
+            render_compliance_report_html(
+                out, project_label="Demo", rooms_data=[object()],
+                sia3802_results=sia3802, sia4010_results={},
+                language="fr", model_name="Demo.mit", scope="sia3802",
+            )
+            _, payload = self._payload(out)
+            self.assertEqual(payload["meta"]["outstanding"], [])
+        finally:
+            out.unlink(missing_ok=True)
 
     def test_unknown_report_scope_is_rejected(self):
         out = Path(__file__).with_name("_sia_dashboard_invalid_scope.html")

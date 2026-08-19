@@ -1,27 +1,27 @@
 # -*- coding: utf-8 -*-
-"""Inventorie la surface reelle du module `iesve` installe.
+"""Inventories the actual surface of the installed `iesve` module.
 
-A lancer depuis la fenetre Scripts d'IESVE (bouton Run). **Lecture seule** :
-n'ouvre aucun projet, ne cree rien, ne simule rien, ne modifie aucun objet VE.
-Le script se contente d'introspecter le module deja charge.
+To be run from the IESVE Scripts window (Run button). **Read-only**:
+opens no project, creates nothing, simulates nothing, modifies no VE object.
+The script only introspects the already-loaded module.
 
-POURQUOI
+WHY
 --------
-L'installation mesuree est **VE 2025** (sonde `Run_VE_Probe_Runtime.py`,
-2026-07-31), alors que la seule documentation en notre possession est
-`refs/VEScripts-API-VE2023.pdf`. Toutes les affirmations d'API de
-`docs/ADR-001-architecture-MSP.md` §3 en sont tirees et n'ont donc jamais ete
-confrontees a la version reellement installee. Une API retrecit rarement, mais
-elle s'etend et se renomme : tant que ce controle n'est pas fait, la couche
-adaptateur repose sur une doc vieille de deux versions majeures.
+The measured installation is **VE 2025** (probe `Run_VE_Probe_Runtime.py`,
+2026-07-31), whereas the only documentation in our possession is
+`refs/VEScripts-API-VE2023.pdf`. All API statements in
+`docs/ADR-001-architecture-MSP.md` §3 are drawn from it and have therefore
+never been confronted with the actually installed version. An API rarely
+shrinks, but it extends and renames: until this check is done, the adapter
+layer rests on documentation two major versions old.
 
-Cette sonde remplace la documentation : elle produit la liste exacte des classes
-et methodes disponibles ici et maintenant.
+This probe replaces the documentation: it produces the exact list of classes
+and methods available here and now.
 
-SORTIE
+OUTPUT
 ------
-`ve_api_surface.json` a cote de ce script, plus un resume en console qui verifie
-directement les symboles dont le MSP depend.
+`ve_api_surface.json` beside this script, plus a console summary that directly
+checks the symbols the MSP depends on.
 """
 
 import inspect
@@ -29,8 +29,8 @@ import json
 import os
 import sys
 
-# Symboles sur lesquels repose l'architecture retenue (ADR-001 §3). Chacun est
-# verifie explicitement : ce sont eux qui doivent exister, pas "l'API en general".
+# Symbols on which the chosen architecture rests (ADR-001 §3). Each is
+# checked explicitly: these are the ones that must exist, not "the API in general".
 SYMBOLES_CRITIQUES = [
     ("ApacheSim", ["save_options", "run_simulation", "get_options"],
      "lancer une simulation sans interface"),
@@ -57,7 +57,7 @@ SYMBOLES_CRITIQUES = [
 
 
 def _membres_publics(objet):
-    """Noms publics d'un objet, tries, sans les attributs prives."""
+    """Public names of an object, sorted, excluding private attributes."""
     try:
         return sorted(nom for nom in dir(objet) if not nom.startswith('_'))
     except Exception:
@@ -104,7 +104,7 @@ def main():
             entree['members'] = _membres_publics(objet)
         surface[nom] = entree
 
-    # --- Verification ciblee des symboles dont le MSP depend ---
+    # --- Targeted check of the symbols the MSP depends on ---
     print('--- symboles critiques (ADR-001 §3) ---')
     manquants = []
     for nom, methodes, usage in SYMBOLES_CRITIQUES:

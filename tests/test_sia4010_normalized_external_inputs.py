@@ -426,8 +426,8 @@ class NormalizedExternalInputTests(unittest.TestCase):
         ):
             load_test2a_external_bindings(readiness)
 
-    #: Une déclaration provisoire bien formée, telle que la produit
-    #: `iso52016_chapter7_test_cell.binding.json` en attendant les émissivités.
+    #: A well-formed provisional declaration, as produced by
+    #: `iso52016_chapter7_test_cell.binding.json` pending the emissivities.
     _DECLARATION_PROVISOIRE = {
         "field": "surface_properties.inside_ir_emissivity",
         "provisional_value": 0.90,
@@ -437,7 +437,7 @@ class NormalizedExternalInputTests(unittest.TestCase):
     }
 
     def _avec_provisoire(self, **remplacements):
-        """Renvoie un mutateur ISO ajoutant une déclaration provisoire."""
+        """Return an ISO mutator adding a provisional declaration."""
 
         declaration = dict(self._DECLARATION_PROVISOIRE)
         declaration.update(remplacements.pop("declaration", {}))
@@ -456,11 +456,11 @@ class NormalizedExternalInputTests(unittest.TestCase):
         return mutate
 
     def test_provisional_binding_value_is_surfaced_not_absorbed(self):
-        """Une valeur provisoire doit rester visible jusqu'au consommateur.
+        """A provisional value must remain visible all the way to the consumer.
 
-        C'est le contraire du comportement d'origine : le manifeste validait la
-        déclaration du rapport et le contenu passait sans que personne ne voie
-        qu'une valeur ne venait pas de la source.
+        This is the opposite of the original behavior: the manifest validated the
+        report declaration and the content passed without anyone seeing
+        that a value did not come from the source.
         """
 
         bindings = load_test2a_external_bindings(
@@ -482,7 +482,7 @@ class NormalizedExternalInputTests(unittest.TestCase):
         self.assertTrue(bindings.to_dict()["carries_provisional_values"])
 
     def test_fully_source_stated_bindings_declare_no_provisional_field(self):
-        """Témoin négatif : sans déclaration, aucun champ provisoire."""
+        """Negative control: without a declaration, no provisional field."""
 
         bindings = load_test2a_external_bindings(self._write_fixture())
         self.assertFalse(bindings.carries_provisional_values)
@@ -496,7 +496,7 @@ class NormalizedExternalInputTests(unittest.TestCase):
         )
 
     def test_provisional_value_that_still_allows_a_claim_is_rejected(self):
-        """La combinaison qui fabrique un verdict crédible et faux est refusée."""
+        """The combination that produces a credible but false verdict is rejected."""
 
         for claim in (True, None):
             with self.subTest(compliance_claim_allowed=claim):
@@ -511,7 +511,7 @@ class NormalizedExternalInputTests(unittest.TestCase):
                     load_test2a_external_bindings(readiness)
 
     def test_provisional_declaration_without_its_derivation_is_rejected(self):
-        """Sans dérivation ni levée, une valeur provisoire est une invention."""
+        """Without derivation or clearance, a provisional value is an invention."""
 
         for cle in ("how_derived", "cleared_by", "why_not_in_source", "field"):
             with self.subTest(missing=cle):
@@ -522,7 +522,7 @@ class NormalizedExternalInputTests(unittest.TestCase):
                     load_test2a_external_bindings(readiness)
 
     def test_provisional_value_of_none_is_rejected(self):
-        """Déclarer un champ provisoire sans valeur ne rend rien exécutable."""
+        """Declaring a provisional field without a value makes nothing executable."""
 
         readiness = self._write_fixture(
             mutate_iso=self._avec_provisoire(

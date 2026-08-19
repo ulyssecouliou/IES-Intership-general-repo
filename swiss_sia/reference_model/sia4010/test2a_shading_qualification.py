@@ -404,9 +404,17 @@ def _create_fixed_closed_optical_probe(
     iesve_module: Any,
     cdb_project: Any,
     setter_plan: Mapping[str, Any],
+    threshold_setter_plan: Optional[Mapping[str, Any]] = None,
     on_mutation_start: Optional[Callable[[], None]] = None,
 ) -> Dict[str, Any]:
-    """Create one unassigned 2E1 candidate and verify direct-name fields."""
+    """Create one unassigned 2E1 candidate and verify co-stored fields.
+
+    The earlier threshold-only probe proves the three native threshold setters
+    in isolation.  This second construction deliberately stores the same
+    threshold fields together with the fixed-closed optical fields.  A PASS
+    therefore removes the ambiguity that two independently qualified objects
+    might not be representable by one future opening construction.
+    """
 
     construction_class = _resolve_enum(
         iesve_module,
@@ -444,9 +452,10 @@ def _create_fixed_closed_optical_probe(
                 exc
             )
         ) from exc
-    missing_fields = sorted(
-        set(FIXED_CLOSED_SETTER_FIELDS) - set(before_properties)
-    )
+    required_fields = set(FIXED_CLOSED_SETTER_FIELDS)
+    if threshold_setter_plan is not None:
+        required_fields.update(SETTER_FIELDS)
+    missing_fields = sorted(required_fields - set(before_properties))
     if missing_fields:
         raise VeApiUnavailableError(
             "New glazed construction is missing 2E1 optical fields: {}".format(
@@ -476,6 +485,21 @@ def _create_fixed_closed_optical_probe(
             setter_plan["external_shade_visible_reflectance"]
         ),
     }
+    if threshold_setter_plan is not None:
+        properties.update(
+            {
+                "external_shade_radiation_to_lower": float(
+                    threshold_setter_plan[
+                        "external_shade_radiation_to_lower"
+                    ]
+                ),
+                "external_shade_radiation_to_raise": float(
+                    threshold_setter_plan[
+                        "external_shade_radiation_to_raise"
+                    ]
+                ),
+            }
+        )
     if "description" in before_properties:
         properties["description"] = FIXED_CLOSED_PROBE_MARKER
     try:
@@ -518,6 +542,9 @@ def _create_fixed_closed_optical_probe(
         "default_layer_count_unchanged_by_probe": layer_count,
         "layers_edited": False,
         "opening_assignment_performed": False,
+        "threshold_and_optical_fields_co_stored": (
+            threshold_setter_plan is not None
+        ),
     }
 
 
@@ -804,14 +831,16 @@ def qualify_test2a_2e1_optical_setters(
         "layers_changed": False,
         "simulation_performed": False,
         "fixed_closed_storage_qualified": False,
+        "combined_threshold_optical_storage_qualified": False,
         "fixed_closed_optical_mapping_qualified": False,
         "dynamic_equivalence_qualified": False,
         "diagnostic_candidate_generation_authorized": False,
         "compliance_claim_allowed": False,
         "remaining_blockers": list(FIXED_CLOSED_OUTPUT_BLOCKERS),
         "claim_guardrail": (
-            "A PASS qualifies storage/read-back only for the direct-name "
-            "normal-incidence/outside-reflectance fields and ON profile. "
+            "A PASS qualifies co-storage/read-back of the two threshold "
+            "fields, direct-name normal-incidence/outside-reflectance fields "
+            "and ON profile on one unassigned CDB construction. "
             "Angular optics, inside reflectance, visible transmission, "
             "secondary heat transfer and 2E1 APS equivalence remain open."
         ),
@@ -835,6 +864,7 @@ def qualify_test2a_2e1_optical_setters(
             iesve_module,
             cdb_project,
             control.fixed_closed_candidate_setter_plan,
+            threshold_setter_plan=control.setter_plan,
             on_mutation_start=mark_mutation_started,
         )
         report.update(
@@ -843,6 +873,7 @@ def qualify_test2a_2e1_optical_setters(
                 "setter_result": result,
                 "mutation_performed": True,
                 "fixed_closed_storage_qualified": True,
+                "combined_threshold_optical_storage_qualified": True,
             }
         )
     except Exception as exc:

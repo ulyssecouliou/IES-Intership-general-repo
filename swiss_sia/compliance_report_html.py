@@ -132,6 +132,8 @@ _UI = {
         "f_cabinet": "Cabinet", "f_project": "Projet", "f_model": "Modèle VE",
         "f_date": "Date d'analyse", "f_framework": "Référentiel", "f_climate": "Climat de calcul",
         "not_specified": "non spécifié",
+        "outstanding_title": "Pour atteindre un verdict CONFORME SIA 380/2",
+        "outstanding_none": "Tous les critères SIA 380/2 évaluables sont réunis : aucun point bloquant restant.",
         "scope": ("<b>Portée.</b> Cet écran restitue l'analyse automatique du modèle. Les critères "
                   "<b>Décisifs</b> pilotent le verdict ; les critères <b>Diagnostic</b> sont des écarts "
                   "aux entrées du projet de référence SIA 380/2, pas des échecs autonomes. Un critère "
@@ -161,6 +163,8 @@ _UI = {
         "f_cabinet": "Office", "f_project": "Project", "f_model": "VE model",
         "f_date": "Analysis date", "f_framework": "Framework", "f_climate": "Calc. climate",
         "not_specified": "not specified",
+        "outstanding_title": "To reach a COMPLIANT SIA 380/2 verdict",
+        "outstanding_none": "Every evaluable SIA 380/2 criterion is met: no outstanding blocker.",
         "scope": ("<b>Scope.</b> This view reflects the automated model analysis. <b>Decisive</b> criteria "
                   "drive the verdict; <b>Diagnostic</b> criteria are deviations from SIA 380/2 reference-project "
                   "inputs, not standalone failures. A <b>Not checkable</b> criterion never becomes a pass: "
@@ -379,8 +383,16 @@ def _sia4010_criteria(sia4010: Dict[str, Any]) -> List[Dict[str, Any]]:
 def build_criteria(
     sia3802_results: Optional[Dict[str, Any]],
     sia4010_results: Optional[Dict[str, Any]],
+    scope: str = "both",
 ) -> List[Dict[str, Any]]:
-    """Map the real analysis output to the dashboard's criteria list (pure)."""
+    """Map the real analysis output to the dashboard's criteria list (pure).
+
+    In the client ``"sia3802"`` scope the SIA 4010 criteria are omitted
+    entirely: those rows report the toolchain's validation-class state against
+    reference cases, never a statement about the client building, so they must
+    not appear in a client deliverable.
+    """
+    report_scope = normalize_report_scope(scope)
     sia3802 = dict(sia3802_results or {})
     alerts = list(sia3802.get("alerts", []) or [])
     criteria: List[Dict[str, Any]] = []
@@ -392,7 +404,8 @@ def build_criteria(
         criteria.append(_classify(entry, alerts))
     # The decisive global comparison, from the live reviewed-comparison status.
     criteria.append(_global_comparison_criterion(sia3802))
-    criteria.extend(_sia4010_criteria(sia4010_results or {}))
+    if report_scope != "sia3802":
+        criteria.extend(_sia4010_criteria(sia4010_results or {}))
     return criteria
 
 
@@ -430,6 +443,105 @@ def _verdict_banner(
     return {"tone": tone, "title": title, "detail": detail}
 
 
+_DOMAIN_LABELS = {
+    "fr": {
+        "envelope": "Enveloppe", "openings": "Ouvertures", "ventilation": "Ventilation",
+        "gains": "Gains internes", "setpoints": "Consignes", "hvac": "CVC / Génération",
+    },
+    "en": {
+        "envelope": "Envelope", "openings": "Openings", "ventilation": "Ventilation",
+        "gains": "Internal gains", "setpoints": "Setpoints", "hvac": "HVAC / Generation",
+    },
+}
+
+
+def _outstanding_items(verdict: Any, sia3802: Dict[str, Any], code: str) -> List[Dict[str, str]]:
+    """List, in reading order, exactly what blocks a COMPLIANT SIA 380/2 verdict.
+
+    Derived from the live verdict only, so the panel can never disagree with the
+    headline. It reports the SIA 380/2 track alone: the decisive global
+    comparison first, then each domain that is non-compliant or undetermined,
+    each with the concrete input that would resolve it. An empty list means the
+    SIA 380/2 verdict is COMPLIANT.
+    """
+    fr = code == "fr"
+    labels = _DOMAIN_LABELS.get(code, _DOMAIN_LABELS["en"])
+    items: List[Dict[str, str]] = []
+
+    comparison = (sia3802 or {}).get("global_reference_comparison", {}) or {}
+    cstatus = str(comparison.get("status") or "")
+    if cstatus == "REVIEWED_RESULT_CONTRADICTS_ACCEPTANCE":
+        items.append({
+            "tone": "crit",
+            "label": "Comparaison globale (§ 7.2.5.2)" if fr else "Global comparison (§ 7.2.5.2)",
+            "detail": (
+                "La valeur du projet dépasse celle du projet de référence. "
+                "Corriger les valeurs/unités/colonnes ou retirer l'acceptation : "
+                "l'acceptation ne peut pas contredire les chiffres."
+                if fr else
+                "The project value exceeds the reference project value. Correct the "
+                "values/units/columns or withdraw acceptance: acceptance cannot "
+                "override the figures."
+            ),
+        })
+    elif cstatus != "REVIEWED_RESULT_AVAILABLE":
+        items.append({
+            "tone": "warn",
+            "label": "Comparaison globale (§ 7.2.5.2)" if fr else "Global comparison (§ 7.2.5.2)",
+            "detail": (
+                "C'est la porte décisive de conformité SIA 380/2, non calculée "
+                "automatiquement. Fournir l'enregistrement relecteur accepté "
+                "(valeur projet ≤ valeur de référence, unité, réviseur, date, "
+                "source) dans sia4010_evidence/."
+                if fr else
+                "This is the decisive SIA 380/2 compliance gate, not computed "
+                "automatically. Provide the accepted reviewer record (project "
+                "value ≤ reference value, unit, reviewer, date, source) under "
+                "sia4010_evidence/."
+            ),
+        })
+
+    for dv in verdict.domains:
+        label = labels.get(dv.domain, dv.domain)
+        if dv.status == NOT_COMPLIANT:
+            items.append({
+                "tone": "crit",
+                "label": label,
+                "detail": (
+                    "{n} constat(s) bloquant(s) avéré(s) à corriger dans le modèle.".format(n=dv.blocking_count)
+                    if fr else
+                    "{n} determined blocking finding(s) to correct in the model.".format(n=dv.blocking_count)
+                ),
+            })
+        elif dv.status == NOT_DETERMINED:
+            if dv.reason == "domain_not_evaluated":
+                items.append({
+                    "tone": "warn",
+                    "label": label,
+                    "detail": (
+                        "Domaine non évalué : aucune pièce ou donnée exploitable."
+                        if fr else
+                        "Domain not evaluated: no usable room or data."
+                    ),
+                })
+            else:
+                items.append({
+                    "tone": "warn",
+                    "label": label,
+                    "detail": (
+                        "Preuve incomplète : au moins un critère est non vérifiable "
+                        "ou repose sur un placeholder. Renseigner la donnée manquante "
+                        "dans le modèle (ou acquérir la source normative) pour lever "
+                        "l'indétermination."
+                        if fr else
+                        "Evidence incomplete: at least one criterion is unverifiable "
+                        "or rests on a placeholder. Provide the missing model input "
+                        "(or acquire the normative source) to resolve it."
+                    ),
+                })
+    return items
+
+
 def build_payload(
     *,
     project_label: str,
@@ -457,16 +569,25 @@ def build_payload(
         {"k": ui["f_framework"], "v": "SIA 380/2:2022 · 4010:2023", "mono": True},
         {"k": ui["f_climate"], "v": "SIA 2028 DRY · Zürich-Kloten", "mono": True},
     ]
-    criteria = build_criteria(sia3802_results, sia4010_results)
+    report_scope = normalize_report_scope(scope)
+    criteria = build_criteria(sia3802_results, sia4010_results, report_scope)
+    # In the client scope the SIA 4010 section is dropped so no empty header
+    # advertises a track the client report deliberately excludes.
+    section_order = [
+        section
+        for section in _SECTION_ORDER
+        if not (report_scope == "sia3802" and section == "sia4010")
+    ]
     return {
         "meta": {
             "lang": code,
             "ui": ui,
             "sectionLabels": _SECTION_LABELS[code],
-            "sectionOrder": _SECTION_ORDER,
+            "sectionOrder": section_order,
             "statusLabels": _STATUS_LABELS[code],
             "identification": identification,
             "verdict": _verdict_banner(verdict, code, scope),
+            "outstanding": _outstanding_items(verdict, dict(sia3802_results or {}), code),
             "reference": reference,
         },
         "criteria": criteria,

@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
-u"""Tests de l'import de géométrie (`scripts/importer_geometrie_test1.py`).
+u"""Tests of the geometry import (`scripts/importer_geometrie_test1.py`).
 
-Ce script est le seul du dépôt qui MODIFIE volontairement le modèle VE. Deux
-choses doivent donc tenir :
+This script is the only one in the repository that deliberately MODIFIES the
+VE model. Two things must therefore hold:
 
-* il ne doit pas se déclencher par accident — d'où un lanceur séparé de la
-  sonde, et un avertissement dans son rapport ;
-* la **confrontation des surfaces** doit mordre. Un import qui ne lève pas ne
-  prouve rien : les épaisseurs de couche à 1 mm ont été créées sans la moindre
-  erreur et valaient un R quarante-sept fois trop faible.
+* it must not trigger by accident — hence a separate launcher from the
+  probe, and a warning in its report;
+* the **surface confrontation** must bite. An import that does not raise proves
+  nothing: the 1 mm layer thicknesses were created without any error and yielded
+  an R forty-seven times too low.
 """
 
 import io
@@ -29,18 +29,18 @@ def cotes():
 
 
 # --------------------------------------------------------------------------
-# Les totaux attendus, agrégés comme VE les rend
+# The expected totals, aggregated as VE returns them
 # --------------------------------------------------------------------------
 
 def test_les_murs_sont_agreges_comme_get_areas_les_rend(cotes):
-    """`get_areas()` ne donne pas une entrée par face : il agrège. Comparer
-    face à face serait comparer ce que VE ne sépare pas."""
+    """`get_areas()` does not give one entry per face: it aggregates. Comparing
+    face by face would compare what VE does not separate."""
     attendus = importateur.totaux_attendus(cotes)
     assert attendus['murs_exterieurs'] == pytest.approx(9.6 + 21.6 + 16.2 * 2)
 
 
 def test_le_vitrage_est_compte_a_part_des_murs(cotes):
-    """Le confondre avec l'opaque doublerait la paroi."""
+    """Confusing it with the opaque would double the wall."""
     attendus = importateur.totaux_attendus(cotes)
     assert attendus['vitrage_exterieur'] == pytest.approx(12.0)
     assert attendus['murs_exterieurs'] == pytest.approx(63.6)
@@ -53,7 +53,7 @@ def test_plancher_et_toiture_valent_la_surface_au_sol(cotes):
 
 
 # --------------------------------------------------------------------------
-# La confrontation — la seule étape qui prouve quelque chose
+# The confrontation — the only step that proves something
 # --------------------------------------------------------------------------
 
 def test_des_surfaces_identiques_concordent():
@@ -69,15 +69,14 @@ def test_un_ecart_de_surface_est_declare_divergent():
 
 
 def test_le_flottant_32_bits_est_tolere():
-    """VE stocke en float32 : une egalite exacte echouerait sur un import
-    pourtant correct."""
+    """VE stores in float32: an exact equality would fail on a correct import."""
     verdicts = importateur.comparer({'plancher': 48.0},
                                     {'plancher': 48.00000023841858})
     assert verdicts['plancher']['statut'] == 'CONCORDE'
 
 
 def test_un_poste_absent_nest_jamais_lu_comme_zero():
-    """C'est la regle centrale du depot : une absence n est pas une mesure."""
+    """This is the central rule of the repository: an absence is not a measurement."""
     verdicts = importateur.comparer({'toiture': 48.0}, {'toiture': None})
     assert verdicts['toiture']['statut'] == 'NON_RELEVE'
     assert verdicts['toiture']['releve_m2'] is None
@@ -85,7 +84,7 @@ def test_un_poste_absent_nest_jamais_lu_comme_zero():
 
 
 def test_le_verdict_est_rendu_poste_par_poste():
-    """Un booleen global masquerait QUEL poste diverge."""
+    """A global boolean would hide WHICH item diverges."""
     verdicts = importateur.comparer(
         {'plancher': 48.0, 'toiture': 48.0},
         {'plancher': 48.0, 'toiture': 12.0})
@@ -94,17 +93,17 @@ def test_le_verdict_est_rendu_poste_par_poste():
 
 
 def test_lecart_signe_est_conserve():
-    """Trop grand et trop petit ne se corrigent pas pareil."""
+    """Too large and too small are not corrected the same way."""
     verdicts = importateur.comparer({'plancher': 48.0}, {'plancher': 50.0})
     assert verdicts['plancher']['ecart_m2'] > 0
 
 
 # --------------------------------------------------------------------------
-# Cumul des surfaces relues
+# Cumulation of read-back surfaces
 # --------------------------------------------------------------------------
 
 class CorpsFactice(object):
-    """Double de `VEBody`, rendant les clés réelles de `get_areas()`."""
+    """Stand-in for `VEBody`, returning the real keys of `get_areas()`."""
 
     def __init__(self, aires):
         self._aires = aires
@@ -121,8 +120,8 @@ def test_les_surfaces_sont_cumulees_sur_tous_les_corps():
 
 
 def test_un_plancher_interieur_et_exterieur_sont_additionnes():
-    """VE distingue `ext_floor_area` et `int_floor_area` ; la cellule n a
-    qu un plancher, mais l agregation doit tenir dans les deux cas."""
+    """VE distinguishes `ext_floor_area` and `int_floor_area`; the cell has
+    only one floor, but the aggregation must hold in both cases."""
     corps = [CorpsFactice({'ext_floor_area': 48.0, 'int_floor_area': 0.0})]
     assert importateur.totaux_releves(corps)['plancher'] == pytest.approx(48.0)
 
@@ -144,12 +143,12 @@ def test_sans_aucun_corps_tous_les_postes_restent_nuls_pas_zero():
 
 
 # --------------------------------------------------------------------------
-# Formes d'appel de import_file
+# Call shapes for import_file
 # --------------------------------------------------------------------------
 
 def test_la_premiere_forme_qui_repond_est_retenue():
-    """La signature n est pas introspectable : sa docstring se reduit a
-    « cap_height ». On essaie, et on consigne ce qui marche."""
+    """The signature is not introspectable: its docstring reduces to
+    'cap_height'. We try, and record what works."""
     class Importeur(object):
         @staticmethod
         def import_file(chemin, *arguments):
@@ -162,8 +161,8 @@ def test_la_premiere_forme_qui_repond_est_retenue():
 
 
 def test_les_echecs_sont_tous_consignes():
-    """Les messages d erreur nomment ce que l API attend : les perdre
-    obligerait a refaire l essai."""
+    """Error messages name what the API expects: losing them
+    would require redoing the trial."""
     class Importeur(object):
         @staticmethod
         def import_file(chemin, *arguments):
@@ -176,19 +175,19 @@ def test_les_echecs_sont_tous_consignes():
 
 
 def test_les_formes_vont_du_plus_simple_au_plus_complet():
-    """Essayer d abord la forme complete risquerait de passer avec des
-    valeurs par defaut non voulues."""
+    """Trying the complete form first would risk passing with
+    unwanted default values."""
     longueurs = [len(arguments) for _, arguments in importateur.FORMES_DAPPEL]
     assert longueurs == sorted(longueurs)
     assert longueurs[0] == 0
 
 
 # --------------------------------------------------------------------------
-# Garde-fous
+# Safeguards
 # --------------------------------------------------------------------------
 
 def test_le_rapport_avertit_que_le_modele_est_modifie():
-    """C'est le seul script du depot qui mute volontairement le modele."""
+    """This is the only script in the repository that deliberately mutates the model."""
     rapport = importateur.importer()
     assert 'MODIFIE' in rapport['avertissement']
     assert 'JETABLE' in rapport['avertissement']
@@ -226,7 +225,7 @@ def test_le_lanceur_avertit_avant_de_muter():
         pytest.skip(u'lanceur absent')
     with io.open(chemin, encoding='utf-8') as flux:
         source = flux.read()
-    # Le lanceur est passe a l anglais ; la propriete gardee est la meme :
-    # il doit AVERTIR avant de muter, et nommer le projet jetable.
+    # The launcher was moved to English; the preserved property is the same:
+    # it must WARN before mutating, and name the throwaway project.
     assert 'MODIFIES the VE model' in source
     assert 'THROWAWAY' in source

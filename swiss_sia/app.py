@@ -7,6 +7,7 @@ checks, and Excel report generation.
 from __future__ import annotations
 
 import importlib
+import json
 import logging
 import os
 import re
@@ -69,6 +70,7 @@ reference_project_module = _reload_local_module("reference_project")
 company_profile_module = _reload_local_module("company_profile")
 compliance_report_pdf_module = _reload_local_module("compliance_report_pdf")
 compliance_report_html_module = _reload_local_module("compliance_report_html")
+compliance_criteria_evaluator_module = _reload_local_module("compliance_criteria_evaluator")
 excel_report_module = _reload_local_module("excel_report")
 
 VEDataExtractor = data_extractor_module.VEDataExtractor
@@ -88,15 +90,26 @@ render_compliance_report_pdf = (
 render_compliance_report_html = (
     compliance_report_html_module.render_compliance_report_html
 )
+evaluate_client_compliance = (
+    compliance_criteria_evaluator_module.evaluate_client_compliance
+)
 # The client chooses the report language; Swiss work runs in DE/FR/IT plus EN.
 REPORT_LANGUAGE_ENV_VAR = "SIA_REPORT_LANGUAGE"
-# Report scope. The default full report carries both SIA 380/2 and the SIA 4010
-# readiness/validation evidence. A client 380/2-only deliverable is selected by
-# setting SIA_REPORT_SCOPE to one of the tokens below, so the workbook drops
-# every SIA 4010 sheet, card and label except the protective disclaimers and the
-# provenance citations that a professional report must keep.
+# Report scope. The DEFAULT deliverable is the client SIA 380/2-only report:
+# SIA 4010 validation classes qualify the toolchain against reference cases, not
+# a client building, so they must never appear in a client report. The full
+# internal report (SIA 380/2 + SIA 4010 readiness) is opt-in, selected by setting
+# SIA_REPORT_SCOPE to one of the internal tokens below, or by calling
+# ``main(include_sia4010=True)`` from a dedicated internal launcher.
 REPORT_SCOPE_ENV_VAR = "SIA_REPORT_SCOPE"
-_CLIENT_ONLY_SCOPE_TOKENS = {"sia3802", "sia380", "sia3802_only", "380_2_only", "client"}
+_INTERNAL_FULL_SCOPE_TOKENS = {
+    "both",
+    "full",
+    "internal",
+    "sia4010",
+    "sia380_and_sia4010",
+    "sia3802_and_sia4010",
+}
 HealthScoreCalculator = health_score_module.HealthScoreCalculator
 ExcelReportGenerator = excel_report_module.ExcelReportGenerator
 scan_sia3802_justifications = evidence_manager_module.scan_sia3802_justifications
@@ -908,15 +921,17 @@ def _build_preflight_checks(
 def _resolve_include_sia4010(explicit: Optional[bool]) -> bool:
     """Decide whether the workbook includes the SIA 4010 evidence sections.
 
-    An explicit caller argument wins so a dedicated client launcher can force
-    the 380/2-only deliverable. Otherwise the SIA_REPORT_SCOPE environment
-    variable selects it; any other value keeps the default full report.
+    An explicit caller argument wins so a dedicated internal launcher can force
+    the full report. Otherwise the default is the client SIA 380/2-only
+    deliverable, and the full report is opt-in only: the SIA_REPORT_SCOPE
+    environment variable must name one of the internal tokens for the SIA 4010
+    sections to be included.
     """
 
     if explicit is not None:
         return explicit
     scope = os.environ.get(REPORT_SCOPE_ENV_VAR, "").strip().lower()
-    return scope not in _CLIENT_ONLY_SCOPE_TOKENS
+    return scope in _INTERNAL_FULL_SCOPE_TOKENS
 
 
 def main(include_sia4010: Optional[bool] = None):
@@ -1129,6 +1144,37 @@ def main(include_sia4010: Optional[bool] = None):
         except Exception as exc:
             # The HTML dashboard is an additional deliverable; never lose the run.
             logger.error("Could not render the compliance dashboard HTML: %s", exc)
+
+        logger.info("Evaluating the client SIA 380/2 compliance-criteria manifest.")
+        compliance_criteria_path = None
+        try:
+            criteria_manifest = evaluate_client_compliance(
+                sia3802_results,
+                sia4010_results,
+                dynamic_results,
+                rooms_data,
+                preflight_checks,
+                scope=report_scope,
+                generated_at=datetime.now().strftime("%Y-%m-%d %H:%M"),
+                project_label=project_label,
+                model_name=_object_label(data_extractor.model, ""),
+            )
+            compliance_criteria_path = (
+                os.path.splitext(unique_report_path)[0] + "_compliance_criteria.json"
+            )
+            with open(compliance_criteria_path, "w", encoding="utf-8") as handle:
+                json.dump(criteria_manifest, handle, ensure_ascii=False, indent=2)
+                handle.write("\n")
+            evaluation = criteria_manifest.get("evaluation", {})
+            logger.info(
+                "Compliance-criteria manifest: %s (overall SIA 380/2 %s; tally %s)",
+                compliance_criteria_path,
+                evaluation.get("overall_sia3802_status"),
+                evaluation.get("criteria_status_tally"),
+            )
+        except Exception as exc:
+            # The criteria manifest is an additional deliverable; never lose the run.
+            logger.error("Could not evaluate the compliance-criteria manifest: %s", exc)
 
         evidence_pack_result = None
         try:

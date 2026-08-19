@@ -1,31 +1,30 @@
 # -*- coding: utf-8 -*-
-u"""Sonde des variables de résultats d'un fichier `.aps`.
+u"""Probe of result variables from a `.aps` file.
 
-CE QU'ELLE DÉBLOQUE. Les tests SIA 2 à 6 comparent 20 grandeurs
-(« Wärmezufuhr Lufterwärmer », « Energiebedarf Ventilatoren », « Hilfsenergie
-WRG »…) dont **aucune n'a de nom de variable VE établi** :
-`ve_adapter/bandes_adapter.py` les déclare toutes `aps_varname: None`. Tant que
-ce relevé n'existe pas, l'extraction refuse de tourner — à raison : deviner un
-nom produirait un nombre plausible et faux.
+WHAT IT UNLOCKS. SIA tests 2 to 6 compare 20 quantities
+("Wärmezufuhr Lufterwärmer", "Energiebedarf Ventilatoren", "Hilfsenergie
+WRG"...) for which **none has an established VE variable name**:
+`ve_adapter/bandes_adapter.py` declares all of them `aps_varname: None`. As
+long as this reading does not exist, extraction refuses to run — rightly so:
+guessing a name would produce a plausible but false number.
 
-Cette sonde liste ce que le fichier contient RÉELLEMENT, à tous les niveaux
-utiles. Elle ne lie rien : l'appariement libellé allemand → variable VE se fait
-ensuite, à la main, en confrontant le relevé au classeur SIA.
+This probe lists what the file actually contains, at all useful levels. It
+binds nothing: the matching of German label → VE variable is done afterwards,
+by hand, by confronting the reading against the SIA workbook.
 
-CE QU'ELLE N'EST PAS. Aucune valeur produite ici n'est un résultat de
-validation. La sonde lit des noms, des unités et des tailles de séries ; elle
-ne juge aucun écart.
+WHAT IT IS NOT. No value produced here is a validation result. The probe reads
+names, units and series sizes; it judges no discrepancy.
 
-EN QUOI ELLE DIFFÈRE DE `Run_VE_SIA4010_APS_Probe.py`, qui existait déjà.
-Celle-là filtre les variables sur onze jetons choisis pour les Tests 1 et 2
-(`load`, `solar`, `radiation`, `gain`, `window`, `temperature`…) et écrit son
-rapport dans le dossier du projet VE. **Aucun de ces jetons ne désigne un
-ventilateur, un humidificateur ni une récupération de chaleur** : elle écarte
-précisément ce qui manque aux tests 4 à 6. Celle-ci ne filtre rien, interroge
-en plus les systèmes Apache, les postes d'énergie et les unités, et écrit sous
-`outputs/`. Les deux sont en lecture seule et peuvent coexister.
+HOW IT DIFFERS FROM `Run_VE_SIA4010_APS_Probe.py`, which already existed.
+That one filters variables on eleven tokens chosen for Tests 1 and 2
+(`load`, `solar`, `radiation`, `gain`, `window`, `temperature`...) and writes
+its report to the VE project folder. **None of those tokens names a fan, a
+humidifier or a heat-recovery unit**: it filters out exactly what tests 4 to 6
+need. This one filters nothing, additionally queries Apache systems, energy
+metering and units, and writes under `outputs/`. Both are read-only and can
+coexist.
 
-Elle écrit `outputs/sonde_aps.json`. C'est ce fichier qu'il faut renvoyer.
+It writes `outputs/sonde_aps.json`. That is the file to send back.
 """
 
 from __future__ import print_function
@@ -43,44 +42,44 @@ if _RACINE not in sys.path:
 from scripts.run_test1_dans_ve import (  # noqa: E402
     LIMITE_ELEMENTS, _dans_ve, _membres, _serialisable, dire)
 
-#: Plafond que `_serialisable` applique à toute séquence consignée dans une
-#: étape. Il a tronqué le relevé du 2026-08-06 à 500 variables, dont aucune de
-#: niveau « z ». Re-exporté pour que les tests puissent viser ce seuil : c'est
-#: précisément ce que la liste complète doit contourner.
+#: Ceiling that `_serialisable` applies to any sequence recorded in a step.
+#: It truncated the 2026-08-06 reading to 500 variables, none of level "z".
+#: Re-exported so that tests can target this threshold: it is precisely what
+#: the complete list must work around.
 LIMITE_ELEMENTS_ETAPE = LIMITE_ELEMENTS
 
 CHEMIN_RAPPORT = os.path.join(_RACINE, 'outputs', 'sonde_aps.json')
 
-#: Niveaux de résultat interrogés par `get_variables`. Les libellés SIA des
-#: tests 4 à 6 (Lufterwärmer, Luftkühler, WRG, Ventilatoren) désignent des
-#: organes de traitement d'air : ils vivent au niveau système, pas au niveau
-#: du local. On interroge les trois pour ne rien présumer.
+#: Result levels queried by `get_variables`. The SIA labels for tests 4 to 6
+#: (Lufterwärmer, Luftkühler, WRG, Ventilatoren) name air-handling components:
+#: they live at the system level, not the room level. All three are queried to
+#: avoid any assumption.
 NIVEAUX = (
     ('z', u'local / zone'),
     ('v', u'systeme Apache'),
     ('w', u'meteo'),
 )
 
-#: Sous-dossiers de projet VE où cherche-t-on un `.aps`. La liste est indicative
-#: et la recherche descend récursivement : on ne suppose pas l'arborescence.
+#: VE project sub-folders in which a `.aps` is searched. The list is indicative
+#: and the search descends recursively: the directory tree is not assumed.
 PROFONDEUR_RECHERCHE = 3
 
-#: Au-delà, on cesse d'énumérer : un projet volumineux produirait un rapport
-#: illisible sans rien apprendre de plus.
+#: Beyond this, enumeration stops: a large project would produce an unreadable
+#: report without conveying anything more.
 LIMITE_FICHIERS = 40
 
 
 def trouver_aps(racine_projet):
-    u"""Cherche les fichiers `.aps` sous un dossier de projet VE.
+    u"""Searches for `.aps` files under a VE project folder.
 
     Args:
-        racine_projet: Dossier du projet VE.
+        racine_projet: VE project folder.
 
     Returns:
-        list[str]: Chemins trouvés, les plus récents d'abord. Vide si aucun.
+        list[str]: Paths found, most recent first. Empty if none.
     """
-    # `VEProject.path` n'est pas garanti etre une chaine : `os.path.isdir(3)`
-    # interpreterait un entier comme un descripteur de fichier.
+    # `VEProject.path` is not guaranteed to be a string: `os.path.isdir(3)`
+    # would interpret an integer as a file descriptor.
     if not isinstance(racine_projet, str) or not os.path.isdir(racine_projet):
         return []
     trouves = []
@@ -100,17 +99,17 @@ def trouver_aps(racine_projet):
 
 
 def _resume_serie(serie):
-    u"""Décrit une série sans la recopier.
+    u"""Describes a series without copying it.
 
-    Une série horaire fait 8760 points : la coucher entière dans le rapport le
-    rendrait illisible. Son étendue et ses premières valeurs suffisent à
-    reconnaître une grandeur et à repérer une unité aberrante.
+    An hourly series has 8760 points: including it in full would make the
+    report unreadable. Its range and first values are enough to recognise a
+    quantity and spot an erroneous unit.
 
     Args:
-        serie: Séquence de nombres, ou toute autre chose.
+        serie: Sequence of numbers, or anything else.
 
     Returns:
-        dict: Résumé, ou description de ce qui a empêché de le faire.
+        dict: Summary, or a description of what prevented it.
     """
     try:
         valeurs = [v for v in serie if isinstance(v, (int, float))]
@@ -128,14 +127,14 @@ def _resume_serie(serie):
 
 
 def sonder(chemin_aps=None):
-    u"""Relève le contenu d'un `.aps` : variables, systèmes, postes d'énergie.
+    u"""Reads the content of a `.aps`: variables, systems, energy metering.
 
     Args:
-        chemin_aps: Fichier à ouvrir. Si `None`, cherche dans le projet VE
-            courant et prend le plus récent.
+        chemin_aps: File to open. If `None`, searches in the current VE
+            project and takes the most recent.
 
     Returns:
-        dict: Rapport, écrit aussi sur disque.
+        dict: Report, also written to disk.
     """
     rapport = {
         'dans_ve': _dans_ve(),
@@ -148,14 +147,14 @@ def sonder(chemin_aps=None):
     }
 
     def etape(nom, fonction):
-        u"""Exécute une étape en consignant son issue.
+        u"""Executes a step recording its outcome.
 
         Args:
-            nom: Libellé de l'étape.
-            fonction: Appelable sans argument.
+            nom: Step label.
+            fonction: Callable taking no argument.
 
         Returns:
-            Any: Le résultat, ou `None` en cas d'échec.
+            Any: The result, or `None` on failure.
         """
         try:
             valeur = fonction()
@@ -184,7 +183,7 @@ def sonder(chemin_aps=None):
 
     import iesve
 
-    # --- Localiser le fichier -------------------------------------------
+    # --- Locate the file -------------------------------------------
     if chemin_aps is None:
         projet = etape(u'projet courant',
                        lambda: iesve.VEProject.get_current_project())
@@ -219,11 +218,11 @@ def sonder(chemin_aps=None):
 
 
 def _sans_aps():
-    u"""Signale l'absence de fichier de résultats.
+    u"""Signals the absence of a results file.
 
     Raises:
-        RuntimeError: Toujours. Une étape en échec explicite vaut mieux qu'un
-            rapport silencieusement vide.
+        RuntimeError: Always. An explicit failure step is better than a
+            silently empty report.
     """
     raise RuntimeError(
         u'aucun .aps sous le dossier du projet. Lancer une simulation '
@@ -231,38 +230,38 @@ def _sans_aps():
 
 
 def _relever(etape, lecteur, rapport=None):
-    u"""Interroge toutes les portes d'entrée utiles du `ResultsReader`.
+    u"""Queries all useful entry points of the `ResultsReader`.
 
     Args:
-        etape: Fonction d'exécution consignée.
-        lecteur: `ResultsReader` ouvert.
-        rapport: Rapport où déposer la liste de variables COMPLÈTE, hors du
-            plafond appliqué aux étapes.
+        etape: Recorded execution function.
+        lecteur: Open `ResultsReader`.
+        rapport: Report where the COMPLETE variable list is deposited, outside
+            the ceiling applied to steps.
     """
-    # --- Cadre temporel : sans lui, une somme annuelle n'a pas de sens.
+    # --- Time frame: without it, an annual sum has no meaning.
     for nom in ('results_per_day', 'first_day', 'last_day', 'year',
                 'weather_file', 'hvac_file'):
         etape(u'%s' % nom, lambda n=nom: getattr(lecteur, n))
 
-    # --- Variables : le coeur du releve.
+    # --- Variables: the core of the reading.
     #
-    # TRANCHE PAR L EXECUTION, le 2026-08-06 sur ZOER_C1.aps :
-    # `get_variables()` SANS argument repond ; `get_variables('z')` leve
-    # ArgumentError. `swiss_sia` avait raison, `bandes_adapter` avait tort.
-    # Le niveau se lit sur `model_level`, entree par entree.
+    # CONFIRMED BY EXECUTION on 2026-08-06 on ZOER_C1.aps:
+    # `get_variables()` WITHOUT argument responds; `get_variables('z')` raises
+    # ArgumentError. `swiss_sia` was right, `bandes_adapter` was wrong.
+    # The level is read from `model_level`, entry by entry.
     #
-    # Les formes a argument restent relevees : si une version de VE les
-    # acceptait, le rapport le dirait au lieu de laisser croire au contraire.
+    # The argument forms are still read: if a VE version accepted them, the
+    # report would say so rather than letting the opposite be assumed.
     variables = etape(u'get_variables()  [sans argument]',
                       lambda: lecteur.get_variables())
     for niveau, libelle in NIVEAUX:
         etape(u'get_variables(%r)  [%s]' % (niveau, libelle),
               lambda n=niveau: lecteur.get_variables(n))
 
-    # La liste complete est deposee HORS des etapes : le plafond de 500
-    # elements y avait tronque le releve du 2026-08-06 a 500 entrees, dont
-    # aucune de niveau « z ». Un garde-fou destine a la lisibilite avait ainsi
-    # coupe exactement ce que la sonde existe pour rapporter.
+    # The complete list is deposited OUTSIDE the steps: the 500-element ceiling
+    # had truncated the 2026-08-06 reading to 500 entries, none of level "z".
+    # A guard intended for readability had cut exactly what the probe exists to
+    # report.
     if rapport is not None and variables:
         rapport['variables'] = [_variable_lisible(v) for v in variables]
         rapport['variables_par_niveau'] = _compter_par_niveau(variables)
@@ -270,55 +269,55 @@ def _relever(etape, lecteur, rapport=None):
              % (len(variables),
                 _en_clair(rapport['variables_par_niveau'])))
 
-    # --- Locaux : les grandeurs de niveau z se lisent par piece.
+    # --- Rooms: level-z quantities are read per room.
     etape(u'get_room_list', lambda: lecteur.get_room_list())
     etape(u'get_room_ids', lambda: lecteur.get_room_ids())
 
-    # --- Systemes Apache : c'est la que vivent Luftkuhler, Lufterwarmer et
-    # --- WRG, s'ils existent dans le modele.
+    # --- Apache systems: this is where Luftkühler, Lufterwärmer and
+    # --- WRG live, if they exist in the model.
     systemes = etape(u'get_apache_systems', lambda: lecteur.get_apache_systems())
     if systemes:
         etape(u'get_all_apache_system_results (1er systeme)',
               lambda: _apercu_resultats(
                   lecteur.get_all_apache_system_results(systemes[0])))
 
-    # --- Postes d'energie : piste la plus probable pour « Energiebedarf
-    # --- Ventilatoren » et « Befeuchtungsenergie ».
+    # --- Energy metering: the most likely path for "Energiebedarf
+    # --- Ventilatoren" and "Befeuchtungsenergie".
     etape(u'get_energy_uses', lambda: lecteur.get_energy_uses())
     etape(u'get_energy_meters', lambda: lecteur.get_energy_meters())
     etape(u'get_energy_sources', lambda: lecteur.get_energy_sources())
 
-    # --- Composants HVAC, si un reseau ApacheHVAC existe.
+    # --- HVAC components, if an ApacheHVAC network exists.
     etape(u'get_component_objects', lambda: lecteur.get_component_objects())
 
-    # `get_process_variables()` sans argument leve ArgumentError : il attend un
-    # processus, que `get_process_list()` fournit. Constate le 2026-08-06.
+    # `get_process_variables()` without argument raises ArgumentError: it
+    # expects a process, which `get_process_list()` provides. Observed 2026-08-06.
     processus = etape(u'get_process_list', lambda: lecteur.get_process_list())
     for nom_processus in list(processus or [])[:6]:
         etape(u'get_process_variables(%r)' % nom_processus,
               lambda p=nom_processus: lecteur.get_process_variables(p))
 
-    # --- Unites : sans elles, on ne sait pas si une serie est en W ou en kW.
+    # --- Units: without them, it is unknown whether a series is in W or kW.
     etape(u'get_units', lambda: lecteur.get_units())
 
-    # --- Surface complete, pour comparaison avec ve_api_surface.json.
+    # --- Complete surface, for comparison with ve_api_surface.json.
     etape(u'attributs du ResultsReader', lambda: _membres(lecteur))
 
 
-#: Champs conservés d'une entrée de `get_variables()`. Tout ce qui sert à
-#: reconnaître une grandeur et à convertir son unité, rien de plus.
+#: Fields kept from a `get_variables()` entry. Everything needed to recognise
+#: a quantity and convert its unit, nothing more.
 CHAMPS_VARIABLE = ('aps_varname', 'display_name', 'model_level', 'units_type',
                    'subtype', 'custom_type', 'source')
 
 
 def _variable_lisible(variable):
-    u"""Réduit une entrée de `get_variables()` à ce qui sert.
+    u"""Reduces a `get_variables()` entry to what is useful.
 
     Args:
-        variable: Entrée telle que renvoyée par l'API.
+        variable: Entry as returned by the API.
 
     Returns:
-        dict: Champs retenus, ou le `repr` si la forme est inattendue.
+        dict: Retained fields, or the `repr` if the form is unexpected.
     """
     if not isinstance(variable, dict):
         return {'forme_inattendue': repr(variable)[:200]}
@@ -327,13 +326,13 @@ def _variable_lisible(variable):
 
 
 def _compter_par_niveau(variables):
-    u"""Compte les variables par `model_level`.
+    u"""Counts variables by `model_level`.
 
     Args:
-        variables: Liste d'entrées de `get_variables()`.
+        variables: List of `get_variables()` entries.
 
     Returns:
-        dict: `{niveau: nombre}`, trié par niveau.
+        dict: `{level: count}`, sorted by level.
     """
     comptes = {}
     for variable in variables:
@@ -344,26 +343,26 @@ def _compter_par_niveau(variables):
 
 
 def _en_clair(comptes):
-    u"""Met les comptes par niveau sur une ligne de console.
+    u"""Puts the counts by level on a single console line.
 
     Args:
-        comptes: `{niveau: nombre}`.
+        comptes: `{level: count}`.
 
     Returns:
-        str: Par exemple « e=274, c=184, z=61 ».
+        str: For example "e=274, c=184, z=61".
     """
     return u', '.join(u'%s=%d' % couple for couple in comptes.items())
 
 
 def _apercu_resultats(resultats):
-    u"""Résume un jeu de résultats sans recopier les séries.
+    u"""Summarises a result set without copying the series.
 
     Args:
-        resultats: Ce que renvoie un `get_all_*_results`.
+        resultats: What a `get_all_*_results` returns.
 
     Returns:
-        dict | Any: Résumé par variable, ou la valeur telle quelle si sa forme
-            n'est pas reconnue — auquel cas c'est le `repr` qui renseigne.
+        dict | Any: Summary per variable, or the value as-is if its form is
+            not recognised — in which case the `repr` is informative.
     """
     if not isinstance(resultats, dict):
         return resultats
@@ -372,10 +371,10 @@ def _apercu_resultats(resultats):
 
 
 def _ecrire(rapport):
-    u"""Écrit le rapport sur disque et dit où le trouver.
+    u"""Writes the report to disk and says where to find it.
 
     Args:
-        rapport: Rapport de sonde.
+        rapport: Probe report.
     """
     dossier = os.path.dirname(CHEMIN_RAPPORT)
     if not os.path.isdir(dossier):
@@ -389,13 +388,13 @@ def _ecrire(rapport):
 
 
 def main(arguments=()):
-    u"""Point d'entrée.
+    u"""Entry point.
 
     Args:
-        arguments: Chemin d'un `.aps` explicite, facultatif.
+        arguments: Explicit `.aps` path, optional.
 
     Returns:
-        int: 0 si le rapport a pu être écrit, 1 sinon.
+        int: 0 if the report could be written, 1 otherwise.
     """
     chemins = [a for a in arguments if not a.startswith('--')]
     rapport = sonder(chemins[0] if chemins else None)

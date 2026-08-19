@@ -229,21 +229,21 @@ def required_external_input_ids(
     get_case_capability(variant, case_id)
     test_id = base_test_id(variant)
     if test_id == "1":
-        # Les six cas ISO tournent sur la météo DRYCOLD fournie et n'ont aucune
-        # entrée déléguée. La chaîne diagnostique en introduit une par maillon,
-        # et l'ordre est celui de la spécification, figé dans
-        # refs/reference-data/test-1.diagnostics.ref.json :
-        #   1A  cellule ISO + climat Zürich-Kloten
-        #   1B  idem — la nouvelle fenêtre vient de la spécification Test 2 et
-        #       de la documentation du bâtiment exemple, deux fichiers
-        #       officiels, pas des entrées déléguées
-        #   1C  + SIA 2024 : l'infiltration ajustée y est chiffrée
-        #       « 0.15 m3/(h*m2) gemäss SIA 2024:2021 »
-        #   1D  idem — usage personnes/appareils/éclairage selon SIA 2024
-        #   1E  idem 1D, plus le store, dont les propriétés sont dans la
-        #       documentation officielle du bâtiment exemple
-        # Rendre `()` pour 1A à 1D affirmerait qu'ils ne dépendent d'aucune
-        # donnée déléguée, alors que le climat de Kloten en est une.
+        # The six ISO cases run on the supplied DRYCOLD weather and have no
+        # delegated inputs. The diagnostic chain introduces one per link,
+        # and the order is that of the specification, frozen in
+        # refs/reference-data/test-1.diagnostics.ref.json:
+        #   1A  ISO test cell + Zürich-Kloten climate
+        #   1B  same — the new window comes from the Test 2 specification and
+        #       the example-building documentation, two official files,
+        #       not delegated inputs
+        #   1C  + SIA 2024: the adjusted infiltration is stated there as
+        #       "0.15 m3/(h*m2) gemäss SIA 2024:2021"
+        #   1D  same — people/equipment/lighting usage per SIA 2024
+        #   1E  same as 1D, plus the blind, whose properties are in the
+        #       official example-building documentation
+        # Returning `()` for 1A to 1D would assert they have no delegated
+        # inputs, whereas the Kloten climate is one.
         if case_id in {"1A", "1B"}:
             return (
                 "iso52016_2017_chapter7_test_cell",

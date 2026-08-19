@@ -32,6 +32,8 @@ MONTHLY_HORIZONTAL_DIFFUSE_KWH_M2 = (
 
 
 def _sha256(path):
+    """Return the uppercase SHA-256 digest of a source file."""
+
     digest = hashlib.sha256()
     with path.open("rb") as handle:
         for block in iter(lambda: handle.read(1024 * 1024), b""):
@@ -40,6 +42,8 @@ def _sha256(path):
 
 
 def _load_iso_rows():
+    """Load the 8,760 post-initialization ISO climate rows."""
+
     sheet = xlrd.open_workbook(str(XLS)).sheet_by_index(0)
     rows = []
     for row_index in range(5, sheet.nrows):
@@ -52,6 +56,8 @@ def _load_iso_rows():
 
 
 def build():
+    """Build the auditable hourly EPW solar-component transport dataset."""
+
     from swiss_sia.reference_model.sia4010.weather_conversion import (
         _cosine_solar_zenith,
         _parse_tmy1,

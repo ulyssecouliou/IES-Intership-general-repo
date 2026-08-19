@@ -50,16 +50,16 @@ from engine import scatter_band
 _ICI = os.path.dirname(os.path.abspath(__file__))
 _RACINE = os.path.abspath(os.path.join(_ICI, os.pardir))
 
-#: Tests dont les references ont cette forme. Les cinq classeurs presentent
-#: pourtant trois dispositions differentes -- grandeur en bloc et cas en
-#: ligne (2, 3), grandeur en ligne sans cas (4, 6), matrice grandeur x cas
-#: (5) -- mais scripts/build_sia_reference.py les normalise a l extraction.
+#: Tests whose references have this shape. The five workbooks actually present
+#: three different layouts -- quantity as block with cases in rows (2, 3),
+#: quantity in row without cases (4, 6), quantity-by-case matrix
+#: (5) -- but scripts/build_sia_reference.py normalises them at extraction.
 TESTS_SUPPORTES = (2, 3, 4, 5, 6)
 
 TOLERANCE_DEFAUT = 1e-6
 
-#: Statut par defaut : le critere n'est pas ecrit dans la specification, il est
-#: retrouve dans les formules du classeur. Vaut pour les tests 4 et 6.
+#: Default status: the criterion is not written in the specification; it is
+#: recovered from the workbook formulas. Applies to tests 4 and 6.
 STATUT_CRITERE = 'INFERE'
 JUSTIFICATION_CRITERE = (
     "La specification de ce test n'enonce aucun critere ; SIA 4010:2023 "
@@ -68,17 +68,17 @@ JUSTIFICATION_CRITERE = (
 
 STATUT_CRITERE_ENONCE = 'ENONCE_DANS_LA_SPEC'
 
-#: CORRIGE le 2026-08-07, apres relecture des specifications officielles.
+#: CORRECTED on 2026-08-07, after re-reading the official specifications.
 #:
-#: On avait cru que seul le Test 1 enoncait ses criteres. C'est faux : les
-#: specifications des tests 2, 3 et 5 comportent une section « Testkriterien »
-#: qui enonce la bande annuelle MOT POUR MOT, et dans la formule meme que ce
-#: moteur applique. Pour ces trois tests, le critere n'est donc pas infere : il
-#: est ecrit. Continuer a les marquer INFERE affaiblirait a tort trois tests, et
-#: contredirait leur propre matrice de tracabilite.
+#: It had been believed that only Test 1 stated its criteria. This is incorrect:
+#: the specifications of tests 2, 3 and 5 include a "Testkriterien" section
+#: that states the annual band WORD FOR WORD, in the very formula this
+#: engine applies. For those three tests the criterion is therefore not inferred:
+#: it is written. Continuing to mark them INFERE would wrongly weaken three tests
+#: and contradict their own traceability matrix.
 #:
-#: Les tests 4 et 6 n'ont, eux, aucune section « Testkriterien » : pour eux le
-#: statut INFERE reste exact.
+#: Tests 4 and 6 have no "Testkriterien" section: for them the
+#: INFERE status remains correct.
 CRITERE_PAR_TEST = {
     2: (STATUT_CRITERE_ENONCE,
         u'Spezifikation_Test2.pdf, Testkriterien : « Jahressumme der solaren '
@@ -96,43 +96,43 @@ CRITERE_PAR_TEST = {
 
 
 def critere_du_test(numero_test):
-    """Statut et justification du critere de somme annuelle d'un test.
+    """Status and justification of the annual sum criterion for a test.
 
     Args:
-        numero_test: Numero du test SIA.
+        numero_test: SIA test number.
 
     Returns:
-        tuple[str, str]: Statut et justification.
+        tuple[str, str]: Status and justification.
     """
     return CRITERE_PAR_TEST.get(
         numero_test, (STATUT_CRITERE, JUSTIFICATION_CRITERE))
 
 
 def chemin_reference(numero_test):
-    """Chemin du referentiel fige d'un test.
+    """Path of the frozen reference for a test.
 
     Args:
-        numero_test: Numero du test SIA.
+        numero_test: SIA test number.
 
     Returns:
-        str: Chemin absolu du JSON.
+        str: Absolute path of the JSON file.
     """
     return os.path.join(_RACINE, 'refs', 'reference-data',
                         'test-%d.ref.json' % numero_test)
 
 
 def charger_reference(numero_test, chemin=None):
-    """Charge les references figees d'un test.
+    """Load the frozen references for a test.
 
     Args:
-        numero_test: Numero du test SIA, 2 ou 3.
-        chemin: Chemin explicite, sinon celui par defaut.
+        numero_test: SIA test number, 2 or 3.
+        chemin: Explicit path, otherwise the default one.
 
     Returns:
-        dict: Le referentiel.
+        dict: The reference data.
 
     Raises:
-        ValueError: Si le test n'a pas cette forme de reference.
+        ValueError: If the test does not have this reference shape.
     """
     if numero_test not in TESTS_SUPPORTES:
         raise ValueError(
@@ -144,16 +144,16 @@ def charger_reference(numero_test, chemin=None):
 
 
 def valeurs_contributrices(cas):
-    """Valeurs des seuls programmes contributeurs d'un cas.
+    """Values of the contributing programs only for a case.
 
-    Un programme absent du jeu est ECARTE, jamais mis a zero : le compter
-    comme zero deplacerait la moyenne et donc la bande.
+    A program absent from the set is EXCLUDED, never set to zero: counting it
+    as zero would shift the mean and therefore the dispersion band.
 
     Args:
-        cas: Entree de cas du referentiel.
+        cas: Case entry from the reference data.
 
     Returns:
-        list[float]: Valeurs, dans l'ordre du classeur.
+        list[float]: Values, in workbook order.
     """
     par_colonne = cas['par_colonne']
     valeurs = []
@@ -170,15 +170,15 @@ def _cle(texte):
 
 def evaluer_cas(cas, valeur_candidate, tolerance=TOLERANCE_DEFAUT,
                 critere_statut=STATUT_CRITERE):
-    """Verdict d'un cas : le candidat tombe-t-il dans la bande ?
+    """Verdict for a case: does the candidate fall inside the dispersion band?
 
     Args:
-        cas: Entree de cas du referentiel.
-        valeur_candidate: Valeur produite par VE, ou `None`.
-        tolerance: Tolerance de comparaison.
+        cas: Case entry from the reference data.
+        valeur_candidate: Value produced by VE, or `None`.
+        tolerance: Comparison tolerance.
 
     Returns:
-        dict: Ligne de resultat, jamais `None`.
+        dict: Result row, never `None`.
     """
     contributions = valeurs_contributrices(cas)
     statut = scatter_band.verdict(
@@ -212,13 +212,13 @@ def evaluer_cas(cas, valeur_candidate, tolerance=TOLERANCE_DEFAUT,
 
 
 def _index_candidat(candidat):
-    """Indexe un candidat imbrique en {(grandeur, cas): valeur}.
+    """Index a nested candidate as {(quantity, case): value}.
 
     Args:
-        candidat: `{libelle grandeur: {nom de cas: valeur}}`.
+        candidat: `{quantity label: {case name: value}}`.
 
     Returns:
-        dict: Index insensible a la casse et aux espaces de bord.
+        dict: Case- and whitespace-insensitive index.
     """
     index = {}
     for grandeur, par_cas in (candidat or {}).items():
@@ -230,19 +230,19 @@ def _index_candidat(candidat):
 
 
 def evaluer(reference, candidat=None, tolerance=TOLERANCE_DEFAUT):
-    """Evalue un test entier.
+    """Evaluate a full test.
 
-    Le statut du critere depend du TEST : enonce dans la specification pour les
-    tests 2, 3 et 5 ; infere des formules du classeur pour les tests 4 et 6.
+    The criterion status depends on the TEST: stated in the specification for
+    tests 2, 3 and 5; inferred from workbook formulas for tests 4 and 6.
 
     Args:
-        reference: Referentiel charge par `charger_reference`.
-        candidat: `{libelle grandeur: {nom de cas: valeur}}`. Une grandeur ou
-            un cas absent reste NOT_CHECKABLE -- jamais un succes par defaut.
-        tolerance: Tolerance de comparaison.
+        reference: Reference data loaded by `charger_reference`.
+        candidat: `{quantity label: {case name: value}}`. A missing quantity or
+            case remains NOT_CHECKABLE -- never a pass by default.
+        tolerance: Comparison tolerance.
 
     Returns:
-        dict: Resultat complet, meme contrat que `test7_engine.evaluer_test7`.
+        dict: Full result, same contract as `test7_engine.evaluer_test7`.
     """
     index = _index_candidat(candidat)
     attendues = set()
@@ -263,8 +263,8 @@ def evaluer(reference, candidat=None, tolerance=TOLERANCE_DEFAUT):
             'cas': lignes,
         })
 
-    # Cles fournies mais appariees a rien : presque toujours une faute de
-    # frappe cote adaptateur. N influence pas le verdict, mais doit s afficher.
+    # Keys supplied but matched to nothing: almost always a typo on the
+    # adapter side. Does not affect the verdict, but must be displayed.
     ignorees = sorted(
         '%s / %s' % (g, c)
         for (g, c) in _index_candidat(candidat)
@@ -304,13 +304,13 @@ def evaluer(reference, candidat=None, tolerance=TOLERANCE_DEFAUT):
 
 
 def resumer(resultat):
-    """Resume texte, une ligne par cas.
+    """Text summary, one line per case.
 
     Args:
-        resultat: Sortie d'`evaluer`.
+        resultat: Output of `evaluer`.
 
     Returns:
-        str: Resume multi-lignes.
+        str: Multi-line summary.
     """
     lignes = ['Test %s -- classes %s' % (resultat['test'],
                                          ', '.join(resultat['classes_concernees'])),
