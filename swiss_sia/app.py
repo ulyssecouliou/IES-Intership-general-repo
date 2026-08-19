@@ -1056,6 +1056,13 @@ def main(include_sia4010: Optional[bool] = None):
                 "(validation classes qualify the toolchain, not the client model)."
             )
 
+        # The ApacheSim .aps dynamic results (room temperatures, occupancy,
+        # heating/cooling demands) are SIA 380/2 evidence — summer comfort and
+        # energy — not SIA 4010. Attach them regardless of scope so the coverage
+        # stats and the criteria manifest read them even when the SIA 4010 checks
+        # are skipped.
+        sia4010_results["dynamic_results"] = dynamic_results
+
         logger.info("Scanning SIA 380/2 reviewer justifications.")
         justification_results = scan_sia3802_justifications(
             PROJECT_ROOT,

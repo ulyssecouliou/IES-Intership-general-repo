@@ -131,6 +131,24 @@ class EvaluatorTests(unittest.TestCase):
             if str(c.get("standard") or "").startswith("SIA 4010")
         ])
 
+    def test_aps_dynamic_results_unblock_the_aps_criteria(self):
+        """Room .aps results (temperatures, demands) must reach the coverage stats
+        even in the client scope where the SIA 4010 checks are skipped."""
+        dynamic = {"rooms": [{
+            "room_id": "SP000000", "room_name": "Office_01", "area_m2": 20.0,
+            "heating_kwh": 120.0, "cooling_kwh": 40.0,
+            "occupied_hours_above_26": 3.0, "occupied_hours_above_27": 1.0,
+        }]}
+        manifest = evaluate_client_compliance(
+            self._base_sia3802("REVIEWED_RESULT_AVAILABLE"), {}, dynamic, [_Room()], [],
+            scope="sia3802",
+        )
+        by_id = {c["id"]: c for c in manifest["criteria"]}
+        self.assertNotEqual(
+            by_id["SIA3802_HEATING_COOLING_DEMANDS"]["runtime_status"], "NOT_CHECKABLE")
+        self.assertNotEqual(
+            by_id["SIA3802_HOURLY_TEMPERATURES"]["runtime_status"], "NOT_CHECKABLE")
+
     def test_evaluation_block_matches_the_authoritative_verdict(self):
         manifest = evaluate_client_compliance(
             self._base_sia3802("NOT_CHECKABLE"), {}, {}, [_Room()], [],

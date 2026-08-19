@@ -120,6 +120,13 @@ def evaluate_client_compliance(
     sia3802 = dict(sia3802_results or {})
     sia4010 = dict(sia4010_results or {})
     rooms = list(rooms_data or [])
+    # The ApacheSim .aps room results are SIA 380/2 evidence (summer comfort,
+    # energy). The coverage stats read them from sia4010["dynamic_results"]; in
+    # the client scope the SIA 4010 checks are skipped and sia4010 is empty, so
+    # attach the explicitly-passed dynamic results here or the .aps criteria
+    # would wrongly read as NOT_CHECKABLE.
+    if dynamic_results and not sia4010.get("dynamic_results"):
+        sia4010["dynamic_results"] = dynamic_results
     manifest = build_manifest()
     if str(scope or "").strip().lower() == "sia3802":
         manifest["criteria"] = [
