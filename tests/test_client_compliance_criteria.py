@@ -149,6 +149,29 @@ class EvaluatorTests(unittest.TestCase):
         self.assertNotEqual(
             by_id["SIA3802_HOURLY_TEMPERATURES"]["runtime_status"], "NOT_CHECKABLE")
 
+    def test_accepted_use_category_credits_the_criterion(self):
+        """A room carrying a reviewer-accepted SIA 2024 category makes
+        USE_CATEGORY OK, instead of staying forever PARTIAL."""
+        class _MappedRoom:
+            surfaces = []
+            openings = []
+            sia2024_category = "3.01"
+
+        manifest = evaluate_client_compliance(
+            self._base_sia3802("REVIEWED_RESULT_AVAILABLE"), {}, {},
+            [_MappedRoom(), _MappedRoom()], [], scope="sia3802",
+        )
+        by_id = {c["id"]: c for c in manifest["criteria"]}
+        self.assertEqual(by_id["SIA3802_USE_CATEGORY_SIA2024"]["runtime_status"], "OK")
+
+    def test_unmapped_rooms_keep_use_category_partial(self):
+        manifest = evaluate_client_compliance(
+            self._base_sia3802("REVIEWED_RESULT_AVAILABLE"), {}, {}, [_Room()], [],
+            scope="sia3802",
+        )
+        by_id = {c["id"]: c for c in manifest["criteria"]}
+        self.assertEqual(by_id["SIA3802_USE_CATEGORY_SIA2024"]["runtime_status"], "PARTIAL")
+
     def test_evaluation_block_matches_the_authoritative_verdict(self):
         manifest = evaluate_client_compliance(
             self._base_sia3802("NOT_CHECKABLE"), {}, {}, [_Room()], [],

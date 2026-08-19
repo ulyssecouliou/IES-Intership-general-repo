@@ -4503,9 +4503,14 @@ class ExcelReportGenerator:
             return ("AVAILABLE", f"{count} thermal room(s) extracted.") if count else ("MISSING", "No thermal room extracted.")
         if key == "use_category":
             count = int(stats.get("rooms", 0) or 0)
-            if count:
-                return "PARTIAL", f"{count} room(s) extracted; SIA 2024 category mapping still needs confirmation."
-            return "MISSING", "No room data available for SIA 2024 mapping."
+            mapped = int(stats.get("rooms_with_use_category", 0) or 0)
+            if not count:
+                return "MISSING", "No room data available for SIA 2024 mapping."
+            if mapped >= count:
+                return "AVAILABLE", f"{mapped}/{count} room(s) carry a reviewer-accepted SIA 2024 use category."
+            if mapped:
+                return "PARTIAL", f"{mapped}/{count} room(s) carry a reviewer-accepted SIA 2024 use category; confirm the rest."
+            return "PARTIAL", f"{count} room(s) extracted; SIA 2024 category mapping still needs confirmation."
         if key == "external_surfaces":
             count = int(stats.get("external_surfaces", 0) or 0)
             return ("AVAILABLE", f"{count} external surface(s) extracted.") if count else ("MISSING", "No external surface extracted.")
@@ -5088,6 +5093,10 @@ class ExcelReportGenerator:
                 g_total_not_required_for_g_limit += 1
         return {
             "rooms": len(rooms_data),
+            "rooms_with_use_category": sum(
+                1 for room in rooms_data
+                if str(getattr(room, "sia2024_category", "") or "").strip()
+            ),
             "external_surfaces": len(external_surfaces),
             "surface_u_values": sum(1 for surface in external_surfaces if getattr(surface, "u_value", None) is not None),
             "surface_tilt_values": sum(1 for surface in external_surfaces if getattr(surface, "tilt", None) is not None),
