@@ -395,6 +395,14 @@ class ClientTemplateRemediationUI:
         self.preview_signature = self._form_signature()
         ready_to_apply = plan["status"] == "READY_FOR_APPLY"
         self.apply_button.configure(state="normal" if ready_to_apply else "disabled")
+        structure = plan.get("capability_assessment", {}).get(
+            "room_gain_structure", {}
+        )
+        blocked_rooms = [
+            room
+            for room in structure.get("rooms", [])
+            if room.get("status") == "BLOCKED"
+        ]
         lines = [
             "STATUS: {}".format(plan["status"]),
             "Template: {}".format(plan["template"]["name"]),
@@ -426,20 +434,41 @@ class ClientTemplateRemediationUI:
             "Plan file: {}".format(path),
             "Evidence mode: {}".format(plan["evidence"]["evidence_mode"]),
             "Source trace: {}".format(plan["evidence"]["source_trace_status"]),
+            "{}: {}".format(
+                self._t("template_remediation_gain_structure_status"),
+                structure.get("status", "NOT_CHECKABLE"),
+            ),
+        ]
+        for room in blocked_rooms:
+            lines.append(
+                "{} | {}: {}".format(
+                    room.get("room_name") or room.get("room_id"),
+                    self._t("template_remediation_missing_gain_families"),
+                    ", ".join(room.get("missing_gain_families", [])) or "[TO VERIFY]",
+                )
+            )
+        lines.extend([
             "",
             "No VE object was changed by this preview.",
             (
                 "Applying will change only the selected rooms in the active copy."
                 if ready_to_apply
-                else self._t("template_remediation_apply_locked")
+                else (
+                    self._t("template_remediation_gain_structure_blocked")
+                    if plan["status"]
+                    == "BLOCKED_UNSUPPORTED_ROOM_GAIN_STRUCTURE"
+                    else self._t("template_remediation_apply_locked")
+                )
             ),
-        ]
+        ])
         self._set_preview_text("\n".join(lines))
-        self.status_var.set(
-            self._t("template_remediation_preview_ready")
-            if ready_to_apply
-            else "Review-only preview ready. No application is permitted."
-        )
+        if ready_to_apply:
+            status_text = self._t("template_remediation_preview_ready")
+        elif plan["status"] == "BLOCKED_UNSUPPORTED_ROOM_GAIN_STRUCTURE":
+            status_text = self._t("template_remediation_gain_structure_blocked")
+        else:
+            status_text = "Review-only preview ready. No application is permitted."
+        self.status_var.set(status_text)
 
     def _apply(self) -> None:
         if self.plan is None or self.preview_signature != self._form_signature():

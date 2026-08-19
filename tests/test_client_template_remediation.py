@@ -68,17 +68,30 @@ class _Profile:
 
 
 class _RoomData:
-    def __init__(self):
+    def __init__(self, gains=None):
         self.general = {
             "thermal_template": 1,
             "thermal_template_name": "default",
         }
+        self.gains = list(
+            gains
+            if gains is not None
+            else [
+                _Record(
+                    name="Existing lighting",
+                    type_str="Lighting",
+                    max_power_consumptions={0: 5.0},
+                    units_val=0,
+                    variation_profile="DAY_1",
+                )
+            ]
+        )
 
     def get_general(self):
         return dict(self.general)
 
     def get_internal_gains(self):
-        return []
+        return list(self.gains)
 
     def get_air_exchanges(self):
         return []
@@ -91,10 +104,10 @@ class _RoomData:
 
 
 class _Body:
-    def __init__(self, room_id="ROOM-1", name="Office 1"):
+    def __init__(self, room_id="ROOM-1", name="Office 1", gains=None):
         self.id = room_id
         self.name = name
-        self.data = _RoomData()
+        self.data = _RoomData(gains=gains)
 
     def get_room_data(self):
         return self.data
@@ -168,7 +181,64 @@ class ClientTemplateRemediationTests(unittest.TestCase):
         )
         self.assertEqual(plan["rooms"][0]["current_template_name"], "default")
         self.assertIn("state_fingerprint_sha256", plan["rooms"][0])
+        self.assertEqual(
+            plan["capability_assessment"]["room_gain_structure"]["status"],
+            "COMPATIBLE_EXISTING_ROOM_GAIN_STRUCTURE",
+        )
         validate_plan_hash(plan)
+
+    def test_missing_room_gain_family_blocks_before_any_gateway_write(self):
+        class _PeopleAndLightingTemplate(_Template):
+            def get_casual_gains(self):
+                return super().get_casual_gains() + [
+                    _Record(
+                        name="Reviewed people",
+                        type_str="People",
+                        occupancy_density=4.0,
+                        variation_profile=self.profile,
+                    )
+                ]
+
+        plan = self._plan(
+            Path("C:/Models/CLIENT_COPY"),
+            project=_Project(_PeopleAndLightingTemplate()),
+        )
+
+        self.assertEqual(
+            plan["status"], "BLOCKED_UNSUPPORTED_ROOM_GAIN_STRUCTURE"
+        )
+        assessment = plan["capability_assessment"]["room_gain_structure"]
+        self.assertEqual(assessment["room_gain_creation_api"],
+                         "NOT_AVAILABLE_IN_DOCUMENTED_VERoomData_API")
+        self.assertEqual(
+            assessment["rooms"][0]["missing_gain_families"], ["people"]
+        )
+        self.assertIn("TO VERIFY", assessment["message"])
+        with self.assertRaisesRegex(ClientTemplateRemediationError, "not ready"):
+            apply_preview_plan(object(), plan)
+
+    def test_unknown_gain_type_never_becomes_a_known_family(self):
+        class _UnknownTemplate(_Template):
+            def get_casual_gains(self):
+                return [
+                    _Record(
+                        name="Unknown load",
+                        type_str="Unverified VE gain type",
+                        variation_profile=self.profile,
+                    )
+                ]
+
+        plan = self._plan(
+            Path("C:/Models/CLIENT_COPY"), project=_Project(_UnknownTemplate())
+        )
+        assessment = plan["capability_assessment"]["room_gain_structure"]
+        self.assertEqual(
+            plan["status"], "BLOCKED_UNSUPPORTED_ROOM_GAIN_STRUCTURE"
+        )
+        self.assertEqual(
+            assessment["unknown_target_gain_type_labels"],
+            ["Unverified VE gain type"],
+        )
 
     def test_ordinary_client_project_is_never_mutated(self):
         with self.assertRaisesRegex(

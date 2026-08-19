@@ -21,12 +21,33 @@ from .compliance_hub import is_disposable_project
 from .reference_model.ve_compat import thermal_templates
 
 
-SCHEMA_VERSION = "1.0"
+SCHEMA_VERSION = "1.1"
 OPERATION = "ASSIGN_EXISTING_THERMAL_TEMPLATE"
 APPROVAL_STATUS = "APPROVED_FOR_PROJECT_USE"
 REVIEW_ONLY_STATUS = "CANDIDATE_FOR_REVIEW"
 TECHNICAL_APPLICATION_STATUS = "TECHNICAL_APPLICATION_CONFIRMED"
 AUTOMATIC_EVIDENCE_MODE = "AUTOMATIC_TECHNICAL_EVIDENCE"
+
+# Documented VE gain labels used only to compare the *structure* already
+# present in a room with the structure of the selected template.  This is not
+# a regulatory mapping.  Sources:
+# - references/iesve/IESVE_API_REFERENCE.md, "RoomInternalGain";
+# - official IESVE help, "Space Data" and
+#   "Appendix A. Known Limitations" (room gains must be added/removed through
+#   the assigned template or Query Room; VERoomData exposes no add_gain API).
+# Unknown labels are never folded into a known family.
+_GAIN_FAMILY_BY_TYPE_STR = {
+    "people": "people",
+    "lighting": "lighting",
+    "general lighting": "lighting",
+    "fluorescent lighting": "lighting",
+    "tungsten lighting": "lighting",
+    "machinery": "energy",
+    "miscellaneous": "energy",
+    "cooking": "energy",
+    "computers": "energy",
+}
+_ROOM_GAIN_CREATION_API_STATUS = "NOT_AVAILABLE_IN_DOCUMENTED_VERoomData_API"
 
 
 class ClientTemplateRemediationError(RuntimeError):
@@ -370,6 +391,102 @@ def _record_label(record: Mapping[str, Any]) -> str:
     ).casefold()
 
 
+def _gain_family(record: Mapping[str, Any]) -> Optional[str]:
+    """Return a documented gain family, or ``None`` for an unknown label."""
+
+    label = " ".join(str(record.get("type_str") or "").split()).casefold()
+    return _GAIN_FAMILY_BY_TYPE_STR.get(label)
+
+
+def _gain_structure_assessment(
+    template: Mapping[str, Any], rooms: Sequence[Mapping[str, Any]]
+) -> Dict[str, Any]:
+    """Assess whether VE can synchronize target gains without creating rows.
+
+    Runtime evidence from VE 2025 showed that
+    ``assign_thermal_template_to_rooms`` persists the template handle but does
+    not necessarily materialize missing room-level gain families.  The
+    documented ``VERoomData`` API has no ``add_gain``/``remove_gain`` member.
+    Therefore a missing or ambiguous family must block before the first write.
+    """
+
+    target_records = [
+        item
+        for item in template.get("casual_gains", [])
+        if isinstance(item, Mapping)
+    ]
+    target_families = [_gain_family(item) for item in target_records]
+    unknown_targets = [
+        str(item.get("type_str") or item.get("name") or "<unknown>")
+        for item, family in zip(target_records, target_families)
+        if family is None
+    ]
+    known_targets = [family for family in target_families if family is not None]
+    duplicate_targets = sorted(
+        family for family in set(known_targets) if known_targets.count(family) > 1
+    )
+
+    room_results: List[Dict[str, Any]] = []
+    blocked = bool(unknown_targets or duplicate_targets)
+    for room in rooms:
+        state = room.get("current_state")
+        state = state if isinstance(state, Mapping) else {}
+        actual_records = [
+            item
+            for item in state.get("casual_gains", [])
+            if isinstance(item, Mapping)
+        ]
+        actual_families = [_gain_family(item) for item in actual_records]
+        unknown_actual = [
+            str(item.get("type_str") or item.get("name") or "<unknown>")
+            for item, family in zip(actual_records, actual_families)
+            if family is None
+        ]
+        known_actual = [family for family in actual_families if family is not None]
+        duplicate_actual = sorted(
+            family for family in set(known_actual) if known_actual.count(family) > 1
+        )
+        missing = sorted(set(known_targets) - set(known_actual))
+        room_blocked = bool(unknown_actual or duplicate_actual or missing)
+        blocked = blocked or room_blocked
+        room_results.append(
+            {
+                "room_id": str(room.get("room_id") or ""),
+                "room_name": str(room.get("room_name") or ""),
+                "existing_gain_families": sorted(set(known_actual)),
+                "missing_gain_families": missing,
+                "duplicate_gain_families": duplicate_actual,
+                "unknown_gain_type_labels": unknown_actual,
+                "status": "BLOCKED" if room_blocked else "COMPATIBLE",
+            }
+        )
+
+    return {
+        "status": (
+            "BLOCKED_UNSUPPORTED_ROOM_GAIN_STRUCTURE"
+            if blocked
+            else "COMPATIBLE_EXISTING_ROOM_GAIN_STRUCTURE"
+        ),
+        "target_gain_families": sorted(set(known_targets)),
+        "unknown_target_gain_type_labels": unknown_targets,
+        "duplicate_target_gain_families": duplicate_targets,
+        "rooms": room_results,
+        "room_gain_creation_api": _ROOM_GAIN_CREATION_API_STATUS,
+        "source": (
+            "references/iesve/IESVE_API_REFERENCE.md: VERoomData and "
+            "RoomInternalGain; IESVE help: Appendix A. Known Limitations"
+        ),
+        "message": (
+            "[TO VERIFY] The documented VERoomData API cannot create missing "
+            "room-level gain families. Add the missing gain rows through VE "
+            "Query Room, or use rooms that already expose each target family, "
+            "then create a new preview."
+            if blocked
+            else "Every target gain family already exists exactly once in each room."
+        ),
+    }
+
+
 def _template_review_observations(template: Mapping[str, Any]) -> Dict[str, Any]:
     """Expose likely gap coverage without turning heuristics into a verdict."""
 
@@ -554,15 +671,22 @@ def build_preview_plan(
             )
         )
     selected = _selected_rooms(inventory, room_ids)
+    gain_structure = _gain_structure_assessment(template, selected)
     generated_at = datetime.now().isoformat(timespec="seconds")
     ready_for_technical_apply = evidence.approval_status in {
         APPROVAL_STATUS,
         TECHNICAL_APPLICATION_STATUS,
-    }
+    } and gain_structure["status"] == "COMPATIBLE_EXISTING_ROOM_GAIN_STRUCTURE"
+    if gain_structure["status"] != "COMPATIBLE_EXISTING_ROOM_GAIN_STRUCTURE":
+        plan_status = "BLOCKED_UNSUPPORTED_ROOM_GAIN_STRUCTURE"
+    elif ready_for_technical_apply:
+        plan_status = "READY_FOR_APPLY"
+    else:
+        plan_status = "REVIEW_ONLY"
     plan: Dict[str, Any] = {
         "schema_version": SCHEMA_VERSION,
         "operation": OPERATION,
-        "status": "READY_FOR_APPLY" if ready_for_technical_apply else "REVIEW_ONLY",
+        "status": plan_status,
         "generated_at": generated_at,
         "project": {
             "name": str(project_name),
@@ -583,11 +707,15 @@ def build_preview_plan(
             "review_observations": template["review_observations"],
         },
         "rooms": selected,
+        "capability_assessment": {
+            "room_gain_structure": gain_structure,
+        },
         "evidence": asdict(evidence),
         "guardrails": {
             "explicit_room_selection": True,
             "template_content_not_created_by_script": True,
             "post_assignment_readback_required": True,
+            "missing_room_gain_family_blocks_before_mutation": True,
             "rerun_sia3802_audit_before_saving": True,
             "automatic_compliance_claim": False,
             "technical_application_confirmation_required": True,

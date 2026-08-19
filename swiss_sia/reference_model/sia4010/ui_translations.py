@@ -2081,6 +2081,40 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
         "fr": "Previsualisation technique prete ; examinez le plan immuable avant application.",
         "it": "Anteprima tecnica pronta; verificare il piano immutabile prima dell'applicazione.",
     },
+    "template_remediation_gain_structure_status": {
+        "en": "Room gain-structure capability",
+        "de": "Faehigkeit der Raumlaststruktur",
+        "fr": "Capacite de structure des gains du local",
+        "it": "Capacita della struttura dei carichi del locale",
+    },
+    "template_remediation_missing_gain_families": {
+        "en": "missing gain families",
+        "de": "fehlende Lastfamilien",
+        "fr": "familles de gains manquantes",
+        "it": "famiglie di carico mancanti",
+    },
+    "template_remediation_gain_structure_blocked": {
+        "en": (
+            "Application is blocked before mutation: the documented VERoomData "
+            "API cannot create missing room-level gain families. Add them through "
+            "VE Query Room, then create a new preview."
+        ),
+        "de": (
+            "Die Anwendung wird vor der Mutation blockiert: Die dokumentierte "
+            "VERoomData-API kann fehlende Raumlastfamilien nicht erstellen. Fuegen "
+            "Sie sie ueber VE Query Room hinzu und erstellen Sie eine neue Vorschau."
+        ),
+        "fr": (
+            "L'application est bloquee avant mutation : l'API VERoomData documentee "
+            "ne peut pas creer les familles de gains manquantes dans le local. "
+            "Ajoutez-les via VE Query Room, puis creez une nouvelle previsualisation."
+        ),
+        "it": (
+            "L'applicazione e bloccata prima della modifica: l'API VERoomData "
+            "documentata non puo creare le famiglie di carico mancanti nel locale. "
+            "Aggiungerle tramite VE Query Room, poi creare una nuova anteprima."
+        ),
+    },
 }
 
 
