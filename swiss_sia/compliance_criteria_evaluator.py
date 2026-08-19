@@ -143,6 +143,9 @@ def evaluate_client_compliance(
     manifest["decisive_gate"]["runtime_status"] = gate_status
     manifest["decisive_gate"]["runtime_evidence"] = gate_evidence
 
+    reference_project = sia3802.get("reference_project", {}) or {}
+    reference_blockers = list(reference_project.get("blockers", []) or [])
+
     verdict = build_compliance_verdict(sia3802, sia4010, len(rooms))
     tally: Dict[str, int] = {}
     for criterion in manifest["criteria"]:
@@ -157,6 +160,8 @@ def evaluate_client_compliance(
         "overall_sia3802_reason": verdict.sia3802_reason,
         "decisive_gate_status": gate_status,
         "outstanding": list(verdict.outstanding),
+        "reference_project_status": str(reference_project.get("status") or ""),
+        "reference_project_blockers": reference_blockers,
         "criteria_status_tally": tally,
         "note": (
             "Component criteria are diagnostics; overall SIA 380/2 compliance is the "

@@ -31,11 +31,19 @@ class HealthScoreCalculator:
         self,
         sia3802_results: Dict[str, Any],
         sia4010_results: Dict[str, Any],
+        include_sia4010: bool = True,
     ) -> ScoreResult:
-        """Calculate all report scores and aggregate alerts."""
+        """Calculate all report scores and aggregate alerts.
+
+        ``include_sia4010`` False (the client SIA 380/2-only scope) drops the
+        SIA 4010 detailed-score categories: those report the toolchain's
+        validation-class readiness, not the client building.
+        """
         compliance_score = self._calculate_compliance_score(sia3802_results)
         health_score = self._calculate_health_score(sia3802_results, sia4010_results)
-        detailed_scores = self._calculate_detailed_scores(sia3802_results, sia4010_results)
+        detailed_scores = self._calculate_detailed_scores(
+            sia3802_results, sia4010_results, include_sia4010
+        )
         alerts = sia3802_results.get("alerts", []) + sia4010_results.get("alerts", [])
 
         return ScoreResult(
@@ -157,6 +165,7 @@ class HealthScoreCalculator:
         self,
         sia3802_results: Dict[str, Any],
         sia4010_results: Dict[str, Any],
+        include_sia4010: bool = True,
     ) -> Dict[str, float]:
         """Build detailed score rows for the report workbook."""
         detailed_scores: Dict[str, float] = {}
@@ -172,10 +181,13 @@ class HealthScoreCalculator:
             {},
         ).get("score", 0.0)
 
-        detailed_scores["SIA4010_ENERGY"] = sia4010_results.get("score", 0.0)
-        detailed_scores["SIA4010_EVIDENCE_READINESS"] = sia4010_results.get("readiness_score", 0.0)
+        # SIA 4010 validation-class readiness qualifies the toolchain, not a
+        # client building: it is omitted from the client SIA 380/2-only scope.
+        if include_sia4010:
+            detailed_scores["SIA4010_ENERGY"] = sia4010_results.get("score", 0.0)
+            detailed_scores["SIA4010_EVIDENCE_READINESS"] = sia4010_results.get("readiness_score", 0.0)
 
-        for test_name, test_data in sia4010_results.get("tests", {}).items():
-            detailed_scores[f"SIA4010_{test_name.upper()}"] = test_data.get("score", 0.0)
+            for test_name, test_data in sia4010_results.get("tests", {}).items():
+                detailed_scores[f"SIA4010_{test_name.upper()}"] = test_data.get("score", 0.0)
 
         return detailed_scores

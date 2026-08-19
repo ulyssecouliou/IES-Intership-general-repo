@@ -1020,24 +1020,35 @@ def main(include_sia4010: Optional[bool] = None):
             len(reference_specification.blockers),
         )
 
-        logger.info("Running SIA 4010 readiness checks.")
-        sia4010_checker = SIA4010Checker(
-            model_analyzer,
-            RuleEngine(),
-            project_label=project_label,
-        )
-        sia4010_results = sia4010_checker.check_all(rooms_data=rooms_data)
-        _apply_dynamic_results_to_sia4010(sia4010_results, dynamic_results)
+        # SIA 4010 validation classes qualify the VE toolchain against reference
+        # cases, not a client building. In the client SIA 380/2-only scope they
+        # are neither computed nor reported: sia4010_results stays empty so every
+        # downstream deliverable is purely SIA 380/2.
+        if include_sia4010:
+            logger.info("Running SIA 4010 readiness checks.")
+            sia4010_checker = SIA4010Checker(
+                model_analyzer,
+                RuleEngine(),
+                project_label=project_label,
+            )
+            sia4010_results = sia4010_checker.check_all(rooms_data=rooms_data)
+            _apply_dynamic_results_to_sia4010(sia4010_results, dynamic_results)
 
-        logger.info("Deriving the SIA 4010 validation-class scope of this model.")
-        class_scope = derive_validation_class_scope(rooms_data)
-        sia4010_results["required_class_scope"] = class_scope.to_dict()
-        logger.info(
-            "Required validation class: %s (conservative: %s, status %s)",
-            class_scope.required_class or "not derived",
-            class_scope.conservative_class or "not derived",
-            class_scope.status,
-        )
+            logger.info("Deriving the SIA 4010 validation-class scope of this model.")
+            class_scope = derive_validation_class_scope(rooms_data)
+            sia4010_results["required_class_scope"] = class_scope.to_dict()
+            logger.info(
+                "Required validation class: %s (conservative: %s, status %s)",
+                class_scope.required_class or "not derived",
+                class_scope.conservative_class or "not derived",
+                class_scope.status,
+            )
+        else:
+            sia4010_results = {}
+            logger.info(
+                "SIA 4010 checks skipped: client SIA 380/2-only scope "
+                "(validation classes qualify the toolchain, not the client model)."
+            )
 
         logger.info("Scanning SIA 380/2 reviewer justifications.")
         justification_results = scan_sia3802_justifications(
@@ -1055,7 +1066,9 @@ def main(include_sia4010: Optional[bool] = None):
 
         logger.info("Calculating scores.")
         score_calculator = HealthScoreCalculator()
-        score_result = score_calculator.calculate_scores(sia3802_results, sia4010_results)
+        score_result = score_calculator.calculate_scores(
+            sia3802_results, sia4010_results, include_sia4010=include_sia4010
+        )
 
         logger.info("Generating Excel report.")
         unique_report_path = _build_unique_report_path(project.path, data_extractor.model)
@@ -1063,13 +1076,14 @@ def main(include_sia4010: Optional[bool] = None):
             output_path=unique_report_path,
             model_analyzer=model_analyzer,
         )
-        logger.info("Running SIA 4010 PDF-based prevalidation.")
-        sia4010_results["prevalidation"] = build_sia4010_pdf_prevalidation(
-            rooms_data,
-            sia3802_results,
-            sia4010_results,
-            dynamic_results,
-        )
+        if include_sia4010:
+            logger.info("Running SIA 4010 PDF-based prevalidation.")
+            sia4010_results["prevalidation"] = build_sia4010_pdf_prevalidation(
+                rooms_data,
+                sia3802_results,
+                sia4010_results,
+                dynamic_results,
+            )
         extraction_diagnostics = data_extractor.get_body_extraction_diagnostics()
         preflight_checks = _build_preflight_checks(
             project,
