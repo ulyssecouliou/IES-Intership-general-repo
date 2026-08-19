@@ -319,17 +319,28 @@ def _draw_identification(
     top += 3.0
     page.line(MARGIN, top, A4_MM[0] - MARGIN, top, width_pt=0.5, colour=LINE)
     top += 5.0
-    for label, value in rows:
-        page.text(MARGIN, top, label, size_pt=8.0, colour=MUTED)
+    # Two-column card: fits the client/project identification (client, address,
+    # mandate, author, checker, index, framework...) without pushing the rest of
+    # the one-page report off the sheet.
+    column_width = CONTENT_WIDTH / 2.0
+    label_width = 34.0
+    value_width = column_width - label_width - 4.0
+    row_height = 5.0
+    for index, (label, value) in enumerate(rows):
+        column = index % 2
+        line_index = index // 2
+        x = MARGIN + column * column_width
+        y = top + line_index * row_height
+        page.text(x, y, label, size_pt=7.5, colour=MUTED)
         page.text(
-            MARGIN + 46.0,
-            top,
-            truncate_to_width(value, 8.0, CONTENT_WIDTH - 48.0),
-            size_pt=8.0,
+            x + label_width,
+            y,
+            truncate_to_width(value, 7.5, value_width),
+            size_pt=7.5,
             colour=INK,
         )
-        top += 5.0
-    return top + 2.0
+    line_count = (len(rows) + 1) // 2
+    return top + line_count * row_height + 3.0
 
 
 def _draw_domain_table(
@@ -574,12 +585,42 @@ def _draw_signature(
             page.text(left, top - 1.6, value, size_pt=8.0, colour=INK)
 
 
-def _draw_footer(page: PdfPage, page_number: int, total: int, language: str) -> None:
-    """Draw the page footer with the non-certification reminder."""
+def _draw_footer(
+    page: PdfPage,
+    page_number: int,
+    total: int,
+    language: str,
+    ies_logo_path: Optional[Path] = None,
+) -> None:
+    """Draw the page footer: non-certification reminder, IES brand mark, page no.
+
+    ``ies_logo_path`` embeds the real IES logo when the asset is present; when it
+    is absent the footer falls back to the "Powered by IES Virtual Environment"
+    wordmark so the report always carries the product provenance without ever
+    reproducing a logo the project does not ship.
+    """
 
     y = A4_MM[1] - 10.0
     page.line(MARGIN, y - 4.0, A4_MM[0] - MARGIN, y - 4.0, width_pt=0.4, colour=LINE)
     page.text(MARGIN, y, translate("footer_not_certificate", language), size_pt=6.5, colour=MUTED)
+
+    powered_by = translate("footer_powered_by", language)
+    centre = A4_MM[0] / 2.0
+    logo_drawn = False
+    if ies_logo_path is not None:
+        try:
+            page.image(centre - 26.0, y - 4.2, 6.0, 6.0, ies_logo_path)
+            logo_drawn = True
+        except Exception:
+            # A logo that cannot be embedded must never block the report.
+            logo_drawn = False
+    page.text(
+        centre - (18.0 if logo_drawn else 30.0),
+        y,
+        powered_by,
+        size_pt=6.5,
+        colour=BRAND,
+    )
     page.text(
         A4_MM[0] - MARGIN - 30.0,
         y,
@@ -589,6 +630,21 @@ def _draw_footer(page: PdfPage, page_number: int, total: int, language: str) -> 
         align="right",
         width_mm=30.0,
     )
+
+
+def _resolve_ies_logo(project_root: Optional[Union[str, Path]]) -> Optional[Path]:
+    """Return the IES brand logo asset path when the user has supplied one.
+
+    Looked up at ``assets/ies_logo.png`` (or .jpg) under the project root. The
+    project does not ship the IES logo; drop the real asset there to embed it.
+    """
+
+    root = Path(project_root) if project_root else Path.cwd()
+    for name in ("assets/ies_logo.png", "assets/ies_logo.jpg", "assets/ies_logo.jpeg"):
+        candidate = root / name
+        if candidate.is_file():
+            return candidate
+    return None
 
 
 def render_compliance_report_pdf(
@@ -648,18 +704,21 @@ def render_compliance_report_pdf(
     cursor += 8.0
     cursor = _draw_verdict_banner(page, cursor, verdict, code, report_scope)
 
+    to_complete = translate("value_to_complete", code)
     identification = [
+        (translate("field_client", code), to_complete),
         (translate("field_project", code), project_label or translate("value_unavailable", code)),
+        (translate("field_project_address", code), to_complete),
         (translate("field_model", code), model_name or translate("value_unavailable", code)),
+        (translate("field_mandate", code), office.report_reference or to_complete),
         (
             translate("field_generated", code),
             datetime.now().strftime("%Y-%m-%d %H:%M"),
         ),
+        (translate("field_prepared_by", code), office.author_name or to_complete),
+        (translate("field_checked_by", code), to_complete),
         (translate("field_framework", code), "SIA 380/2:2022 + SIA 4010:2023"),
-        (
-            translate("field_reference", code),
-            office.report_reference or translate("value_unavailable", code),
-        ),
+        (translate("field_index", code), to_complete),
     ]
     cursor = _draw_identification(page, cursor, identification, code)
     cursor = _draw_domain_table(page, cursor, verdict, code)
@@ -680,5 +739,5 @@ def render_compliance_report_pdf(
     cursor = max(thumbnail_bottom, figures_bottom) + 2.0
     cursor = _draw_scope_block(page, cursor, verdict, code)
     _draw_signature(page, cursor, office, code)
-    _draw_footer(page, 1, 1, code)
+    _draw_footer(page, 1, 1, code, ies_logo_path=_resolve_ies_logo(project_root))
     return document.save(output_path)
