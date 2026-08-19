@@ -79,6 +79,8 @@ def run() -> None:
         reflects = bool(tmpl_set) and tmpl_set.issubset(room_set)
         any_inheritance = any_inheritance or reflects
         print("  - {!r}".format(room.get("room_name")))
+        print("      room_id (use this in the usage-mapping CSV) : {}".format(
+            room.get("room_id")))
         print("      assigned template : handle={} name={!r}".format(
             handle, template.get("name")))
         print("      room get_internal_gains : {}".format(room_fams or "[]"))
