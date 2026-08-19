@@ -3,18 +3,22 @@
 The verdict is deliberately conservative and fail-closed, because the report
 carries a company signature:
 
-- a domain is ``COMPLIANT`` only when it was actually evaluated and produced no
-  critical or high finding;
-- any critical or high finding makes it ``NOT_COMPLIANT``;
-- anything unevaluated, or missing decisive evidence, is ``NOT_DETERMINED`` -
+- a per-domain status is ``COMPLIANT`` only when the domain was actually
+  evaluated and produced no critical or high finding;
+- any critical or high determined finding makes the overall ``NOT_COMPLIANT``;
+- the overall SIA 380/2 statement is decided on the reviewed global
+  project/reference comparison (SIA 380/2:2022 §7.2.5.2): with that comparison
+  reviewed and satisfied and no determined failure, the statement is
+  ``COMPLIANT`` and any unverifiable component diagnostic is reported as a
+  visible reserve in ``outstanding`` rather than downgrading the verdict;
+- without the decisive comparison the statement stays ``NOT_DETERMINED`` -
   never silently compliant.
 
-The overall SIA 380/2 statement additionally requires the reviewed global
-project/reference comparison, because SIA 380/2 decides compliance on that
-comparison and the component checks are diagnostics. The SIA 4010 statement
-reports the validation-class state of the toolchain and never reads as an
-official validation: that requires the official test results plus SIA
-sub-commission attestation.
+Treating component diagnostics as reserves (not blockers) once the decisive
+gate is met is a product decision (2026-08-19) PENDING norm-analyst /
+qa-auditor sign-off. The SIA 4010 statement reports the validation-class state
+of the toolchain and never reads as an official validation: that requires the
+official test results plus SIA sub-commission attestation.
 """
 
 from dataclasses import dataclass, field
@@ -214,6 +218,15 @@ def build_compliance_verdict(
     comparison_contradicts = (
         comparison_status == "REVIEWED_RESULT_CONTRADICTS_ACCEPTANCE"
     )
+    # SIA 380/2:2022 §7.2.5.2 decides overall compliance on the reviewed global
+    # project/reference comparison; the per-component checks are diagnostics of
+    # the reference-project inputs, not the verdict itself. So once the decisive
+    # comparison is reviewed and satisfied and no DETERMINED failure exists, the
+    # SIA 380/2 statement is COMPLIANT, and unverifiable component diagnostics
+    # remain visible reserves (in `outstanding`) rather than downgrading the
+    # verdict. A determined out-of-range finding (blocking_total) or a comparison
+    # that contradicts its acceptance still fails closed.
+    # Product decision 2026-08-19; PENDING norm-analyst / qa-auditor sign-off.
     if not rooms_analysed:
         sia3802_status, sia3802_reason = NOT_DETERMINED, "no_room_analysed"
     elif blocking_total:
@@ -223,15 +236,14 @@ def build_compliance_verdict(
             NOT_COMPLIANT,
             "global_comparison_contradicts_acceptance",
         )
-    elif domain_evidence_incomplete:
-        sia3802_status, sia3802_reason = (
-            NOT_DETERMINED,
-            "domain_evidence_incomplete",
-        )
     elif not comparison_available:
         sia3802_status, sia3802_reason = NOT_DETERMINED, "global_comparison_missing"
     else:
-        sia3802_status, sia3802_reason = COMPLIANT, "comparison_reviewed_no_blocker"
+        sia3802_status, sia3802_reason = COMPLIANT, (
+            "comparison_reviewed_no_blocker_with_reserves"
+            if domain_evidence_incomplete
+            else "comparison_reviewed_no_blocker"
+        )
     if not comparison_available:
         outstanding.append("global_reference_comparison")
     if domain_evidence_incomplete:

@@ -214,8 +214,11 @@ class VerdictEngineTests(unittest.TestCase):
         self.assertEqual(gains.status, COMPLIANT)
         self.assertEqual(gains.advisory_count, 2)
 
-    def test_missing_evidence_keeps_domain_and_overall_not_determined(self):
-        """Do not label a domain compliant when its required evidence is missing."""
+    def test_missing_component_evidence_is_a_reserve_not_a_downgrade(self):
+        """A domain with missing evidence is a per-domain NOT_DETERMINED, but once
+        the decisive §7.2.5.2 comparison is reviewed and no determined failure
+        exists the overall statement is COMPLIANT with the reserve surfaced in
+        `outstanding` (product decision 2026-08-19, pending norm-analyst)."""
 
         verdict = build_compliance_verdict(
             self._sia3802(
@@ -233,8 +236,25 @@ class VerdictEngineTests(unittest.TestCase):
         )
         gains = next(d for d in verdict.domains if d.domain == "gains")
         self.assertEqual(gains.status, NOT_DETERMINED)
-        self.assertEqual(verdict.sia3802_status, NOT_DETERMINED)
-        self.assertEqual(verdict.sia3802_reason, "domain_evidence_incomplete")
+        self.assertEqual(verdict.sia3802_status, COMPLIANT)
+        self.assertEqual(
+            verdict.sia3802_reason, "comparison_reviewed_no_blocker_with_reserves"
+        )
+        self.assertIn("sia3802_domain_evidence", verdict.outstanding)
+
+    def test_determined_failure_still_fails_closed_despite_reviewed_comparison(self):
+        """A determined (non-indeterminate) blocking finding must still make the
+        overall NOT_COMPLIANT even with the decisive comparison reviewed."""
+
+        verdict = build_compliance_verdict(
+            self._sia3802(
+                alerts=[_Alert("Openings", "CRITICAL", rule="SIA3802_U_VALUE_WINDOW")],
+                comparison_status="REVIEWED_RESULT_AVAILABLE",
+            ),
+            {},
+            rooms_analysed=3,
+        )
+        self.assertEqual(verdict.sia3802_status, NOT_COMPLIANT)
 
     def test_sia3802_compliant_only_with_reviewed_comparison_and_no_blocker(self):
         verdict = build_compliance_verdict(

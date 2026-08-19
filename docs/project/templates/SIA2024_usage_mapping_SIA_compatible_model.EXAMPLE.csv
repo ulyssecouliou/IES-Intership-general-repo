@@ -1,0 +1,4 @@
+room_id,thermal_template_id,sia2024_category,review_status,reviewer,source_document,source_reference,notes
+<FILL_VE_ROOM_ID_for_Office_01>,,3.01,pending,<FILL_REVIEWER_NAME>,SIA 2024:2021 controlled copy,Raumdatenblatt 3.01,SUGGESTED Office -> 3.01 Einzel-/Gruppenbuero. Replace room_id with the exact VE room id; confirm the category and set review_status=accepted.
+<FILL_VE_ROOM_ID_for_Office_02>,,3.01,pending,<FILL_REVIEWER_NAME>,SIA 2024:2021 controlled copy,Raumdatenblatt 3.01,SUGGESTED Office -> 3.01. Replace room_id with the exact VE room id; confirm and set review_status=accepted.
+<FILL_VE_ROOM_ID_for_Corridor_01>,,12.03,pending,<FILL_REVIEWER_NAME>,SIA 2024:2021 controlled copy,Raumdatenblatt 12.03,SUGGESTED Corridor -> 12.03 Verkehrsflaeche/circulation. Replace room_id with the exact VE room id; confirm and set review_status=accepted.
