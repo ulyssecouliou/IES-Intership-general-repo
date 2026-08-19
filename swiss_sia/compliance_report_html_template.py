@@ -107,6 +107,16 @@ TEMPLATE = r'''<title>__PAGE_TITLE__</title>
   .outstanding.clear{border-left-color:var(--ok);}
   .outstanding.clear .none{display:flex; align-items:center; gap:9px; color:var(--ok); font-size:13px; font-weight:600;}
 
+  .limitations{margin-top:24px; background:var(--surface); border:1px solid var(--border); border-left:4px solid var(--unknown); border-radius:var(--r); padding:16px 18px; box-shadow:var(--shadow);}
+  .limitations h2{margin:0 0 4px; font-family:var(--font-display); font-size:15px; font-weight:700; color:var(--ink); letter-spacing:-.01em;}
+  .limitations .lead{color:var(--ink-3); font-size:12px; margin:0 0 12px;}
+  .limitations ul{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:10px;}
+  .limitations li{border-top:1px solid var(--border); padding-top:10px;}
+  .limitations li:first-child{border-top:0; padding-top:0;}
+  .limitations .lt{font-weight:650; font-size:13px; color:var(--ink); display:flex; align-items:center; gap:8px;}
+  .limitations .lt::before{content:""; width:7px; height:7px; border-radius:2px; background:var(--unknown); flex:0 0 auto;}
+  .limitations .lw{font-size:12.5px; color:var(--ink-2); line-height:1.5; margin-top:3px;}
+
   .summary{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin-top:24px;}
   .tile{background:var(--surface); border:1px solid var(--border); border-radius:var(--r); padding:14px 16px; box-shadow:var(--shadow); position:relative; overflow:hidden; cursor:pointer; text-align:left; transition:transform .12s ease, border-color .12s ease;}
   .tile:hover{transform:translateY(-2px); border-color:var(--border-strong);}
@@ -231,6 +241,7 @@ TEMPLATE = r'''<title>__PAGE_TITLE__</title>
     <div class="thead" id="thead"></div>
     <div id="rows"></div>
   </div>
+  <section class="limitations" id="limitations" hidden></section>
   <div class="foot" id="foot"></div>
 </div>
 
@@ -257,6 +268,7 @@ window.__SIA_DATA__ = __DATA_JSON__;
     var v=M.verdict||{}; var box=$("verdictBox"); box.className="verdict "+(v.tone||"warn");
     $("verdictTitle").textContent=v.title||""; $("verdictDetail").innerHTML=v.detail||"";
     outstanding();
+    limitations();
     $("search").placeholder=UI.search||""; $("sortLbl").textContent=UI.sort||""; $("reset").textContent=UI.reset||"";
     $("foot").innerHTML=UI.scope||"";
     var so=[["section",UI.sort_section],["status",UI.sort_status],["severity",UI.sort_severity],["name",UI.sort_name],["type",UI.sort_type]];
@@ -286,6 +298,19 @@ window.__SIA_DATA__ = __DATA_JSON__;
           '<div class="oi-label">'+esc(it.label||"")+'</div>'+
           '<div class="oi-detail">'+esc(it.detail||"")+'</div></li>';
       }).join("")+'</ol>';
+  }
+
+  function limitations(){
+    var el=$("limitations"); if(!el)return;
+    var items=M.limitations||[];
+    if(!items.length){el.hidden=true;return;}
+    el.hidden=false;
+    el.innerHTML='<h2>'+esc(UI.limitations_title||"")+'</h2>'+
+      '<div class="lead">'+esc(UI.limitations_lead||"")+'</div>'+
+      '<ul>'+items.map(function(it){
+        return '<li><div class="lt">'+esc(it.title||"")+'</div>'+
+          '<div class="lw">'+esc(it.why||"")+'</div></li>';
+      }).join("")+'</ul>';
   }
 
   function filtered(){

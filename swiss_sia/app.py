@@ -68,6 +68,12 @@ sia4010_prevalidation_module = _reload_local_module("sia4010_prevalidation")
 validation_class_scope_module = _reload_local_module("validation_class_scope")
 reference_project_module = _reload_local_module("reference_project")
 company_profile_module = _reload_local_module("company_profile")
+# Reload the verdict engine and the criteria builder BEFORE the report/evaluator
+# modules that import from them, so a `from swiss_sia.compliance_verdict import ...`
+# in those modules binds to the freshly reloaded version. Without this, VE's long-
+# lived interpreter keeps a stale verdict module across Run clicks.
+_reload_local_module("compliance_verdict")
+_reload_local_module("compliance_criteria")
 compliance_report_pdf_module = _reload_local_module("compliance_report_pdf")
 compliance_report_html_module = _reload_local_module("compliance_report_html")
 compliance_criteria_evaluator_module = _reload_local_module("compliance_criteria_evaluator")
