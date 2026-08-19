@@ -24,15 +24,6 @@ PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
 
-# What the audit looks for, as lower-case token groups (any group present = ok).
-_WANTED = {
-    "room air temperature": [["dry", "resultant", "temperature"], ["air", "temperature"], ["resultant", "temperature"]],
-    "occupancy": [["occupancy"], ["people"], ["occupied"]],
-    "heating load": [["heating", "load"], ["sensible", "heating"], ["heating"]],
-    "cooling load": [["cooling", "load"], ["sensible", "cooling"], ["cooling"]],
-}
-
-
 def run() -> None:
     try:
         import iesve  # type: ignore  # noqa: F401
@@ -82,16 +73,51 @@ def run() -> None:
             print("   {} | {} | {}".format(
                 v.get("aps_varname"), v.get("display_name"),
                 v.get("resolved_metric_unit") or v.get("units_type")))
-        print("\n--- WHAT THE AUDIT NEEDS ---")
-        for label, groups in _WANTED.items():
-            hit = None
-            for tokens in groups:
-                m = sim.find_aps_variable(variables, tokens)
-                if m:
-                    hit = (tokens, m.get("aps_varname") or m.get("display_name"))
-                    break
-            print("  {:24s}: {}".format(
-                label, ("FOUND via {} -> {}".format(hit[0], hit[1]) if hit else "NOT FOUND")))
+        print("\n--- WHAT THE AUDIT NEEDS (find_aps_variable returns a tuple) ---")
+        # The variables the real extractor looks up, with the exact tokens/levels
+        # it uses in collect_room_dynamic_results.
+        needed = {
+            "temperature (dry resultant, z)": (("dry", "resultant", "temperature"), "z"),
+            "occupancy (number people, z)": (("number", "people"), "z"),
+            "heating load (room, heating)": None,   # via find_room_sensible_load_variable
+            "cooling load (room, cooling)": None,
+        }
+        found = {}
+        for label, spec in needed.items():
+            if spec is None:
+                mode = "heating" if "heating" in label else "cooling"
+                m = sim.find_room_sensible_load_variable(variables, mode)
+            else:
+                tokens, level = spec
+                m = sim.find_aps_variable(variables, tokens, level)
+            found[label] = m
+            if m:
+                print("  {:34s}: FOUND -> aps={!r} display={!r} level={!r}".format(
+                    label, m[0], m[1], m[2]))
+            else:
+                print("  {:34s}: NOT FOUND".format(label))
+
+        print("\n--- ROOM LIST + SAMPLE READ (the real failure point) ---")
+        try:
+            room_list = reader.get_room_list()
+            print("  get_room_list(): OK, {} room(s)".format(len(list(room_list))))
+        except Exception as exc:
+            room_list = []
+            print("  get_room_list(): FAILED ->", exc)
+        rooms = list(room_list)
+        temp_var = found.get("temperature (dry resultant, z)")
+        if rooms and temp_var:
+            first = rooms[0]
+            rid = first.get("id") if isinstance(first, dict) else (
+                first[1] if isinstance(first, (list, tuple)) and len(first) >= 2 else first)
+            print("  first room id:", rid)
+            try:
+                series = sim.read_metric_room_result(reader, rid, temp_var)
+                series = list(series)
+                print("  read temperature series length:", len(series),
+                      "| sample:", series[:3])
+            except Exception as exc:
+                print("  read_metric_room_result FAILED ->", exc)
     finally:
         try:
             reader.close()
