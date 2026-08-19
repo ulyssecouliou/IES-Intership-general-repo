@@ -440,8 +440,52 @@ class VEDataExtractor:
         """Return room internal gains from ``VERoomData.get_internal_gains``."""
         return self.get_internal_gains_audit(room_data)["items"]
 
+    def get_assigned_thermal_template(self, room_data: Any) -> Any:
+        """Return the thermal template assigned to a room, or ``None``.
+
+        A real-VE probe (2026-08-19) confirmed that on VE 2025
+        ``VERoomData.get_internal_gains()`` returns ``[]`` for gains inherited
+        from the assigned thermal template: assignment persists only the
+        template handle, and the gains live on the template. Resolving the
+        template by that handle lets the audit read the real gains.
+        """
+        general = self.get_room_general(room_data)
+        handle = general.get("thermal_template")
+        if handle in (None, ""):
+            return None
+        templates = self.get_thermal_templates()
+        template = templates.get(handle)
+        if template is None:
+            template = templates.get(str(handle))
+        if template is None:
+            for candidate in templates.values():
+                candidate_id = self._safe_object_attr(candidate, "id")
+                candidate_handle = self._safe_object_attr(candidate, "handle")
+                if str(handle) in (str(candidate_id), str(candidate_handle)):
+                    template = candidate
+                    break
+        return template
+
+    def _assigned_template_casual_gains(self, room_data: Any) -> List[Any]:
+        """Return the casual gains of a room's assigned thermal template."""
+        template = self.get_assigned_thermal_template(room_data)
+        if template is None or not hasattr(template, "get_casual_gains"):
+            return []
+        try:
+            return self._as_list(template.get_casual_gains())
+        except Exception as exc:
+            logger.error("Error reading assigned template casual gains: %s", exc)
+            return []
+
     def get_internal_gains_audit(self, room_data: Any) -> Dict[str, Any]:
-        """Return documented room gains or a named fail-closed placeholder."""
+        """Return documented room gains or a named fail-closed placeholder.
+
+        VE keeps template-inherited internal gains on the assigned thermal
+        template, not on the room (real-VE probe 2026-08-19). When the room-level
+        list is empty we therefore resolve the assigned template's casual gains
+        before concluding there are none, so a properly templated model is not
+        wrongly read as gain-free.
+        """
         placeholder = "DAILY_INTERNAL_GAINS_VE_MEMBER_TO_VERIFY"
         if room_data is None or not hasattr(room_data, "get_internal_gains"):
             return {
@@ -449,14 +493,7 @@ class VEDataExtractor:
                 "items": [],
             }
         try:
-            return {
-                "items": self._as_list(room_data.get_internal_gains()),
-                "value": None,
-                "status": "OK",
-                "source": "VERoomData.get_internal_gains()",
-                "placeholder": "",
-                "note": "",
-            }
+            room_items = self._as_list(room_data.get_internal_gains())
         except Exception as e:
             logger.error("Error while retrieving internal gains: %s", e)
             return {
@@ -467,13 +504,61 @@ class VEDataExtractor:
                 "placeholder": placeholder,
                 "note": f"NOT_CHECKABLE: documented VE member read-back failed: {e}",
             }
+        if room_items:
+            return {
+                "items": room_items,
+                "value": None,
+                "status": "OK",
+                "source": "VERoomData.get_internal_gains()",
+                "placeholder": "",
+                "note": "",
+            }
+        template_items = self._assigned_template_casual_gains(room_data)
+        if template_items:
+            return {
+                "items": template_items,
+                "value": None,
+                "status": "OK",
+                "source": "VEThermalTemplate.get_casual_gains() (assigned template)",
+                "placeholder": "",
+                "note": (
+                    "Resolved from the assigned thermal template; room-level "
+                    "get_internal_gains() was empty because VE keeps "
+                    "template-inherited gains on the template."
+                ),
+            }
+        return {
+            "items": [],
+            "value": None,
+            "status": "OK",
+            "source": "VERoomData.get_internal_gains()",
+            "placeholder": "",
+            "note": "",
+        }
 
     def get_air_exchanges(self, room_data: Any) -> List[Any]:
-        """Return room air exchanges from ``VERoomData.get_air_exchanges``."""
+        """Return room air exchanges from ``VERoomData.get_air_exchanges``.
+
+        As for internal gains, VE keeps template-inherited air exchanges
+        (ventilation and infiltration) on the assigned thermal template rather
+        than on the room. When the room-level list is empty we resolve the
+        assigned template's air exchanges so a properly templated model is not
+        read as having no ventilation or infiltration.
+        """
         try:
-            return self._as_list(room_data.get_air_exchanges())
+            room_items = self._as_list(room_data.get_air_exchanges())
         except Exception as e:
             logger.error("Error while retrieving air exchanges: %s", e)
+            return []
+        if room_items:
+            return room_items
+        template = self.get_assigned_thermal_template(room_data)
+        if template is None or not hasattr(template, "get_air_exchanges"):
+            return []
+        try:
+            return self._as_list(template.get_air_exchanges())
+        except Exception as exc:
+            logger.error("Error reading assigned template air exchanges: %s", exc)
             return []
 
     def get_apache_systems(self, room_data: Any) -> Dict[str, Any]:
