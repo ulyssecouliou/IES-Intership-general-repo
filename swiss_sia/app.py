@@ -313,11 +313,20 @@ def _current_project_weather_label(project: Any) -> str:
 
 
 def _aps_matches_project_weather(aps_references: List[str], project_weather: str) -> bool:
-    """Return true only when both weather references are known and match."""
+    """Return true only when both weather references are known and match.
+
+    Compared on the file STEM (basename without extension), so the same climate
+    dataset matches across container formats — VE's compiled ``.fwt`` and the
+    source ``.epw`` of ``CHE_GVE_2060_RCP85_DRY`` are the same weather, not a
+    mismatch. The stem still distinguishes different climates.
+    """
     if not aps_references or not project_weather:
         return False
-    project_weather_name = os.path.basename(project_weather).lower()
-    return any(os.path.basename(reference).lower() == project_weather_name for reference in aps_references)
+    project_stem = os.path.splitext(os.path.basename(project_weather))[0].lower()
+    return any(
+        os.path.splitext(os.path.basename(reference))[0].lower() == project_stem
+        for reference in aps_references
+    )
 
 
 def _sum_numeric_rows(rows: List[Dict[str, Any]], key: str) -> Optional[float]:
