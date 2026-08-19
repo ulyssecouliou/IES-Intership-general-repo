@@ -39,6 +39,7 @@ from swiss_sia.compliance_verdict import (
     _INDETERMINATE_RULE_MARKERS,
     build_compliance_verdict,
 )
+from swiss_sia.compliance_criteria import CLIENT_LIMITATIONS
 from swiss_sia.config import SIA_COMPLIANCE_REQUIREMENT_MATRIX
 from swiss_sia.company_profile import CompanyProfile, load_company_profile
 from swiss_sia.reference_model.sia4010.ui_translations import translate
@@ -178,42 +179,6 @@ _UI = {
         "sev_haute": "High", "sev_moyenne": "Medium", "sev_basse": "Low",
     },
 }
-
-# What the tool / VE structurally cannot establish, each with its justification.
-# These are stable facts about the documented VE API and the available sources,
-# not per-model results; they are shown so a reader understands why some criteria
-# can never be auto-decided (they are reserves, not silent passes).
-_LIMITATIONS = {
-    "fr": [
-        {"title": "Ponts thermiques (ψ/χ)",
-         "why": "VE n'expose aucune grandeur ψ/χ lisible par l'API documentée, et un champ vide ne vaut pas zéro. Un calcul de ponts thermiques relu (évidence externe) est requis."},
-        {"title": "Puissance de dimensionnement",
-         "why": "Le calcul par les jours de dimensionnement prescrits n'est pas implémenté ; les pics annuels ne peuvent pas s'y substituer."},
-        {"title": "SEER / SCoP saisonniers",
-         "why": "L'équivalence avec l'indice saisonnier VE repose sur SN EN 14825, absente des sources vérifiées : verdict indicatif [TO VERIFY], pas un pass prouvé."},
-        {"title": "Contrôle de l'éclairage",
-         "why": "SIA 387/4 (référence de contrôle éclairage) est absente des sources vérifiées : le verdict de contrôle ne peut pas être clôturé."},
-        {"title": "Comparaison globale (§ 7.2.5.2)",
-         "why": "Décisive pour la conformité SIA 380/2, elle n'est pas calculée côté client (le projet de référence n'est pas simulé) : elle est fournie et acceptée par un relecteur."},
-        {"title": "Écriture des gains / ventilation dans les pièces",
-         "why": "L'API VE documentée n'expose pas de membre pour écrire des gains au niveau pièce (VERoomData) ; la préparation du modèle se fait dans l'interface VE. L'outil lit et audite, il ne modifie pas le modèle."},
-    ],
-    "en": [
-        {"title": "Thermal bridges (ψ/χ)",
-         "why": "VE exposes no ψ/χ quantity through the documented API, and an empty field is not zero. A reviewed external thermal-bridge calculation is required."},
-        {"title": "Design-day power",
-         "why": "The prescribed heating/cooling design-day workflow is not implemented; annual room peaks must never be substituted for it."},
-        {"title": "Seasonal SEER / SCoP",
-         "why": "Equivalence with the VE seasonal index rests on SN EN 14825, absent from the verified sources: indicative [TO VERIFY], not a proven pass."},
-        {"title": "Lighting control",
-         "why": "SIA 387/4 (lighting-control reference) is absent from the verified sources: the control verdict cannot be closed."},
-        {"title": "Global comparison (§ 7.2.5.2)",
-         "why": "Decisive for SIA 380/2 compliance, it is not computed client-side (the reference project is not simulated): it is supplied and accepted by a reviewer."},
-        {"title": "Writing room gains / ventilation",
-         "why": "The documented VE API exposes no member to write room-level gains (VERoomData); model preparation is done in the VE interface. The tool reads and audits, it does not modify the model."},
-    ],
-}
-
 
 def _lang(language: str) -> str:
     code = (language or "en").strip().lower()[:2]
@@ -627,7 +592,7 @@ def build_payload(
             "identification": identification,
             "verdict": _verdict_banner(verdict, code, scope),
             "outstanding": _outstanding_items(verdict, dict(sia3802_results or {}), code),
-            "limitations": _LIMITATIONS[code],
+            "limitations": CLIENT_LIMITATIONS[code],
             "reference": reference,
         },
         "criteria": criteria,

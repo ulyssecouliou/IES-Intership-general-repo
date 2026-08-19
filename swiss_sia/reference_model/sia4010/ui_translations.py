@@ -1944,6 +1944,42 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
         "fr": "Propulsé par IES Virtual Environment",
         "it": "Con tecnologia IES Virtual Environment",
     },
+    "annex_title": {
+        "en": "Annex — reserves and methodology",
+        "de": "Anhang — Vorbehalte und Methodik",
+        "fr": "Annexe — réserves et méthodologie",
+        "it": "Allegato — riserve e metodologia",
+    },
+    "annex_limitations_title": {
+        "en": "What cannot be established automatically — and why",
+        "de": "Was nicht automatisch bestimmt werden kann — und warum",
+        "fr": "Ce qui ne peut pas être établi automatiquement — et pourquoi",
+        "it": "Ciò che non può essere stabilito automaticamente — e perché",
+    },
+    "annex_reserves_title": {
+        "en": "Outstanding model reserves",
+        "de": "Offene Modellvorbehalte",
+        "fr": "Réserves ouvertes du modèle",
+        "it": "Riserve aperte del modello",
+    },
+    "annex_reserves_none": {
+        "en": "No outstanding reserve: every evaluable SIA 380/2 criterion is met.",
+        "de": "Keine offenen Vorbehalte: alle bewertbaren SIA 380/2-Kriterien sind erfüllt.",
+        "fr": "Aucune réserve ouverte : tous les critères SIA 380/2 évaluables sont réunis.",
+        "it": "Nessuna riserva aperta: tutti i criteri SIA 380/2 valutabili sono soddisfatti.",
+    },
+    "annex_method_title": {
+        "en": "Methodology and data sources",
+        "de": "Methodik und Datenquellen",
+        "fr": "Méthodologie et sources de données",
+        "it": "Metodologia e fonti dati",
+    },
+    "annex_method_body": {
+        "en": "This report reads the VE static model (geometry, constructions, systems), the ApacheSim .aps dynamic results, and reviewer-supplied evidence. SIA 380/2:2022 §7.2.5.2 decides overall compliance on the reviewed global project/reference comparison; component checks are diagnostics of the reference-project inputs. Missing or unverifiable evidence is reported as a visible reserve and never becomes a silent pass. This document is an engineering assessment, not an official SIA certificate.",
+        "de": "Dieser Bericht liest das statische VE-Modell (Geometrie, Konstruktionen, Anlagen), die dynamischen ApacheSim-.aps-Ergebnisse und die vom Prüfer gelieferten Nachweise. SIA 380/2:2022 §7.2.5.2 entscheidet die Gesamtkonformität über den geprüften globalen Projekt-/Referenzvergleich; Komponentenprüfungen sind Diagnosen der Referenzprojekt-Eingaben. Fehlende oder nicht überprüfbare Nachweise werden als sichtbarer Vorbehalt ausgewiesen und werden nie zu einem stillen Bestehen. Dieses Dokument ist eine ingenieurtechnische Beurteilung, kein offizielles SIA-Zertifikat.",
+        "fr": "Ce rapport lit le modèle statique VE (géométrie, constructions, systèmes), les résultats dynamiques ApacheSim .aps, et les évidences fournies par le relecteur. SIA 380/2:2022 §7.2.5.2 décide la conformité globale sur la comparaison relue projet/référence ; les contrôles composants sont des diagnostics des entrées du projet de référence. Une preuve manquante ou non vérifiable est signalée comme réserve visible et ne devient jamais un succès silencieux. Ce document est une évaluation d'ingénierie, pas un certificat SIA officiel.",
+        "it": "Questo rapporto legge il modello statico VE (geometria, costruzioni, impianti), i risultati dinamici ApacheSim .aps e le evidenze fornite dal revisore. La SIA 380/2:2022 §7.2.5.2 decide la conformità complessiva sul confronto globale progetto/riferimento revisionato; i controlli dei componenti sono diagnostici degli input del progetto di riferimento. Una prova mancante o non verificabile è segnalata come riserva visibile e non diventa mai un esito positivo silenzioso. Questo documento è una valutazione ingegneristica, non un certificato SIA ufficiale.",
+    },
     "sia4010_readiness_attestation_required": {
         "en": "SIA 4010: readiness, attestation required",
         "de": "SIA 4010: Bereitschaft, Bestätigung erforderlich",

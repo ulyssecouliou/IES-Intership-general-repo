@@ -18,6 +18,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
 
 from .company_profile import CompanyProfile, load_company_profile
+from .compliance_criteria import CLIENT_LIMITATIONS
 from .compliance_verdict import (
     COMPLIANT,
     NOT_COMPLIANT,
@@ -647,6 +648,64 @@ def _resolve_ies_logo(project_root: Optional[Union[str, Path]]) -> Optional[Path
     return None
 
 
+def _draw_annex_page(
+    document: PdfDocument,
+    office: CompanyProfile,
+    verdict: ComplianceVerdict,
+    language: str,
+) -> PdfPage:
+    """Draw the second-page annex: limitations, reserves and methodology."""
+
+    page = document.add_page()
+    cursor = _draw_letterhead(page, office, language)
+    page.text(
+        MARGIN, cursor, translate("annex_title", language),
+        size_pt=15.0, bold=True, colour=INK,
+    )
+    cursor += 9.0
+
+    def _section_header(top: float, key: str) -> float:
+        page.text(MARGIN, top, translate(key, language).upper(),
+                  size_pt=8.0, bold=True, colour=BRAND)
+        top += 3.0
+        page.line(MARGIN, top, A4_MM[0] - MARGIN, top, width_pt=0.5, colour=LINE)
+        return top + 5.5
+
+    # 1. Structural limitations, each with its justification.
+    cursor = _section_header(cursor, "annex_limitations_title")
+    for item in CLIENT_LIMITATIONS.get(language, CLIENT_LIMITATIONS["en"]):
+        page.rect(MARGIN, cursor - 2.6, 1.6, 1.6, fill=MUTED)
+        page.text(MARGIN + 4.0, cursor, item["title"], size_pt=8.5, bold=True, colour=INK)
+        cursor += 4.6
+        for line in wrap_to_width(item["why"], 7.5, CONTENT_WIDTH - 4.0):
+            page.text(MARGIN + 4.0, cursor, line, size_pt=7.5, colour=MUTED)
+            cursor += 3.8
+        cursor += 2.0
+    cursor += 3.0
+
+    # 2. Outstanding model reserves for this run (dynamic).
+    cursor = _section_header(cursor, "annex_reserves_title")
+    if verdict.outstanding:
+        for item in verdict.outstanding:
+            text = "• " + translate("outstanding_" + item, language)
+            for line in wrap_to_width(text, 7.8, CONTENT_WIDTH - 4.0):
+                page.text(MARGIN + 2.0, cursor, line, size_pt=7.8, colour=INK)
+                cursor += 4.2
+            cursor += 1.0
+    else:
+        page.text(MARGIN + 2.0, cursor, translate("annex_reserves_none", language),
+                  size_pt=7.8, colour=OK)
+        cursor += 5.0
+    cursor += 4.0
+
+    # 3. Methodology and data sources.
+    cursor = _section_header(cursor, "annex_method_title")
+    for line in wrap_to_width(translate("annex_method_body", language), 7.8, CONTENT_WIDTH - 4.0):
+        page.text(MARGIN + 2.0, cursor, line, size_pt=7.8, colour=INK)
+        cursor += 4.2
+    return page
+
+
 def render_compliance_report_pdf(
     output_path: Union[str, Path],
     project_label: str,
@@ -739,5 +798,9 @@ def render_compliance_report_pdf(
     cursor = max(thumbnail_bottom, figures_bottom) + 2.0
     cursor = _draw_scope_block(page, cursor, verdict, code)
     _draw_signature(page, cursor, office, code)
-    _draw_footer(page, 1, 1, code, ies_logo_path=_resolve_ies_logo(project_root))
+    ies_logo = _resolve_ies_logo(project_root)
+    _draw_footer(page, 1, 2, code, ies_logo_path=ies_logo)
+
+    annex_page = _draw_annex_page(document, office, verdict, code)
+    _draw_footer(annex_page, 2, 2, code, ies_logo_path=ies_logo)
     return document.save(output_path)
