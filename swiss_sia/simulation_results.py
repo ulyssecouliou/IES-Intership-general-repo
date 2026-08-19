@@ -16,6 +16,8 @@ import re
 from dataclasses import dataclass
 from typing import Any, Dict, Iterable, List, Optional, Tuple
 
+from .reference_model import sia180_comfort
+
 
 APSVariable = Tuple[str, str, str, str, float, float]
 
@@ -702,6 +704,30 @@ def collect_room_dynamic_results(results_file: Any) -> List[RoomDynamicResult]:
         else []
     )
 
+    # VE outputs TM52/CIBSE/ASHRAE comfort, never the SIA 180 band. When the APS
+    # carries no comfort-limit variable, compute the SIA 180:2014 figure-4 limits
+    # from the outdoor dry-bulb running mean (theta_rm). Source-traced and
+    # verified (see swiss_sia/reference_model/sia180_comfort); the operative-
+    # temperature definition and theta_rm window remain PENDING norm-analyst.
+    sia180_source = ""
+    if not upper_weather_limits or not lower_weather_limits:
+        exterior_var = find_aps_variable(variables, ("dry", "bulb", "temperature"), "w")
+        exterior = (
+            read_metric_weather_result(results_file, exterior_var)
+            if exterior_var
+            else []
+        )
+        if exterior:
+            sia180_upper, sia180_lower = sia180_comfort.comfort_limit_series(exterior, rph)
+            if not upper_weather_limits:
+                upper_weather_limits = sia180_upper
+            if not lower_weather_limits:
+                lower_weather_limits = sia180_lower
+            sia180_source = (
+                "SIA 180:2014 figure 4 computed from outdoor theta_rm "
+                "[operative-temperature definition PENDING norm-analyst]"
+            )
+
     try:
         room_list = results_file.get_room_list()
     except Exception:
@@ -788,9 +814,16 @@ def collect_room_dynamic_results(results_file: Any) -> List[RoomDynamicResult]:
                     direction="below",
                 )
             result.comfort_curve_source = "; ".join(
-                result_label(variable)
-                for variable in (upper_limit_var, lower_limit_var)
-                if variable
+                part
+                for part in (
+                    "; ".join(
+                        result_label(variable)
+                        for variable in (upper_limit_var, lower_limit_var)
+                        if variable
+                    ),
+                    sia180_source,
+                )
+                if part
             )
             if not result.annual_comfort_period_complete:
                 notes.append("temperature, occupancy and both comfort-limit series are not aligned exact 365-day series")
