@@ -1999,6 +1999,88 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
         "fr": "Statut : {status}\n\nRapport : {report}\n\nVerifiez la constante moteur provisoire, puis enregistrez le projet VE.",
         "it": "Stato: {status}\n\nRapporto: {report}\n\nVerifica la costante motore provvisoria, poi salva il progetto VE.",
     },
+    "template_remediation_technical_section": {
+        "en": "3. Confirm controlled technical application",
+        "de": "3. Kontrollierte technische Anwendung bestaetigen",
+        "fr": "3. Confirmer l'application technique controlee",
+        "it": "3. Confermare l'applicazione tecnica controllata",
+    },
+    "template_remediation_automatic_evidence_help": {
+        "en": (
+            "No form is required. The plan records the active project, exact VE "
+            "template fingerprint, selected room IDs, generation date and any "
+            "matching source-traced provisioning receipt automatically. Missing "
+            "source evidence remains NOT_CHECKABLE. Applying never grants a "
+            "compliance verdict."
+        ),
+        "de": (
+            "Kein Formular ist erforderlich. Der Plan erfasst automatisch das aktive "
+            "Projekt, den exakten VE-Template-Fingerabdruck, die ausgewaehlten "
+            "Raum-IDs, das Erstellungsdatum und einen passenden quellenverfolgten "
+            "Bereitstellungsbeleg. Fehlende Quellenbelege bleiben NOT_CHECKABLE. "
+            "Die Anwendung erteilt nie ein Konformitaetsurteil."
+        ),
+        "fr": (
+            "Aucun formulaire n'est requis. Le plan enregistre automatiquement le "
+            "projet actif, l'empreinte exacte du template VE, les identifiants des "
+            "locaux, la date de generation et tout recu de provisioning source. Une "
+            "preuve source manquante reste NOT_CHECKABLE. L'application n'accorde "
+            "jamais un verdict de conformite."
+        ),
+        "it": (
+            "Non e richiesto alcun modulo. Il piano registra automaticamente il "
+            "progetto attivo, l'impronta esatta del template VE, gli ID dei locali, "
+            "la data di generazione e ogni ricevuta di provisioning tracciata alla "
+            "fonte. Le prove mancanti restano NOT_CHECKABLE. L'applicazione non "
+            "concede mai un verdetto di conformita."
+        ),
+    },
+    "template_remediation_copy_confirmation": {
+        "en": "I confirm this is a saved disposable project copy.",
+        "de": "Ich bestaetige, dass dies eine gespeicherte Wegwerf-Projektkopie ist.",
+        "fr": "Je confirme qu'il s'agit d'une copie de projet jetable enregistree.",
+        "it": "Confermo che questa e una copia di progetto usa e getta salvata.",
+    },
+    "template_remediation_apply_confirmation": {
+        "en": (
+            "I authorize the technical application of the exact checksum-bound "
+            "preview to the selected rooms. I understand that this grants no SIA "
+            "compliance verdict."
+        ),
+        "de": (
+            "Ich genehmige die technische Anwendung der exakt checksumgebundenen "
+            "Vorschau auf die ausgewaehlten Raeume. Mir ist bewusst, dass dies kein "
+            "SIA-Konformitaetsurteil erteilt."
+        ),
+        "fr": (
+            "J'autorise l'application technique de la previsualisation exacte liee "
+            "au checksum aux locaux selectionnes. Je comprends que cela n'accorde "
+            "aucun verdict de conformite SIA."
+        ),
+        "it": (
+            "Autorizzo l'applicazione tecnica dell'anteprima esatta vincolata al "
+            "checksum ai locali selezionati. Comprendo che cio non concede alcun "
+            "verdetto di conformita SIA."
+        ),
+    },
+    "template_remediation_confirmation_changed": {
+        "en": "Selection or confirmation changed. Create a new preview before applying.",
+        "de": "Auswahl oder Bestaetigung wurde geaendert. Vor der Anwendung eine neue Vorschau erstellen.",
+        "fr": "La selection ou la confirmation a change. Creez une nouvelle previsualisation avant d'appliquer.",
+        "it": "La selezione o la conferma e cambiata. Creare una nuova anteprima prima di applicare.",
+    },
+    "template_remediation_apply_locked": {
+        "en": "Apply is locked until technical application is confirmed.",
+        "de": "Die Anwendung bleibt gesperrt, bis die technische Anwendung bestaetigt ist.",
+        "fr": "L'application est verrouillee jusqu'a confirmation de l'application technique.",
+        "it": "L'applicazione e bloccata finche l'applicazione tecnica non viene confermata.",
+    },
+    "template_remediation_preview_ready": {
+        "en": "Technical preview ready; review the immutable plan before applying.",
+        "de": "Technische Vorschau bereit; den unveraenderlichen Plan vor der Anwendung pruefen.",
+        "fr": "Previsualisation technique prete ; examinez le plan immuable avant application.",
+        "it": "Anteprima tecnica pronta; verificare il piano immutabile prima dell'applicazione.",
+    },
 }
 
 
