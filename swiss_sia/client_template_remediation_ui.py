@@ -403,6 +403,9 @@ class ClientTemplateRemediationUI:
             for room in structure.get("rooms", [])
             if room.get("status") == "BLOCKED"
         ]
+        bridge_required = structure.get("status") == (
+            "TRANSIENT_SOURCE_TEMPLATE_GAIN_BRIDGE_AVAILABLE"
+        )
         lines = [
             "STATUS: {}".format(plan["status"]),
             "Template: {}".format(plan["template"]["name"]),
@@ -451,7 +454,9 @@ class ClientTemplateRemediationUI:
             "",
             "No VE object was changed by this preview.",
             (
-                "Applying will change only the selected rooms in the active copy."
+                self._t("template_remediation_gain_structure_bridge")
+                if ready_to_apply and bridge_required
+                else "Applying will change only the selected rooms in the active copy."
                 if ready_to_apply
                 else (
                     self._t("template_remediation_gain_structure_blocked")

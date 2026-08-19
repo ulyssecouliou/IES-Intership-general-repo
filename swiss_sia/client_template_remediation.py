@@ -378,6 +378,11 @@ def template_snapshot(
         "referenced_profiles": referenced,
         "missing_profile_references": missing,
         "fingerprint_sha256": fingerprint,
+        "capabilities": {
+            "add_gain": callable(getattr(template, "add_gain", None)),
+            "remove_gain": callable(getattr(template, "remove_gain", None)),
+            "apply_changes": callable(getattr(template, "apply_changes", None)),
+        },
         "review_observations": _template_review_observations(content),
     }
 
@@ -399,7 +404,9 @@ def _gain_family(record: Mapping[str, Any]) -> Optional[str]:
 
 
 def _gain_structure_assessment(
-    template: Mapping[str, Any], rooms: Sequence[Mapping[str, Any]]
+    template: Mapping[str, Any],
+    rooms: Sequence[Mapping[str, Any]],
+    inventory: Mapping[str, Any],
 ) -> Dict[str, Any]:
     """Assess whether VE can synchronize target gains without creating rows.
 
@@ -447,7 +454,7 @@ def _gain_structure_assessment(
             family for family in set(known_actual) if known_actual.count(family) > 1
         )
         missing = sorted(set(known_targets) - set(known_actual))
-        room_blocked = bool(unknown_actual or duplicate_actual or missing)
+        room_blocked = bool(unknown_actual or duplicate_actual)
         blocked = blocked or room_blocked
         room_results.append(
             {
@@ -457,20 +464,134 @@ def _gain_structure_assessment(
                 "missing_gain_families": missing,
                 "duplicate_gain_families": duplicate_actual,
                 "unknown_gain_type_labels": unknown_actual,
-                "status": "BLOCKED" if room_blocked else "COMPATIBLE",
+                "status": (
+                    "BLOCKED"
+                    if room_blocked
+                    else "MISSING_GAIN_FAMILIES"
+                    if missing
+                    else "COMPATIBLE"
+                ),
             }
         )
 
+    selected_ids = {str(room.get("room_id") or "") for room in rooms}
+    templates_by_handle = {
+        str(item.get("handle") or ""): item
+        for item in inventory.get("templates", [])
+        if isinstance(item, Mapping)
+    }
+    all_rooms_by_template: Dict[str, List[str]] = {}
+    for room in inventory.get("rooms", []):
+        if not isinstance(room, Mapping):
+            continue
+        handle = str(room.get("current_template_handle") or "")
+        all_rooms_by_template.setdefault(handle, []).append(
+            str(room.get("room_id") or "")
+        )
+
+    bridge_by_source: Dict[str, Dict[str, Any]] = {}
+    target_by_family = {
+        family: record
+        for family, record in zip(target_families, target_records)
+        if family is not None
+    }
+    target_handle = str(template.get("handle") or "")
+    for room_result, room in zip(room_results, rooms):
+        missing = list(room_result["missing_gain_families"])
+        if not missing:
+            continue
+        source_handle = str(room.get("current_template_handle") or "")
+        source = templates_by_handle.get(source_handle)
+        source_capabilities = (
+            source.get("capabilities", {}) if isinstance(source, Mapping) else {}
+        )
+        source_records = (
+            [
+                item
+                for item in source.get("casual_gains", [])
+                if isinstance(item, Mapping)
+            ]
+            if isinstance(source, Mapping)
+            else []
+        )
+        source_families = [_gain_family(item) for item in source_records]
+        source_unknown = [family for family in source_families if family is None]
+        source_duplicates = [
+            family
+            for family in set(source_families)
+            if family is not None and source_families.count(family) > 1
+        ]
+        unselected = sorted(
+            set(all_rooms_by_template.get(source_handle, [])) - selected_ids
+        )
+        bridge_possible = bool(
+            source
+            and source_handle != target_handle
+            and not source_unknown
+            and not source_duplicates
+            and not (set(missing) & set(source_families))
+            and not unselected
+            and all(
+                bool(source_capabilities.get(member))
+                for member in ("add_gain", "remove_gain", "apply_changes")
+            )
+        )
+        if not bridge_possible:
+            blocked = True
+            room_result["status"] = "BLOCKED"
+            room_result["bridge_status"] = "NOT_AVAILABLE"
+            room_result["unselected_rooms_sharing_source_template"] = unselected
+            continue
+        room_result["bridge_status"] = "AVAILABLE_DOCUMENTED_TEMPLATE_API"
+        room_result["status"] = "BRIDGE_AVAILABLE"
+        bridge = bridge_by_source.setdefault(
+            source_handle,
+            {
+                "source_template_handle": source_handle,
+                "source_template_name": str(source.get("name") or ""),
+                "source_template_fingerprint_sha256": str(
+                    source.get("fingerprint_sha256") or ""
+                ),
+                "original_gain_record_names": [
+                    str(item.get("name") or "") for item in source_records
+                ],
+                "room_ids": [],
+                "target_gain_records": [],
+            },
+        )
+        bridge["room_ids"].append(str(room.get("room_id") or ""))
+        existing_bridge_families = {
+            str(item.get("family") or "") for item in bridge["target_gain_records"]
+        }
+        for family in missing:
+            if family in existing_bridge_families:
+                continue
+            record = target_by_family[family]
+            bridge["target_gain_records"].append(
+                {
+                    "family": family,
+                    "name": str(record.get("name") or ""),
+                }
+            )
+            existing_bridge_families.add(family)
+
+    requires_bridge = any(
+        room.get("missing_gain_families") for room in room_results
+    )
+    if blocked:
+        status = "BLOCKED_UNSUPPORTED_ROOM_GAIN_STRUCTURE"
+    elif requires_bridge:
+        status = "TRANSIENT_SOURCE_TEMPLATE_GAIN_BRIDGE_AVAILABLE"
+    else:
+        status = "COMPATIBLE_EXISTING_ROOM_GAIN_STRUCTURE"
+
     return {
-        "status": (
-            "BLOCKED_UNSUPPORTED_ROOM_GAIN_STRUCTURE"
-            if blocked
-            else "COMPATIBLE_EXISTING_ROOM_GAIN_STRUCTURE"
-        ),
+        "status": status,
         "target_gain_families": sorted(set(known_targets)),
         "unknown_target_gain_type_labels": unknown_targets,
         "duplicate_target_gain_families": duplicate_targets,
         "rooms": room_results,
+        "transient_template_bridges": list(bridge_by_source.values()),
         "room_gain_creation_api": _ROOM_GAIN_CREATION_API_STATUS,
         "source": (
             "references/iesve/IESVE_API_REFERENCE.md: VERoomData and "
@@ -478,11 +599,17 @@ def _gain_structure_assessment(
         ),
         "message": (
             "[TO VERIFY] The documented VERoomData API cannot create missing "
-            "room-level gain families. Add the missing gain rows through VE "
-            "Query Room, or use rooms that already expose each target family, "
-            "then create a new preview."
+            "room-level gain families, and a scope-safe transient source-template "
+            "bridge is unavailable. Add the missing gain rows through VE Query "
+            "Room, or select every room sharing the affected source template."
             if blocked
-            else "Every target gain family already exists exactly once in each room."
+            else (
+                "Missing room gain families will be materialized through documented "
+                "VEThermalTemplate add_gain/remove_gain/apply_changes operations, "
+                "verified, and the source template will be restored."
+                if requires_bridge
+                else "Every target gain family already exists exactly once in each room."
+            )
         ),
     }
 
@@ -671,13 +798,16 @@ def build_preview_plan(
             )
         )
     selected = _selected_rooms(inventory, room_ids)
-    gain_structure = _gain_structure_assessment(template, selected)
+    gain_structure = _gain_structure_assessment(template, selected, inventory)
     generated_at = datetime.now().isoformat(timespec="seconds")
     ready_for_technical_apply = evidence.approval_status in {
         APPROVAL_STATUS,
         TECHNICAL_APPLICATION_STATUS,
-    } and gain_structure["status"] == "COMPATIBLE_EXISTING_ROOM_GAIN_STRUCTURE"
-    if gain_structure["status"] != "COMPATIBLE_EXISTING_ROOM_GAIN_STRUCTURE":
+    } and gain_structure["status"] in {
+        "COMPATIBLE_EXISTING_ROOM_GAIN_STRUCTURE",
+        "TRANSIENT_SOURCE_TEMPLATE_GAIN_BRIDGE_AVAILABLE",
+    }
+    if gain_structure["status"] == "BLOCKED_UNSUPPORTED_ROOM_GAIN_STRUCTURE":
         plan_status = "BLOCKED_UNSUPPORTED_ROOM_GAIN_STRUCTURE"
     elif ready_for_technical_apply:
         plan_status = "READY_FOR_APPLY"
@@ -774,6 +904,25 @@ def apply_preview_plan(iesve_module: Any, plan: Mapping[str, Any]) -> Dict[str, 
         raise ClientTemplateRemediationError(
             "The selected template changed after preview; create a new preview"
         )
+    gain_assessment = dict(plan.get("capability_assessment") or {}).get(
+        "room_gain_structure", {}
+    )
+    current_templates_by_handle = {
+        str(item.get("handle") or ""): item
+        for item in current.get("templates", [])
+        if isinstance(item, Mapping)
+    }
+    for bridge in gain_assessment.get("transient_template_bridges", []):
+        source = current_templates_by_handle.get(
+            str(bridge.get("source_template_handle") or "")
+        )
+        if source is None or str(source.get("fingerprint_sha256") or "") != str(
+            bridge.get("source_template_fingerprint_sha256") or ""
+        ):
+            raise ClientTemplateRemediationError(
+                "A source template required by the gain bridge changed after "
+                "preview; create a new preview"
+            )
     current_rooms = _selected_rooms(
         current,
         [str(item.get("room_id") or "") for item in plan.get("rooms", [])],
@@ -798,6 +947,7 @@ def apply_preview_plan(iesve_module: Any, plan: Mapping[str, Any]) -> Dict[str, 
     receipt = gateway.apply_existing_thermal_template_to_rooms(
         str(planned_template["name"]),
         [room["room_id"] for room in current_rooms],
+        structure_bridge=gain_assessment.get("transient_template_bridges", []),
     )
     return {
         "schema_version": SCHEMA_VERSION,

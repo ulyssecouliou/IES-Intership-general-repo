@@ -469,6 +469,210 @@ class VeGatewayAdjacencyGuardTests(unittest.TestCase):
 
 
 class VeGatewayMiscTests(unittest.TestCase):
+    def test_client_template_assignment_is_explicit_and_read_back(self):
+        """The public client boundary verifies assignment on named rooms."""
+
+        room = _Body(None, "CLIENT ROOM", "ROOM-1", [])
+        iesve, project, model = _build_iesve(bodies=[room])
+
+        class _Template:
+            name = "REVIEWED CLIENT TEMPLATE"
+
+            @staticmethod
+            def get_casual_gains():
+                return []
+
+            @staticmethod
+            def get_air_exchanges():
+                return []
+
+        template = _Template()
+        project.thermal_templates = lambda assigned=False: {8: template}
+
+        def assign_template(_template, room_ids):
+            self.assertEqual(room_ids, ["ROOM-1"])
+            room._room_data._general.update(
+                {
+                    "thermal_template": 8,
+                    "thermal_template_name": "REVIEWED CLIENT TEMPLATE",
+                }
+            )
+
+        model.assign_thermal_template_to_rooms = assign_template
+        receipt = IesVeGateway(iesve_module=iesve).apply_existing_thermal_template_to_rooms(
+            "REVIEWED CLIENT TEMPLATE", ["ROOM-1"]
+        )
+
+        self.assertEqual(receipt["room_ids"], ["ROOM-1"])
+        self.assertEqual(
+            receipt["after"][0]["general"]["thermal_template_name"],
+            "REVIEWED CLIENT TEMPLATE",
+        )
+
+    def test_client_template_assignment_bridges_and_restores_missing_gain_rows(self):
+        """A documented source-template bridge is exact, scoped and restored."""
+
+        room = _Body(None, "CLIENT ROOM", "ROOM-1", [])
+        room._room_data._general = {
+            "thermal_template": 1,
+            "thermal_template_name": "SOURCE TEMPLATE",
+        }
+        energy = SimpleNamespace(
+            get=lambda: {"name": "Target equipment", "type_str": "Computers"}
+        )
+        people = SimpleNamespace(
+            get=lambda: {"name": "Target people", "type_str": "People"}
+        )
+        lighting = SimpleNamespace(
+            get=lambda: {"name": "Target lighting", "type_str": "Lighting"}
+        )
+        room._room_data._gains = [energy]
+        iesve, project, model = _build_iesve(bodies=[room])
+
+        class _Template:
+            def __init__(self, name, gains, on_apply=None):
+                self.name = name
+                self.gains = list(gains)
+                self.on_apply = on_apply
+
+            def get_casual_gains(self):
+                return list(self.gains)
+
+            @staticmethod
+            def get_air_exchanges():
+                return []
+
+            def add_gain(self, gain):
+                self.gains.append(gain)
+
+            def remove_gain(self, gain):
+                self.gains.remove(gain)
+
+            def apply_changes(self):
+                if self.on_apply is not None:
+                    self.on_apply(self)
+
+        def propagate_source(source):
+            if room._room_data._general.get("thermal_template") == 1:
+                room._room_data._gains = list(source.gains)
+
+        source = _Template("SOURCE TEMPLATE", [energy], propagate_source)
+        target = _Template(
+            "REVIEWED CLIENT TEMPLATE", [people, lighting, energy]
+        )
+        project.thermal_templates = lambda assigned=False: {1: source, 8: target}
+
+        def assign_template(_template, room_ids):
+            self.assertEqual(room_ids, ["ROOM-1"])
+            room._room_data._general = {
+                "thermal_template": 8,
+                "thermal_template_name": "REVIEWED CLIENT TEMPLATE",
+            }
+
+        model.assign_thermal_template_to_rooms = assign_template
+        bridge = [
+            {
+                "source_template_handle": "1",
+                "source_template_name": "SOURCE TEMPLATE",
+                "original_gain_record_names": ["Target equipment"],
+                "target_gain_records": [
+                    {"family": "people", "name": "Target people"},
+                    {"family": "lighting", "name": "Target lighting"},
+                ],
+            }
+        ]
+
+        receipt = IesVeGateway(
+            iesve_module=iesve
+        ).apply_existing_thermal_template_to_rooms(
+            "REVIEWED CLIENT TEMPLATE", ["ROOM-1"], structure_bridge=bridge
+        )
+
+        self.assertEqual(
+            receipt["transient_gain_structure_bridge"]["status"],
+            "APPLIED_AND_RESTORED",
+        )
+        self.assertEqual(
+            [gain.get()["name"] for gain in source.get_casual_gains()],
+            ["Target equipment"],
+        )
+        self.assertEqual(len(room._room_data.get_internal_gains()), 3)
+
+    def test_client_template_bridge_restores_source_when_assignment_fails(self):
+        """A downstream VE failure cannot leave the source template bridged."""
+
+        room = _Body(None, "CLIENT ROOM", "ROOM-1", [])
+        room._room_data._general = {
+            "thermal_template": 1,
+            "thermal_template_name": "SOURCE TEMPLATE",
+        }
+        energy = SimpleNamespace(
+            get=lambda: {"name": "Target equipment", "type_str": "Computers"}
+        )
+        people = SimpleNamespace(
+            get=lambda: {"name": "Target people", "type_str": "People"}
+        )
+        room._room_data._gains = [energy]
+        iesve, project, model = _build_iesve(bodies=[room])
+
+        class _Template:
+            def __init__(self, name, gains, on_apply=None):
+                self.name = name
+                self.gains = list(gains)
+                self.on_apply = on_apply
+
+            def get_casual_gains(self):
+                return list(self.gains)
+
+            @staticmethod
+            def get_air_exchanges():
+                return []
+
+            def add_gain(self, gain):
+                self.gains.append(gain)
+
+            def remove_gain(self, gain):
+                self.gains.remove(gain)
+
+            def apply_changes(self):
+                if self.on_apply is not None:
+                    self.on_apply(self)
+
+        def propagate_source(source):
+            if room._room_data._general.get("thermal_template") == 1:
+                room._room_data._gains = list(source.gains)
+
+        source = _Template("SOURCE TEMPLATE", [energy], propagate_source)
+        target = _Template("REVIEWED CLIENT TEMPLATE", [people, energy])
+        project.thermal_templates = lambda assigned=False: {1: source, 8: target}
+
+        def fail_assignment(_template, _room_ids):
+            raise RuntimeError("synthetic VE setter failure")
+
+        model.assign_thermal_template_to_rooms = fail_assignment
+        bridge = [
+            {
+                "source_template_handle": "1",
+                "source_template_name": "SOURCE TEMPLATE",
+                "original_gain_record_names": ["Target equipment"],
+                "target_gain_records": [
+                    {"family": "people", "name": "Target people"},
+                ],
+            }
+        ]
+
+        with self.assertRaisesRegex(VeMutationError, "synthetic VE setter failure"):
+            IesVeGateway(
+                iesve_module=iesve
+            ).apply_existing_thermal_template_to_rooms(
+                "REVIEWED CLIENT TEMPLATE", ["ROOM-1"], structure_bridge=bridge
+            )
+
+        self.assertEqual(
+            [gain.get()["name"] for gain in source.get_casual_gains()],
+            ["Target equipment"],
+        )
+
     def test_room_control_sync_writes_only_changed_supported_fields(self):
         """Never replay read-only getter fields such as VE 2025 ``dhw_unit``."""
 

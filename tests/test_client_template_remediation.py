@@ -32,10 +32,15 @@ class _Record:
 class _Template:
     name = "SIA REVIEWED OFFICE"
 
-    def __init__(self, profile="DAY_1"):
+    def __init__(self, profile="DAY_1", name=None, gains=None):
         self.profile = profile
+        if name is not None:
+            self.name = name
+        self.gains = list(gains) if gains is not None else None
 
     def get_casual_gains(self):
+        if self.gains is not None:
+            return list(self.gains)
         return [
             _Record(
                 name="Reviewed lighting",
@@ -46,6 +51,18 @@ class _Template:
                 variation_profile_from_template=False,
             )
         ]
+
+    def add_gain(self, gain):
+        if self.gains is None:
+            self.gains = self.get_casual_gains()
+        self.gains.append(gain)
+
+    def remove_gain(self, gain):
+        self.gains.remove(gain)
+
+    @staticmethod
+    def apply_changes():
+        return None
 
     def get_air_exchanges(self):
         return [
@@ -217,6 +234,85 @@ class ClientTemplateRemediationTests(unittest.TestCase):
         with self.assertRaisesRegex(ClientTemplateRemediationError, "not ready"):
             apply_preview_plan(object(), plan)
 
+    def test_missing_gain_families_use_scope_safe_documented_template_bridge(self):
+        target = _Template(
+            gains=[
+                _Record(name="Target people", type_str="People"),
+                _Record(name="Target lighting", type_str="Lighting"),
+                _Record(name="Target equipment", type_str="Computers"),
+            ]
+        )
+        source = _Template(
+            name="SOURCE TEMPLATE",
+            gains=[_Record(name="Existing equipment", type_str="Miscellaneous")],
+        )
+        project = _Project(target)
+        project.thermal_templates = lambda assigned, allow_ncm=False: {
+            1: source,
+            5: target,
+        }
+        model = _Model()
+        model.body = _Body(
+            gains=[_Record(name="Existing equipment", type_str="Miscellaneous")]
+        )
+        plan = self._plan(
+            Path("C:/Models/CLIENT_COPY"), project=project, model=model
+        )
+
+        assessment = plan["capability_assessment"]["room_gain_structure"]
+        self.assertEqual(plan["status"], "READY_FOR_APPLY")
+        self.assertEqual(
+            assessment["status"],
+            "TRANSIENT_SOURCE_TEMPLATE_GAIN_BRIDGE_AVAILABLE",
+        )
+        bridge = assessment["transient_template_bridges"][0]
+        self.assertEqual(bridge["source_template_handle"], "1")
+        self.assertEqual(
+            [item["family"] for item in bridge["target_gain_records"]],
+            ["lighting", "people"],
+        )
+
+    def test_gain_bridge_is_blocked_when_source_template_has_unselected_rooms(self):
+        target = _Template(
+            gains=[
+                _Record(name="Target people", type_str="People"),
+                _Record(name="Target equipment", type_str="Computers"),
+            ]
+        )
+        source = _Template(
+            name="SOURCE TEMPLATE",
+            gains=[_Record(name="Existing equipment", type_str="Miscellaneous")],
+        )
+        project = _Project(target)
+        project.thermal_templates = lambda assigned, allow_ncm=False: {
+            1: source,
+            5: target,
+        }
+        model = _Model()
+        model.body = _Body(
+            gains=[_Record(name="Existing equipment", type_str="Miscellaneous")]
+        )
+        second = _Body(
+            room_id="ROOM-2",
+            name="Office 2",
+            gains=[_Record(name="Existing equipment", type_str="Miscellaneous")],
+        )
+        model.get_bodies = lambda selected_only: [model.body, second]
+
+        plan = self._plan(
+            Path("C:/Models/CLIENT_COPY"), project=project, model=model
+        )
+        assessment = plan["capability_assessment"]["room_gain_structure"]
+        self.assertEqual(
+            plan["status"], "BLOCKED_UNSUPPORTED_ROOM_GAIN_STRUCTURE"
+        )
+        self.assertEqual(
+            assessment["rooms"][0][
+                "unselected_rooms_sharing_source_template"
+            ],
+            ["ROOM-2"],
+        )
+
     def test_unknown_gain_type_never_becomes_a_known_family(self):
         class _UnknownTemplate(_Template):
             def get_casual_gains(self):
@@ -376,7 +472,7 @@ class ClientTemplateRemediationTests(unittest.TestCase):
                 self.project = project
                 self.model = model
 
-            def apply_existing_thermal_template_to_rooms(self, *_arguments):
+            def apply_existing_thermal_template_to_rooms(self, *_arguments, **_keywords):
                 raise AssertionError("No VE write is permitted after room drift")
 
         with patch("swiss_sia.reference_model.ve_api.IesVeGateway", _Gateway):
@@ -400,10 +496,13 @@ class ClientTemplateRemediationTests(unittest.TestCase):
                 self.model = model
 
             @staticmethod
-            def apply_existing_thermal_template_to_rooms(template_name, room_ids):
+            def apply_existing_thermal_template_to_rooms(
+                template_name, room_ids, structure_bridge=()
+            ):
                 return {
                     "template_name": template_name,
                     "room_ids": list(room_ids),
+                    "structure_bridge": list(structure_bridge),
                     "after": [{"readback": "verified"}],
                 }
 

@@ -10,7 +10,7 @@ from enum import Enum
 import hashlib
 import math
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple
+from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence, Tuple
 
 from .asset_manifest import AssetManifest
 from .compliance_config import ParameterRegistry
@@ -1446,6 +1446,403 @@ class IesVeGateway(VeGateway):
                 )
             changes["apache_system"] = system_drift
         return changes
+
+    def _client_room_template_snapshot(self, body: Any) -> Dict[str, Any]:
+        """Return simulation-relevant room content for a mutation receipt."""
+
+        room_data = body.get_room_data()
+        snapshot: Dict[str, Any] = {
+            "room_id": str(getattr(body, "id", "") or ""),
+            "room_name": str(getattr(body, "name", "") or ""),
+            "general": _enum_or_value(dict(room_data.get_general())),
+            "gains": [
+                _enum_or_value(self._record_data(record, "client room gain"))
+                for record in list(room_data.get_internal_gains())
+            ],
+            "air_exchanges": [
+                _enum_or_value(
+                    self._record_data(record, "client room air exchange")
+                )
+                for record in list(room_data.get_air_exchanges())
+            ],
+        }
+        for key, getter in (
+            ("room_conditions", "get_room_conditions"),
+            ("apache_systems", "get_apache_systems"),
+        ):
+            method = getattr(room_data, getter, None)
+            if method is not None:
+                snapshot[key] = _enum_or_value(dict(method()))
+        return snapshot
+
+    def _prepare_client_gain_structure_bridge(
+        self,
+        bridge_plan: Sequence[Mapping[str, Any]],
+        requested_ids: Sequence[str],
+        target_template: Any,
+    ) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
+        """Materialize missing room-gain rows via documented template methods.
+
+        ``VERoomData`` exposes no documented room-level ``add_gain`` method.
+        IES documentation states that edits to an assigned thermal template are
+        immediately applied to its rooms.  This guarded bridge therefore adds
+        exact target gain objects to a source template only when every room
+        using that source template is selected.  Every mutation is read back;
+        callers must restore the source templates after target assignment.
+        """
+
+        if not bridge_plan:
+            return [], []
+        templates = thermal_templates(self.project, assigned=False)
+        templates_by_handle = {
+            str(handle): template for handle, template in templates.items()
+        }
+        target_records = list(target_template.get_casual_gains())
+        target_by_name = {
+            str(
+                self._record_data(record, "target template gain").get("name")
+                or ""
+            ): record
+            for record in target_records
+        }
+        selected_ids = set(requested_ids)
+        bodies = list(self.model.get_bodies(False))
+        contexts: List[Dict[str, Any]] = []
+        receipts: List[Dict[str, Any]] = []
+
+        try:
+            for entry in bridge_plan:
+                source_handle = str(entry.get("source_template_handle") or "")
+                source = templates_by_handle.get(source_handle)
+                if source is None:
+                    raise VeMutationError(
+                        "Transient gain bridge source template handle '{}' is absent".format(
+                            source_handle
+                        )
+                    )
+                if str(getattr(source, "name", "") or "") != str(
+                    entry.get("source_template_name") or ""
+                ):
+                    raise VeMutationError(
+                        "Transient gain bridge source template identity changed"
+                    )
+                for member in ("add_gain", "remove_gain", "apply_changes"):
+                    if not callable(getattr(source, member, None)):
+                        raise VeApiUnavailableError(
+                            "VEThermalTemplate.{} is unavailable for transient gain bridge".format(
+                                member
+                            )
+                        )
+
+                assigned_ids = set()
+                for body in bodies:
+                    general = dict(body.get_room_data().get_general())
+                    if str(general.get("thermal_template", "")) == source_handle:
+                        assigned_ids.add(str(getattr(body, "id", "") or ""))
+                unselected = sorted(assigned_ids - selected_ids)
+                if unselected:
+                    raise VeMutationError(
+                        "Transient gain bridge would affect unselected rooms: {}".format(
+                            unselected
+                        )
+                    )
+
+                original_names = _record_names(source.get_casual_gains())
+                planned_original = sorted(
+                    str(name) for name in entry.get("original_gain_record_names", [])
+                )
+                if original_names != planned_original:
+                    raise VeMutationError(
+                        "Transient gain bridge source template changed after preview"
+                    )
+
+                added_records: List[Any] = []
+                added_names: List[str] = []
+                for requested_gain in entry.get("target_gain_records", []):
+                    gain_name = str(requested_gain.get("name") or "")
+                    expected_family = str(requested_gain.get("family") or "")
+                    gain = target_by_name.get(gain_name)
+                    if gain is None:
+                        raise VeMutationError(
+                            "Transient gain bridge target gain '{}' is absent".format(
+                                gain_name
+                            )
+                        )
+                    gain_data = self._record_data(gain, "target bridge gain")
+                    if _gain_family(gain_data) != expected_family:
+                        raise VeMutationError(
+                            "Transient gain bridge family changed for '{}'".format(
+                                gain_name
+                            )
+                        )
+                    source.add_gain(gain)
+                    added_records.append(gain)
+                    added_names.append(gain_name)
+                source.apply_changes()
+                verified_names = _record_names(source.get_casual_gains())
+                if verified_names != sorted(original_names + added_names):
+                    raise VeMutationError(
+                        "Transient gain bridge did not persist on source template '{}'".format(
+                            getattr(source, "name", source_handle)
+                        )
+                    )
+                context = {
+                    "source": source,
+                    "source_handle": source_handle,
+                    "source_name": str(getattr(source, "name", "") or ""),
+                    "original_names": original_names,
+                    "added_records": added_records,
+                    "added_names": added_names,
+                }
+                contexts.append(context)
+                receipts.append(
+                    {
+                        "source_template_handle": source_handle,
+                        "source_template_name": context["source_name"],
+                        "temporarily_added_gain_names": added_names,
+                        "materialization_readback": "PASS",
+                    }
+                )
+
+            expected_families = {
+                _gain_family(self._record_data(record, "target template gain"))
+                for record in target_records
+            }
+            expected_families.discard("")
+            expected_families.discard(None)
+            for body in self.model.get_bodies(False):
+                room_id = str(getattr(body, "id", "") or "")
+                if room_id not in selected_ids:
+                    continue
+                families = [
+                    _gain_family(self._record_data(record, "bridged room gain"))
+                    for record in body.get_room_data().get_internal_gains()
+                ]
+                missing = sorted(expected_families - set(families))
+                duplicates = sorted(
+                    family
+                    for family in expected_families
+                    if families.count(family) != 1
+                )
+                if missing or duplicates:
+                    raise VeMutationError(
+                        "Transient gain bridge room read-back failed for '{}': "
+                        "missing={}, non_unique={}".format(
+                            getattr(body, "name", room_id), missing, duplicates
+                        )
+                    )
+        except Exception:
+            self._restore_client_gain_structure_bridge(contexts)
+            raise
+        return contexts, receipts
+
+    def _restore_client_gain_structure_bridge(
+        self, contexts: Sequence[Mapping[str, Any]]
+    ) -> List[Dict[str, Any]]:
+        """Restore and verify every transiently edited source template."""
+
+        receipts: List[Dict[str, Any]] = []
+        errors: List[str] = []
+        for context in reversed(list(contexts)):
+            source = context["source"]
+            try:
+                for record in reversed(list(context.get("added_records", []))):
+                    source.remove_gain(record)
+                source.apply_changes()
+                actual_names = _record_names(source.get_casual_gains())
+                expected_names = list(context.get("original_names", []))
+                if actual_names != expected_names:
+                    raise VeMutationError(
+                        "source template gain list was not restored"
+                    )
+                receipts.append(
+                    {
+                        "source_template_handle": context.get("source_handle"),
+                        "source_template_name": context.get("source_name"),
+                        "removed_gain_names": list(context.get("added_names", [])),
+                        "restoration_readback": "PASS",
+                    }
+                )
+            except Exception as exc:
+                errors.append(
+                    "{}: {}".format(context.get("source_name", "<unknown>"), exc)
+                )
+        if errors:
+            raise VeMutationError(
+                "Transient gain bridge cleanup failed: {}. Close VE without saving.".format(
+                    "; ".join(errors)
+                )
+            )
+        receipts.reverse()
+        return receipts
+
+    def apply_existing_thermal_template_to_rooms(
+        self,
+        template_name: str,
+        room_ids: Sequence[str],
+        structure_bridge: Sequence[Mapping[str, Any]] = (),
+    ) -> Dict[str, Any]:
+        """Assign one reviewed existing template to explicit client-room IDs.
+
+        This public mutation boundary is used by the client remediation
+        workflow.  All rooms and API members are resolved before the first
+        write.  The template assignment, effective gains, air exchanges and
+        controls are then read back; any unresolved difference fails closed.
+        """
+
+        requested_ids = [str(item).strip() for item in room_ids if str(item).strip()]
+        if not requested_ids:
+            raise VeMutationError("At least one room ID is required")
+        if len(requested_ids) != len(set(requested_ids)):
+            raise VeMutationError("Room IDs must be unique")
+        if not hasattr(self.model, "assign_thermal_template_to_rooms"):
+            raise VeApiUnavailableError(
+                "VEModel.assign_thermal_template_to_rooms is unavailable"
+            )
+
+        template_handle, template = self._find_template(str(template_name))
+        for member in ("get_casual_gains", "get_air_exchanges"):
+            if not hasattr(template, member):
+                raise VeApiUnavailableError(
+                    "Selected template exposes no {}".format(member)
+                )
+
+        try:
+            bodies = list(self.model.get_bodies(False))
+        except Exception as exc:
+            raise VeApiUnavailableError(
+                "VE rooms cannot be enumerated before template mutation: {}".format(
+                    exc
+                )
+            ) from exc
+        by_id = {
+            str(getattr(body, "id", "") or ""): body
+            for body in bodies
+            if str(getattr(body, "id", "") or "")
+        }
+        missing = sorted(set(requested_ids) - set(by_id))
+        if missing:
+            raise VeMutationError(
+                "Selected room IDs are absent from the active model: {}".format(
+                    missing
+                )
+            )
+        selected = [by_id[room_id] for room_id in requested_ids]
+        before = [self._client_room_template_snapshot(body) for body in selected]
+
+        # Resolve every room content accessor used during verification before
+        # assigning the template.  A missing method must not surface only after
+        # a partial write.
+        for body in selected:
+            room_data = body.get_room_data()
+            for member in (
+                "get_general",
+                "get_internal_gains",
+                "get_air_exchanges",
+            ):
+                if not hasattr(room_data, member):
+                    raise VeApiUnavailableError(
+                        "Room '{}' exposes no {}".format(
+                            getattr(body, "name", getattr(body, "id", "<unknown>")),
+                            member,
+                        )
+                    )
+
+        bridge_contexts, bridge_materialization = (
+            self._prepare_client_gain_structure_bridge(
+                structure_bridge, requested_ids, template
+            )
+        )
+        synchronization: List[Dict[str, Any]] = []
+        after: List[Dict[str, Any]] = []
+        try:
+            if hasattr(template, "apply_changes"):
+                template.apply_changes()
+            self.model.assign_thermal_template_to_rooms(template, requested_ids)
+
+            fresh_by_id = {
+                str(getattr(body, "id", "") or ""): body
+                for body in self.model.get_bodies(False)
+            }
+            for room_id in requested_ids:
+                body = fresh_by_id.get(room_id)
+                if body is None:
+                    raise VeMutationError(
+                        "Room '{}' disappeared after template assignment".format(
+                            room_id
+                        )
+                    )
+                room_data = body.get_room_data()
+                general = dict(room_data.get_general())
+                assigned_handle = str(general.get("thermal_template", ""))
+                assigned_name = str(general.get("thermal_template_name", ""))
+                if not (
+                    assigned_name == str(template_name)
+                    or assigned_handle == str(template_handle)
+                    or assigned_handle == str(template_name)
+                ):
+                    raise VeMutationError(
+                        "Template assignment did not persist for room '{}': "
+                        "expected name={!r}/handle={!r}, got name={!r}/handle={!r}".format(
+                            getattr(body, "name", room_id),
+                            str(template_name),
+                            str(template_handle),
+                            assigned_name,
+                            assigned_handle,
+                        )
+                    )
+
+                room_name = str(getattr(body, "name", room_id))
+                gain_changes = self._synchronise_room_gains(
+                    room_data, template, room_name
+                )
+                exchange_changes = self._synchronise_room_air_exchanges(
+                    room_data, template, room_name
+                )
+                control_changes = self._synchronise_room_controls(
+                    room_data, template, room_name
+                )
+                synchronization.append(
+                    {
+                        "room_id": room_id,
+                        "room_name": room_name,
+                        "gain_changes": gain_changes,
+                        "air_exchange_changes": exchange_changes,
+                        "control_changes": control_changes,
+                    }
+                )
+                after.append(self._client_room_template_snapshot(body))
+        except Exception as exc:
+            try:
+                self._restore_client_gain_structure_bridge(bridge_contexts)
+            except Exception as cleanup_exc:
+                raise cleanup_exc from exc
+            if isinstance(exc, (VeMutationError, VeApiUnavailableError)):
+                raise
+            raise VeMutationError(
+                "Client thermal-template assignment failed: {}".format(exc)
+            ) from exc
+
+        bridge_restoration = self._restore_client_gain_structure_bridge(
+            bridge_contexts
+        )
+        return {
+            "template_name": str(template_name),
+            "template_handle": str(template_handle),
+            "room_ids": requested_ids,
+            "before": before,
+            "after": after,
+            "synchronization": synchronization,
+            "transient_gain_structure_bridge": {
+                "materialization": bridge_materialization,
+                "restoration": bridge_restoration,
+                "status": (
+                    "APPLIED_AND_RESTORED"
+                    if bridge_contexts
+                    else "NOT_REQUIRED"
+                ),
+            },
+        }
 
     def assign_thermal_template(
         self, expected_geometry: GeometryModel, parameters: ParameterRegistry

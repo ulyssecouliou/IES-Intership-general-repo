@@ -39,9 +39,15 @@ VE 2025 runtime qualification on `ZOER_32_C1_COPY` also showed that
 `assign_thermal_template_to_rooms()` persisted the new template identity but did
 not materialize missing `People` and `Lighting` room-gain families. The script
 therefore compares the target and existing gain families during the read-only
-preview. A missing, duplicate or unknown family now produces
-`BLOCKED_UNSUPPORTED_ROOM_GAIN_STRUCTURE` before the first write. It is never
-treated as a zero load or a successful assignment.
+preview. When every room sharing an affected source template is selected, the
+plan may use a source-traced transient bridge: add the exact missing target gain
+objects to the source template, call `apply_changes()`, verify the room rows,
+assign the target template, then remove the temporary records and verify that
+the source template is exactly restored. These are documented
+`VEThermalTemplate` operations; no room value is invented. If the scope cannot
+be isolated, or a family is duplicate or unknown, the preview produces
+`BLOCKED_UNSUPPORTED_ROOM_GAIN_STRUCTURE` before the first write. A structural
+gap is never treated as a zero load or a successful assignment.
 
 The existing read-only audit must be rerun after the assignment. It determines
 whether the original room-level findings have actually been resolved.
@@ -76,9 +82,10 @@ source-reviewed remediation operations are required for them.
    a matching source-traced provisioning receipt are captured automatically.
 7. Confirm the technical application and apply the unchanged preview. The plan
    checksum, template fingerprint and room-state fingerprints must still match.
-   If the preview reports missing room-gain families, add those rows through
-   **Query Room > Internal Gains** in the disposable copy and create a new
-   preview; VEScripts does not invent or emulate them.
+   If the preview reports a transient bridge, verify that every room sharing
+   each affected source template is selected. If it reports a structural block,
+   add the rows through **Query Room > Internal Gains** in the disposable copy
+   (or extend the selection safely) and create a new preview.
 8. The VE API assigns the template and reads back its identity, gains, air
    exchanges and supported controls.
 9. Rerun the read-only client audit before saving VE.
@@ -175,7 +182,8 @@ shown as a post-remediation audit.
 - independent review remains mandatory for a later compliance claim, not for
   the non-claiming technical application;
 - referenced profiles are checked;
-- target gain families must already exist exactly once in every selected room;
+- target gain families must either exist exactly once or have a checksum-bound,
+  scope-safe transient source-template bridge;
 - exact before/target state is recorded;
 - preview integrity is checksum-bound;
 - template and room drift invalidate the preview;

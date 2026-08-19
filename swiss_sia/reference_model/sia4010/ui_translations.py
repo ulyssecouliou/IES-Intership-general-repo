@@ -2115,6 +2115,32 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
             "Aggiungerle tramite VE Query Room, poi creare una nuova anteprima."
         ),
     },
+    "template_remediation_gain_structure_bridge": {
+        "en": (
+            "Applying will temporarily add the missing gain families to the source "
+            "template, verify the selected rooms, assign the target template, then "
+            "restore and verify the source template. Close VE without saving if any "
+            "read-back fails."
+        ),
+        "de": (
+            "Bei der Anwendung werden die fehlenden Lastfamilien voruebergehend zum "
+            "Quell-Template hinzugefuegt, die ausgewaehlten Raeume geprueft, das "
+            "Ziel-Template zugewiesen und danach das Quell-Template wiederhergestellt "
+            "und geprueft. Bei einem Lesefehler VE ohne Speichern schliessen."
+        ),
+        "fr": (
+            "L'application ajoutera temporairement les familles de gains manquantes "
+            "au template source, verifiera les locaux selectionnes, affectera le "
+            "template cible, puis restaurera et verifiera le template source. En cas "
+            "d'echec de lecture, fermez VE sans sauvegarder."
+        ),
+        "it": (
+            "L'applicazione aggiungera temporaneamente le famiglie di carico mancanti "
+            "al template sorgente, verifichera i locali selezionati, assegnera il "
+            "template di destinazione, quindi ripristinera e verifichera il template "
+            "sorgente. Se una lettura fallisce, chiudere VE senza salvare."
+        ),
+    },
 }
 
 
