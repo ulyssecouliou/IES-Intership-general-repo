@@ -10,7 +10,8 @@
     "chiffres": [
       "2.3.1",
       "2.3.2 (avec figure 4)"
-    ]
+    ],
+    "complement": "Figure 3 fournie par Yiqiao Yang (SIA) le 2026-08-20 (sans rectificatif applicable)."
   },
   "corrigenda": {
     "existent": true,
@@ -90,5 +91,63 @@
       "consequence": "Les sommets ci-dessous ne sont PAS lus à l'œil sur la capture : ils sont extraits du dessin VECTORIEL de la figure 1 de refs/SIA-380-2-2022.pdf p. 27 (résidu < 0,001 °C), puis confrontés à la capture de la figure 4. Concordance sur les 8 valeurs.",
       "fichier": "sia-380-2-2022.figure1.json"
     }
+  },
+  "chiffre_2_3_3_figure_3": {
+    "titre_de": "Zulässiger Bereich der empfundenen Temperatur in Räumen mit natürlicher Lüftung, während diese weder beheizt noch gekühlt sind, je nach dem gleitenden Mittelwert der Aussentemperatur",
+    "grandeur_ordonnee": "empfundene Temperatur (température ressentie), °C",
+    "grandeur_abscisse": "gleitender Mittelwert der Aussentemperatur über 48 Stunden (θrm), °C",
+    "domaine_dapplication": "locaux à ventilation naturelle, ni chauffés ni refroidis (modèle de confort adaptatif)",
+    "source": {
+      "nature": "capture d'écran du document publié",
+      "fournisseur": "Yiqiao Yang, SIA",
+      "date_reception": "2026-08-20",
+      "rectificatif_applicable": false
+    },
+    "axes": {
+      "abscisse_theta_rm_C": [
+        5,
+        27
+      ],
+      "ordonnee_C": [
+        20,
+        31
+      ]
+    },
+    "limite_superieure": {
+      "equation_tracee": "0,33·θrm + 21,8",
+      "pente": 0.33,
+      "ordonnee_origine_C": 21.8,
+      "plancher_plateau_C": 25.0,
+      "formule_effective": "max(25.0, 0.33*theta_rm + 21.8)",
+      "point_de_rupture_theta_rm_C": 9.7
+    },
+    "limite_inferieure": {
+      "equation_tracee": "0,33·θrm + 14,3",
+      "pente": 0.33,
+      "ordonnee_origine_C": 14.3,
+      "plancher_plateau_C": 20.5,
+      "plafond_plateau_C": 22.0,
+      "formule_effective": "min(22.0, max(20.5, 0.33*theta_rm + 14.3))",
+      "point_de_rupture_bas_theta_rm_C": 18.79,
+      "point_de_rupture_haut_theta_rm_C": 23.33
+    },
+    "controle_croise": {
+      "methode": "points de rupture recalculés depuis les intersections plateau/pente et valeurs confrontées à la figure 3 publiée (verifier_figure_3).",
+      "exemples_theta_rm_inf_sup": {
+        "5": [
+          20.5,
+          25.0
+        ],
+        "19": [
+          20.57,
+          28.07
+        ],
+        "27": [
+          22.0,
+          30.71
+        ]
+      }
+    },
+    "distinction_figure_4": "Figure 3 (ventilation naturelle, ni chauffé ni refroidi = modèle adaptatif) ≠ figure 4 (chauffé/refroidi/ventilé mécaniquement). Ne pas confondre : la figure 4 est celle reprise par SIA 380/2 figure 1."
   }
 }

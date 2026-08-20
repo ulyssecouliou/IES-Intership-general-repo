@@ -318,8 +318,60 @@ def construire_sia2024():
     }
 
 
+# SIA 180:2014 figure 3 -- adaptive comfort band for rooms with NATURAL
+# ventilation while neither heated nor cooled, vs the 48 h running mean of the
+# outdoor temperature (theta_rm). Read from the published figure 3 provided by
+# Yiqiao Yang (SIA) on 2026-08-20. The two limit lines carry their own equations
+# on the chart: upper 0.33*theta_rm + 21.8, lower 0.33*theta_rm + 14.3, with an
+# upper floor (25.0 degC), a lower floor (20.5 degC) and a lower cap (22.0 degC).
+FIG3_PENTE = 0.33
+FIG3_SUP_OFFSET = 21.8
+FIG3_INF_OFFSET = 14.3
+FIG3_SUP_PLANCHER = 25.0
+FIG3_INF_PLANCHER = 20.5
+FIG3_INF_PLAFOND = 22.0
+
+
+def _figure3_limites(theta_rm):
+    u"""Return (lower, upper) figure-3 comfort limits at one theta_rm."""
+    upper = max(FIG3_SUP_PLANCHER, FIG3_PENTE * theta_rm + FIG3_SUP_OFFSET)
+    lower = min(
+        FIG3_INF_PLAFOND,
+        max(FIG3_INF_PLANCHER, FIG3_PENTE * theta_rm + FIG3_INF_OFFSET),
+    )
+    return lower, upper
+
+
+def verifier_figure_3():
+    u"""Recompute the figure-3 break points and confront the graph's key points.
+
+    Raises AssertionError on the first discrepancy: the only proof that the
+    transcribed equations and plateaus reproduce the published figure 3.
+    """
+    rupture_sup = (FIG3_SUP_PLANCHER - FIG3_SUP_OFFSET) / FIG3_PENTE
+    rupture_inf_bas = (FIG3_INF_PLANCHER - FIG3_INF_OFFSET) / FIG3_PENTE
+    rupture_inf_haut = (FIG3_INF_PLAFOND - FIG3_INF_OFFSET) / FIG3_PENTE
+    # (theta_rm, lower_expected, upper_expected) read on the published chart.
+    controles = [(5, 20.5, 25.0), (10, 20.5, 25.1), (19, 20.57, 28.07),
+                 (23.33, 22.0, 29.5), (27, 22.0, 30.71)]
+    for theta, lo_att, up_att in controles:
+        lo, up = _figure3_limites(theta)
+        assert abs(lo - lo_att) < 0.15, (
+            u'figure 3 limite inférieure à theta_rm=%s : %.2f attendu %.2f'
+            % (theta, lo, lo_att))
+        assert abs(up - up_att) < 0.15, (
+            u'figure 3 limite supérieure à theta_rm=%s : %.2f attendu %.2f'
+            % (theta, up, up_att))
+    return {
+        u'rupture_superieure_theta_rm_C': round(rupture_sup, 2),
+        u'rupture_inferieure_basse_theta_rm_C': round(rupture_inf_bas, 2),
+        u'rupture_inferieure_haute_theta_rm_C': round(rupture_inf_haut, 2),
+    }
+
+
 def construire_sia180():
     """Build the source-traced SIA 180 reference payload."""
+    ruptures = verifier_figure_3()
 
     return {
         u'norme': u'SIA 180:2014',
@@ -332,6 +384,8 @@ def construire_sia180():
             u'fournisseur': u'Yiqiao Yang, SIA',
             u'date_reception': u'2026-08-04',
             u'chiffres': [u'2.3.1', u'2.3.2 (avec figure 4)'],
+            u'complement': u'Figure 3 fournie par Yiqiao Yang (SIA) le 2026-08-20 '
+                           u'(sans rectificatif applicable).',
         },
         u'corrigenda': {
             u'existent': True,
@@ -404,6 +458,63 @@ def construire_sia180():
                                 u'de la figure 4. Concordance sur les 8 valeurs.',
                 u'fichier': u'sia-380-2-2022.figure1.json',
             },
+        },
+        u'chiffre_2_3_3_figure_3': {
+            u'titre_de': u'Zulässiger Bereich der empfundenen Temperatur in Räumen '
+                         u'mit natürlicher Lüftung, während diese weder beheizt noch '
+                         u'gekühlt sind, je nach dem gleitenden Mittelwert der '
+                         u'Aussentemperatur',
+            u'grandeur_ordonnee': u'empfundene Temperatur (température ressentie), °C',
+            u'grandeur_abscisse': u'gleitender Mittelwert der Aussentemperatur über '
+                                  u'48 Stunden (θrm), °C',
+            u'domaine_dapplication': u'locaux à ventilation naturelle, ni chauffés '
+                                     u'ni refroidis (modèle de confort adaptatif)',
+            u'source': {
+                u'nature': u"capture d'écran du document publié",
+                u'fournisseur': u'Yiqiao Yang, SIA',
+                u'date_reception': u'2026-08-20',
+                u'rectificatif_applicable': False,
+            },
+            u'axes': {
+                u'abscisse_theta_rm_C': [5, 27],
+                u'ordonnee_C': [20, 31],
+            },
+            u'limite_superieure': {
+                u'equation_tracee': u'0,33·θrm + 21,8',
+                u'pente': FIG3_PENTE,
+                u'ordonnee_origine_C': FIG3_SUP_OFFSET,
+                u'plancher_plateau_C': FIG3_SUP_PLANCHER,
+                u'formule_effective': u'max(25.0, 0.33*theta_rm + 21.8)',
+                u'point_de_rupture_theta_rm_C':
+                    ruptures[u'rupture_superieure_theta_rm_C'],
+            },
+            u'limite_inferieure': {
+                u'equation_tracee': u'0,33·θrm + 14,3',
+                u'pente': FIG3_PENTE,
+                u'ordonnee_origine_C': FIG3_INF_OFFSET,
+                u'plancher_plateau_C': FIG3_INF_PLANCHER,
+                u'plafond_plateau_C': FIG3_INF_PLAFOND,
+                u'formule_effective': u'min(22.0, max(20.5, 0.33*theta_rm + 14.3))',
+                u'point_de_rupture_bas_theta_rm_C':
+                    ruptures[u'rupture_inferieure_basse_theta_rm_C'],
+                u'point_de_rupture_haut_theta_rm_C':
+                    ruptures[u'rupture_inferieure_haute_theta_rm_C'],
+            },
+            u'controle_croise': {
+                u'methode': u'points de rupture recalculés depuis les '
+                            u'intersections plateau/pente et valeurs confrontées '
+                            u'à la figure 3 publiée (verifier_figure_3).',
+                u'exemples_theta_rm_inf_sup': {
+                    u'5': list(_figure3_limites(5)),
+                    u'19': [round(v, 2) for v in _figure3_limites(19)],
+                    u'27': [round(v, 2) for v in _figure3_limites(27)],
+                },
+            },
+            u'distinction_figure_4': u'Figure 3 (ventilation naturelle, ni chauffé '
+                                     u'ni refroidi = modèle adaptatif) ≠ figure 4 '
+                                     u'(chauffé/refroidi/ventilé mécaniquement). Ne '
+                                     u'pas confondre : la figure 4 est celle '
+                                     u'reprise par SIA 380/2 figure 1.',
         },
     }
 
@@ -545,6 +656,16 @@ def main():
         print(u'  courbe %-11s usage %-5s  annoncé %d K  calculé %d K  OK'
               % (courbe, usage, attendu, calcule))
     print(u'  -> %d/%d décalages reproduits.' % (len(controles), len(controles)))
+
+    ruptures = verifier_figure_3()
+    print()
+    print(u'SIA 180:2014 figure 3 (ventilation naturelle, ni chauffe ni refroidi) :')
+    print(u'  limite sup 0.33*theta_rm+21.8 (plancher 25) ; inf 0.33*theta_rm+14.3 '
+          u'(plancher 20.5 ; plafond 22)')
+    print(u'  ruptures theta_rm : sup %.2f ; inf basse %.2f ; inf haute %.2f  OK'
+          % (ruptures[u'rupture_superieure_theta_rm_C'],
+             ruptures[u'rupture_inferieure_basse_theta_rm_C'],
+             ruptures[u'rupture_inferieure_haute_theta_rm_C']))
 
     t11 = _par_usage()
     print()
