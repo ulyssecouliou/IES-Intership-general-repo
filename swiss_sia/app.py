@@ -74,10 +74,14 @@ company_profile_module = _reload_local_module("company_profile")
 # lived interpreter keeps a stale verdict module across Run clicks.
 _reload_local_module("compliance_verdict")
 _reload_local_module("compliance_criteria")
+# excel_report MUST be reloaded before compliance_criteria_evaluator and the
+# report modules: they do `from swiss_sia.excel_report import ExcelReportGenerator`
+# at import time, so reloading them first would bind them to a stale class (this
+# is what left the VE-read thermal-bridge coverage showing the old message).
+excel_report_module = _reload_local_module("excel_report")
 compliance_report_pdf_module = _reload_local_module("compliance_report_pdf")
 compliance_report_html_module = _reload_local_module("compliance_report_html")
 compliance_criteria_evaluator_module = _reload_local_module("compliance_criteria_evaluator")
-excel_report_module = _reload_local_module("excel_report")
 
 VEDataExtractor = data_extractor_module.VEDataExtractor
 ModelAnalyzer = model_analyzer_module.ModelAnalyzer
