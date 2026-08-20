@@ -70,11 +70,14 @@ _CAPABILITY_OVERRIDES = {
     "SIA3802_COOLING_EER_SEER": {
         "ve_capability_note": (
             "Generator type/EER extractable, but an autosized generator leaves the "
-            "capacity greyed out so the SIA 380/2 Tables 5-7 power band cannot be "
+            "capacity greyed out so the SIA 380/2 table 5 power band cannot be "
             "resolved from the model; supply the reviewed manufacturer class + "
-            "capacity + nominal EER via SIA3802_cooling_generators_<project>.csv. "
-            "The seasonal SEER equivalence still rests on SN EN 14825 (absent from "
-            "refs/): the SEER verdict stays indicative [TO VERIFY], not a proven pass."
+            "capacity + declared SEER (or nominal EER) via "
+            "SIA3802_cooling_generators_<project>.csv. A declared SEER is EN 14825 "
+            "by construction (SN EN 14825:2018 is now a verified reference and SIA "
+            "380/2 table 5 defines its SEER minima 'selon SN EN 14825'), so it is "
+            "compared to the SIA SEER band cleanly. A seasonal index read from the "
+            "VE model still needs its EN 14825 computation confirmed."
         ),
     },
     "SIA3802_HEATING_SCOP": {
@@ -137,8 +140,10 @@ CLIENT_LIMITATIONS = {
          "why": "VE n'expose aucune grandeur ψ/χ lisible par l'API documentée, et un champ vide ne vaut pas zéro. Un calcul de ponts thermiques relu (évidence externe) est requis."},
         {"title": "Puissance de dimensionnement",
          "why": "Le calcul par les jours de dimensionnement prescrits n'est pas implémenté ; les pics annuels ne peuvent pas s'y substituer."},
-        {"title": "SEER / SCoP saisonniers",
-         "why": "L'équivalence avec l'indice saisonnier VE repose sur SN EN 14825, absente des sources vérifiées : verdict indicatif [TO VERIFY], pas un pass prouvé."},
+        {"title": "SEER saisonnier (froid)",
+         "why": "SN EN 14825:2018 est désormais une référence vérifiée et SIA 380/2 table 5 définit ses minima SEER « selon SN EN 14825» : un SEER déclaré fabricant (ErP/Ecodesign) est comparé proprement à la bande SIA. Seul un indice saisonnier lu du modèle VE reste [TO VERIFY] (calcul EN 14825 non confirmé)."},
+        {"title": "SCoP saisonnier (chaud)",
+         "why": "La clause de calcul du SCoP (EN 14825, chaud) n'est pas encore vérifiée : verdict indicatif [TO VERIFY], pas un pass prouvé."},
         {"title": "Contrôle de l'éclairage",
          "why": "SIA 387/4 (référence de contrôle éclairage) est absente des sources vérifiées : le verdict de contrôle ne peut pas être clôturé."},
         {"title": "Comparaison globale (§ 7.2.5.2)",
@@ -151,8 +156,10 @@ CLIENT_LIMITATIONS = {
          "why": "VE exposes no ψ/χ quantity through the documented API, and an empty field is not zero. A reviewed external thermal-bridge calculation is required."},
         {"title": "Design-day power",
          "why": "The prescribed heating/cooling design-day workflow is not implemented; annual room peaks must never be substituted for it."},
-        {"title": "Seasonal SEER / SCoP",
-         "why": "Equivalence with the VE seasonal index rests on SN EN 14825, absent from the verified sources: indicative [TO VERIFY], not a proven pass."},
+        {"title": "Seasonal SEER (cooling)",
+         "why": "SN EN 14825:2018 is now a verified reference and SIA 380/2 table 5 defines its SEER minima 'selon SN EN 14825': a declared SEER (manufacturer ErP/Ecodesign) is compared cleanly to the SIA band. Only a seasonal index read from the VE model stays [TO VERIFY] (its EN 14825 computation is unconfirmed)."},
+        {"title": "Seasonal SCoP (heating)",
+         "why": "The heating SCoP calculation clause (EN 14825) is not yet verified: indicative [TO VERIFY], not a proven pass."},
         {"title": "Lighting control",
          "why": "SIA 387/4 (lighting-control reference) is absent from the verified sources: the control verdict cannot be closed."},
         {"title": "Global comparison (§ 7.2.5.2)",

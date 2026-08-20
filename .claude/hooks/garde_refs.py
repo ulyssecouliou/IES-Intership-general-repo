@@ -45,6 +45,7 @@ REGENERATEURS = {
     'sia-2028-kloten-temperature.json': 'scripts/extract_kloten_weather_from_sia.py',
     'sia-2028-kloten-temperature.csv': 'scripts/extract_kloten_weather_from_sia.py',
     'iso-52016-1-climat-drycold.json': 'scripts/freeze_iso_drycold_climate.py',
+    'sn-en-14825-2018.cooling-seer.json': 'scripts/build_sn_en_14825_seer.py',
 }
 
 

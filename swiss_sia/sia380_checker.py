@@ -12,6 +12,7 @@ from typing import Any, Callable, Dict, List, Optional
 
 from .config import (
     PROJECT_ROOT,
+    SIA3802_COOLING_AIR_CHILLER_MAX_KW,
     SIA3802_COOLING_EER_SEER_LIMITS,
     SIA3802_COOLING_EER_SEER_TARGETS,
     SIA3802_COOLING_NEED_SCREENING,
@@ -73,17 +74,21 @@ class SIA3802Checker:
             "not a standalone component-compliance failure."
         )
         # SEER (cooling) and SCoP (heating) are seasonal indices defined per
-        # SN EN 14825. That standard is absent from refs/, so the equivalence
-        # between the VE-reported seasonal index and the SIA/SN definition is
-        # unverified. The reference-project path (reference_project.py) already
-        # carries this caveat; the client checker must too, so a signed report
-        # never states "meets the SIA limit" for SEER/SCoP as if it were proven.
-        # The full-load EER rule below is exempt: it compares the directly-named
-        # Table 5 EER, not a seasonal SN EN 14825 index. [TO VERIFY]
+        # SN EN 14825:2018 (now a verified reference:
+        # refs/reference-data/sn-en-14825-2018.cooling-seer.json). SIA 380/2:2022
+        # table 5 (page PDF 38) states the SEER minima "selon SN EN 14825", so a
+        # DECLARED SEER (manufacturer ErP/Ecodesign figure, EN 14825 by
+        # construction) is directly comparable to the SIA band -- handled by the
+        # dedicated SIA3802_COOLING_SEER_MIN_DECLARED rule below, no caveat.
+        # This VE-internal caveat remains ONLY for a seasonal index read from the
+        # VE model itself, whose computation method is not confirmed to follow
+        # EN 14825. The heating SCoP calculation clause is not yet verified, so
+        # SCoP keeps the caveat too. The full-load EER rule compares the
+        # directly-named table 5 EER and is exempt.
         sn_en_14825_caveat = (
-            " [SEER/SCoP per SN EN 14825 - equivalence with the VE seasonal "
-            "index is unverified (SN EN 14825 absent from refs/); indicative, "
-            "not a proven pass. TO VERIFY]"
+            " [seasonal index read from the VE model - its EN 14825 computation "
+            "is not confirmed; indicative, not a proven pass. Provide a declared "
+            "SEER/SCoP (manufacturer, EN 14825) for a clean comparison. TO VERIFY]"
         )
         self.rule_engine.add_rule(Rule(
             name="SIA3802_U_VALUE_EXTERNAL_WALL",
@@ -235,6 +240,22 @@ class SIA3802Checker:
             recommendation=f"Check generator classification, rated capacity and seasonal SEER against the applicable reference-project row.{sn_en_14825_caveat}",
         ))
 
+        # Declared SEER (manufacturer ErP/Ecodesign figure) is EN 14825 by
+        # construction, and SIA 380/2 table 5 defines its minima "selon SN EN
+        # 14825" -- so this comparison is clean, no seasonal-equivalence caveat.
+        self.rule_engine.add_rule(Rule(
+            name="SIA3802_COOLING_SEER_MIN_DECLARED",
+            description=(
+                "Declared cooling SEER (manufacturer, SN EN 14825:2018) meets the "
+                "SIA 380/2 table 5 SEER limit for an air-cooled chiller below 150 kW. "
+                f"{reference_note}"
+            ),
+            check=lambda hvac: self._hvac_metric_meets_limit(hvac, "seer"),
+            severity=Severity.LOW,
+            category=reference_category,
+            recommendation="Confirm the declared SEER, generator class and rated capacity against the SIA 380/2 table 5 SEER band.",
+        ))
+
         self.rule_engine.add_rule(Rule(
             name="SIA3802_HEATING_SCOP_MIN",
             description=f"Heat-pump SCOP meets the capacity-banded SIA 380/2 table 8 or 9 limit. {reference_note}{sn_en_14825_caveat}",
@@ -309,6 +330,10 @@ class SIA3802Checker:
         cooling_generator_record = find_accepted_cooling_generators(
             cooling_generator_scan, project_label or ""
         )
+        # Make the accepted reviewer cooling-generator record available to the
+        # HVAC check, so a declared SEER (EN 14825) can be compared to the SIA
+        # band even when the VE generator is autosized (capacity greyed out).
+        self._reviewer_cooling_generator = cooling_generator_record
 
         # AHU / heat-recovery (Table 4) and ventilation-control (Table 4) verified
         # characteristics are supplied as reviewed evidence: VE exposes only the
@@ -1155,10 +1180,71 @@ class SIA3802Checker:
                         data=hvac,
                     )
 
+        self._check_declared_cooling_seer()
+
         return {
             "alerts": self.rule_engine.get_alerts_by_category("HVAC"),
             "score": self._calculate_category_score("HVAC"),
         }
+
+    def _check_declared_cooling_seer(self) -> None:
+        """Compare a reviewer-declared SEER (EN 14825) to the SIA table 5 band.
+
+        Runs only when an accepted cooling-generator evidence record exists. This
+        is the autosize workaround: VE leaves the capacity greyed out, so the
+        band cannot be resolved from the model; the reviewer supplies the SIA
+        class, the rated capacity and the declared SEER. A declared SEER is
+        EN 14825 by construction, so no seasonal-equivalence caveat applies.
+
+        The clean declared comparison is restricted to the SIA 380/2 table 5
+        scope: AIR-cooled chillers below 150 kW. Table 5 is the only cooling
+        table whose minima are stated as a SEER "selon SN EN 14825"; water-cooled
+        and >=150 kW units fall under tables 6/7 (table 7 is an EER+ metric, not a
+        SEER), so comparing a declared SEER to them would mix metrics. Those cases
+        stay NOT_CHECKABLE here.
+        """
+        record = getattr(self, "_reviewer_cooling_generator", None)
+        if not isinstance(record, dict):
+            return
+        sia_class = record.get("sia_cooling_class")
+        capacity = self._float_or_none(record.get("capacity_kw_numeric"))
+        seer = self._float_or_none(record.get("seer_numeric"))
+        if not sia_class or capacity is None or seer is None:
+            return
+        if sia_class != "air_cooled" or capacity >= SIA3802_COOLING_AIR_CHILLER_MAX_KW:
+            self.rule_engine.add_alert(
+                rule="SIA3802_COOLING_SEER_DECLARED_OUT_OF_TABLE5_SCOPE",
+                description=(
+                    f"Declared SEER for the reviewer cooling generator "
+                    f"({sia_class or 'unclassified'}, {capacity} kW) is outside the "
+                    "SIA 380/2 table 5 SEER scope (air-cooled < 150 kW). Water-cooled "
+                    "or >=150 kW units fall under tables 6/7 (table 7 is EER+, not a "
+                    "SEER), so a clean SEER comparison cannot be made here."
+                ),
+                severity=Severity.LOW,
+                category="Reference Project Diagnostics",
+                recommendation=(
+                    "Provide the table-appropriate metric (e.g. Table 7 EER+ for "
+                    "water-cooled with dry post-cooling); do not compare a declared "
+                    "SEER to a non-table-5 band."
+                ),
+                data=record,
+            )
+            return
+        declared_hvac = {
+            "id": "reviewer_cooling_generator",
+            "cooling_generator_class": sia_class,
+            "cooling_capacity_kw": capacity,
+            "seer": seer,
+            "reviewer_declared": True,
+        }
+        self._check_hvac_metric(
+            declared_hvac,
+            "seer",
+            "SIA3802_COOLING_SEER_MIN_DECLARED",
+            "declared seasonal SEER",
+            "cooling_capacity_kw",
+        )
 
     def _check_dynamic_method(self, dynamic_results: Dict[str, Any]) -> Dict[str, Any]:
         """Check full-year comfort evidence and design-power result availability."""

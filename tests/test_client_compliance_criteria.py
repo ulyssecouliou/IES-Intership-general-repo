@@ -411,10 +411,26 @@ class CoolingGeneratorEvidenceTests(unittest.TestCase):
         from swiss_sia.evidence_manager import _normalize_cooling_generator_record
         self.assertTrue(_normalize_cooling_generator_record(self._row())["accepted"])
 
-    def test_missing_eer_is_rejected(self):
+    def test_declared_seer_only_is_accepted(self):
+        """A declared SEER (no nominal EER) is a valid EN 14825 quantum (voie A)."""
+        from swiss_sia.evidence_manager import _normalize_cooling_generator_record
+        record = _normalize_cooling_generator_record(
+            self._row(nominal_eer="", seer="3.9", generator_class="air_cooled"))
+        self.assertTrue(record["accepted"])
+        self.assertEqual(record["sia_cooling_class"], "air_cooled")
+        self.assertEqual(record["seer_numeric"], 3.9)
+
+    def test_water_cooled_class_is_mapped(self):
+        from swiss_sia.evidence_manager import _normalize_cooling_generator_record
+        record = _normalize_cooling_generator_record(
+            self._row(generator_class="water_cooled_chiller"))
+        self.assertEqual(record["sia_cooling_class"], "water_cooled")
+
+    def test_no_eer_and_no_seer_is_rejected(self):
         from swiss_sia.evidence_manager import _normalize_cooling_generator_record
         self.assertFalse(
-            _normalize_cooling_generator_record(self._row(nominal_eer=""))["accepted"])
+            _normalize_cooling_generator_record(
+                self._row(nominal_eer="", seer=""))["accepted"])
 
     def test_missing_capacity_is_rejected(self):
         from swiss_sia.evidence_manager import _normalize_cooling_generator_record

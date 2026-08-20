@@ -157,9 +157,14 @@ SIA_COMPLIANCE_VALUE_PROVENANCE = {
 # < 150 kW per 7.2.5.4, and the heat-pump SCOP tables for heating. Water-cooled
 # chillers >= 150 kW use Table 7's EER+ metric (net-of-post-cooling), which the
 # VE model does not expose, so they are handled as a blocker, not encoded here.
-# The SEER/SCOP figures are defined per SN EN 14825; that standard is not in
-# refs/, so the equivalence with the VE SEER/SCoP outputs is unverified and the
-# engine compares the directly-named full-load EER for cooling. [TO VERIFY]
+# The SEER/SCOP figures are defined per SN EN 14825:2018. For cooling that
+# standard is now a verified reference
+# (refs/reference-data/sn-en-14825-2018.cooling-seer.json, frozen from the
+# published tables), and SIA 380/2 table 5 defines its SEER minima "selon SN EN
+# 14825": a DECLARED SEER (manufacturer ErP/Ecodesign figure) is therefore
+# directly comparable to the SEER band. A seasonal index read from the VE model
+# still needs its EN 14825 computation confirmed. The heating SCoP calculation
+# clause is not yet verified, so SCoP stays [TO VERIFY].
 SIA3802_GENERATION_REFERENCE = {
     "cooling_air_chiller": {
         "grandeur": "EER_full_load",

@@ -555,12 +555,28 @@ def _normalize_cooling_generator_record(raw_row: Dict[str, Any]) -> Dict[str, An
             record[numeric_field + "_numeric"] = float(record.get(numeric_field))
         except (TypeError, ValueError):
             record[numeric_field + "_numeric"] = None
+    # Map the free-text class to the SIA 380/2 table 5 band key. On the EU/CH
+    # market the nominal (full-load) EER is a UK-only NCM input and is often
+    # absent, while the declared SEER (ErP/Ecodesign, computed per SN EN 14825)
+    # is available -- so either a nominal EER OR a declared SEER is a valid
+    # quantum for the band comparison.
+    class_key = str(record.get("generator_class") or "").lower()
+    if "water" in class_key:
+        record["sia_cooling_class"] = "water_cooled"
+    elif "air" in class_key:
+        record["sia_cooling_class"] = "air_cooled"
+    else:
+        record["sia_cooling_class"] = ""
+    has_quantum = (
+        record.get("nominal_eer_numeric") is not None
+        or record.get("seer_numeric") is not None
+    )
     record["accepted"] = (
         _status_key(record.get("review_status")) in ACCEPTED_REVIEW_STATUSES
         and bool(record.get("project_id"))
         and bool(record.get("generator_class"))
         and record.get("capacity_kw_numeric") is not None
-        and record.get("nominal_eer_numeric") is not None
+        and has_quantum
         and bool(record.get("reviewer"))
         and bool(record.get("review_date"))
         and bool(record.get("source_document") or record.get("source_reference"))
