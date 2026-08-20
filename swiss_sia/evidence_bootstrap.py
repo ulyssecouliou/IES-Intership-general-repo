@@ -21,6 +21,8 @@ TEMPLATE_TARGETS = [
     ("sia3802_global_reference_comparison_template.csv", "SIA3802_global_reference_comparison_{project}.csv"),
     ("sia3802_thermal_bridges_template.csv", "SIA3802_thermal_bridges_{project}.csv"),
     ("sia3802_cooling_generators_template.csv", "SIA3802_cooling_generators_{project}.csv"),
+    ("sia3802_ahu_heat_recovery_template.csv", "SIA3802_ahu_heat_recovery_{project}.csv"),
+    ("sia3802_ventilation_control_template.csv", "SIA3802_ventilation_control_{project}.csv"),
     ("glazing_solar_protection_template.csv", "glazing_solar_protection_{project}.csv"),
     ("g_values_audit_template.csv", "g_values_audit_{project}.csv"),
 ]

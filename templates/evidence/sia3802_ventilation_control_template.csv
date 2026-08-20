@@ -1,0 +1,2 @@
+project_id,system_type,control_class,airflow_band,specific_airflow_m3_h_m2,unit,review_status,reviewer,review_date,source_document,source_reference,notes
+VE_PROJECT_FOLDER_NAME,MONOZONE_OR_MULTIZONE,INSTALLED_CONTROL_CLASS,LE_3_OR_3_TO_6_OR_GT_6,SPECIFIC_AIRFLOW_M3_H_M2,m3/(h.m2),pending,REVIEWER_NAME,YYYY-MM-DD,VENTILATION_DESIGN_DOC,SIA 380/2:2022 Table 4,Classify the installed control against Table 4 by system type (monozone/multizone) and the specific airflow band. Provide the band or the numeric specific airflow. Nothing is inferred from the model.

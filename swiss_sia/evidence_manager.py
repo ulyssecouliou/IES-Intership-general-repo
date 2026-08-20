@@ -70,6 +70,16 @@ SIA3802_COOLING_GENERATOR_FILE_PATTERNS = (
     "sia3802_cooling_generators_*.csv",
 )
 
+SIA3802_AHU_HEAT_RECOVERY_FILE_PATTERNS = (
+    "SIA3802_ahu_heat_recovery_*.csv",
+    "sia3802_ahu_heat_recovery_*.csv",
+)
+
+SIA3802_VENTILATION_CONTROL_FILE_PATTERNS = (
+    "SIA3802_ventilation_control_*.csv",
+    "sia3802_ventilation_control_*.csv",
+)
+
 
 def scan_sia3802_justifications(
     project_root: Path,
@@ -249,21 +259,23 @@ def find_accepted_global_comparison(
     return None
 
 
-def scan_sia3802_thermal_bridges(
+def _scan_reviewer_records(
     project_root: Path,
-    evidence_dir_name: str = "sia4010_evidence",
-    project_label: Optional[str] = None,
+    evidence_dir_name: str,
+    file_patterns: Any,
+    project_label: Optional[str],
+    normalizer: Any,
 ) -> Dict[str, Any]:
-    """Scan reviewer-owned SIA 380/2 thermal-bridge (psi/chi) records.
+    """Scan project-scoped reviewer CSVs and normalize each row.
 
-    VE exposes no psi/chi quantity, so the project's thermal-bridge treatment is
-    supplied as reviewed external evidence rather than read from the model.
+    Shared body for every reviewer-owned SIA 380/2 evidence family (thermal
+    bridges, cooling generators, AHU/heat recovery, ventilation control). Only
+    the file patterns and the per-row normalizer differ; acceptance is decided by
+    the normalizer, never inferred here.
     """
     evidence_dir = Path(project_root) / evidence_dir_name
     files, excluded_files = _matching_project_files(
-        evidence_dir,
-        SIA3802_THERMAL_BRIDGE_FILE_PATTERNS,
-        project_label,
+        evidence_dir, file_patterns, project_label
     )
     records: List[Dict[str, Any]] = []
     errors: List[Dict[str, str]] = []
@@ -271,7 +283,7 @@ def scan_sia3802_thermal_bridges(
         try:
             with file_path.open("r", encoding="utf-8-sig", newline="") as handle:
                 for row_number, raw_row in enumerate(csv.DictReader(handle), start=2):
-                    record = _normalize_thermal_bridge_record(raw_row)
+                    record = normalizer(raw_row)
                     record["file"] = str(file_path)
                     record["row"] = row_number
                     records.append(record)
@@ -292,20 +304,47 @@ def scan_sia3802_thermal_bridges(
     }
 
 
-def find_accepted_thermal_bridges(
-    thermal_bridge_results: Dict[str, Any],
+def _find_accepted_for_project(
+    scan_results: Dict[str, Any],
     project_label: str,
 ) -> Optional[Dict[str, Any]]:
-    """Return the accepted thermal-bridge record for the active VE project."""
-    if not isinstance(thermal_bridge_results, dict):
+    """Return the accepted reviewer record matching the active VE project."""
+    if not isinstance(scan_results, dict):
         return None
-    accepted = thermal_bridge_results.get("accepted_records", []) or []
+    accepted = scan_results.get("accepted_records", []) or []
     if not isinstance(accepted, list):
         return None
     for record in accepted:
         if isinstance(record, dict) and _field_matches(record.get("project_id"), project_label):
             return record
     return None
+
+
+def scan_sia3802_thermal_bridges(
+    project_root: Path,
+    evidence_dir_name: str = "sia4010_evidence",
+    project_label: Optional[str] = None,
+) -> Dict[str, Any]:
+    """Scan reviewer-owned SIA 380/2 thermal-bridge (psi/chi) records.
+
+    VE exposes no psi/chi quantity, so the project's thermal-bridge treatment is
+    supplied as reviewed external evidence rather than read from the model.
+    """
+    return _scan_reviewer_records(
+        project_root,
+        evidence_dir_name,
+        SIA3802_THERMAL_BRIDGE_FILE_PATTERNS,
+        project_label,
+        _normalize_thermal_bridge_record,
+    )
+
+
+def find_accepted_thermal_bridges(
+    thermal_bridge_results: Dict[str, Any],
+    project_label: str,
+) -> Optional[Dict[str, Any]]:
+    """Return the accepted thermal-bridge record for the active VE project."""
+    return _find_accepted_for_project(thermal_bridge_results, project_label)
 
 
 def scan_sia3802_cooling_generators(
@@ -321,37 +360,13 @@ def scan_sia3802_cooling_generators(
     nominal EER (with SEER optional) from the manufacturer data sheet. Nothing is
     inferred from an empty field.
     """
-    evidence_dir = Path(project_root) / evidence_dir_name
-    files, excluded_files = _matching_project_files(
-        evidence_dir,
+    return _scan_reviewer_records(
+        project_root,
+        evidence_dir_name,
         SIA3802_COOLING_GENERATOR_FILE_PATTERNS,
         project_label,
+        _normalize_cooling_generator_record,
     )
-    records: List[Dict[str, Any]] = []
-    errors: List[Dict[str, str]] = []
-    for file_path in files:
-        try:
-            with file_path.open("r", encoding="utf-8-sig", newline="") as handle:
-                for row_number, raw_row in enumerate(csv.DictReader(handle), start=2):
-                    record = _normalize_cooling_generator_record(raw_row)
-                    record["file"] = str(file_path)
-                    record["row"] = row_number
-                    records.append(record)
-        except Exception as exc:
-            errors.append({"file": str(file_path), "error": str(exc)})
-    accepted_records = [record for record in records if record.get("accepted")]
-    return {
-        "evidence_dir": str(evidence_dir),
-        "project_label": project_label or "",
-        "files": [str(path) for path in files],
-        "excluded_files": [str(path) for path in excluded_files],
-        "records": records,
-        "accepted_records": accepted_records,
-        "record_count": len(records),
-        "accepted_count": len(accepted_records),
-        "errors": errors,
-        "status": "AVAILABLE" if accepted_records else ("PENDING_REVIEW" if records else "NOT_PROVIDED"),
-    }
 
 
 def find_accepted_cooling_generators(
@@ -359,15 +374,63 @@ def find_accepted_cooling_generators(
     project_label: str,
 ) -> Optional[Dict[str, Any]]:
     """Return the accepted cooling-generator record for the active VE project."""
-    if not isinstance(cooling_generator_results, dict):
-        return None
-    accepted = cooling_generator_results.get("accepted_records", []) or []
-    if not isinstance(accepted, list):
-        return None
-    for record in accepted:
-        if isinstance(record, dict) and _field_matches(record.get("project_id"), project_label):
-            return record
-    return None
+    return _find_accepted_for_project(cooling_generator_results, project_label)
+
+
+def scan_sia3802_ahu_heat_recovery(
+    project_root: Path,
+    evidence_dir_name: str = "sia4010_evidence",
+    project_label: Optional[str] = None,
+) -> Dict[str, Any]:
+    """Scan reviewer-owned AHU / heat-recovery records (SIA 380/2 Table 4).
+
+    VE exposes recovery/control identifiers but not verified leakage class,
+    seasonal recovery efficiency, pressure drops or SFP. The reviewer supplies
+    them from the AHU data sheet; nothing is inferred from an empty field.
+    """
+    return _scan_reviewer_records(
+        project_root,
+        evidence_dir_name,
+        SIA3802_AHU_HEAT_RECOVERY_FILE_PATTERNS,
+        project_label,
+        _normalize_ahu_heat_recovery_record,
+    )
+
+
+def find_accepted_ahu_heat_recovery(
+    ahu_results: Dict[str, Any],
+    project_label: str,
+) -> Optional[Dict[str, Any]]:
+    """Return the accepted AHU / heat-recovery record for the active VE project."""
+    return _find_accepted_for_project(ahu_results, project_label)
+
+
+def scan_sia3802_ventilation_control(
+    project_root: Path,
+    evidence_dir_name: str = "sia4010_evidence",
+    project_label: Optional[str] = None,
+) -> Dict[str, Any]:
+    """Scan reviewer-owned ventilation-control records (SIA 380/2 Table 4).
+
+    The Table 4 control band depends on the system type (monozone/multizone) and
+    the specific airflow (<=3 / 3-6 / >6 m3/(h.m2)); the reviewer classifies the
+    installed control strategy against it. Nothing is inferred from the model.
+    """
+    return _scan_reviewer_records(
+        project_root,
+        evidence_dir_name,
+        SIA3802_VENTILATION_CONTROL_FILE_PATTERNS,
+        project_label,
+        _normalize_ventilation_control_record,
+    )
+
+
+def find_accepted_ventilation_control(
+    ventilation_results: Dict[str, Any],
+    project_label: str,
+) -> Optional[Dict[str, Any]]:
+    """Return the accepted ventilation-control record for the active VE project."""
+    return _find_accepted_for_project(ventilation_results, project_label)
 
 
 def _normalize_cooling_generator_record(raw_row: Dict[str, Any]) -> Dict[str, Any]:
@@ -406,6 +469,102 @@ def _normalize_cooling_generator_record(raw_row: Dict[str, Any]) -> Dict[str, An
         and bool(record.get("generator_class"))
         and record.get("capacity_kw_numeric") is not None
         and record.get("nominal_eer_numeric") is not None
+        and bool(record.get("reviewer"))
+        and bool(record.get("review_date"))
+        and bool(record.get("source_document") or record.get("source_reference"))
+    )
+    return record
+
+
+def _normalize_ahu_heat_recovery_record(raw_row: Dict[str, Any]) -> Dict[str, Any]:
+    """Normalize one reviewer-owned AHU / heat-recovery record (SIA 380/2 Table 4).
+
+    Accepted only when a reviewer has signed off the leakage/air-tightness class
+    and a numeric heat-recovery temperature efficiency (the Table 4 quantum),
+    with a traceable AHU data-sheet source. Pressure drop and SFP are optional
+    supplementary fields. Nothing is inferred from an empty field.
+    """
+    record = {
+        _normalize_header(key): _clean_value(value)
+        for key, value in (raw_row or {}).items()
+        if key is not None
+    }
+    record.setdefault("project_id", record.get("project", ""))
+    record.setdefault("leakage_class", "")
+    record.setdefault("heat_recovery_type", "")
+    record.setdefault("heat_recovery_temperature_efficiency", "")
+    record.setdefault("supply_pressure_drop_pa", "")
+    record.setdefault("extract_pressure_drop_pa", "")
+    record.setdefault("sfp_w_per_m3_s", "")
+    record.setdefault("unit", "")
+    record.setdefault("review_status", "")
+    record.setdefault("reviewer", "")
+    record.setdefault("review_date", "")
+    record.setdefault("source_document", record.get("source_file", ""))
+    record.setdefault("source_reference", "")
+    record.setdefault("notes", "")
+    for numeric_field in (
+        "heat_recovery_temperature_efficiency",
+        "supply_pressure_drop_pa",
+        "extract_pressure_drop_pa",
+        "sfp_w_per_m3_s",
+    ):
+        try:
+            record[numeric_field + "_numeric"] = float(record.get(numeric_field))
+        except (TypeError, ValueError):
+            record[numeric_field + "_numeric"] = None
+    record["accepted"] = (
+        _status_key(record.get("review_status")) in ACCEPTED_REVIEW_STATUSES
+        and bool(record.get("project_id"))
+        and bool(record.get("leakage_class"))
+        and record.get("heat_recovery_temperature_efficiency_numeric") is not None
+        and bool(record.get("reviewer"))
+        and bool(record.get("review_date"))
+        and bool(record.get("source_document") or record.get("source_reference"))
+    )
+    return record
+
+
+def _normalize_ventilation_control_record(raw_row: Dict[str, Any]) -> Dict[str, Any]:
+    """Normalize one reviewer-owned ventilation-control record (SIA 380/2 Table 4).
+
+    Accepted only when a reviewer has signed off the system type
+    (monozone/multizone), the installed control class and the specific airflow
+    band it was judged against, with a traceable source. Nothing is inferred.
+    """
+    record = {
+        _normalize_header(key): _clean_value(value)
+        for key, value in (raw_row or {}).items()
+        if key is not None
+    }
+    record.setdefault("project_id", record.get("project", ""))
+    record.setdefault("system_type", "")
+    record.setdefault("control_class", "")
+    record.setdefault("airflow_band", "")
+    record.setdefault("specific_airflow_m3_h_m2", "")
+    record.setdefault("unit", "")
+    record.setdefault("review_status", "")
+    record.setdefault("reviewer", "")
+    record.setdefault("review_date", "")
+    record.setdefault("source_document", record.get("source_file", ""))
+    record.setdefault("source_reference", "")
+    record.setdefault("notes", "")
+    try:
+        record["specific_airflow_m3_h_m2_numeric"] = float(
+            record.get("specific_airflow_m3_h_m2")
+        )
+    except (TypeError, ValueError):
+        record["specific_airflow_m3_h_m2_numeric"] = None
+    has_band = (
+        bool(record.get("airflow_band"))
+        or record.get("specific_airflow_m3_h_m2_numeric") is not None
+    )
+    record["accepted"] = (
+        _status_key(record.get("review_status")) in ACCEPTED_REVIEW_STATUSES
+        and bool(record.get("project_id"))
+        and bool(record.get("system_type"))
+        and bool(record.get("control_class"))
+        and has_band
         and bool(record.get("reviewer"))
         and bool(record.get("review_date"))
         and bool(record.get("source_document") or record.get("source_reference"))

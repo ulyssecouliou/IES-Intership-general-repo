@@ -27,12 +27,16 @@ from .config import (
     SIA4010_EVIDENCE_DIR,
 )
 from .evidence_manager import (
+    find_accepted_ahu_heat_recovery,
     find_accepted_cooling_generators,
     find_accepted_mapping,
     find_accepted_thermal_bridges,
+    find_accepted_ventilation_control,
     scan_sia2024_usage_mappings,
+    scan_sia3802_ahu_heat_recovery,
     scan_sia3802_cooling_generators,
     scan_sia3802_thermal_bridges,
+    scan_sia3802_ventilation_control,
     scan_sia3874_lighting_mappings,
 )
 from .model_analyzer import ModelAnalyzer, RoomData, has_active_solar_protection
@@ -304,6 +308,20 @@ class SIA3802Checker:
             cooling_generator_scan, project_label or ""
         )
 
+        # AHU / heat-recovery (Table 4) and ventilation-control (Table 4) verified
+        # characteristics are supplied as reviewed evidence: VE exposes only the
+        # identifiers, not the leakage class, seasonal efficiency or control band.
+        ahu_scan = scan_sia3802_ahu_heat_recovery(
+            PROJECT_ROOT, SIA4010_EVIDENCE_DIR, project_label
+        )
+        ahu_record = find_accepted_ahu_heat_recovery(ahu_scan, project_label or "")
+        ventilation_control_scan = scan_sia3802_ventilation_control(
+            PROJECT_ROOT, SIA4010_EVIDENCE_DIR, project_label
+        )
+        ventilation_control_record = find_accepted_ventilation_control(
+            ventilation_control_scan, project_label or ""
+        )
+
         envelope = self._run_category(
             "Envelope", self._check_envelope, rooms_data
         )
@@ -358,6 +376,16 @@ class SIA3802Checker:
                 "status": cooling_generator_scan.get("status"),
                 "accepted": bool(cooling_generator_record),
                 "record": cooling_generator_record,
+            },
+            "ahu_heat_recovery": {
+                "status": ahu_scan.get("status"),
+                "accepted": bool(ahu_record),
+                "record": ahu_record,
+            },
+            "ventilation_control_evidence": {
+                "status": ventilation_control_scan.get("status"),
+                "accepted": bool(ventilation_control_record),
+                "record": ventilation_control_record,
             },
             "rule_evaluations": dict(self.rule_engine.evaluated_counts),
             "alerts": list(self.rule_engine.alerts),

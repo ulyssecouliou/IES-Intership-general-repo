@@ -4426,6 +4426,35 @@ class ExcelReportGenerator:
             stats["cooling_generator_evidence"] = (
                 "Reviewer-accepted cooling-generator evidence ({}).".format(detail)
             )
+        # Reviewed AHU / heat-recovery (Table 4) evidence rides on sia3802_results.
+        ahu = (sia3802_results or {}).get("ahu_heat_recovery", {}) or {}
+        stats["ahu_reviewed_accepted"] = bool(ahu.get("accepted"))
+        ahu_record = ahu.get("record") or {}
+        if isinstance(ahu_record, dict) and ahu.get("accepted"):
+            leakage = str(ahu_record.get("leakage_class") or "").strip()
+            eta = ahu_record.get("heat_recovery_temperature_efficiency_numeric")
+            detail = "leakage class={}".format(leakage) if leakage else "reviewed AHU"
+            if eta is not None:
+                detail += ", heat-recovery temperature efficiency={}".format(eta)
+            stats["ahu_reviewed_evidence"] = (
+                "Reviewer-accepted AHU/heat-recovery evidence ({}).".format(detail)
+            )
+        # Reviewed ventilation-control (Table 4) evidence rides on sia3802_results.
+        vent = (sia3802_results or {}).get("ventilation_control_evidence", {}) or {}
+        stats["ventilation_control_reviewed_accepted"] = bool(vent.get("accepted"))
+        vent_record = vent.get("record") or {}
+        if isinstance(vent_record, dict) and vent.get("accepted"):
+            system_type = str(vent_record.get("system_type") or "").strip()
+            control_class = str(vent_record.get("control_class") or "").strip()
+            band = str(vent_record.get("airflow_band") or "").strip()
+            detail = "system={}".format(system_type) if system_type else "reviewed control"
+            if control_class:
+                detail += ", control class={}".format(control_class)
+            if band:
+                detail += ", airflow band={}".format(band)
+            stats["ventilation_control_reviewed_evidence"] = (
+                "Reviewer-accepted ventilation-control evidence ({}).".format(detail)
+            )
         evidence = sia4010_results.get("evidence", {}) or {}
         dynamic_payload = dynamic_results or sia4010_results.get("dynamic_results", {}) or {}
         preflight_status_by_check = {
@@ -4633,16 +4662,26 @@ class ExcelReportGenerator:
                 "rooms with resolved representative daily profile hours",
             )
         if key == "ventilation_control":
+            if stats.get("ventilation_control_reviewed_accepted"):
+                return "AVAILABLE", stats.get(
+                    "ventilation_control_reviewed_evidence",
+                    "Reviewer-accepted ventilation-control class (SIA 380/2 Table 4).",
+                )
             return availability(
                 int(stats.get("rooms_with_ventilation_control", 0) or 0),
                 int(stats.get("rooms_with_ventilation", 0) or 0),
                 "ventilated rooms with system/control classification",
             )
         if key == "ahu_heat_recovery":
+            if stats.get("ahu_reviewed_accepted"):
+                return "AVAILABLE", stats.get(
+                    "ahu_reviewed_evidence",
+                    "Reviewer-accepted AHU leakage class and heat-recovery efficiency (SIA 380/2 Table 4).",
+                )
             count = int(stats.get("rooms_with_ahu_identifiers", 0) or 0)
             if count:
-                return "PARTIAL", f"{count} room(s) expose fan/recovery/humidification identifiers; pressure-drop, leakage and verified efficiency evidence remains external."
-            return "MISSING", "No AHU fan/recovery/humidification identifier was extracted."
+                return "PARTIAL", f"{count} room(s) expose fan/recovery/humidification identifiers; pressure-drop, leakage and verified efficiency evidence remains external. Attach reviewed evidence via SIA3802_ahu_heat_recovery_<project>.csv."
+            return "MISSING", "No AHU fan/recovery/humidification identifier was extracted. Provide reviewed evidence via SIA3802_ahu_heat_recovery_<project>.csv."
         if key == "cooling_efficiency":
             if stats.get("cooling_generator_accepted"):
                 return "AVAILABLE", stats.get(

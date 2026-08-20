@@ -266,6 +266,37 @@ class EvaluatorTests(unittest.TestCase):
         self.assertEqual(
             by_id["SIA3802_COOLING_EER_SEER"]["runtime_status"], "NOT_CHECKABLE")
 
+    def test_reviewed_ahu_evidence_credits_the_ahu_criterion(self):
+        sia3802 = self._base_sia3802("REVIEWED_RESULT_AVAILABLE")
+        sia3802["ahu_heat_recovery"] = {
+            "status": "AVAILABLE",
+            "accepted": True,
+            "record": {
+                "leakage_class": "B",
+                "heat_recovery_temperature_efficiency_numeric": 0.78,
+            },
+        }
+        manifest = evaluate_client_compliance(
+            sia3802, {}, {}, [_Room()], [], scope="sia3802")
+        by_id = {c["id"]: c for c in manifest["criteria"]}
+        self.assertEqual(by_id["SIA3802_AHU_HEAT_RECOVERY"]["runtime_status"], "OK")
+
+    def test_reviewed_ventilation_control_credits_the_criterion(self):
+        sia3802 = self._base_sia3802("REVIEWED_RESULT_AVAILABLE")
+        sia3802["ventilation_control_evidence"] = {
+            "status": "AVAILABLE",
+            "accepted": True,
+            "record": {
+                "system_type": "multizone",
+                "control_class": "demand_controlled",
+                "airflow_band": "3_to_6",
+            },
+        }
+        manifest = evaluate_client_compliance(
+            sia3802, {}, {}, [_Room()], [], scope="sia3802")
+        by_id = {c["id"]: c for c in manifest["criteria"]}
+        self.assertEqual(by_id["SIA3802_VENTILATION_CONTROL"]["runtime_status"], "OK")
+
     def test_evaluation_block_matches_the_authoritative_verdict(self):
         manifest = evaluate_client_compliance(
             self._base_sia3802("NOT_CHECKABLE"), {}, {}, [_Room()], [],
@@ -350,6 +381,76 @@ class CoolingGeneratorEvidenceTests(unittest.TestCase):
         from swiss_sia.evidence_manager import _normalize_cooling_generator_record
         self.assertFalse(
             _normalize_cooling_generator_record(self._row(review_status="pending"))["accepted"])
+
+
+class AhuHeatRecoveryEvidenceTests(unittest.TestCase):
+    """The reviewer AHU / heat-recovery record is accepted only when complete."""
+
+    def _row(self, **overrides):
+        row = {
+            "project_id": "Demo",
+            "leakage_class": "B",
+            "heat_recovery_type": "plate",
+            "heat_recovery_temperature_efficiency": "0.78",
+            "review_status": "accepted",
+            "reviewer": "Reviewer",
+            "review_date": "2026-08-20",
+            "source_document": "ahu_datasheet.pdf",
+        }
+        row.update(overrides)
+        return row
+
+    def test_complete_record_is_accepted(self):
+        from swiss_sia.evidence_manager import _normalize_ahu_heat_recovery_record
+        self.assertTrue(_normalize_ahu_heat_recovery_record(self._row())["accepted"])
+
+    def test_missing_efficiency_is_rejected(self):
+        from swiss_sia.evidence_manager import _normalize_ahu_heat_recovery_record
+        self.assertFalse(
+            _normalize_ahu_heat_recovery_record(
+                self._row(heat_recovery_temperature_efficiency=""))["accepted"])
+
+    def test_missing_leakage_class_is_rejected(self):
+        from swiss_sia.evidence_manager import _normalize_ahu_heat_recovery_record
+        self.assertFalse(
+            _normalize_ahu_heat_recovery_record(self._row(leakage_class=""))["accepted"])
+
+
+class VentilationControlEvidenceTests(unittest.TestCase):
+    """The reviewer ventilation-control record is accepted only when complete."""
+
+    def _row(self, **overrides):
+        row = {
+            "project_id": "Demo",
+            "system_type": "multizone",
+            "control_class": "demand_controlled",
+            "airflow_band": "3_to_6",
+            "review_status": "accepted",
+            "reviewer": "Reviewer",
+            "review_date": "2026-08-20",
+            "source_document": "ventilation_design.pdf",
+        }
+        row.update(overrides)
+        return row
+
+    def test_complete_record_is_accepted(self):
+        from swiss_sia.evidence_manager import _normalize_ventilation_control_record
+        self.assertTrue(_normalize_ventilation_control_record(self._row())["accepted"])
+
+    def test_numeric_airflow_satisfies_the_band(self):
+        from swiss_sia.evidence_manager import _normalize_ventilation_control_record
+        row = self._row(airflow_band="", specific_airflow_m3_h_m2="4.5")
+        self.assertTrue(_normalize_ventilation_control_record(row)["accepted"])
+
+    def test_missing_band_and_airflow_is_rejected(self):
+        from swiss_sia.evidence_manager import _normalize_ventilation_control_record
+        row = self._row(airflow_band="", specific_airflow_m3_h_m2="")
+        self.assertFalse(_normalize_ventilation_control_record(row)["accepted"])
+
+    def test_missing_control_class_is_rejected(self):
+        from swiss_sia.evidence_manager import _normalize_ventilation_control_record
+        self.assertFalse(
+            _normalize_ventilation_control_record(self._row(control_class=""))["accepted"])
 
 
 if __name__ == "__main__":
