@@ -70,6 +70,24 @@ def _write_test_png(path: Path, width: int = 12, height: int = 8) -> Path:
 class LogoEmbeddingTests(unittest.TestCase):
     """The company logo must embed and decode back to real pixels."""
 
+    def test_contained_logo_keeps_its_original_aspect_ratio(self):
+        wide = _write_test_png(OUTPUT_ROOT / "wide_logo.png", width=24, height=8)
+        portrait = _write_test_png(
+            OUTPUT_ROOT / "portrait_logo.png", width=8, height=24
+        )
+        document = PdfDocument(title="logo ratios")
+        page = document.add_page()
+
+        wide_box = page.image_contain(10.0, 10.0, 18.0, 18.0, wide)
+        portrait_box = page.image_contain(40.0, 10.0, 18.0, 18.0, portrait)
+
+        self.assertAlmostEqual(wide_box[2] / wide_box[3], 3.0)
+        self.assertAlmostEqual(portrait_box[2] / portrait_box[3], 1.0 / 3.0)
+        self.assertAlmostEqual(wide_box[0], 10.0)
+        self.assertAlmostEqual(wide_box[1], 16.0)
+        self.assertAlmostEqual(portrait_box[0], 46.0)
+        self.assertAlmostEqual(portrait_box[1], 10.0)
+
     def test_png_logo_round_trips_through_the_pdf(self):
         from swiss_sia.pdf_writer import load_image
 

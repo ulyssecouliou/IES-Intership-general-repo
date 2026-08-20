@@ -213,7 +213,7 @@ def _draw_letterhead(
     text_left = MARGIN
     if profile.logo_path is not None:
         try:
-            page.image(MARGIN, 6.5, 17.0, 17.0, profile.logo_path)
+            page.image_contain(MARGIN, 6.5, 17.0, 17.0, profile.logo_path)
             text_left = MARGIN + 21.0
         except Exception:
             # A logo that cannot be embedded must never block the report.
@@ -433,7 +433,9 @@ def _draw_model_thumbnail(
     )
     if image_path:
         try:
-            page.image(x + 4.0, top + 9.0, width - 8.0, height - 13.0, image_path)
+            page.image_contain(
+                x + 4.0, top + 9.0, width - 8.0, height - 13.0, image_path
+            )
             return top + height + 3.0
         except Exception:
             # A broken optional presentation image cannot block the report.
@@ -628,7 +630,7 @@ def _draw_footer(
     logo_drawn = False
     if ies_logo_path is not None:
         try:
-            page.image(centre - 26.0, y - 4.2, 6.0, 6.0, ies_logo_path)
+            page.image_contain(centre - 26.0, y - 4.2, 6.0, 6.0, ies_logo_path)
             logo_drawn = True
         except Exception:
             # A logo that cannot be embedded must never block the report.
@@ -1123,7 +1125,13 @@ def render_compliance_report_pdf(
     client_logo = str(context_value("client_logo_path", "") or "").strip()
     if client_logo and Path(client_logo).is_file():
         try:
-            page.image(A4_MM[0] - MARGIN - 19.0, cursor - 5.0, 19.0, 13.0, client_logo)
+            page.image_contain(
+                A4_MM[0] - MARGIN - 19.0,
+                cursor - 5.0,
+                19.0,
+                13.0,
+                client_logo,
+            )
         except Exception:
             pass
     page.text(

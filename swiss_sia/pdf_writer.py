@@ -365,7 +365,7 @@ class PdfPage:
     def image(
         self, x_mm: float, y_mm: float, width_mm: float, height_mm: float, path
     ) -> None:
-        """Draw a JPEG or PNG image inside the given top-left box."""
+        """Draw a JPEG or PNG image stretched to the given top-left box."""
 
         name = self.document.register_image(path)
         self._operations.append(
@@ -377,6 +377,39 @@ class PdfPage:
                 name,
             )
         )
+
+    def image_contain(
+        self,
+        x_mm: float,
+        y_mm: float,
+        width_mm: float,
+        height_mm: float,
+        path: Union[str, Path],
+    ) -> Tuple[float, float, float, float]:
+        """Fit an image inside a box without cropping or changing its ratio.
+
+        The fitted image is centred on both axes.  Returning its actual drawing
+        box makes the geometry directly testable and lets callers align nearby
+        content when needed.
+        """
+
+        image = self.document.image_info(path)
+        source_width = float(image["width"])
+        source_height = float(image["height"])
+        if source_width <= 0 or source_height <= 0:
+            raise ImageError("Image dimensions must be positive")
+        source_ratio = source_width / source_height
+        box_ratio = float(width_mm) / float(height_mm)
+        if source_ratio >= box_ratio:
+            draw_width = float(width_mm)
+            draw_height = draw_width / source_ratio
+        else:
+            draw_height = float(height_mm)
+            draw_width = draw_height * source_ratio
+        draw_x = float(x_mm) + (float(width_mm) - draw_width) / 2.0
+        draw_y = float(y_mm) + (float(height_mm) - draw_height) / 2.0
+        self.image(draw_x, draw_y, draw_width, draw_height, path)
+        return draw_x, draw_y, draw_width, draw_height
 
     def content(self) -> bytes:
         """Return the page content stream."""
@@ -412,6 +445,13 @@ class PdfDocument:
             self._images[key] = load_image(path)
             self._image_names[key] = "Im{}".format(len(self._image_names) + 1)
         return self._image_names[key]
+
+    def image_info(self, path: Union[str, Path]) -> Dict[str, Any]:
+        """Return registered image metadata, loading the asset only once."""
+
+        key = str(Path(path).resolve())
+        self.register_image(path)
+        return self._images[key]
 
     def save(self, path: Union[str, Path]) -> Path:
         """Write the document, atomically replacing any existing file."""
