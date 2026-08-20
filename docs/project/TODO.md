@@ -38,7 +38,8 @@ Modèle exemple `SIA_compatible_model_TEST` : **overall SIA 380/2 CONFORME (avec
 
 - [x] ✅ **EER / SEER froid** — *ingestion + comparaison SEER câblées* (`92c9330`, `615e03f`) : CSV relecteur `SIA3802_cooling_generators_<project>.csv` (classe air/water + capacité kW + **SEER déclaré** ou EER nominal). Le **SEER déclaré** (fiche ErP, EN 14825) est comparé **proprement** à la bande SIA Table 5 (règle `SIA3802_COOLING_SEER_MIN_DECLARED`, sans caveat), **gaté air-cooled < 150 kW** ; water-cooled / ≥150 kW → NOT_CHECKABLE (tables 6/7). Réf. EN 14825:2018 figée + avis norm-analyst.
   - *Reste côté utilisateur* : fournir la **fiche fabricant** (SEER unique) et la saisir dans le CSV.
-  - ⬜ *Réserve qa-auditor* : relire les bandes `seer` du config vs **SIA 380/2 PDF p.38** (norm-analyst n'a pas pu, poppler absent) ; consigner les 5 conditions Q1 pour l'unité réelle. Détail : `traceability/sn-en-14825-seer-froid.spec.md`.
+  - [x] ✅ *Bandes `seer` vérifiées* vs **SIA 380/2 PDF p.38** (`b711134`, PyMuPDF) : Tables 5 (air) & 6 (eau) correspondent exactement ; gate déclaré élargi air+eau (seul Table 7 EER+ / non classé exclu).
+  - ⬜ *Réserve qa-auditor restante* : consigner les 5 conditions Q1 pour l'unité réelle du projet client. Détail : `traceability/sn-en-14825-seer-froid.spec.md`.
   - ⬜ *SCoP chaud* : reste `[TO VERIFY]` (clause de calcul chaud EN 14825 non figée ; base des tables 8/9 non confirmée).
 
 - [x] ✅ **AHU / récupération de chaleur** — *ingestion faite* (`5671e1b`) : CSV relecteur `SIA3802_ahu_heat_recovery_<project>.csv` (classe d'étanchéité + rendement température récup. = quantum Table 4 ; Δp et SFP optionnels) crédite `ahu_heat_recovery` → **AVAILABLE**.
