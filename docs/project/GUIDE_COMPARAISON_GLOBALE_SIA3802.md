@@ -47,9 +47,10 @@ manque exactement.
 
 ## 3. Fournir la comparaison globale — pas à pas
 
-1. Calculez, hors de l'outil, l'indice SIA 380/2 du **projet** et celui du
-   **projet de référence** (même métrique, même unité), et conservez le document
-   de calcul.
+1. Calculez l'indice SIA 380/2 du **projet** et celui du **projet de référence**
+   (même métrique, même unité), et conservez le document de calcul. Deux voies :
+   soit un calcul hors outil, soit l'outil qui **construit** le projet de
+   référence à simuler (voir § 5).
 2. Copiez le gabarit
    [`templates/SIA3802_global_reference_comparison_TEMPLATE.csv`](templates/SIA3802_global_reference_comparison_TEMPLATE.csv)
    dans le dossier `sia4010_evidence/` **à côté du modèle VE**, et renommez-le :
@@ -91,7 +92,52 @@ Si `accepted` est posé mais que `project_value > reference_value`, le rapport
 lève l'alerte critique `SIA3802_GLOBAL_REFERENCE_DISCREPANCY` et devient
 **Non conforme** : l'acceptation ne peut **jamais** contredire les chiffres.
 
-## 5. Ce que ça ne fait pas
+## 5. Calculer l'indice de référence dans VE (voie alternative)
+
+Le § 3 suppose que vous calculez l'indice du projet **et** celui du projet de
+référence hors de l'outil. En alternative, l'outil sait **construire** le projet
+de référence à partir des substitutions normatives, pour que vous n'ayez plus
+qu'à **simuler** les deux modèles et lire les deux indices. Cette voie ne calcule
+toujours **rien** toute seule : elle prépare le modèle de référence, vous lancez
+ApacheSim, et un relecteur accepte la comparaison.
+
+**Étape 1 — voir le spec et ce qui bloque.**
+Ouvrez le projet client actif et lancez **`Run_VE_SIA3802_Reference_Spec_Dump.py`**
+(lecture seule). Il écrit, à côté du projet, un JSON listant chaque substitution
+(valeur projet, limite et cible de référence, source SIA) et surtout les
+**blockers**. Statuts possibles du spec :
+- `READY_FOR_REFERENCE_RUN` — toutes les familles substituables sont résolues.
+- `BLOCKED_INCOMPLETE_INPUTS` — au moins une famille manque (surface non classée,
+  valeur de référence non encodée, g_perp non prouvé…). **Résolvez chaque blocker
+  dans le modèle** (classer la surface, exposer la valeur) avant de construire,
+  sinon la référence est incomplète. Les familles hors périmètre outil restent à
+  traiter à la main par le relecteur (voir le JSON `missing_input_families`).
+
+**Étape 2 — construire le projet de référence (sur une COPIE).**
+`Run_VE_SIA3802_Build_Reference_Model.py` **refuse** de muter un projet dont le
+chemin ne contient pas `_TEST`, `_COPY` ou `_DISPOSABLE` — il ne touche **jamais**
+l'original. Travaillez donc sur une copie du projet. Le script applique les
+substitutions (infiltration, émission, capacité illimitée, génération SCoP/SEER,
+enveloppe opaque, vitrage, frame fraction) **avec capability-check + readback**
+immédiat ; toute famille dont le readback échoue est marquée `FAILED_READBACK` et
+signalée — elle **n'est pas** silencieusement supposée appliquée. Le script ne
+lance **pas** ApacheSim.
+
+**Étape 3 — simuler les deux modèles.**
+Lancez ApacheSim sur le **projet** et sur le **projet de référence** construit,
+avec la **même météo** et les mêmes réglages, puis relevez l'**indice global
+SIA 380** de chacun (même métrique, même unité).
+
+**Étape 4 — reporter dans le CSV.**
+Mettez les deux indices dans `SIA3802_global_reference_comparison_<projet>.csv`
+(§ 4), faites relire/accepter, relancez `Run_VE_Swiss_Compliance.py`.
+
+> ⚠️ **Ce n'est pas une qualification.** Un modèle de référence construit par API
+> et simulé n'est pas une preuve certifiée : les `FAILED_READBACK`, les familles
+> hors périmètre et l'acceptation relecteur restent des garde-fous obligatoires.
+> `BLOCKED_INCOMPLETE_INPUTS` non résolu ⇒ la référence n'est pas déterministe.
+
+## 6. Ce que ça ne fait pas
 
 - Ça ne remplace pas un certificat : le rapport reste une **évaluation de
   preuves**.
