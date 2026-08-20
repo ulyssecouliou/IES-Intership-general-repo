@@ -26,8 +26,9 @@ Modèle exemple `SIA_compatible_model_TEST` : **overall SIA 380/2 CONFORME (avec
 
 ### ⬜ Réserves du modèle client — détail (intérêt · quoi faire · qui · effort outil)
 
-- [x] ✅ **Ponts thermiques ψ/χ** — *ingestion faite* (`3a19a0c`) : CSV relecteur `SIA3802_thermal_bridges_<project>.csv` (méthode + total ψ.L+χ W/K OU référence de schéma + reviewer + source), scanné par `evidence_manager`, appliqué par `sia380_checker`, crédité en couverture ; capacité `EXTERNAL_EVIDENCE` → critère **OK** si évidence relue, sinon `NEEDS_REVIEWER_EVIDENCE`.
-  - *Reste côté utilisateur* : fournir le **calcul de ponts thermiques** (ingénieur physique du bâtiment) et le saisir dans le CSV.
+- [x] ✅ **Ponts thermiques ψ/χ** — *lecture VE directe* (`595660f`, après `3a19a0c`) : VE 2025.2 expose ψ/χ par surface (`VESurface.get_thermal_bridges_non_repeating/_random`) — découvert via le script officiel IES du manager, confirmé par probe sur VE réelle (H_tb=24,66 W/K sur le modèle test). `data_extractor.get_model_thermal_bridges()` calcule **H_tb = Σ(ψ·L·flux) + Σ(χ·count)** en W/K ; `sia380_checker` : VE-read **prioritaire**, CSV relecteur en **repli** (vieilles VE / modèle non renseigné). Capacité `VE_AVAILABLE`.
+  - ⚠️ *Honnêteté* : jonctions à ψ=0 signalées (défaut non saisi possible) ; une lecture tout-à-zéro n'est pas une preuve complète.
+  - *Reste côté utilisateur* : s'assurer que les ψ sont bien **saisis** dans VE (sinon 0 par défaut) — la qualité des ψ reste la responsabilité du modéliseur/relecteur.
 
 - ⬜ **Puissance de dimensionnement** (`NOT_AVAILABLE_IN_VE`, `config.py:1894` `NOT_IMPLEMENTED`)
   - *Intérêt* : SIA 380/2 prescrit les jours de dimensionnement (séquences chaud/froid après préconditionnement) ; ni pics annuels ni autosize ne s'y substituent.
