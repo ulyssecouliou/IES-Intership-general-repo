@@ -38,17 +38,11 @@ Modèle exemple `SIA_compatible_model_TEST` : **overall SIA 380/2 CONFORME (avec
 - [x] ✅ **EER froid** — *ingestion faite* (`92c9330`) : CSV relecteur `SIA3802_cooling_generators_<project>.csv` (classe + capacité kW + EER nominal ; SEER optionnel, conditionnel SN EN 14825) scanné par `evidence_manager`, appliqué par `sia380_checker`, crédite `cooling_efficiency` → **OK**. Contourne l'autosize (capacité grisée).
   - *Reste côté utilisateur* : fournir la **fiche fabricant du groupe froid** (ingénieur CVC) et la saisir dans le CSV.
 
-- ⬜ **AHU / récupération de chaleur** (`PARTIAL`, `SIA3802_AHU_HEAT_RECOVERY`)
-  - *Intérêt* : SIA 380/2 Table 4 — classe d'étanchéité, rendement récup., pertes de charge, SFP.
-  - *Quoi faire* : fournir la fiche CTA (η_rec, pertes de charge, L1/L2, SFP).
-  - *Qui* : ingénieur CVC / fiche fabricant CTA.
-  - *Dev outil* : **CSV relecteur AHU** + ingestion. **Je peux le faire.**
+- [x] ✅ **AHU / récupération de chaleur** — *ingestion faite* (`5671e1b`) : CSV relecteur `SIA3802_ahu_heat_recovery_<project>.csv` (classe d'étanchéité + rendement température récup. = quantum Table 4 ; Δp et SFP optionnels) crédite `ahu_heat_recovery` → **AVAILABLE**.
+  - *Reste côté utilisateur* : fournir la **fiche CTA** (ingénieur CVC) et la saisir dans le CSV.
 
-- ⬜ **Contrôle de ventilation** (`NOT_CHECKABLE`, `SIA3802_VENTILATION_CONTROL`)
-  - *Intérêt* : SIA 380/2 Table 4 — classe de contrôle selon système (mono/multizone) et débit (≤3 / 3-6 / >6 m³/h·m²).
-  - *Quoi faire* : classifier système + contrôle (constant / à la demande / CO₂).
-  - *Qui* : ingénieur CVC.
-  - *Dev outil* : **CSV relecteur contrôle ventilation** + ingestion (`rooms_with_ventilation_control`). **Je peux le faire.**
+- [x] ✅ **Contrôle de ventilation** — *ingestion faite* (`5671e1b`) : CSV relecteur `SIA3802_ventilation_control_<project>.csv` (type système mono/multizone + classe de contrôle + tranche de débit ≤3 / 3-6 / >6 m³/h·m²) crédite `ventilation_control` → **AVAILABLE**.
+  - *Reste côté utilisateur* : classifier le système + contrôle (ingénieur CVC) et le saisir dans le CSV.
 
 - ⬜ **Protection solaire** (`NOT_CHECKABLE`, `SIA3802_SOLAR_PROTECTION_CONTROL`)
   - *Intérêt* : SIA 380/2 Table 10 — type, g_total actif, contrôle ; anti-surchauffe estivale.
