@@ -4406,6 +4406,26 @@ class ExcelReportGenerator:
             stats["thermal_bridge_evidence"] = (
                 "Reviewer-accepted thermal-bridge evidence ({}).".format(detail)
             )
+        # Reviewed cooling-generator EER/SEER evidence (autosize workaround) also
+        # rides on sia3802_results. Surface it to the cooling_efficiency key.
+        cooling_generators = (sia3802_results or {}).get("cooling_generators", {}) or {}
+        stats["cooling_generator_accepted"] = bool(cooling_generators.get("accepted"))
+        cooling_record = cooling_generators.get("record") or {}
+        if isinstance(cooling_record, dict) and cooling_generators.get("accepted"):
+            gen_class = str(cooling_record.get("generator_class") or "").strip()
+            capacity = cooling_record.get("capacity_kw_numeric")
+            eer = cooling_record.get("nominal_eer_numeric")
+            seer = cooling_record.get("seer_numeric")
+            detail = "class={}".format(gen_class) if gen_class else "reviewed generator"
+            if capacity is not None:
+                detail += ", capacity={} kW".format(capacity)
+            if eer is not None:
+                detail += ", nominal EER={}".format(eer)
+            if seer is not None:
+                detail += ", SEER={} [conditional on SN EN 14825]".format(seer)
+            stats["cooling_generator_evidence"] = (
+                "Reviewer-accepted cooling-generator evidence ({}).".format(detail)
+            )
         evidence = sia4010_results.get("evidence", {}) or {}
         dynamic_payload = dynamic_results or sia4010_results.get("dynamic_results", {}) or {}
         preflight_status_by_check = {
@@ -4624,10 +4644,15 @@ class ExcelReportGenerator:
                 return "PARTIAL", f"{count} room(s) expose fan/recovery/humidification identifiers; pressure-drop, leakage and verified efficiency evidence remains external."
             return "MISSING", "No AHU fan/recovery/humidification identifier was extracted."
         if key == "cooling_efficiency":
+            if stats.get("cooling_generator_accepted"):
+                return "AVAILABLE", stats.get(
+                    "cooling_generator_evidence",
+                    "Reviewer-accepted cooling-generator class/capacity/EER evidence.",
+                )
             count = int(stats.get("cooling_systems_with_efficiency", 0) or 0)
             if count:
                 return "PARTIAL", f"{count} cooling system(s) expose class, capacity and EER/SEER; Table 7 EER+ and part-load evidence remains conditional."
-            return "MISSING", "No cooling system exposes a complete class/capacity/EER-or-SEER tuple."
+            return "MISSING", "No cooling system exposes a complete class/capacity/EER-or-SEER tuple. Provide reviewed manufacturer EER via SIA3802_cooling_generators_<project>.csv when the generator is autosized."
         if key == "heating_efficiency":
             count = int(stats.get("heating_systems_with_efficiency", 0) or 0)
             if count:

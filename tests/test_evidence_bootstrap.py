@@ -32,7 +32,7 @@ class EvidenceBootstrapTests(unittest.TestCase):
             )
 
             self.assertEqual(result["status"], "READY")
-            self.assertEqual(result["created_count"], 11)
+            self.assertEqual(result["created_count"], 12)
             evidence_dir = Path(result["evidence_dir"])
             g_values_path = evidence_dir / "g_values_audit_SIA_compatible_model.csv"
             metadata_path = evidence_dir / "SIA3802_project_metadata_SIA_compatible_model.csv"

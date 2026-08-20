@@ -27,9 +27,11 @@ from .config import (
     SIA4010_EVIDENCE_DIR,
 )
 from .evidence_manager import (
+    find_accepted_cooling_generators,
     find_accepted_mapping,
     find_accepted_thermal_bridges,
     scan_sia2024_usage_mappings,
+    scan_sia3802_cooling_generators,
     scan_sia3802_thermal_bridges,
     scan_sia3874_lighting_mappings,
 )
@@ -292,6 +294,16 @@ class SIA3802Checker:
             thermal_bridge_scan, project_label or ""
         )
 
+        # Cooling-generator EER/SEER can be supplied as reviewed manufacturer
+        # evidence when the VE generator is autosized (capacity greyed out), so
+        # the SIA 380/2 Tables 5-7 power band cannot be resolved from the model.
+        cooling_generator_scan = scan_sia3802_cooling_generators(
+            PROJECT_ROOT, SIA4010_EVIDENCE_DIR, project_label
+        )
+        cooling_generator_record = find_accepted_cooling_generators(
+            cooling_generator_scan, project_label or ""
+        )
+
         envelope = self._run_category(
             "Envelope", self._check_envelope, rooms_data
         )
@@ -341,6 +353,11 @@ class SIA3802Checker:
                 "status": thermal_bridge_scan.get("status"),
                 "accepted": bool(thermal_bridge_record),
                 "record": thermal_bridge_record,
+            },
+            "cooling_generators": {
+                "status": cooling_generator_scan.get("status"),
+                "accepted": bool(cooling_generator_record),
+                "record": cooling_generator_record,
             },
             "rule_evaluations": dict(self.rule_engine.evaluated_counts),
             "alerts": list(self.rule_engine.alerts),

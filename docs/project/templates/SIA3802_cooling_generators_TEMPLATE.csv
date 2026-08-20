@@ -1,0 +1,2 @@
+project_id,generator_class,capacity_kw,nominal_eer,seer,unit,review_status,reviewer,review_date,source_document,source_reference,notes
+<PROJECT_LABEL>,<FILL_GENERATOR_CLASS>,<FILL_NOMINAL_CAPACITY_KW>,<FILL_NOMINAL_EER>,<OR_FILL_SEER>,EER=W/W;kW,accepted,<FILL_REVIEWER_NAME>,<FILL_YYYY-MM-DD>,<FILL_MANUFACTURER_DATA_SHEET>,SIA 380/2:2022 Tables 5-7,Use only when the VE cooling generator is autosized. class + capacity (kW) + nominal EER let the SIA 380/2 Tables 5-7 power band be checked. SEER stays conditional on SN EN 14825. Keep review_status=accepted only after signing.

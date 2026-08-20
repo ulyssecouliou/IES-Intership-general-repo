@@ -240,6 +240,32 @@ class EvaluatorTests(unittest.TestCase):
         self.assertEqual(
             by_id["SIA3802_HEATING_SCOP"]["runtime_status"], "NOT_CHECKABLE")
 
+    def test_reviewed_cooling_generator_credits_the_eer_criterion(self):
+        """Reviewed manufacturer EER (autosize workaround) makes EER/SEER OK."""
+        sia3802 = self._base_sia3802("REVIEWED_RESULT_AVAILABLE")
+        sia3802["cooling_generators"] = {
+            "status": "AVAILABLE",
+            "accepted": True,
+            "record": {
+                "generator_class": "air_cooled_chiller",
+                "capacity_kw_numeric": 45.0,
+                "nominal_eer_numeric": 3.2,
+                "seer_numeric": None,
+            },
+        }
+        manifest = evaluate_client_compliance(
+            sia3802, {}, {}, [_Room()], [], scope="sia3802")
+        by_id = {c["id"]: c for c in manifest["criteria"]}
+        self.assertEqual(by_id["SIA3802_COOLING_EER_SEER"]["runtime_status"], "OK")
+
+    def test_cooling_eer_without_evidence_stays_not_checkable(self):
+        manifest = evaluate_client_compliance(
+            self._base_sia3802("REVIEWED_RESULT_AVAILABLE"), {}, {}, [_Room()], [],
+            scope="sia3802")
+        by_id = {c["id"]: c for c in manifest["criteria"]}
+        self.assertEqual(
+            by_id["SIA3802_COOLING_EER_SEER"]["runtime_status"], "NOT_CHECKABLE")
+
     def test_evaluation_block_matches_the_authoritative_verdict(self):
         manifest = evaluate_client_compliance(
             self._base_sia3802("NOT_CHECKABLE"), {}, {}, [_Room()], [],
@@ -285,6 +311,45 @@ class ThermalBridgeEvidenceTests(unittest.TestCase):
         from swiss_sia.evidence_manager import _normalize_thermal_bridge_record
         self.assertFalse(
             _normalize_thermal_bridge_record(self._row(review_status="pending"))["accepted"])
+
+
+class CoolingGeneratorEvidenceTests(unittest.TestCase):
+    """The reviewer cooling-generator record is accepted only when complete."""
+
+    def _row(self, **overrides):
+        row = {
+            "project_id": "Demo",
+            "generator_class": "air_cooled_chiller",
+            "capacity_kw": "45.0",
+            "nominal_eer": "3.2",
+            "seer": "",
+            "unit": "kW",
+            "review_status": "accepted",
+            "reviewer": "Reviewer",
+            "review_date": "2026-08-20",
+            "source_document": "manufacturer_datasheet.pdf",
+        }
+        row.update(overrides)
+        return row
+
+    def test_complete_record_is_accepted(self):
+        from swiss_sia.evidence_manager import _normalize_cooling_generator_record
+        self.assertTrue(_normalize_cooling_generator_record(self._row())["accepted"])
+
+    def test_missing_eer_is_rejected(self):
+        from swiss_sia.evidence_manager import _normalize_cooling_generator_record
+        self.assertFalse(
+            _normalize_cooling_generator_record(self._row(nominal_eer=""))["accepted"])
+
+    def test_missing_capacity_is_rejected(self):
+        from swiss_sia.evidence_manager import _normalize_cooling_generator_record
+        self.assertFalse(
+            _normalize_cooling_generator_record(self._row(capacity_kw=""))["accepted"])
+
+    def test_pending_review_is_rejected(self):
+        from swiss_sia.evidence_manager import _normalize_cooling_generator_record
+        self.assertFalse(
+            _normalize_cooling_generator_record(self._row(review_status="pending"))["accepted"])
 
 
 if __name__ == "__main__":

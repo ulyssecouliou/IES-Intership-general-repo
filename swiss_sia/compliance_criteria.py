@@ -69,9 +69,12 @@ _CAPABILITY_OVERRIDES = {
     },
     "SIA3802_COOLING_EER_SEER": {
         "ve_capability_note": (
-            "Generator type/EER extractable, but the seasonal SEER equivalence rests "
-            "on SN EN 14825, which is absent from refs/: the SEER verdict stays "
-            "indicative [TO VERIFY], not a proven pass."
+            "Generator type/EER extractable, but an autosized generator leaves the "
+            "capacity greyed out so the SIA 380/2 Tables 5-7 power band cannot be "
+            "resolved from the model; supply the reviewed manufacturer class + "
+            "capacity + nominal EER via SIA3802_cooling_generators_<project>.csv. "
+            "The seasonal SEER equivalence still rests on SN EN 14825 (absent from "
+            "refs/): the SEER verdict stays indicative [TO VERIFY], not a proven pass."
         ),
     },
     "SIA3802_HEATING_SCOP": {

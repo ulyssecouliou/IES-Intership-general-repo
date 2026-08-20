@@ -65,6 +65,11 @@ SIA3802_THERMAL_BRIDGE_FILE_PATTERNS = (
     "sia3802_thermal_bridges_*.csv",
 )
 
+SIA3802_COOLING_GENERATOR_FILE_PATTERNS = (
+    "SIA3802_cooling_generators_*.csv",
+    "sia3802_cooling_generators_*.csv",
+)
+
 
 def scan_sia3802_justifications(
     project_root: Path,
@@ -301,6 +306,111 @@ def find_accepted_thermal_bridges(
         if isinstance(record, dict) and _field_matches(record.get("project_id"), project_label):
             return record
     return None
+
+
+def scan_sia3802_cooling_generators(
+    project_root: Path,
+    evidence_dir_name: str = "sia4010_evidence",
+    project_label: Optional[str] = None,
+) -> Dict[str, Any]:
+    """Scan reviewer-owned cooling-generator EER/SEER records.
+
+    An autosized VE cooling generator leaves its capacity greyed out, so the
+    SIA 380/2 Tables 5-7 EER power band cannot be resolved from the model. The
+    reviewer then supplies the generator class, the nominal capacity (kW) and the
+    nominal EER (with SEER optional) from the manufacturer data sheet. Nothing is
+    inferred from an empty field.
+    """
+    evidence_dir = Path(project_root) / evidence_dir_name
+    files, excluded_files = _matching_project_files(
+        evidence_dir,
+        SIA3802_COOLING_GENERATOR_FILE_PATTERNS,
+        project_label,
+    )
+    records: List[Dict[str, Any]] = []
+    errors: List[Dict[str, str]] = []
+    for file_path in files:
+        try:
+            with file_path.open("r", encoding="utf-8-sig", newline="") as handle:
+                for row_number, raw_row in enumerate(csv.DictReader(handle), start=2):
+                    record = _normalize_cooling_generator_record(raw_row)
+                    record["file"] = str(file_path)
+                    record["row"] = row_number
+                    records.append(record)
+        except Exception as exc:
+            errors.append({"file": str(file_path), "error": str(exc)})
+    accepted_records = [record for record in records if record.get("accepted")]
+    return {
+        "evidence_dir": str(evidence_dir),
+        "project_label": project_label or "",
+        "files": [str(path) for path in files],
+        "excluded_files": [str(path) for path in excluded_files],
+        "records": records,
+        "accepted_records": accepted_records,
+        "record_count": len(records),
+        "accepted_count": len(accepted_records),
+        "errors": errors,
+        "status": "AVAILABLE" if accepted_records else ("PENDING_REVIEW" if records else "NOT_PROVIDED"),
+    }
+
+
+def find_accepted_cooling_generators(
+    cooling_generator_results: Dict[str, Any],
+    project_label: str,
+) -> Optional[Dict[str, Any]]:
+    """Return the accepted cooling-generator record for the active VE project."""
+    if not isinstance(cooling_generator_results, dict):
+        return None
+    accepted = cooling_generator_results.get("accepted_records", []) or []
+    if not isinstance(accepted, list):
+        return None
+    for record in accepted:
+        if isinstance(record, dict) and _field_matches(record.get("project_id"), project_label):
+            return record
+    return None
+
+
+def _normalize_cooling_generator_record(raw_row: Dict[str, Any]) -> Dict[str, Any]:
+    """Normalize one reviewer-owned cooling-generator EER/SEER record.
+
+    Accepted only when a reviewer has signed off a generator class, a numeric
+    nominal capacity (kW) and a numeric nominal EER (the SIA 380/2 Tables 5-7
+    quantum), with a traceable manufacturer source. SEER is optional and stays
+    conditional on SN EN 14825 (absent from the verified sources).
+    """
+    record = {
+        _normalize_header(key): _clean_value(value)
+        for key, value in (raw_row or {}).items()
+        if key is not None
+    }
+    record.setdefault("project_id", record.get("project", ""))
+    record.setdefault("generator_class", "")
+    record.setdefault("capacity_kw", "")
+    record.setdefault("nominal_eer", "")
+    record.setdefault("seer", "")
+    record.setdefault("unit", "")
+    record.setdefault("review_status", "")
+    record.setdefault("reviewer", "")
+    record.setdefault("review_date", "")
+    record.setdefault("source_document", record.get("source_file", ""))
+    record.setdefault("source_reference", "")
+    record.setdefault("notes", "")
+    for numeric_field in ("capacity_kw", "nominal_eer", "seer"):
+        try:
+            record[numeric_field + "_numeric"] = float(record.get(numeric_field))
+        except (TypeError, ValueError):
+            record[numeric_field + "_numeric"] = None
+    record["accepted"] = (
+        _status_key(record.get("review_status")) in ACCEPTED_REVIEW_STATUSES
+        and bool(record.get("project_id"))
+        and bool(record.get("generator_class"))
+        and record.get("capacity_kw_numeric") is not None
+        and record.get("nominal_eer_numeric") is not None
+        and bool(record.get("reviewer"))
+        and bool(record.get("review_date"))
+        and bool(record.get("source_document") or record.get("source_reference"))
+    )
+    return record
 
 
 def _normalize_thermal_bridge_record(raw_row: Dict[str, Any]) -> Dict[str, Any]:
