@@ -19,7 +19,6 @@ from .client_report_context import (
 )
 from .pdf_writer import ImageError, load_image
 from .reference_model.sia4010.ui_translations import (
-    LANGUAGES,
     normalize_language,
     translate,
 )
@@ -33,6 +32,22 @@ except ImportError:  # pragma: no cover - desktop Python provides Tkinter
 
 RunAnalysis = Callable[[ClientReportContext, Path], Dict[str, Any]]
 CaptureModelViewer = Callable[[Path], Path]
+
+LANGUAGE_LABELS = {
+    "en": "English (EN)",
+    "de": "Deutsch (DE)",
+    "fr": "Français (FR)",
+    "it": "Italiano (IT)",
+}
+LANGUAGE_CODES = {label: code for code, label in LANGUAGE_LABELS.items()}
+
+
+def initial_client_language(context: ClientReportContext) -> str:
+    """Return English for legacy/default contexts, or the explicit choice."""
+
+    if context.language_selected:
+        return normalize_language(context.language)
+    return "en"
 
 
 def compliance_palette(status: str) -> tuple[str, str, str]:
@@ -97,7 +112,7 @@ class ClientComplianceWindow:
         self.capture_model_viewer = capture_model_viewer
         saved = load_client_report_context(self.project_path)
         default_project = saved.project_name or self.project_path.name
-        self.language = normalize_language(saved.language or "fr")
+        self.language = initial_client_language(saved)
         self.root = tk.Tk()
         self.root.withdraw()
         self.root.configure(background=self.COLORS["canvas"])
@@ -118,6 +133,7 @@ class ClientComplianceWindow:
                 value=saved.model_viewer_image_path
             ),
         }
+        self.language_choice = tk.StringVar(value=LANGUAGE_LABELS[self.language])
         self.result: Dict[str, Any] = {}
         self._configure_style()
         self._build()
@@ -193,6 +209,8 @@ class ClientComplianceWindow:
         )
 
     def _build(self) -> None:
+        for child in self.root.winfo_children():
+            child.destroy()
         self.root.title(self.t("client_ui_window_title"))
         banner = tk.Frame(self.root, background=self.COLORS["navy"], padx=30, pady=20)
         banner.pack(fill="x")
@@ -332,11 +350,12 @@ class ClientComplianceWindow:
         language_box = ttk.Combobox(
             locale_row,
             state="readonly",
-            textvariable=self.vars["language"],
-            values=LANGUAGES,
-            width=6,
+            textvariable=self.language_choice,
+            values=tuple(LANGUAGE_LABELS[code] for code in ("en", "de", "fr", "it")),
+            width=16,
         )
         language_box.grid(row=1, column=0, sticky="w")
+        language_box.bind("<<ComboboxSelected>>", self._change_language)
         tk.Label(
             locale_row, text=self.t("client_ui_weather_detected"),
             background=self.COLORS["card"], foreground=self.COLORS["text"],
@@ -519,6 +538,17 @@ class ClientComplianceWindow:
         if selected:
             self.vars[target].set(selected)
 
+    def _change_language(self, _event: Any = None) -> None:
+        """Apply the selected language immediately to the whole interface."""
+
+        selected = LANGUAGE_CODES.get(self.language_choice.get(), "en")
+        self.language = normalize_language(selected)
+        self.vars["language"].set(self.language)
+        previous_result = dict(self.result)
+        self._build()
+        if previous_result:
+            self._render_result(previous_result)
+
     def _choose_logo(self) -> None:
         self._choose_image(self.t("client_ui_choose_logo"), "client_logo_path")
 
@@ -555,7 +585,8 @@ class ClientComplianceWindow:
 
     def _context(self) -> ClientReportContext:
         return ClientReportContext(
-            **{key: variable.get() for key, variable in self.vars.items()}
+            **{key: variable.get() for key, variable in self.vars.items()},
+            language_selected=True,
         ).normalized()
 
     def _render_empty_result(self) -> None:

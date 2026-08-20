@@ -32,7 +32,8 @@ class ClientReportContext:
     client_contact: str = ""
     report_reference: str = ""
     prepared_by: str = ""
-    language: str = "fr"
+    language: str = "en"
+    language_selected: bool = False
     weather_file: str = ""
     solar_shading: str = "TO_CONFIRM"
     client_logo_path: str = ""
@@ -47,7 +48,7 @@ class ClientReportContext:
     def normalized(self) -> "ClientReportContext":
         """Return trimmed, validated values without inventing missing fields."""
 
-        language = str(self.language or "fr").strip().lower()
+        language = str(self.language or "en").strip().lower()
         if language not in {"de", "en", "fr", "it"}:
             language = "en"
         shading = str(self.solar_shading or "TO_CONFIRM").strip().upper()
@@ -61,6 +62,7 @@ class ClientReportContext:
             report_reference=str(self.report_reference or "").strip(),
             prepared_by=str(self.prepared_by or "").strip(),
             language=language,
+            language_selected=self.language_selected is True,
             weather_file=str(self.weather_file or "").strip(),
             solar_shading=shading,
             client_logo_path=str(self.client_logo_path or "").strip(),

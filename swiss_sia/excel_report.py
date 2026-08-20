@@ -49,6 +49,7 @@ from .rule_engine import Alert, Severity
 from .evidence_manager import describe_justification, find_accepted_justification
 from .model_analyzer import has_active_solar_protection
 from .compliance_verdict import build_compliance_verdict
+from .reference_model.sia4010.ui_translations import normalize_language, translate
 
 logger = logging.getLogger(__name__)
 
@@ -66,6 +67,9 @@ class ExcelReportGenerator:
         self.output_path = output_path or os.path.join(OUTPUT_DIR, EXCEL_REPORT_NAME)
         self.model_analyzer = model_analyzer
         self.report_context = report_context
+        self.report_language = normalize_language(
+            self._context_value("language", "en")
+        )
         self.workbook = None
         self.use_xlsxwriter = USE_XLSXWRITER
         self.sia3802_justifications: Dict[str, Any] = {}
@@ -340,6 +344,11 @@ class ExcelReportGenerator:
             return context.get(key, default)
         return getattr(context, key, default)
 
+    def _tr(self, key: str) -> str:
+        """Translate one client-facing workbook label."""
+
+        return translate(key, self.report_language)
+
     def _context_image(self, key: str) -> Optional[str]:
         """Return one existing report-context image path."""
 
@@ -367,13 +376,12 @@ class ExcelReportGenerator:
 
     @staticmethod
     def _resolve_cover_logo():
-        """Return the cover logo path, real brand first, placeholder second.
+        """Return the real cover logo path when one has been supplied.
 
         The assets directory is resolved from this module's location, not from
         the workbook output path -- the workbook can be written anywhere, and the
-        previous relative lookup never found the file, so the cover always fell
-        back to bare text. A client-facing report should carry the on-brand
-        placeholder at worst, and the real IES logo the moment one is supplied.
+        previous relative lookup never found the file.  The placeholder square
+        is deliberately excluded from client-facing workbooks.
 
         Returns:
             str | None: An existing logo file path, or None when neither the
@@ -383,10 +391,9 @@ class ExcelReportGenerator:
         assets = os.path.join(
             os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "assets"
         )
-        for candidate in ("ies_logo.png", "office_logo.placeholder.png"):
-            path = os.path.join(assets, candidate)
-            if os.path.isfile(path):
-                return path
+        path = os.path.join(assets, "ies_logo.png")
+        if os.path.isfile(path):
+            return path
         return None
 
     def _write_cover_xlsxwriter(self, score_result, sia3802_results, sia4010_results, rooms_data):
@@ -421,9 +428,8 @@ class ExcelReportGenerator:
             {**report_style.xw_disclaimer(), "valign": "top"}
         )
 
-        # Cover logo. Drop a real IES logo at assets/ies_logo.png to brand it;
-        # until then the on-brand navy placeholder under assets/ is used, so the
-        # cover never shows the bare text "[ IES logo ]" in front of a client.
+        # Cover logo. Only a real supplied IES asset is accepted; the generic
+        # placeholder square is never printed on a client report.
         worksheet.merge_range("B2:C4", "", logo_format)
         worksheet.merge_range("D2:E4", "", logo_format)
         worksheet.set_row(1, 22)
@@ -446,9 +452,9 @@ class ExcelReportGenerator:
                     },
                 )
             except Exception:
-                worksheet.write("B2", "Swiss SIA Compliance", logo_format)
+                worksheet.write("B2", "SIA 380/2", logo_format)
         else:
-            worksheet.write("B2", "Swiss SIA Compliance", logo_format)
+            worksheet.write("B2", "SIA 380/2", logo_format)
         client_logo = self._context_image("client_logo_path")
         if client_logo:
             try:
@@ -466,37 +472,40 @@ class ExcelReportGenerator:
             except Exception:
                 worksheet.write("D2", str(self._context_value("client_name", "")), logo_format)
 
-        report_title = (
-            "Swiss SIA Compliance Report"
-            if self.include_sia4010
-            else "Swiss SIA 380/2 Compliance Report"
-        )
+        report_title = self._tr("report_title")
         worksheet.merge_range("B6:E6", report_title, title_format)
         worksheet.set_row(5, 32)
         worksheet.merge_range(
             "B7:E7",
             "Automated SIA 380/2 readiness review and SIA 4010 evidence status"
             if self.include_sia4010
-            else "SIA 380/2 compliance assessment of the client model",
+            else self._tr("report_subtitle_sia3802"),
             subtitle_format,
         )
 
-        worksheet.write("B9", "Client", label_format)
-        worksheet.merge_range("C9:E9", self._context_value("client_name", "Not specified"), value_format)
-        worksheet.write("B10", "Project", label_format)
+        unavailable = self._tr("value_unavailable")
+        worksheet.write("B9", self._tr("field_client"), label_format)
+        worksheet.merge_range("C9:E9", self._context_value("client_name", unavailable), value_format)
+        worksheet.write("B10", self._tr("field_project"), label_format)
         worksheet.merge_range("C10:E10", self._context_value("project_name", "") or self._project_label(), value_format)
-        worksheet.write("B11", "Project address", label_format)
-        worksheet.merge_range("C11:E11", self._context_value("project_address", "Not specified"), value_format)
-        worksheet.write("B12", "Weather file used", label_format)
-        worksheet.merge_range("C12:E12", self._context_value("weather_file", "Not exposed by VE"), value_format)
-        worksheet.write("B13", "Solar shading declared", label_format)
-        worksheet.merge_range("C13:E13", self._context_value("solar_shading", "TO_CONFIRM"), value_format)
-        worksheet.write("B14", "Generated", label_format)
+        worksheet.write("B11", self._tr("field_project_address"), label_format)
+        worksheet.merge_range("C11:E11", self._context_value("project_address", unavailable), value_format)
+        worksheet.write("B12", self._tr("client_ui_weather"), label_format)
+        worksheet.merge_range("C12:E12", self._context_value("weather_file", unavailable), value_format)
+        worksheet.write("B13", self._tr("field_solar_shading"), label_format)
+        shading_code = str(self._context_value("solar_shading", "TO_CONFIRM") or "TO_CONFIRM").upper()
+        shading_label = self._tr(
+            {"YES": "client_ui_yes", "NO": "client_ui_no"}.get(
+                shading_code, "client_ui_to_confirm"
+            )
+        )
+        worksheet.merge_range("C13:E13", shading_label, value_format)
+        worksheet.write("B14", self._tr("field_generated"), label_format)
         worksheet.merge_range("C14:E14", datetime.now().strftime("%Y-%m-%d %H:%M:%S"), value_format)
         # Regulatory framework is fixed for the whole assessment (constrained
         # navigator): stating the editions on the cover keeps the scope explicit
         # and immutable from the first sheet, per the SIA 380/2 navigator brief.
-        worksheet.write("B15", "Regulatory framework", label_format)
+        worksheet.write("B15", self._tr("field_framework"), label_format)
         worksheet.merge_range(
             "C15:E15",
             "SIA 380/2:2022 (FR) + SIA 4010:2023 (FR) - editions fixed for this assessment"
@@ -516,9 +525,13 @@ class ExcelReportGenerator:
             worksheet.write("B19", "Rooms analysed", kpi_label_format)
             worksheet.write_number("C19", len(rooms_data), kpi_int_format)
         else:
-            worksheet.write("B17", "SIA 380/2 compliance verdict", kpi_label_format)
-            worksheet.merge_range("C17:E17", verdict.sia3802_status.replace("_", " "), kpi_value_format)
-            worksheet.write("B18", "Rooms analysed", kpi_label_format)
+            worksheet.write("B17", self._tr("client_ui_decision"), kpi_label_format)
+            status_key = {
+                "COMPLIANT": "verdict_compliant",
+                "NOT_COMPLIANT": "verdict_not_compliant",
+            }.get(verdict.sia3802_status, "verdict_not_determined")
+            worksheet.merge_range("C17:E17", self._tr(status_key), kpi_value_format)
+            worksheet.write("B18", self._tr("figure_rooms"), kpi_label_format)
             worksheet.write_number("C18", len(rooms_data), kpi_int_format)
 
         worksheet.merge_range(
@@ -530,10 +543,7 @@ class ExcelReportGenerator:
                 "missing official evidence is reported as WARNING or NOT_CHECKABLE, "
                 "never as a pass. See the INDEX sheet to navigate all sections."
                 if self.include_sia4010
-                else "This workbook reports the assessed SIA 380/2 compliance of the "
-                "client model. It is an engineering assessment, not an official SIA "
-                "certificate. Missing or unverifiable evidence remains visible and "
-                "never becomes a silent pass. See the INDEX sheet for supporting detail."
+                else self._tr("excel_scope_statement")
             ),
             disclaimer_format,
         )
@@ -549,10 +559,10 @@ class ExcelReportGenerator:
         note_format = self.workbook.add_format(
             report_style.xw_format("muted", text_wrap=True, valign="top")
         )
-        worksheet.merge_range("B2:M2", "Model Viewer - analysed VE model", title_format)
+        worksheet.merge_range("B2:M2", self._tr("excel_model_viewer_title"), title_format)
         worksheet.merge_range(
             "B4:M5",
-            "User-selected presentation image. It documents the model view used for the report; compliance remains based on extracted VE data and reviewed evidence.",
+            self._tr("excel_model_viewer_note"),
             note_format,
         )
         image_path = self._context_image("model_viewer_image_path")
@@ -564,9 +574,9 @@ class ExcelReportGenerator:
                     {"x_scale": 0.70, "y_scale": 0.70, "object_position": 1},
                 )
             except Exception:
-                worksheet.merge_range("B7:M10", "The selected image could not be embedded.", note_format)
+                worksheet.merge_range("B7:M10", self._tr("excel_image_unavailable"), note_format)
         else:
-            worksheet.merge_range("B7:M10", "No Model Viewer image was supplied.", note_format)
+            worksheet.merge_range("B7:M10", self._tr("excel_no_viewer_image"), note_format)
 
     def _write_index_xlsxwriter(self, has_rooms: bool):
         """Write a clickable index grouped by report section."""
@@ -590,7 +600,7 @@ class ExcelReportGenerator:
             {**report_style.xw_link(), "underline": 1}
         )
 
-        worksheet.write("B2", "Report index", title_format)
+        worksheet.write("B2", self._tr("excel_report_index"), title_format)
         row = 3
         for section, color, sheets in self._active_sections:
             visible = [s for s in sheets if s != "ROOMS" or has_rooms]
@@ -620,14 +630,14 @@ class ExcelReportGenerator:
 
         project = self._project_label()
         generated = datetime.now().strftime("%Y-%m-%d %H:%M")
-        header = "&L{}&CSwiss SIA Compliance Report&R&D".format(project)
+        header = "&L{}&C{}&R&D".format(project, self._tr("report_title"))
         footer = (
             (
                 "&LNot a certificate - automated SIA readiness review"
                 if self.include_sia4010
-                else "&LNot a certificate - SIA 380/2 compliance assessment"
+                else "&L" + self._tr("footer_not_certificate")
             )
-            + "&C&P / &N&Rgenerated {}".format(generated)
+            + "&C&P / &N&R{} {}".format(self._tr("field_generated"), generated)
         )
         for worksheet in self.workbook.worksheets():
             name = getattr(worksheet, "name", "")
@@ -1375,16 +1385,28 @@ class ExcelReportGenerator:
             else 0
         )
 
-        worksheet.merge_range("A1:H1", "Client / Manager Summary", title_format)
+        worksheet.merge_range(
+            "A1:H1",
+            "Client / Manager Summary"
+            if self.include_sia4010
+            else self._tr("excel_client_summary_title"),
+            title_format,
+        )
         worksheet.merge_range(
             "A2:H3",
             "Professional readiness statement for the active VE model. This page is intentionally conservative: it separates automated SIA 380/2 checks from official SIA 4010 validation evidence."
             if self.include_sia4010
-            else "Professional SIA 380/2 compliance statement for the active client VE model. Missing data is reported and never assumed compliant.",
+            else self._tr("excel_client_summary_intro"),
             note_format,
         )
 
-        worksheet.write("A5", "Current decision", section_format)
+        worksheet.write(
+            "A5",
+            "Current decision"
+            if self.include_sia4010
+            else self._tr("excel_current_decision"),
+            section_format,
+        )
         client_verdict = build_compliance_verdict(
             sia3802_results, sia4010_results, len(rooms_data)
         )
@@ -1409,12 +1431,12 @@ class ExcelReportGenerator:
         )
 
         worksheet.write("A8", "KPI", section_format)
-        worksheet.write("B8", "Value", section_format)
-        worksheet.write("C8", "Interpretation", section_format)
+        worksheet.write("B8", self._tr("excel_value"), section_format)
+        worksheet.write("C8", self._tr("excel_interpretation"), section_format)
         kpis = [
-            ("Rooms analysed", len(rooms_data), "Thermal rooms/zones extracted from VE.", count_format),
-            ("Floor area analysed (m2)", total_area, "Sum of extracted room areas.", number_format),
-            ("P1 action groups", len(p1_groups), "Priority groups to treat before client compliance wording.", count_format),
+            (self._tr("excel_rooms_analysed"), len(rooms_data), self._tr("excel_rooms_interpretation"), count_format),
+            (self._tr("excel_floor_area_analysed"), total_area, self._tr("excel_floor_area_interpretation"), number_format),
+            (self._tr("excel_p1_groups"), len(p1_groups), self._tr("excel_p1_interpretation"), count_format),
         ]
         if self.include_sia4010:
             kpis[0:0] = [
@@ -1424,7 +1446,7 @@ class ExcelReportGenerator:
         if self.include_sia4010:
             kpis.append(("SIA 4010 evidence", evidence_present, f"Official evidence families detected out of {len(SIA4010_REQUIRED_EVIDENCE)}.", count_format))
             kpis.append(("SIA 4010 blocked tests", blocked_sia4010_tests, "Tests remain blocked until official evidence is complete and reviewed.", count_format))
-        kpis.append(("High + critical alerts", alerts_count.get("Critical", 0) + alerts_count.get("High", 0), "Blocking or near-blocking review items.", count_format))
+        kpis.append((self._tr("excel_high_critical"), alerts_count.get("Critical", 0) + alerts_count.get("High", 0), self._tr("excel_high_critical_interpretation"), count_format))
         row = 8
         for label, value, interpretation, value_format in kpis:
             row += 1
@@ -1432,30 +1454,44 @@ class ExcelReportGenerator:
             worksheet.write(row, 1, value, value_format)
             worksheet.write(row, 2, interpretation, cell_format)
 
-        worksheet.write("A19", "Safe claim", section_format)
-        worksheet.write("B19", "Use / avoid", section_format)
-        worksheet.write("C19", "Reason", section_format)
+        worksheet.write("A19", self._tr("excel_safe_claim"), section_format)
+        worksheet.write("B19", self._tr("excel_use_avoid"), section_format)
+        worksheet.write("C19", self._tr("excel_reason"), section_format)
         claim_rows = [
             (
                 "Use",
                 (
                     "Automated SIA 380/2 readiness review for directly extracted VE data."
                     if self.include_sia4010
-                    else "Assessed SIA 380/2 compliance verdict with visible evidence reserves."
+                    else self._tr("excel_claim_supported")
                 ),
-                "Supported by the implemented checks and requirement matrix.",
+                self._tr("excel_claim_supported_reason"),
             ),
-            ("Avoid", "This model is fully SIA compliant.", "Current P1 items remain open and several MSP checks are not implemented yet."),
+            (
+                "Avoid" if self.include_sia4010 else self._tr("excel_avoid"),
+                "This model is fully SIA compliant."
+                if self.include_sia4010
+                else self._tr("excel_claim_avoid_full"),
+                "Current P1 items remain open and several MSP checks are not implemented yet."
+                if self.include_sia4010
+                else self._tr("excel_claim_open_items"),
+            ),
         ]
+        if not self.include_sia4010:
+            claim_rows[0] = (
+                self._tr("excel_use"),
+                claim_rows[0][1],
+                claim_rows[0][2],
+            )
         if self.include_sia4010:
             claim_rows.insert(1, ("Use", "SIA 4010 evidence readiness matrix.", "The script scans evidence presence and keeps official tests NOT_CHECKABLE without proof."))
             claim_rows.append(("Avoid", "The software/model is SIA 4010 validated.", "Official SIA test files, candidate outputs, reference comparisons and validation class confirmation are missing."))
         for offset, claim in enumerate(claim_rows, start=20):
             worksheet.write_row(offset, 0, claim, cell_format)
 
-        worksheet.write("A27", "Immediate next decision", section_format)
-        worksheet.write("B27", "Owner", section_format)
-        worksheet.write("C27", "Evidence expected", section_format)
+        worksheet.write("A27", self._tr("excel_immediate_decision"), section_format)
+        worksheet.write("B27", self._tr("excel_owner"), section_format)
+        worksheet.write("C27", self._tr("excel_evidence_expected"), section_format)
         next_rows = self._client_next_decision_rows(p1_groups, sia4010_results)
         for offset, item in enumerate(next_rows, start=28):
             worksheet.write_row(offset, 0, item, cell_format)
@@ -5935,8 +5971,8 @@ class ExcelReportGenerator:
             if str(test.get("status", "") or "").upper() in blocked_statuses
         )
 
-    @staticmethod
     def _dashboard_verdict(
+        self,
         score_result: ScoreResult,
         sia4010_results: Dict[str, Any],
         rooms_data: List[Any],
@@ -5953,25 +5989,19 @@ class ExcelReportGenerator:
             verdict = build_compliance_verdict(
                 sia3802_results, sia4010_results, len(rooms_data)
             )
-            if verdict.sia3802_status == "COMPLIANT":
-                return (
-                    "COMPLIANT: the reviewed SIA 380/2 project/reference comparison "
-                    "supports the building conclusion; visible reserves remain listed."
-                )
-            if verdict.sia3802_status == "NOT_COMPLIANT":
-                return (
-                    "NOT COMPLIANT: at least one determined finding or the reviewed "
-                    "project/reference comparison prevents a compliant conclusion."
-                )
-            return (
-                "NOT DETERMINED: the decisive reviewed SIA 380/2 project/reference "
-                "comparison or required evidence is not yet available."
+            status_key = {
+                "COMPLIANT": "verdict_compliant",
+                "NOT_COMPLIANT": "verdict_not_compliant",
+            }.get(verdict.sia3802_status, "verdict_not_determined")
+            return "{}: {}".format(
+                self._tr(status_key),
+                self._tr("report_reason_" + verdict.sia3802_reason),
             )
 
         critical_count = sum(1 for alert in score_result.alerts if alert.severity == Severity.CRITICAL)
         high_count = sum(1 for alert in score_result.alerts if alert.severity == Severity.HIGH)
         blocked_tests = (
-            ExcelReportGenerator._count_blocked_sia4010_tests(sia4010_results)
+            self._count_blocked_sia4010_tests(sia4010_results)
             if include_sia4010
             else 0
         )

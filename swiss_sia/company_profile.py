@@ -1,10 +1,9 @@
 """Company identity used on the letterhead of the SIA compliance report.
 
-The report is signed by an engineering office, so the office details and its
-logo are project configuration, never hard-coded. A profile is loaded from
-``config/company_profile.json``; when that file is absent the report still
-renders, but every unset field is reported as unspecified rather than invented,
-and the signature block stays visibly empty.
+Engineering-office details and its logo are project configuration, never
+hard-coded. A profile is loaded from ``config/company_profile.json``; when it
+is absent or incomplete, the report uses a neutral SIA 380/2 header instead of
+inventing an issuer identity or displaying a placeholder logo.
 """
 
 import json
@@ -98,12 +97,15 @@ def load_company_profile(
         return CompanyProfile()
     if not isinstance(payload, dict):
         return CompanyProfile()
+    name = str(payload.get("name") or "").strip()
     return CompanyProfile(
-        name=str(payload.get("name") or "").strip(),
+        name=name,
         tagline=str(payload.get("tagline") or "").strip(),
         address_lines=_lines(payload, "address_lines"),
         contact_lines=_lines(payload, "contact_lines"),
-        logo_path=_resolve_logo(payload, root),
+        # A logo without an office name is typically the shipped placeholder,
+        # not a real issuer identity.  Never print it on a client report.
+        logo_path=_resolve_logo(payload, root) if name else None,
         author_name=str(payload.get("author_name") or "").strip(),
         author_role=str(payload.get("author_role") or "").strip(),
         report_reference=str(payload.get("report_reference") or "").strip(),

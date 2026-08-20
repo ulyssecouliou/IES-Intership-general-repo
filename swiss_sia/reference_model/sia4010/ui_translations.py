@@ -1902,6 +1902,12 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
         "fr": "Bureau d'ingénieurs non configuré",
         "it": "Studio di ingegneria non configurato",
     },
+    "report_neutral_header": {
+        "en": "Compliance assessment",
+        "de": "Konformitaetsbeurteilung",
+        "fr": "Evaluation de conformite",
+        "it": "Valutazione di conformita",
+    },
     "field_client": {
         "en": "Client / building owner",
         "de": "Auftraggeber / Bauherrschaft",
@@ -2811,6 +2817,143 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
     "report_domain_reason_no_blocking_finding": {
         "en": "No determined blocking finding", "de": "Kein festgestellter Blocker",
         "fr": "Aucun point bloquant avere", "it": "Nessun blocco accertato",
+    },
+    "excel_scope_statement": {
+        "en": "This workbook reports the assessed SIA 380/2 compliance of the client model. It is an engineering assessment, not an official SIA certificate. Missing or unverifiable evidence remains visible and is never treated as a pass. See the INDEX sheet for supporting detail.",
+        "de": "Diese Arbeitsmappe dokumentiert die beurteilte SIA 380/2-Konformitaet des Kundenmodells. Sie ist eine technische Beurteilung und kein offizielles SIA-Zertifikat. Fehlende oder nicht pruefbare Nachweise bleiben sichtbar und gelten nie als bestanden. Einzelheiten stehen im Blatt INDEX.",
+        "fr": "Ce classeur presente la conformite SIA 380/2 evaluee du modele client. Il s'agit d'une evaluation d'ingenierie et non d'un certificat SIA officiel. Toute preuve manquante ou non verifiable reste visible et n'est jamais consideree comme conforme. Voir la feuille INDEX pour les details.",
+        "it": "Questa cartella di lavoro presenta la conformita SIA 380/2 valutata del modello cliente. E una valutazione tecnica, non un certificato SIA ufficiale. Le prove mancanti o non verificabili restano visibili e non sono mai considerate conformi. Vedere il foglio INDEX per i dettagli.",
+    },
+    "excel_model_viewer_title": {
+        "en": "Model Viewer capture", "de": "Model-Viewer-Aufnahme",
+        "fr": "Capture du Model Viewer", "it": "Cattura del Model Viewer",
+    },
+    "excel_model_viewer_note": {
+        "en": "Project model view supplied for report identification and visual context. It is illustrative and does not replace the technical evidence used for the compliance decision.",
+        "de": "Zur Projektidentifikation und visuellen Einordnung bereitgestellte Modellansicht. Sie ist illustrativ und ersetzt nicht die technischen Nachweise fuer den Konformitaetsentscheid.",
+        "fr": "Vue du modele fournie pour identifier le projet et donner un contexte visuel. Elle est illustrative et ne remplace pas les preuves techniques utilisees pour la decision de conformite.",
+        "it": "Vista del modello fornita per identificare il progetto e offrire un contesto visivo. E illustrativa e non sostituisce le prove tecniche usate per la decisione di conformita.",
+    },
+    "excel_image_unavailable": {
+        "en": "The selected Model Viewer image could not be embedded.",
+        "de": "Das ausgewaehlte Model-Viewer-Bild konnte nicht eingebettet werden.",
+        "fr": "L'image Model Viewer selectionnee n'a pas pu etre integree.",
+        "it": "Non e stato possibile incorporare l'immagine Model Viewer selezionata.",
+    },
+    "excel_no_viewer_image": {
+        "en": "No Model Viewer capture was supplied for this report.",
+        "de": "Fuer diesen Bericht wurde keine Model-Viewer-Aufnahme bereitgestellt.",
+        "fr": "Aucune capture du Model Viewer n'a ete fournie pour ce rapport.",
+        "it": "Per questo rapporto non e stata fornita alcuna cattura del Model Viewer.",
+    },
+    "excel_report_index": {
+        "en": "Report index", "de": "Berichtsindex",
+        "fr": "Index du rapport", "it": "Indice del rapporto",
+    },
+    "excel_client_summary_title": {
+        "en": "Client compliance summary", "de": "Konformitaetsuebersicht fuer den Kunden",
+        "fr": "Synthese de conformite client", "it": "Sintesi di conformita per il cliente",
+    },
+    "excel_client_summary_intro": {
+        "en": "SIA 380/2 compliance statement for the active client VE model. Missing data is reported explicitly and is never assumed compliant.",
+        "de": "SIA 380/2-Konformitaetsaussage fuer das aktive VE-Kundenmodell. Fehlende Daten werden ausdruecklich ausgewiesen und nie als konform angenommen.",
+        "fr": "Declaration de conformite SIA 380/2 pour le modele VE actif du client. Les donnees manquantes sont signalees explicitement et ne sont jamais presumees conformes.",
+        "it": "Dichiarazione di conformita SIA 380/2 per il modello VE attivo del cliente. I dati mancanti sono segnalati esplicitamente e non sono mai presunti conformi.",
+    },
+    "excel_current_decision": {
+        "en": "Current decision", "de": "Aktueller Entscheid",
+        "fr": "Decision actuelle", "it": "Decisione attuale",
+    },
+    "excel_value": {
+        "en": "Value", "de": "Wert", "fr": "Valeur", "it": "Valore",
+    },
+    "excel_interpretation": {
+        "en": "Interpretation", "de": "Interpretation",
+        "fr": "Interpretation", "it": "Interpretazione",
+    },
+    "excel_rooms_analysed": {
+        "en": "Rooms analysed", "de": "Analysierte Raeume",
+        "fr": "Locaux analyses", "it": "Locali analizzati",
+    },
+    "excel_rooms_interpretation": {
+        "en": "Thermal rooms/zones extracted from VE.",
+        "de": "Aus VE extrahierte thermische Raeume/Zonen.",
+        "fr": "Locaux/zones thermiques extraits de VE.",
+        "it": "Locali/zone termiche estratti da VE.",
+    },
+    "excel_floor_area_analysed": {
+        "en": "Floor area analysed (m2)", "de": "Analysierte Flaeche (m2)",
+        "fr": "Surface analysee (m2)", "it": "Superficie analizzata (m2)",
+    },
+    "excel_floor_area_interpretation": {
+        "en": "Sum of extracted room areas.", "de": "Summe der extrahierten Raumflaechen.",
+        "fr": "Somme des surfaces des locaux extraits.", "it": "Somma delle superfici dei locali estratti.",
+    },
+    "excel_p1_groups": {
+        "en": "P1 action groups", "de": "P1-Massnahmengruppen",
+        "fr": "Groupes d'actions P1", "it": "Gruppi di azioni P1",
+    },
+    "excel_p1_interpretation": {
+        "en": "Priority groups to resolve before issuing the client compliance statement.",
+        "de": "Prioritaetsgruppen, die vor der Ausgabe der Konformitaetsaussage zu loesen sind.",
+        "fr": "Groupes prioritaires a resoudre avant d'emettre la declaration de conformite client.",
+        "it": "Gruppi prioritari da risolvere prima di emettere la dichiarazione di conformita del cliente.",
+    },
+    "excel_high_critical": {
+        "en": "High + critical findings", "de": "Hohe + kritische Feststellungen",
+        "fr": "Constats eleves + critiques", "it": "Rilievi alti + critici",
+    },
+    "excel_high_critical_interpretation": {
+        "en": "Blocking or near-blocking review items.",
+        "de": "Blockierende oder nahezu blockierende Pruefpunkte.",
+        "fr": "Points de revue bloquants ou presque bloquants.",
+        "it": "Punti di revisione bloccanti o quasi bloccanti.",
+    },
+    "excel_safe_claim": {
+        "en": "Safe claim", "de": "Zulaessige Aussage",
+        "fr": "Formulation sure", "it": "Dicitura sicura",
+    },
+    "excel_use_avoid": {
+        "en": "Use / avoid", "de": "Verwenden / vermeiden",
+        "fr": "Utiliser / eviter", "it": "Usare / evitare",
+    },
+    "excel_reason": {
+        "en": "Reason", "de": "Begruendung", "fr": "Raison", "it": "Motivo",
+    },
+    "excel_use": {"en": "Use", "de": "Verwenden", "fr": "Utiliser", "it": "Usare"},
+    "excel_avoid": {"en": "Avoid", "de": "Vermeiden", "fr": "Eviter", "it": "Evitare"},
+    "excel_claim_supported": {
+        "en": "Assessed SIA 380/2 compliance verdict with visible evidence reserves.",
+        "de": "Beurteilter SIA 380/2-Konformitaetsentscheid mit sichtbaren Nachweisvorbehalten.",
+        "fr": "Decision de conformite SIA 380/2 evaluee avec reserves de preuve visibles.",
+        "it": "Decisione di conformita SIA 380/2 valutata con riserve probatorie visibili.",
+    },
+    "excel_claim_supported_reason": {
+        "en": "Supported by the implemented checks and requirement matrix.",
+        "de": "Durch die implementierten Pruefungen und die Anforderungsmatrix gestuetzt.",
+        "fr": "Etayee par les controles implementes et la matrice des exigences.",
+        "it": "Supportata dai controlli implementati e dalla matrice dei requisiti.",
+    },
+    "excel_claim_avoid_full": {
+        "en": "This model is fully SIA compliant.",
+        "de": "Dieses Modell ist vollstaendig SIA-konform.",
+        "fr": "Ce modele est entierement conforme SIA.",
+        "it": "Questo modello e pienamente conforme SIA.",
+    },
+    "excel_claim_open_items": {
+        "en": "Open blocking items or outstanding evidence do not support that statement.",
+        "de": "Offene Blocker oder ausstehende Nachweise stuetzen diese Aussage nicht.",
+        "fr": "Les points bloquants ouverts ou les preuves encore attendues ne permettent pas cette affirmation.",
+        "it": "I punti bloccanti aperti o le prove mancanti non consentono tale affermazione.",
+    },
+    "excel_immediate_decision": {
+        "en": "Immediate next decision", "de": "Naechster Entscheid",
+        "fr": "Prochaine decision immediate", "it": "Prossima decisione immediata",
+    },
+    "excel_owner": {"en": "Owner", "de": "Verantwortlich", "fr": "Responsable", "it": "Responsabile"},
+    "excel_evidence_expected": {
+        "en": "Evidence expected", "de": "Erwarteter Nachweis",
+        "fr": "Preuve attendue", "it": "Prova richiesta",
     },
 }
 

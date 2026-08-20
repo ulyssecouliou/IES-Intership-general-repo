@@ -12,6 +12,7 @@ from pypdf import PdfReader
 from swiss_sia.client_compliance_ui import (
     ClientComplianceWindow,
     compliance_palette,
+    initial_client_language,
     validate_client_context,
 )
 from swiss_sia.client_report_context import (
@@ -56,6 +57,24 @@ def _write_rgb_png(path: Path, width: int = 10, height: int = 6) -> Path:
 
 
 class ClientContextTests(unittest.TestCase):
+    def test_english_is_the_default_for_new_and_legacy_contexts(self) -> None:
+        self.assertEqual(ClientReportContext().language, "en")
+        self.assertEqual(initial_client_language(ClientReportContext()), "en")
+        # Contexts saved before explicit language selection used French as an
+        # implicit default. They migrate to the new English default.
+        self.assertEqual(
+            initial_client_language(ClientReportContext(language="fr")),
+            "en",
+        )
+
+    def test_an_explicit_language_choice_is_restored(self) -> None:
+        self.assertEqual(
+            initial_client_language(
+                ClientReportContext(language="it", language_selected=True)
+            ),
+            "it",
+        )
+
     def test_missing_translation_key_is_humanised_for_the_business_ui(self) -> None:
         window = ClientComplianceWindow.__new__(ClientComplianceWindow)
         window.language = "fr"
@@ -108,6 +127,7 @@ class ClientContextTests(unittest.TestCase):
         self.assertEqual(loaded.client_name, "Client")
         self.assertEqual(loaded.weather_file, "weather.fwt")
         self.assertEqual(loaded.solar_shading, "YES")
+        self.assertEqual(loaded.language, "en")
         self.assertTrue(Path(stored.client_logo_path).is_file())
         self.assertTrue(Path(stored.model_viewer_image_path).is_file())
         self.assertTrue(Path(stored.client_logo_path).is_relative_to(project))

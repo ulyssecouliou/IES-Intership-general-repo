@@ -1264,8 +1264,8 @@ def main(
             logger.info("Compliance report PDF: %s", compliance_pdf_path)
             if not company_profile.is_configured:
                 logger.warning(
-                    "No config/company_profile.json found: the PDF letterhead and "
-                    "signature block are printed as not specified."
+                    "No configured office identity: the PDF uses the neutral "
+                    "SIA 380/2 header and leaves the signature identity empty."
                 )
         except Exception as exc:
             # Internal runs retain the workbook; the client UI requires both

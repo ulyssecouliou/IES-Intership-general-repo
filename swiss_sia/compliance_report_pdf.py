@@ -208,6 +208,24 @@ def _draw_letterhead(
 ) -> float:
     """Draw the company letterhead and return the y position below it."""
 
+    if not profile.is_configured:
+        # No invented issuer and no shipped placeholder logo.  A compact,
+        # factual report identity is preferable to a large warning-like
+        # "engineering office not configured" banner on a client document.
+        page.rect(0, 0, A4_MM[0], 20.0, fill=BRAND_DEEP)
+        page.rect(0, 20.0, A4_MM[0], 1.4, fill=ACCENT)
+        page.text(MARGIN, 12.5, "SIA 380/2", size_pt=13.0, bold=True, colour=WHITE)
+        page.text(
+            A4_MM[0] - MARGIN - 70.0,
+            12.5,
+            translate("report_neutral_header", language),
+            size_pt=8.5,
+            colour=(0.741, 0.882, 0.831),
+            align="right",
+            width_mm=70.0,
+        )
+        return 30.0
+
     page.rect(0, 0, A4_MM[0], 30.0, fill=BRAND_DEEP)
     page.rect(0, 30.0, A4_MM[0], 1.4, fill=ACCENT)
     text_left = MARGIN
@@ -218,11 +236,10 @@ def _draw_letterhead(
         except Exception:
             # A logo that cannot be embedded must never block the report.
             text_left = MARGIN
-    name = profile.name or translate("company_unspecified", language)
     page.text(
         text_left,
         13.5,
-        truncate_to_width(name, 15.0, 120.0, bold=True),
+        truncate_to_width(profile.name, 15.0, 120.0, bold=True),
         size_pt=15.0,
         bold=True,
         colour=WHITE,

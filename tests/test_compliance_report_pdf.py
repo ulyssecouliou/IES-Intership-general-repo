@@ -399,6 +399,18 @@ class CompanyProfileTests(unittest.TestCase):
         self.assertTrue(profile.is_configured)
         self.assertIsNone(profile.logo_path)
 
+    def test_placeholder_logo_is_ignored_when_office_name_is_empty(self):
+        root = OUTPUT_ROOT / "placeholder_only"
+        (root / "config").mkdir(parents=True, exist_ok=True)
+        logo = _write_test_png(root / "placeholder.png")
+        (root / "config" / "company_profile.json").write_text(
+            '{"name": "", "logo_path": "placeholder.png"}',
+            encoding="utf-8",
+        )
+        profile = load_company_profile(root)
+        self.assertFalse(profile.is_configured)
+        self.assertIsNone(profile.logo_path)
+
 
 class RenderedReportTests(unittest.TestCase):
     """Render the real report and pin its compliance-critical wording."""
@@ -602,17 +614,33 @@ class RenderedReportTests(unittest.TestCase):
             )
 
     def test_report_renders_without_any_company_profile(self):
+        for code in LANGUAGES:
+            with self.subTest(language=code):
+                path = render_compliance_report_pdf(
+                    OUTPUT_ROOT / "report_noprofile_{}.pdf".format(code),
+                    project_label="P",
+                    rooms_data=self.rooms,
+                    sia3802_results=self.sia3802,
+                    sia4010_results=self.sia4010,
+                    profile=CompanyProfile(),
+                    language=code,
+                )
+                text = PdfReader(str(path)).pages[0].extract_text()
+                self.assertIn(translate("report_neutral_header", code), text)
+                self.assertNotIn(translate("company_unspecified", code), text)
+
+    def test_report_language_defaults_to_english(self):
         path = render_compliance_report_pdf(
-            OUTPUT_ROOT / "report_noprofile.pdf",
+            OUTPUT_ROOT / "report_default_language.pdf",
             project_label="P",
             rooms_data=self.rooms,
             sia3802_results=self.sia3802,
             sia4010_results=self.sia4010,
             profile=CompanyProfile(),
-            language="en",
         )
         text = PdfReader(str(path)).pages[0].extract_text()
-        self.assertIn(translate("company_unspecified", "en"), text)
+        self.assertIn(translate("report_title", "en"), text)
+        self.assertIn(translate("report_neutral_header", "en"), text)
 
 
 if __name__ == "__main__":

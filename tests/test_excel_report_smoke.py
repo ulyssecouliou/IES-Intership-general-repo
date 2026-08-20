@@ -17,6 +17,7 @@ from swiss_sia.sia4010_checker import SIA4010Checker
 from swiss_sia.reference_project import build_reference_project_specification
 from swiss_sia.validation_class_scope import derive_validation_class_scope
 from swiss_sia.client_report_context import ClientReportContext
+from swiss_sia.reference_model.sia4010.ui_translations import translate
 
 
 def _write_rgb_png(path: Path, width: int = 20, height: int = 12) -> Path:
@@ -303,14 +304,54 @@ class ClientSia3802OnlyReportTests(unittest.TestCase):
             self.assertIn("Client Alpine SA", report_text)
             self.assertIn("School North", report_text)
             self.assertIn("CHE_GVE_2060_RCP85_DRY.fwt", report_text)
-            self.assertIn("Solar shading declared", report_text)
-            self.assertIn("SIA 380/2 compliance verdict", report_text)
+            self.assertIn(translate("field_solar_shading", "en"), report_text)
+            self.assertIn(translate("excel_client_summary_title", "en"), report_text)
             self.assertNotIn("Model health score", report_text)
             self.assertNotIn("SIA 380/2 automated score", report_text)
             self.assertIn(viewer_image.read_bytes(), embedded_images)
         finally:
             output_path.unlink(missing_ok=True)
             viewer_image.unlink(missing_ok=True)
+
+    def test_client_workbook_uses_selected_report_language(self) -> None:
+        """The client-facing Excel pages follow the language selected in the UI."""
+
+        analyzer, score, s3802, s4010, rooms, dynamic = _build_report_inputs()
+        for language in ("en", "de", "fr", "it"):
+            with self.subTest(language=language):
+                output_path = Path(__file__).with_name(
+                    f"_excel_report_language_{language}.xlsx"
+                )
+                context = ClientReportContext(
+                    client_name="International Client",
+                    project_name="Multilingual Project",
+                    language=language,
+                    language_selected=True,
+                )
+                try:
+                    ExcelReportGenerator(
+                        str(output_path), analyzer, report_context=context
+                    ).generate_report(
+                        score,
+                        s3802,
+                        s4010,
+                        rooms_data=rooms,
+                        dynamic_results=dynamic,
+                        include_sia4010=False,
+                    )
+                    with zipfile.ZipFile(output_path) as workbook:
+                        strings = workbook.read("xl/sharedStrings.xml").decode(
+                            "utf-8", "ignore"
+                        )
+                    self.assertIn(translate("report_title", language), strings)
+                    self.assertIn(
+                        translate("excel_client_summary_title", language), strings
+                    )
+                    self.assertIn(
+                        translate("excel_model_viewer_title", language), strings
+                    )
+                finally:
+                    output_path.unlink(missing_ok=True)
 
 
 if __name__ == "__main__":
