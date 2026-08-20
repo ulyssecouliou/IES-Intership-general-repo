@@ -8,7 +8,10 @@ toolchain, not a client building, so they never appear unless explicitly asked.
 from __future__ import annotations
 
 import os
+import shutil
 import unittest
+from pathlib import Path
+from types import SimpleNamespace
 from unittest import mock
 
 from swiss_sia import app
@@ -45,6 +48,38 @@ class ResolveIncludeSia4010Tests(unittest.TestCase):
     def test_unknown_or_client_scope_keeps_the_380_2_only_report(self):
         for token in ("", "sia3802", "client", "sia380", "garbage"):
             self.assertFalse(self._resolve(None, scope=token), msg=token)
+
+
+class ModelViewerCaptureTests(unittest.TestCase):
+    """The client UI can capture the active Mv2 view without manual files."""
+
+    def test_documented_mv2_snapshot_is_saved_inside_the_project(self):
+        project = (
+            Path(__file__).resolve().parents[1]
+            / ".codex_tmp"
+            / "model_viewer_capture_api"
+        )
+        recorded = {}
+
+        class FakeMv2:
+            class mv2_viewmode:
+                shaded = "SHADED"
+
+            def take_snapshot(self, **options):
+                recorded.update(options)
+                output = Path(options["path"]) / (options["file_name"] + ".png")
+                output.write_bytes(b"captured-model-viewer")
+
+        try:
+            with mock.patch.object(app, "iesve", SimpleNamespace(Mv2=FakeMv2)):
+                output = app.capture_model_viewer_image(project)
+
+            self.assertTrue(output.is_file())
+            self.assertTrue(output.is_relative_to(project))
+            self.assertEqual(recorded["view_mode"], "SHADED")
+            self.assertFalse(recorded["components"])
+        finally:
+            shutil.rmtree(project, ignore_errors=True)
 
 
 if __name__ == "__main__":

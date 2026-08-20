@@ -331,6 +331,68 @@ def _current_project_weather_label(project: Any) -> str:
     return ""
 
 
+def capture_model_viewer_image(project_path: object) -> Path:
+    """Capture the active Model Viewer through the documented ``iesve.Mv2`` API.
+
+    The snapshot is presentation evidence only. It is stored under the active
+    project and never participates in the compliance verdict.
+    """
+
+    if iesve is None:
+        raise RuntimeError("Model Viewer capture is only available inside IESVE.")
+    mv2_class = getattr(iesve, "Mv2", None)
+    if mv2_class is None:
+        raise RuntimeError("This IESVE version does not expose the Mv2 API.")
+    viewer = mv2_class()
+    take_snapshot = getattr(viewer, "take_snapshot", None)
+    if not callable(take_snapshot):
+        raise RuntimeError("This IESVE version cannot capture Model Viewer images.")
+
+    destination = (
+        Path(str(project_path))
+        / client_report_context_module.CONTEXT_DIR_NAME
+        / client_report_context_module.ASSET_DIR_NAME
+    )
+    destination.mkdir(parents=True, exist_ok=True)
+    stem = "model_viewer_{}".format(datetime.now().strftime("%Y%m%d_%H%M%S_%f"))
+    options: Dict[str, Any] = {
+        "file_name": stem,
+        "path": str(destination),
+        "components": False,
+    }
+    view_modes = getattr(mv2_class, "mv2_viewmode", None)
+    shaded = getattr(view_modes, "shaded", None)
+    if shaded is not None:
+        options["view_mode"] = shaded
+    returned = take_snapshot(**options)
+
+    candidates: List[Path] = []
+    if returned and not isinstance(returned, bool):
+        returned_path = Path(str(returned))
+        candidates.append(
+            returned_path if returned_path.is_absolute() else destination / returned_path
+        )
+    candidates.extend(destination / (stem + suffix) for suffix in (".png", ".jpg", ".jpeg"))
+    candidates.extend(
+        sorted(
+            (
+                path
+                for path in destination.glob(stem + "*")
+                if path.suffix.lower() in {".png", ".jpg", ".jpeg"}
+            ),
+            key=lambda path: path.stat().st_mtime,
+            reverse=True,
+        )
+    )
+    for candidate in candidates:
+        if candidate.is_file() and candidate.stat().st_size > 0:
+            return candidate
+    raise RuntimeError(
+        "IESVE did not create the Model Viewer image. Open Model Viewer, frame "
+        "the model, and try the capture again."
+    )
+
+
 def _aps_matches_project_weather(aps_references: List[str], project_weather: str) -> bool:
     """Return true only when both weather references are known and match.
 

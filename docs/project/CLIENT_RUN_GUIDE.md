@@ -14,8 +14,9 @@ It is designed for the IESVE Run button. No PowerShell step is required.
 1. Open the target client project in IESVE.
 2. Confirm the correct model is active.
 3. Prepare the client's logo as PNG/JPG if it should appear in the reports.
-4. Save a clear PNG/JPG capture from the VE Model Viewer if it should replace
-   the fallback facade schematic.
+4. Open Model Viewer and frame the model as it should appear in the reports.
+   The client interface captures this view automatically; a previously saved
+   PNG/JPG can still be selected as a fallback.
 5. Close any previously generated workbook that is still open in Excel.
 
 The interface asks for the client, project, address, contact, report reference,
@@ -114,8 +115,9 @@ Run_VE_Swiss_Compliance.py
 3. Click `Run`.
 4. Complete the client/project fields. The active VE weather file is displayed
    read-only.
-5. Choose the client logo and Model Viewer image if required, and answer the
-   solar-shading question (`Yes`, `No` or `To confirm`).
+5. Choose the client logo, frame the model in Model Viewer, then click `Capture
+   now`. Use `Choose existing file` only if automatic capture is unavailable.
+   Answer the solar-shading question (`Yes`, `No` or `To confirm`).
 6. Click `Generate Excel + PDF`. The current timestamped Excel workbook opens
    first, followed by the PDF, when generation succeeds. The `Reports from this
    run` block in the Client UI Viewer then keeps direct buttons for the current

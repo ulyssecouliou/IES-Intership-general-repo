@@ -2421,14 +2421,41 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
     "client_ui_viewer": {
         "en": "Model Viewer image", "de": "Model-Viewer-Bild", "fr": "Capture du Model Viewer", "it": "Immagine Model Viewer"
     },
+    "client_ui_capture_viewer": {
+        "en": "Capture now", "de": "Jetzt aufnehmen", "fr": "Capturer maintenant", "it": "Cattura ora"
+    },
     "client_ui_choose_viewer": {
-        "en": "Choose image", "de": "Bild waehlen", "fr": "Choisir la capture", "it": "Scegli immagine"
+        "en": "Choose existing file", "de": "Vorhandene Datei waehlen", "fr": "Choisir un fichier existant", "it": "Scegli file esistente"
     },
     "client_ui_viewer_hint": {
-        "en": "Save a clear PNG/JPG from Model Viewer, then select it here.",
-        "de": "Ein klares PNG/JPG aus Model Viewer speichern und hier waehlen.",
-        "fr": "Enregistrez une vue claire du Model Viewer en PNG/JPG, puis selectionnez-la ici.",
-        "it": "Salva una vista chiara da Model Viewer in PNG/JPG, poi selezionala qui.",
+        "en": "Frame the model in Model Viewer, then click Capture now. Choose an existing PNG/JPG only as a fallback.",
+        "de": "Modell im Model Viewer ausrichten und Jetzt aufnehmen klicken. Eine vorhandene PNG/JPG-Datei dient nur als Alternative.",
+        "fr": "Cadrez le modele dans Model Viewer, puis cliquez sur Capturer maintenant. Le choix PNG/JPG sert uniquement de secours.",
+        "it": "Inquadra il modello nel Model Viewer, poi fai clic su Cattura ora. Scegli un PNG/JPG esistente solo come alternativa.",
+    },
+    "client_ui_capturing_viewer": {
+        "en": "Capturing the active Model Viewer...",
+        "de": "Aktiver Model Viewer wird aufgenommen...",
+        "fr": "Capture du Model Viewer actif...",
+        "it": "Acquisizione del Model Viewer attivo...",
+    },
+    "client_ui_capture_done": {
+        "en": "Model Viewer image captured and selected.",
+        "de": "Model-Viewer-Bild wurde aufgenommen und ausgewaehlt.",
+        "fr": "Capture du Model Viewer enregistree et selectionnee.",
+        "it": "Immagine del Model Viewer acquisita e selezionata.",
+    },
+    "client_ui_capture_failed": {
+        "en": "The automatic capture failed. Keep Model Viewer open and try again, or choose an existing PNG/JPG.",
+        "de": "Die automatische Aufnahme ist fehlgeschlagen. Model Viewer geoeffnet lassen und erneut versuchen oder eine vorhandene PNG/JPG-Datei waehlen.",
+        "fr": "La capture automatique a echoue. Laissez Model Viewer ouvert et reessayez, ou choisissez un PNG/JPG existant.",
+        "it": "La cattura automatica non e riuscita. Lascia aperto Model Viewer e riprova, oppure scegli un PNG/JPG esistente.",
+    },
+    "client_ui_capture_unavailable": {
+        "en": "Automatic capture is available inside IESVE. Use Choose existing file as a fallback.",
+        "de": "Die automatische Aufnahme ist in IESVE verfuegbar. Alternativ eine vorhandene Datei waehlen.",
+        "fr": "La capture automatique est disponible dans IESVE. Sinon, utilisez Choisir un fichier existant.",
+        "it": "La cattura automatica e disponibile in IESVE. In alternativa scegli un file esistente.",
     },
     "client_ui_image_error": {
         "en": "This image cannot be added to the PDF. Use a non-transparent RGB PNG or a JPEG.",

@@ -4,7 +4,7 @@ Client launcher for the Swiss SIA 380/2 compliance checker interface.
 Use this file from the IESVE Scripts window with the Run button. It is the
 default client deliverable: an SIA 380/2-only report. SIA 4010 validation
 classes qualify the toolchain, not a client building, so they never appear
-here (only the protective disclaimers and provenance citations remain).
+in this client report.
 
 For the full internal report (SIA 380/2 + SIA 4010 readiness), use
 Run_VE_Swiss_Compliance_Internal_SIA4010.py instead.
@@ -54,4 +54,5 @@ if __name__ == "__main__":
         str(project.path),
         app._current_project_weather_label(project),
         run_client_reports,
+        capture_model_viewer=app.capture_model_viewer_image,
     )

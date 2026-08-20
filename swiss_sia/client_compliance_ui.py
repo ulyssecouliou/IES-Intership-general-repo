@@ -32,6 +32,7 @@ except ImportError:  # pragma: no cover - desktop Python provides Tkinter
 
 
 RunAnalysis = Callable[[ClientReportContext, Path], Dict[str, Any]]
+CaptureModelViewer = Callable[[Path], Path]
 
 
 def compliance_palette(status: str) -> tuple[str, str, str]:
@@ -83,11 +84,13 @@ class ClientComplianceWindow:
         project_path: str,
         weather_file: str,
         runner: RunAnalysis,
+        capture_model_viewer: Optional[CaptureModelViewer] = None,
     ) -> None:
         if tk is None or ttk is None:
             raise RuntimeError("Tkinter is unavailable in this runtime.")
         self.project_path = Path(project_path)
         self.runner = runner
+        self.capture_model_viewer = capture_model_viewer
         saved = load_client_report_context(self.project_path)
         default_project = saved.project_name or self.project_path.name
         self.language = normalize_language(saved.language or "fr")
@@ -260,17 +263,12 @@ class ClientComplianceWindow:
             variable="client_logo_path",
             chooser=self._choose_logo,
         )
-        self._asset_row(
-            row=9,
-            label_key="client_ui_viewer",
-            button_key="client_ui_choose_viewer",
-            variable="model_viewer_image_path",
-            chooser=self._choose_viewer,
-        )
+        self._viewer_asset_row(row=9)
         ttk.Label(
             self.form,
             text=self.t("client_ui_viewer_hint"),
             style="Client.TLabel",
+            wraplength=650,
         ).grid(row=10, column=1, columnspan=3, sticky="w", pady=(0, 6))
 
         actions = ttk.Frame(container, style="Client.TFrame")
@@ -326,6 +324,35 @@ class ClientComplianceWindow:
             style="Client.TLabel",
         ).grid(row=row, column=2, columnspan=2, sticky="w", padx=(8, 0), pady=5)
 
+    def _viewer_asset_row(self, row: int) -> None:
+        """Draw automatic capture plus manual-file fallback for Model Viewer."""
+
+        ttk.Label(
+            self.form,
+            text=self.t("client_ui_viewer"),
+            style="Client.TLabel",
+        ).grid(row=row, column=0, sticky="w", pady=5)
+        actions = tk.Frame(self.form, background=self.COLORS["card"])
+        actions.grid(row=row, column=1, columnspan=2, sticky="w", pady=5)
+        ttk.Button(
+            actions,
+            text=self.t("client_ui_capture_viewer"),
+            style="Client.TButton",
+            command=self._capture_viewer,
+        ).pack(side="left", padx=(0, 6))
+        ttk.Button(
+            actions,
+            text=self.t("client_ui_choose_viewer"),
+            style="Client.TButton",
+            command=self._choose_viewer,
+        ).pack(side="left")
+        ttk.Label(
+            self.form,
+            textvariable=self.vars["model_viewer_image_path"],
+            style="Client.TLabel",
+            wraplength=280,
+        ).grid(row=row, column=3, sticky="w", padx=(8, 0), pady=5)
+
     def _choose_image(self, title: str, target: str) -> None:
         if filedialog is None:
             return
@@ -344,6 +371,32 @@ class ClientComplianceWindow:
         self._choose_image(
             self.t("client_ui_choose_viewer"), "model_viewer_image_path"
         )
+
+    def _capture_viewer(self) -> None:
+        """Capture the active VE Model Viewer and select the resulting image."""
+
+        if self.capture_model_viewer is None:
+            if messagebox is not None:
+                messagebox.showinfo(
+                    self.t("client_ui_viewer"),
+                    self.t("client_ui_capture_unavailable"),
+                    parent=self.root,
+                )
+            return
+        self.status_text.set(self.t("client_ui_capturing_viewer"))
+        self.root.update_idletasks()
+        try:
+            image_path = self.capture_model_viewer(self.project_path)
+            self.vars["model_viewer_image_path"].set(str(image_path))
+            self.status_text.set(self.t("client_ui_capture_done"))
+        except Exception as exc:
+            self.status_text.set("")
+            if messagebox is not None:
+                messagebox.showerror(
+                    self.t("client_ui_viewer"),
+                    "{}\n\n{}".format(self.t("client_ui_capture_failed"), exc),
+                    parent=self.root,
+                )
 
     def _context(self) -> ClientReportContext:
         return ClientReportContext(
@@ -524,8 +577,16 @@ class ClientComplianceWindow:
 
 
 def launch_client_compliance_ui(
-    project_path: str, weather_file: str, runner: RunAnalysis
+    project_path: str,
+    weather_file: str,
+    runner: RunAnalysis,
+    capture_model_viewer: Optional[CaptureModelViewer] = None,
 ) -> None:
     """Open the client report interface for the active VE project."""
 
-    ClientComplianceWindow(project_path, weather_file, runner).run()
+    ClientComplianceWindow(
+        project_path,
+        weather_file,
+        runner,
+        capture_model_viewer=capture_model_viewer,
+    ).run()

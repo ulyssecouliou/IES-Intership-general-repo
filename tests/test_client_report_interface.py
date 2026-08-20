@@ -126,6 +126,34 @@ class ClientContextTests(unittest.TestCase):
             ["current-report.xlsx", "current-report.pdf"],
         )
 
+    def test_automatic_model_viewer_capture_selects_the_created_image(self) -> None:
+        class Value:
+            def __init__(self) -> None:
+                self.value = ""
+
+            def set(self, value: str) -> None:
+                self.value = value
+
+        class Root:
+            def update_idletasks(self) -> None:
+                pass
+
+        window = ClientComplianceWindow.__new__(ClientComplianceWindow)
+        window.project_path = Path("project")
+        window.capture_model_viewer = lambda project: project / "captured.png"
+        window.vars = {"model_viewer_image_path": Value()}
+        window.status_text = Value()
+        window.root = Root()
+        window.t = lambda key: key
+
+        window._capture_viewer()
+
+        self.assertEqual(
+            window.vars["model_viewer_image_path"].value,
+            str(Path("project") / "captured.png"),
+        )
+        self.assertEqual(window.status_text.value, "client_ui_capture_done")
+
 
 class ClientPdfContextTests(unittest.TestCase):
     def test_pdf_contains_client_weather_shading_logo_and_viewer_image(self) -> None:
