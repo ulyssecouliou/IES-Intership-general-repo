@@ -2445,8 +2445,14 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
     "client_ui_result": {
         "en": "Compliance result", "de": "Konformitaetsergebnis", "fr": "Resultat de conformite", "it": "Risultato di conformita"
     },
+    "client_ui_current_reports": {
+        "en": "Reports from this run",
+        "de": "Berichte dieses Laufs",
+        "fr": "Rapports de cette generation",
+        "it": "Rapporti di questa esecuzione",
+    },
     "client_ui_open_excel": {
-        "en": "Open Excel report", "de": "Excel-Bericht oeffnen", "fr": "Ouvrir le rapport Excel", "it": "Apri rapporto Excel"
+        "en": "Open current Excel", "de": "Aktuelles Excel oeffnen", "fr": "Ouvrir l'Excel a jour", "it": "Apri Excel aggiornato"
     },
     "client_ui_open_pdf": {
         "en": "Open PDF report", "de": "PDF-Bericht oeffnen", "fr": "Ouvrir le rapport PDF", "it": "Apri rapporto PDF"

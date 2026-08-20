@@ -416,8 +416,13 @@ class ClientComplianceWindow:
                 font=("Segoe UI", 10, "bold"),
             ).pack(anchor="w", pady=(2, 0))
 
+        ttk.Label(
+            self.result_body,
+            text=self.t("client_ui_current_reports").upper(),
+            style="ClientSection.TLabel",
+        ).pack(anchor="w", pady=(8, 4))
         buttons = tk.Frame(self.result_body, background=self.COLORS["card"])
-        buttons.pack(fill="x", pady=(8, 0))
+        buttons.pack(fill="x")
         for key, path_key in (
             ("client_ui_open_excel", "excel_path"),
             ("client_ui_open_pdf", "pdf_path"),
@@ -457,8 +462,10 @@ class ClientComplianceWindow:
             self.result = dict(result or {})
             self._render_result(self.result)
             self.status_text.set(str(self.result.get("message") or ""))
-            # A report action should lead to the document, not just save it.
-            self._open_path(self.result.get("pdf_path"))
+            # Open the exact timestamped deliverables from this run. Excel is
+            # launched first, then the PDF, so neither button can accidentally
+            # lead the user to a stale "latest" alias from an earlier run.
+            self._open_current_reports()
         except Exception as exc:
             self.status_text.set("")
             if messagebox is not None:
@@ -468,6 +475,12 @@ class ClientComplianceWindow:
         finally:
             self.root.configure(cursor="")
             self.generate_button.state(["!disabled"])
+
+    def _open_current_reports(self) -> None:
+        """Open the Excel and PDF deliverables produced by the current run."""
+
+        for key in ("excel_path", "pdf_path"):
+            self._open_path(self.result.get(key))
 
     def _open_path(self, value: Any) -> None:
         if not value:

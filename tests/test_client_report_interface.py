@@ -10,6 +10,7 @@ from pathlib import Path
 from pypdf import PdfReader
 
 from swiss_sia.client_compliance_ui import (
+    ClientComplianceWindow,
     compliance_palette,
     validate_client_context,
 )
@@ -108,6 +109,22 @@ class ClientContextTests(unittest.TestCase):
         self.assertEqual(compliance_palette("COMPLIANT")[2], "verdict_compliant")
         self.assertEqual(compliance_palette("NOT_COMPLIANT")[2], "verdict_not_compliant")
         self.assertEqual(compliance_palette("anything")[2], "verdict_not_determined")
+
+    def test_current_excel_and_pdf_are_opened_in_that_order(self) -> None:
+        window = ClientComplianceWindow.__new__(ClientComplianceWindow)
+        window.result = {
+            "excel_path": "current-report.xlsx",
+            "pdf_path": "current-report.pdf",
+        }
+        opened = []
+        window._open_path = opened.append
+
+        window._open_current_reports()
+
+        self.assertEqual(
+            opened,
+            ["current-report.xlsx", "current-report.pdf"],
+        )
 
 
 class ClientPdfContextTests(unittest.TestCase):

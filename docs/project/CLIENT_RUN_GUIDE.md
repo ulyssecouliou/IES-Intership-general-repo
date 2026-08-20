@@ -116,8 +116,10 @@ Run_VE_Swiss_Compliance.py
    read-only.
 5. Choose the client logo and Model Viewer image if required, and answer the
    solar-shading question (`Yes`, `No` or `To confirm`).
-6. Click `Generate Excel + PDF`. The PDF opens automatically when generation
-   succeeds. The Excel, PDF and folder buttons then open their target directly.
+6. Click `Generate Excel + PDF`. The current timestamped Excel workbook opens
+   first, followed by the PDF, when generation succeeds. The `Reports from this
+   run` block in the Client UI Viewer then keeps direct buttons for the current
+   Excel, PDF and report folder.
 
 ## Report Output
 
