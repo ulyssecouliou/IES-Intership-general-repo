@@ -35,11 +35,8 @@ Modèle exemple `SIA_compatible_model_TEST` : **overall SIA 380/2 CONFORME (avec
   - *Qui* : modélisateur VE (simu) + dev (extraction).
   - *Dev outil* : **implémenter le workflow design-day** (lecture `.aps` jours de dim.). Gros dev.
 
-- ⬜ **EER froid** (`NOT_CHECKABLE`, `SIA3802_COOLING_EER_SEER`)
-  - *Intérêt* : SIA 380/2 Tables 5-7 rangent l'EER par type + tranche de **puissance nominale** ; sans capacité, pas de bande.
-  - *Quoi faire* : générateur froid **autosize** (capacité grisée) → soit désactiver l'autosize et saisir une capacité, soit fournir EER + capacité par évidence relecteur.
-  - *Qui* : ingénieur CVC / fiche fabricant du groupe froid.
-  - *Dev outil* : **CSV relecteur « générateur froid »** (classe + capacité kW + EER/SEER) + ingestion `cooling_systems_with_efficiency`. **Je peux le faire.**
+- [x] ✅ **EER froid** — *ingestion faite* (`92c9330`) : CSV relecteur `SIA3802_cooling_generators_<project>.csv` (classe + capacité kW + EER nominal ; SEER optionnel, conditionnel SN EN 14825) scanné par `evidence_manager`, appliqué par `sia380_checker`, crédite `cooling_efficiency` → **OK**. Contourne l'autosize (capacité grisée).
+  - *Reste côté utilisateur* : fournir la **fiche fabricant du groupe froid** (ingénieur CVC) et la saisir dans le CSV.
 
 - ⬜ **AHU / récupération de chaleur** (`PARTIAL`, `SIA3802_AHU_HEAT_RECOVERY`)
   - *Intérêt* : SIA 380/2 Table 4 — classe d'étanchéité, rendement récup., pertes de charge, SFP.
@@ -65,10 +62,7 @@ Modèle exemple `SIA_compatible_model_TEST` : **overall SIA 380/2 CONFORME (avec
   - *Qui* : SIA 387/4 → SIA Shop / contact SIA (Yiqiao Yang) ; valeurs → électricien.
   - *Dev outil* : crédit du gabarit `SIA3874_lighting_control_mapping_*.csv` (scanner présent) — **ingestion/couverture à finaliser**.
 
-- ⬜ **Chauffage SCOP** (`NOT_CHECKABLE`) — **chaudière → NON_APPLICABLE**
-  - *Intérêt* : le SCOP ne concerne que les PAC ; une chaudière n'a pas de SCOP. La conformité passe par la comparaison globale (déjà OK).
-  - *Quoi faire* : rien (décision de conception).
-  - *Dev outil* : **libellé `NON_APPLICABLE` (chaudière)** au lieu de `NOT_CHECKABLE` (stat `has_non_heat_pump_heating` + statut couverture + mapping évaluateur + légende). Petit mais multi-fichiers. **Je peux le faire.**
+- [x] ✅ **Chauffage SCOP → NON_APPLICABLE** — *fait* (`8d441b4`) : un générateur de chauffage dimensionné que VE ne classe pas en PAC (chaudière) rend `SIA3802_HEATING_SCOP` **NON_APPLICABLE** (hors périmètre), au lieu de `NOT_CHECKABLE`. Une PAC sans SCOP reste bien `NOT_CHECKABLE` (vrai manque). L'efficacité de génération non-PAC passe par la comparaison globale.
 
 ### ⬜ Sources normatives à acquérir (débloquent des verdicts)
 - ⬜ **SIA 387/4** (contrôle éclairage) · **SN EN 14825** (SEER/SCoP) · **SIA 180 complet** (Fig.3 + corrigenda) · **SIA 380 faîtière** (agrégation/pondération annuelle) · **SN EN 15316-2 / 16798-13** (énergie système). → SIA Shop / contact SIA. Sans elles : verdicts `[TO VERIFY]` par honnêteté.
