@@ -4406,6 +4406,22 @@ class ExcelReportGenerator:
             stats["thermal_bridge_evidence"] = (
                 "Reviewer-accepted thermal-bridge evidence ({}).".format(detail)
             )
+        # VE 2025.2 reads psi/chi directly (VESurface thermal bridges): the model
+        # thermal-bridge conductance H_tb (W/K) is the primary evidence.
+        stats["thermal_bridge_ve_available"] = bool(thermal_bridges.get("ve_available"))
+        if thermal_bridges.get("ve_available"):
+            total_htb = thermal_bridges.get("total_w_per_k")
+            nonzero = thermal_bridges.get("nonzero_count")
+            zero_psi = thermal_bridges.get("zero_psi_linear_count")
+            detail = "H_tb={} W/K from {} non-zero junction(s)".format(
+                round(total_htb, 3) if isinstance(total_htb, (int, float)) else total_htb,
+                nonzero,
+            )
+            if zero_psi:
+                detail += "; {} junction(s) at psi=0 (verify not un-entered defaults)".format(zero_psi)
+            stats["thermal_bridge_ve_evidence"] = (
+                "VE-read thermal bridges ({}).".format(detail)
+            )
         # Reviewed cooling-generator EER/SEER evidence (autosize workaround) also
         # rides on sia3802_results. Surface it to the cooling_efficiency key.
         cooling_generators = (sia3802_results or {}).get("cooling_generators", {}) or {}
@@ -4590,11 +4606,16 @@ class ExcelReportGenerator:
                 "external surface U-values",
             )
         if key == "thermal_bridges":
-            # VE envelope U-values do not prove that junction/point losses have
-            # been included, and VE exposes no psi/chi quantity to read: the
-            # project's thermal-bridge treatment is credited only from a reviewed
-            # external schedule (SIA3802_thermal_bridges_<project>.csv). The
-            # configured zero is never taken as evidence.
+            # VE 2025.2 reads psi/chi per surface, so the model's H_tb (W/K) is
+            # the primary evidence. A reviewer schedule is the fallback. An
+            # all-zero VE read (possible un-entered defaults) is not complete
+            # evidence, so it does not credit AVAILABLE on its own.
+            if stats.get("thermal_bridge_ve_available"):
+                return (
+                    "AVAILABLE",
+                    stats.get("thermal_bridge_ve_evidence")
+                    or "VE-read thermal-bridge conductance (psi.L + chi) available.",
+                )
             if stats.get("thermal_bridge_accepted"):
                 return (
                     "AVAILABLE",
@@ -4603,7 +4624,7 @@ class ExcelReportGenerator:
                 )
             return (
                 "MISSING",
-                "No reviewed linear psi / point chi thermal-bridge schedule is ingested; the configured zero remains a placeholder, not evidence.",
+                "No VE-read psi/chi thermal bridges and no reviewed schedule; the configured zero remains a placeholder, not evidence.",
             )
         if key == "window_u_values":
             return availability(

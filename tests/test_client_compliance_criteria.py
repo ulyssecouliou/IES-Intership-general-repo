@@ -69,10 +69,10 @@ class ManifestContractTests(unittest.TestCase):
         self.assertEqual(
             self.by_id["SIA3802_DESIGN_POWER_DAYS"]["ve_capability"], "NOT_AVAILABLE")
 
-    def test_thermal_bridges_are_reviewer_evidence_not_unavailable(self):
-        # VE still can't read psi/chi, but a reviewed schedule can now be ingested.
+    def test_thermal_bridges_are_read_from_ve(self):
+        # VE 2025.2 reads psi/chi per surface; a reviewed schedule is the fallback.
         self.assertEqual(
-            self.by_id["SIA3802_THERMAL_BRIDGES"]["ve_capability"], "EXTERNAL_EVIDENCE")
+            self.by_id["SIA3802_THERMAL_BRIDGES"]["ve_capability"], "VE_AVAILABLE")
 
     def test_seasonal_efficiency_criteria_carry_the_sn_en_14825_caveat(self):
         for cid in ("SIA3802_COOLING_EER_SEER", "SIA3802_HEATING_SCOP"):
@@ -102,10 +102,10 @@ class EvaluatorTests(unittest.TestCase):
             self._base_sia3802("NOT_CHECKABLE"), {}, {}, [_Room()], [],
         )
         by_id = {c["id"]: c for c in manifest["criteria"]}
-        # Thermal bridges are now reviewer-evidence: without a schedule they read
-        # NEEDS_REVIEWER_EVIDENCE (VE still cannot read psi/chi itself).
+        # Thermal bridges are read from VE (VE_AVAILABLE): with no VE read and no
+        # reviewer schedule they read NOT_CHECKABLE, never a silent pass.
         self.assertEqual(
-            by_id["SIA3802_THERMAL_BRIDGES"]["runtime_status"], "NEEDS_REVIEWER_EVIDENCE"
+            by_id["SIA3802_THERMAL_BRIDGES"]["runtime_status"], "NOT_CHECKABLE"
         )
         self.assertEqual(
             by_id["SIA3802_DESIGN_POWER_DAYS"]["runtime_status"], "NOT_AVAILABLE_IN_VE"
@@ -194,13 +194,31 @@ class EvaluatorTests(unittest.TestCase):
         by_id = {c["id"]: c for c in manifest["criteria"]}
         self.assertEqual(by_id["SIA3802_THERMAL_BRIDGES"]["runtime_status"], "OK")
 
-    def test_thermal_bridge_without_evidence_needs_reviewer(self):
+    def test_thermal_bridge_without_evidence_is_not_checkable(self):
         manifest = evaluate_client_compliance(
             self._base_sia3802("REVIEWED_RESULT_AVAILABLE"), {}, {}, [_Room()], [],
             scope="sia3802")
         by_id = {c["id"]: c for c in manifest["criteria"]}
         self.assertEqual(
-            by_id["SIA3802_THERMAL_BRIDGES"]["runtime_status"], "NEEDS_REVIEWER_EVIDENCE")
+            by_id["SIA3802_THERMAL_BRIDGES"]["runtime_status"], "NOT_CHECKABLE")
+
+    def test_ve_read_thermal_bridges_credit_the_criterion(self):
+        """A VE-read H_tb with non-zero junctions credits the criterion (VE primary)."""
+        sia3802 = self._base_sia3802("REVIEWED_RESULT_AVAILABLE")
+        sia3802["thermal_bridges"] = {
+            "status": "NOT_PROVIDED",
+            "accepted": False,
+            "record": None,
+            "source": "ve_model",
+            "ve_available": True,
+            "total_w_per_k": 24.66,
+            "nonzero_count": 8,
+            "zero_psi_linear_count": 60,
+        }
+        manifest = evaluate_client_compliance(
+            sia3802, {}, {}, [_Room()], [], scope="sia3802")
+        by_id = {c["id"]: c for c in manifest["criteria"]}
+        self.assertEqual(by_id["SIA3802_THERMAL_BRIDGES"]["runtime_status"], "OK")
 
     def test_boiler_only_heating_makes_scop_non_applicable(self):
         """A sized non-heat-pump heating generator -> SCOP is out of scope, not a gap."""

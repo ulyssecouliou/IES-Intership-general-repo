@@ -312,14 +312,17 @@ class SIA3802Checker:
                 ),
             }
 
-        # Thermal bridges (psi/chi) are supplied as reviewed external evidence:
-        # VE exposes no psi/chi quantity to read.
+        # Thermal bridges (psi/chi): VE 2025.2 exposes them per surface
+        # (VESurface.get_thermal_bridges_non_repeating/_random), so the model's
+        # thermal-bridge conductance H_tb (W/K) is read directly. A reviewer
+        # schedule stays as a fallback for older VE versions / unset data.
         thermal_bridge_scan = scan_sia3802_thermal_bridges(
             PROJECT_ROOT, SIA4010_EVIDENCE_DIR, project_label
         )
         thermal_bridge_record = find_accepted_thermal_bridges(
             thermal_bridge_scan, project_label or ""
         )
+        ve_thermal_bridges = self._read_ve_thermal_bridges()
 
         # Cooling-generator EER/SEER can be supplied as reviewed manufacturer
         # evidence when the VE generator is autosized (capacity greyed out), so
@@ -404,11 +407,9 @@ class SIA3802Checker:
                 ),
             },
             "external_mappings": external_mappings,
-            "thermal_bridges": {
-                "status": thermal_bridge_scan.get("status"),
-                "accepted": bool(thermal_bridge_record),
-                "record": thermal_bridge_record,
-            },
+            "thermal_bridges": self._build_thermal_bridge_result(
+                thermal_bridge_scan, thermal_bridge_record, ve_thermal_bridges
+            ),
             "cooling_generators": {
                 "status": cooling_generator_scan.get("status"),
                 "accepted": bool(cooling_generator_record),
@@ -1186,6 +1187,58 @@ class SIA3802Checker:
             "alerts": self.rule_engine.get_alerts_by_category("HVAC"),
             "score": self._calculate_category_score("HVAC"),
         }
+
+    def _read_ve_thermal_bridges(self) -> Dict[str, Any]:
+        """Read the model's thermal-bridge conductance from VE, if available.
+
+        Guarded: the data extractor is absent in pure-Python tests, and the VE
+        members are absent on older versions. Returns an empty dict when the
+        read cannot be performed, so the reviewer schedule remains the fallback.
+        """
+        extractor = getattr(self.model_analyzer, "data_extractor", None)
+        if extractor is None or not hasattr(extractor, "get_model_thermal_bridges"):
+            return {}
+        try:
+            return extractor.get_model_thermal_bridges() or {}
+        except Exception as exc:  # noqa: BLE001 - never let a read break the audit
+            _LOGGER.warning("VE thermal-bridge read failed: %s", exc)
+            return {}
+
+    @staticmethod
+    def _build_thermal_bridge_result(
+        thermal_bridge_scan: Dict[str, Any],
+        thermal_bridge_record: Optional[Dict[str, Any]],
+        ve_thermal_bridges: Dict[str, Any],
+    ) -> Dict[str, Any]:
+        """Merge the VE-read thermal-bridge conductance with the reviewer schedule.
+
+        VE-read is primary when the surface members are present and returned data;
+        the reviewer schedule is the fallback (older VE / unset model). A VE read
+        made only of zero-psi junctions is surfaced but NOT treated as complete
+        evidence, so an un-entered default never silently reads as a pass.
+        """
+        result: Dict[str, Any] = {
+            "status": thermal_bridge_scan.get("status"),
+            "accepted": bool(thermal_bridge_record),
+            "record": thermal_bridge_record,
+            "ve_read": ve_thermal_bridges or {},
+        }
+        ve = ve_thermal_bridges or {}
+        if ve.get("readable"):
+            result["source"] = "ve_model"
+            result["total_w_per_k"] = ve.get("total_w_per_k")
+            result["nonzero_count"] = int(ve.get("nonzero_count", 0) or 0)
+            result["zero_psi_linear_count"] = int(ve.get("zero_psi_linear_count", 0) or 0)
+            # Available as evidence once at least one non-zero junction is read.
+            # An all-zero read is transparent but not complete evidence.
+            result["ve_available"] = result["nonzero_count"] > 0
+        elif thermal_bridge_record:
+            result["source"] = "reviewer_csv"
+            result["ve_available"] = False
+        else:
+            result["source"] = "none"
+            result["ve_available"] = False
+        return result
 
     def _check_declared_cooling_seer(self) -> None:
         """Compare a reviewer-declared SEER (EN 14825) to the SIA table 5 band.

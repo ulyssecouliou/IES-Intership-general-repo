@@ -259,6 +259,104 @@ class VEDataExtractor:
                 self._openings[surface_id] = []
         return self._openings[surface_id]
 
+    def get_model_thermal_bridges(self) -> Dict[str, Any]:
+        """Aggregate the model's SIA 380/2 thermal-bridge conductance from VE.
+
+        Reads the documented ``VESurface`` members exposed by the IES thermal-
+        bridging report (VE 2025.2):
+
+          get_thermal_bridges_non_repeating() -> linear/opening junctions:
+              bd.psi [W/(m.K)], bd.length [m], bd.flux_factor
+          get_thermal_bridges_random() -> point/random bridges:
+              bd.transmittance (psi [W/(m.K)] for linear, chi [W/K] for point),
+              bd.dimension (length [m] for linear, count for point)
+
+        Returns the building thermal-bridge conductance H_tb (W/K):
+            sum(psi * length * flux_factor)  +  sum(chi * count)
+
+        Everything is capability-checked (the members may be absent on older VE)
+        and read-only. A psi of 0.0 is reported and counted separately -- it may
+        be a real absence or an un-entered default, so the caller can flag it; it
+        is never silently taken as complete evidence.
+        """
+        summary: Dict[str, Any] = {
+            "capability_present": False,
+            "readable": False,
+            "total_w_per_k": 0.0,
+            "linear_conductance_w_per_k": 0.0,
+            "point_conductance_w_per_k": 0.0,
+            "linear_count": 0,
+            "point_count": 0,
+            "zero_psi_linear_count": 0,
+            "nonzero_count": 0,
+            "surfaces_scanned": 0,
+            "errors": [],
+        }
+        try:
+            import importlib
+            iesve = importlib.import_module("iesve")
+        except Exception as exc:
+            summary["errors"].append("iesve unavailable: {}".format(exc))
+            return summary
+
+        nonrep_none = getattr(getattr(iesve, "ThermalBridge_NonRepType", None), "none", object())
+        random_point = getattr(getattr(iesve, "ThermalBridge_RandomType", None), "point", object())
+
+        bodies = self.get_bodies()
+        for body in bodies:
+            for surface in self.get_surfaces(body):
+                has_nonrep = hasattr(surface, "get_thermal_bridges_non_repeating")
+                has_random = hasattr(surface, "get_thermal_bridges_random")
+                if has_nonrep or has_random:
+                    summary["capability_present"] = True
+                else:
+                    continue
+                summary["surfaces_scanned"] += 1
+                if has_nonrep:
+                    try:
+                        for bd in self._as_list(surface.get_thermal_bridges_non_repeating()):
+                            if getattr(bd, "type", None) == nonrep_none:
+                                continue
+                            summary["readable"] = True
+                            psi = self._to_float_or_none(getattr(bd, "psi", None))
+                            length = self._to_float_or_none(getattr(bd, "length", None))
+                            flux = self._to_float_or_none(getattr(bd, "flux_factor", None))
+                            flux = 1.0 if flux is None else flux
+                            if psi is None or length is None:
+                                continue
+                            summary["linear_count"] += 1
+                            summary["linear_conductance_w_per_k"] += psi * length * flux
+                            if psi == 0.0:
+                                summary["zero_psi_linear_count"] += 1
+                            else:
+                                summary["nonzero_count"] += 1
+                    except Exception as exc:
+                        summary["errors"].append("non_repeating read failed: {}".format(exc))
+                if has_random:
+                    try:
+                        for bd in self._as_list(surface.get_thermal_bridges_random()):
+                            summary["readable"] = True
+                            transmittance = self._to_float_or_none(getattr(bd, "transmittance", None))
+                            dimension = self._to_float_or_none(getattr(bd, "dimension", None))
+                            if transmittance is None or dimension is None:
+                                continue
+                            contribution = transmittance * dimension
+                            if getattr(bd, "type", None) == random_point:
+                                summary["point_count"] += 1
+                                summary["point_conductance_w_per_k"] += contribution
+                            else:
+                                summary["linear_count"] += 1
+                                summary["linear_conductance_w_per_k"] += contribution
+                            if transmittance != 0.0:
+                                summary["nonzero_count"] += 1
+                    except Exception as exc:
+                        summary["errors"].append("random read failed: {}".format(exc))
+
+        summary["total_w_per_k"] = (
+            summary["linear_conductance_w_per_k"] + summary["point_conductance_w_per_k"]
+        )
+        return summary
+
     def get_thermal_templates(self) -> Dict[str, Any]:
         """Return all thermal templates from the active VE project."""
         if not self._templates:

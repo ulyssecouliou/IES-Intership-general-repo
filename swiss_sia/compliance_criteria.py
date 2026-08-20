@@ -51,13 +51,15 @@ CAPABILITY_LEGEND = {
 # Code-grounded caveats that override or annotate the generic mapping.
 _CAPABILITY_OVERRIDES = {
     "SIA3802_THERMAL_BRIDGES": {
-        "ve_capability": "EXTERNAL_EVIDENCE",
+        "ve_capability": "VE_AVAILABLE",
         "ve_capability_note": (
-            "VE exposes no psi/chi thermal-bridge quantity to read; an empty field "
-            "must NOT be read as zero, and the reference-model 0.0 is a placeholder, "
-            "not evidence. Supply a reviewed external thermal-bridge schedule via "
-            "SIA3802_thermal_bridges_<project>.csv (assessment method + total psi.L+chi "
-            "or a referenced junction schedule, reviewer, date, source)."
+            "VE 2025.2 exposes psi/chi per surface (VESurface."
+            "get_thermal_bridges_non_repeating/_random), so the model's thermal-"
+            "bridge conductance H_tb = sum(psi.L.flux) + sum(chi.count) [W/K] is read "
+            "directly. A junction left at psi=0 may be an un-entered default, so an "
+            "all-zero read is surfaced but not treated as complete evidence. On older "
+            "VE (members absent) or unset models, supply a reviewed schedule via "
+            "SIA3802_thermal_bridges_<project>.csv."
         ),
     },
     "SIA3802_DESIGN_POWER_DAYS": {
@@ -137,7 +139,7 @@ _APS_QUANTITIES = {
 CLIENT_LIMITATIONS = {
     "fr": [
         {"title": "Ponts thermiques (ψ/χ)",
-         "why": "VE n'expose aucune grandeur ψ/χ lisible par l'API documentée, et un champ vide ne vaut pas zéro. Un calcul de ponts thermiques relu (évidence externe) est requis."},
+         "why": "VE 2025.2 expose ψ/χ par surface : la conductance de ponts thermiques H_tb (W/K) est lue directement. Une jonction laissée à ψ=0 peut être un défaut non saisi (à vérifier). Sur VE plus ancienne ou modèle non renseigné, un calcul relu (CSV) reste le repli."},
         {"title": "Puissance de dimensionnement",
          "why": "Le calcul par les jours de dimensionnement prescrits n'est pas implémenté ; les pics annuels ne peuvent pas s'y substituer."},
         {"title": "SEER saisonnier (froid)",
@@ -153,7 +155,7 @@ CLIENT_LIMITATIONS = {
     ],
     "en": [
         {"title": "Thermal bridges (ψ/χ)",
-         "why": "VE exposes no ψ/χ quantity through the documented API, and an empty field is not zero. A reviewed external thermal-bridge calculation is required."},
+         "why": "VE 2025.2 exposes ψ/χ per surface: the thermal-bridge conductance H_tb (W/K) is read directly. A junction left at ψ=0 may be an un-entered default (to verify). On older VE or an unset model, a reviewed calculation (CSV) is the fallback."},
         {"title": "Design-day power",
          "why": "The prescribed heating/cooling design-day workflow is not implemented; annual room peaks must never be substituted for it."},
         {"title": "Seasonal SEER (cooling)",
