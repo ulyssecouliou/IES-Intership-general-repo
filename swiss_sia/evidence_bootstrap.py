@@ -19,6 +19,7 @@ TEMPLATE_TARGETS = [
     ("sia3874_lighting_control_mapping_template.csv", "SIA3874_lighting_control_mapping_{project}.csv"),
     ("sia3802_project_metadata_template.csv", "SIA3802_project_metadata_{project}.csv"),
     ("sia3802_global_reference_comparison_template.csv", "SIA3802_global_reference_comparison_{project}.csv"),
+    ("sia3802_thermal_bridges_template.csv", "SIA3802_thermal_bridges_{project}.csv"),
     ("glazing_solar_protection_template.csv", "glazing_solar_protection_{project}.csv"),
     ("g_values_audit_template.csv", "g_values_audit_{project}.csv"),
 ]

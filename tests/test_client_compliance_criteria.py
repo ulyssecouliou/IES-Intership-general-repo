@@ -65,9 +65,14 @@ class ManifestContractTests(unittest.TestCase):
             self.assertIn("aps_simulation_results", crit["data_source"], cid)
             self.assertTrue(crit["aps_quantities"], cid)
 
-    def test_the_two_things_ve_cannot_produce_stay_flagged(self):
-        for cid in ("SIA3802_THERMAL_BRIDGES", "SIA3802_DESIGN_POWER_DAYS"):
-            self.assertEqual(self.by_id[cid]["ve_capability"], "NOT_AVAILABLE", cid)
+    def test_design_power_stays_not_available_in_ve(self):
+        self.assertEqual(
+            self.by_id["SIA3802_DESIGN_POWER_DAYS"]["ve_capability"], "NOT_AVAILABLE")
+
+    def test_thermal_bridges_are_reviewer_evidence_not_unavailable(self):
+        # VE still can't read psi/chi, but a reviewed schedule can now be ingested.
+        self.assertEqual(
+            self.by_id["SIA3802_THERMAL_BRIDGES"]["ve_capability"], "EXTERNAL_EVIDENCE")
 
     def test_seasonal_efficiency_criteria_carry_the_sn_en_14825_caveat(self):
         for cid in ("SIA3802_COOLING_EER_SEER", "SIA3802_HEATING_SCOP"):
@@ -97,8 +102,10 @@ class EvaluatorTests(unittest.TestCase):
             self._base_sia3802("NOT_CHECKABLE"), {}, {}, [_Room()], [],
         )
         by_id = {c["id"]: c for c in manifest["criteria"]}
+        # Thermal bridges are now reviewer-evidence: without a schedule they read
+        # NEEDS_REVIEWER_EVIDENCE (VE still cannot read psi/chi itself).
         self.assertEqual(
-            by_id["SIA3802_THERMAL_BRIDGES"]["runtime_status"], "NOT_AVAILABLE_IN_VE"
+            by_id["SIA3802_THERMAL_BRIDGES"]["runtime_status"], "NEEDS_REVIEWER_EVIDENCE"
         )
         self.assertEqual(
             by_id["SIA3802_DESIGN_POWER_DAYS"]["runtime_status"], "NOT_AVAILABLE_IN_VE"
@@ -172,6 +179,29 @@ class EvaluatorTests(unittest.TestCase):
         by_id = {c["id"]: c for c in manifest["criteria"]}
         self.assertEqual(by_id["SIA3802_USE_CATEGORY_SIA2024"]["runtime_status"], "PARTIAL")
 
+    def test_thermal_bridge_reviewed_evidence_credits_the_criterion(self):
+        sia3802 = self._base_sia3802("REVIEWED_RESULT_AVAILABLE")
+        sia3802["thermal_bridges"] = {
+            "status": "AVAILABLE",
+            "accepted": True,
+            "record": {
+                "assessment_method": "detailed_psi_chi",
+                "total_psi_chi_w_per_k_numeric": 12.4,
+            },
+        }
+        manifest = evaluate_client_compliance(
+            sia3802, {}, {}, [_Room()], [], scope="sia3802")
+        by_id = {c["id"]: c for c in manifest["criteria"]}
+        self.assertEqual(by_id["SIA3802_THERMAL_BRIDGES"]["runtime_status"], "OK")
+
+    def test_thermal_bridge_without_evidence_needs_reviewer(self):
+        manifest = evaluate_client_compliance(
+            self._base_sia3802("REVIEWED_RESULT_AVAILABLE"), {}, {}, [_Room()], [],
+            scope="sia3802")
+        by_id = {c["id"]: c for c in manifest["criteria"]}
+        self.assertEqual(
+            by_id["SIA3802_THERMAL_BRIDGES"]["runtime_status"], "NEEDS_REVIEWER_EVIDENCE")
+
     def test_evaluation_block_matches_the_authoritative_verdict(self):
         manifest = evaluate_client_compliance(
             self._base_sia3802("NOT_CHECKABLE"), {}, {}, [_Room()], [],
@@ -180,6 +210,43 @@ class EvaluatorTests(unittest.TestCase):
         self.assertEqual(evaluation["overall_sia3802_status"], "NOT_DETERMINED")
         self.assertIn("global_reference_comparison", evaluation["outstanding"])
         self.assertEqual(evaluation["rooms_analysed"], 1)
+
+
+class ThermalBridgeEvidenceTests(unittest.TestCase):
+    """The reviewer thermal-bridge record is accepted only when complete."""
+
+    def _row(self, **overrides):
+        row = {
+            "project_id": "Demo",
+            "assessment_method": "detailed_psi_chi",
+            "total_psi_chi_w_per_k": "12.4",
+            "unit": "W/K",
+            "review_status": "accepted",
+            "reviewer": "Reviewer",
+            "review_date": "2026-08-20",
+            "source_document": "thermal_bridge_calc.pdf",
+        }
+        row.update(overrides)
+        return row
+
+    def test_complete_record_is_accepted(self):
+        from swiss_sia.evidence_manager import _normalize_thermal_bridge_record
+        self.assertTrue(_normalize_thermal_bridge_record(self._row())["accepted"])
+
+    def test_schedule_reference_satisfies_the_quantum(self):
+        from swiss_sia.evidence_manager import _normalize_thermal_bridge_record
+        row = self._row(total_psi_chi_w_per_k="", schedule_reference="Junction schedule §4")
+        self.assertTrue(_normalize_thermal_bridge_record(row)["accepted"])
+
+    def test_missing_value_and_schedule_is_rejected(self):
+        from swiss_sia.evidence_manager import _normalize_thermal_bridge_record
+        row = self._row(total_psi_chi_w_per_k="", schedule_reference="")
+        self.assertFalse(_normalize_thermal_bridge_record(row)["accepted"])
+
+    def test_pending_review_is_rejected(self):
+        from swiss_sia.evidence_manager import _normalize_thermal_bridge_record
+        self.assertFalse(
+            _normalize_thermal_bridge_record(self._row(review_status="pending"))["accepted"])
 
 
 if __name__ == "__main__":

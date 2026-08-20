@@ -4390,7 +4390,22 @@ class ExcelReportGenerator:
         dynamic_results: Dict[str, Any],
     ) -> List[Dict[str, Any]]:
         """Build data coverage rows for automated checks, APS/Vista data and external evidence."""
-        stats = self._build_sia4010_model_stats(rooms_data, sia4010_results)
+        stats = dict(self._build_sia4010_model_stats(rooms_data, sia4010_results))
+        # Reviewed thermal-bridge (psi/chi) evidence is a SIA 380/2 result, so it
+        # rides on sia3802_results, not the model stats. Surface it to the
+        # coverage check for the thermal_bridges key.
+        thermal_bridges = (sia3802_results or {}).get("thermal_bridges", {}) or {}
+        stats["thermal_bridge_accepted"] = bool(thermal_bridges.get("accepted"))
+        record = thermal_bridges.get("record") or {}
+        if isinstance(record, dict) and thermal_bridges.get("accepted"):
+            method = str(record.get("assessment_method") or "").strip()
+            total = record.get("total_psi_chi_w_per_k_numeric")
+            detail = "method={}".format(method) if method else "reviewed schedule"
+            if total is not None:
+                detail += ", total psi.L+chi={} W/K".format(total)
+            stats["thermal_bridge_evidence"] = (
+                "Reviewer-accepted thermal-bridge evidence ({}).".format(detail)
+            )
         evidence = sia4010_results.get("evidence", {}) or {}
         dynamic_payload = dynamic_results or sia4010_results.get("dynamic_results", {}) or {}
         preflight_status_by_check = {
@@ -4522,8 +4537,16 @@ class ExcelReportGenerator:
             )
         if key == "thermal_bridges":
             # VE envelope U-values do not prove that junction/point losses have
-            # been included.  Keep this evidence requirement fail-closed until
-            # a dedicated, reviewed thermal-bridge dataset is ingested.
+            # been included, and VE exposes no psi/chi quantity to read: the
+            # project's thermal-bridge treatment is credited only from a reviewed
+            # external schedule (SIA3802_thermal_bridges_<project>.csv). The
+            # configured zero is never taken as evidence.
+            if stats.get("thermal_bridge_accepted"):
+                return (
+                    "AVAILABLE",
+                    stats.get("thermal_bridge_evidence")
+                    or "Reviewer-accepted thermal-bridge (psi/chi) schedule ingested.",
+                )
             return (
                 "MISSING",
                 "No reviewed linear psi / point chi thermal-bridge schedule is ingested; the configured zero remains a placeholder, not evidence.",

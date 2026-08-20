@@ -51,11 +51,13 @@ CAPABILITY_LEGEND = {
 # Code-grounded caveats that override or annotate the generic mapping.
 _CAPABILITY_OVERRIDES = {
     "SIA3802_THERMAL_BRIDGES": {
-        "ve_capability": "NOT_AVAILABLE",
+        "ve_capability": "EXTERNAL_EVIDENCE",
         "ve_capability_note": (
             "VE exposes no psi/chi thermal-bridge quantity to read; an empty field "
             "must NOT be read as zero, and the reference-model 0.0 is a placeholder, "
-            "not evidence. Requires a reviewed external thermal-bridge calculation."
+            "not evidence. Supply a reviewed external thermal-bridge schedule via "
+            "SIA3802_thermal_bridges_<project>.csv (assessment method + total psi.L+chi "
+            "or a referenced junction schedule, reviewer, date, source)."
         ),
     },
     "SIA3802_DESIGN_POWER_DAYS": {

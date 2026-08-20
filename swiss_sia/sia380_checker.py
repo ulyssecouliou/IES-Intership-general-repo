@@ -28,7 +28,9 @@ from .config import (
 )
 from .evidence_manager import (
     find_accepted_mapping,
+    find_accepted_thermal_bridges,
     scan_sia2024_usage_mappings,
+    scan_sia3802_thermal_bridges,
     scan_sia3874_lighting_mappings,
 )
 from .model_analyzer import ModelAnalyzer, RoomData, has_active_solar_protection
@@ -259,14 +261,15 @@ class SIA3802Checker:
         rooms_data = rooms_data if rooms_data is not None else self.model_analyzer.analyze_all_rooms()
         self.rule_engine.clear_alerts()
 
+        project = getattr(
+            getattr(self.model_analyzer, "data_extractor", None),
+            "project",
+            None,
+        )
+        project_path = str(getattr(project, "path", "") or "")
+        project_label = Path(project_path).name if project_path else None
+
         if external_mappings is None:
-            project = getattr(
-                getattr(self.model_analyzer, "data_extractor", None),
-                "project",
-                None,
-            )
-            project_path = str(getattr(project, "path", "") or "")
-            project_label = Path(project_path).name if project_path else None
             external_mappings = {
                 "sia2024_usage": scan_sia2024_usage_mappings(
                     PROJECT_ROOT,
@@ -279,6 +282,15 @@ class SIA3802Checker:
                     project_label,
                 ),
             }
+
+        # Thermal bridges (psi/chi) are supplied as reviewed external evidence:
+        # VE exposes no psi/chi quantity to read.
+        thermal_bridge_scan = scan_sia3802_thermal_bridges(
+            PROJECT_ROOT, SIA4010_EVIDENCE_DIR, project_label
+        )
+        thermal_bridge_record = find_accepted_thermal_bridges(
+            thermal_bridge_scan, project_label or ""
+        )
 
         envelope = self._run_category(
             "Envelope", self._check_envelope, rooms_data
@@ -325,6 +337,11 @@ class SIA3802Checker:
                 ),
             },
             "external_mappings": external_mappings,
+            "thermal_bridges": {
+                "status": thermal_bridge_scan.get("status"),
+                "accepted": bool(thermal_bridge_record),
+                "record": thermal_bridge_record,
+            },
             "rule_evaluations": dict(self.rule_engine.evaluated_counts),
             "alerts": list(self.rule_engine.alerts),
         }

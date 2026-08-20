@@ -60,6 +60,11 @@ SIA3802_GLOBAL_COMPARISON_FILE_PATTERNS = (
     "sia3802_global_reference_comparison_*.csv",
 )
 
+SIA3802_THERMAL_BRIDGE_FILE_PATTERNS = (
+    "SIA3802_thermal_bridges_*.csv",
+    "sia3802_thermal_bridges_*.csv",
+)
+
 
 def scan_sia3802_justifications(
     project_root: Path,
@@ -237,6 +242,109 @@ def find_accepted_global_comparison(
         if isinstance(record, dict) and _field_matches(record.get("project_id"), project_label):
             return record
     return None
+
+
+def scan_sia3802_thermal_bridges(
+    project_root: Path,
+    evidence_dir_name: str = "sia4010_evidence",
+    project_label: Optional[str] = None,
+) -> Dict[str, Any]:
+    """Scan reviewer-owned SIA 380/2 thermal-bridge (psi/chi) records.
+
+    VE exposes no psi/chi quantity, so the project's thermal-bridge treatment is
+    supplied as reviewed external evidence rather than read from the model.
+    """
+    evidence_dir = Path(project_root) / evidence_dir_name
+    files, excluded_files = _matching_project_files(
+        evidence_dir,
+        SIA3802_THERMAL_BRIDGE_FILE_PATTERNS,
+        project_label,
+    )
+    records: List[Dict[str, Any]] = []
+    errors: List[Dict[str, str]] = []
+    for file_path in files:
+        try:
+            with file_path.open("r", encoding="utf-8-sig", newline="") as handle:
+                for row_number, raw_row in enumerate(csv.DictReader(handle), start=2):
+                    record = _normalize_thermal_bridge_record(raw_row)
+                    record["file"] = str(file_path)
+                    record["row"] = row_number
+                    records.append(record)
+        except Exception as exc:
+            errors.append({"file": str(file_path), "error": str(exc)})
+    accepted_records = [record for record in records if record.get("accepted")]
+    return {
+        "evidence_dir": str(evidence_dir),
+        "project_label": project_label or "",
+        "files": [str(path) for path in files],
+        "excluded_files": [str(path) for path in excluded_files],
+        "records": records,
+        "accepted_records": accepted_records,
+        "record_count": len(records),
+        "accepted_count": len(accepted_records),
+        "errors": errors,
+        "status": "AVAILABLE" if accepted_records else ("PENDING_REVIEW" if records else "NOT_PROVIDED"),
+    }
+
+
+def find_accepted_thermal_bridges(
+    thermal_bridge_results: Dict[str, Any],
+    project_label: str,
+) -> Optional[Dict[str, Any]]:
+    """Return the accepted thermal-bridge record for the active VE project."""
+    if not isinstance(thermal_bridge_results, dict):
+        return None
+    accepted = thermal_bridge_results.get("accepted_records", []) or []
+    if not isinstance(accepted, list):
+        return None
+    for record in accepted:
+        if isinstance(record, dict) and _field_matches(record.get("project_id"), project_label):
+            return record
+    return None
+
+
+def _normalize_thermal_bridge_record(raw_row: Dict[str, Any]) -> Dict[str, Any]:
+    """Normalize one reviewer-owned thermal-bridge (psi/chi) record.
+
+    Accepted only when a reviewer has signed off a stated assessment method and
+    either a numeric total psi.L + chi (W/K) or a referenced junction schedule,
+    with a traceable source. The tool never derives the value from an empty VE
+    field, and zero is only valid when explicitly stated and reviewed.
+    """
+    record = {
+        _normalize_header(key): _clean_value(value)
+        for key, value in (raw_row or {}).items()
+        if key is not None
+    }
+    record.setdefault("project_id", record.get("project", ""))
+    record.setdefault("assessment_method", "")
+    record.setdefault("total_psi_chi_w_per_k", "")
+    record.setdefault("schedule_reference", "")
+    record.setdefault("unit", "")
+    record.setdefault("review_status", "")
+    record.setdefault("reviewer", "")
+    record.setdefault("review_date", "")
+    record.setdefault("source_document", record.get("source_file", ""))
+    record.setdefault("source_reference", "")
+    record.setdefault("notes", "")
+    try:
+        record["total_psi_chi_w_per_k_numeric"] = float(record.get("total_psi_chi_w_per_k"))
+    except (TypeError, ValueError):
+        record["total_psi_chi_w_per_k_numeric"] = None
+    has_quantum = (
+        record.get("total_psi_chi_w_per_k_numeric") is not None
+        or bool(record.get("schedule_reference"))
+    )
+    record["accepted"] = (
+        _status_key(record.get("review_status")) in ACCEPTED_REVIEW_STATUSES
+        and bool(record.get("project_id"))
+        and bool(record.get("assessment_method"))
+        and has_quantum
+        and bool(record.get("reviewer"))
+        and bool(record.get("review_date"))
+        and bool(record.get("source_document") or record.get("source_reference"))
+    )
+    return record
 
 
 def find_accepted_mapping(
