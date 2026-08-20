@@ -94,6 +94,54 @@ class ClientContextTests(unittest.TestCase):
             )
         )
 
+    def test_context_reads_the_text_visible_in_focused_entries(self) -> None:
+        """IESVE-hosted Tk entries are synchronised before form validation."""
+
+        class Value:
+            def __init__(self, value: str = "") -> None:
+                self.value = value
+
+            def get(self) -> str:
+                return self.value
+
+            def set(self, value: str) -> None:
+                self.value = value
+
+        class Entry:
+            def __init__(self, value: str) -> None:
+                self.value = value
+
+            def get(self) -> str:
+                return self.value
+
+        window = ClientComplianceWindow.__new__(ClientComplianceWindow)
+        window.vars = {
+            key: Value(default)
+            for key, default in {
+                "client_name": "",
+                "project_name": "",
+                "project_address": "",
+                "client_contact": "",
+                "report_reference": "",
+                "prepared_by": "",
+                "language": "en",
+                "weather_file": "weather.fwt",
+                "solar_shading": "TO_CONFIRM",
+                "client_logo_path": "",
+                "model_viewer_image_path": "",
+            }.items()
+        }
+        window.field_entries = {
+            "client_name": Entry("Client visible in the form"),
+            "project_name": Entry("Project visible in the form"),
+        }
+
+        context = window._context()
+
+        self.assertEqual(context.client_name, "Client visible in the form")
+        self.assertEqual(context.project_name, "Project visible in the form")
+        self.assertIsNone(validate_client_context(context))
+
     def test_unusable_report_image_is_rejected_before_generation(self) -> None:
         self.assertEqual(
             validate_client_context(

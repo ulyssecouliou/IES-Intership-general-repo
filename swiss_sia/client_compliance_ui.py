@@ -211,6 +211,7 @@ class ClientComplianceWindow:
     def _build(self) -> None:
         for child in self.root.winfo_children():
             child.destroy()
+        self.field_entries: Dict[str, Any] = {}
         self.root.title(self.t("client_ui_window_title"))
         banner = tk.Frame(self.root, background=self.COLORS["navy"], padx=30, pady=20)
         banner.pack(fill="x")
@@ -337,7 +338,13 @@ class ClientComplianceWindow:
                 field, text=self.t(key), background=self.COLORS["card"],
                 foreground=self.COLORS["text"], font=("Segoe UI Semibold", 8),
             ).pack(anchor="w", pady=(0, 4))
-            ttk.Entry(field, textvariable=self.vars[variable], style="Client.TEntry").pack(fill="x")
+            entry = ttk.Entry(
+                field,
+                textvariable=self.vars[variable],
+                style="Client.TEntry",
+            )
+            entry.pack(fill="x")
+            self.field_entries[variable] = entry
 
         locale_row = tk.Frame(self.form, background=self.COLORS["card"])
         locale_row.grid(row=4, column=0, columnspan=2, sticky="ew", pady=(0, 13))
@@ -541,6 +548,7 @@ class ClientComplianceWindow:
     def _change_language(self, _event: Any = None) -> None:
         """Apply the selected language immediately to the whole interface."""
 
+        self._sync_visible_fields()
         selected = LANGUAGE_CODES.get(self.language_choice.get(), "en")
         self.language = normalize_language(selected)
         self.vars["language"].set(self.language)
@@ -584,10 +592,25 @@ class ClientComplianceWindow:
                 )
 
     def _context(self) -> ClientReportContext:
+        # IESVE can host Tkinter in a long-lived embedded interpreter. In that
+        # environment a focused Entry may visually contain the latest text
+        # while its StringVar still exposes the previous value. Read the live
+        # widgets explicitly before validating or saving the report context.
+        self._sync_visible_fields()
         return ClientReportContext(
             **{key: variable.get() for key, variable in self.vars.items()},
             language_selected=True,
         ).normalized()
+
+    def _sync_visible_fields(self) -> None:
+        """Copy the text displayed by every live Entry into its report variable."""
+
+        for key, entry in getattr(self, "field_entries", {}).items():
+            try:
+                visible_value = entry.get()
+            except (AttributeError, tk.TclError):
+                continue
+            self.vars[key].set(visible_value)
 
     def _render_empty_result(self) -> None:
         for child in self.result_body.winfo_children():
@@ -736,6 +759,16 @@ class ClientComplianceWindow:
         context = self._context()
         issue = validate_client_context(context)
         if issue:
+            missing_field = (
+                "client_name" if not context.client_name else "project_name"
+            )
+            entry = getattr(self, "field_entries", {}).get(missing_field)
+            if entry is not None:
+                try:
+                    entry.focus_set()
+                    entry.selection_range(0, "end")
+                except tk.TclError:
+                    pass
             if messagebox is not None:
                 messagebox.showwarning(
                     self.t("client_ui_header"),

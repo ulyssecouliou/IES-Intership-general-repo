@@ -411,6 +411,12 @@ class CompanyProfileTests(unittest.TestCase):
         self.assertFalse(profile.is_configured)
         self.assertIsNone(profile.logo_path)
 
+    def test_repository_profile_identifies_ies_as_report_issuer(self):
+        profile = load_company_profile(REPO_ROOT)
+        self.assertEqual(profile.name, "IES")
+        self.assertEqual(profile.logo_path, REPO_ROOT / "assets" / "ies_logo.png")
+        self.assertTrue(profile.logo_path.is_file())
+
 
 class RenderedReportTests(unittest.TestCase):
     """Render the real report and pin its compliance-critical wording."""

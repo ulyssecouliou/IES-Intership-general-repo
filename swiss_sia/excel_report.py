@@ -438,14 +438,14 @@ class ExcelReportGenerator:
         logo_path = self._resolve_cover_logo()
         if logo_path is not None:
             try:
-                # Fit the ~480x160 asset into the three-row logo block without
-                # distorting it: scale to the block height, centred in its cell.
+                # Fit the square IES asset into the three-row logo block without
+                # distorting it or allowing it to dominate the client identity.
                 worksheet.insert_image(
                     "B2",
                     logo_path,
                     {
-                        "x_scale": 0.34,
-                        "y_scale": 0.34,
+                        "x_scale": 0.23,
+                        "y_scale": 0.23,
                         "object_position": 1,
                         "x_offset": 4,
                         "y_offset": 4,
@@ -630,7 +630,9 @@ class ExcelReportGenerator:
 
         project = self._project_label()
         generated = datetime.now().strftime("%Y-%m-%d %H:%M")
-        header = "&L{}&C{}&R&D".format(project, self._tr("report_title"))
+        header = "&LIES | {}&C{}&R&D".format(
+            project, self._tr("report_title")
+        )
         footer = (
             (
                 "&LNot a certificate - automated SIA readiness review"

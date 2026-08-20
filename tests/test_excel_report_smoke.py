@@ -294,21 +294,31 @@ class ClientSia3802OnlyReportTests(unittest.TestCase):
             with zipfile.ZipFile(output_path) as workbook:
                 workbook_xml = workbook.read("xl/workbook.xml").decode("utf-8", "ignore")
                 strings = workbook.read("xl/sharedStrings.xml").decode("utf-8", "ignore")
+                sheet_xml = "".join(
+                    workbook.read(name).decode("utf-8", "ignore")
+                    for name in workbook.namelist()
+                    if name.startswith("xl/worksheets/sheet") and name.endswith(".xml")
+                )
                 embedded_images = [
                     workbook.read(name)
                     for name in workbook.namelist()
                     if name.startswith("xl/media/")
                 ]
-            report_text = workbook_xml + strings
+            report_text = workbook_xml + strings + sheet_xml
             self.assertIn("MODEL VIEWER", report_text)
             self.assertIn("Client Alpine SA", report_text)
             self.assertIn("School North", report_text)
             self.assertIn("CHE_GVE_2060_RCP85_DRY.fwt", report_text)
             self.assertIn(translate("field_solar_shading", "en"), report_text)
             self.assertIn(translate("excel_client_summary_title", "en"), report_text)
+            self.assertIn("IES |", report_text)
             self.assertNotIn("Model health score", report_text)
             self.assertNotIn("SIA 380/2 automated score", report_text)
             self.assertIn(viewer_image.read_bytes(), embedded_images)
+            self.assertIn(
+                (Path(__file__).resolve().parents[1] / "assets" / "ies_logo.png").read_bytes(),
+                embedded_images,
+            )
         finally:
             output_path.unlink(missing_ok=True)
             viewer_image.unlink(missing_ok=True)

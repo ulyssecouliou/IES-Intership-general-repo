@@ -1,15 +1,14 @@
 {
   "_comment": [
-    "Profil du bureau qui emet le rapport. Copie de company_profile.template.json",
-    "avec le chemin de logo renseigne pour exercer le letterhead.",
-    "Tout champ laisse vide s imprime comme non specifie : rien n est invente.",
-    "A completer par le bureau avant toute remise a un client."
+    "IES est l'emetteur des rapports client generes par cet outil.",
+    "Les coordonnees du client et du projet sont saisies dans l'interface.",
+    "Ne pas remplacer ce logo par le logo du client : celui-ci dispose d'un champ separe."
   ],
-  "name": "",
+  "name": "IES",
   "tagline": "",
   "address_lines": [],
   "contact_lines": [],
-  "logo_path": "assets/office_logo.placeholder.png",
+  "logo_path": "assets/ies_logo.png",
   "author_name": "",
   "author_role": "",
   "report_reference": ""
