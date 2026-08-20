@@ -12,7 +12,6 @@ from typing import Any, Callable, Dict, List, Optional
 
 from .config import (
     PROJECT_ROOT,
-    SIA3802_COOLING_AIR_CHILLER_MAX_KW,
     SIA3802_COOLING_EER_SEER_LIMITS,
     SIA3802_COOLING_EER_SEER_TARGETS,
     SIA3802_COOLING_NEED_SCREENING,
@@ -247,8 +246,8 @@ class SIA3802Checker:
             name="SIA3802_COOLING_SEER_MIN_DECLARED",
             description=(
                 "Declared cooling SEER (manufacturer, SN EN 14825:2018) meets the "
-                "SIA 380/2 table 5 SEER limit for an air-cooled chiller below 150 kW. "
-                f"{reference_note}"
+                "capacity-banded SIA 380/2 table 5 (air-cooled) or table 6 "
+                f"(water-cooled) SEER limit. {reference_note}"
             ),
             check=lambda hvac: self._hvac_metric_meets_limit(hvac, "seer"),
             severity=Severity.LOW,
@@ -1249,12 +1248,13 @@ class SIA3802Checker:
         class, the rated capacity and the declared SEER. A declared SEER is
         EN 14825 by construction, so no seasonal-equivalence caveat applies.
 
-        The clean declared comparison is restricted to the SIA 380/2 table 5
-        scope: AIR-cooled chillers below 150 kW. Table 5 is the only cooling
-        table whose minima are stated as a SEER "selon SN EN 14825"; water-cooled
-        and >=150 kW units fall under tables 6/7 (table 7 is an EER+ metric, not a
-        SEER), so comparing a declared SEER to them would mix metrics. Those cases
-        stay NOT_CHECKABLE here.
+        The clean declared comparison covers the SIA 380/2 tables whose minima are
+        stated as a SEER "selon SN EN 14825": table 5 (air-cooled) and table 6
+        (water-cooled), both across their full power ranges (verified on the
+        SIA 380/2:2022 PDF page 38). Only a water-cooled unit with dry post-cooling
+        (table 7, an EER+ metric, not a SEER) or an unclassified generator is out
+        of scope; those stay NOT_CHECKABLE here. Band resolution itself is left to
+        _hvac_metric (a capacity outside the encoded bands -> BAND_NOT_CHECKABLE).
         """
         record = getattr(self, "_reviewer_cooling_generator", None)
         if not isinstance(record, dict):
@@ -1264,22 +1264,23 @@ class SIA3802Checker:
         seer = self._float_or_none(record.get("seer_numeric"))
         if not sia_class or capacity is None or seer is None:
             return
-        if sia_class != "air_cooled" or capacity >= SIA3802_COOLING_AIR_CHILLER_MAX_KW:
+        if sia_class not in ("air_cooled", "water_cooled"):
             self.rule_engine.add_alert(
-                rule="SIA3802_COOLING_SEER_DECLARED_OUT_OF_TABLE5_SCOPE",
+                rule="SIA3802_COOLING_SEER_DECLARED_OUT_OF_TABLE_SCOPE",
                 description=(
                     f"Declared SEER for the reviewer cooling generator "
                     f"({sia_class or 'unclassified'}, {capacity} kW) is outside the "
-                    "SIA 380/2 table 5 SEER scope (air-cooled < 150 kW). Water-cooled "
-                    "or >=150 kW units fall under tables 6/7 (table 7 is EER+, not a "
-                    "SEER), so a clean SEER comparison cannot be made here."
+                    "SIA 380/2 table 5/6 SEER scope. A water-cooled unit with dry "
+                    "post-cooling uses table 7's EER+ (not a SEER), and an "
+                    "unclassified generator cannot select a table row, so a clean "
+                    "SEER comparison cannot be made here."
                 ),
                 severity=Severity.LOW,
                 category="Reference Project Diagnostics",
                 recommendation=(
-                    "Provide the table-appropriate metric (e.g. Table 7 EER+ for "
+                    "Provide the table-appropriate metric (e.g. table 7 EER+ for "
                     "water-cooled with dry post-cooling); do not compare a declared "
-                    "SEER to a non-table-5 band."
+                    "SEER to a non-table-5/6 band."
                 ),
                 data=record,
             )

@@ -16,13 +16,23 @@ par le CSV relecteur `SIA3802_cooling_generators_<projet>.csv` via
 Un SEER **lu du modèle VE** (calcul interne non confirmé EN 14825) garde le
 caveat : règle `SIA3802_COOLING_SEER_MIN`. Étanchéité vérifiée par norm-analyst.
 
-## Périmètre (À CORRIGER appliqué)
-La voie déclarée « propre » est **restreinte au tableau 5** : refroidisseur
-**refroidi par air, < 150 kW** (SIA 380/2:2022 §7.2.5.4-5 ;
-`SIA3802_COOLING_AIR_CHILLER_MAX_KW = 150`). Toute unité **water_cooled** ou
-**≥ 150 kW** relève des tables 6/7 (la 7 est en **EER+**, pas un SEER) → verdict
-`SIA3802_COOLING_SEER_DECLARED_OUT_OF_TABLE5_SCOPE` (NOT_CHECKABLE), jamais un
-pass propre.
+## Périmètre (corrigé après lecture directe du PDF p.38)
+**Vérification PDF faite** (PyMuPDF, 2026-08-20) : la page 38 confirme
+**Tableau 5 (air)** ET **Tableau 6 (eau)**, tous deux avec une colonne
+« valeur minimale SEER **selon SN EN 14825** » sur toute leur plage. Les bandes
+`SIA3802_COOLING_EER_SEER_LIMITS`/`_TARGETS` correspondent **exactement** :
+- Air (Table 5) limites EER/SEER : 2,90/3,80 · 3,00/3,90 · 3,10/4,00 · 3,20/4,20 · 3,40/4,40 ✓
+- Eau (Table 6) limites EER/SEER : 4,05/4,50 · 4,25/4,80 · 4,65/5,50 · 5,05/6,10 · 5,50/6,70 ✓
+
+**Réserve Q4 norm-analyst LEVÉE** : les bandes `water_cooled` viennent du
+**Tableau 6 (vrai SEER)**, PAS du Tableau 7 (EER+). Le gate déclaré couvre donc
+**air (Table 5) + eau (Table 6)**, pleine plage. Seul **l'unité eau à
+refroidissement sec (Table 7, EER+)** ou un générateur **non classé** est hors
+périmètre → `SIA3802_COOLING_SEER_DECLARED_OUT_OF_TABLE_SCOPE` (NOT_CHECKABLE).
+La résolution de bande hors plage reste gérée par `_hvac_metric`
+(BAND_NOT_CHECKABLE). Le commentaire config §GENERATION_REFERENCE (« eau ≥150 kW
+= Table 7 ») concerne une **autre structure** (projet de référence), pas
+`COOLING_EER_SEER_LIMITS`.
 
 ## Conditions à tracer au dossier pour l'unité concernée (Q1, interprétations)
 1. La valeur est bien un **SEER** (froid confort, tous modes), pas SEERon ni EER.
@@ -39,9 +49,8 @@ Base « EN 14825 par construction » (Reg. UE 206/2012 ≤12 kW ; 2016/2281 conf
 > 12 kW) = **savoir externe, hors refs/** → **[INTERPRÉTATION]**, pas une citation.
 
 ## Réserves ouvertes
-- **Bandes `seer` du config vs PDF p.38** : norm-analyst n'a **pas** pu confronter
-  le tableau 5 au PDF (poppler absent). → à faire relire par
-  `reference-data-engineer` / `qa-auditor` sur `refs/SIA-380-2-2022.pdf` p.38.
+- ~~Bandes `seer` du config vs PDF p.38~~ **LEVÉE** (2026-08-20, PyMuPDF) :
+  Tables 5 & 6 confrontées, valeurs identiques (voir « Périmètre » ci-dessus).
 - **Saison de refroidissement de référence (2 598 h)** : cross-check seulement
   auto-cohérent (somme = total transcrit) ; non confronté à une valeur EN 14825
   publiée indépendante. **Impact nul** sur le verdict (bins utilisés seulement en

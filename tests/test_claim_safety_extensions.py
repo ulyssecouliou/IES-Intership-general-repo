@@ -198,35 +198,54 @@ class ClaimSafetyExtensionTests(unittest.TestCase):
         self.assertNotIn("SIA3802_COOLING_SEER_MIN_DECLARED", names)
         self.assertNotIn("SIA3802_COOLING_SEER_MIN_DECLARED_VALUE_MISSING", names)
 
-    def test_declared_seer_water_cooled_is_out_of_table5_scope(self):
-        """Table 5 SEER is air-cooled < 150 kW; a water-cooled declared SEER must
-        NOT get a clean pass (tables 6/7, table 7 is EER+, not SEER)."""
+    def test_declared_seer_water_cooled_below_table6_band_fails(self):
+        """Table 6 (water-cooled) also carries a SEER 'selon SN EN 14825' band, so
+        a declared water-cooled SEER under its band fails the clean declared rule."""
+        engine = RuleEngine()
+        checker = SIA3802Checker(SimpleNamespace(), engine)
+        # water_cooled, 45 kW -> band 12-50, SIA SEER limit 4.50.
+        checker._reviewer_cooling_generator = {
+            "sia_cooling_class": "water_cooled",
+            "capacity_kw_numeric": 45.0,
+            "seer_numeric": 4.0,
+        }
+        checker._check_declared_cooling_seer()
+        names = [a.rule for a in engine.get_alerts_by_category(
+            "Reference Project Diagnostics")]
+        self.assertIn("SIA3802_COOLING_SEER_MIN_DECLARED", names)
+        self.assertNotIn("SIA3802_COOLING_SEER_DECLARED_OUT_OF_TABLE_SCOPE", names)
+
+    def test_declared_seer_water_cooled_meeting_table6_band_passes(self):
+        """A declared water-cooled SEER at/above the table 6 band passes cleanly."""
         engine = RuleEngine()
         checker = SIA3802Checker(SimpleNamespace(), engine)
         checker._reviewer_cooling_generator = {
             "sia_cooling_class": "water_cooled",
             "capacity_kw_numeric": 45.0,
-            "seer_numeric": 6.0,
-        }
-        checker._check_declared_cooling_seer()
-        names = [a.rule for a in engine.get_alerts_by_category(
-            "Reference Project Diagnostics")]
-        self.assertIn("SIA3802_COOLING_SEER_DECLARED_OUT_OF_TABLE5_SCOPE", names)
-        self.assertNotIn("SIA3802_COOLING_SEER_MIN_DECLARED", names)
-
-    def test_declared_seer_large_air_cooled_is_out_of_table5_scope(self):
-        """An air-cooled chiller >= 150 kW is outside the table 5 SEER scope."""
-        engine = RuleEngine()
-        checker = SIA3802Checker(SimpleNamespace(), engine)
-        checker._reviewer_cooling_generator = {
-            "sia_cooling_class": "air_cooled",
-            "capacity_kw_numeric": 300.0,
             "seer_numeric": 5.0,
         }
         checker._check_declared_cooling_seer()
         names = [a.rule for a in engine.get_alerts_by_category(
             "Reference Project Diagnostics")]
-        self.assertIn("SIA3802_COOLING_SEER_DECLARED_OUT_OF_TABLE5_SCOPE", names)
+        self.assertNotIn("SIA3802_COOLING_SEER_MIN_DECLARED", names)
+        self.assertNotIn("SIA3802_COOLING_SEER_DECLARED_OUT_OF_TABLE_SCOPE", names)
+
+    def test_declared_seer_unclassified_is_out_of_table_scope(self):
+        """An unclassified generator cannot select a table 5/6 row -> out of scope."""
+        engine = RuleEngine()
+        checker = SIA3802Checker(SimpleNamespace(), engine)
+        checker._reviewer_cooling_generator = {
+            "sia_cooling_class": "",
+            "capacity_kw_numeric": 300.0,
+            "seer_numeric": 5.0,
+        }
+        # An empty class returns early (incomplete record), so force a non-mappable
+        # but present class to exercise the out-of-scope branch.
+        checker._reviewer_cooling_generator["sia_cooling_class"] = "evaporative"
+        checker._check_declared_cooling_seer()
+        names = [a.rule for a in engine.get_alerts_by_category(
+            "Reference Project Diagnostics")]
+        self.assertIn("SIA3802_COOLING_SEER_DECLARED_OUT_OF_TABLE_SCOPE", names)
 
     def test_reference_input_deviation_is_not_a_compliance_failure(self):
         """Keep reference-project deviations in their dedicated report state."""
