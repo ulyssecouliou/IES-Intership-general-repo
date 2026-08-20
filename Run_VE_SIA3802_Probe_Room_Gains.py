@@ -92,6 +92,19 @@ def run() -> None:
         {f for f in families(t.get("casual_gains", [])) if f != "<unknown>"}
         for t in inventory.get("templates", [])
     )
+    print("\n--- ROOM ID SOURCES (the usage-mapping CSV must use room.id) ---")
+    print("  room.id = get_object_id(body): tries get_id() FIRST, then .id.")
+    for body in model.get_bodies(False):
+        bid = getattr(body, "id", None)
+        getid = None
+        try:
+            member = getattr(body, "get_id", None)
+            getid = member() if callable(member) else None
+        except Exception as exc:  # noqa: BLE001 -- diagnostic only
+            getid = "<error {}>".format(exc)
+        print("  name={!r} | .id={!r} | get_id()={!r}  --> use the get_id() value "
+              "if it differs".format(getattr(body, "name", ""), bid, getid))
+
     print("\n--- CONCLUSION ---")
     if any_inheritance:
         print("At least one room's get_internal_gains reflects its assigned")
