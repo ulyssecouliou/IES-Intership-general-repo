@@ -44,11 +44,8 @@ Modèle exemple `SIA_compatible_model_TEST` : **overall SIA 380/2 CONFORME (avec
 - [x] ✅ **Contrôle de ventilation** — *ingestion faite* (`5671e1b`) : CSV relecteur `SIA3802_ventilation_control_<project>.csv` (type système mono/multizone + classe de contrôle + tranche de débit ≤3 / 3-6 / >6 m³/h·m²) crédite `ventilation_control` → **AVAILABLE**.
   - *Reste côté utilisateur* : classifier le système + contrôle (ingénieur CVC) et le saisir dans le CSV.
 
-- ⬜ **Protection solaire** (`NOT_CHECKABLE`, `SIA3802_SOLAR_PROTECTION_CONTROL`)
-  - *Intérêt* : SIA 380/2 Table 10 — type, g_total actif, contrôle ; anti-surchauffe estivale.
-  - *Quoi faire* : modéliser les stores dans VE (type, optique, contrôle), ou note relecteur si absence justifiée.
-  - *Qui* : architecte / façadier + ingénieur (g_total).
-  - *Dev outil* : soit lecture VE des stores, soit CSV relecteur (le gabarit `glazing_solar_protection_*.csv` existe mais la couverture ne le crédite pas encore — **ingestion à ajouter**).
+- [x] ✅ **Protection solaire** — *ingestion faite* (`2a78bef`) : le CSV relecteur `glazing_solar_protection_<project>.csv` (type protection + g_total avec store = quantum Table 10, par façade) est désormais scanné et crédite `solar_protection` → **AVAILABLE**, mais uniquement quand la couverture VE **plus** les fenêtres relues atteignent toutes les fenêtres externes (sinon PARTIAL, jamais de pass silencieux).
+  - *Reste côté utilisateur* : modéliser les stores dans VE **ou** documenter le store hors VE (architecte/façadier + ingénieur g_total) et saisir le CSV.
 
 - ⬜ **Contrôle éclairage** (`PARTIAL`, `SIA3802_LIGHTING_CONTROL`)
   - *Intérêt* : SIA 387/4 — puissance installée + contrôle présence/lumière du jour.
