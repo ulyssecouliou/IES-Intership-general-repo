@@ -143,7 +143,11 @@ class ExcelReportGenerator:
         # that were never written.
         self._active_sections = [
             (
-                section_name,
+                (
+                    "Compliance & priority"
+                    if not include_sia4010 and section_name == "Readiness & priority"
+                    else section_name
+                ),
                 colour,
                 [
                     sheet
@@ -473,7 +477,7 @@ class ExcelReportGenerator:
             "B7:E7",
             "Automated SIA 380/2 readiness review and SIA 4010 evidence status"
             if self.include_sia4010
-            else "Automated SIA 380/2 readiness review of the client model",
+            else "SIA 380/2 compliance assessment of the client model",
             subtitle_format,
         )
 
@@ -519,24 +523,20 @@ class ExcelReportGenerator:
 
         worksheet.merge_range(
             "B20:E23",
-            "This workbook is an automated readiness and evidence review. It is "
-            "NOT an SIA certificate and does not constitute SIA 4010 validation. "
-            "Scores are indicators computed from the directly extracted VE model; "
-            "missing official evidence is reported as WARNING or NOT_CHECKABLE, "
-            "never as a pass. See the INDEX sheet to navigate all sections.",
+            (
+                "This workbook is an automated readiness and evidence review. It is "
+                "NOT an SIA certificate and does not constitute SIA 4010 validation. "
+                "Scores are indicators computed from the directly extracted VE model; "
+                "missing official evidence is reported as WARNING or NOT_CHECKABLE, "
+                "never as a pass. See the INDEX sheet to navigate all sections."
+                if self.include_sia4010
+                else "This workbook reports the assessed SIA 380/2 compliance of the "
+                "client model. It is an engineering assessment, not an official SIA "
+                "certificate. Missing or unverifiable evidence remains visible and "
+                "never becomes a silent pass. See the INDEX sheet for supporting detail."
+            ),
             disclaimer_format,
         )
-
-        if not self.include_sia4010:
-            # One honest credential line. SIA 4010 validates the software, not
-            # this building, so it appears here as a pointer, never as a score
-            # on the client model. Its full state lives in the Anwenderbericht.
-            worksheet.merge_range(
-                "B24:E24",
-                "Tool undergoing SIA 4010 validation (software, not this "
-                "building) - see the separate Anwenderbericht.",
-                logo_format,
-            )
 
     def _write_model_viewer_xlsxwriter(self) -> None:
         """Embed the user-selected Model Viewer capture in the workbook."""
@@ -622,8 +622,12 @@ class ExcelReportGenerator:
         generated = datetime.now().strftime("%Y-%m-%d %H:%M")
         header = "&L{}&CSwiss SIA Compliance Report&R&D".format(project)
         footer = (
-            "&LNot a certificate - automated SIA readiness review"
-            "&C&P / &N&Rgenerated {}".format(generated)
+            (
+                "&LNot a certificate - automated SIA readiness review"
+                if self.include_sia4010
+                else "&LNot a certificate - SIA 380/2 compliance assessment"
+            )
+            + "&C&P / &N&Rgenerated {}".format(generated)
         )
         for worksheet in self.workbook.worksheets():
             name = getattr(worksheet, "name", "")
@@ -765,7 +769,7 @@ class ExcelReportGenerator:
             "A2:L2",
             "Executive view - VE model, automated SIA 380/2 checks, SIA 4010 readiness and action priorities."
             if self.include_sia4010
-            else "Executive view - client VE model, automated SIA 380/2 checks and action priorities.",
+            else "Executive view - client VE model, SIA 380/2 compliance verdict and action priorities.",
             subtitle_format,
         )
         # Build the target list first, then drop it into the fixed slots, so the
@@ -1282,7 +1286,11 @@ class ExcelReportGenerator:
             8,
             next_row + 3,
             15,
-            "Use this workbook as a professional SIA 380/2 and SIA 4010 readiness report. Do not claim final SIA compliance or SIA 4010 validation until model blockers, evidence files and reviewer acceptance are complete.",
+            (
+                "Use this workbook as a professional SIA 380/2 and SIA 4010 readiness report. Do not claim final SIA compliance or SIA 4010 validation until model blockers, evidence files and reviewer acceptance are complete."
+                if self.include_sia4010
+                else "Use the displayed SIA 380/2 verdict together with its blocking, advisory and outstanding-evidence details. This engineering assessment is not an official SIA certificate."
+            ),
             muted_format,
         )
 
@@ -1372,7 +1380,7 @@ class ExcelReportGenerator:
             "A2:H3",
             "Professional readiness statement for the active VE model. This page is intentionally conservative: it separates automated SIA 380/2 checks from official SIA 4010 validation evidence."
             if self.include_sia4010
-            else "Professional SIA 380/2 readiness statement for the active client VE model. It is intentionally conservative: missing data is reported, never assumed compliant.",
+            else "Professional SIA 380/2 compliance statement for the active client VE model. Missing data is reported and never assumed compliant.",
             note_format,
         )
 
@@ -1428,7 +1436,15 @@ class ExcelReportGenerator:
         worksheet.write("B19", "Use / avoid", section_format)
         worksheet.write("C19", "Reason", section_format)
         claim_rows = [
-            ("Use", "Automated SIA 380/2 readiness review for directly extracted VE data.", "Supported by the implemented checks and requirement matrix."),
+            (
+                "Use",
+                (
+                    "Automated SIA 380/2 readiness review for directly extracted VE data."
+                    if self.include_sia4010
+                    else "Assessed SIA 380/2 compliance verdict with visible evidence reserves."
+                ),
+                "Supported by the implemented checks and requirement matrix.",
+            ),
             ("Avoid", "This model is fully SIA compliant.", "Current P1 items remain open and several MSP checks are not implemented yet."),
         ]
         if self.include_sia4010:
@@ -1488,7 +1504,15 @@ class ExcelReportGenerator:
             ]
         status_counts = Counter(str(check.get("status", "UNKNOWN")) for check in checks)
 
-        worksheet.merge_range("A1:G1", "VE Run Preflight - Execution Readiness", header_format)
+        worksheet.merge_range(
+            "A1:G1",
+            (
+                "VE Run Preflight - Execution Readiness"
+                if self.include_sia4010
+                else "VE Run Preflight - Report Inputs"
+            ),
+            header_format,
+        )
         worksheet.merge_range(
             "A2:G2",
             "These checks indicate whether the report can be interpreted with confidence. "
@@ -2316,12 +2340,16 @@ class ExcelReportGenerator:
             ),
         ]
         if not self.include_sia4010:
-            # Drop the assumption row that is purely about SIA 4010 validation.
-            # The remaining 380/2 rows keep their source citations, which may
-            # cross-reference an SIA 4010 clause as provenance -- a citation, not
-            # a claim about the building.
+            # The client workbook is strictly scoped to the building assessment:
+            # remove the software-validation row and its cross-references.
             rows = [
-                row_values
+                tuple(
+                    str(value)
+                    .replace("Use as readiness indicator", "Use as supporting evidence")
+                    .replace("; SIA 4010 clause 3.1.5", "")
+                    .replace("; SIA 4010 system tables", "")
+                    for value in row_values
+                )
                 for row_values in rows
                 if "SIA 4010 validation is evidence-based" not in row_values[1]
             ]
@@ -2478,7 +2506,14 @@ class ExcelReportGenerator:
             guardrails.append(("SIA 4010", "Official validation requires SIA test specifications, official evaluation workbooks, candidate results, reference comparisons and class confirmation."))
         guardrails.extend([
             ("Missing data", "Missing or non-comparable data must never be treated as PASS."),
-            ("Report wording", "Use readiness/audit wording until every blocker and official evidence requirement is reviewed."),
+            (
+                "Report wording",
+                (
+                    "Use readiness/audit wording until every blocker and official evidence requirement is reviewed."
+                    if self.include_sia4010
+                    else "Use the assessed compliance verdict together with its visible blockers, advisory findings and evidence reserves."
+                ),
+            ),
         ])
         for label, text in guardrails:
             row += 1
@@ -3264,8 +3299,8 @@ class ExcelReportGenerator:
             "These values are readiness indicators extracted from APS/Vista when IESVE ResultsReader is available. "
             "They support SIA 380/2 and SIA 4010 checks but do not replace official SIA 4010 comparison workbooks."
             if self.include_sia4010
-            else "These values are readiness indicators extracted from APS/Vista when IESVE ResultsReader is "
-            "available. They support the SIA 380/2 checks of the client model.",
+            else "These values are extracted from APS/Vista when IESVE ResultsReader is available. "
+            "They support the SIA 380/2 compliance assessment of the client model.",
             note_format,
         )
 

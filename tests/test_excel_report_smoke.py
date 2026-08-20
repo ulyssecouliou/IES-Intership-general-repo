@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import struct
 import unittest
 import zipfile
+import zlib
 from pathlib import Path
 
 from scripts.quality.fixtures import StaticModelAnalyzer, build_reference_room
@@ -15,6 +17,33 @@ from swiss_sia.sia4010_checker import SIA4010Checker
 from swiss_sia.reference_project import build_reference_project_specification
 from swiss_sia.validation_class_scope import derive_validation_class_scope
 from swiss_sia.client_report_context import ClientReportContext
+
+
+def _write_rgb_png(path: Path, width: int = 20, height: int = 12) -> Path:
+    """Write a small dependency-free RGB image for workbook embedding tests."""
+
+    raw = bytearray()
+    for row in range(height):
+        raw.append(0)
+        for column in range(width):
+            raw += bytes((column * 11 % 256, row * 19 % 256, 120))
+
+    def chunk(tag: bytes, body: bytes) -> bytes:
+        return (
+            struct.pack(">I", len(body))
+            + tag
+            + body
+            + struct.pack(">I", zlib.crc32(tag + body) & 0xFFFFFFFF)
+        )
+
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_bytes(
+        b"\x89PNG\r\n\x1a\n"
+        + chunk(b"IHDR", struct.pack(">IIBBBBB", width, height, 8, 2, 0, 0, 0))
+        + chunk(b"IDAT", zlib.compress(bytes(raw)))
+        + chunk(b"IEND", b"")
+    )
+    return path
 
 
 def _build_report_inputs():
@@ -168,21 +197,7 @@ class ExcelReportSmokeTests(unittest.TestCase):
 
 
 class ClientSia3802OnlyReportTests(unittest.TestCase):
-    """Guard the SIA 380/2-only client workbook against SIA 4010 leakage."""
-
-    # The only places a client 380/2-only workbook may still mention SIA 4010:
-    # two protective disclaimers that tell the reader not to over-claim, a single
-    # credential line pointing at the tool's separate Anwenderbericht, and two
-    # provenance citations that name the exact SIA article behind a value. Every
-    # other SIA 4010 sheet, card, KPI and label must be gone. Each entry is a
-    # distinctive fragment; a leaked string must contain one of them to pass.
-    _ALLOWLIST_MARKERS = (
-        "does not constitute SIA 4010 validation",          # cover disclaimer
-        "Tool undergoing SIA 4010 validation",              # cover credential line
-        "Do not claim final SIA compliance or SIA 4010",    # action-dashboard disclaimer
-        "table 2; SIA 4010 clause 3.1.5.",                  # provenance citation
-        "SIA 4010 system tables.",                          # provenance citation
-    )
+    """Keep the client workbook strictly on real SIA 380/2 compliance."""
 
     def _generate(self, output_path: Path, *, include_sia4010: bool) -> str:
         analyzer, score, s3802, s4010, rooms, dynamic = _build_report_inputs()
@@ -195,13 +210,14 @@ class ClientSia3802OnlyReportTests(unittest.TestCase):
             include_sia4010=include_sia4010,
         )
         with zipfile.ZipFile(output_path) as workbook:
-            workbook_xml = workbook.read("xl/workbook.xml").decode("utf-8", "ignore")
-            shared_strings = workbook.read("xl/sharedStrings.xml").decode("utf-8", "ignore")
-        return workbook_xml + shared_strings
+            return "\n".join(
+                workbook.read(name).decode("utf-8", "ignore")
+                for name in workbook.namelist()
+                if name.endswith(".xml")
+            )
 
-    def test_client_workbook_has_no_sia4010_outside_allowlist(self) -> None:
-        """A 380/2-only workbook mentions SIA 4010 only in the allowlisted cells."""
-        import re
+    def test_client_workbook_has_no_sia4010_or_development_indicators(self) -> None:
+        """The client workbook contains compliance, not software/readiness KPIs."""
 
         output_path = Path(__file__).with_name("_excel_report_3802_only.xlsx")
         try:
@@ -217,20 +233,10 @@ class ClientSia3802OnlyReportTests(unittest.TestCase):
             ):
                 self.assertNotIn(sheet_name, report_text)
 
-            # Every shared string carrying "4010" must be one of the allowlisted
-            # disclaimers, the credential line or a provenance citation.
-            strings = re.findall(r"<t[^>]*>(.*?)</t>", report_text, re.S)
-            leaked = [
-                text
-                for text in strings
-                if "4010" in text
-                and not any(marker in text for marker in self._ALLOWLIST_MARKERS)
-            ]
-            self.assertEqual(
-                leaked,
-                [],
-                msg=f"Unexpected SIA 4010 content in the client workbook: {leaked}",
-            )
+            self.assertNotIn("4010", report_text)
+            self.assertNotIn("Model health score", report_text)
+            self.assertNotIn("SIA 380/2 automated score", report_text)
+            self.assertNotIn("DETAILED SCORES", report_text)
 
             # The 380/2 client deliverable still carries its own content.
             self.assertIn("SIA 380/2", report_text)
@@ -257,6 +263,11 @@ class ClientSia3802OnlyReportTests(unittest.TestCase):
         """The client headlines contain compliance, not development scores."""
 
         output_path = Path(__file__).with_name("_excel_report_client_ui.xlsx")
+        viewer_image = _write_rgb_png(
+            Path(__file__).resolve().parents[1]
+            / ".codex_tmp"
+            / "excel_client_model_viewer.png"
+        )
         analyzer, score, s3802, s4010, rooms, dynamic = _build_report_inputs()
         context = ClientReportContext(
             client_name="Client Alpine SA",
@@ -266,6 +277,7 @@ class ClientSia3802OnlyReportTests(unittest.TestCase):
             prepared_by="U. Engineer",
             weather_file="CHE_GVE_2060_RCP85_DRY.fwt",
             solar_shading="YES",
+            model_viewer_image_path=str(viewer_image),
         )
         try:
             ExcelReportGenerator(
@@ -281,6 +293,11 @@ class ClientSia3802OnlyReportTests(unittest.TestCase):
             with zipfile.ZipFile(output_path) as workbook:
                 workbook_xml = workbook.read("xl/workbook.xml").decode("utf-8", "ignore")
                 strings = workbook.read("xl/sharedStrings.xml").decode("utf-8", "ignore")
+                embedded_images = [
+                    workbook.read(name)
+                    for name in workbook.namelist()
+                    if name.startswith("xl/media/")
+                ]
             report_text = workbook_xml + strings
             self.assertIn("MODEL VIEWER", report_text)
             self.assertIn("Client Alpine SA", report_text)
@@ -290,8 +307,10 @@ class ClientSia3802OnlyReportTests(unittest.TestCase):
             self.assertIn("SIA 380/2 compliance verdict", report_text)
             self.assertNotIn("Model health score", report_text)
             self.assertNotIn("SIA 380/2 automated score", report_text)
+            self.assertIn(viewer_image.read_bytes(), embedded_images)
         finally:
             output_path.unlink(missing_ok=True)
+            viewer_image.unlink(missing_ok=True)
 
 
 if __name__ == "__main__":
