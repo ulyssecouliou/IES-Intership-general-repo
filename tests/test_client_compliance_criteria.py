@@ -281,6 +281,50 @@ class EvaluatorTests(unittest.TestCase):
         by_id = {c["id"]: c for c in manifest["criteria"]}
         self.assertEqual(by_id["SIA3802_AHU_HEAT_RECOVERY"]["runtime_status"], "OK")
 
+    def test_reviewed_solar_protection_windows_credit_the_criterion(self):
+        """Reviewer-documented shading covering every external window -> OK."""
+        class _Window:
+            is_external = True
+            opening_type = "window"
+
+        class _WindowedRoom:
+            surfaces = []
+            openings = [_Window()]
+
+        sia3802 = self._base_sia3802("REVIEWED_RESULT_AVAILABLE")
+        sia3802["solar_protection_evidence"] = {
+            "status": "AVAILABLE",
+            "accepted_window_count": 1,
+            "records": [],
+        }
+        manifest = evaluate_client_compliance(
+            sia3802, {}, {}, [_WindowedRoom()], [], scope="sia3802")
+        by_id = {c["id"]: c for c in manifest["criteria"]}
+        self.assertEqual(
+            by_id["SIA3802_SOLAR_PROTECTION_CONTROL"]["runtime_status"], "OK")
+
+    def test_partial_reviewed_solar_protection_stays_partial(self):
+        """Reviewed shading covering only some windows must not read AVAILABLE."""
+        class _Window:
+            is_external = True
+            opening_type = "window"
+
+        class _TwoWindowRoom:
+            surfaces = []
+            openings = [_Window(), _Window()]
+
+        sia3802 = self._base_sia3802("REVIEWED_RESULT_AVAILABLE")
+        sia3802["solar_protection_evidence"] = {
+            "status": "AVAILABLE",
+            "accepted_window_count": 1,
+            "records": [],
+        }
+        manifest = evaluate_client_compliance(
+            sia3802, {}, {}, [_TwoWindowRoom()], [], scope="sia3802")
+        by_id = {c["id"]: c for c in manifest["criteria"]}
+        self.assertEqual(
+            by_id["SIA3802_SOLAR_PROTECTION_CONTROL"]["runtime_status"], "PARTIAL")
+
     def test_reviewed_ventilation_control_credits_the_criterion(self):
         sia3802 = self._base_sia3802("REVIEWED_RESULT_AVAILABLE")
         sia3802["ventilation_control_evidence"] = {
@@ -451,6 +495,49 @@ class VentilationControlEvidenceTests(unittest.TestCase):
         from swiss_sia.evidence_manager import _normalize_ventilation_control_record
         self.assertFalse(
             _normalize_ventilation_control_record(self._row(control_class=""))["accepted"])
+
+
+class SolarProtectionEvidenceTests(unittest.TestCase):
+    """The reviewer solar-protection record is accepted only when complete."""
+
+    def _row(self, **overrides):
+        row = {
+            "project_name": "Demo",
+            "facade_or_zone": "South",
+            "window_count": "4",
+            "solar_protection_type": "venetian_blind",
+            "g_total_with_shading": "0.10",
+            "reviewer": "Reviewer",
+            "review_status": "accepted",
+            "source_document": "facade_shading.pdf",
+        }
+        row.update(overrides)
+        return row
+
+    def test_complete_record_is_accepted(self):
+        from swiss_sia.evidence_manager import _normalize_solar_protection_record
+        record = _normalize_solar_protection_record(self._row())
+        self.assertTrue(record["accepted"])
+        self.assertEqual(record["window_count_numeric"], 4.0)
+
+    def test_missing_g_total_is_rejected(self):
+        from swiss_sia.evidence_manager import _normalize_solar_protection_record
+        self.assertFalse(
+            _normalize_solar_protection_record(self._row(g_total_with_shading=""))["accepted"])
+
+    def test_missing_type_is_rejected(self):
+        from swiss_sia.evidence_manager import _normalize_solar_protection_record
+        self.assertFalse(
+            _normalize_solar_protection_record(self._row(solar_protection_type=""))["accepted"])
+
+    def test_accepted_windows_are_summed_for_the_project(self):
+        from swiss_sia.evidence_manager import accepted_solar_protection_windows
+        scan = {"accepted_records": [
+            {"project_id": "Demo", "window_count_numeric": 4.0},
+            {"project_id": "Demo", "window_count_numeric": 3.0},
+            {"project_id": "Other", "window_count_numeric": 9.0},
+        ]}
+        self.assertEqual(accepted_solar_protection_windows(scan, "Demo"), 7)
 
 
 if __name__ == "__main__":

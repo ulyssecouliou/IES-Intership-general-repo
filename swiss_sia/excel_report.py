@@ -4455,6 +4455,11 @@ class ExcelReportGenerator:
             stats["ventilation_control_reviewed_evidence"] = (
                 "Reviewer-accepted ventilation-control evidence ({}).".format(detail)
             )
+        # Reviewed solar-protection (Table 10) windows documented outside VE.
+        solar_evidence = (sia3802_results or {}).get("solar_protection_evidence", {}) or {}
+        stats["solar_protection_reviewed_windows"] = int(
+            solar_evidence.get("accepted_window_count", 0) or 0
+        )
         evidence = sia4010_results.get("evidence", {}) or {}
         dynamic_payload = dynamic_results or sia4010_results.get("dynamic_results", {}) or {}
         preflight_status_by_check = {
@@ -4644,15 +4649,28 @@ class ExcelReportGenerator:
             g_total_count = int(stats.get("g_total_values", 0) or 0)
             g_total_not_required = int(stats.get("g_total_not_required_for_g_limit", 0) or 0)
             g_total_coverage = min(total_windows, g_total_count + g_total_not_required)
+            reviewed_windows = int(stats.get("solar_protection_reviewed_windows", 0) or 0)
             evidence_text = (
                 f"type/category {type_count}/{total_windows}; "
                 f"control/profile {control_count}/{total_windows}; "
                 f"active g_total {g_total_count}/{total_windows}; "
                 f"EN 410 g already <= SIA limit {g_total_not_required}/{total_windows}."
             )
+            if reviewed_windows:
+                evidence_text += f" reviewer-documented shading windows {reviewed_windows}/{total_windows}."
+            # Reviewer-documented shading (Table 10) covers windows VE does not
+            # model. Credit AVAILABLE only when the VE-derived coverage plus the
+            # reviewed windows reach every external window; never a silent pass.
+            ve_type_covered = min(total_windows, type_count)
+            combined_covered = min(
+                total_windows,
+                max(ve_type_covered, g_total_coverage) + reviewed_windows,
+            )
             if type_count >= total_windows and control_count >= total_windows and g_total_coverage >= total_windows:
                 return "AVAILABLE", evidence_text
-            if type_count or control_count or g_total_count or g_total_not_required:
+            if reviewed_windows and combined_covered >= total_windows:
+                return "AVAILABLE", evidence_text
+            if type_count or control_count or g_total_count or g_total_not_required or reviewed_windows:
                 return "PARTIAL", evidence_text
             return "MISSING", evidence_text
         if key == "schedules":

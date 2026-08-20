@@ -80,6 +80,11 @@ SIA3802_VENTILATION_CONTROL_FILE_PATTERNS = (
     "sia3802_ventilation_control_*.csv",
 )
 
+GLAZING_SOLAR_PROTECTION_FILE_PATTERNS = (
+    "glazing_solar_protection_*.csv",
+    "GLAZING_solar_protection_*.csv",
+)
+
 
 def scan_sia3802_justifications(
     project_root: Path,
@@ -431,6 +436,93 @@ def find_accepted_ventilation_control(
 ) -> Optional[Dict[str, Any]]:
     """Return the accepted ventilation-control record for the active VE project."""
     return _find_accepted_for_project(ventilation_results, project_label)
+
+
+def scan_glazing_solar_protection(
+    project_root: Path,
+    evidence_dir_name: str = "sia4010_evidence",
+    project_label: Optional[str] = None,
+) -> Dict[str, Any]:
+    """Scan reviewer-owned solar-protection records (SIA 380/2 Table 10).
+
+    One row per facade/construction: solar-protection type + g_total with shading
+    are the Table 10 quantum. Used when the shading is documented outside VE (not
+    modelled on the openings). Nothing is inferred from an empty field.
+    """
+    return _scan_reviewer_records(
+        project_root,
+        evidence_dir_name,
+        GLAZING_SOLAR_PROTECTION_FILE_PATTERNS,
+        project_label,
+        _normalize_solar_protection_record,
+    )
+
+
+def accepted_solar_protection_windows(
+    solar_protection_results: Dict[str, Any],
+    project_label: str,
+) -> int:
+    """Sum the reviewed window count across accepted solar-protection rows.
+
+    Returns how many external windows the reviewer has documented with a Table 10
+    solar-protection treatment for this project, so the coverage check can compare
+    it against the external windows VE actually sees (never a silent full pass).
+    """
+    if not isinstance(solar_protection_results, dict):
+        return 0
+    accepted = solar_protection_results.get("accepted_records", []) or []
+    if not isinstance(accepted, list):
+        return 0
+    total = 0
+    for record in accepted:
+        if not isinstance(record, dict):
+            continue
+        if not _field_matches(record.get("project_id"), project_label):
+            continue
+        count = record.get("window_count_numeric")
+        total += int(count) if count is not None else 1
+    return total
+
+
+def _normalize_solar_protection_record(raw_row: Dict[str, Any]) -> Dict[str, Any]:
+    """Normalize one reviewer-owned solar-protection record (SIA 380/2 Table 10).
+
+    Accepted only when a reviewer has signed off a solar-protection type and a
+    numeric g_total with shading (the Table 10 quantum), with a traceable source.
+    The reviewed window count feeds the coverage reconciliation. Nothing is
+    inferred from an empty field.
+    """
+    record = {
+        _normalize_header(key): _clean_value(value)
+        for key, value in (raw_row or {}).items()
+        if key is not None
+    }
+    record.setdefault("project_id", record.get("project_name", record.get("project", "")))
+    record.setdefault("facade_or_zone", "")
+    record.setdefault("window_count", "")
+    record.setdefault("solar_protection_type", "")
+    record.setdefault("solar_protection_category", "")
+    record.setdefault("shading_control_strategy", "")
+    record.setdefault("g_total_with_shading", "")
+    record.setdefault("review_status", "")
+    record.setdefault("reviewer", "")
+    record.setdefault("source_document", record.get("source_file", ""))
+    record.setdefault("source_page_or_sheet", "")
+    record.setdefault("notes", "")
+    for numeric_field in ("window_count", "g_total_with_shading"):
+        try:
+            record[numeric_field + "_numeric"] = float(record.get(numeric_field))
+        except (TypeError, ValueError):
+            record[numeric_field + "_numeric"] = None
+    record["accepted"] = (
+        _status_key(record.get("review_status")) in ACCEPTED_REVIEW_STATUSES
+        and bool(record.get("project_id"))
+        and bool(record.get("solar_protection_type"))
+        and record.get("g_total_with_shading_numeric") is not None
+        and bool(record.get("reviewer"))
+        and bool(record.get("source_document") or record.get("source_page_or_sheet"))
+    )
+    return record
 
 
 def _normalize_cooling_generator_record(raw_row: Dict[str, Any]) -> Dict[str, Any]:

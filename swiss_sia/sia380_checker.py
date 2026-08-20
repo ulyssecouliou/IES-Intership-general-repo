@@ -27,11 +27,13 @@ from .config import (
     SIA4010_EVIDENCE_DIR,
 )
 from .evidence_manager import (
+    accepted_solar_protection_windows,
     find_accepted_ahu_heat_recovery,
     find_accepted_cooling_generators,
     find_accepted_mapping,
     find_accepted_thermal_bridges,
     find_accepted_ventilation_control,
+    scan_glazing_solar_protection,
     scan_sia2024_usage_mappings,
     scan_sia3802_ahu_heat_recovery,
     scan_sia3802_cooling_generators,
@@ -322,6 +324,16 @@ class SIA3802Checker:
             ventilation_control_scan, project_label or ""
         )
 
+        # Solar protection (Table 10) documented outside VE: reviewed rows carry
+        # the shading type + g_total with shading. The reviewed window count is
+        # reconciled against the external windows VE sees, never a silent pass.
+        solar_protection_scan = scan_glazing_solar_protection(
+            PROJECT_ROOT, SIA4010_EVIDENCE_DIR, project_label
+        )
+        solar_protection_windows = accepted_solar_protection_windows(
+            solar_protection_scan, project_label or ""
+        )
+
         envelope = self._run_category(
             "Envelope", self._check_envelope, rooms_data
         )
@@ -386,6 +398,11 @@ class SIA3802Checker:
                 "status": ventilation_control_scan.get("status"),
                 "accepted": bool(ventilation_control_record),
                 "record": ventilation_control_record,
+            },
+            "solar_protection_evidence": {
+                "status": solar_protection_scan.get("status"),
+                "accepted_window_count": solar_protection_windows,
+                "records": solar_protection_scan.get("accepted_records", []),
             },
             "rule_evaluations": dict(self.rule_engine.evaluated_counts),
             "alerts": list(self.rule_engine.alerts),
