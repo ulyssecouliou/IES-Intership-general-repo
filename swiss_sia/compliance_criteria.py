@@ -291,6 +291,7 @@ def build_manifest() -> Dict[str, Any]:
                 "NOT_CHECKABLE": "Required model/.aps evidence missing or placeholder; never a pass.",
                 "NOT_AVAILABLE_IN_VE": "VE structurally cannot produce this; not auto-decidable.",
                 "NEEDS_REVIEWER_EVIDENCE": "Requires reviewer/official evidence files.",
+                "NON_APPLICABLE": "The norm does not apply this criterion to this model (e.g. SCOP with no heat pump); out of scope, never a silent pass.",
             },
             "data_source_legend": {
                 "ve_project_settings": "VE project location/altitude/weather settings.",

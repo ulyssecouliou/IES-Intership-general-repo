@@ -4632,6 +4632,12 @@ class ExcelReportGenerator:
             count = int(stats.get("heating_systems_with_efficiency", 0) or 0)
             if count:
                 return "PARTIAL", f"{count} heating system(s) expose heat-pump class, capacity and SCOP; delegated evidence remains conditional."
+            heat_pumps = int(stats.get("heat_pump_heating_systems", 0) or 0)
+            non_heat_pumps = int(stats.get("non_heat_pump_heating_systems", 0) or 0)
+            if heat_pumps:
+                return "MISSING", f"{heat_pumps} heat-pump heating system(s) present without a complete class/capacity/SCOP tuple; SCOP evidence required."
+            if non_heat_pumps:
+                return "NON_APPLICABLE", f"{non_heat_pumps} heating generator(s) are not heat pumps; SCOP does not apply (SIA 380/2). Non-heat-pump generation efficiency runs through the global project/reference comparison."
             return "MISSING", "No heating system exposes a complete heat-pump class/capacity/SCOP tuple."
         if key == "infiltration":
             rooms = int(stats.get("rooms", 0) or 0)
@@ -5014,6 +5020,20 @@ class ExcelReportGenerator:
             and system.get("heating_capacity_kw") is not None
             and system.get("scop") is not None
         ]
+        # SCOP is a heat-pump seasonal index (SIA 380/2). A heat pump is present
+        # when the generator classifier resolved a heat-pump class. A sized
+        # heating generator that VE did NOT classify as a heat pump is a
+        # non-heat-pump source (e.g. a boiler): SCOP does not apply to it, so the
+        # SCOP criterion is NON_APPLICABLE rather than NOT_CHECKABLE.
+        heat_pump_heating_systems = [
+            system for system in hvac_systems
+            if system.get("heating_generator_class")
+        ]
+        non_heat_pump_heating_systems = [
+            system for system in hvac_systems
+            if not system.get("heating_generator_class")
+            and system.get("heating_capacity_kw") is not None
+        ]
         daylight_control_evidence = [
             room for room in rooms_data
             if getattr(room, "daylight_dimming_profile", "")
@@ -5155,6 +5175,8 @@ class ExcelReportGenerator:
             "rooms_with_ahu_identifiers": len(rooms_with_ahu_identifiers),
             "cooling_systems_with_efficiency": len(cooling_systems_with_efficiency),
             "heating_systems_with_efficiency": len(heating_systems_with_efficiency),
+            "heat_pump_heating_systems": len(heat_pump_heating_systems),
+            "non_heat_pump_heating_systems": len(non_heat_pump_heating_systems),
             "daylight_control_evidence": len(daylight_control_evidence),
             "lighting_control_mappings": len(lighting_control_mappings),
             "fan_controls": len(fan_controls),

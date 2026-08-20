@@ -202,6 +202,44 @@ class EvaluatorTests(unittest.TestCase):
         self.assertEqual(
             by_id["SIA3802_THERMAL_BRIDGES"]["runtime_status"], "NEEDS_REVIEWER_EVIDENCE")
 
+    def test_boiler_only_heating_makes_scop_non_applicable(self):
+        """A sized non-heat-pump heating generator -> SCOP is out of scope, not a gap."""
+        class _BoilerRoom:
+            surfaces = []
+            openings = []
+            hvac_systems = [{
+                "heating_capacity_kw": 12.0,
+                "heating_generator_class": None,  # VE did not classify a heat pump
+                "scop": None,
+            }]
+
+        manifest = evaluate_client_compliance(
+            self._base_sia3802("REVIEWED_RESULT_AVAILABLE"), {}, {},
+            [_BoilerRoom()], [], scope="sia3802",
+        )
+        by_id = {c["id"]: c for c in manifest["criteria"]}
+        self.assertEqual(
+            by_id["SIA3802_HEATING_SCOP"]["runtime_status"], "NON_APPLICABLE")
+
+    def test_heat_pump_without_scop_stays_not_checkable(self):
+        """A heat pump lacking SCOP is a real gap, never NON_APPLICABLE."""
+        class _HeatPumpRoom:
+            surfaces = []
+            openings = []
+            hvac_systems = [{
+                "heating_capacity_kw": 8.0,
+                "heating_generator_class": "heat_pump_air_water",
+                "scop": None,
+            }]
+
+        manifest = evaluate_client_compliance(
+            self._base_sia3802("REVIEWED_RESULT_AVAILABLE"), {}, {},
+            [_HeatPumpRoom()], [], scope="sia3802",
+        )
+        by_id = {c["id"]: c for c in manifest["criteria"]}
+        self.assertEqual(
+            by_id["SIA3802_HEATING_SCOP"]["runtime_status"], "NOT_CHECKABLE")
+
     def test_evaluation_block_matches_the_authoritative_verdict(self):
         manifest = evaluate_client_compliance(
             self._base_sia3802("NOT_CHECKABLE"), {}, {}, [_Room()], [],

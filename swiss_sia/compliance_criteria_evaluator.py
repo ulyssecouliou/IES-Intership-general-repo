@@ -29,6 +29,9 @@ _COVERAGE_TO_RUNTIME = {
     "AVAILABLE": "OK",
     "PARTIAL": "PARTIAL",
     "MISSING": "NOT_CHECKABLE",
+    # A criterion that the norm does not apply to this model (e.g. SCOP with no
+    # heat pump) is neither a pass nor a gap: it is out of scope, not silently OK.
+    "NON_APPLICABLE": "NON_APPLICABLE",
 }
 
 
