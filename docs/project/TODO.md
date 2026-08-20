@@ -8,6 +8,81 @@
 
 ---
 
+## 🧭 ÉTAT 2026-08-20 — chaîne client prouvée sur VE réelle
+
+Modèle exemple `SIA_compatible_model_TEST` : **overall SIA 380/2 CONFORME (avec réserves)**, **16 critères OK**, precheck 89.7, health 77. Chaîne complète validée en VE réelle : extraction (gains lus du template) → `.aps` (confort **SIA 180 calculé** + énergie) → **porte décisive §7.2.5.2** → verdict CONFORME avec réserves → livrables (PDF 2 pages + **logo IES**, dashboard HTML + panneau limitations, JSON de critères, evidence pack).
+
+### ✅ Fait cette session (2026-08-19/20)
+- [x] Découplage **SIA 4010 hors du chemin client** (défaut 380/2-only ; launcher interne séparé) ; SIA 4010 = validation du logiciel, pas du bâtiment.
+- [x] **Verdict décidé sur la porte §7.2.5.2** ; composants `NOT_CHECKABLE` = réserves affichées, plus des bloqueurs *(commit `cd11781`, **PENDING norm-analyst**)*.
+- [x] **Lecture des gains/air-exchanges depuis le template assigné** (VE ne matérialise pas les gains au niveau pièce) *(b76fa56)*.
+- [x] **Confort d'été SIA 180** calculé depuis θrm 48 h du `.aps` (Fig.4 vérifiée) *(6b71b0f)* — **PENDING norm-analyst** : définition T° opérative, fenêtre θrm, Fig.3.
+- [x] **Météo** : match sur le *stem* (`.epw`/`.fwt` équivalents) *(97d3cce)*.
+- [x] **Mapping usage SIA 2024 accepté crédité** en couverture *(4af0de1)*.
+- [x] **Manifeste de critères** JSON rempli au runtime `<rapport>_compliance_criteria.json` + explain one-click.
+- [x] **Rapport PDF pro 2 pages** : carte identification 2 colonnes + placeholders client, annexe (limitations justifiées + réserves + méthodologie), **logo IES** au pied.
+- [x] Rechargement `compliance_verdict`/`compliance_criteria` par Run (plus de redémarrage VE requis) *(1cfcc86)*.
+- [x] Probes lecture seule : gains pièce (`room_id`), variables `.aps`.
+
+### ⬜ Réserves du modèle client — détail (intérêt · quoi faire · qui · effort outil)
+
+- ⬜ **Ponts thermiques ψ/χ** (`NOT_AVAILABLE_IN_VE`)
+  - *Intérêt* : 10–30 % des déperditions ; intégrés au bilan SIA 380/2. VE n'expose aucune grandeur ψ/χ lisible.
+  - *Quoi faire* : calcul de ponts thermiques (catalogue SIA / Flixo/Therm) ; ingérer comme évidence relue.
+  - *Qui* : ingénieur physique du bâtiment / thermique.
+  - *Dev outil* : **ajouter un chemin d'ingestion ψ/χ** (CSV de jonctions : longueur, ψ, χ ponctuel, source) + contrôle `SIA3802_THERMAL_BRIDGES` (aujourd'hui placeholder `config.py:104`, `excel_report.py:4637`). **Je peux le faire.**
+
+- ⬜ **Puissance de dimensionnement** (`NOT_AVAILABLE_IN_VE`, `config.py:1894` `NOT_IMPLEMENTED`)
+  - *Intérêt* : SIA 380/2 prescrit les jours de dimensionnement (séquences chaud/froid après préconditionnement) ; ni pics annuels ni autosize ne s'y substituent.
+  - *Quoi faire* : simulations design-day dédiées dans VE ; lire leurs `.aps`.
+  - *Qui* : modélisateur VE (simu) + dev (extraction).
+  - *Dev outil* : **implémenter le workflow design-day** (lecture `.aps` jours de dim.). Gros dev.
+
+- ⬜ **EER froid** (`NOT_CHECKABLE`, `SIA3802_COOLING_EER_SEER`)
+  - *Intérêt* : SIA 380/2 Tables 5-7 rangent l'EER par type + tranche de **puissance nominale** ; sans capacité, pas de bande.
+  - *Quoi faire* : générateur froid **autosize** (capacité grisée) → soit désactiver l'autosize et saisir une capacité, soit fournir EER + capacité par évidence relecteur.
+  - *Qui* : ingénieur CVC / fiche fabricant du groupe froid.
+  - *Dev outil* : **CSV relecteur « générateur froid »** (classe + capacité kW + EER/SEER) + ingestion `cooling_systems_with_efficiency`. **Je peux le faire.**
+
+- ⬜ **AHU / récupération de chaleur** (`PARTIAL`, `SIA3802_AHU_HEAT_RECOVERY`)
+  - *Intérêt* : SIA 380/2 Table 4 — classe d'étanchéité, rendement récup., pertes de charge, SFP.
+  - *Quoi faire* : fournir la fiche CTA (η_rec, pertes de charge, L1/L2, SFP).
+  - *Qui* : ingénieur CVC / fiche fabricant CTA.
+  - *Dev outil* : **CSV relecteur AHU** + ingestion. **Je peux le faire.**
+
+- ⬜ **Contrôle de ventilation** (`NOT_CHECKABLE`, `SIA3802_VENTILATION_CONTROL`)
+  - *Intérêt* : SIA 380/2 Table 4 — classe de contrôle selon système (mono/multizone) et débit (≤3 / 3-6 / >6 m³/h·m²).
+  - *Quoi faire* : classifier système + contrôle (constant / à la demande / CO₂).
+  - *Qui* : ingénieur CVC.
+  - *Dev outil* : **CSV relecteur contrôle ventilation** + ingestion (`rooms_with_ventilation_control`). **Je peux le faire.**
+
+- ⬜ **Protection solaire** (`NOT_CHECKABLE`, `SIA3802_SOLAR_PROTECTION_CONTROL`)
+  - *Intérêt* : SIA 380/2 Table 10 — type, g_total actif, contrôle ; anti-surchauffe estivale.
+  - *Quoi faire* : modéliser les stores dans VE (type, optique, contrôle), ou note relecteur si absence justifiée.
+  - *Qui* : architecte / façadier + ingénieur (g_total).
+  - *Dev outil* : soit lecture VE des stores, soit CSV relecteur (le gabarit `glazing_solar_protection_*.csv` existe mais la couverture ne le crédite pas encore — **ingestion à ajouter**).
+
+- ⬜ **Contrôle éclairage** (`PARTIAL`, `SIA3802_LIGHTING_CONTROL`)
+  - *Intérêt* : SIA 387/4 — puissance installée + contrôle présence/lumière du jour.
+  - *Quoi faire* : acquérir **SIA 387/4** ; renseigner puissance + contrôle par local.
+  - *Qui* : SIA 387/4 → SIA Shop / contact SIA (Yiqiao Yang) ; valeurs → électricien.
+  - *Dev outil* : crédit du gabarit `SIA3874_lighting_control_mapping_*.csv` (scanner présent) — **ingestion/couverture à finaliser**.
+
+- ⬜ **Chauffage SCOP** (`NOT_CHECKABLE`) — **chaudière → NON_APPLICABLE**
+  - *Intérêt* : le SCOP ne concerne que les PAC ; une chaudière n'a pas de SCOP. La conformité passe par la comparaison globale (déjà OK).
+  - *Quoi faire* : rien (décision de conception).
+  - *Dev outil* : **libellé `NON_APPLICABLE` (chaudière)** au lieu de `NOT_CHECKABLE` (stat `has_non_heat_pump_heating` + statut couverture + mapping évaluateur + légende). Petit mais multi-fichiers. **Je peux le faire.**
+
+### ⬜ Sources normatives à acquérir (débloquent des verdicts)
+- ⬜ **SIA 387/4** (contrôle éclairage) · **SN EN 14825** (SEER/SCoP) · **SIA 180 complet** (Fig.3 + corrigenda) · **SIA 380 faîtière** (agrégation/pondération annuelle) · **SN EN 15316-2 / 16798-13** (énergie système). → SIA Shop / contact SIA. Sans elles : verdicts `[TO VERIFY]` par honnêteté.
+
+### 🔶 À faire valider (indépendant)
+- 🔶 **norm-analyst** : (a) « porte décisive = suffisante » (interprétation §7.2.5.2) ; (b) définition de **T° opérative** SIA 180 + fenêtre θrm + Fig.3 ; (c) variantes fenêtre Test 2 / critères SIA 4010 Tests 2-7.
+- 🔶 **qa-auditor** : signer les matrices de traçabilité avant tout « done ».
+- 🔶 **Qualification VE réelle** : capability-check + readback par valeur (au-delà du fonctionnel prouvé).
+
+---
+
 ## ✅ Fait (remédiation audit)
 
 - [x] **P0.1** Test 7 — drapeau d'honnêteté `attestation_sous_commission_requise` (+ test)
