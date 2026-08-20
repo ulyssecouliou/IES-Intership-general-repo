@@ -212,7 +212,7 @@ The minimum saleable product should add:
 
 | Couche | Role | Statut |
 |---|---|---|
-| `swiss_sia/` | extraction VE, regles SIA 380/2 & 4010, scoring, rapports Excel + PDF client, evidence | **PRODUCTION** |
+| `swiss_sia/` | extraction VE, interface client, regles SIA 380/2 & 4010, rapports Excel + PDF dans le dossier du modele, evidence | **PRODUCTION** |
 | `swiss_sia/reference_model/ve_api.py`, `data_extractor.py` | seul acces `iesve` de production | production |
 | `refs/reference-data/` | valeurs de reference figees, recalculees et confrontees | donnees |
 | `engine/` + `ve_adapter/` | recompute SIA 4010 independant + build des references (`scripts/build_*.py`) | outillage, hors runtime client |
@@ -226,4 +226,3 @@ python scripts/run_test1_dans_ve.py --preflight
 ```
 
 Dans VE, le meme fichier au bouton Run lance la sonde d introspection.
-

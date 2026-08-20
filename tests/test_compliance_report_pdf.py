@@ -456,7 +456,7 @@ class RenderedReportTests(unittest.TestCase):
         self.assertIn(translate("verdict_not_determined", "en"), text)
         self.assertNotIn(translate("verdict_compliant", "en") + "\n" + "SIA", text)
 
-    def test_sia3802_scope_ignores_sia4010_attestation_ceiling_in_banner(self):
+    def test_sia3802_scope_omits_sia4010_readiness_from_client_banner(self):
         sia3802 = {
             "envelope": {},
             "openings": {},
@@ -496,7 +496,7 @@ class RenderedReportTests(unittest.TestCase):
         compliant = text.index(translate("verdict_compliant", "fr"), heading)
         undetermined = text.find(translate("verdict_not_determined", "fr"), heading)
         self.assertTrue(undetermined < 0 or compliant < undetermined)
-        self.assertIn(
+        self.assertNotIn(
             translate("sia4010_readiness_attestation_required", "fr"), text
         )
 

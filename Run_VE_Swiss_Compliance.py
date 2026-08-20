@@ -1,5 +1,5 @@
 """
-Client launcher for the Swiss SIA 380/2 compliance checker.
+Client launcher for the Swiss SIA 380/2 compliance checker interface.
 
 Use this file from the IESVE Scripts window with the Run button. It is the
 default client deliverable: an SIA 380/2-only report. SIA 4010 validation
@@ -27,4 +27,31 @@ if __name__ == "__main__":
         app = importlib.reload(sys.modules[module_name])
     else:
         app = importlib.import_module(module_name)
-    app.main()
+    if app.iesve is None:
+        raise RuntimeError("Run this launcher inside IESVE VEScripts.")
+    project = app.iesve.VEProject.get_current_project()
+    if not project or not str(getattr(project, "path", "") or ""):
+        raise RuntimeError("Open and save a VE project before launching the report interface.")
+
+    ui_name = "swiss_sia.client_compliance_ui"
+    if ui_name in sys.modules:
+        client_ui = importlib.reload(sys.modules[ui_name])
+    else:
+        client_ui = importlib.import_module(ui_name)
+
+    def run_client_reports(context, output_dir):
+        """Run the client-only analysis requested by the native interface."""
+
+        return app.main(
+            include_sia4010=False,
+            report_context=context,
+            output_dir=output_dir,
+            generate_html=False,
+            raise_errors=True,
+        )
+
+    client_ui.launch_client_compliance_ui(
+        str(project.path),
+        app._current_project_weather_label(project),
+        run_client_reports,
+    )

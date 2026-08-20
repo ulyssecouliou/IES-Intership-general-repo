@@ -15,6 +15,7 @@ import shutil
 import sys
 import unicodedata
 from datetime import datetime
+from dataclasses import replace
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -68,11 +69,12 @@ sia4010_prevalidation_module = _reload_local_module("sia4010_prevalidation")
 validation_class_scope_module = _reload_local_module("validation_class_scope")
 reference_project_module = _reload_local_module("reference_project")
 company_profile_module = _reload_local_module("company_profile")
+client_report_context_module = _reload_local_module("client_report_context")
 # Reload the verdict engine and the criteria builder BEFORE the report/evaluator
 # modules that import from them, so a `from swiss_sia.compliance_verdict import ...`
 # in those modules binds to the freshly reloaded version. Without this, VE's long-
 # lived interpreter keeps a stale verdict module across Run clicks.
-_reload_local_module("compliance_verdict")
+compliance_verdict_module = _reload_local_module("compliance_verdict")
 _reload_local_module("compliance_criteria")
 # excel_report MUST be reloaded before compliance_criteria_evaluator and the
 # report modules: they do `from swiss_sia.excel_report import ExcelReportGenerator`
@@ -94,6 +96,9 @@ build_reference_project_specification = (
     reference_project_module.build_reference_project_specification
 )
 load_company_profile = company_profile_module.load_company_profile
+ClientReportContext = client_report_context_module.ClientReportContext
+default_report_directory = client_report_context_module.report_directory
+build_compliance_verdict = compliance_verdict_module.build_compliance_verdict
 render_compliance_report_pdf = (
     compliance_report_pdf_module.render_compliance_report_pdf
 )
@@ -187,7 +192,11 @@ def _object_label(value: object, fallback: str) -> str:
     return fallback
 
 
-def _build_unique_report_path(project_path: object, model: object = None) -> str:
+def _build_unique_report_path(
+    project_path: object,
+    model: object = None,
+    output_dir: Optional[object] = None,
+) -> str:
     """Build a timestamped report path so VE runs do not overwrite each other."""
     project_name = os.path.basename(os.path.normpath(str(project_path or ""))) or "VE_Project"
     project_name = _safe_filename_part(project_name)
@@ -196,19 +205,25 @@ def _build_unique_report_path(project_path: object, model: object = None) -> str
     extension = extension or ".xlsx"
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     filename = f"{base_name}__{project_name}__{model_name}__{timestamp}{extension}"
-    candidate = os.path.join(REPORTS_DIR, filename)
+    destination = os.path.abspath(os.fspath(output_dir or REPORTS_DIR))
+    os.makedirs(destination, exist_ok=True)
+    candidate = os.path.join(destination, filename)
 
     suffix = 2
     while os.path.exists(candidate):
         filename = f"{base_name}__{project_name}__{model_name}__{timestamp}_{suffix}{extension}"
-        candidate = os.path.join(REPORTS_DIR, filename)
+        candidate = os.path.join(destination, filename)
         suffix += 1
     return candidate
 
 
-def _copy_latest_report_alias(source_path: str) -> Optional[str]:
+def _copy_latest_report_alias(
+    source_path: str, output_dir: Optional[object] = None
+) -> Optional[str]:
     """Keep Swiss_Compliance_Report.xlsx as a convenience alias when possible."""
-    latest_path = os.path.join(REPORTS_DIR, EXCEL_REPORT_NAME)
+    latest_path = os.path.join(
+        os.path.abspath(os.fspath(output_dir or REPORTS_DIR)), EXCEL_REPORT_NAME
+    )
     if os.path.abspath(source_path) == os.path.abspath(latest_path):
         return latest_path
 
@@ -953,13 +968,27 @@ def _resolve_include_sia4010(explicit: Optional[bool]) -> bool:
     return scope in _INTERNAL_FULL_SCOPE_TOKENS
 
 
-def main(include_sia4010: Optional[bool] = None):
+def main(
+    include_sia4010: Optional[bool] = None,
+    report_context: Any = None,
+    output_dir: Optional[object] = None,
+    generate_html: bool = True,
+    raise_errors: bool = False,
+):
     """Run the VE extraction, SIA checks, scoring, and Excel report generation.
 
     Args:
         include_sia4010: Force the report scope. ``None`` (default) resolves the
             scope from the SIA_REPORT_SCOPE environment variable; ``False``
             produces a client SIA 380/2-only workbook.
+        report_context: Optional client/project identification collected by the
+            native report interface.
+        output_dir: Destination for the timestamped reports. The native client
+            flow passes a directory inside the active VE project.
+        generate_html: Keep the optional internal HTML dashboard. The client UI
+            exposes exactly the Excel and PDF reports and passes ``False``.
+        raise_errors: Re-raise failures to a calling UI instead of exiting the
+            VE script interpreter.
     """
     try:
         include_sia4010 = _resolve_include_sia4010(include_sia4010)
@@ -980,6 +1009,17 @@ def main(include_sia4010: Optional[bool] = None):
         project_label = os.path.basename(
             os.path.normpath(str(getattr(project, "path", "") or ""))
         ) or "VE_Project"
+        if isinstance(report_context, ClientReportContext):
+            report_context = report_context.normalized()
+        elif isinstance(report_context, dict):
+            report_context = ClientReportContext(**report_context).normalized()
+        else:
+            report_context = ClientReportContext(
+                project_name=project_label,
+                language=os.environ.get(REPORT_LANGUAGE_ENV_VAR, "") or "en",
+            ).normalized()
+        target_output_dir = Path(output_dir) if output_dir else default_report_directory(project.path)
+        target_output_dir.mkdir(parents=True, exist_ok=True)
 
         logger.info("Preparing project-scoped evidence templates without overwriting reviews.")
         evidence_preparation = prepare_evidence_folder(
@@ -1009,6 +1049,9 @@ def main(include_sia4010: Optional[bool] = None):
 
         logger.info("Collecting APS/Vista dynamic results where available.")
         dynamic_results = _collect_dynamic_results(project)
+        active_weather = str(dynamic_results.get("project_weather_file") or "")
+        if active_weather and active_weather != report_context.weather_file:
+            report_context = replace(report_context, weather_file=active_weather)
         dynamic_results["template_remediation"] = latest_remediation_evidence(
             str(getattr(project, "path", "") or "")
         )
@@ -1097,10 +1140,13 @@ def main(include_sia4010: Optional[bool] = None):
         )
 
         logger.info("Generating Excel report.")
-        unique_report_path = _build_unique_report_path(project.path, data_extractor.model)
+        unique_report_path = _build_unique_report_path(
+            project.path, data_extractor.model, target_output_dir
+        )
         report_generator = ExcelReportGenerator(
             output_path=unique_report_path,
             model_analyzer=model_analyzer,
+            report_context=report_context,
         )
         if include_sia4010:
             logger.info("Running SIA 4010 PDF-based prevalidation.")
@@ -1130,7 +1176,7 @@ def main(include_sia4010: Optional[bool] = None):
             include_sia4010=include_sia4010,
         )
         latest_report_path = (
-            _copy_latest_report_alias(report_generator.output_path)
+            _copy_latest_report_alias(report_generator.output_path, target_output_dir)
             if CREATE_LATEST_REPORT_ALIAS
             else None
         )
@@ -1141,16 +1187,17 @@ def main(include_sia4010: Optional[bool] = None):
             company_profile = load_company_profile(PROJECT_ROOT)
             compliance_pdf_path = render_compliance_report_pdf(
                 os.path.splitext(unique_report_path)[0] + ".pdf",
-                project_label=project_label,
+                project_label=report_context.project_name or project_label,
                 rooms_data=rooms_data,
                 sia3802_results=sia3802_results,
                 sia4010_results=sia4010_results,
                 score_result=score_result,
                 profile=company_profile,
                 project_root=PROJECT_ROOT,
-                language=os.environ.get(REPORT_LANGUAGE_ENV_VAR, "") or "en",
+                language=report_context.language,
                 model_name=_object_label(data_extractor.model, ""),
                 scope=report_scope,
+                report_context=report_context,
             )
             logger.info("Compliance report PDF: %s", compliance_pdf_path)
             if not company_profile.is_configured:
@@ -1159,31 +1206,35 @@ def main(include_sia4010: Optional[bool] = None):
                     "signature block are printed as not specified."
                 )
         except Exception as exc:
-            # The PDF is an additional deliverable; never lose the workbook run.
+            # Internal runs retain the workbook; the client UI requires both
+            # promised deliverables and therefore receives the exception.
             logger.error("Could not render the compliance report PDF: %s", exc)
+            if raise_errors:
+                raise
 
-        logger.info("Rendering the interactive client compliance dashboard (HTML).")
         compliance_html_path = None
-        try:
-            # profile=None: the generator loads the company profile itself, so this
-            # deliverable never depends on the PDF block above having succeeded.
-            compliance_html_path = render_compliance_report_html(
-                os.path.splitext(unique_report_path)[0] + "_dashboard.html",
-                project_label=project_label,
-                rooms_data=rooms_data,
-                sia3802_results=sia3802_results,
-                sia4010_results=sia4010_results,
-                score_result=score_result,
-                profile=None,
-                project_root=PROJECT_ROOT,
-                language=os.environ.get(REPORT_LANGUAGE_ENV_VAR, "") or "en",
-                model_name=_object_label(data_extractor.model, ""),
-                scope=report_scope,
-            )
-            logger.info("Client compliance dashboard (HTML): %s", compliance_html_path)
-        except Exception as exc:
-            # The HTML dashboard is an additional deliverable; never lose the run.
-            logger.error("Could not render the compliance dashboard HTML: %s", exc)
+        if generate_html:
+            logger.info("Rendering the interactive client compliance dashboard (HTML).")
+            try:
+                # profile=None: the generator loads the company profile itself, so this
+                # deliverable never depends on the PDF block above having succeeded.
+                compliance_html_path = render_compliance_report_html(
+                    os.path.splitext(unique_report_path)[0] + "_dashboard.html",
+                    project_label=report_context.project_name or project_label,
+                    rooms_data=rooms_data,
+                    sia3802_results=sia3802_results,
+                    sia4010_results=sia4010_results,
+                    score_result=score_result,
+                    profile=None,
+                    project_root=PROJECT_ROOT,
+                    language=report_context.language,
+                    model_name=_object_label(data_extractor.model, ""),
+                    scope=report_scope,
+                )
+                logger.info("Client compliance dashboard (HTML): %s", compliance_html_path)
+            except Exception as exc:
+                # The HTML dashboard is an additional deliverable; never lose the run.
+                logger.error("Could not render the compliance dashboard HTML: %s", exc)
 
         logger.info("Evaluating the client SIA 380/2 compliance-criteria manifest.")
         compliance_criteria_path = None
@@ -1265,11 +1316,37 @@ def main(include_sia4010: Optional[bool] = None):
         for category, score in score_result.detailed_scores.items():
             logger.info(" - %s: %.1f/100", category, score)
 
+        verdict = build_compliance_verdict(
+            sia3802_results, sia4010_results, len(rooms_data)
+        )
+        return {
+            "verdict_status": verdict.sia3802_status,
+            "blocking_total": verdict.blocking_total,
+            "advisory_total": verdict.advisory_total,
+            "domains": [
+                {
+                    "domain": domain.domain,
+                    "status": domain.status,
+                    "blocking_count": domain.blocking_count,
+                    "advisory_count": domain.advisory_count,
+                }
+                for domain in verdict.domains
+            ],
+            "excel_path": str(report_generator.output_path),
+            "pdf_path": str(compliance_pdf_path) if compliance_pdf_path else "",
+            "html_path": str(compliance_html_path) if compliance_html_path else "",
+            "report_directory": str(target_output_dir),
+            "weather_file": report_context.weather_file,
+            "message": "Excel and PDF reports generated in the VE project folder.",
+        }
+
     except Exception as exc:
         logger.error("Critical error during analysis: %s", exc)
         import traceback
 
         traceback.print_exc()
+        if raise_errors:
+            raise
         sys.exit(1)
 
 

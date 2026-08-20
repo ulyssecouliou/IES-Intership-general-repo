@@ -14,6 +14,7 @@ from swiss_sia.sia380_checker import SIA3802Checker
 from swiss_sia.sia4010_checker import SIA4010Checker
 from swiss_sia.reference_project import build_reference_project_specification
 from swiss_sia.validation_class_scope import derive_validation_class_scope
+from swiss_sia.client_report_context import ClientReportContext
 
 
 def _build_report_inputs():
@@ -249,6 +250,46 @@ class ClientSia3802OnlyReportTests(unittest.TestCase):
                 "SIA4010 SOFTWARE REGISTER",
             ):
                 self.assertIn(sheet_name, report_text)
+        finally:
+            output_path.unlink(missing_ok=True)
+
+    def test_client_workbook_uses_real_verdict_and_project_information(self) -> None:
+        """The client headlines contain compliance, not development scores."""
+
+        output_path = Path(__file__).with_name("_excel_report_client_ui.xlsx")
+        analyzer, score, s3802, s4010, rooms, dynamic = _build_report_inputs()
+        context = ClientReportContext(
+            client_name="Client Alpine SA",
+            project_name="School North",
+            project_address="1 Test Street, Lausanne",
+            report_reference="SIA-26-014",
+            prepared_by="U. Engineer",
+            weather_file="CHE_GVE_2060_RCP85_DRY.fwt",
+            solar_shading="YES",
+        )
+        try:
+            ExcelReportGenerator(
+                str(output_path), analyzer, report_context=context
+            ).generate_report(
+                score,
+                s3802,
+                s4010,
+                rooms_data=rooms,
+                dynamic_results=dynamic,
+                include_sia4010=False,
+            )
+            with zipfile.ZipFile(output_path) as workbook:
+                workbook_xml = workbook.read("xl/workbook.xml").decode("utf-8", "ignore")
+                strings = workbook.read("xl/sharedStrings.xml").decode("utf-8", "ignore")
+            report_text = workbook_xml + strings
+            self.assertIn("MODEL VIEWER", report_text)
+            self.assertIn("Client Alpine SA", report_text)
+            self.assertIn("School North", report_text)
+            self.assertIn("CHE_GVE_2060_RCP85_DRY.fwt", report_text)
+            self.assertIn("Solar shading declared", report_text)
+            self.assertIn("SIA 380/2 compliance verdict", report_text)
+            self.assertNotIn("Model health score", report_text)
+            self.assertNotIn("SIA 380/2 automated score", report_text)
         finally:
             output_path.unlink(missing_ok=True)
 

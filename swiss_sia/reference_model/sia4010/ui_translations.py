@@ -1686,6 +1686,12 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
         "fr": "Évaluation d'un modèle IESVE selon SIA 380/2:2022 et SIA 4010:2023",
         "it": "Valutazione di un modello IESVE secondo SIA 380/2:2022 e SIA 4010:2023",
     },
+    "report_subtitle_sia3802": {
+        "en": "Assessment of one IESVE model against SIA 380/2:2022",
+        "de": "Beurteilung eines IESVE-Modells nach SIA 380/2:2022",
+        "fr": "Evaluation d'un modele IESVE selon SIA 380/2:2022",
+        "it": "Valutazione di un modello IESVE secondo SIA 380/2:2022",
+    },
     "verdict_heading": {
         "en": "Assessed result",
         "de": "Beurteiltes Ergebnis",
@@ -2321,6 +2327,141 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
             "template di destinazione, quindi ripristinera e verifichera il template "
             "sorgente. Se una lettura fallisce, chiudere VE senza salvare."
         ),
+    },
+    "scope_line_1_sia3802": {
+        "en": "This is an engineering assessment of the analysed model. It is not an official SIA certificate.",
+        "de": "Dies ist eine ingenieurtechnische Beurteilung des analysierten Modells. Es ist kein offizielles SIA-Zertifikat.",
+        "fr": "Ceci est une evaluation d'ingenierie du modele analyse. Ce n'est pas un certificat SIA officiel.",
+        "it": "Questa e una valutazione ingegneristica del modello analizzato. Non e un certificato SIA ufficiale.",
+    },
+    "scope_line_2_sia3802": {
+        "en": "A SIA 380/2 compliance conclusion requires the reviewed project/reference comparison.",
+        "de": "Eine Konformitaetsaussage nach SIA 380/2 erfordert den geprueften Projekt-/Referenzvergleich.",
+        "fr": "Une conclusion de conformite SIA 380/2 exige la comparaison projet/reference verifiee.",
+        "it": "Una conclusione di conformita SIA 380/2 richiede il confronto progetto/riferimento verificato.",
+    },
+    # ------------------------------------------ client compliance report UI
+    "client_ui_window_title": {
+        "en": "Swiss SIA 380/2 Compliance",
+        "de": "Schweizer SIA 380/2 Konformitaet",
+        "fr": "Conformite suisse SIA 380/2",
+        "it": "Conformita svizzera SIA 380/2",
+    },
+    "client_ui_header": {
+        "en": "Client compliance report",
+        "de": "Konformitaetsbericht fuer Auftraggeber",
+        "fr": "Rapport de conformite client",
+        "it": "Rapporto di conformita per il cliente",
+    },
+    "client_ui_subtitle": {
+        "en": "Identify the project, run the SIA 380/2 assessment and open the two reports.",
+        "de": "Projekt identifizieren, SIA 380/2 beurteilen und beide Berichte oeffnen.",
+        "fr": "Identifiez le projet, lancez l'evaluation SIA 380/2 et ouvrez les deux rapports.",
+        "it": "Identifica il progetto, esegui la valutazione SIA 380/2 e apri i due rapporti.",
+    },
+    "client_ui_section_details": {
+        "en": "Client and project",
+        "de": "Auftraggeber und Projekt",
+        "fr": "Client et projet",
+        "it": "Cliente e progetto",
+    },
+    "client_ui_project_name": {
+        "en": "Project name",
+        "de": "Projektname",
+        "fr": "Nom du projet",
+        "it": "Nome del progetto",
+    },
+    "client_ui_contact": {
+        "en": "Client contact",
+        "de": "Kontakt Auftraggeber",
+        "fr": "Contact client",
+        "it": "Contatto cliente",
+    },
+    "client_ui_prepared_by": {
+        "en": "Prepared by",
+        "de": "Erstellt von",
+        "fr": "Etabli par",
+        "it": "Redatto da",
+    },
+    "client_ui_weather": {
+        "en": "Weather file used",
+        "de": "Verwendete Wetterdatei",
+        "fr": "Fichier meteo utilise",
+        "it": "File meteo utilizzato",
+    },
+    "client_ui_section_model": {
+        "en": "Model presentation",
+        "de": "Modelldarstellung",
+        "fr": "Presentation du modele",
+        "it": "Presentazione del modello",
+    },
+    "client_ui_shading": {
+        "en": "Does the model include solar shading?",
+        "de": "Enthaelt das Modell Sonnenschutz?",
+        "fr": "Le modele comporte-t-il des stores ?",
+        "it": "Il modello include schermature solari?",
+    },
+    "field_solar_shading": {
+        "en": "Solar shading",
+        "de": "Sonnenschutz",
+        "fr": "Stores solaires",
+        "it": "Schermature solari",
+    },
+    "client_ui_yes": {"en": "Yes", "de": "Ja", "fr": "Oui", "it": "Si"},
+    "client_ui_no": {"en": "No", "de": "Nein", "fr": "Non", "it": "No"},
+    "client_ui_to_confirm": {
+        "en": "To confirm", "de": "Zu bestaetigen", "fr": "A confirmer", "it": "Da confermare"
+    },
+    "client_ui_logo": {
+        "en": "Client logo", "de": "Logo Auftraggeber", "fr": "Logo du client", "it": "Logo del cliente"
+    },
+    "client_ui_choose_logo": {
+        "en": "Choose logo", "de": "Logo waehlen", "fr": "Choisir le logo", "it": "Scegli logo"
+    },
+    "client_ui_viewer": {
+        "en": "Model Viewer image", "de": "Model-Viewer-Bild", "fr": "Capture du Model Viewer", "it": "Immagine Model Viewer"
+    },
+    "client_ui_choose_viewer": {
+        "en": "Choose image", "de": "Bild waehlen", "fr": "Choisir la capture", "it": "Scegli immagine"
+    },
+    "client_ui_viewer_hint": {
+        "en": "Save a clear PNG/JPG from Model Viewer, then select it here.",
+        "de": "Ein klares PNG/JPG aus Model Viewer speichern und hier waehlen.",
+        "fr": "Enregistrez une vue claire du Model Viewer en PNG/JPG, puis selectionnez-la ici.",
+        "it": "Salva una vista chiara da Model Viewer in PNG/JPG, poi selezionala qui.",
+    },
+    "client_ui_image_error": {
+        "en": "This image cannot be added to the PDF. Use a non-transparent RGB PNG or a JPEG.",
+        "de": "Dieses Bild kann nicht in das PDF eingefuegt werden. Verwenden Sie ein nicht transparentes RGB-PNG oder ein JPEG.",
+        "fr": "Cette image ne peut pas etre ajoutee au PDF. Utilisez un PNG RGB sans transparence ou un JPEG.",
+        "it": "Questa immagine non puo essere aggiunta al PDF. Usa un PNG RGB non trasparente o un JPEG.",
+    },
+    "client_ui_generate": {
+        "en": "Generate Excel + PDF", "de": "Excel + PDF erzeugen", "fr": "Generer Excel + PDF", "it": "Genera Excel + PDF"
+    },
+    "client_ui_generating": {
+        "en": "Analysing the active VE model...", "de": "Aktives VE-Modell wird analysiert...", "fr": "Analyse du modele VE actif...", "it": "Analisi del modello VE attivo..."
+    },
+    "client_ui_result": {
+        "en": "Compliance result", "de": "Konformitaetsergebnis", "fr": "Resultat de conformite", "it": "Risultato di conformita"
+    },
+    "client_ui_open_excel": {
+        "en": "Open Excel report", "de": "Excel-Bericht oeffnen", "fr": "Ouvrir le rapport Excel", "it": "Apri rapporto Excel"
+    },
+    "client_ui_open_pdf": {
+        "en": "Open PDF report", "de": "PDF-Bericht oeffnen", "fr": "Ouvrir le rapport PDF", "it": "Apri rapporto PDF"
+    },
+    "client_ui_open_folder": {
+        "en": "Open report folder", "de": "Berichtsordner oeffnen", "fr": "Ouvrir le dossier des rapports", "it": "Apri cartella rapporti"
+    },
+    "client_ui_required": {
+        "en": "Enter the client and project names before generating the reports.",
+        "de": "Vor der Berichterstellung Auftraggeber und Projektname eingeben.",
+        "fr": "Saisissez le client et le nom du projet avant de generer les rapports.",
+        "it": "Inserisci cliente e nome del progetto prima di generare i rapporti.",
+    },
+    "client_ui_no_file": {
+        "en": "No file selected", "de": "Keine Datei gewaehlt", "fr": "Aucun fichier selectionne", "it": "Nessun file selezionato"
     },
 }
 

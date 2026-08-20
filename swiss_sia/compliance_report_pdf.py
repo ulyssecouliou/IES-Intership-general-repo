@@ -1,16 +1,15 @@
 """Render the company-letterhead SIA compliance report as a PDF.
 
 The document states, on the office's own letterhead, what the analysis of one
-VE model found against SIA 380/2 and what validation state the toolchain holds
-under SIA 4010. It is an engineering assessment report, not an official SIA
-certificate and not an SIA 4010 validation attestation: the scope block says so
-explicitly, and the verdict engine in :mod:`swiss_sia.compliance_verdict` keeps
-every undetermined item visible instead of reading as compliant.
+VE model found against SIA 380/2 and, for internal combined reports, what
+validation state the toolchain holds under SIA 4010. It is an engineering
+assessment report, not an official SIA certificate. The verdict engine in
+:mod:`swiss_sia.compliance_verdict` keeps every undetermined item visible
+instead of reading as compliant.
 
-The model thumbnail is a schematic drawn from the extracted data (external
-opaque and glazed area per orientation). The analysed model does not expose
-surface polygons, so no attempt is made to draw a geometric view that could
-misrepresent the building.
+When the client interface supplies a Model Viewer capture, that image is used
+as the report thumbnail. Otherwise the report falls back to a schematic drawn
+from extracted opaque and glazed areas; it never invents surface geometry.
 """
 
 from datetime import datetime
@@ -99,6 +98,16 @@ def scoped_verdict_status(verdict: ComplianceVerdict, scope: str = "both") -> st
     if normalized == "sia3802":
         return verdict.sia3802_status
     return verdict.overall_status
+
+
+def _scoped_outstanding(verdict: ComplianceVerdict, scope: str) -> Tuple[str, ...]:
+    """Return only reserves that belong to the selected report scope."""
+
+    if normalize_report_scope(scope) == "sia3802":
+        return tuple(
+            item for item in verdict.outstanding if not item.startswith("sia4010_")
+        )
+    return verdict.outstanding
 
 
 def _status_label(status: str, language: str) -> str:
@@ -289,15 +298,6 @@ def _draw_verdict_banner(
         align="right",
         width_mm=62.0,
     )
-    if normalized_scope == "sia3802":
-        page.text(
-            MARGIN + 7.0,
-            top + height + 4.0,
-            translate("sia4010_readiness_attestation_required", language),
-            size_pt=7.0,
-            colour=MUTED,
-        )
-        return top + height + 10.0
     return top + height + 7.0
 
 
@@ -414,19 +414,28 @@ def _draw_model_thumbnail(
     width: float,
     summary: Dict[str, Any],
     language: str,
+    image_path: Optional[Union[str, Path]] = None,
 ) -> float:
-    """Draw the schematic facade rose of the analysed model."""
+    """Draw the selected Model Viewer image or the extracted-data schematic."""
 
     height = 46.0
     page.rect(x, top, width, height, fill=PANEL, stroke=LINE, width_pt=0.4)
+    thumbnail_title = "client_ui_viewer" if image_path else "section_model"
     page.text(
         x + 4.0,
         top + 6.0,
-        translate("section_model", language).upper(),
+        translate(thumbnail_title, language).upper(),
         size_pt=7.0,
         bold=True,
         colour=BRAND,
     )
+    if image_path:
+        try:
+            page.image(x + 4.0, top + 9.0, width - 8.0, height - 13.0, image_path)
+            return top + height + 3.0
+        except Exception:
+            # A broken optional presentation image cannot block the report.
+            pass
     opaque = summary["opaque_by_sector"]
     glazed = summary["glazed_by_sector"]
     peak = max(list(opaque.values()) + list(glazed.values()) + [0.0])
@@ -522,20 +531,27 @@ def _draw_key_figures(
 
 
 def _draw_scope_block(
-    page: PdfPage, top: float, verdict: ComplianceVerdict, language: str
+    page: PdfPage,
+    top: float,
+    verdict: ComplianceVerdict,
+    language: str,
+    scope: str = "both",
 ) -> float:
     """Draw the mandatory scope and limitation statement."""
 
+    normalized_scope = normalize_report_scope(scope)
+    suffix = "_sia3802" if normalized_scope == "sia3802" else ""
     statements = [
-        translate("scope_line_1", language),
-        translate("scope_line_2", language),
+        translate("scope_line_1" + suffix, language),
+        translate("scope_line_2" + suffix, language),
     ]
-    if verdict.outstanding:
+    outstanding = _scoped_outstanding(verdict, normalized_scope)
+    if outstanding:
         statements.append(
             translate("scope_outstanding", language).format(
                 items=", ".join(
                     translate("outstanding_" + item, language)
-                    for item in verdict.outstanding
+                    for item in outstanding
                 )
             )
         )
@@ -653,6 +669,7 @@ def _draw_annex_page(
     office: CompanyProfile,
     verdict: ComplianceVerdict,
     language: str,
+    scope: str = "both",
 ) -> PdfPage:
     """Draw the second-page annex: limitations, reserves and methodology."""
 
@@ -685,8 +702,9 @@ def _draw_annex_page(
 
     # 2. Outstanding model reserves for this run (dynamic).
     cursor = _section_header(cursor, "annex_reserves_title")
-    if verdict.outstanding:
-        for item in verdict.outstanding:
+    outstanding = _scoped_outstanding(verdict, scope)
+    if outstanding:
+        for item in outstanding:
             text = "• " + translate("outstanding_" + item, language)
             for line in wrap_to_width(text, 7.8, CONTENT_WIDTH - 4.0):
                 page.text(MARGIN + 2.0, cursor, line, size_pt=7.8, colour=INK)
@@ -718,12 +736,13 @@ def render_compliance_report_pdf(
     language: str = "en",
     model_name: str = "",
     scope: str = "both",
+    report_context: Any = None,
 ) -> Path:
     """Render the company SIA compliance report and return the written path.
 
     ``scope="both"`` retains the combined SIA 380/2 and SIA 4010 headline.
-    ``scope="sia3802"`` reports only ``sia3802_status`` in that headline while
-    keeping the SIA 4010 readiness information and the scope block visible.
+    ``scope="sia3802"`` reports only the SIA 380/2 status, reserves and scope;
+    the client report contains no SIA 4010 readiness indicator.
     """
 
     code = normalize_language(language)
@@ -744,6 +763,17 @@ def render_compliance_report_pdf(
     )
     page = document.add_page()
     cursor = _draw_letterhead(page, office, code)
+    context_value = (
+        (lambda key, default="": report_context.get(key, default))
+        if isinstance(report_context, dict)
+        else (lambda key, default="": getattr(report_context, key, default))
+    )
+    client_logo = str(context_value("client_logo_path", "") or "").strip()
+    if client_logo and Path(client_logo).is_file():
+        try:
+            page.image(A4_MM[0] - MARGIN - 19.0, cursor - 5.0, 19.0, 13.0, client_logo)
+        except Exception:
+            pass
     page.text(
         MARGIN,
         cursor,
@@ -756,7 +786,10 @@ def render_compliance_report_pdf(
     page.text(
         MARGIN,
         cursor,
-        translate("report_subtitle", code),
+        translate(
+            "report_subtitle_sia3802" if report_scope == "sia3802" else "report_subtitle",
+            code,
+        ),
         size_pt=9.0,
         colour=MUTED,
     )
@@ -765,26 +798,32 @@ def render_compliance_report_pdf(
 
     to_complete = translate("value_to_complete", code)
     identification = [
-        (translate("field_client", code), to_complete),
-        (translate("field_project", code), project_label or translate("value_unavailable", code)),
-        (translate("field_project_address", code), to_complete),
+        (translate("field_client", code), str(context_value("client_name", "") or to_complete)),
+        (translate("field_project", code), str(context_value("project_name", "") or project_label or translate("value_unavailable", code))),
+        (translate("field_project_address", code), str(context_value("project_address", "") or to_complete)),
         (translate("field_model", code), model_name or translate("value_unavailable", code)),
-        (translate("field_mandate", code), office.report_reference or to_complete),
+        (translate("field_mandate", code), str(context_value("report_reference", "") or office.report_reference or to_complete)),
         (
             translate("field_generated", code),
             datetime.now().strftime("%Y-%m-%d %H:%M"),
         ),
-        (translate("field_prepared_by", code), office.author_name or to_complete),
-        (translate("field_checked_by", code), to_complete),
-        (translate("field_framework", code), "SIA 380/2:2022 + SIA 4010:2023"),
-        (translate("field_index", code), to_complete),
+        (translate("field_prepared_by", code), str(context_value("prepared_by", "") or office.author_name or to_complete)),
+        (translate("client_ui_weather", code), str(context_value("weather_file", "") or translate("value_unavailable", code))),
+        (translate("field_framework", code), "SIA 380/2:2022" if report_scope == "sia3802" else "SIA 380/2:2022 + SIA 4010:2023"),
+        (translate("field_solar_shading", code), str(context_value("solar_shading", "TO_CONFIRM") or "TO_CONFIRM")),
     ]
     cursor = _draw_identification(page, cursor, identification, code)
     cursor = _draw_domain_table(page, cursor, verdict, code)
 
     column_width = (CONTENT_WIDTH - 6.0) / 2.0
     thumbnail_bottom = _draw_model_thumbnail(
-        page, MARGIN, cursor, column_width, summary, code
+        page,
+        MARGIN,
+        cursor,
+        column_width,
+        summary,
+        code,
+        image_path=str(context_value("model_viewer_image_path", "") or "") or None,
     )
     figures_bottom = _draw_key_figures(
         page,
@@ -796,11 +835,11 @@ def render_compliance_report_pdf(
         code,
     )
     cursor = max(thumbnail_bottom, figures_bottom) + 2.0
-    cursor = _draw_scope_block(page, cursor, verdict, code)
+    cursor = _draw_scope_block(page, cursor, verdict, code, report_scope)
     _draw_signature(page, cursor, office, code)
     ies_logo = _resolve_ies_logo(project_root)
     _draw_footer(page, 1, 2, code, ies_logo_path=ies_logo)
 
-    annex_page = _draw_annex_page(document, office, verdict, code)
+    annex_page = _draw_annex_page(document, office, verdict, code, report_scope)
     _draw_footer(annex_page, 2, 2, code, ies_logo_path=ies_logo)
     return document.save(output_path)

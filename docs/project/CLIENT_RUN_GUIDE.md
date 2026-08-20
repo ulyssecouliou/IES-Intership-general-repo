@@ -2,8 +2,10 @@
 
 ## Purpose
 
-This workflow generates a professional readiness report for Swiss SIA 380/2:2022
-and SIA 4010:2023 checks from the active IESVE model.
+This workflow opens the client interface and generates the two client
+deliverables for the active IESVE model: the SIA 380/2 Excel workbook and the
+company PDF report. SIA 4010 qualifies the software separately and is not shown
+as a property of the client building.
 
 It is designed for the IESVE Run button. No PowerShell step is required.
 
@@ -11,8 +13,17 @@ It is designed for the IESVE Run button. No PowerShell step is required.
 
 1. Open the target client project in IESVE.
 2. Confirm the correct model is active.
-3. Close any open copy of `reports/Swiss_Compliance_Report.xlsx`.
-4. If SIA 4010 evidence is available, place it in:
+3. Prepare the client's logo as PNG/JPG if it should appear in the reports.
+4. Save a clear PNG/JPG capture from the VE Model Viewer if it should replace
+   the fallback facade schematic.
+5. Close any previously generated workbook that is still open in Excel.
+
+The interface asks for the client, project, address, contact, report reference,
+author, report language and whether the client declares solar shading. The
+shading answer is descriptive evidence only: it never replaces the shading
+objects extracted from the VE model and cannot create a compliance pass.
+
+For internal SIA 4010 work only, evidence remains stored in:
 
 ```text
 sia4010_evidence/
@@ -101,18 +112,19 @@ Run_VE_Swiss_Compliance.py
 ```
 
 3. Click `Run`.
-4. The launcher creates any missing project-scoped evidence templates without
-   overwriting completed reviewer files.
-5. Wait until the log says the Excel report and evidence-pack ZIP have been generated.
-6. Fill or review the generated files in `sia4010_evidence/` when external
-   evidence is available, then rerun the same launcher.
+4. Complete the client/project fields. The active VE weather file is displayed
+   read-only.
+5. Choose the client logo and Model Viewer image if required, and answer the
+   solar-shading question (`Yes`, `No` or `To confirm`).
+6. Click `Generate Excel + PDF`. The PDF opens automatically when generation
+   succeeds. The Excel, PDF and folder buttons then open their target directly.
 
 ## Report Output
 
-Reports are written to:
+The two reports are written inside the active VE model folder:
 
 ```text
-reports/
+<VE project>/SIA Compliance Reports/
 ```
 
 Each successful run creates:
@@ -120,14 +132,16 @@ Each successful run creates:
 - a timestamped Excel workbook;
 - a timestamped one-page compliance report PDF on the engineering office's
   letterhead, beside the workbook and with the same base name;
-- a timestamped evidence-pack ZIP for manager/reviewer handoff.
+- project-local copies of the selected client logo and Model Viewer image under
+  `<VE project>/.sia_compliance/report_assets/` so later reruns remain portable.
 
 ### Compliance report PDF
 
 The PDF is the client-facing deliverable. It carries the office letterhead and
-logo, the assessed verdict per SIA 380/2 domain, a schematic of the analysed
-model (external opaque and glazed area per orientation), the key figures, the
-scope statements and a signature block.
+logo, the client/project information, the weather file used, the declared
+solar-shading state, the assessed verdict per SIA 380/2 domain, the selected
+Model Viewer image (or a fallback facade schematic), the key figures, scope
+statements and a signature block.
 
 Configure the letterhead once by copying the template:
 
@@ -140,8 +154,7 @@ Fill in the office name, address, contacts, author and report reference, and set
 field left empty is printed as "not specified" - nothing is invented. If the
 file is absent the PDF is still produced, with the letterhead visibly unset.
 
-Choose the language with the `SIA_REPORT_LANGUAGE` environment variable
-(`en`, `de`, `fr`, `it`; English by default).
+Choose the report language directly in the interface (`en`, `de`, `fr`, `it`).
 
 The PDF is an engineering assessment report, not an official SIA certificate and
 not an SIA 4010 validation attestation. A domain reads COMPLIANT only when it
@@ -175,7 +188,8 @@ separate handoff archive, not a second report.
 
 ## How To Read The Workbook
 
-- `COVER`: branded landing page with the project, date, headline KPIs and the non-certification disclaimer.
+- `COVER`: office/client branding, project identification, weather, shading declaration and the actual SIA 380/2 verdict. The client workbook does not show model-health or weighted readiness scores.
+- `MODEL VIEWER`: the client-selected image used to identify the analysed model.
 - `INDEX`: clickable index linking to every sheet, grouped by section.
 - `MANAGER DASHBOARD`: executive summary, KPI cards, charts and priority actions.
 - `ACTION DASHBOARD`: consolidated action and priority view.
@@ -192,16 +206,15 @@ separate handoff archive, not a second report.
 - `INPUT REQUEST`: owner-ready missing input/evidence checklist.
 - `SIA3802 JUSTIFICATIONS`: reviewer-signed retained SIA 380/2 deviations, if supplied.
 - `OPEN ITEMS BACKLOG`: dynamic backlog of model alerts, coverage gaps and navigator items.
-- `SIA4010 READINESS`: official validation evidence matrix.
-- `SIA4010 PREVALIDATION`: PDF-based prevalidation of tests 1 to 7 and classes 1A to 5 from VE/APS data.
-- `SIA4010 CLASS MATRIX`: class-by-class SIA 4010 matrix, including the non-gating automated band cross-check column (`NOT_RUN` until an official test run is performed).
-- `SIA4010 SOFTWARE REGISTER`: manager-provided software-register guardrail and validation-class detail.
+- The four SIA 4010 sheets exist only in the separate internal report launched
+  through `Run_VE_Swiss_Compliance_Internal_SIA4010.py`.
 - `NAVIGATOR BACKLOG`: manager-provided SIA 380/2 navigator roadmap and current project gaps.
 - `DYNAMIC RESULTS`: APS/Vista dynamic indicators when readable from VE.
 - `ALERT SUMMARY`: grouped technical findings.
 - `ALERTS`: detailed alerts (repetitive low-severity rules are capped for readability, with a per-rule summary).
 - `DATA QUALITY`: extraction coverage and missing-data risks.
-- `DETAILED SCORES`: score components.
+- `DETAILED SCORES` exists only in the internal report; client reporting is
+  centred on the compliance verdict and its supporting findings.
 - `ROOMS`: extracted room data.
 
 The legacy `SUMMARY`, `COMPLIANCE RESULTS`, `ACTION PLAN` and `SIA REQUIREMENTS`
