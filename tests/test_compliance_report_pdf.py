@@ -4,12 +4,15 @@ import struct
 import unittest
 import zlib
 from pathlib import Path
+from types import SimpleNamespace
 
 from pypdf import PdfReader
 
 from scripts.quality.fixtures import StaticModelAnalyzer, build_reference_room
 from swiss_sia.company_profile import CompanyProfile, load_company_profile
+from swiss_sia.config import SIA_COMPLIANCE_REQUIREMENT_MATRIX
 from swiss_sia.compliance_report_pdf import (
+    _criterion_for_alert,
     render_compliance_report_pdf,
     scoped_verdict_status,
     summarise_model,
@@ -23,7 +26,7 @@ from swiss_sia.compliance_verdict import (
 from swiss_sia.model_analyzer import OpeningData, RoomData, SurfaceData
 from swiss_sia.pdf_writer import PdfDocument, wrap_to_width
 from swiss_sia.reference_model.sia4010.ui_translations import LANGUAGES, translate
-from swiss_sia.rule_engine import RuleEngine
+from swiss_sia.rule_engine import Alert, RuleEngine, Severity
 from swiss_sia.sia380_checker import SIA3802Checker
 from swiss_sia.sia4010_checker import SIA4010Checker
 
@@ -180,6 +183,16 @@ class VerdictEngineTests(unittest.TestCase):
         verdict = build_compliance_verdict(self._sia3802(), {}, rooms_analysed=0)
         self.assertEqual(verdict.sia3802_status, NOT_DETERMINED)
         self.assertEqual(verdict.overall_status, NOT_DETERMINED)
+
+    def test_alert_never_borrows_a_limit_from_an_unrelated_domain(self):
+        alert = Alert(
+            rule="SIA3802_LIGHTING_CONTROL_TYPE_MISSING",
+            description="Lighting control evidence is missing.",
+            severity=Severity.MEDIUM,
+            category="Gains",
+            recommendation="Provide the lighting-control evidence.",
+        )
+        self.assertEqual(_criterion_for_alert(alert), {})
 
     def test_missing_global_comparison_blocks_a_compliant_statement(self):
         verdict = build_compliance_verdict(self._sia3802(), {}, rooms_analysed=3)
@@ -455,6 +468,64 @@ class RenderedReportTests(unittest.TestCase):
         text = self._render("en")
         self.assertIn(translate("verdict_not_determined", "en"), text)
         self.assertNotIn(translate("verdict_compliant", "en") + "\n" + "SIA", text)
+
+    def test_detailed_pages_explain_the_decision_and_each_action(self):
+        path = render_compliance_report_pdf(
+            OUTPUT_ROOT / "report_detailed_findings.pdf",
+            project_label="ZOER_32_C1",
+            rooms_data=self.rooms,
+            sia3802_results=self.sia3802,
+            sia4010_results={},
+            profile=self.profile,
+            language="fr",
+            scope="sia3802",
+        )
+        reader = PdfReader(str(path))
+        full_text = "\n".join(page.extract_text() for page in reader.pages)
+        self.assertGreaterEqual(len(reader.pages), 3)
+        self.assertIn(translate("report_details_title", "fr"), full_text)
+        self.assertIn(translate("report_decision_basis", "fr").upper(), full_text)
+        self.assertIn(translate("report_finding_action", "fr"), full_text)
+        self.assertIn(
+            translate("report_reason_global_comparison_missing", "fr"),
+            full_text,
+        )
+
+    def test_configured_limit_and_model_value_are_printed_for_a_blocker(self):
+        wall_entry = next(
+            item
+            for item in SIA_COMPLIANCE_REQUIREMENT_MATRIX
+            if item.get("implemented_rule") == "SIA3802_U_VALUE_EXTERNAL_WALL"
+        )
+        sia3802 = {
+            "envelope": {}, "openings": {}, "ventilation": {},
+            "gains": {}, "setpoints": {}, "hvac": {},
+            "global_reference_comparison": {"status": "REVIEWED_RESULT_AVAILABLE"},
+            "alerts": [
+                Alert(
+                    rule="SIA3802_U_VALUE_EXTERNAL_WALL",
+                    description="External wall U-value exceeds the configured reference input.",
+                    severity=Severity.CRITICAL,
+                    category="Envelope",
+                    recommendation="Review the wall construction and rerun the assessment.",
+                    data=SimpleNamespace(name="Wall A", u_value=0.41),
+                )
+            ],
+        }
+        path = render_compliance_report_pdf(
+            OUTPUT_ROOT / "report_detailed_limit.pdf",
+            project_label="P",
+            rooms_data=self.rooms,
+            sia3802_results=sia3802,
+            sia4010_results={},
+            profile=self.profile,
+            language="en",
+            scope="sia3802",
+        )
+        full_text = "\n".join(page.extract_text() for page in PdfReader(str(path)).pages)
+        self.assertIn(str(wall_entry["limit"]), full_text)
+        self.assertIn("u value: 0.41", full_text)
+        self.assertIn("Review the wall construction", full_text)
 
     def test_sia3802_scope_omits_sia4010_readiness_from_client_banner(self):
         sia3802 = {

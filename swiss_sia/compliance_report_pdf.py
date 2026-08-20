@@ -18,10 +18,12 @@ from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
 
 from .company_profile import CompanyProfile, load_company_profile
 from .compliance_criteria import CLIENT_LIMITATIONS
+from .config import SIA_COMPLIANCE_REQUIREMENT_MATRIX
 from .compliance_verdict import (
     COMPLIANT,
     NOT_COMPLIANT,
     NOT_DETERMINED,
+    _INDETERMINATE_RULE_MARKERS,
     ComplianceVerdict,
     build_compliance_verdict,
 )
@@ -664,6 +666,356 @@ def _resolve_ies_logo(project_root: Optional[Union[str, Path]]) -> Optional[Path
     return None
 
 
+def _alert_value(alert: Any, key: str, default: Any = "") -> Any:
+    """Read one alert field from either the real dataclass or a test mapping."""
+
+    if isinstance(alert, dict):
+        return alert.get(key, default)
+    return getattr(alert, key, default)
+
+
+def _alert_severity(alert: Any) -> str:
+    """Return a stable upper-case severity name."""
+
+    severity = _alert_value(alert, "severity", "")
+    name = getattr(severity, "name", None) or getattr(severity, "value", None)
+    return str(name or severity or "").upper()
+
+
+def _alert_is_indeterminate(alert: Any) -> bool:
+    """Return whether an alert represents absent/uncheckable evidence."""
+
+    rule = str(_alert_value(alert, "rule", "") or "").upper()
+    return any(marker in rule for marker in _INDETERMINATE_RULE_MARKERS) or any(
+        marker in rule for marker in ("NOT_COMPARABLE", "SOURCE_NOT_COMPARABLE")
+    )
+
+
+def _alert_kind(alert: Any) -> str:
+    """Classify a finding consistently with the fail-closed verdict engine."""
+
+    if _alert_is_indeterminate(alert):
+        return "missing"
+    if _alert_severity(alert) in {"CRITICAL", "HIGH"}:
+        return "blocking"
+    return "advisory"
+
+
+def _criterion_for_alert(alert: Any) -> Dict[str, Any]:
+    """Find the closest configured SIA criterion without inventing a limit."""
+
+    rule = str(_alert_value(alert, "rule", "") or "").upper()
+    if not rule:
+        return {}
+    for entry in SIA_COMPLIANCE_REQUIREMENT_MATRIX:
+        candidates = [
+            item.strip().upper()
+            for item in str(entry.get("implemented_rule") or "").split("/")
+            if item.strip()
+        ]
+        if any(rule == item or rule.startswith(item + "_") or item in rule for item in candidates):
+            return entry
+
+    # Missing-data alerts often permute the same tokens as the evaluated rule
+    # (e.g. WINDOW_U_VALUE_MISSING vs U_VALUE_WINDOW). Token overlap gives the
+    # report its configured reference only when the match is unambiguous enough.
+    ignored = {
+        "SIA3802", "SIA4010", "MISSING", "NOT", "CHECKABLE", "UNAVAILABLE",
+        "SOURCE", "COMPARABLE", "ERROR", "RULE", "MODEL",
+    }
+    rule_tokens = {part for part in rule.split("_") if part and part not in ignored}
+    category = str(_alert_value(alert, "category", "") or "")
+    compatible_domains = {
+        "Envelope": {"Envelope"},
+        "Openings": {"Openings", "Solar protection"},
+        "Ventilation": {"Ventilation"},
+        "HVAC": {"Cooling", "Heating"},
+    }.get(category, set())
+    if not compatible_domains:
+        return {}
+    scored: List[Tuple[int, Dict[str, Any]]] = []
+    for entry in SIA_COMPLIANCE_REQUIREMENT_MATRIX:
+        if str(entry.get("domain") or "") not in compatible_domains:
+            continue
+        implemented = str(entry.get("implemented_rule") or "").upper()
+        tokens = {part for part in implemented.replace(" / ", "_").split("_") if part and part not in ignored}
+        score = len(rule_tokens.intersection(tokens))
+        if score >= 2:
+            scored.append((score, entry))
+    if not scored:
+        return {}
+    scored.sort(key=lambda item: item[0], reverse=True)
+    if len(scored) > 1 and scored[0][0] == scored[1][0]:
+        return {}
+    return scored[0][1]
+
+
+def _format_reference_value(value: Any, unit: Any, language: str) -> str:
+    """Format a configured limit/target exactly as stored in the matrix."""
+
+    if value is None or value == "":
+        return translate("report_value_not_available", language)
+    if isinstance(value, float):
+        text = ("{:.4g}".format(value)).rstrip("0").rstrip(".")
+    else:
+        text = str(value)
+    unit_text = str(unit or "").strip()
+    if unit_text and unit_text not in {"-", "minimum"}:
+        text = "{} {}".format(text, unit_text)
+    return text
+
+
+def _model_data_text(alert: Any, language: str) -> str:
+    """Summarise only scalar model evidence carried by the real alert."""
+
+    data = _alert_value(alert, "data", None)
+    if data is None:
+        return translate("report_value_not_available", language)
+    if isinstance(data, dict):
+        values = data
+    else:
+        try:
+            values = vars(data)
+        except TypeError:
+            values = {}
+    preferred = (
+        "name", "id", "room_name", "surface_name", "opening_name",
+        "value", "actual", "u_value", "solar_factor", "g_total",
+        "visible_transmittance", "frame_fraction", "air_exchange_rate",
+        "infiltration_rate", "area", "orientation", "heating_setpoint",
+        "cooling_setpoint", "power_density", "efficiency", "eer", "seer", "scop",
+    )
+    parts: List[str] = []
+    for key in preferred:
+        value = values.get(key)
+        if value is None or value == "" or isinstance(value, (dict, list, tuple, set)):
+            continue
+        label = key.replace("_", " ")
+        parts.append("{}: {}".format(label, value))
+        if len(parts) == 6:
+            break
+    return "; ".join(parts) or translate("report_value_not_available", language)
+
+
+def _decision_reason(verdict: ComplianceVerdict, language: str) -> str:
+    """Return the translated, explicit reason for the SIA 380/2 decision."""
+
+    return translate("report_reason_" + verdict.sia3802_reason, language)
+
+
+def _decision_action(verdict: ComplianceVerdict, language: str) -> str:
+    """Return the concrete next step associated with the overall decision."""
+
+    return translate("report_action_" + verdict.sia3802_reason, language)
+
+
+def _detail_section_header(page: PdfPage, top: float, key: str, language: str) -> float:
+    """Draw a reusable detailed-report section heading."""
+
+    page.text(MARGIN, top, translate(key, language).upper(), size_pt=8.0, bold=True, colour=BRAND)
+    top += 3.0
+    page.line(MARGIN, top, A4_MM[0] - MARGIN, top, width_pt=0.5, colour=LINE)
+    return top + 5.5
+
+
+def _draw_detailed_pages(
+    document: PdfDocument,
+    office: CompanyProfile,
+    verdict: ComplianceVerdict,
+    sia3802_results: Optional[Dict[str, Any]],
+    language: str,
+) -> List[PdfPage]:
+    """Add a paginated decision rationale and every SIA 380/2 finding."""
+
+    results = dict(sia3802_results or {})
+    alerts = list(results.get("alerts", []) or [])
+    pages: List[PdfPage] = []
+    page: PdfPage
+    cursor: float
+
+    def new_page(continued: bool = False) -> Tuple[PdfPage, float]:
+        detail_page = document.add_page()
+        pages.append(detail_page)
+        top = _draw_letterhead(detail_page, office, language)
+        detail_page.text(
+            MARGIN,
+            top,
+            translate("report_details_continued" if continued else "report_details_title", language),
+            size_pt=15.0,
+            bold=True,
+            colour=INK,
+        )
+        top += 6.5
+        if not continued:
+            detail_page.text(
+                MARGIN,
+                top,
+                translate("report_details_subtitle", language),
+                size_pt=8.2,
+                colour=MUTED,
+            )
+            top += 8.0
+        else:
+            top += 4.0
+        return detail_page, top
+
+    page, cursor = new_page()
+
+    # Explicit decision rationale and decisive project/reference figures.
+    cursor = _detail_section_header(page, cursor, "report_decision_basis", language)
+    status_colour, status_bg = _STATUS_COLOURS.get(verdict.sia3802_status, (WARN, WARN_BG))
+    reason_lines = wrap_to_width(_decision_reason(verdict, language), 8.1, CONTENT_WIDTH - 12.0)
+    action_lines = wrap_to_width(_decision_action(verdict, language), 7.6, CONTENT_WIDTH - 44.0)
+    decision_height = 19.0 + len(reason_lines) * 4.2 + max(1, len(action_lines)) * 3.9
+    page.rect(MARGIN, cursor, CONTENT_WIDTH, decision_height, fill=status_bg)
+    page.rect(MARGIN, cursor, 2.2, decision_height, fill=status_colour)
+    page.text(
+        MARGIN + 6.0, cursor + 6.0, _status_label(verdict.sia3802_status, language),
+        size_pt=11.0, bold=True, colour=status_colour,
+    )
+    y = cursor + 12.0
+    for line in reason_lines:
+        page.text(MARGIN + 6.0, y, line, size_pt=8.1, colour=INK)
+        y += 4.2
+    y += 1.0
+    page.text(MARGIN + 6.0, y, translate("report_finding_action", language), size_pt=6.8, bold=True, colour=status_colour)
+    for line_index, line in enumerate(action_lines):
+        page.text(MARGIN + 40.0, y + line_index * 3.9, line, size_pt=7.6, colour=INK)
+    cursor += decision_height + 6.0
+
+    comparison = results.get("global_reference_comparison", {}) or {}
+    if not isinstance(comparison, dict):
+        comparison = {}
+    page.text(MARGIN, cursor, translate("report_global_comparison", language), size_pt=9.0, bold=True, colour=INK)
+    cursor += 5.0
+    comparison_rows = (
+        ("report_comparison_status", comparison.get("status")),
+        ("report_comparison_project_value", comparison.get("project_value")),
+        ("report_comparison_reference_value", comparison.get("reference_value")),
+        ("report_comparison_source", comparison.get("source")),
+    )
+    cell_width = CONTENT_WIDTH / 2.0
+    for index, (label_key, value) in enumerate(comparison_rows):
+        x = MARGIN + (index % 2) * cell_width
+        y = cursor + (index // 2) * 10.0
+        page.rect(x, y, cell_width - 2.0, 8.0, fill=PANEL)
+        page.text(x + 3.0, y + 3.4, translate(label_key, language), size_pt=6.5, colour=MUTED)
+        page.text(
+            x + 3.0, y + 6.6,
+            truncate_to_width(
+                str(value) if value not in (None, "") else translate("report_value_not_available", language),
+                7.3,
+                cell_width - 8.0,
+            ),
+            size_pt=7.3, bold=True, colour=INK,
+        )
+    cursor += 24.0
+
+    # Six domain decisions, including the internal reason rather than only a colour.
+    cursor = _detail_section_header(page, cursor, "report_domains_detailed", language)
+    for domain in verdict.domains:
+        colour, background = _STATUS_COLOURS.get(domain.status, (WARN, WARN_BG))
+        page.rect(MARGIN, cursor, CONTENT_WIDTH, 8.0, fill=PANEL)
+        page.rect(MARGIN, cursor, 2.0, 8.0, fill=colour)
+        page.text(MARGIN + 5.0, cursor + 5.0, translate("domain_" + domain.domain, language), size_pt=8.0, bold=True, colour=INK)
+        page.text(
+            MARGIN + 54.0, cursor + 5.0,
+            translate("report_domain_reason_" + domain.reason, language),
+            size_pt=7.2, colour=MUTED,
+        )
+        page.text(
+            A4_MM[0] - MARGIN - 53.0, cursor + 5.0,
+            "{}  |  {} / {}".format(
+                _status_label(domain.status, language),
+                domain.blocking_count,
+                domain.advisory_count,
+            ),
+            size_pt=7.1, bold=True, colour=colour, align="right", width_mm=53.0,
+        )
+        cursor += 9.5
+    cursor += 4.0
+
+    cursor = _detail_section_header(page, cursor, "report_findings_title", language)
+    if not alerts:
+        for line in wrap_to_width(translate("report_findings_none", language), 8.0, CONTENT_WIDTH - 4.0):
+            page.text(MARGIN + 2.0, cursor, line, size_pt=8.0, colour=MUTED)
+            cursor += 4.2
+        return pages
+
+    priority = {"blocking": 0, "missing": 1, "advisory": 2}
+    alerts.sort(key=lambda item: (priority[_alert_kind(item)], str(_alert_value(item, "category", "")), str(_alert_value(item, "rule", ""))))
+    for number, alert in enumerate(alerts, 1):
+        kind = _alert_kind(alert)
+        criterion = _criterion_for_alert(alert)
+        unit = criterion.get("unit")
+        title = str(criterion.get("criterion") or _alert_value(alert, "category", "") or _alert_value(alert, "rule", ""))
+        fields = [
+            (
+                "report_finding_observation",
+                str(_alert_value(alert, "description", "") or translate("report_value_not_available", language)),
+            ),
+            ("report_finding_why", translate("report_finding_why_" + kind, language)),
+            (
+                "report_finding_limit",
+                _format_reference_value(criterion.get("limit"), unit, language),
+            ),
+        ]
+        if criterion.get("target") not in (None, ""):
+            fields.append(("report_finding_target", _format_reference_value(criterion.get("target"), unit, language)))
+        fields.extend(
+            [
+                ("report_finding_model_data", _model_data_text(alert, language)),
+                (
+                    "report_finding_source",
+                    str(criterion.get("source") or translate("report_value_not_available", language)),
+                ),
+                (
+                    "report_finding_action",
+                    str(_alert_value(alert, "recommendation", "") or criterion.get("next_action") or translate("report_value_not_available", language)),
+                ),
+            ]
+        )
+        wrapped = [
+            (label, wrap_to_width(value, 7.2, CONTENT_WIDTH - 45.0))
+            for label, value in fields
+        ]
+        card_height = 13.0 + sum(max(1, len(lines)) * 3.7 + 1.3 for _, lines in wrapped)
+        if cursor + card_height > A4_MM[1] - 24.0:
+            page, cursor = new_page(continued=True)
+            cursor = _detail_section_header(page, cursor, "report_findings_title", language)
+
+        if kind == "blocking":
+            tone, ground = BAD, BAD_BG
+        elif kind == "missing":
+            tone, ground = WARN, WARN_BG
+        else:
+            tone, ground = BRAND, PANEL
+        page.rect(MARGIN, cursor, CONTENT_WIDTH, card_height, fill=WHITE, stroke=LINE, width_pt=0.5)
+        page.rect(MARGIN, cursor, CONTENT_WIDTH, 10.0, fill=ground)
+        page.rect(MARGIN, cursor, 2.2, card_height, fill=tone)
+        page.text(MARGIN + 6.0, cursor + 6.2, "{:02d}  {}".format(number, title), size_pt=8.7, bold=True, colour=INK)
+        page.text(
+            A4_MM[0] - MARGIN - 62.0,
+            cursor + 6.2,
+            translate("report_finding_" + kind, language),
+            size_pt=7.0,
+            bold=True,
+            colour=tone,
+            align="right",
+            width_mm=59.0,
+        )
+        rule = str(_alert_value(alert, "rule", "") or "")
+        page.text(MARGIN + 6.0, cursor + 10.8, "{}: {}".format(translate("report_finding_rule", language), rule), size_pt=6.2, colour=MUTED)
+        y = cursor + 15.0
+        for label_key, lines in wrapped:
+            page.text(MARGIN + 6.0, y, translate(label_key, language), size_pt=6.8, bold=True, colour=BRAND)
+            for line_index, line in enumerate(lines or [""]):
+                page.text(MARGIN + 40.0, y + line_index * 3.7, line, size_pt=7.2, colour=INK)
+            y += max(1, len(lines)) * 3.7 + 1.3
+        cursor += card_height + 5.0
+    return pages
+
+
 def _draw_annex_page(
     document: PdfDocument,
     office: CompanyProfile,
@@ -838,8 +1190,16 @@ def render_compliance_report_pdf(
     cursor = _draw_scope_block(page, cursor, verdict, code, report_scope)
     _draw_signature(page, cursor, office, code)
     ies_logo = _resolve_ies_logo(project_root)
-    _draw_footer(page, 1, 2, code, ies_logo_path=ies_logo)
 
-    annex_page = _draw_annex_page(document, office, verdict, code, report_scope)
-    _draw_footer(annex_page, 2, 2, code, ies_logo_path=ies_logo)
+    _draw_detailed_pages(document, office, verdict, sia3802_results, code)
+    _draw_annex_page(document, office, verdict, code, report_scope)
+    total_pages = len(document.pages)
+    for page_number, report_page in enumerate(document.pages, 1):
+        _draw_footer(
+            report_page,
+            page_number,
+            total_pages,
+            code,
+            ies_logo_path=ies_logo,
+        )
     return document.save(output_path)

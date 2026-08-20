@@ -56,6 +56,14 @@ def _write_rgb_png(path: Path, width: int = 10, height: int = 6) -> Path:
 
 
 class ClientContextTests(unittest.TestCase):
+    def test_missing_translation_key_is_humanised_for_the_business_ui(self) -> None:
+        window = ClientComplianceWindow.__new__(ClientComplianceWindow)
+        window.language = "fr"
+        self.assertEqual(
+            window.t("client_ui_example_business_label"),
+            "Example business label",
+        )
+
     def test_required_fields_are_explicit(self) -> None:
         self.assertEqual(
             validate_client_context(ClientReportContext()),

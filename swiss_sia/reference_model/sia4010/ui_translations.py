@@ -2341,6 +2341,24 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
         "it": "Una conclusione di conformita SIA 380/2 richiede il confronto progetto/riferimento verificato.",
     },
     # ------------------------------------------ client compliance report UI
+    "client_ui_eyebrow": {
+        "en": "Engineering assessment workspace",
+        "de": "Arbeitsbereich fuer die technische Beurteilung",
+        "fr": "Espace d'evaluation technique",
+        "it": "Area di valutazione tecnica",
+    },
+    "client_ui_active_project": {
+        "en": "Active VE project", "de": "Aktives VE-Projekt",
+        "fr": "Projet VE actif", "it": "Progetto VE attivo",
+    },
+    "client_ui_weather_short": {
+        "en": "Weather data", "de": "Wetterdaten",
+        "fr": "Donnees meteo", "it": "Dati meteo",
+    },
+    "client_ui_output_short": {
+        "en": "Report location", "de": "Berichtsablage",
+        "fr": "Dossier des rapports", "it": "Cartella dei rapporti",
+    },
     "client_ui_window_title": {
         "en": "Swiss SIA 380/2 Compliance",
         "de": "Schweizer SIA 380/2 Konformitaet",
@@ -2364,6 +2382,36 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
         "de": "Auftraggeber und Projekt",
         "fr": "Client et projet",
         "it": "Cliente e progetto",
+    },
+    "client_ui_client_name": {
+        "en": "Client / building owner *",
+        "de": "Auftraggeber / Bauherrschaft *",
+        "fr": "Client / maitre d'ouvrage *",
+        "it": "Cliente / committente *",
+    },
+    "client_ui_project_name_required": {
+        "en": "Project name *", "de": "Projektname *",
+        "fr": "Nom du projet *", "it": "Nome del progetto *",
+    },
+    "client_ui_project_address": {
+        "en": "Project address", "de": "Projektadresse",
+        "fr": "Adresse du projet", "it": "Indirizzo del progetto",
+    },
+    "client_ui_contact_details": {
+        "en": "Client contact (name, email or phone)",
+        "de": "Kontaktperson (Name, E-Mail oder Telefon)",
+        "fr": "Contact client (nom, e-mail ou telephone)",
+        "it": "Contatto cliente (nome, e-mail o telefono)",
+    },
+    "client_ui_report_reference": {
+        "en": "Mandate / report reference",
+        "de": "Auftrags- / Berichtsreferenz",
+        "fr": "Reference du mandat / rapport",
+        "it": "Riferimento incarico / rapporto",
+    },
+    "client_ui_report_language": {
+        "en": "Report language", "de": "Berichtssprache",
+        "fr": "Langue des rapports", "it": "Lingua dei rapporti",
     },
     "client_ui_project_name": {
         "en": "Project name",
@@ -2389,6 +2437,12 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
         "fr": "Fichier meteo utilise",
         "it": "File meteo utilizzato",
     },
+    "client_ui_weather_detected": {
+        "en": "Weather file detected in the VE model",
+        "de": "Im VE-Modell erkannte Wetterdatei",
+        "fr": "Fichier meteo detecte dans le modele VE",
+        "it": "File meteo rilevato nel modello VE",
+    },
     "client_ui_section_model": {
         "en": "Model presentation",
         "de": "Modelldarstellung",
@@ -2400,6 +2454,18 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
         "de": "Enthaelt das Modell Sonnenschutz?",
         "fr": "Le modele comporte-t-il des stores ?",
         "it": "Il modello include schermature solari?",
+    },
+    "client_ui_shading_question": {
+        "en": "Does the VE model contain blinds or solar-protection systems?",
+        "de": "Enthaelt das VE-Modell Storen oder Sonnenschutzsysteme?",
+        "fr": "Le modele VE contient-il des stores ou protections solaires ?",
+        "it": "Il modello VE contiene tende o sistemi di protezione solare?",
+    },
+    "client_ui_shading_help": {
+        "en": "Declare what is represented in the model; this answer is printed in both reports.",
+        "de": "Geben Sie an, was im Modell abgebildet ist; die Antwort erscheint in beiden Berichten.",
+        "fr": "Indiquez ce qui est represente dans le modele ; la reponse figurera dans les deux rapports.",
+        "it": "Indicare cosa e rappresentato nel modello; la risposta apparira in entrambi i rapporti.",
     },
     "field_solar_shading": {
         "en": "Solar shading",
@@ -2415,11 +2481,23 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
     "client_ui_logo": {
         "en": "Client logo", "de": "Logo Auftraggeber", "fr": "Logo du client", "it": "Logo del cliente"
     },
+    "client_ui_logo_report": {
+        "en": "Client logo to display in the reports",
+        "de": "Auftraggeberlogo fuer die Berichte",
+        "fr": "Logo du client a afficher dans les rapports",
+        "it": "Logo del cliente da mostrare nei rapporti",
+    },
     "client_ui_choose_logo": {
         "en": "Choose logo", "de": "Logo waehlen", "fr": "Choisir le logo", "it": "Scegli logo"
     },
     "client_ui_viewer": {
         "en": "Model Viewer image", "de": "Model-Viewer-Bild", "fr": "Capture du Model Viewer", "it": "Immagine Model Viewer"
+    },
+    "client_ui_viewer_report": {
+        "en": "Model view to include in the reports",
+        "de": "Modellansicht fuer die Berichte",
+        "fr": "Vue du modele a integrer aux rapports",
+        "it": "Vista del modello da inserire nei rapporti",
     },
     "client_ui_capture_viewer": {
         "en": "Capture now", "de": "Jetzt aufnehmen", "fr": "Capturer maintenant", "it": "Cattura ora"
@@ -2472,6 +2550,46 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
     "client_ui_result": {
         "en": "Compliance result", "de": "Konformitaetsergebnis", "fr": "Resultat de conformite", "it": "Risultato di conformita"
     },
+    "client_ui_result_pending": {
+        "en": "Assessment ready to run", "de": "Beurteilung kann gestartet werden",
+        "fr": "Evaluation prete a etre lancee", "it": "Valutazione pronta per l'avvio",
+    },
+    "client_ui_result_pending_help": {
+        "en": "The decision and the six assessed domains will appear here after the model analysis.",
+        "de": "Entscheid und sechs Beurteilungsbereiche erscheinen hier nach der Modellanalyse.",
+        "fr": "La decision et les six domaines evalues apparaitront ici apres l'analyse du modele.",
+        "it": "La decisione e i sei ambiti valutati appariranno qui dopo l'analisi del modello.",
+    },
+    "client_ui_check_client": {
+        "en": "Complete the client and project identity",
+        "de": "Auftraggeber- und Projektangaben vervollstaendigen",
+        "fr": "Completer l'identite du client et du projet",
+        "it": "Completare i dati del cliente e del progetto",
+    },
+    "client_ui_check_model": {
+        "en": "Confirm shading and add the presentation assets",
+        "de": "Sonnenschutz bestaetigen und Darstellungsbilder hinzufuegen",
+        "fr": "Confirmer les stores et ajouter les elements visuels",
+        "it": "Confermare le schermature e aggiungere gli elementi visivi",
+    },
+    "client_ui_check_generate": {
+        "en": "Generate and open the current Excel and PDF reports",
+        "de": "Aktuelle Excel- und PDF-Berichte erzeugen und oeffnen",
+        "fr": "Generer et ouvrir les rapports Excel et PDF a jour",
+        "it": "Generare e aprire i rapporti Excel e PDF aggiornati",
+    },
+    "client_ui_decision": {
+        "en": "SIA 380/2 decision", "de": "Entscheid nach SIA 380/2",
+        "fr": "Decision SIA 380/2", "it": "Decisione SIA 380/2",
+    },
+    "client_ui_blocking_findings": {
+        "en": "Blocking findings", "de": "Blockierende Feststellungen",
+        "fr": "Points bloquants", "it": "Rilievi bloccanti",
+    },
+    "client_ui_advisory_findings": {
+        "en": "Points to review", "de": "Zu pruefende Punkte",
+        "fr": "Points a examiner", "it": "Punti da verificare",
+    },
     "client_ui_current_reports": {
         "en": "Reports from this run",
         "de": "Berichte dieses Laufs",
@@ -2495,6 +2613,204 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
     },
     "client_ui_no_file": {
         "en": "No file selected", "de": "Keine Datei gewaehlt", "fr": "Aucun fichier selectionne", "it": "Nessun file selezionato"
+    },
+    # ------------------------------------------ detailed PDF diagnostics
+    "report_details_title": {
+        "en": "Detailed compliance analysis", "de": "Detaillierte Konformitaetsanalyse",
+        "fr": "Analyse detaillee de la conformite", "it": "Analisi dettagliata della conformita",
+    },
+    "report_details_subtitle": {
+        "en": "Decision basis, blocking findings, missing evidence and corrective actions",
+        "de": "Entscheidungsgrundlage, Blockaden, fehlende Nachweise und Korrekturmassnahmen",
+        "fr": "Motif de decision, points bloquants, preuves manquantes et actions correctives",
+        "it": "Base decisionale, rilievi bloccanti, prove mancanti e azioni correttive",
+    },
+    "report_details_continued": {
+        "en": "Detailed analysis - continued", "de": "Detaillierte Analyse - Fortsetzung",
+        "fr": "Analyse detaillee - suite", "it": "Analisi dettagliata - continuazione",
+    },
+    "report_decision_basis": {
+        "en": "Why this decision was reached", "de": "Begruendung des Entscheids",
+        "fr": "Pourquoi cette decision", "it": "Motivo della decisione",
+    },
+    "report_global_comparison": {
+        "en": "Decisive project / reference comparison", "de": "Entscheidender Projekt-/Referenzvergleich",
+        "fr": "Comparaison decisive projet / reference", "it": "Confronto decisivo progetto / riferimento",
+    },
+    "report_comparison_project_value": {
+        "en": "Project value", "de": "Projektwert", "fr": "Valeur du projet", "it": "Valore del progetto",
+    },
+    "report_comparison_reference_value": {
+        "en": "Reference value", "de": "Referenzwert", "fr": "Valeur de reference", "it": "Valore di riferimento",
+    },
+    "report_comparison_status": {
+        "en": "Review state", "de": "Pruefstatus", "fr": "Etat de la verification", "it": "Stato della verifica",
+    },
+    "report_comparison_source": {
+        "en": "Calculation source", "de": "Berechnungsquelle", "fr": "Source du calcul", "it": "Fonte del calcolo",
+    },
+    "report_domains_detailed": {
+        "en": "Assessment by domain", "de": "Beurteilung nach Bereich",
+        "fr": "Evaluation par domaine", "it": "Valutazione per ambito",
+    },
+    "report_findings_title": {
+        "en": "Detailed findings", "de": "Detaillierte Feststellungen",
+        "fr": "Constats detailles", "it": "Rilievi dettagliati",
+    },
+    "report_findings_none": {
+        "en": "No individual alert was raised. The decision above still depends on the decisive comparison and the stated reserves.",
+        "de": "Es wurde keine einzelne Warnung erzeugt. Der Entscheid haengt dennoch vom entscheidenden Vergleich und den genannten Vorbehalten ab.",
+        "fr": "Aucune alerte individuelle n'a ete emise. La decision ci-dessus reste neanmoins liee a la comparaison decisive et aux reserves indiquees.",
+        "it": "Non e stato emesso alcun avviso individuale. La decisione resta comunque legata al confronto decisivo e alle riserve indicate.",
+    },
+    "report_finding_blocking": {
+        "en": "Determined non-compliance", "de": "Festgestellte Nichtkonformitaet",
+        "fr": "Non-conformite averee", "it": "Non conformita accertata",
+    },
+    "report_finding_missing": {
+        "en": "Evidence incomplete / not checkable", "de": "Nachweis unvollstaendig / nicht pruefbar",
+        "fr": "Preuve incomplete / non verifiable", "it": "Prova incompleta / non verificabile",
+    },
+    "report_finding_advisory": {
+        "en": "Point to review", "de": "Zu pruefender Punkt",
+        "fr": "Point a examiner", "it": "Punto da verificare",
+    },
+    "report_finding_why": {
+        "en": "Effect on compliance", "de": "Auswirkung auf die Konformitaet",
+        "fr": "Effet sur la conformite", "it": "Effetto sulla conformita",
+    },
+    "report_finding_why_blocking": {
+        "en": "The criterion was evaluated and a critical or high-severity deviation was found; it blocks a compliant conclusion until corrected.",
+        "de": "Das Kriterium wurde geprueft und eine kritische oder schwere Abweichung festgestellt; sie verhindert eine Konformitaetsaussage bis zur Korrektur.",
+        "fr": "Le critere a ete evalue et un ecart critique ou majeur a ete constate ; il bloque une conclusion conforme jusqu'a correction.",
+        "it": "Il criterio e stato valutato e presenta uno scostamento critico o grave; impedisce una conclusione conforme fino alla correzione.",
+    },
+    "report_finding_why_missing": {
+        "en": "The tool could not establish this point from auditable evidence. Missing evidence is never treated as a pass.",
+        "de": "Dieser Punkt konnte nicht anhand pruefbarer Nachweise beurteilt werden. Fehlende Nachweise gelten nie als bestanden.",
+        "fr": "L'outil ne peut pas etablir ce point a partir d'une preuve auditable. Une preuve manquante n'est jamais consideree comme conforme.",
+        "it": "Lo strumento non puo stabilire questo punto da prove verificabili. Una prova mancante non e mai considerata conforme.",
+    },
+    "report_finding_why_advisory": {
+        "en": "This point does not by itself block the decisive conclusion, but it remains a documented item to review.",
+        "de": "Dieser Punkt blockiert den entscheidenden Schluss nicht allein, bleibt aber dokumentiert und zu pruefen.",
+        "fr": "Ce point ne bloque pas a lui seul la conclusion decisive, mais reste un element documente a examiner.",
+        "it": "Questo punto non blocca da solo la conclusione decisiva, ma resta documentato e da verificare.",
+    },
+    "report_finding_observation": {
+        "en": "Finding", "de": "Feststellung", "fr": "Constat", "it": "Rilievo",
+    },
+    "report_finding_rule": {
+        "en": "Automated check", "de": "Automatische Pruefung", "fr": "Controle automatise", "it": "Controllo automatico",
+    },
+    "report_finding_limit": {
+        "en": "Limit / reference input", "de": "Grenz-/Referenzwert",
+        "fr": "Limite / valeur de reference", "it": "Limite / valore di riferimento",
+    },
+    "report_finding_target": {
+        "en": "Target value", "de": "Zielwert", "fr": "Valeur cible", "it": "Valore obiettivo",
+    },
+    "report_finding_source": {
+        "en": "Normative source", "de": "Normative Quelle", "fr": "Source normative", "it": "Fonte normativa",
+    },
+    "report_finding_model_data": {
+        "en": "Model data read", "de": "Gelesene Modelldaten", "fr": "Donnees lues dans le modele", "it": "Dati letti dal modello",
+    },
+    "report_finding_action": {
+        "en": "Required next action", "de": "Erforderliche naechste Massnahme",
+        "fr": "Action attendue", "it": "Azione richiesta",
+    },
+    "report_value_not_available": {
+        "en": "Not available in the analysed evidence", "de": "In den analysierten Nachweisen nicht verfuegbar",
+        "fr": "Non disponible dans les preuves analysees", "it": "Non disponibile nelle prove analizzate",
+    },
+    "report_reason_no_room_analysed": {
+        "en": "No usable thermal room was analysed; no building-level conclusion can be established.",
+        "de": "Es wurde kein nutzbarer thermischer Raum analysiert; eine Gebaeudeaussage ist nicht moeglich.",
+        "fr": "Aucun local thermique exploitable n'a ete analyse ; aucune conclusion a l'echelle du batiment ne peut etre etablie.",
+        "it": "Nessun locale termico utilizzabile e stato analizzato; non e possibile stabilire una conclusione per l'edificio.",
+    },
+    "report_reason_blocking_findings": {
+        "en": "One or more determined critical/high deviations were found in the assessed model domains.",
+        "de": "In den bewerteten Modellbereichen wurden kritische oder schwere Abweichungen festgestellt.",
+        "fr": "Un ou plusieurs ecarts critiques ou majeurs averes ont ete constates dans les domaines evalues du modele.",
+        "it": "Sono stati rilevati uno o piu scostamenti critici o gravi negli ambiti valutati del modello.",
+    },
+    "report_reason_global_comparison_contradicts_acceptance": {
+        "en": "The reviewed project value exceeds the reference value; reviewer acceptance cannot override the figures.",
+        "de": "Der gepruefte Projektwert uebersteigt den Referenzwert; die Freigabe kann die Zahlen nicht aufheben.",
+        "fr": "La valeur projet verifiee depasse la valeur de reference ; l'acceptation du relecteur ne peut pas primer sur les chiffres.",
+        "it": "Il valore di progetto verificato supera il riferimento; l'accettazione del revisore non puo prevalere sui dati.",
+    },
+    "report_reason_global_comparison_missing": {
+        "en": "The reviewed project/reference comparison required for the decisive SIA 380/2 conclusion is missing or incomplete.",
+        "de": "Der fuer den Entscheid nach SIA 380/2 erforderliche gepruefte Projekt-/Referenzvergleich fehlt oder ist unvollstaendig.",
+        "fr": "La comparaison projet/reference verifiee, necessaire a la conclusion decisive SIA 380/2, est absente ou incomplete.",
+        "it": "Il confronto progetto/riferimento verificato, necessario alla decisione SIA 380/2, e assente o incompleto.",
+    },
+    "report_reason_comparison_reviewed_no_blocker_with_reserves": {
+        "en": "The decisive comparison is reviewed and satisfied, with no determined blocker; incomplete component evidence remains explicitly reserved.",
+        "de": "Der entscheidende Vergleich ist geprueft und erfuellt; es gibt keinen festgestellten Blocker, unvollstaendige Detailnachweise bleiben als Vorbehalt sichtbar.",
+        "fr": "La comparaison decisive est verifiee et satisfaite, sans blocage avere ; les preuves partielles restent explicitement mentionnees en reserve.",
+        "it": "Il confronto decisivo e verificato e soddisfatto, senza blocchi accertati; le prove parziali restano indicate come riserva.",
+    },
+    "report_reason_comparison_reviewed_no_blocker": {
+        "en": "The decisive project/reference comparison is reviewed and satisfied, and no determined blocker was found.",
+        "de": "Der entscheidende Projekt-/Referenzvergleich ist geprueft und erfuellt; es wurde kein Blocker festgestellt.",
+        "fr": "La comparaison decisive projet/reference est verifiee et satisfaite, et aucun point bloquant avere n'a ete constate.",
+        "it": "Il confronto decisivo progetto/riferimento e verificato e soddisfatto e non e stato rilevato alcun blocco.",
+    },
+    "report_action_no_room_analysed": {
+        "en": "Open the intended VE project, confirm that thermal rooms are available, then rerun the complete analysis.",
+        "de": "Das vorgesehene VE-Projekt oeffnen, thermische Raeume pruefen und die vollstaendige Analyse erneut starten.",
+        "fr": "Ouvrir le bon projet VE, verifier la presence des locaux thermiques, puis relancer l'analyse complete.",
+        "it": "Aprire il progetto VE corretto, verificare i locali termici e rilanciare l'analisi completa.",
+    },
+    "report_action_blocking_findings": {
+        "en": "Correct every determined blocking finding listed below and rerun the assessment before issuing the report.",
+        "de": "Alle unten aufgefuehrten festgestellten Blocker korrigieren und die Beurteilung vor der Ausgabe erneut starten.",
+        "fr": "Corriger chaque point bloquant avere detaille ci-dessous, puis relancer l'evaluation avant emission du rapport.",
+        "it": "Correggere ogni rilievo bloccante riportato di seguito e rilanciare la valutazione prima dell'emissione.",
+    },
+    "report_action_global_comparison_contradicts_acceptance": {
+        "en": "Reconcile the project/reference figures, their units and column order, or withdraw the reviewer acceptance.",
+        "de": "Projekt-/Referenzwerte, Einheiten und Spaltenreihenfolge korrigieren oder die Freigabe zurueckziehen.",
+        "fr": "Concilier les valeurs projet/reference, leurs unites et l'ordre des colonnes, ou retirer l'acceptation du relecteur.",
+        "it": "Correggere i valori progetto/riferimento, le unita e l'ordine delle colonne, oppure ritirare l'accettazione.",
+    },
+    "report_action_global_comparison_missing": {
+        "en": "Provide an accepted reviewer record containing the project value, reference value, common unit, reviewer, date and calculation source.",
+        "de": "Einen akzeptierten Pruefnachweis mit Projektwert, Referenzwert, gemeinsamer Einheit, Pruefer, Datum und Berechnungsquelle bereitstellen.",
+        "fr": "Fournir un enregistrement accepte par le relecteur avec valeur projet, valeur de reference, unite commune, relecteur, date et source du calcul.",
+        "it": "Fornire un record accettato dal revisore con valore progetto, riferimento, unita comune, revisore, data e fonte del calcolo.",
+    },
+    "report_action_comparison_reviewed_no_blocker_with_reserves": {
+        "en": "The conclusion may be issued with the listed reserves; complete the missing component evidence for a fully documented file.",
+        "de": "Der Schluss kann mit den genannten Vorbehalten ausgegeben werden; fehlende Detailnachweise fuer eine vollstaendige Akte ergaenzen.",
+        "fr": "La conclusion peut etre emise avec les reserves indiquees ; completer les preuves manquantes pour un dossier entierement documente.",
+        "it": "La conclusione puo essere emessa con le riserve indicate; completare le prove mancanti per un fascicolo completo.",
+    },
+    "report_action_comparison_reviewed_no_blocker": {
+        "en": "Retain the reviewed comparison and the generated evidence package with the issued report.",
+        "de": "Den geprueften Vergleich und das erzeugte Nachweispaket mit dem Bericht archivieren.",
+        "fr": "Conserver la comparaison verifiee et le dossier de preuves genere avec le rapport emis.",
+        "it": "Conservare il confronto verificato e il pacchetto di prove generato con il rapporto emesso.",
+    },
+    "report_domain_reason_domain_not_evaluated": {
+        "en": "Domain not evaluated", "de": "Bereich nicht bewertet",
+        "fr": "Domaine non evalue", "it": "Ambito non valutato",
+    },
+    "report_domain_reason_blocking_findings": {
+        "en": "Determined blocking finding(s)", "de": "Festgestellte blockierende Abweichung(en)",
+        "fr": "Point(s) bloquant(s) avere(s)", "it": "Rilievo/i bloccante/i accertato/i",
+    },
+    "report_domain_reason_evidence_incomplete": {
+        "en": "Evidence incomplete", "de": "Nachweise unvollstaendig",
+        "fr": "Preuves incompletes", "it": "Prove incomplete",
+    },
+    "report_domain_reason_no_blocking_finding": {
+        "en": "No determined blocking finding", "de": "Kein festgestellter Blocker",
+        "fr": "Aucun point bloquant avere", "it": "Nessun blocco accertato",
     },
 }
 
