@@ -4,8 +4,11 @@ Un seul endroit pour tout ce qui attend une réponse extérieure. Rien ici n'est
 envoyé automatiquement : le registre existe pour qu'aucune question ne se perde
 et pour qu'un envoi groupé remplace trois courriels séparés.
 
-**État au 2026-08-13** : une réponse est déjà en attente sur un envoi antérieur.
-Rien ne part avant elle.
+**État au 2026-08-20** : décision projet — aucun achat de norme payante ne sera
+engagé. Les exigences qui dépendent exclusivement d'une norme absente restent
+explicitement `NOT_CHECKABLE`/`PARTIAL`; elles ne sont ni reconstituées ni
+présentées comme conformes. Une source sous licence fournie ultérieurement par
+IES ou par un réviseur pourra toujours être intégrée.
 
 ---
 
@@ -22,7 +25,7 @@ Chaque affirmation y est adossée à la cellule ou au fichier qui la prouve.
 | S3 | Signalement, pas une question : `Resultaterfassung Test7.xlsx`, feuille `Zusammenfassung`, cellules `W32` et `W33` portent `kW` dans la cellule de grandeur et `°C` sur la ligne d'unité. Seul bloc sur dix-sept où les deux divergent. | Rien de bloquant. Nous conservons les effectifs et laissons l'unité nulle. | oui, cellule par cellule |
 | S4 | Les fiches **SIA 2024** restantes que notre matrice exige : auditorium, bâtiment exemple, restaurant 6.2, cuisine 6.4. | Les Tests 3 à 6 sur ces catégories d'usage. La catégorie 3.1 est déjà en main et suffit à toute la chaîne 1A→1E. | oui |
 
-| S5 | Le **tableau 10** de SIA 387/4. Nous ne détenons que le **tableau 9**, fourni en captures par Yiqiao Yang (SIA) le 2026-08-04 — voir `refs/reference-data/sia-387-4-2017.blinds.json`. Et l'**édition** : nous avons reçu 387/4:**2017**, alors que SIA 4010:2023 §3.1.5 cite 387/4:**2023**. | L'entrée déléguée `sia3874_2017_tables9_10_controls`, donc les **douze cas du Test 3**. | oui, vérifié sur le fichier |
+| S5 | **CLOS — sans achat.** Le tableau 10 et l'édition 2023 de SIA 387/4 ne seront pas acquis par le projet. Nous conservons uniquement le tableau 9 de l'édition 2017 fourni par Yiqiao Yang — voir `refs/reference-data/sia-387-4-2017.blinds.json`. | Les **douze cas du Test 3** restent `NOT_CHECKABLE` tant qu'une liaison contrôlée sous licence n'est pas fournie par IES ou un réviseur. | décision projet 2026-08-20 |
 | S6 | **EN 16798-5-1 annexe D**, modèle de récupérateur rotatif. Absent du dépôt : ce n'est pas une transcription à faire, c'est un document que nous n'avons pas. Question d'acquisition ou de licence, peut-être répondable en interne chez IES. | L'entrée déléguée `en16798_5_1_annex_d_rotary_recovery_model`, donc les **quatre cas du Test 5**. | oui |
 | S7 | Pour la catégorie **SIA 2024 3.1**, quels jours sont les deux jours de repos hebdomadaires et comment les **261 jours d'utilisation** sont-ils placés dans l'année de calcul ? Les 24 fractions horaires sont connues, mais cette convention de calendrier ne figure pas dans l'extrait reçu. | Le graphe VE natif daily/weekly/yearly sans hypothèse inventée, nécessaire au Test 2A et à toute génération qui consomme directement ces profils. | oui |
 

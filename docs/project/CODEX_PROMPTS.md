@@ -141,7 +141,7 @@ Tests : selon l'issue. pytest.
 
 # Actions HORS CODE (à mener en parallèle)
 
-- **Acquérir les normes** (débloquent des checks, cf. CLIENT_MVP_IMPLEMENTATION_LIST §5) : SN EN 14825 (SEER/SCoP), SIA 2024:2021 Raumdatenblätter (gratuit sur sia.ch item=15143), SIA 387/4, SIA 180:2014 (complet), SIA 380 faîtière, SN EN 15316-2 / 16798-13. Une fois en main → figer les valeurs (skill /figer-reference) avec locator exact.
+- **Ne pas acheter de normes payantes** (décision projet du 2026-08-20). Les checks qui en dépendent restent `NOT_CHECKABLE`/`PARTIAL`, sans reconstruction. Si IES ou un réviseur fournit ultérieurement une source sous licence, figer uniquement les valeurs autorisées avec un locator exact. Les sources gratuites ou déjà détenues peuvent toujours être exploitées.
 - **Signature indépendante** des matrices de traçabilité SIA 4010 (qa-auditor) — condition « done » de chaque test.
 - **Qualification VE réelle** : rejouer les chemins de mutation/lecture dans une vraie VE (les tests actuels sont contre des doubles d'API ; API simulée ≠ qualification VE).
 

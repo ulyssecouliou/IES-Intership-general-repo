@@ -2,7 +2,7 @@
 
 ## Résumé exécutif
 
-La spécification d'entrée du **projet de référence SIA 380/2** est un composant Python automatisé qui prépare la comparaison décisive requise par `# SIA 380/2:2022 7.2.5.2` : conformité globale si la demande d'énergie du projet **est inférieure** à celle du projet de référence. Le composant est **fonctionnel, testé et livré** ; il produit une spécification déterministe des substitutions à appliquer (enveloppe, fenêtres, infiltration, génération, usage). **Huit des quatorze familles d'entrées sont automatisées** ; six restent bloquées, soit faute de norme fournie (`# SIA 380` pour l'agrégation globale), soit faute d'API pour les exposer (`# SIA 387/4` pour l'éclairage), soit par choix d'archi (sonde VE réelle requise pour la ventilation). **Deux blocages strictement exécutables en aval** barrent un verdict client : l'unité de l'indice global SIA 380 (en attente) et un constructeur de modèle de référence VE (distinct, exige VE réel).
+La spécification d'entrée du **projet de référence SIA 380/2** est un composant Python automatisé qui prépare la comparaison décisive requise par `# SIA 380/2:2022 7.2.5.2` : conformité globale si la demande d'énergie du projet **est inférieure** à celle du projet de référence. Le composant est **fonctionnel, testé et livré** ; il produit une spécification déterministe des substitutions à appliquer (enveloppe, fenêtres, infiltration, génération, usage). **Huit des quatorze familles d'entrées sont automatisées** ; six restent bloquées, soit faute de norme fournie (`# SIA 380` pour l'agrégation globale), soit faute d'API pour les exposer (`# SIA 387/4` pour l'éclairage), soit par choix d'archi (sonde VE réelle requise pour la ventilation). **Décision du 2026-08-20 : aucune norme payante ne sera achetée pour lever ces deux lacunes documentaires.** Les contrôles concernés restent donc hors verdict, sans valeur reconstruite. **Deux blocages strictement exécutables en aval** barrent un verdict client : la définition de l'indice global SIA 380 et un constructeur de modèle de référence VE (distinct, exige VE réel).
 
 ---
 
@@ -66,7 +66,7 @@ La spécification d'entrée du **projet de référence SIA 380/2** est un compos
 #### Éclairage (11)
 - **SIA 380/2:2022 Tableau 2, p.32-33** : pLi (puissance nominale éclairage) et contrôles (catégories 4/2, commandes 2/3) → **SIA 387/4**.
 - **Blocage** : norme **SIA 387/4 absente de `/refs`**. Table d'entrée éclairage non localisée.
-- **Débloqueur** : acquisition SIA 387/4 (édition actuelle, chargée en `/refs`, parsing des Tableaux 9-10).
+- **Décision projet (2026-08-20)** : pas d'achat. Cette famille reste `NOT_CHECKABLE`; seule une liaison contrôlée sous licence fournie par IES ou un réviseur pourrait la rouvrir.
 
 #### Ventilation (12)
 - **SIA 380/2:2022 Tableau 2 + Tableau 4, p.32-33 et p.37 ; `# 7.1.1` → SIA 382/1**.
@@ -81,7 +81,7 @@ La spécification d'entrée du **projet de référence SIA 380/2** est un compos
 #### Agrégation globale SIA 380 (14)
 - **SIA 380/2:2022 6.1.2** : « l'agrégation en valeurs annuelles et la pondération s'effectuent **selon SIA 380** » (norme absente).
 - **Blocage majeur** : **unité de l'indice de dépense d'énergie** (SIA 380/2:2022 6.1.4) non définie dans 380/2 (délégué SIA 380). Pas de kWh/m² fixe : c'est un indice pondéré calculé. Formule inconnue.
-- **Débloqueur** : acquisition SIA 380 (édition actuelle, chargée en `/refs`, extraction formule/pondérations).
+- **Décision projet (2026-08-20)** : pas d'achat. L'agrégation automatique reste hors périmètre; un indice complet, avec unité, source et visa du réviseur, peut toujours être importé par le chemin de preuve existant.
 
 ---
 
@@ -89,13 +89,13 @@ La spécification d'entrée du **projet de référence SIA 380/2** est un compos
 
 Le composant `swiss_sia/reference_project.py` produit une **spécification d'entrée**, jamais un verdict. Deux étapes aval restent **nécessaires** pour un verdict client exécutable :
 
-### Blocage 1 : Unité de l'indice SIA 380 [EN ATTENTE NORMATIF]
+### Blocage 1 : Unité de l'indice SIA 380 [HORS PÉRIMÈTRE D'ACQUISITION]
 
 **Description** : Le critère `# SIA 380/2:2022 7.2.5.2` compare deux indices : `indice_projet < indice_référence`. Ces deux indices sont construits per `# 6.1.4` (« indice de dépense d'énergie **selon SIA 380** »). Mais SIA 380 est **absente** (non fournie au 2026-08-14).
 
 **Impact** : Impossible d'exprimer le verdict en unité/échelle compréhensible (kWh/m²/an ? points ? classe de consommation ?). La comparaison numérique est exécutable en code, mais **non communicable** à un client sans unité.
 
-**Débloqueur** : Acquisition SIA 380 ; extraction formule d'agrégation/pondération. Task orthogonale au composant reference_project.
+**Traitement retenu** : ne pas calculer ni deviner cet indice. Accepter uniquement un résultat complet revu (métrique, périmètre, valeurs projet/référence, unité, source, réviseur et date) via le CSV de comparaison globale existant.
 
 ### Blocage 2 : Constructeur de modèle de référence VE [DÉPENDANCE ARCHITECTURE]
 
@@ -149,8 +149,8 @@ La spécification `reference_project.py` = étape 1 de 4. Jamais un verdict seul
 | **Obstacles API VEScripts** | **1** : ponts thermiques (ψ/χ non exposés). |
 | **Obstacles normatifs documentaires** | **2** : SIA 387/4 (éclairage) + SIA 380 (indice global) absentes. |
 | **Obstacles conception** | **3** : fg (grandeur projet non exposée — WWR ≠ Glasanteil) ; ventilation (sonde réelle) ; PV (sonde réelle). |
-| **Verdict client exécutable ?** | **NON** — 2 blocages aval : (1) unité SIA 380 en attente ; (2) VE-builder distinct requis. |
-| **Délai libération ?** | Dépend de (1) SIA 380 + (2) VE-builder + tests complets. Aucune dépendance technique sur reference_project.py. |
+| **Verdict client exécutable ?** | **NON** — 2 blocages aval : (1) indice SIA 380 hors acquisition, sauf preuve revue importée ; (2) VE-builder distinct requis. |
+| **Délai libération ?** | Dépend du VE-builder et, pour un verdict global, d'un indice complet fourni et visé extérieurement. Aucune dépendance technique sur reference_project.py. |
 
 ---
 
