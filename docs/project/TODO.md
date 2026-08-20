@@ -26,11 +26,8 @@ Modèle exemple `SIA_compatible_model_TEST` : **overall SIA 380/2 CONFORME (avec
 
 ### ⬜ Réserves du modèle client — détail (intérêt · quoi faire · qui · effort outil)
 
-- ⬜ **Ponts thermiques ψ/χ** (`NOT_AVAILABLE_IN_VE`)
-  - *Intérêt* : 10–30 % des déperditions ; intégrés au bilan SIA 380/2. VE n'expose aucune grandeur ψ/χ lisible.
-  - *Quoi faire* : calcul de ponts thermiques (catalogue SIA / Flixo/Therm) ; ingérer comme évidence relue.
-  - *Qui* : ingénieur physique du bâtiment / thermique.
-  - *Dev outil* : **ajouter un chemin d'ingestion ψ/χ** (CSV de jonctions : longueur, ψ, χ ponctuel, source) + contrôle `SIA3802_THERMAL_BRIDGES` (aujourd'hui placeholder `config.py:104`, `excel_report.py:4637`). **Je peux le faire.**
+- [x] ✅ **Ponts thermiques ψ/χ** — *ingestion faite* (`3a19a0c`) : CSV relecteur `SIA3802_thermal_bridges_<project>.csv` (méthode + total ψ.L+χ W/K OU référence de schéma + reviewer + source), scanné par `evidence_manager`, appliqué par `sia380_checker`, crédité en couverture ; capacité `EXTERNAL_EVIDENCE` → critère **OK** si évidence relue, sinon `NEEDS_REVIEWER_EVIDENCE`.
+  - *Reste côté utilisateur* : fournir le **calcul de ponts thermiques** (ingénieur physique du bâtiment) et le saisir dans le CSV.
 
 - ⬜ **Puissance de dimensionnement** (`NOT_AVAILABLE_IN_VE`, `config.py:1894` `NOT_IMPLEMENTED`)
   - *Intérêt* : SIA 380/2 prescrit les jours de dimensionnement (séquences chaud/froid après préconditionnement) ; ni pics annuels ni autosize ne s'y substituent.
