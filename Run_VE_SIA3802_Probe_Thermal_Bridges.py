@@ -1,22 +1,27 @@
-"""READ-ONLY probe: does the iesve API expose the per-construction thermal-bridge
-coefficient shown in Apache Construction Database Manager -> Project Constructions
--> Thermal Bridges (W/m2.K)?
+"""READ-ONLY probe: read the model's thermal bridges (psi / chi) via the
+surface-level iesve API and compute the building thermal-bridge conductance.
 
-Run this file from the IESVE Scripts window with the Run button, on the active
-project. It performs NO mutation and NO simulation. It:
-  1. collects every construction assigned to the model's surfaces and openings,
-  2. for each unique construction, dumps the raw VECdbConstruction.get_properties()
-     dict, the U-factors, and every non-callable attribute / zero-arg accessor,
-  3. highlights any key whose name looks like a thermal-bridge / psi / chi /
-     linear / y-value quantity, and prints its value + unit hint.
+An official IES 2025.2 script (thermal_bridging_report.py) revealed that thermal
+bridges are exposed on SURFACES, not constructions:
 
-Purpose: decide, from the REAL API on this VE (not an assumption), whether the
-thermal-bridge coefficient is machine-readable. If a readable member is found, we
-switch SIA3802_THERMAL_BRIDGES from reviewer-CSV evidence to a direct VE read
-(sum of coefficient x area, in W/K). If nothing is exposed, the reviewer CSV path
-stays -- populated from the values visible in this dialog.
+  surface.get_thermal_bridges_non_repeating() -> linear/opening junctions:
+      bd.type (iesve.ThermalBridge_NonRepType), bd.length [m],
+      bd.psi [W/(m.K)], bd.flux_factor
+  surface.get_thermal_bridges_random() -> point/random bridges:
+      bd.type (iesve.ThermalBridge_RandomType, incl. .point),
+      bd.dimension (length [m] for linear, count for point),
+      bd.transmittance (psi [W/(m.K)] for linear, chi [W/K] for point)
 
-Nothing here is written back. It only reads and prints.
+These are exactly the SIA 380/2 quantities (psi.L + chi, in W/K). This probe
+performs NO mutation and NO simulation. It:
+  1. capability-checks the two surface members on THIS VE version,
+  2. lists every non-none thermal bridge per room/surface with its psi/chi,
+  3. computes the building thermal-bridge conductance
+        H_tb = sum(psi * length * flux_factor) + sum(chi * count)   [W/K]
+
+Run it from the IESVE Scripts window with the Run button on the active project.
+Send me the output: if the members are present and return data, I wire a direct
+VE read of the SIA thermal-bridge term (no reviewer CSV needed).
 """
 
 from __future__ import annotations
@@ -29,226 +34,134 @@ PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
 
-# Name fragments that would indicate a thermal-bridge quantity. Use the STEM
-# "bridg" so both "bridge" and "bridging" match (the VE glazing key is
-# thermal_bridging_coefficient).
-_BRIDGE_HINTS = (
-    "bridg", "psi", "linear", "y_value", "yvalue", "y-value",
-    "junction", "tb_", "_tb", "point_transmit",
-)
 
-
-def _looks_like_bridge(name: str) -> bool:
-    lowered = str(name or "").lower()
-    return any(hint in lowered for hint in _BRIDGE_HINTS)
-
-
-def _safe(callable_or_value):
-    """Return a value, calling a zero-arg accessor defensively."""
+def _num(value):
     try:
-        if callable(callable_or_value):
-            return callable_or_value()
-        return callable_or_value
-    except Exception as exc:  # noqa: BLE001 - probe: report, never raise
-        return f"<error: {exc}>"
-
-
-def _dump_object(obj, label):
-    print(f"  --- raw dump of {label} ---")
-    # get_properties() dict is the most likely home of the coefficient.
-    if hasattr(obj, "get_properties"):
-        try:
-            props = obj.get_properties()
-            props = dict(props) if hasattr(props, "items") else props
-            print(f"  get_properties() -> {type(props).__name__}")
-            if isinstance(props, dict):
-                for key in sorted(props):
-                    marker = "  <-- BRIDGE?" if _looks_like_bridge(key) else ""
-                    print(f"      {key} = {props[key]!r}{marker}")
-        except Exception as exc:  # noqa: BLE001
-            print(f"  get_properties() failed: {exc}")
-    # Every non-dunder attribute / zero-arg accessor, flagged when name matches.
-    print("  attributes / accessors matching a thermal-bridge name:")
-    found_any = False
-    for name in sorted(dir(obj)):
-        if name.startswith("_"):
-            continue
-        if not _looks_like_bridge(name):
-            continue
-        found_any = True
-        print(f"      {name} -> {_safe(getattr(obj, name, None))!r}")
-    if not found_any:
-        print("      (none)")
-
-    # Try documented-looking candidate getters for an opaque thermal-bridge
-    # coefficient (the glazing key is thermal_bridging_coefficient; opaque may
-    # expose it under a method or a differently-named property).
-    candidates = (
-        "thermal_bridging_coefficient", "thermal_bridge_coefficient",
-        "get_thermal_bridging_coefficient", "get_thermal_bridge_coefficient",
-        "thermal_bridging", "thermal_bridges", "get_thermal_bridges",
-        "psi_value", "get_psi", "linear_thermal_transmittance",
-    )
-    printed_candidate = False
-    for name in candidates:
-        if hasattr(obj, name):
-            if not printed_candidate:
-                print("  candidate thermal-bridge members present:")
-                printed_candidate = True
-            print(f"      {name} -> {_safe(getattr(obj, name))!r}")
-    if not printed_candidate:
-        print("  candidate thermal-bridge members: (none present)")
+        return float(value)
+    except (TypeError, ValueError):
+        return None
 
 
 def run() -> None:
     try:
-        import iesve  # type: ignore  # noqa: F401
+        import iesve  # type: ignore
     except Exception as exc:  # noqa: BLE001
         raise RuntimeError("Run this launcher inside IESVE VEScripts.") from exc
 
-    de_module = importlib.reload(importlib.import_module("swiss_sia.data_extractor"))
-    project = importlib.import_module("iesve").VEProject.get_current_project()
+    project = iesve.VEProject.get_current_project()
     if not project:
         raise RuntimeError("Open a project first.")
-
-    extractor = de_module.VEDataExtractor(project)
+    models = project.models
+    if not models:
+        raise RuntimeError("The active project has no model.")
+    model = models[0]
 
     print("=" * 78)
-    print("READ-ONLY THERMAL-BRIDGE API PROBE (no mutation, no simulation)")
+    print("READ-ONLY THERMAL-BRIDGE PROBE (surface API; no mutation, no simulation)")
     print("=" * 78)
 
-    # 1. Collect every construction id assigned in the model.
-    construction_ids = []
-    seen = set()
-    for body in extractor.get_bodies():
-        for surface in extractor.get_surfaces(body):
-            for cid in extractor.get_constructions(surface) or []:
-                if cid and cid not in seen:
-                    seen.add(cid)
-                    construction_ids.append(cid)
-            for opening in extractor.get_openings(surface) or []:
-                cid = extractor.get_opening_construction(opening)
-                if cid and cid not in seen:
-                    seen.add(cid)
-                    construction_ids.append(cid)
-
-    print(f"Unique constructions assigned in the model: {len(construction_ids)}")
-    if not construction_ids:
-        print("No construction found. Open the client model first.")
+    # 1. Capability check on the documented surface members.
+    bodies = model.get_bodies_and_ids(False)
+    sample_surface = None
+    for body in bodies.values():
+        if getattr(body, "type", None) != iesve.VEBody_type.room:
+            continue
+        surfaces = body.get_surfaces()
+        if surfaces:
+            sample_surface = surfaces[0]
+            break
+    has_nonrep = bool(sample_surface is not None and hasattr(sample_surface, "get_thermal_bridges_non_repeating"))
+    has_random = bool(sample_surface is not None and hasattr(sample_surface, "get_thermal_bridges_random"))
+    print("Capability check (VESurface):")
+    print("  get_thermal_bridges_non_repeating:", "PRESENT" if has_nonrep else "ABSENT")
+    print("  get_thermal_bridges_random       :", "PRESENT" if has_random else "ABSENT")
+    if not (has_nonrep or has_random):
+        print("-" * 78)
+        print("RESULT: neither thermal-bridge member exists on this VE version.")
+        print("Keep the reviewer-CSV path. Tell me your IESVE version.")
         print("=" * 78)
         return
 
-    # 2. Resolve the raw CDB construction object for each id and dump it.
-    iesve = importlib.import_module("iesve")
-    classes = extractor._get_cdb_construction_classes(iesve)
-    classes.append(None)
-    cdb_projects = extractor._get_cdb_projects()
-    print(f"CDB projects available: {len(cdb_projects)}")
+    units = "metric" if project.get_display_units() == iesve.DisplayUnits.metric else "ip"
+    print("Display units:", units, "(psi expected in W/(m.K), chi in W/K when metric)")
 
-    any_bridge_key = False
-    for cid in construction_ids:
-        print("-" * 78)
-        print(f"Construction id: {cid}")
-        raw_obj = None
-        for cdb_project in cdb_projects:
-            for cls in classes:
-                raw_obj = extractor._safe_get_cdb_construction(cdb_project, cid, cls)
-                if raw_obj is not None:
-                    break
-            if raw_obj is not None:
-                break
-        if raw_obj is None:
-            print("  (could not resolve the raw CDB construction object)")
+    # 2 + 3. Enumerate every thermal bridge and accumulate the W/K conductance.
+    linear_conductance = 0.0   # sum(psi * length * flux_factor)
+    point_conductance = 0.0    # sum(chi * count)
+    linear_count = 0
+    point_count = 0
+    rooms_seen = 0
+
+    for body in bodies.values():
+        if getattr(body, "type", None) != iesve.VEBody_type.room:
             continue
-
-        # U-factors for context (so we can compare with any bridge uplift).
-        try:
-            uvalue_types = extractor._get_cdb_uvalue_types(iesve)
-            u_factors = {}
-            for name, value in uvalue_types:
+        rooms_seen += 1
+        for surface in body.get_surfaces():
+            # Non-repeating (linear + opening) bridges.
+            if has_nonrep:
                 try:
-                    u_factors[name] = raw_obj.get_u_factor(value)
-                except Exception:
-                    pass
-            print(f"  u_factors = {u_factors}")
-        except Exception as exc:  # noqa: BLE001
-            print(f"  u_factors read failed: {exc}")
-
-        _dump_object(raw_obj, f"VECdbConstruction {cid}")
-
-        # Did this construction expose any bridge-looking key?
-        try:
-            props = raw_obj.get_properties()
-            props = dict(props) if hasattr(props, "items") else {}
-        except Exception:
-            props = {}
-        if any(_looks_like_bridge(k) for k in props) or any(
-            _looks_like_bridge(n) for n in dir(raw_obj) if not n.startswith("_")
-        ):
-            any_bridge_key = True
-
-    # Full member list of the first OPAQUE construction, so a thermal-bridge
-    # method that does not match the hints is still visible for eyeballing.
-    print("-" * 78)
-    print("FULL member list of the first opaque construction (names only):")
-    first_opaque = None
-    for cid in construction_ids:
-        for cdb_project in cdb_projects:
-            for cls in classes:
-                obj = extractor._safe_get_cdb_construction(cdb_project, cid, cls)
-                if obj is None:
-                    continue
+                    nonrep = surface.get_thermal_bridges_non_repeating()
+                except Exception as exc:  # noqa: BLE001
+                    nonrep = []
+                    print("  [warn] non_repeating read failed:", exc)
+                for bd in nonrep:
+                    if getattr(bd, "type", None) == iesve.ThermalBridge_NonRepType.none:
+                        continue
+                    psi = _num(getattr(bd, "psi", None))
+                    length = _num(getattr(bd, "length", None))
+                    flux = _num(getattr(bd, "flux_factor", None))
+                    flux = 1.0 if flux is None else flux
+                    contrib = None
+                    if psi is not None and length is not None:
+                        contrib = psi * length * flux
+                        linear_conductance += contrib
+                        linear_count += 1
+                    print("  [{}] {} | {} : psi={} W/mK, L={} m, flux={} -> {} W/K".format(
+                        body.name, str(getattr(surface, "type", "")), str(getattr(bd, "type", "")),
+                        psi, length, flux,
+                        round(contrib, 4) if contrib is not None else "?"))
+            # Random (point + random-linear) bridges.
+            if has_random:
                 try:
-                    props = obj.get_properties()
-                    cat = str((dict(props) if hasattr(props, "items") else {}).get("category", ""))
-                except Exception:
-                    cat = ""
-                if "glazing" not in cat.lower() and "window" not in cat.lower():
-                    first_opaque = obj
-                    break
-            if first_opaque is not None:
-                break
-        if first_opaque is not None:
-            break
-    if first_opaque is not None:
-        names = [n for n in sorted(dir(first_opaque)) if not n.startswith("_")]
-        print("  ", names)
-    else:
-        print("  (no opaque construction resolved)")
+                    randoms = surface.get_thermal_bridges_random()
+                except Exception as exc:  # noqa: BLE001
+                    randoms = []
+                    print("  [warn] random read failed:", exc)
+                for bd in randoms:
+                    btype = getattr(bd, "type", None)
+                    transmittance = _num(getattr(bd, "transmittance", None))
+                    dimension = _num(getattr(bd, "dimension", None))
+                    is_point = (btype == iesve.ThermalBridge_RandomType.point)
+                    contrib = None
+                    if transmittance is not None and dimension is not None:
+                        contrib = transmittance * dimension
+                        if is_point:
+                            point_conductance += contrib
+                            point_count += 1
+                        else:
+                            linear_conductance += contrib
+                            linear_count += 1
+                    kind = "chi(point)" if is_point else "psi(random-linear)"
+                    print("  [{}] {} | {} : {}={}, dim={} -> {} W/K".format(
+                        body.name, str(getattr(surface, "type", "")), str(btype),
+                        kind, transmittance, dimension,
+                        round(contrib, 4) if contrib is not None else "?"))
 
-    # Project-level thermal-bridge collections (some VE versions keep junction
-    # psi lists on the CDB project / model, not on the construction).
+    total = linear_conductance + point_conductance
     print("-" * 78)
-    print("Project/model members matching a thermal-bridge name:")
-    project_hits = False
-    for holder_label, holder in (
-        ("VEProject", project),
-        ("VEModel", getattr(extractor, "model", None)),
-    ):
-        if holder is None:
-            continue
-        for name in sorted(dir(holder)):
-            if not name.startswith("_") and _looks_like_bridge(name):
-                project_hits = True
-                print(f"      {holder_label}.{name} -> {_safe(getattr(holder, name, None))!r}")
-    for cdb_project in cdb_projects[:1]:
-        for name in sorted(dir(cdb_project)):
-            if not name.startswith("_") and _looks_like_bridge(name):
-                project_hits = True
-                print(f"      VECdbProject.{name} -> {_safe(getattr(cdb_project, name, None))!r}")
-    if not project_hits:
-        print("      (none)")
-
+    print("Rooms scanned:", rooms_seen)
+    print("Linear/opening bridges:", linear_count,
+          "-> sum(psi.L.flux) =", round(linear_conductance, 4), "W/K")
+    print("Point bridges:", point_count,
+          "-> sum(chi.count) =", round(point_conductance, 4), "W/K")
+    print("BUILDING THERMAL-BRIDGE CONDUCTANCE H_tb =", round(total, 4), "W/K")
     print("=" * 78)
-    if any_bridge_key:
-        print("RESULT: a thermal-bridge member IS exposed by the API (see flagged")
-        print("keys above, e.g. thermal_bridging_coefficient on glazing).")
-        print("Send me: (1) is the Thermal Bridges tab on GLAZING or on OPAQUE walls?")
-        print("(2) the value shown there, and (3) whether it appears above. If opaque")
-        print("thermal bridges are NOT exposed, we keep the reviewer-CSV for those.")
+    if linear_count == 0 and point_count == 0:
+        print("RESULT: the members exist but the model carries NO thermal bridge")
+        print("(all zero / none). Enter junctions in VE, or supply the reviewer CSV.")
     else:
-        print("RESULT: NO thermal-bridge member exposed by the documented API here.")
-        print("The reviewer-CSV path stays; populate it from the Thermal Bridges tab.")
+        print("RESULT: VE exposes real psi/chi thermal bridges. Send me this output;")
+        print("I will wire a direct VE read of H_tb (W/K) for SIA3802_THERMAL_BRIDGES.")
     print("=" * 78)
 
 
