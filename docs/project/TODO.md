@@ -70,12 +70,12 @@ Modèle exemple `SIA_compatible_model_TEST` : **overall SIA 380/2 CONFORME (avec
 - [x] ✅ **A2** — scores de catégorie honnêtes : NOT_CHECKABLE plafonne à 60 (`9cc68fc`).
 - [x] ✅ **A1** — indicateur de tête renommé « couverture (diagnostic, ≠ conformité) » + verdict affiché en tête (porte-conscient).
 - [x] ✅ **A4 (norm-analyst) — porte décisive vs exigences autonomes §7.1** : §7.2.5.2 décisive + entrées Tableau 2 = réserves légitimes ; exigences **autonomes §7.1** gatées (forcent `NOT_DETERMINED` si non vérifiées) : ventilation + été (`677b3dd`) + **contrôle protection solaire §7.1.2.2-5** (`7e88404`). Décision produit assumée (COMPLIANT plus rare). Détail : `traceability/audit-A4-verdict-porte-decisive-sia3802.md`.
-- [x] ✅ **§7.2.4 (puissance électrique requise)** — implémenté (`11e3808`) : seuils 7 W/m² (neuf) / 12 W/m² (existant) sourcés §7.2.4.2 p32 ; voie relecteur `SIA3802_electrical_power_<projet>.csv` (puissance de dimensionnement, VE ne l'expose pas) ; checker compare + diagnostic si dépassement. ⬜ *Reste* : **[PENDING norm-analyst]** — un dépassement doit-il **bloquer** le verdict (gate) quand le refroidissement est présent ?
+- [x] ✅ **§7.2.4 (puissance électrique requise)** — implémenté + **gate tranché norm-analyst A5** (`11e3808`, `3d6d790`) : porte **autonome conditionnelle**. Seuils 7/12 W/m² (§7.2.4.2 p32). Dépassement + froid **souhaitable** → NON_COMPLIANT ; froid **nécessaire** → non bloquant ; catégorie indéterminée / puissance non fournie → NOT_DETERMINED ; sans installation → NOT_APPLICABLE. Voie relecteur `SIA3802_electrical_power_<projet>.csv` (+ `cooling_category`). Détail : `traceability/audit-A5-...md`.
 - ⬜ **Ponts thermiques `NOT_AVAILABLE`** : corrompent la valeur projet de la comparaison → au cas par cas via attestation relecteur (le CSV global doit confirmer leur intégration).
 
 ### 🔶 À faire valider (indépendant)
-- 🔶 **norm-analyst** : (a) ✅ porte décisive §7.2.5.2 + exigences autonomes §7.1 (rendu 2026-08-20) ; (b) définition de **T° opérative** SIA 180 + fenêtre θrm + Fig.3 ; (c) variantes fenêtre Test 2 / critères SIA 4010 Tests 2-7 ; (d) **§7.2.4 : gate ou diagnostic** quand refroidissement présent.
-- 🔶 **qa-auditor** : ✅ lot indicateurs+verdict A1-A4 **SIGNÉ** (`traceability/audit-lot-A1-A4-verification-2026-08-21.matrix.md`) ; reste : signer §7.2.4 + le reste avant « done » commercial.
+- 🔶 **norm-analyst** : (a) ✅ porte décisive §7.2.5.2 + exigences autonomes §7.1 (2026-08-20) ; (b) définition de **T° opérative** SIA 180 + fenêtre θrm + Fig.3 ; (c) variantes fenêtre Test 2 / critères SIA 4010 Tests 2-7 ; (d) ✅ **§7.2.4 porte conditionnelle** (A5, 2026-08-21).
+- 🔶 **qa-auditor** : ✅ lot indicateurs+verdict A1-A4 **SIGNÉ** (`audit-lot-A1-A4-...matrix.md`) ; ⬜ reste : signer **§7.2.4** (A5) avant « done » commercial.
 - 🔶 **Qualification VE réelle** : capability-check + readback par valeur (au-delà du fonctionnel prouvé).
 
 ---
