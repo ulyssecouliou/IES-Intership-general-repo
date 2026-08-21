@@ -292,7 +292,7 @@ class RenderTests(unittest.TestCase):
         out = Path(__file__).with_name("_sia_dashboard_clear.html")
         sia3802 = {
             "envelope": {}, "openings": {}, "ventilation": {}, "gains": {},
-            "setpoints": {}, "hvac": {}, "alerts": [],
+            "setpoints": {}, "hvac": {}, "dynamic": {}, "alerts": [],
             "global_reference_comparison": {"status": "REVIEWED_RESULT_AVAILABLE"},
         }
         try:

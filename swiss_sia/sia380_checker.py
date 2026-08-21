@@ -350,6 +350,12 @@ class SIA3802Checker:
         ventilation_control_record = find_accepted_ventilation_control(
             ventilation_control_scan, project_label or ""
         )
+        self._reviewer_ventilation_controls = list(
+            ventilation_control_scan.get("accepted_records", []) or []
+        )
+        applied_ventilation_evidence = self._apply_reviewed_ventilation_controls(
+            rooms_data
+        )
 
         # Solar protection (Table 10) documented outside VE: reviewed rows carry
         # the shading type + g_total with shading. The reviewed window count is
@@ -423,6 +429,10 @@ class SIA3802Checker:
                 "status": ventilation_control_scan.get("status"),
                 "accepted": bool(ventilation_control_record),
                 "record": ventilation_control_record,
+                "records": list(
+                    ventilation_control_scan.get("accepted_records", []) or []
+                ),
+                "applied_room_count": applied_ventilation_evidence,
             },
             "solar_protection_evidence": {
                 "status": solar_protection_scan.get("status"),
@@ -794,6 +804,125 @@ class SIA3802Checker:
             "score": self._calculate_category_score("Openings"),
         }
 
+    def _apply_reviewed_ventilation_controls(
+        self,
+        rooms_data: List[RoomData],
+    ) -> int:
+        """Apply accepted Table-4 records only when their scope and band reconcile."""
+        records = list(getattr(self, "_reviewer_ventilation_controls", []) or [])
+        if not records:
+            return 0
+        system_ids = {
+            str(system.get("id") or "").strip().lower()
+            for room in rooms_data
+            for system in (getattr(room, "hvac_systems", []) or [])
+            if isinstance(system, dict) and system.get("id")
+        }
+        applied = 0
+        for room in rooms_data:
+            room_system_ids = {
+                str(system.get("id") or "").strip().lower()
+                for system in (getattr(room, "hvac_systems", []) or [])
+                if isinstance(system, dict) and system.get("id")
+            }
+            room_scope_keys = {
+                str(getattr(room, "id", "") or "").strip().lower(),
+                str(getattr(room, "name", "") or "").strip().lower(),
+                str((getattr(room, "hvac_zone", {}) or {}).get("id") or "").strip().lower(),
+                str((getattr(room, "hvac_zone", {}) or {}).get("name") or "").strip().lower(),
+            }
+            room_scope_keys.discard("")
+            matches = []
+            for record in records:
+                record_system = str(record.get("system_id") or "").strip().lower()
+                record_scope = str(record.get("room_or_zone") or "").strip().lower()
+                if record_scope:
+                    if record_scope in room_scope_keys and (
+                        not record_system or record_system in room_system_ids
+                    ):
+                        matches.append(record)
+                elif record_system and record_system in room_system_ids:
+                    matches.append(record)
+                elif (
+                    not record_system
+                    and not record_scope
+                    and len(records) == 1
+                    and len(system_ids) <= 1
+                ):
+                    matches.append(record)
+
+            if len(matches) != 1:
+                if len(matches) > 1:
+                    self.rule_engine.add_alert(
+                        rule="SIA3802_VENTILATION_EVIDENCE_SCOPE_AMBIGUOUS",
+                        description=(
+                            f"Room {room.name or room.id} matches more than one accepted "
+                            "ventilation-control record."
+                        ),
+                        severity=Severity.MEDIUM,
+                        category="Ventilation",
+                        recommendation=(
+                            "Use unique system_id or room_or_zone values in the ventilation evidence CSV."
+                        ),
+                        data=room,
+                    )
+                continue
+
+            record = matches[0]
+            ve_airflow = self._float_or_none(
+                getattr(room, "ventilation_m3_h_m2", None)
+            )
+            evidence_airflow = self._float_or_none(
+                record.get("specific_airflow_m3_h_m2_numeric")
+            )
+            record_band = str(record.get("airflow_band_normalized") or "")
+            ve_band = self._ventilation_band(ve_airflow) if ve_airflow is not None else ""
+            if ve_band and record_band and ve_band != record_band:
+                self.rule_engine.add_alert(
+                    rule="SIA3802_VENTILATION_EVIDENCE_AIRFLOW_MISMATCH",
+                    description=(
+                        f"Room {room.name or room.id} is in VE airflow band {ve_band} "
+                        f"({ve_airflow:.3g} m3/(h.m2)), while the accepted ventilation "
+                        f"record states band {record_band}."
+                    ),
+                    severity=Severity.MEDIUM,
+                    category="Ventilation",
+                    recommendation=(
+                        "Reconcile the VE design airflow and reviewed Table-4 record before validation."
+                    ),
+                    data=room,
+                )
+                continue
+            if ve_airflow is None:
+                if evidence_airflow is None:
+                    continue
+                room.ventilation_m3_h_m2 = evidence_airflow
+                room.ventilation_rate = evidence_airflow
+                room.ventilation_unit = "m3/(h.m2)"
+                room.ventilation_normalization_method = "reviewer-accepted design airflow"
+                room.ventilation_source = str(
+                    record.get("source_document")
+                    or record.get("source_reference")
+                    or "reviewed ventilation evidence"
+                )
+                room.mechanical_ventilation_present = True
+
+            room.ventilation_installation_type = str(
+                record.get("system_type_normalized") or ""
+            )
+            room.ventilation_installation_type_status = "REVIEWER_ACCEPTED"
+            room.ventilation_installation_type_placeholder = ""
+            room.ventilation_control = str(record.get("control_class") or "")
+            room.ventilation_control_level = int(record["control_level_numeric"])
+            room.ventilation_control_level_status = "REVIEWER_ACCEPTED"
+            room.ventilation_control_level_placeholder = ""
+            room.ventilation_control_evidence_note = (
+                "Reviewer-accepted SIA 380/2 Table 4 evidence: "
+                f"{record.get('file', record.get('source_document', ''))}"
+            )
+            applied += 1
+        return applied
+
     def _check_ventilation(self, rooms_data: List[RoomData]) -> Dict[str, Any]:
         """Check ventilation and infiltration evidence."""
         if not rooms_data:
@@ -823,13 +952,25 @@ class SIA3802Checker:
                     ),
                     data=room,
                 )
-            if room.ventilation_rate is not None:
+            mechanical_present = getattr(room, "mechanical_ventilation_present", None)
+            if mechanical_present is False:
+                # Source-traced air exchanges contain no auxiliary ventilation;
+                # Table 4 mechanical-control classification is not applicable.
+                pass
+            elif room.ventilation_rate is not None:
                 self.rule_engine.check_rules(["SIA3802_VENTILATION_RATE"], room)
                 ventilation_m3_h_m2 = getattr(room, "ventilation_m3_h_m2", None)
                 if ventilation_m3_h_m2 is None:
+                    raw_evidence = list(
+                        getattr(room, "air_exchange_evidence", []) or []
+                    )
                     self.rule_engine.add_alert(
                         rule="SIA3802_VENTILATION_UNIT_NOT_COMPARABLE",
-                        description=f"Ventilation rate is present for room {room.name or room.id}, but it is not normalized to m3/(h.m2).",
+                        description=(
+                            f"Ventilation rate is present for room {room.name or room.id}, "
+                            "but it is not normalized to m3/(h.m2). "
+                            f"VE evidence: {raw_evidence!r}"
+                        ),
                         severity=Severity.LOW,
                         category="Ventilation",
                         recommendation="Export or convert outdoor airflow per floor area to select the applicable SIA 380/2 table 4 band.",
@@ -851,7 +992,9 @@ class SIA3802Checker:
                             description=(
                                 f"Ventilation rate {ventilation_m3_h_m2:.3g} m3/(h.m2) "
                                 f"for room {room.name or room.id}; table 4 band: {band}. "
-                                "The installation type or comparable control strategy could not be extracted."
+                                "The installation type or comparable control strategy could not be proven. "
+                                f"Available VE control context: "
+                                f"{getattr(room, 'ventilation_control_evidence_note', '') or 'none'}"
                             ),
                             severity=Severity.LOW,
                             category="Ventilation",
@@ -861,7 +1004,12 @@ class SIA3802Checker:
             else:
                 self.rule_engine.add_alert(
                     rule="SIA3802_VENTILATION_RATE_MISSING",
-                    description=f"Ventilation rate is not available for room {room.name or room.id}.",
+                    description=(
+                        f"Mechanical ventilation for room {room.name or room.id} cannot be "
+                        "excluded or quantified from a usable room design rate. "
+                        f"VE air/system evidence: "
+                        f"{getattr(room, 'air_exchange_evidence', [])!r}"
+                    ),
                     severity=Severity.MEDIUM,
                     category="Ventilation",
                     recommendation="Check VE air exchanges and units to document the ventilation rate.",

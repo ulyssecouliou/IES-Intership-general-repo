@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import csv
 import re
 import unicodedata
 from pathlib import Path
@@ -103,6 +104,108 @@ def print_preparation_summary(result: Dict[str, Any]) -> None:
     )
     for item in result.get("files", []):
         print(f"- {item.get('status')}: {item.get('target')}")
+
+
+def prefill_ventilation_control_evidence(
+    rooms_data: Any,
+    project_root: Path = PROJECT_ROOT,
+    project_label: Optional[str] = None,
+) -> Dict[str, Any]:
+    """Replace only the untouched ventilation placeholder with VE inventory rows.
+
+    The generated rows remain ``pending`` and cannot validate compliance until a
+    reviewer supplies their name/date and confirms the canonical Table-4 class.
+    Existing user-edited evidence is never overwritten.
+    """
+    root = Path(project_root).resolve()
+    label = _safe_filename_part(project_label or "VE_Project")
+    target = root / SIA4010_EVIDENCE_DIR / (
+        "SIA3802_ventilation_control_{}.csv".format(label)
+    )
+    if not target.is_file():
+        return {"status": "MISSING", "file": str(target), "row_count": 0}
+    try:
+        with target.open("r", encoding="utf-8-sig", newline="") as handle:
+            existing = list(csv.DictReader(handle))
+    except Exception as exc:
+        return {"status": "ERROR", "file": str(target), "error": str(exc), "row_count": 0}
+    if not existing:
+        return {"status": "EMPTY", "file": str(target), "row_count": 0}
+    placeholder = existing[0]
+    untouched = (
+        len(existing) == 1
+        and str(placeholder.get("review_status") or "").strip().lower() == "pending"
+        and (
+            "VE_APACHE_SYSTEM_ID" in str(placeholder.get("system_id") or "")
+            or "REVIEWER_NAME" in str(placeholder.get("reviewer") or "")
+        )
+    )
+    if not untouched:
+        return {"status": "PRESERVED", "file": str(target), "row_count": len(existing)}
+
+    fieldnames = list(placeholder.keys())
+    generated: List[Dict[str, Any]] = []
+    control_class_by_level = {
+        0: "one_speed_time_schedule",
+        1: "two_speeds_time_schedule",
+    }
+    for room in list(rooms_data or []):
+        if getattr(room, "mechanical_ventilation_present", None) is not True:
+            continue
+        systems = [
+            system
+            for system in (getattr(room, "hvac_systems", []) or [])
+            if isinstance(system, dict)
+        ] or [{}]
+        for system in systems:
+            airflow = getattr(room, "ventilation_m3_h_m2", None)
+            try:
+                airflow_number = float(airflow) if airflow is not None else None
+            except (TypeError, ValueError):
+                airflow_number = None
+            band = ""
+            if airflow_number is not None:
+                band = "<=3" if airflow_number <= 3 else ("3-6" if airflow_number <= 6 else ">6")
+            profiles = sorted({
+                str(item.get("variation_profile") or "")
+                for item in (getattr(room, "air_exchange_evidence", []) or [])
+                if isinstance(item, dict) and item.get("variation_profile")
+            })
+            level = getattr(room, "ventilation_control_level", None)
+            row = {name: "" for name in fieldnames}
+            row.update({
+                "project_id": label,
+                "system_id": str(system.get("id") or ""),
+                "room_or_zone": str(getattr(room, "id", "") or getattr(room, "name", "") or ""),
+                "system_type": str(getattr(room, "ventilation_installation_type", "") or ""),
+                "control_class": control_class_by_level.get(level, ""),
+                "airflow_band": band,
+                "specific_airflow_m3_h_m2": "" if airflow_number is None else "{:.6g}".format(airflow_number),
+                "unit": "m3/(h.m2)",
+                "air_flow_control": str(system.get("air_flow_control") or ""),
+                "fan_control": str(system.get("fan_control") or ""),
+                "demand_sensor": str(system.get("demand_controlled_ventilation") or ""),
+                "control_scope": "room" if getattr(room, "hvac_zone", None) else "system",
+                "time_schedule": " | ".join(profiles),
+                "review_status": "pending",
+                "source_document": "IESVE model readback; reviewer confirmation required",
+                "source_reference": (
+                    "VERoomData.get_air_exchanges/get_apache_systems; "
+                    "VEApacheSystem ventilation_ncm/system_controls_ncm"
+                ),
+                "notes": str(getattr(room, "ventilation_control_evidence_note", "") or ""),
+            })
+            generated.append(row)
+    if not generated:
+        return {"status": "NO_MECHANICAL_ROOMS", "file": str(target), "row_count": 0}
+    try:
+        with target.open("w", encoding="utf-8", newline="") as handle:
+            writer = csv.DictWriter(handle, fieldnames=fieldnames, extrasaction="ignore")
+            writer.writeheader()
+            writer.writerows(generated)
+    except Exception as exc:
+        return {"status": "ERROR", "file": str(target), "error": str(exc), "row_count": 0}
+    return {"status": "PREFILLED", "file": str(target), "row_count": len(generated)}
 
 
 def _detect_ve_project_label() -> str:

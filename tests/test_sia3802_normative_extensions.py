@@ -441,6 +441,77 @@ class CheckerBehaviorTests(unittest.TestCase):
             ["SIA3802_VENTILATION_CONTROL_EVIDENCE_MISSING"],
         )
 
+    def test_reviewed_ventilation_record_is_applied_only_when_band_matches(self):
+        checker, _ = self._new_checker()
+        checker._reviewer_ventilation_controls = [{
+            "system_id": "SYS-1",
+            "room_or_zone": "",
+            "system_type_normalized": "monozone",
+            "control_class": "two_speeds_time_schedule",
+            "control_level_numeric": 1,
+            "airflow_band_normalized": "3-6",
+            "specific_airflow_m3_h_m2_numeric": 4.0,
+            "source_document": "ventilation_design.pdf",
+        }]
+        room = RoomData(
+            id="R1",
+            ventilation_rate=4.0,
+            ventilation_m3_h_m2=4.0,
+            mechanical_ventilation_present=True,
+            hvac_systems=[{"id": "SYS-1"}],
+        )
+
+        applied = checker._apply_reviewed_ventilation_controls([room])
+
+        self.assertEqual(applied, 1)
+        self.assertEqual(room.ventilation_installation_type, "monozone")
+        self.assertEqual(room.ventilation_control_level, 1)
+        self.assertEqual(room.ventilation_control_level_status, "REVIEWER_ACCEPTED")
+
+    def test_natural_ventilation_does_not_raise_mechanical_rate_missing(self):
+        checker, engine = self._new_checker()
+        room = RoomData(
+            id="R1",
+            mechanical_ventilation_present=False,
+            air_exchange_classification_status="OK",
+            infiltration_m3_h_m2=0.15,
+        )
+
+        checker._check_ventilation([room])
+
+        self.assertNotIn(
+            "SIA3802_VENTILATION_RATE_MISSING",
+            [alert.rule for alert in engine.get_alerts_by_category("Ventilation")],
+        )
+
+    def test_room_scope_disambiguates_records_on_the_same_system(self):
+        checker, _ = self._new_checker()
+        base = {
+            "system_id": "SYS-1",
+            "system_type_normalized": "monozone",
+            "control_class": "one_speed_time_schedule",
+            "control_level_numeric": 0,
+            "airflow_band_normalized": "<=3",
+            "specific_airflow_m3_h_m2_numeric": 2.0,
+            "source_document": "ventilation_design.pdf",
+        }
+        checker._reviewer_ventilation_controls = [
+            dict(base, room_or_zone="R1"),
+            dict(base, room_or_zone="R2"),
+        ]
+        rooms = [
+            RoomData(
+                id=room_id,
+                ventilation_rate=2.0,
+                ventilation_m3_h_m2=2.0,
+                mechanical_ventilation_present=True,
+                hvac_systems=[{"id": "SYS-1"}],
+            )
+            for room_id in ("R1", "R2")
+        ]
+
+        self.assertEqual(checker._apply_reviewed_ventilation_controls(rooms), 2)
+
     def test_cooling_need_screening_statuses(self):
         cases = (
             (121.0, "no_window_support", "NECESSARY"),

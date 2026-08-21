@@ -843,6 +843,7 @@ def _draw_detailed_pages(
     verdict: ComplianceVerdict,
     sia3802_results: Optional[Dict[str, Any]],
     language: str,
+    rooms_data: Optional[Sequence[Any]] = None,
 ) -> List[PdfPage]:
     """Add a paginated decision rationale and every SIA 380/2 finding."""
 
@@ -953,6 +954,81 @@ def _draw_detailed_pages(
         )
         cursor += 9.5
     cursor += 4.0
+
+    # Ventilation is an essential evidence gate.  Show what VE actually proved,
+    # even when no alert exists because every applicable room passed.
+    rooms = list(rooms_data or [])
+    mechanical_rooms = [
+        room for room in rooms
+        if getattr(room, "mechanical_ventilation_present", None) is True
+    ]
+    normalized_rooms = [
+        room for room in mechanical_rooms
+        if _float_or_none(getattr(room, "ventilation_m3_h_m2", None)) is not None
+    ]
+    controlled_rooms = [
+        room for room in mechanical_rooms
+        if getattr(room, "ventilation_installation_type", None)
+        and getattr(room, "ventilation_control_level", None) is not None
+    ]
+    reviewed_rooms = [
+        room for room in controlled_rooms
+        if str(getattr(room, "ventilation_control_level_status", "") or "")
+        == "REVIEWER_ACCEPTED"
+    ]
+    airflow_values = [
+        _float_or_none(getattr(room, "ventilation_m3_h_m2", None))
+        for room in normalized_rooms
+    ]
+    airflow_values = [value for value in airflow_values if value is not None]
+    cursor = _detail_section_header(
+        page, cursor, "report_ventilation_evidence_title", language
+    )
+    airflow_range = translate("report_value_not_available", language)
+    if airflow_values:
+        airflow_range = "{:.3g} - {:.3g} m3/(h.m2)".format(
+            min(airflow_values), max(airflow_values)
+        )
+    ventilation_rows = (
+        (
+            "report_ventilation_rooms",
+            "{} / {} (unknown: {})".format(
+                len(mechanical_rooms),
+                len(rooms),
+                sum(
+                    1
+                    for room in rooms
+                    if getattr(room, "mechanical_ventilation_present", None) is None
+                ),
+            ),
+        ),
+        (
+            "report_ventilation_airflow",
+            "{} / {}".format(len(normalized_rooms), len(mechanical_rooms)),
+        ),
+        (
+            "report_ventilation_control",
+            "{} / {} (reviewed: {})".format(
+                len(controlled_rooms), len(mechanical_rooms), len(reviewed_rooms)
+            ),
+        ),
+        ("report_ventilation_range", airflow_range),
+    )
+    cell_width = CONTENT_WIDTH / 2.0
+    for index, (label_key, value) in enumerate(ventilation_rows):
+        x = MARGIN + (index % 2) * cell_width
+        y = cursor + (index // 2) * 10.0
+        page.rect(x, y, cell_width - 2.0, 8.0, fill=PANEL)
+        page.text(x + 3.0, y + 3.2, translate(label_key, language), size_pt=6.3, colour=MUTED)
+        page.text(
+            x + 3.0,
+            y + 6.5,
+            truncate_to_width(str(value), 7.2, cell_width - 8.0),
+            size_pt=7.2,
+            bold=True,
+            colour=INK,
+        )
+    cursor += 24.0
 
     cursor = _detail_section_header(page, cursor, "report_findings_title", language)
     if not alerts:
@@ -1216,7 +1292,9 @@ def render_compliance_report_pdf(
     _draw_signature(page, cursor, office, code)
     ies_logo = _resolve_ies_logo(project_root)
 
-    _draw_detailed_pages(document, office, verdict, sia3802_results, code)
+    _draw_detailed_pages(
+        document, office, verdict, sia3802_results, code, rooms_data=rooms
+    )
     _draw_annex_page(document, office, verdict, code, report_scope)
     total_pages = len(document.pages)
     for page_number, report_page in enumerate(document.pages, 1):

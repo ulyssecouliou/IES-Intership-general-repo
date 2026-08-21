@@ -273,6 +273,26 @@ class VerdictEngineTests(unittest.TestCase):
         )
         self.assertIn("sia3802_domain_evidence", verdict.outstanding)
 
+    def test_missing_essential_ventilation_evidence_downgrades_to_not_determined(self):
+        verdict = build_compliance_verdict(
+            self._sia3802(
+                alerts=[
+                    _Alert(
+                        "Ventilation",
+                        "MEDIUM",
+                        rule="SIA3802_VENTILATION_RATE_MISSING",
+                    )
+                ],
+                comparison_status="REVIEWED_RESULT_AVAILABLE",
+            ),
+            {},
+            rooms_analysed=3,
+        )
+
+        self.assertEqual(verdict.sia3802_status, NOT_DETERMINED)
+        self.assertEqual(verdict.sia3802_reason, "ventilation_evidence_incomplete")
+        self.assertIn("sia3802_ventilation_evidence", verdict.outstanding)
+
     def test_determined_failure_still_fails_closed_despite_reviewed_comparison(self):
         """A determined (non-indeterminate) blocking finding must still make the
         overall NOT_COMPLIANT even with the decisive comparison reviewed."""

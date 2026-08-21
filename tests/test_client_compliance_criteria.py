@@ -501,7 +501,7 @@ class VentilationControlEvidenceTests(unittest.TestCase):
         row = {
             "project_id": "Demo",
             "system_type": "multizone",
-            "control_class": "demand_controlled",
+            "control_class": "variable_occupancy",
             "airflow_band": "3_to_6",
             "review_status": "accepted",
             "reviewer": "Reviewer",
@@ -529,6 +529,15 @@ class VentilationControlEvidenceTests(unittest.TestCase):
         from swiss_sia.evidence_manager import _normalize_ventilation_control_record
         self.assertFalse(
             _normalize_ventilation_control_record(self._row(control_class=""))["accepted"])
+
+    def test_ambiguous_demand_control_is_rejected(self):
+        """Table 4 distinguishes occupancy and gas-sensor demand control."""
+        from swiss_sia.evidence_manager import _normalize_ventilation_control_record
+        self.assertFalse(
+            _normalize_ventilation_control_record(
+                self._row(control_class="demand_controlled")
+            )["accepted"]
+        )
 
 
 class SolarProtectionEvidenceTests(unittest.TestCase):

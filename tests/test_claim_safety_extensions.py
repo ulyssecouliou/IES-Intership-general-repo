@@ -328,7 +328,6 @@ class ClaimSafetyExtensionTests(unittest.TestCase):
             {3: "l/s/person"},
             15.0,
         )
-
         self.assertAlmostEqual(result, 2.4)
         self.assertIsNone(
             ModelAnalyzer._derive_m3_h_m2_from_person_flow(
@@ -337,6 +336,31 @@ class ClaimSafetyExtensionTests(unittest.TestCase):
                 None,
             )
         )
+
+    def test_ach_is_normalized_with_room_geometry(self):
+        """ACH becomes floor-specific airflow only with volume and area."""
+        value, method = ModelAnalyzer._normalize_room_airflow(
+            {0: 0.5},
+            {0: "ach"},
+            0,
+            room_area=100.0,
+            room_volume=300.0,
+            occupancy_density_m2_per_person=None,
+        )
+        self.assertAlmostEqual(value, 1.5)
+        self.assertIn("volume", method)
+
+    def test_total_litres_per_second_is_normalized_with_floor_area(self):
+        value, method = ModelAnalyzer._normalize_room_airflow(
+            {1: 50.0},
+            {1: "l/s"},
+            1,
+            room_area=100.0,
+            room_volume=300.0,
+            occupancy_density_m2_per_person=None,
+        )
+        self.assertAlmostEqual(value, 1.8)
+        self.assertIn("floor area", method)
 
     def test_energy_source_metadata_never_returns_plausible_zero_consumption(self):
         """Require ResultsReader consumption data instead of source metadata dictionaries."""

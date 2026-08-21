@@ -133,6 +133,9 @@ find_accepted_project_metadata = evidence_manager_module.find_accepted_project_m
 scan_sia3802_global_comparisons = evidence_manager_module.scan_sia3802_global_comparisons
 find_accepted_global_comparison = evidence_manager_module.find_accepted_global_comparison
 prepare_evidence_folder = evidence_bootstrap_module.prepare_evidence_folder
+prefill_ventilation_control_evidence = (
+    evidence_bootstrap_module.prefill_ventilation_control_evidence
+)
 create_evidence_pack = evidence_pack_module.create_evidence_pack
 latest_remediation_evidence = (
     client_template_remediation_module.latest_remediation_evidence
@@ -1108,6 +1111,17 @@ def main(
         logger.info("Loaded model_analyzer from: %s", model_analyzer_module.__file__)
 
         rooms_data = model_analyzer.analyze_all_rooms()
+        ventilation_prefill = prefill_ventilation_control_evidence(
+            rooms_data,
+            PROJECT_ROOT,
+            project_label,
+        )
+        logger.info(
+            "Ventilation evidence inventory: %s (%s row(s), %s)",
+            ventilation_prefill.get("status"),
+            ventilation_prefill.get("row_count", 0),
+            ventilation_prefill.get("file", ""),
+        )
 
         logger.info("Collecting APS/Vista dynamic results where available.")
         dynamic_results = _collect_dynamic_results(project)

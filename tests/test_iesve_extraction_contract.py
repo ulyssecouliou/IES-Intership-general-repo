@@ -282,6 +282,28 @@ class IESVEExtractionContractTests(unittest.TestCase):
         self.assertTrue(room.ventilation_installation_type_placeholder)
         self.assertTrue(room.ventilation_control_level_placeholder)
 
+    def test_exact_sia4010_identifiers_resolve_narrow_monozone_control(self):
+        """Exact SYS_TYPE/AIR_FLOW_CTRL plus a schedule are model evidence."""
+        extractor = SimpleNamespace(get_room_zone_membership=lambda: {})
+        room = RoomData(
+            id="R1",
+            hvac_systems=[{
+                "system_type": "SINGLE_ZONE",
+                "air_flow_control": "MULTI_STAGE",
+            }],
+            air_exchange_evidence=[{
+                "type": "auxiliary_ventilation",
+                "variation_profile": "OCCUPIED",
+            }],
+        )
+
+        ModelAnalyzer(extractor)._annotate_hvac_zoning_and_controls([room])
+
+        self.assertEqual(room.ventilation_installation_type, "monozone")
+        self.assertEqual(room.ventilation_installation_type_status, "OK")
+        self.assertEqual(room.ventilation_control_level, 1)
+        self.assertEqual(room.ventilation_control_level_status, "OK")
+
     def test_project_apache_systems_list_is_indexed_by_documented_ids(self):
         primary = FakeApacheSystem("SYS-01", "Primary")
         secondary = FakeApacheSystem("SYS-02", "Secondary")

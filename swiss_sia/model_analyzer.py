@@ -149,11 +149,17 @@ class RoomData:
     window_ventilation_support_placeholder: str = "WINDOW_SUPPORT_THRESHOLD_TO_VERIFY"
     window_ventilation_support_note: str = ""
     ventilation_rate: Optional[float] = None
+    ventilation_unit: Optional[str] = None
     ventilation_m3_h_m2: Optional[float] = None
     ventilation_facade_m3_h_m2: Optional[float] = None
+    ventilation_normalization_method: str = ""
+    ventilation_source: str = ""
     infiltration_rate: Optional[float] = None
     infiltration_unit: Optional[str] = None
     infiltration_m3_h_m2: Optional[float] = None
+    infiltration_normalization_method: str = ""
+    air_exchange_evidence: List[Dict[str, Any]] = field(default_factory=list)
+    mechanical_ventilation_present: Optional[bool] = None
     air_exchange_classification_status: str = NOT_CHECKABLE
     air_exchange_classification_placeholder: str = "AIR_EXCHANGE_TYPE_VAL_TO_VERIFY"
     air_exchange_classification_note: str = ""
@@ -167,6 +173,7 @@ class RoomData:
     ventilation_control_level: Optional[int] = None
     ventilation_control_level_status: str = NOT_CHECKABLE
     ventilation_control_level_placeholder: str = VENTILATION_CONTROL_LEVEL_PLACEHOLDER
+    ventilation_control_evidence_note: str = ""
     fan_control: Optional[str] = None
     heat_recovery_type: Optional[str] = None
     dynamic_results: Dict[str, Any] = field(default_factory=dict)
@@ -209,24 +216,37 @@ class ModelAnalyzer:
             occupancy_density = self._to_float_or_none(
                 gain_summary.get("occupancy_density_m2_per_person")
             )
+            room_volume = float(body_areas.get("volume", 0.0) or 0.0)
             air_exchange_summary = (
-                self._analyze_air_exchanges(room_data_obj, occupancy_density)
+                self._analyze_air_exchanges(
+                    room_data_obj,
+                    occupancy_density,
+                    room_area=room_area,
+                    room_volume=room_volume,
+                )
                 if room_data_obj
                 else {}
+            )
+            room_conditions = self._analyze_room_conditions(room_data_obj) if room_data_obj else {}
+            hvac_systems = self._analyze_hvac_systems(room_data_obj, room_conditions) if room_data_obj else []
+            self._supplement_air_exchange_from_hvac(
+                air_exchange_summary,
+                hvac_systems,
+                room_area=room_area,
+                room_volume=room_volume,
+                occupancy_density_m2_per_person=occupancy_density,
             )
             ventilation_rate = air_exchange_summary.get("ventilation_rate")
             ventilation_m3_h_m2 = air_exchange_summary.get("ventilation_m3_h_m2")
             infiltration_rate = air_exchange_summary.get("infiltration_rate")
             infiltration_unit = air_exchange_summary.get("infiltration_unit")
             infiltration_m3_h_m2 = air_exchange_summary.get("infiltration_m3_h_m2")
-            room_conditions = self._analyze_room_conditions(room_data_obj) if room_data_obj else {}
-            hvac_systems = self._analyze_hvac_systems(room_data_obj, room_conditions) if room_data_obj else []
             window_summary = self._analyze_window_ventilation(openings)
 
             return RoomData(
                 id=self.data_extractor.get_object_id(body),
                 name=self._get_body_name(body),
-                volume=float(body_areas.get("volume", 0.0) or 0.0),
+                volume=room_volume,
                 area=room_area,
                 surfaces=surfaces,
                 openings=openings,
@@ -255,11 +275,25 @@ class ModelAnalyzer:
                     window_summary.get("window_ventilation_support_note") or ""
                 ),
                 ventilation_rate=ventilation_rate,
+                ventilation_unit=air_exchange_summary.get("ventilation_unit"),
                 ventilation_m3_h_m2=ventilation_m3_h_m2,
                 ventilation_facade_m3_h_m2=air_exchange_summary.get("ventilation_facade_m3_h_m2"),
+                ventilation_normalization_method=str(
+                    air_exchange_summary.get("ventilation_normalization_method") or ""
+                ),
+                ventilation_source=str(air_exchange_summary.get("ventilation_source") or ""),
                 infiltration_rate=infiltration_rate,
                 infiltration_unit=infiltration_unit,
                 infiltration_m3_h_m2=infiltration_m3_h_m2,
+                infiltration_normalization_method=str(
+                    air_exchange_summary.get("infiltration_normalization_method") or ""
+                ),
+                air_exchange_evidence=list(
+                    air_exchange_summary.get("air_exchange_evidence", []) or []
+                ),
+                mechanical_ventilation_present=air_exchange_summary.get(
+                    "mechanical_ventilation_present"
+                ),
                 air_exchange_classification_status=str(
                     air_exchange_summary.get("air_exchange_classification_status")
                     or NOT_CHECKABLE
@@ -593,15 +627,24 @@ class ModelAnalyzer:
         self,
         room_data: Any,
         occupancy_density_m2_per_person: Optional[float] = None,
-    ) -> Dict[str, Optional[float]]:
+        *,
+        room_area: float = 0.0,
+        room_volume: float = 0.0,
+    ) -> Dict[str, Any]:
         """Analyze ventilation and infiltration from VE room air exchanges."""
         summary: Dict[str, Any] = {
             "ventilation_rate": None,
+            "ventilation_unit": None,
             "ventilation_m3_h_m2": None,
             "ventilation_facade_m3_h_m2": None,
+            "ventilation_normalization_method": "",
+            "ventilation_source": "",
             "infiltration_rate": None,
             "infiltration_unit": None,
             "infiltration_m3_h_m2": None,
+            "infiltration_normalization_method": "",
+            "air_exchange_evidence": [],
+            "mechanical_ventilation_present": None,
             "air_exchange_classification_status": NOT_CHECKABLE,
             "air_exchange_classification_placeholder": "AIR_EXCHANGE_TYPE_VAL_TO_VERIFY",
             "air_exchange_classification_note": "No source-traced air-exchange type was resolved.",
@@ -615,6 +658,7 @@ class ModelAnalyzer:
         auxiliary_type = type_contract["values"]["auxiliary_ventilation"]
         recognized_types = set(type_contract["values"].values())
         unresolved_types: List[Any] = []
+        auxiliary_count = 0
         for exchange in air_exchanges:
             try:
                 exchange_data = self._safe_get_data(exchange)
@@ -623,24 +667,72 @@ class ModelAnalyzer:
                 units = exchange_data.get("units_strs") or {}
                 units_val = exchange_data.get("units_val")
                 active_rate = self._extract_flow_for_unit(max_flows, units_val)
+                active_unit = self._lookup_unit_label(units, units_val)
 
                 if exchange_type not in recognized_types:
                     unresolved_types.append(exchange_type)
                     continue
 
+                type_name = next(
+                    (
+                        name
+                        for name, value in type_contract["values"].items()
+                        if value == exchange_type
+                    ),
+                    "unknown",
+                )
+                normalized_flow, normalization_method = self._normalize_room_airflow(
+                    max_flows,
+                    units,
+                    units_val,
+                    room_area=room_area,
+                    room_volume=room_volume,
+                    occupancy_density_m2_per_person=occupancy_density_m2_per_person,
+                )
+                evidence = {
+                    "name": str(exchange_data.get("name") or ""),
+                    "type": type_name,
+                    "type_val": exchange_type,
+                    "active_rate": active_rate,
+                    "active_unit": active_unit or "",
+                    "units_val": units_val,
+                    "normalized_m3_h_m2": normalized_flow,
+                    "normalization_method": normalization_method,
+                    "variation_profile": str(
+                        exchange_data.get("variation_profile") or ""
+                    ),
+                    "max_flow_from_template": bool(
+                        exchange_data.get("max_flow_from_template")
+                    ),
+                    "variation_profile_from_template": bool(
+                        exchange_data.get("variation_profile_from_template")
+                    ),
+                }
+                summary["air_exchange_evidence"].append(evidence)
+
                 if exchange_type == auxiliary_type:
-                    summary["ventilation_rate"] = active_rate
-                    floor_flow = self._derive_m3_h_m2_from_flow_table(max_flows, units)
-                    if floor_flow is None:
-                        floor_flow = self._derive_m3_h_m2_from_person_flow(
-                            max_flows,
-                            units,
-                            occupancy_density_m2_per_person,
-                        )
+                    auxiliary_count += 1
+                    if summary["ventilation_rate"] is None:
+                        summary["ventilation_rate"] = active_rate
+                        summary["ventilation_unit"] = active_unit
+                    floor_flow = normalized_flow
                     facade_flow = self._derive_facade_m3_h_m2_from_flow_table(max_flows, units)
                     if floor_flow is not None:
                         summary["ventilation_m3_h_m2"] = (
                             float(summary["ventilation_m3_h_m2"] or 0.0) + floor_flow
+                        )
+                        methods = set(
+                            filter(
+                                None,
+                                str(summary["ventilation_normalization_method"]).split(" + "),
+                            )
+                        )
+                        methods.add(normalization_method)
+                        summary["ventilation_normalization_method"] = " + ".join(
+                            sorted(methods)
+                        )
+                        summary["ventilation_source"] = (
+                            "VERoomData.get_air_exchanges() or assigned thermal-template fallback"
                         )
                     if facade_flow is not None:
                         summary["ventilation_facade_m3_h_m2"] = (
@@ -648,14 +740,30 @@ class ModelAnalyzer:
                         )
 
                 if exchange_type == infiltration_type:
-                    summary["infiltration_rate"] = active_rate
-                    summary["infiltration_unit"] = self._lookup_unit_label(units, units_val)
-                    summary["infiltration_m3_h_m2"] = self._derive_m3_h_m2_from_flow_table(max_flows, units)
+                    if summary["infiltration_rate"] is None:
+                        summary["infiltration_rate"] = active_rate
+                        summary["infiltration_unit"] = active_unit
+                    if normalized_flow is not None:
+                        summary["infiltration_m3_h_m2"] = (
+                            float(summary["infiltration_m3_h_m2"] or 0.0)
+                            + normalized_flow
+                        )
+                        methods = set(
+                            filter(
+                                None,
+                                str(summary["infiltration_normalization_method"]).split(" + "),
+                            )
+                        )
+                        methods.add(normalization_method)
+                        summary["infiltration_normalization_method"] = " + ".join(
+                            sorted(methods)
+                        )
             except Exception as e:
                 logger.error("Error while analyzing air exchanges: %s", e)
                 unresolved_types.append("read_error")
         if air_exchanges and not unresolved_types:
             summary["air_exchange_classification_status"] = "OK"
+            summary["mechanical_ventilation_present"] = auxiliary_count > 0
             summary["air_exchange_classification_placeholder"] = ""
             summary["air_exchange_classification_note"] = type_contract["locator"]
         elif unresolved_types:
@@ -685,6 +793,70 @@ class ModelAnalyzer:
                 if key in max_flows:
                     return ModelAnalyzer._to_float_or_none(max_flows.get(key))
         return ModelAnalyzer._extract_first_numeric(max_flows)
+
+    @classmethod
+    def _normalize_room_airflow(
+        cls,
+        max_flows: Any,
+        units: Any,
+        units_val: Any,
+        *,
+        room_area: float,
+        room_volume: float,
+        occupancy_density_m2_per_person: Optional[float],
+    ) -> Any:
+        """Return floor-area airflow and the auditable conversion method.
+
+        VE usually exposes a conversion table.  We prefer its explicit
+        l/(s.m2) value; otherwise we convert l/(s.person), ACH or total l/s only
+        when the corresponding occupancy, volume and floor-area evidence exists.
+        """
+        floor_flow = cls._derive_m3_h_m2_from_flow_table(max_flows, units)
+        if floor_flow is not None:
+            return floor_flow, "VE l/(s.m2) conversion table x 3.6"
+
+        person_flow = cls._derive_m3_h_m2_from_person_flow(
+            max_flows,
+            units,
+            occupancy_density_m2_per_person,
+        )
+        if person_flow is not None:
+            return person_flow, "VE l/(s.person) / occupancy density x 3.6"
+
+        active_rate = cls._extract_flow_for_unit(max_flows, units_val)
+        active_unit = cls._lookup_unit_label(units, units_val)
+        compact_unit = "".join(
+            character
+            for character in str(active_unit or "").lower().replace("Â³", "3")
+            if not character.isspace()
+        )
+        unit_values = SIA_COMPLIANCE_VALUE_PROVENANCE[
+            "room_air_exchange_units_val"
+        ]["values"]
+        area = cls._to_float_or_none(room_area)
+        volume = cls._to_float_or_none(room_volume)
+        if active_rate is None or area is None or area <= 0.0:
+            return None, ""
+
+        is_ach = units_val == unit_values["ach"] or compact_unit in {
+            "ach",
+            "h-1",
+            "1/h",
+            "airchanges/hour",
+        }
+        if is_ach and volume is not None and volume > 0.0:
+            return active_rate * volume / area, "ACH x room volume / floor area"
+
+        is_total_l_s = (
+            units_val == unit_values["litres_per_second"]
+            or compact_unit in {"l/s", "lps", "litres/second", "liters/second"}
+        )
+        if is_total_l_s:
+            factor = SIA_COMPLIANCE_VALUE_PROVENANCE["airflow_l_s_to_m3_h"][
+                "value"
+            ]
+            return active_rate * factor / area, "total l/s x 3.6 / floor area"
+        return None, ""
 
     @staticmethod
     def _derive_m3_h_m2_from_flow_table(max_flows: Any, units: Any) -> Optional[float]:
@@ -763,6 +935,89 @@ class ModelAnalyzer:
                     )
         return None
 
+    def _supplement_air_exchange_from_hvac(
+        self,
+        summary: Dict[str, Any],
+        hvac_systems: List[Dict[str, Any]],
+        *,
+        room_area: float,
+        room_volume: float,
+        occupancy_density_m2_per_person: Optional[float],
+    ) -> None:
+        """Use the documented room Apache minimum outdoor-air flow as fallback.
+
+        This value is room-assignment data.  It is used only when no auxiliary
+        RoomAirExchange already represents mechanical ventilation, avoiding a
+        double count between two VE views of the same design flow.  System-wide
+        ``air_supply.OA_max_flow`` is retained as context but is never allocated
+        to a room without an explicit distribution basis.
+        """
+        for system in hvac_systems:
+            flow = self._to_float_or_none(
+                system.get("system_air_minimum_flowrate")
+            )
+            units_val = system.get("system_air_minimum_flowrate_units")
+            flow_table = system.get("system_air_minimum_flowrates") or {}
+            if not isinstance(flow_table, dict):
+                flow_table = {}
+            if flow is not None and units_val not in (None, ""):
+                flow_table = dict(flow_table)
+                flow_table.setdefault(units_val, flow)
+            unit_labels = {
+                0: "ach",
+                1: "l/s",
+                2: "l/(s.m2)",
+                3: "l/(s.person)",
+                4: "l/(s.m2 facade)",
+            }
+            normalized, method = self._normalize_room_airflow(
+                flow_table if flow_table else flow,
+                unit_labels,
+                units_val,
+                room_area=room_area,
+                room_volume=room_volume,
+                occupancy_density_m2_per_person=occupancy_density_m2_per_person,
+            )
+            air_supply = system.get("air_supply_raw") or {}
+            evidence = {
+                "name": str(system.get("name") or system.get("id") or ""),
+                "type": "apache_system_minimum_outdoor_air",
+                "active_rate": flow,
+                "active_unit": unit_labels.get(units_val, ""),
+                "units_val": units_val,
+                "normalized_m3_h_m2": normalized,
+                "normalization_method": method,
+                "from_template": bool(
+                    system.get("system_air_minimum_flowrate_from_template")
+                ),
+                "system_id": str(system.get("id") or ""),
+                "system_oa_max_flow_l_s": self._to_float_or_none(
+                    air_supply.get("OA_max_flow")
+                ),
+            }
+            if flow is not None or evidence["system_oa_max_flow_l_s"] is not None:
+                summary.setdefault("air_exchange_evidence", []).append(evidence)
+
+            if (
+                flow is not None
+                and flow > 0.0
+                and summary.get("mechanical_ventilation_present") is not True
+            ):
+                summary["mechanical_ventilation_present"] = True
+                summary["ventilation_rate"] = flow
+                summary["ventilation_unit"] = unit_labels.get(units_val)
+                summary["ventilation_m3_h_m2"] = normalized
+                summary["ventilation_normalization_method"] = method
+                summary["ventilation_source"] = (
+                    "VERoomData.get_apache_systems().system_air_minimum_flowrate"
+                )
+                if summary.get("air_exchange_classification_status") != "OK":
+                    summary["air_exchange_classification_note"] = (
+                        str(summary.get("air_exchange_classification_note") or "")
+                        + " Apache minimum outdoor-air flow confirms mechanical "
+                        "ventilation, but does not classify missing RoomAirExchange objects."
+                    ).strip()
+
     def _analyze_hvac_systems(
         self,
         room_data: Any,
@@ -806,6 +1061,14 @@ class ModelAnalyzer:
                     "ventilation_control",
                 ),
             )
+            air_flow_control = self._extract_control_identifier(
+                (ventilation_ncm, system_controls, apache_data.get("control", {})),
+                ("air_flow_ctrl", "airflow_control"),
+            )
+            demand_control = self._extract_control_identifier(
+                (ventilation_ncm, system_controls, room_conditions or {}),
+                ("demand_controlled_ventilation", "dcv_control"),
+            )
             system_type = self._extract_control_identifier(
                 (ventilation_ncm, system_controls, apache_data.get("control", {})),
                 ("sys_type", "system_type"),
@@ -835,6 +1098,10 @@ class ModelAnalyzer:
                 "fan_control": self._normalize_identifier(fan_control),
                 "system_type": self._normalize_identifier(system_type),
                 "ventilation_control": self._normalize_identifier(ventilation_control),
+                "air_flow_control": self._normalize_identifier(air_flow_control),
+                "demand_controlled_ventilation": self._normalize_identifier(
+                    demand_control
+                ),
                 "heat_recovery_type": self._normalize_identifier(heat_recovery),
                 # NCM seasonal heat-recovery efficiency (VEApacheSystem.ventilation_ncm),
                 # confirmed extractable on real projects. Compared to the SIA 380/2
@@ -842,6 +1109,22 @@ class ModelAnalyzer:
                 "heat_recovery_efficiency": self._to_float_or_none(
                     ventilation_ncm.get("heat_recovery_efficiency")
                 ),
+                "system_air_minimum_flowrate": self._to_float_or_none(
+                    system_data.get("system_air_minimum_flowrate")
+                ),
+                "system_air_minimum_flowrate_units": system_data.get(
+                    "system_air_minimum_flowrate_units",
+                    system_data.get("system_air_minimum_flowrate_unit"),
+                ),
+                "system_air_minimum_flowrates": dict(
+                    system_data.get("system_air_minimum_flowrates") or {}
+                ),
+                "system_air_minimum_flowrate_from_template": bool(
+                    system_data.get("system_air_minimum_flowrate_from_template")
+                ),
+                "air_supply_raw": dict(apache_data.get("air_supply", {}) or {}),
+                "control_raw": dict(apache_data.get("control", {}) or {}),
+                "system_controls_ncm_raw": dict(system_controls),
                 "cooling_raw": dict(cooling),
                 "heating_raw": dict(heating),
                 "ventilation_ncm_raw": dict(ventilation_ncm),
@@ -934,12 +1217,14 @@ class ModelAnalyzer:
         }
 
     def _annotate_hvac_zoning_and_controls(self, rooms_data: List[RoomData]) -> None:
-        """Keep SIA ventilation classifications fail-closed.
+        """Resolve only explicit VE ventilation identifiers, otherwise fail closed.
 
         ``VERoomData.get_apache_systems`` exposes system and demand-control
-        details, but neither checked API artefact documents direct members for
-        the SIA installation type or ordered control level.  Names, zone counts,
-        and sensor tokens are therefore audit context only, never classification.
+        details. Exact SIA 4010 ``SYS_TYPE`` and ``AIR_FLOW_CTRL`` identifiers
+        are usable evidence; arbitrary system names, zone counts and free-text
+        sensor labels remain context only.  A control level is derived
+        automatically only for the narrow monozone scheduled one-/two-speed
+        cases whose complete Table-4 capability is visible in VE.
         """
         zone_membership = (
             self.data_extractor.get_room_zone_membership()
@@ -949,25 +1234,69 @@ class ModelAnalyzer:
         for room in rooms_data:
             zone = dict(zone_membership.get(str(room.id), {}) or {})
             room.hvac_zone = zone
-            # [TO VERIFY] membre VE absent: direct SIA installation classification.
-            room.ventilation_installation_type = None
-            room.ventilation_installation_type_status = NOT_CHECKABLE
-            room.ventilation_installation_type_placeholder = (
-                VENTILATION_INSTALLATION_TYPE_PLACEHOLDER
+            system_type = self._first_hvac_value(room.hvac_systems, "system_type")
+            installation_map = {
+                "SINGLE_ZONE": "monozone",
+                "MULTI_ZONE": "multizone",
+            }
+            installation_type = installation_map.get(str(system_type or "").upper())
+            if installation_type:
+                room.ventilation_installation_type = installation_type
+                room.ventilation_installation_type_status = "OK"
+                room.ventilation_installation_type_placeholder = ""
+            else:
+                room.ventilation_installation_type = None
+                room.ventilation_installation_type_status = NOT_CHECKABLE
+                room.ventilation_installation_type_placeholder = (
+                    VENTILATION_INSTALLATION_TYPE_PLACEHOLDER
+                )
+
+            air_flow_control = self._first_hvac_value(
+                room.hvac_systems, "air_flow_control"
             )
-            # [TO VERIFY] membre VE absent: direct SIA table-4 control level.
-            room.ventilation_control = None
-            room.ventilation_control_level = None
-            room.ventilation_control_level_status = NOT_CHECKABLE
-            room.ventilation_control_level_placeholder = (
-                VENTILATION_CONTROL_LEVEL_PLACEHOLDER
+            demand_control = self._first_hvac_value(
+                room.hvac_systems, "demand_controlled_ventilation"
             )
+            room.ventilation_control = (
+                air_flow_control
+                or demand_control
+                or self._first_hvac_value(room.hvac_systems, "ventilation_control")
+            )
+            has_schedule = any(
+                str(item.get("variation_profile") or "").strip()
+                for item in (room.air_exchange_evidence or [])
+                if isinstance(item, dict)
+                and item.get("type") == "auxiliary_ventilation"
+            )
+            derived_level = None
+            if installation_type == "monozone" and has_schedule:
+                if air_flow_control in {"NO_CTRL", "ON_OFF_CTRL", "ON/OFF_CTRL"}:
+                    derived_level = 0
+                elif air_flow_control == "MULTI_STAGE":
+                    derived_level = 1
+
+            context = (
+                f"VE SYS_TYPE={system_type or 'missing'}, "
+                f"AIR_FLOW_CTRL={air_flow_control or 'missing'}, "
+                f"DCV={demand_control or 'missing'}, "
+                f"FAN_CTRL={room.fan_control or 'missing'}, "
+                f"scheduled auxiliary airflow={'yes' if has_schedule else 'no'}"
+            )
+            room.ventilation_control_evidence_note = context
+            if derived_level is not None:
+                room.ventilation_control_level = derived_level
+                room.ventilation_control_level_status = "OK"
+                room.ventilation_control_level_placeholder = ""
+            else:
+                room.ventilation_control_level = None
+                room.ventilation_control_level_status = NOT_CHECKABLE
+                room.ventilation_control_level_placeholder = (
+                    VENTILATION_CONTROL_LEVEL_PLACEHOLDER
+                )
 
     def _derive_ventilation_control(self, room: RoomData) -> Any:
-        """Return no classification when no direct documented VE member exists."""
-        # [TO VERIFY] membre VE absent.  Deliberately do not infer from labels,
-        # fan modes, sensor names, or zone topology.
-        return None, None
+        """Return the already source-traced installation/control classification."""
+        return room.ventilation_control, room.ventilation_control_level
 
     @staticmethod
     def _first_hvac_value(hvac_systems: List[Dict[str, Any]], key: str) -> Optional[str]:

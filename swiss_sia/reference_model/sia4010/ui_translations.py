@@ -2060,6 +2060,12 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
         "fr": "preuves manquantes par domaine SIA 380/2",
         "it": "prove mancanti per dominio SIA 380/2",
     },
+    "outstanding_sia3802_ventilation_evidence": {
+        "en": "essential ventilation airflow and control evidence",
+        "de": "wesentliche Nachweise zu Luftmengen und Lueftungsregelung",
+        "fr": "preuves essentielles de debit et de regulation de ventilation",
+        "it": "prove essenziali di portata e regolazione della ventilazione",
+    },
     "outstanding_sia4010_official_results": {
         "en": "official SIA 4010 test results",
         "de": "offizielle Testergebnisse nach SIA 4010",
@@ -2754,6 +2760,12 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
         "fr": "La comparaison projet/reference verifiee, necessaire a la conclusion decisive SIA 380/2, est absente ou incomplete.",
         "it": "Il confronto progetto/riferimento verificato, necessario alla decisione SIA 380/2, e assente o incompleto.",
     },
+    "report_reason_ventilation_evidence_incomplete": {
+        "en": "The global comparison is satisfied, but essential ventilation airflow or Table-4 control evidence remains unverifiable.",
+        "de": "Der globale Vergleich ist erfuellt, aber wesentliche Nachweise zu Luftmengen oder Regelung nach Tabelle 4 sind nicht pruefbar.",
+        "fr": "La comparaison globale est satisfaite, mais le debit de ventilation ou la regulation selon le tableau 4 reste invérifiable.",
+        "it": "Il confronto globale e soddisfatto, ma la portata di ventilazione o la regolazione secondo la tabella 4 resta non verificabile.",
+    },
     "report_reason_comparison_reviewed_no_blocker_with_reserves": {
         "en": "The decisive comparison is reviewed and satisfied, with no determined blocker; incomplete component evidence remains explicitly reserved.",
         "de": "Der entscheidende Vergleich ist geprueft und erfuellt; es gibt keinen festgestellten Blocker, unvollstaendige Detailnachweise bleiben als Vorbehalt sichtbar.",
@@ -2790,6 +2802,12 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
         "fr": "Fournir un enregistrement accepte par le relecteur avec valeur projet, valeur de reference, unite commune, relecteur, date et source du calcul.",
         "it": "Fornire un record accettato dal revisore con valore progetto, riferimento, unita comune, revisore, data e fonte del calcolo.",
     },
+    "report_action_ventilation_evidence_incomplete": {
+        "en": "Reconcile the VE airflow inventory and complete the reviewed ventilation-control CSV for every applicable system or zone.",
+        "de": "Die VE-Luftmengenaufstellung abstimmen und den geprueften CSV-Nachweis zur Lueftungsregelung fuer jedes relevante System oder jede Zone vervollstaendigen.",
+        "fr": "Concilier l'inventaire des debits VE et completer le CSV de regulation verifie pour chaque systeme ou zone applicable.",
+        "it": "Riconciliare l'inventario delle portate VE e completare il CSV verificato della regolazione per ogni sistema o zona applicabile.",
+    },
     "report_action_comparison_reviewed_no_blocker_with_reserves": {
         "en": "The conclusion may be issued with the listed reserves; complete the missing component evidence for a fully documented file.",
         "de": "Der Schluss kann mit den genannten Vorbehalten ausgegeben werden; fehlende Detailnachweise fuer eine vollstaendige Akte ergaenzen.",
@@ -2817,6 +2835,36 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
     "report_domain_reason_no_blocking_finding": {
         "en": "No determined blocking finding", "de": "Kein festgestellter Blocker",
         "fr": "Aucun point bloquant avere", "it": "Nessun blocco accertato",
+    },
+    "report_ventilation_evidence_title": {
+        "en": "Ventilation evidence",
+        "de": "Lueftungsnachweise",
+        "fr": "Preuves de ventilation",
+        "it": "Prove di ventilazione",
+    },
+    "report_ventilation_rooms": {
+        "en": "Mechanical ventilation rooms",
+        "de": "Raeume mit mechanischer Lueftung",
+        "fr": "Locaux avec ventilation mecanique",
+        "it": "Locali con ventilazione meccanica",
+    },
+    "report_ventilation_airflow": {
+        "en": "Normalized design airflow",
+        "de": "Normierter Auslegungs-Luftvolumenstrom",
+        "fr": "Debit de dimensionnement normalise",
+        "it": "Portata di progetto normalizzata",
+    },
+    "report_ventilation_control": {
+        "en": "Table-4 control validated",
+        "de": "Regelung nach Tabelle 4 validiert",
+        "fr": "Regulation du tableau 4 validee",
+        "it": "Regolazione della tabella 4 validata",
+    },
+    "report_ventilation_range": {
+        "en": "Airflow range / evidence",
+        "de": "Luftmengenbereich / Nachweis",
+        "fr": "Plage de debit / preuve",
+        "it": "Intervallo di portata / prova",
     },
     "excel_scope_statement": {
         "en": "This workbook reports the assessed SIA 380/2 compliance of the client model. It is an engineering assessment, not an official SIA certificate. Missing or unverifiable evidence remains visible and is never treated as a pass. See the INDEX sheet for supporting detail.",

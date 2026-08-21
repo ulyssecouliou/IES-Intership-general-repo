@@ -646,6 +646,8 @@ def _normalize_ventilation_control_record(raw_row: Dict[str, Any]) -> Dict[str, 
         if key is not None
     }
     record.setdefault("project_id", record.get("project", ""))
+    record.setdefault("system_id", "")
+    record.setdefault("room_or_zone", record.get("scope", ""))
     record.setdefault("system_type", "")
     record.setdefault("control_class", "")
     record.setdefault("airflow_band", "")
@@ -657,6 +659,30 @@ def _normalize_ventilation_control_record(raw_row: Dict[str, Any]) -> Dict[str, 
     record.setdefault("source_document", record.get("source_file", ""))
     record.setdefault("source_reference", "")
     record.setdefault("notes", "")
+    system_type_key = _status_key(record.get("system_type"))
+    record["system_type_normalized"] = {
+        "monozone": "monozone",
+        "single_zone": "monozone",
+        "singlezone": "monozone",
+        "multizone": "multizone",
+        "multi_zone": "multizone",
+    }.get(system_type_key)
+    control_key = _status_key(record.get("control_class"))
+    control_levels = {
+        "one_speed_time_schedule": 0,
+        "one_speed_time_schedule_control": 0,
+        "two_speeds_time_schedule": 1,
+        "two_speeds_time_schedule_control": 1,
+        "two_speeds_occupancy": 2,
+        "two_speeds_occupancy_control": 2,
+        "variable_occupancy": 3,
+        "variable_speed_occupancy": 3,
+        "variable_speed_demand_control_by_occupancy": 3,
+        "variable_gas_sensor": 4,
+        "variable_speed_gas_sensor": 4,
+        "variable_speed_demand_control_by_gas_sensor": 4,
+    }
+    record["control_level_numeric"] = control_levels.get(control_key)
     try:
         record["specific_airflow_m3_h_m2_numeric"] = float(
             record.get("specific_airflow_m3_h_m2")
@@ -667,12 +693,37 @@ def _normalize_ventilation_control_record(raw_row: Dict[str, Any]) -> Dict[str, 
         bool(record.get("airflow_band"))
         or record.get("specific_airflow_m3_h_m2_numeric") is not None
     )
+    band_key = _status_key(record.get("airflow_band"))
+    record["airflow_band_normalized"] = {
+        "le_3": "<=3",
+        "lte_3": "<=3",
+        "3": "<=3",
+        "3_to_6": "3-6",
+        "3_6": "3-6",
+        "gt_6": ">6",
+        "over_6": ">6",
+        "6": ">6",
+    }.get(band_key)
+    numeric_airflow = record.get("specific_airflow_m3_h_m2_numeric")
+    if numeric_airflow is not None:
+        record["airflow_band_from_numeric"] = (
+            "<=3" if numeric_airflow <= 3.0 else ("3-6" if numeric_airflow <= 6.0 else ">6")
+        )
+        if record["airflow_band_normalized"] is None:
+            record["airflow_band_normalized"] = record["airflow_band_from_numeric"]
+    band_consistent = not (
+        record.get("airflow_band_from_numeric")
+        and record.get("airflow_band_normalized")
+        and record["airflow_band_from_numeric"] != record["airflow_band_normalized"]
+    )
     record["accepted"] = (
         _status_key(record.get("review_status")) in ACCEPTED_REVIEW_STATUSES
         and bool(record.get("project_id"))
-        and bool(record.get("system_type"))
-        and bool(record.get("control_class"))
+        and bool(record.get("system_type_normalized"))
+        and record.get("control_level_numeric") is not None
         and has_band
+        and bool(record.get("airflow_band_normalized"))
+        and band_consistent
         and bool(record.get("reviewer"))
         and bool(record.get("review_date"))
         and bool(record.get("source_document") or record.get("source_reference"))

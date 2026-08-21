@@ -177,6 +177,63 @@ class Sia3802UndeterminedNotFailedTests(unittest.TestCase):
         self.assertEqual(envelope["status"], "NOT_COMPLIANT")
         self.assertEqual(envelope["reason"], "blocking_findings")
 
+    def test_determined_summer_overheating_blocks_even_with_gate_satisfied(self):
+        """Audit A3: the checker emits SIA3802_SUMMER_COMFORT_DYNAMIC under the
+        'Dynamic Method' category. A DETERMINED overheating failure must block the
+        verdict even when the decisive global comparison is satisfied; before the
+        fix that HIGH rule was outside DOMAINS and silently ignored."""
+        engine = RuleEngine()
+        engine.add_alert(
+            rule="SIA3802_SUMMER_COMFORT_DYNAMIC",
+            description="Occupied overheating hours exceed the SIA allowance.",
+            severity=Severity.HIGH,
+            category="Dynamic Method",
+            recommendation="Reduce solar gains or add operable shading.",
+            data=None,
+        )
+        results = {
+            "dynamic": {"status": "AVAILABLE"},
+            "alerts": list(engine.alerts),
+            # Decisive gate satisfied on purpose: a determined overheating still fails.
+            "global_reference_comparison": {"status": "REVIEWED_RESULT_AVAILABLE"},
+        }
+        verdict = build_compliance_verdict(results, None, rooms_analysed=1).to_dict()
+        dynamic = next(
+            item for item in verdict["domains"] if item["domain"] == "dynamic"
+        )
+        self.assertEqual(dynamic["status"], "NOT_COMPLIANT")
+        self.assertEqual(verdict["sia3802_status"], "NOT_COMPLIANT")
+
+    def test_not_checkable_summer_comfort_stays_a_reserve_not_a_block(self):
+        """A summer-comfort run that could not be checked (no full-year APS /
+        weather mismatch) carries an indeterminate marker: it is a reserve, never
+        a blocking failure."""
+        engine = RuleEngine()
+        engine.add_alert(
+            rule="SIA3802_SUMMER_COMFORT_NOT_CHECKABLE",
+            description="Full-year dynamic comfort is not checkable.",
+            severity=Severity.MEDIUM,
+            category="Dynamic Method",
+            recommendation="Run a full-year DRY simulation with matching weather.",
+            data=None,
+        )
+        results = {
+            # All six component domains evaluated and clean, so only the dynamic
+            # comfort reserve is incomplete.
+            "envelope": {}, "openings": {}, "ventilation": {}, "gains": {},
+            "setpoints": {}, "hvac": {},
+            "dynamic": {"status": "NOT_CHECKABLE"},
+            "alerts": list(engine.alerts),
+            "global_reference_comparison": {"status": "REVIEWED_RESULT_AVAILABLE"},
+        }
+        verdict = build_compliance_verdict(results, None, rooms_analysed=1).to_dict()
+        dynamic = next(
+            item for item in verdict["domains"] if item["domain"] == "dynamic"
+        )
+        self.assertEqual(dynamic["status"], "NOT_DETERMINED")
+        # A reserve does not fail the model; overall stays COMPLIANT-with-reserves.
+        self.assertEqual(verdict["sia3802_status"], "COMPLIANT")
+
 
 class Sia3802GlobalReferenceComparisonRobustnessTests(unittest.TestCase):
     """The reviewed project/reference gate must survive a degenerate payload.

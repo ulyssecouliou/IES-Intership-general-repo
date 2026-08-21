@@ -7,7 +7,11 @@ import shutil
 import unittest
 from pathlib import Path
 
-from swiss_sia.evidence_bootstrap import prepare_evidence_folder
+from swiss_sia.evidence_bootstrap import (
+    prepare_evidence_folder,
+    prefill_ventilation_control_evidence,
+)
+from swiss_sia.model_analyzer import RoomData
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -46,6 +50,29 @@ class EvidenceBootstrapTests(unittest.TestCase):
             self.assertEqual(g_values_row["review_status"], "pending")
             self.assertEqual(metadata_row["project_id"], "SIA_compatible_model")
             self.assertNotIn("ZOER_32_C1", g_values_path.read_text(encoding="utf-8"))
+
+            room = RoomData(
+                id="ROOM-1",
+                mechanical_ventilation_present=True,
+                ventilation_m3_h_m2=4.0,
+                ventilation_installation_type="monozone",
+                ventilation_control_level=1,
+                ventilation_control_evidence_note="explicit VE identifiers",
+                hvac_systems=[{
+                    "id": "SYS-1",
+                    "air_flow_control": "MULTI_STAGE",
+                    "fan_control": "DIRECT",
+                }],
+            )
+            prefill = prefill_ventilation_control_evidence(
+                [room], temporary_root, "SIA compatible model"
+            )
+            self.assertEqual(prefill["status"], "PREFILLED")
+            with Path(prefill["file"]).open(encoding="utf-8", newline="") as handle:
+                ventilation_row = next(csv.DictReader(handle))
+            self.assertEqual(ventilation_row["system_id"], "SYS-1")
+            self.assertEqual(ventilation_row["control_class"], "two_speeds_time_schedule")
+            self.assertEqual(ventilation_row["review_status"], "pending")
         finally:
             shutil.rmtree(temporary_root, ignore_errors=True)
 

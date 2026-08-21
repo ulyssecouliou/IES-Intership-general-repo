@@ -10,7 +10,9 @@ carries a company signature:
   project/reference comparison (SIA 380/2:2022 §7.2.5.2): with that comparison
   reviewed and satisfied and no determined failure, the statement is
   ``COMPLIANT`` and any unverifiable component diagnostic is reported as a
-  visible reserve in ``outstanding`` rather than downgrading the verdict;
+  visible reserve in ``outstanding`` rather than downgrading the verdict,
+  except incomplete ventilation evidence: airflow and Table-4 control are
+  treated as an essential gate because they materially affect the comparison;
 - without the decisive comparison the statement stays ``NOT_DETERMINED`` -
   never silently compliant.
 
@@ -37,6 +39,13 @@ DOMAINS: Tuple[Tuple[str, str], ...] = (
     ("gains", "Gains"),
     ("setpoints", "Setpoints"),
     ("hvac", "HVAC"),
+    # SIA 380/2:2022 summer thermal protection (dynamic comfort). A DETERMINED
+    # over-heating failure (SIA3802_SUMMER_COMFORT_DYNAMIC, HIGH) must block the
+    # verdict; a not-checkable comfort run (missing full-year APS / weather
+    # mismatch) carries an indeterminate marker and stays a reserve, never a
+    # false failure. Before this entry the HIGH rule was emitted but ignored by
+    # the verdict (audit A3, 2026-08-20).
+    ("dynamic", "Dynamic Method"),
 )
 
 _BLOCKING_SEVERITIES = {"CRITICAL", "HIGH"}
@@ -202,6 +211,10 @@ def build_compliance_verdict(
     domain_evidence_incomplete = any(
         item.status == NOT_DETERMINED for item in domains
     )
+    ventilation_evidence_incomplete = any(
+        item.domain == "ventilation" and item.status == NOT_DETERMINED
+        for item in domains
+    )
     blocking_total = sum(item.blocking_count for item in domains)
     advisory_total = sum(item.advisory_count for item in domains)
 
@@ -238,6 +251,11 @@ def build_compliance_verdict(
         )
     elif not comparison_available:
         sia3802_status, sia3802_reason = NOT_DETERMINED, "global_comparison_missing"
+    elif ventilation_evidence_incomplete:
+        sia3802_status, sia3802_reason = (
+            NOT_DETERMINED,
+            "ventilation_evidence_incomplete",
+        )
     else:
         sia3802_status, sia3802_reason = COMPLIANT, (
             "comparison_reviewed_no_blocker_with_reserves"
@@ -248,6 +266,8 @@ def build_compliance_verdict(
         outstanding.append("global_reference_comparison")
     if domain_evidence_incomplete:
         outstanding.append("sia3802_domain_evidence")
+    if ventilation_evidence_incomplete:
+        outstanding.append("sia3802_ventilation_evidence")
 
     # SIA 4010 reports the toolchain's validation-class state. Official class
     # validation additionally requires SIA sub-commission attestation, so the

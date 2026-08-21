@@ -7358,7 +7358,28 @@ class ExcelReportGenerator:
         if hasattr(data, "ventilation_rate") and getattr(data, "ventilation_rate") is not None:
             ventilation_rate = self._safe_float(getattr(data, "ventilation_rate"), None)
             if ventilation_rate is not None:
-                parts.append(f"ventilation={ventilation_rate:.3f} ach")
+                ventilation_unit = str(
+                    getattr(data, "ventilation_unit", None) or "VE active unit"
+                )
+                parts.append(f"ventilation={ventilation_rate:.3f} {ventilation_unit}")
+        if hasattr(data, "ventilation_m3_h_m2") and getattr(data, "ventilation_m3_h_m2") is not None:
+            normalized = self._safe_float(
+                getattr(data, "ventilation_m3_h_m2"), None
+            )
+            if normalized is not None:
+                parts.append(f"ventilation_normalized={normalized:.3f} m3/(h.m2)")
+        if getattr(data, "ventilation_normalization_method", ""):
+            parts.append(
+                "ventilation_method="
+                + str(getattr(data, "ventilation_normalization_method"))
+            )
+        if getattr(data, "ventilation_source", ""):
+            parts.append("ventilation_source=" + str(getattr(data, "ventilation_source")))
+        if getattr(data, "ventilation_control_evidence_note", ""):
+            parts.append(
+                "ventilation_control_context="
+                + str(getattr(data, "ventilation_control_evidence_note"))
+            )
         if hasattr(data, "internal_gains"):
             gains = getattr(data, "internal_gains") or {}
             if gains:
