@@ -52,6 +52,18 @@ from .value_integrity import add_value_integrity_alerts
 # into a match.
 REFERENCE_INPUT_NUMERICAL_EPSILON_W_M2K = 1.0e-4
 
+# A category carrying any unverifiable ("cannot check") input is capped below the
+# pass band so the number reads "incomplete", not "good". QA heuristic, not a
+# regulatory value. Kept in sync with the verdict's indeterminate definition.
+INCOMPLETE_EVIDENCE_SCORE_CEILING = 60.0
+_INDETERMINATE_ALERT_MARKERS = (
+    "MISSING",
+    "NOT_CHECKABLE",
+    "PLACEHOLDER",
+    "UNAVAILABLE",
+    "RULE_EXECUTION_ERROR",
+)
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -1799,7 +1811,18 @@ class SIA3802Checker:
             return None
 
     def _calculate_category_score(self, category: str) -> float:
-        """Calculate a category score from 0 to 100."""
+        """Calculate a category score from 0 to 100.
+
+        The score must not read as "good" when a category's inputs are not
+        verifiable. An indeterminate alert (missing / not-checkable evidence,
+        same definition the verdict uses) therefore carries a heavy penalty --
+        far above a determined advisory -- and the score is capped below the pass
+        band while any indeterminate alert remains. This aligns the number with
+        the verdict, which marks such a domain NOT_DETERMINED: a category riddled
+        with unverifiable inputs can no longer report ~85 (audit A2, 2026-08-20).
+        It is never forced to 0 for merely-missing evidence, which would be a
+        false failure; only a genuinely blocking alert scores 0.
+        """
         alerts = self.rule_engine.get_alerts_by_category(category)
         if not alerts:
             return 100.0
@@ -1808,8 +1831,14 @@ class SIA3802Checker:
             return 0.0
 
         score = 100.0
+        has_indeterminate = False
         for alert in alerts:
-            if alert.severity == Severity.CRITICAL:
+            if self._is_indeterminate_alert(alert):
+                # Unverifiable input: much heavier than a determined advisory,
+                # so a category cannot look verified when it is not.
+                score -= 20.0
+                has_indeterminate = True
+            elif alert.severity == Severity.CRITICAL:
                 score -= 25.0
             elif alert.severity == Severity.HIGH:
                 score -= 15.0
@@ -1817,6 +1846,9 @@ class SIA3802Checker:
                 score -= 10.0
             elif alert.severity == Severity.LOW:
                 score -= 5.0
+        if has_indeterminate:
+            # Cap below the pass band: "incomplete", not "good".
+            score = min(score, INCOMPLETE_EVIDENCE_SCORE_CEILING)
         return max(0.0, min(100.0, score))
 
     @staticmethod
@@ -1828,6 +1860,16 @@ class SIA3802Checker:
             or "EXTERNAL_ENVELOPE_MISSING" in rule
             or "RULE_EXECUTION_ERROR" in rule
         )
+
+    @staticmethod
+    def _is_indeterminate_alert(alert: Alert) -> bool:
+        """Return true when an alert marks missing / not-checkable evidence.
+
+        Same "cannot check" markers the verdict uses (compliance_verdict.py),
+        so the score and the verdict agree on what counts as undetermined.
+        """
+        rule = str(alert.rule or "").upper()
+        return any(marker in rule for marker in _INDETERMINATE_ALERT_MARKERS)
 
     @staticmethod
     def _ventilation_band(value_m3_h_m2: float) -> str:

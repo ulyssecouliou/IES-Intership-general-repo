@@ -67,6 +67,39 @@ class Sia3802CategoryIsolationTests(unittest.TestCase):
         # A crashed category must never look like a clean 100.
         self.assertEqual(checker._calculate_category_score("Envelope"), 0.0)
 
+    def test_indeterminate_alert_caps_the_category_below_the_pass_band(self):
+        """Audit A2: a not-checkable input must not leave a category reading ~85.
+
+        An indeterminate (missing / not-checkable) alert carries a heavy penalty
+        and caps the category below the pass band, so the number agrees with the
+        verdict marking that domain NOT_DETERMINED -- never a false 'good'."""
+        checker, engine = _checker()
+        engine.add_alert(
+            rule="SIA3802_WINDOW_U_VALUE_MISSING",
+            description="Window U-value is not available for this opening.",
+            severity=Severity.LOW,
+            category="Openings",
+            recommendation="Expose the documented VE window U-value.",
+            data=None,
+        )
+        score = checker._calculate_category_score("Openings")
+        self.assertLessEqual(score, 60.0)  # capped: incomplete, not good
+        self.assertGreater(score, 0.0)     # not a false failure either
+
+    def test_determined_advisory_alone_stays_in_the_pass_band(self):
+        """A determined (non-indeterminate) advisory only dents the score; it is
+        not an unverifiable input, so it is not capped like a missing one."""
+        checker, engine = _checker()
+        engine.add_alert(
+            rule="SIA3802_COOLING_SEER_MIN",
+            description="Cooling SEER is below the SIA table band.",
+            severity=Severity.LOW,
+            category="HVAC",
+            recommendation="Check the generator against the reference row.",
+            data=None,
+        )
+        self.assertEqual(checker._calculate_category_score("HVAC"), 95.0)
+
     def test_failed_category_emits_a_fail_closed_critical_alert(self):
         checker, engine = _checker()
         room = RoomData(id="r1", surfaces=[_UnexpectedSurface()])
