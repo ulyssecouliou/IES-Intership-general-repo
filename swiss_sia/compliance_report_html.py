@@ -451,10 +451,12 @@ _DOMAIN_LABELS = {
     "fr": {
         "envelope": "Enveloppe", "openings": "Ouvertures", "ventilation": "Ventilation",
         "gains": "Gains internes", "setpoints": "Consignes", "hvac": "CVC / Génération",
+        "dynamic": "Confort d'été (dynamique)",
     },
     "en": {
         "envelope": "Envelope", "openings": "Openings", "ventilation": "Ventilation",
         "gains": "Internal gains", "setpoints": "Setpoints", "hvac": "HVAC / Generation",
+        "dynamic": "Summer comfort (dynamic)",
     },
 }
 

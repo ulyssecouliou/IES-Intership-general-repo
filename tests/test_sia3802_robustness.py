@@ -295,6 +295,52 @@ class Sia3802UndeterminedNotFailedTests(unittest.TestCase):
         )
         self.assertIn("sia3802_solar_protection_control", verdict["outstanding"])
 
+    def test_electrical_power_exceeding_the_724_limit_is_reported(self):
+        """SIA 380/2 §7.2.4: a reviewed required electrical power above the W/m2
+        limit (7 new / 12 existing) is reported, and meets_limit is False."""
+        checker, engine = _checker()
+        record = {
+            "accepted": True,
+            "building_status_key": "new",
+            "required_electrical_power_w_m2_numeric": 9.0,
+        }
+        result = checker._evaluate_electrical_power(record)
+        self.assertFalse(result["meets_limit"])
+        self.assertEqual(result["limit_w_m2"], 7.0)
+        names = [a.rule for a in engine.get_alerts_by_category(
+            "Reference Project Diagnostics")]
+        self.assertIn("SIA3802_ELECTRICAL_POWER_EXCEEDS_LIMIT", names)
+
+    def test_electrical_power_within_the_724_limit_passes(self):
+        checker, engine = _checker()
+        record = {
+            "accepted": True,
+            "building_status_key": "existing",
+            "required_electrical_power_w_m2_numeric": 10.0,
+        }
+        result = checker._evaluate_electrical_power(record)
+        self.assertTrue(result["meets_limit"])
+        self.assertEqual(result["limit_w_m2"], 12.0)
+        names = [a.rule for a in engine.get_alerts_by_category(
+            "Reference Project Diagnostics")]
+        self.assertNotIn("SIA3802_ELECTRICAL_POWER_EXCEEDS_LIMIT", names)
+
+    def test_no_solar_protection_alert_does_not_gate_the_verdict(self):
+        """The solar-protection gate must fire only when shading is present. A
+        model with no solar-protection alert (none modelled / none needed) is not
+        over-blocked."""
+        results = {
+            "envelope": {}, "openings": {}, "ventilation": {}, "gains": {},
+            "setpoints": {}, "hvac": {}, "dynamic": {},
+            "alerts": [],
+            "global_reference_comparison": {"status": "REVIEWED_RESULT_AVAILABLE"},
+        }
+        verdict = build_compliance_verdict(results, None, rooms_analysed=1).to_dict()
+        self.assertEqual(verdict["sia3802_status"], "COMPLIANT")
+        self.assertNotIn(
+            "sia3802_solar_protection_control", verdict["outstanding"]
+        )
+
 
 class Sia3802GlobalReferenceComparisonRobustnessTests(unittest.TestCase):
     """The reviewed project/reference gate must survive a degenerate payload.

@@ -13,6 +13,7 @@ from typing import Any, Callable, Dict, List, Optional
 from .config import (
     PROJECT_ROOT,
     SIA3802_COOLING_EER_SEER_LIMITS,
+    SIA3802_ELECTRICAL_POWER_LIMITS_W_M2,
     SIA3802_COOLING_EER_SEER_TARGETS,
     SIA3802_COOLING_NEED_SCREENING,
     SIA_COMPLIANCE_VALUE_PROVENANCE,
@@ -30,6 +31,7 @@ from .evidence_manager import (
     accepted_solar_protection_windows,
     find_accepted_ahu_heat_recovery,
     find_accepted_cooling_generators,
+    find_accepted_electrical_power,
     find_accepted_mapping,
     find_accepted_thermal_bridges,
     find_accepted_ventilation_control,
@@ -37,6 +39,7 @@ from .evidence_manager import (
     scan_sia2024_usage_mappings,
     scan_sia3802_ahu_heat_recovery,
     scan_sia3802_cooling_generators,
+    scan_sia3802_electrical_power,
     scan_sia3802_thermal_bridges,
     scan_sia3802_ventilation_control,
     scan_sia3874_lighting_mappings,
@@ -379,6 +382,17 @@ class SIA3802Checker:
             solar_protection_scan, project_label or ""
         )
 
+        # SIA 380/2:2022 §7.2.4 required electrical power (W/m2): a design sizing
+        # figure VE does not expose, supplied as reviewed evidence.
+        electrical_power_scan = scan_sia3802_electrical_power(
+            PROJECT_ROOT, SIA4010_EVIDENCE_DIR, project_label
+        )
+        electrical_power_record = find_accepted_electrical_power(
+            electrical_power_scan, project_label or ""
+        )
+        electrical_power = self._evaluate_electrical_power(electrical_power_record)
+        electrical_power["status"] = electrical_power_scan.get("status")
+
         envelope = self._run_category(
             "Envelope", self._check_envelope, rooms_data
         )
@@ -451,6 +465,7 @@ class SIA3802Checker:
                 "accepted_window_count": solar_protection_windows,
                 "records": solar_protection_scan.get("accepted_records", []),
             },
+            "electrical_power": electrical_power,
             "rule_evaluations": dict(self.rule_engine.evaluated_counts),
             "alerts": list(self.rule_engine.alerts),
         }
@@ -1397,6 +1412,53 @@ class SIA3802Checker:
         else:
             result["source"] = "none"
             result["ve_available"] = False
+        return result
+
+    def _evaluate_electrical_power(
+        self, record: Optional[Dict[str, Any]]
+    ) -> Dict[str, Any]:
+        """Compare a reviewed §7.2.4 required electrical power to its W/m2 limit.
+
+        §7.2.4.2: the required electrical power must not exceed 7 W/m2 (new) or
+        12 W/m2 (existing/renovated). This is a design sizing figure supplied by
+        the reviewer (VE does not expose it). Whether an exceedance must BLOCK the
+        SIA 380/2 verdict, or is a diagnostic when cooling is present, is
+        [PENDING norm-analyst]; for now an exceedance is reported as a diagnostic
+        (not a silent pass, not a hard gate).
+        """
+        result: Dict[str, Any] = {
+            "accepted": bool(record),
+            "record": record,
+            "meets_limit": None,
+            "limit_w_m2": None,
+        }
+        if not isinstance(record, dict) or not record.get("accepted"):
+            return result
+        status_key = record.get("building_status_key")
+        limit = SIA3802_ELECTRICAL_POWER_LIMITS_W_M2.get(str(status_key))
+        value = self._float_or_none(record.get("required_electrical_power_w_m2_numeric"))
+        if limit is None or value is None:
+            return result
+        result["limit_w_m2"] = limit
+        result["meets_limit"] = value <= limit
+        if not result["meets_limit"]:
+            self.rule_engine.add_alert(
+                rule="SIA3802_ELECTRICAL_POWER_EXCEEDS_LIMIT",
+                description=(
+                    "Reviewed §7.2.4 required electrical power {:.2f} W/m2 exceeds the "
+                    "{} limit {:.0f} W/m2 (SIA 380/2:2022 §7.2.4.2).".format(
+                        value, status_key, limit
+                    )
+                ),
+                severity=Severity.MEDIUM,
+                category="Reference Project Diagnostics",
+                recommendation=(
+                    "Reduce fan/pump/conditioning required power or confirm the "
+                    "sizing basis. [Whether §7.2.4 is a hard verdict gate is pending "
+                    "norm-analyst.]"
+                ),
+                data=record,
+            )
         return result
 
     def _check_declared_cooling_seer(self) -> None:

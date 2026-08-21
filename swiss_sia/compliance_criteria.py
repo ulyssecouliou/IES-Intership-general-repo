@@ -62,6 +62,17 @@ _CAPABILITY_OVERRIDES = {
             "SIA3802_thermal_bridges_<project>.csv."
         ),
     },
+    "SIA3802_ELECTRICAL_POWER": {
+        "ve_capability": "EXTERNAL_EVIDENCE",
+        "ve_capability_note": (
+            "SIA 380/2 §7.2.4 required electrical power (fluid transport + "
+            "conditioning incl. cooling) per conditioned net floor area is a DESIGN "
+            "sizing figure with a daily simultaneity factor (§7.2.4.3); VE does not "
+            "expose it. Supply it via SIA3802_electrical_power_<project>.csv; the "
+            "tool compares it to 7 W/m2 (new) / 12 W/m2 (existing). [Whether an "
+            "exceedance is a hard verdict gate is pending norm-analyst.]"
+        ),
+    },
     "SIA3802_DESIGN_POWER_DAYS": {
         "ve_capability": "NOT_AVAILABLE",
         "ve_capability_note": (

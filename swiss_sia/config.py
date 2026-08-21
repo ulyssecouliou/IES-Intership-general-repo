@@ -207,6 +207,25 @@ SIA3802_GENERATION_REFERENCE = {
 # (Table 7, EER+). SIA 380/2:2022 7.2.5.4-5, page PDF 34.
 SIA3802_COOLING_AIR_CHILLER_MAX_KW = 150.0
 
+# SIA 380/2:2022 §7.2.4 "Installations de faible puissance électrique requise".
+# The required electrical power for fluid transport (air, water, other) and fluid
+# conditioning -- INCLUDING cooling and, where present, humidification and water
+# treatment -- divided by the conditioned net floor area (A_p), must not exceed:
+#   - new installations:               7 W/m2  (§7.2.4.2, page PDF 32)
+#   - existing / renovated installations: 12 W/m2 (§7.2.4.2, page PDF 32)
+# §7.2.4.3: use the sizing calculation with the daily simultaneity factor and the
+# nominal efficiency/COP; part-load improvements are NOT credited; very-low-draw
+# control components (motorized dampers etc.) may be neglected. This is a DESIGN
+# required-power figure (like the design-day workflow), not an annual energy read,
+# so VE does not expose it directly; it is supplied as reviewed evidence.
+# [PENDING norm-analyst: whether §7.2.4 is a hard verdict gate when cooling is
+# present, and the exact required-power quantity definition.]
+SIA3802_ELECTRICAL_POWER_LIMITS_W_M2 = {
+    "new": 7.0,
+    "existing": 12.0,
+}
+SIA3802_ELECTRICAL_POWER_SOURCE = "SIA 380/2:2022 §7.2.4.2, page PDF 32"
+
 SIA3802_LIMIT_VALUES = {
     # Tables 2 to 9 primarily define the limit-case reference project. Keep
     # these historical key names for API compatibility, but never interpret a
@@ -1909,6 +1928,23 @@ SIA_DATA_COVERAGE_MATRIX = [
         "source": f"{SIA3802_SOURCE_REFERENCES['table_4']}; {SIA4010_SYSTEM_REQUIREMENT_SOURCES['ventilation']['pages']}",
         "owner": "Compliance reviewer",
         "next_action": "Use extracted recovery/control identifiers and attach leakage, pressure-drop, efficiency and humidification evidence for tests 5 and 6.",
+    },
+    {
+        "id": "SIA3802_ELECTRICAL_POWER",
+        "standard": "SIA 380/2:2022",
+        "validation_scope": "SIA 380/2 §7.2.4",
+        "domain": "HVAC",
+        "criterion": "Required electrical power for fluid transport and conditioning",
+        "expected_value": "<= 7 W/m2 (new) / 12 W/m2 (existing) of conditioned net floor area",
+        "data_needed": "Design required electrical power (fans, pumps, cooling, humidification, water treatment) with the daily simultaneity factor, and the building status",
+        "expected_source": "Reviewer sizing calculation (VE does not expose the design required power)",
+        "coverage_key": "electrical_power",
+        "automation": "EVIDENCE_SCAN",
+        "preferred_format": "Reviewer CSV SIA3802_electrical_power_<project>.csv",
+        "destination": "sia4010_evidence/",
+        "source": SIA3802_ELECTRICAL_POWER_SOURCE,
+        "owner": "Compliance reviewer",
+        "next_action": "Attach the reviewed required-electrical-power figure (W/m2) and building status; the tool compares it to the §7.2.4 limit.",
     },
     {
         "id": "SIA3802_COOLING_EER_SEER",

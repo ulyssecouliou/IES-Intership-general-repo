@@ -284,6 +284,30 @@ class EvaluatorTests(unittest.TestCase):
         self.assertEqual(
             by_id["SIA3802_COOLING_EER_SEER"]["runtime_status"], "NOT_CHECKABLE")
 
+    def test_reviewed_electrical_power_credits_the_724_criterion(self):
+        sia3802 = self._base_sia3802("REVIEWED_RESULT_AVAILABLE")
+        sia3802["electrical_power"] = {
+            "accepted": True,
+            "meets_limit": True,
+            "limit_w_m2": 7.0,
+            "record": {
+                "building_status_key": "new",
+                "required_electrical_power_w_m2_numeric": 6.0,
+            },
+        }
+        manifest = evaluate_client_compliance(
+            sia3802, {}, {}, [_Room()], [], scope="sia3802")
+        by_id = {c["id"]: c for c in manifest["criteria"]}
+        self.assertEqual(by_id["SIA3802_ELECTRICAL_POWER"]["runtime_status"], "OK")
+
+    def test_electrical_power_without_evidence_needs_reviewer(self):
+        manifest = evaluate_client_compliance(
+            self._base_sia3802("REVIEWED_RESULT_AVAILABLE"), {}, {}, [_Room()], [],
+            scope="sia3802")
+        by_id = {c["id"]: c for c in manifest["criteria"]}
+        self.assertEqual(
+            by_id["SIA3802_ELECTRICAL_POWER"]["runtime_status"], "NEEDS_REVIEWER_EVIDENCE")
+
     def test_reviewed_ahu_evidence_credits_the_ahu_criterion(self):
         sia3802 = self._base_sia3802("REVIEWED_RESULT_AVAILABLE")
         sia3802["ahu_heat_recovery"] = {
@@ -459,6 +483,49 @@ class CoolingGeneratorEvidenceTests(unittest.TestCase):
         from swiss_sia.evidence_manager import _normalize_cooling_generator_record
         self.assertFalse(
             _normalize_cooling_generator_record(self._row(review_status="pending"))["accepted"])
+
+
+class ElectricalPowerEvidenceTests(unittest.TestCase):
+    """The reviewer §7.2.4 electrical-power record is accepted only when complete."""
+
+    def _row(self, **overrides):
+        row = {
+            "project_id": "Demo",
+            "building_status": "new",
+            "required_electrical_power_w_m2": "6.5",
+            "review_status": "accepted",
+            "reviewer": "Reviewer",
+            "review_date": "2026-08-20",
+            "source_document": "sizing_calc.pdf",
+        }
+        row.update(overrides)
+        return row
+
+    def test_complete_record_is_accepted(self):
+        from swiss_sia.evidence_manager import _normalize_electrical_power_record
+        rec = _normalize_electrical_power_record(self._row())
+        self.assertTrue(rec["accepted"])
+        self.assertEqual(rec["building_status_key"], "new")
+        self.assertEqual(rec["required_electrical_power_w_m2_numeric"], 6.5)
+
+    def test_existing_status_is_mapped(self):
+        from swiss_sia.evidence_manager import _normalize_electrical_power_record
+        self.assertEqual(
+            _normalize_electrical_power_record(
+                self._row(building_status="renovated"))["building_status_key"],
+            "existing")
+
+    def test_missing_power_is_rejected(self):
+        from swiss_sia.evidence_manager import _normalize_electrical_power_record
+        self.assertFalse(
+            _normalize_electrical_power_record(
+                self._row(required_electrical_power_w_m2=""))["accepted"])
+
+    def test_unknown_status_is_rejected(self):
+        from swiss_sia.evidence_manager import _normalize_electrical_power_record
+        self.assertFalse(
+            _normalize_electrical_power_record(
+                self._row(building_status="mixed"))["accepted"])
 
 
 class AhuHeatRecoveryEvidenceTests(unittest.TestCase):

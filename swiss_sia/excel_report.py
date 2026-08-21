@@ -4761,6 +4761,21 @@ class ExcelReportGenerator:
         stats["solar_protection_reviewed_windows"] = int(
             solar_evidence.get("accepted_window_count", 0) or 0
         )
+        # Reviewed §7.2.4 required electrical power (W/m2) documented outside VE.
+        electrical_power = (sia3802_results or {}).get("electrical_power", {}) or {}
+        stats["electrical_power_accepted"] = bool(electrical_power.get("accepted"))
+        ep_record = electrical_power.get("record") or {}
+        if isinstance(ep_record, dict) and electrical_power.get("accepted"):
+            value = ep_record.get("required_electrical_power_w_m2_numeric")
+            limit = electrical_power.get("limit_w_m2")
+            meets = electrical_power.get("meets_limit")
+            verdict = "meets" if meets else ("exceeds" if meets is False else "vs")
+            stats["electrical_power_evidence"] = (
+                "Reviewer §7.2.4 required electrical power {} W/m2 ({} the {} W/m2 "
+                "limit for {}).".format(
+                    value, verdict, limit, ep_record.get("building_status_key") or "?"
+                )
+            )
         evidence = sia4010_results.get("evidence", {}) or {}
         dynamic_payload = dynamic_results or sia4010_results.get("dynamic_results", {}) or {}
         preflight_status_by_check = {
@@ -5006,6 +5021,17 @@ class ExcelReportGenerator:
             if count:
                 return "PARTIAL", f"{count} room(s) expose fan/recovery/humidification identifiers; pressure-drop, leakage and verified efficiency evidence remains external. Attach reviewed evidence via SIA3802_ahu_heat_recovery_<project>.csv."
             return "MISSING", "No AHU fan/recovery/humidification identifier was extracted. Provide reviewed evidence via SIA3802_ahu_heat_recovery_<project>.csv."
+        if key == "electrical_power":
+            if stats.get("electrical_power_accepted"):
+                return "AVAILABLE", stats.get(
+                    "electrical_power_evidence",
+                    "Reviewer-accepted §7.2.4 required electrical power (W/m2).",
+                )
+            return (
+                "MISSING",
+                "No reviewed §7.2.4 required electrical power (W/m2) provided; it is a design "
+                "sizing figure VE does not expose. Attach SIA3802_electrical_power_<project>.csv.",
+            )
         if key == "cooling_efficiency":
             if stats.get("cooling_generator_accepted"):
                 return "AVAILABLE", stats.get(

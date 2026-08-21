@@ -85,6 +85,11 @@ GLAZING_SOLAR_PROTECTION_FILE_PATTERNS = (
     "GLAZING_solar_protection_*.csv",
 )
 
+SIA3802_ELECTRICAL_POWER_FILE_PATTERNS = (
+    "SIA3802_electrical_power_*.csv",
+    "sia3802_electrical_power_*.csv",
+)
+
 
 def scan_sia3802_justifications(
     project_root: Path,
@@ -482,6 +487,84 @@ def accepted_solar_protection_windows(
         count = record.get("window_count_numeric")
         total += int(count) if count is not None else 1
     return total
+
+
+def scan_sia3802_electrical_power(
+    project_root: Path,
+    evidence_dir_name: str = "sia4010_evidence",
+    project_label: Optional[str] = None,
+) -> Dict[str, Any]:
+    """Scan reviewer-owned §7.2.4 required-electrical-power records.
+
+    The §7.2.4 required electrical power (W/m2 of conditioned net floor area) is a
+    DESIGN sizing figure with a daily simultaneity factor (§7.2.4.3); VE does not
+    expose it directly, so the reviewer supplies it from the sizing calculation.
+    """
+    return _scan_reviewer_records(
+        project_root,
+        evidence_dir_name,
+        SIA3802_ELECTRICAL_POWER_FILE_PATTERNS,
+        project_label,
+        _normalize_electrical_power_record,
+    )
+
+
+def find_accepted_electrical_power(
+    electrical_power_results: Dict[str, Any],
+    project_label: str,
+) -> Optional[Dict[str, Any]]:
+    """Return the accepted §7.2.4 required-electrical-power record for the project."""
+    return _find_accepted_for_project(electrical_power_results, project_label)
+
+
+def _normalize_electrical_power_record(raw_row: Dict[str, Any]) -> Dict[str, Any]:
+    """Normalize one reviewer-owned §7.2.4 required-electrical-power record.
+
+    Accepted only when a reviewer has signed off the building status
+    (new / existing) and a numeric required electrical power in W/m2 of
+    conditioned net floor area, with a traceable sizing-calculation source.
+    Nothing is inferred from an empty field.
+    """
+    record = {
+        _normalize_header(key): _clean_value(value)
+        for key, value in (raw_row or {}).items()
+        if key is not None
+    }
+    record.setdefault("project_id", record.get("project", ""))
+    record.setdefault("building_status", "")
+    record.setdefault("required_electrical_power_w_m2", "")
+    record.setdefault("conditioned_area_m2", "")
+    record.setdefault("cooling_present", "")
+    record.setdefault("unit", "")
+    record.setdefault("review_status", "")
+    record.setdefault("reviewer", "")
+    record.setdefault("review_date", "")
+    record.setdefault("source_document", record.get("source_file", ""))
+    record.setdefault("source_reference", "")
+    record.setdefault("notes", "")
+    try:
+        record["required_electrical_power_w_m2_numeric"] = float(
+            record.get("required_electrical_power_w_m2")
+        )
+    except (TypeError, ValueError):
+        record["required_electrical_power_w_m2_numeric"] = None
+    status_key = str(record.get("building_status") or "").strip().lower()
+    if status_key in ("new", "neuf", "new_building", "neubau"):
+        record["building_status_key"] = "new"
+    elif status_key in ("existing", "existant", "renovated", "renovation", "renove", "rénové", "sanierung"):
+        record["building_status_key"] = "existing"
+    else:
+        record["building_status_key"] = ""
+    record["accepted"] = (
+        _status_key(record.get("review_status")) in ACCEPTED_REVIEW_STATUSES
+        and bool(record.get("project_id"))
+        and bool(record.get("building_status_key"))
+        and record.get("required_electrical_power_w_m2_numeric") is not None
+        and bool(record.get("reviewer"))
+        and bool(record.get("review_date"))
+        and bool(record.get("source_document") or record.get("source_reference"))
+    )
+    return record
 
 
 def _normalize_solar_protection_record(raw_row: Dict[str, Any]) -> Dict[str, Any]:
