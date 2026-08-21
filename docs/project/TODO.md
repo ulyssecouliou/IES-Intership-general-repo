@@ -60,7 +60,9 @@ Modèle exemple `SIA_compatible_model_TEST` : **overall SIA 380/2 CONFORME (avec
 - [x] ✅ **Chauffage SCOP → NON_APPLICABLE** — *fait* (`8d441b4`) : un générateur de chauffage dimensionné que VE ne classe pas en PAC (chaudière) rend `SIA3802_HEATING_SCOP` **NON_APPLICABLE** (hors périmètre), au lieu de `NOT_CHECKABLE`. Une PAC sans SCOP reste bien `NOT_CHECKABLE` (vrai manque). L'efficacité de génération non-PAC passe par la comparaison globale.
 
 ### ⬜ Sources normatives à acquérir (débloquent des verdicts)
-- ⬜ **SIA 387/4** (contrôle éclairage) · **SN EN 14825** (SEER/SCoP) · **SIA 180 complet** (Fig.3 + corrigenda) · **SIA 380 faîtière** (agrégation/pondération annuelle) · **SN EN 15316-2 / 16798-13** (énergie système). → SIA Shop / contact SIA. Sans elles : verdicts `[TO VERIFY]` par honnêteté.
+- ⬜ **SIA 387/4:2023** (contrôle éclairage, éq. 18-20 + tableau 9) — Yiqiao l'a envoyé le 2026-08-14 ; **à retrouver dans ce mail et intégrer** (édition 2017 déjà figée). · **SN EN 14825** (SCoP chaud) — accès habituel (SEER froid déjà bouclé, `615e03f`). · **SN EN 15316-2 / 16798-13** (énergie système) — accès habituel.
+- [x] ✅ **SIA 180 Fig.3** — fournie par Yiqiao (2026-08-20), **figée** `348479e` (`chiffre_2_3_3_figure_3`). Réserve ZOER levée.
+- ❌ **SIA 380 faîtière — facteur de pondération national** (agrégation/pondération annuelle de l'indice) : **payant (achat uniquement), abandonné** (décision utilisateur 2026-08-20). Sans impact : l'indice global pondéré du §7.2.5.2 est **fourni par le relecteur** (CSV `SIA3802_global_reference_comparison`), jamais calculé par l'outil.
 
 ### 🔶 À faire valider (indépendant)
 - 🔶 **norm-analyst** : (a) « porte décisive = suffisante » (interprétation §7.2.5.2) ; (b) définition de **T° opérative** SIA 180 + fenêtre θrm + Fig.3 ; (c) variantes fenêtre Test 2 / critères SIA 4010 Tests 2-7.
