@@ -75,7 +75,7 @@ Modèle exemple `SIA_compatible_model_TEST` : **overall SIA 380/2 CONFORME (avec
 
 ### 🔶 À faire valider (indépendant)
 - 🔶 **norm-analyst** : (a) ✅ porte décisive §7.2.5.2 + exigences autonomes §7.1 (2026-08-20) ; (b) définition de **T° opérative** SIA 180 + fenêtre θrm + Fig.3 ; (c) variantes fenêtre Test 2 / critères SIA 4010 Tests 2-7 ; (d) ✅ **§7.2.4 porte conditionnelle** (A5, 2026-08-21).
-- 🔶 **qa-auditor** : ✅ lot indicateurs+verdict A1-A4 **SIGNÉ** (`audit-lot-A1-A4-...matrix.md`) ; ⬜ reste : signer **§7.2.4** (A5) avant « done » commercial.
+- 🔶 **qa-auditor** : ✅ lot indicateurs+verdict A1-A4 **SIGNÉ** (`audit-lot-A1-A4-...matrix.md`) ; ✅ **§7.2.4 SIGNÉ** (`electrical-power-7.2.4.matrix.md`). Corrigés suite audit : R1 (puissance négative rejetée) + R2 (unité ≠ W/m² rejetée). ⬜ R3 (réconciliation W/m² vs puissance/surface) + R4 (détection installation heuristique) = améliorations non bloquantes.
 - 🔶 **Qualification VE réelle** : capability-check + readback par valeur (au-delà du fonctionnel prouvé).
 
 ---

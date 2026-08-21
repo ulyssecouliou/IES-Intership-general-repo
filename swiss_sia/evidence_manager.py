@@ -568,11 +568,25 @@ def _normalize_electrical_power_record(raw_row: Dict[str, Any]) -> Dict[str, Any
         record["cooling_category_key"] = "none"
     else:
         record["cooling_category_key"] = ""
+    # Guard the numeric value (audit A5 R1/R2): a required power is a non-negative
+    # W/m2 figure. Reject a negative value, and reject a unit that is clearly not
+    # W/m2 (e.g. "kW") so the value is never silently compared against the W/m2
+    # limit in the wrong unit. A blank unit is accepted (the column is named
+    # required_electrical_power_w_m2).
+    power = record.get("required_electrical_power_w_m2_numeric")
+    power_is_valid = power is not None and power >= 0.0
+    unit_text = str(record.get("unit") or "").strip().lower().replace(" ", "")
+    unit_is_w_m2 = (unit_text == "") or (
+        ("w/m" in unit_text or "w/(m" in unit_text)
+        and "kw" not in unit_text and "mw" not in unit_text
+    )
+    record["unit_is_w_per_m2"] = unit_is_w_m2
     record["accepted"] = (
         _status_key(record.get("review_status")) in ACCEPTED_REVIEW_STATUSES
         and bool(record.get("project_id"))
         and bool(record.get("building_status_key"))
-        and record.get("required_electrical_power_w_m2_numeric") is not None
+        and power_is_valid
+        and unit_is_w_m2
         and bool(record.get("reviewer"))
         and bool(record.get("review_date"))
         and bool(record.get("source_document") or record.get("source_reference"))

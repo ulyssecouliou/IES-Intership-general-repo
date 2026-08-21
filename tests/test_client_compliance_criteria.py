@@ -527,6 +527,24 @@ class ElectricalPowerEvidenceTests(unittest.TestCase):
             _normalize_electrical_power_record(
                 self._row(building_status="mixed"))["accepted"])
 
+    def test_negative_power_is_rejected(self):
+        """Audit A5 R1: a negative required power is invalid, never accepted."""
+        from swiss_sia.evidence_manager import _normalize_electrical_power_record
+        self.assertFalse(
+            _normalize_electrical_power_record(
+                self._row(required_electrical_power_w_m2="-5"))["accepted"])
+
+    def test_wrong_unit_is_rejected(self):
+        """Audit A5 R2: a non-W/m2 unit (e.g. kW) must not be silently compared."""
+        from swiss_sia.evidence_manager import _normalize_electrical_power_record
+        rec = _normalize_electrical_power_record(self._row(unit="kW"))
+        self.assertFalse(rec["accepted"])
+        self.assertFalse(rec["unit_is_w_per_m2"])
+
+    def test_blank_unit_is_accepted(self):
+        from swiss_sia.evidence_manager import _normalize_electrical_power_record
+        self.assertTrue(_normalize_electrical_power_record(self._row(unit=""))["accepted"])
+
 
 class AhuHeatRecoveryEvidenceTests(unittest.TestCase):
     """The reviewer AHU / heat-recovery record is accepted only when complete."""
