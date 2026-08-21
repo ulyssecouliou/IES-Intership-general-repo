@@ -2072,6 +2072,12 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
         "fr": "preuve de la commande de protection solaire (SIA 380/2 7.1.2)",
         "it": "prova del comando di protezione solare (SIA 380/2 7.1.2)",
     },
+    "outstanding_sia3802_electrical_power": {
+        "en": "required electrical power evidence (SIA 380/2 7.2.4)",
+        "de": "Nachweis der erforderlichen elektrischen Leistung (SIA 380/2 7.2.4)",
+        "fr": "preuve de la puissance électrique requise (SIA 380/2 7.2.4)",
+        "it": "prova della potenza elettrica richiesta (SIA 380/2 7.2.4)",
+    },
     "outstanding_sia4010_official_results": {
         "en": "official SIA 4010 test results",
         "de": "offizielle Testergebnisse nach SIA 4010",

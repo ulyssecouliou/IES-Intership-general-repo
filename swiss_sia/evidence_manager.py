@@ -535,6 +535,7 @@ def _normalize_electrical_power_record(raw_row: Dict[str, Any]) -> Dict[str, Any
     record.setdefault("required_electrical_power_w_m2", "")
     record.setdefault("conditioned_area_m2", "")
     record.setdefault("cooling_present", "")
+    record.setdefault("cooling_category", "")
     record.setdefault("unit", "")
     record.setdefault("review_status", "")
     record.setdefault("reviewer", "")
@@ -555,6 +556,18 @@ def _normalize_electrical_power_record(raw_row: Dict[str, Any]) -> Dict[str, Any
         record["building_status_key"] = "existing"
     else:
         record["building_status_key"] = ""
+    # Cooling-necessity category (SIA 380/2 §3.2): the §7.2.4 power lock only
+    # blocks when cooling is desirable/superfluous (not necessary). Left blank
+    # (or unrecognised) means the category is indeterminate.
+    cat = str(record.get("cooling_category") or "").strip().lower()
+    if cat in ("necessary", "necessaire", "nécessaire", "required", "erforderlich", "notwendig"):
+        record["cooling_category_key"] = "necessary"
+    elif cat in ("desirable", "souhaitable", "superfluous", "superflu", "optional", "wuenschenswert", "gewuenscht"):
+        record["cooling_category_key"] = "desirable"
+    elif cat in ("none", "no_cooling", "aucun", "sans", "keine"):
+        record["cooling_category_key"] = "none"
+    else:
+        record["cooling_category_key"] = ""
     record["accepted"] = (
         _status_key(record.get("review_status")) in ACCEPTED_REVIEW_STATUSES
         and bool(record.get("project_id"))

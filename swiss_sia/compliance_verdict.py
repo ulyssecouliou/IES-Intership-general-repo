@@ -246,6 +246,16 @@ def build_compliance_verdict(
     comparison_contradicts = (
         comparison_status == "REVIEWED_RESULT_CONTRADICTS_ACCEPTANCE"
     )
+    # SIA 380/2:2022 §7.2.4 required electrical power is an AUTONOMOUS,
+    # conditionally-blocking requirement (norm-analyst A5): a reviewed exceedance
+    # with desirable/superfluous cooling is a determined NON-compliance; an
+    # exceedance whose cooling-necessity class is unknown, or missing power, is
+    # NOT_DETERMINED. The checker resolves this into a single verdict_status.
+    electrical_power_status = str(
+        (sia3802.get("electrical_power", {}) or {}).get("verdict_status") or ""
+    )
+    electrical_power_not_compliant = electrical_power_status == "NOT_COMPLIANT"
+    electrical_power_incomplete = electrical_power_status == "NOT_DETERMINED"
     # SIA 380/2:2022 §7.2.5.2 decides overall compliance on the reviewed global
     # project/reference comparison; the per-component checks are diagnostics of
     # the reference-project inputs, not the verdict itself. So once the decisive
@@ -268,6 +278,11 @@ def build_compliance_verdict(
             NOT_COMPLIANT,
             "global_comparison_contradicts_acceptance",
         )
+    elif electrical_power_not_compliant:
+        sia3802_status, sia3802_reason = (
+            NOT_COMPLIANT,
+            "electrical_power_exceeds_7_2_4_limit",
+        )
     elif not comparison_available:
         sia3802_status, sia3802_reason = NOT_DETERMINED, "global_comparison_missing"
     elif ventilation_evidence_incomplete:
@@ -279,6 +294,11 @@ def build_compliance_verdict(
         sia3802_status, sia3802_reason = (
             NOT_DETERMINED,
             "solar_protection_control_incomplete",
+        )
+    elif electrical_power_incomplete:
+        sia3802_status, sia3802_reason = (
+            NOT_DETERMINED,
+            "electrical_power_evidence_incomplete",
         )
     else:
         sia3802_status, sia3802_reason = COMPLIANT, (
@@ -294,6 +314,8 @@ def build_compliance_verdict(
         outstanding.append("sia3802_ventilation_evidence")
     if solar_protection_control_incomplete:
         outstanding.append("sia3802_solar_protection_control")
+    if electrical_power_not_compliant or electrical_power_incomplete:
+        outstanding.append("sia3802_electrical_power")
 
     # SIA 4010 reports the toolchain's validation-class state. Official class
     # validation additionally requires SIA sub-commission attestation, so the

@@ -390,7 +390,15 @@ class SIA3802Checker:
         electrical_power_record = find_accepted_electrical_power(
             electrical_power_scan, project_label or ""
         )
-        electrical_power = self._evaluate_electrical_power(electrical_power_record)
+        has_fluid_installation = any(
+            getattr(room, "hvac_systems", None)
+            or getattr(room, "mechanical_ventilation_present", None) is True
+            or getattr(room, "ventilation_rate", None) is not None
+            for room in (rooms_data or [])
+        )
+        electrical_power = self._evaluate_electrical_power(
+            electrical_power_record, has_fluid_installation
+        )
         electrical_power["status"] = electrical_power_scan.get("status")
 
         envelope = self._run_category(
@@ -1415,47 +1423,88 @@ class SIA3802Checker:
         return result
 
     def _evaluate_electrical_power(
-        self, record: Optional[Dict[str, Any]]
+        self, record: Optional[Dict[str, Any]], has_fluid_installation: bool
     ) -> Dict[str, Any]:
-        """Compare a reviewed §7.2.4 required electrical power to its W/m2 limit.
+        """Evaluate the reviewed §7.2.4 required electrical power against its limit.
 
-        §7.2.4.2: the required electrical power must not exceed 7 W/m2 (new) or
-        12 W/m2 (existing/renovated). This is a design sizing figure supplied by
-        the reviewer (VE does not expose it). Whether an exceedance must BLOCK the
-        SIA 380/2 verdict, or is a diagnostic when cooling is present, is
-        [PENDING norm-analyst]; for now an exceedance is reported as a diagnostic
-        (not a silent pass, not a hard gate).
+        norm-analyst A5 (traceability/audit-A5-...): §7.2.4 is an AUTONOMOUS,
+        conditionally-blocking requirement (not subsumed by §7.2.5.2). The power
+        lock (7 W/m2 new / 12 W/m2 existing, §7.2.4.2) only makes a building NON
+        compliant when cooling is DESIRABLE/superfluous (§3.2.3.1 n.1, §3.2.5.2);
+        when cooling is NECESSARY the norm does not restrict the power. Fail-closed:
+
+          - no fluid installation             -> NOT_APPLICABLE  (§7.2.4.1)
+          - installation present, power missing -> NOT_DETERMINED (reserve)
+          - power <= limit                     -> OK
+          - power > limit, cooling desirable   -> NOT_COMPLIANT
+          - power > limit, cooling necessary   -> OK (power unrestricted; §3.2.1.1
+                                                  still forces §7.1, gated elsewhere)
+          - power > limit, category unknown    -> NOT_DETERMINED (SIA 180/2024 for
+                                                  the necessity class are absent)
         """
         result: Dict[str, Any] = {
-            "accepted": bool(record),
-            "record": record,
+            "accepted": bool(record and record.get("accepted")),
+            "record": record if isinstance(record, dict) else None,
             "meets_limit": None,
             "limit_w_m2": None,
+            "verdict_status": None,
         }
         if not isinstance(record, dict) or not record.get("accepted"):
+            result["verdict_status"] = (
+                "NOT_DETERMINED" if has_fluid_installation else "NOT_APPLICABLE"
+            )
             return result
         status_key = record.get("building_status_key")
         limit = SIA3802_ELECTRICAL_POWER_LIMITS_W_M2.get(str(status_key))
         value = self._float_or_none(record.get("required_electrical_power_w_m2_numeric"))
         if limit is None or value is None:
+            result["verdict_status"] = "NOT_DETERMINED"
             return result
         result["limit_w_m2"] = limit
         result["meets_limit"] = value <= limit
-        if not result["meets_limit"]:
+        if result["meets_limit"]:
+            result["verdict_status"] = "OK"
+            return result
+        category = str(record.get("cooling_category_key") or "")
+        if category == "desirable":
+            result["verdict_status"] = "NOT_COMPLIANT"
             self.rule_engine.add_alert(
                 rule="SIA3802_ELECTRICAL_POWER_EXCEEDS_LIMIT",
                 description=(
                     "Reviewed §7.2.4 required electrical power {:.2f} W/m2 exceeds the "
-                    "{} limit {:.0f} W/m2 (SIA 380/2:2022 §7.2.4.2).".format(
+                    "{} limit {:.0f} W/m2, and cooling is desirable/superfluous: per "
+                    "SIA 380/2:2022 §3.2.3.1 note 1 / §3.2.5.2 cooling is then admitted "
+                    "ONLY with a low-power installation.".format(value, status_key, limit)
+                ),
+                severity=Severity.HIGH,
+                category="Electrical Power",
+                recommendation=(
+                    "Reduce the required electrical power to <= the §7.2.4 limit, or "
+                    "renounce mechanical cooling."
+                ),
+                data=record,
+            )
+        elif category == "necessary":
+            # Cooling necessary: the power is not restricted by §7.2.4; §3.2.1.1
+            # still forces the §7.1 constructive requirements (gated separately).
+            result["verdict_status"] = "OK"
+        else:
+            result["verdict_status"] = "NOT_DETERMINED"
+            self.rule_engine.add_alert(
+                rule="SIA3802_ELECTRICAL_POWER_CATEGORY_NOT_CHECKABLE",
+                description=(
+                    "Reviewed §7.2.4 required electrical power {:.2f} W/m2 exceeds the "
+                    "{} limit {:.0f} W/m2, but whether the §7.2.4 power lock applies "
+                    "depends on the cooling-necessity category (§3.2), which is not "
+                    "stated. The building status cannot be concluded.".format(
                         value, status_key, limit
                     )
                 ),
                 severity=Severity.MEDIUM,
-                category="Reference Project Diagnostics",
+                category="Electrical Power",
                 recommendation=(
-                    "Reduce fan/pump/conditioning required power or confirm the "
-                    "sizing basis. [Whether §7.2.4 is a hard verdict gate is pending "
-                    "norm-analyst.]"
+                    "State the cooling category (necessary / desirable) so §7.2.4 can "
+                    "be concluded; necessity classing needs SIA 180 / SIA 2024."
                 ),
                 data=record,
             )

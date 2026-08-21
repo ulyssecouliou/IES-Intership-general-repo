@@ -295,35 +295,77 @@ class Sia3802UndeterminedNotFailedTests(unittest.TestCase):
         )
         self.assertIn("sia3802_solar_protection_control", verdict["outstanding"])
 
-    def test_electrical_power_exceeding_the_724_limit_is_reported(self):
-        """SIA 380/2 §7.2.4: a reviewed required electrical power above the W/m2
-        limit (7 new / 12 existing) is reported, and meets_limit is False."""
+    def test_electrical_power_exceeds_with_desirable_cooling_is_not_compliant(self):
+        """§7.2.4 (norm-analyst A5): a reviewed exceedance with DESIRABLE cooling is
+        a determined non-compliance (cooling then admitted only at low power)."""
         checker, engine = _checker()
         record = {
             "accepted": True,
             "building_status_key": "new",
             "required_electrical_power_w_m2_numeric": 9.0,
+            "cooling_category_key": "desirable",
         }
-        result = checker._evaluate_electrical_power(record)
+        result = checker._evaluate_electrical_power(record, has_fluid_installation=True)
         self.assertFalse(result["meets_limit"])
-        self.assertEqual(result["limit_w_m2"], 7.0)
-        names = [a.rule for a in engine.get_alerts_by_category(
-            "Reference Project Diagnostics")]
+        self.assertEqual(result["verdict_status"], "NOT_COMPLIANT")
+        names = [a.rule for a in engine.get_alerts_by_category("Electrical Power")]
         self.assertIn("SIA3802_ELECTRICAL_POWER_EXCEEDS_LIMIT", names)
 
+    def test_electrical_power_exceeds_with_necessary_cooling_is_not_blocked(self):
+        """Cooling NECESSARY: §7.2.4 does not restrict the power -> not blocked."""
+        checker, _engine = _checker()
+        record = {
+            "accepted": True,
+            "building_status_key": "new",
+            "required_electrical_power_w_m2_numeric": 9.0,
+            "cooling_category_key": "necessary",
+        }
+        result = checker._evaluate_electrical_power(record, has_fluid_installation=True)
+        self.assertEqual(result["verdict_status"], "OK")
+
+    def test_electrical_power_exceeds_unknown_category_is_not_determined(self):
+        """Exceedance with an unknown cooling-necessity class -> NOT_DETERMINED."""
+        checker, _engine = _checker()
+        record = {
+            "accepted": True,
+            "building_status_key": "existing",
+            "required_electrical_power_w_m2_numeric": 15.0,
+            "cooling_category_key": "",
+        }
+        result = checker._evaluate_electrical_power(record, has_fluid_installation=True)
+        self.assertEqual(result["verdict_status"], "NOT_DETERMINED")
+
     def test_electrical_power_within_the_724_limit_passes(self):
-        checker, engine = _checker()
+        checker, _engine = _checker()
         record = {
             "accepted": True,
             "building_status_key": "existing",
             "required_electrical_power_w_m2_numeric": 10.0,
         }
-        result = checker._evaluate_electrical_power(record)
+        result = checker._evaluate_electrical_power(record, has_fluid_installation=True)
         self.assertTrue(result["meets_limit"])
-        self.assertEqual(result["limit_w_m2"], 12.0)
-        names = [a.rule for a in engine.get_alerts_by_category(
-            "Reference Project Diagnostics")]
-        self.assertNotIn("SIA3802_ELECTRICAL_POWER_EXCEEDS_LIMIT", names)
+        self.assertEqual(result["verdict_status"], "OK")
+
+    def test_electrical_power_no_installation_is_not_applicable(self):
+        checker, _engine = _checker()
+        result = checker._evaluate_electrical_power(None, has_fluid_installation=False)
+        self.assertEqual(result["verdict_status"], "NOT_APPLICABLE")
+
+    def test_electrical_power_exceedance_gates_the_verdict(self):
+        """A §7.2.4 NOT_COMPLIANT electrical-power status blocks the overall verdict
+        even when the decisive gate is satisfied (autonomous requirement)."""
+        results = {
+            "envelope": {}, "openings": {}, "ventilation": {}, "gains": {},
+            "setpoints": {}, "hvac": {}, "dynamic": {}, "alerts": [],
+            "global_reference_comparison": {"status": "REVIEWED_RESULT_AVAILABLE"},
+            "electrical_power": {"verdict_status": "NOT_COMPLIANT"},
+        }
+        verdict = build_compliance_verdict(results, None, rooms_analysed=1).to_dict()
+        self.assertEqual(verdict["sia3802_status"], "NOT_COMPLIANT")
+        self.assertEqual(
+            verdict["sia3802_reason"], "electrical_power_exceeds_7_2_4_limit"
+        )
+        self.assertIn("sia3802_electrical_power", verdict["outstanding"])
 
     def test_no_solar_protection_alert_does_not_gate_the_verdict(self):
         """The solar-protection gate must fire only when shading is present. A
