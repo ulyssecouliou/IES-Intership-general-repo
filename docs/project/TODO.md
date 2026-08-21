@@ -64,8 +64,16 @@ Modèle exemple `SIA_compatible_model_TEST` : **overall SIA 380/2 CONFORME (avec
 - [x] ✅ **SIA 180 Fig.3** — fournie par Yiqiao (2026-08-20), **figée** `348479e` (`chiffre_2_3_3_figure_3`). Réserve ZOER levée.
 - ❌ **SIA 380 faîtière — facteur de pondération national** (agrégation/pondération annuelle de l'indice) : **payant (achat uniquement), abandonné** (décision utilisateur 2026-08-20). Sans impact : l'indice global pondéré du §7.2.5.2 est **fourni par le relecteur** (CSV `SIA3802_global_reference_comparison`), jamais calculé par l'outil.
 
+### Audit indicateurs + verdict (2026-08-20)
+- [x] ✅ **A3** — confort d'été (HIGH) rendu **bloquant s'il est avéré** (`677b3dd`) ; **validé norm-analyst** (exigence autonome §7.1.2.1 → SIA 180). *Reste* : citer « §7.1.2.1 → SIA 180 » dans la règle.
+- [x] ✅ **A2** — scores de catégorie honnêtes : NOT_CHECKABLE plafonne à 60 (`9cc68fc`).
+- [x] ✅ **A1** — indicateur de tête renommé « couverture (diagnostic, ≠ conformité) » + verdict affiché en tête (porte-conscient).
+- ⬜ **A4 (norm-analyst) — porte décisive vs exigences autonomes §7.1** : §7.2.5.2 est bien décisive ET les entrées Tableau 2 (U, ψ/χ, ff, g⊥…) sont des réserves légitimes ; MAIS §7.1 pose des exigences **autonomes** que la comparaison globale ne subsume pas → elles doivent forcer `NOT_DETERMINED` si non vérifiées (pas de simple réserve). Fait : ventilation + été. **Reste : contrôle protection solaire (§7.1.2.2-5)** à gater comme la ventilation. ⚠️ Décision produit : rend `COMPLIANT` bien plus rare (et bloqué tant que SIA 387/4 absente). Détail : `traceability/audit-A4-verdict-porte-decisive-sia3802.md`.
+- ⬜ **§7.2.4 (seuil électrique W/m² quand refroidissement présent)** — exigence non traitée aujourd'hui (signalée par norm-analyst), à instruire.
+- ⬜ **Ponts thermiques `NOT_AVAILABLE`** : corrompent la valeur projet de la comparaison → au cas par cas via attestation relecteur (le CSV global doit confirmer leur intégration).
+
 ### 🔶 À faire valider (indépendant)
-- 🔶 **norm-analyst** : (a) « porte décisive = suffisante » (interprétation §7.2.5.2) ; (b) définition de **T° opérative** SIA 180 + fenêtre θrm + Fig.3 ; (c) variantes fenêtre Test 2 / critères SIA 4010 Tests 2-7.
+- 🔶 **norm-analyst** : (a) ✅ porte décisive §7.2.5.2 + exigences autonomes §7.1 (rendu 2026-08-20) ; (b) définition de **T° opérative** SIA 180 + fenêtre θrm + Fig.3 ; (c) variantes fenêtre Test 2 / critères SIA 4010 Tests 2-7.
 - 🔶 **qa-auditor** : signer les matrices de traçabilité avant tout « done ».
 - 🔶 **Qualification VE réelle** : capability-check + readback par valeur (au-delà du fonctionnel prouvé).
 

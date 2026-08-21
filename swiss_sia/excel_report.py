@@ -518,7 +518,7 @@ class ExcelReportGenerator:
             sia3802_results, sia4010_results, len(rooms_data)
         )
         if self.include_sia4010:
-            worksheet.write("B17", "SIA 380/2 automated score", kpi_label_format)
+            worksheet.write("B17", "SIA 380/2 coverage (diagnostic, not compliance)", kpi_label_format)
             worksheet.write_number("C17", round(float(getattr(score_result, "compliance_score", 0.0) or 0.0), 1), kpi_value_format)
             worksheet.write("B18", "Model health score", kpi_label_format)
             worksheet.write_number("C18", round(float(getattr(score_result, "health_score", 0.0) or 0.0), 1), kpi_value_format)
@@ -819,8 +819,8 @@ class ExcelReportGenerator:
         if self.include_sia4010:
             cards.extend([
                 ("MODEL QA", f"{score_result.health_score:.1f}", "Health score from data completeness and model quality."),
-                ("SIA 380/2 SCORE", f"{score_result.compliance_score:.1f}",
-                 "Weighted automated indicator; non-checkable SIA 4010 evidence is kept separate."),
+                ("SIA 380/2 COVERAGE (diag.)", f"{score_result.compliance_score:.1f}",
+                 "Component-coverage diagnostic only, NOT a compliance score: it excludes the decisive §7.2.5.2 gate. See the COMPLIANCE VERDICT."),
             ])
         else:
             cards.extend([
@@ -1120,8 +1120,8 @@ class ExcelReportGenerator:
         )
         cards = []
         if self.include_sia4010:
-            cards.append(("SIA 380/2 SCORE", f"{float(score_result.compliance_score or 0.0):.1f}",
-                          "Automated model-readiness indicator from direct SIA 380/2 checks."))
+            cards.append(("SIA 380/2 COVERAGE (diag.)", f"{float(score_result.compliance_score or 0.0):.1f}",
+                          "Component-coverage diagnostic only, NOT a compliance score: it excludes the decisive §7.2.5.2 gate. See the COMPLIANCE VERDICT."))
         else:
             cards.extend([
                 ("COMPLIANCE VERDICT", compliance_verdict.sia3802_status.replace("_", " "),

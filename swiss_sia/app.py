@@ -1366,11 +1366,24 @@ def main(
             )
 
         logger.info("Analysis completed successfully.")
+        # Lead with the compliance VERDICT (decided on the §7.2.5.2 gate), never
+        # with the numeric indicator: the number is a component-coverage diagnostic
+        # that does not account for the decisive gate, so presenting it alone would
+        # overstate compliance (audit A1).
+        verdict = build_compliance_verdict(
+            sia3802_results, sia4010_results, len(rooms_data)
+        )
         logger.info(
-            "SIA 380/2 automated precheck indicator: %.1f/100",
+            "SIA 380/2 compliance verdict: %s (%s)",
+            verdict.sia3802_status,
+            verdict.sia3802_reason,
+        )
+        logger.info(
+            "SIA 380/2 automated coverage indicator (diagnostic, NOT a compliance "
+            "verdict; excludes the decisive §7.2.5.2 gate): %.1f/100",
             score_result.compliance_score,
         )
-        logger.info("Health Score: %.1f/100", score_result.health_score)
+        logger.info("Model QA / health indicator: %.1f/100", score_result.health_score)
         logger.info("Generated Excel report: %s", report_generator.output_path)
         if latest_report_path:
             logger.info("Updated latest report alias: %s", latest_report_path)
@@ -1392,9 +1405,6 @@ def main(
         for category, score in score_result.detailed_scores.items():
             logger.info(" - %s: %.1f/100", category, score)
 
-        verdict = build_compliance_verdict(
-            sia3802_results, sia4010_results, len(rooms_data)
-        )
         return {
             "verdict_status": verdict.sia3802_status,
             "blocking_total": verdict.blocking_total,
