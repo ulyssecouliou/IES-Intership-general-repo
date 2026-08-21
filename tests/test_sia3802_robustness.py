@@ -268,6 +268,34 @@ class Sia3802UndeterminedNotFailedTests(unittest.TestCase):
         self.assertEqual(verdict["sia3802_status"], "COMPLIANT")
 
 
+    def test_unverified_solar_protection_control_gates_the_verdict(self):
+        """Audit A4: solar-protection control is an autonomous SIA 380/2 §7.1.2.2-5
+        requirement. Active shading whose control is not documented must force
+        NOT_DETERMINED even when the decisive gate is satisfied, not a silent
+        COMPLIANT-with-reserve."""
+        engine = RuleEngine()
+        engine.add_alert(
+            rule="SIA3802_SOLAR_PROTECTION_CONTROL_MISSING",
+            description="Solar-protection control is not available for a window.",
+            severity=Severity.LOW,
+            category="Openings",
+            recommendation="Document the solar-protection control strategy.",
+            data=None,
+        )
+        results = {
+            "envelope": {}, "openings": {}, "ventilation": {}, "gains": {},
+            "setpoints": {}, "hvac": {}, "dynamic": {},
+            "alerts": list(engine.alerts),
+            "global_reference_comparison": {"status": "REVIEWED_RESULT_AVAILABLE"},
+        }
+        verdict = build_compliance_verdict(results, None, rooms_analysed=1).to_dict()
+        self.assertEqual(verdict["sia3802_status"], "NOT_DETERMINED")
+        self.assertEqual(
+            verdict["sia3802_reason"], "solar_protection_control_incomplete"
+        )
+        self.assertIn("sia3802_solar_protection_control", verdict["outstanding"])
+
+
 class Sia3802GlobalReferenceComparisonRobustnessTests(unittest.TestCase):
     """The reviewed project/reference gate must survive a degenerate payload.
 

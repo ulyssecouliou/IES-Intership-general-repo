@@ -2066,6 +2066,12 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
         "fr": "preuves essentielles de debit et de regulation de ventilation",
         "it": "prove essenziali di portata e regolazione della ventilazione",
     },
+    "outstanding_sia3802_solar_protection_control": {
+        "en": "solar-protection control evidence (SIA 380/2 7.1.2)",
+        "de": "Nachweis der Sonnenschutzsteuerung (SIA 380/2 7.1.2)",
+        "fr": "preuve de la commande de protection solaire (SIA 380/2 7.1.2)",
+        "it": "prova del comando di protezione solare (SIA 380/2 7.1.2)",
+    },
     "outstanding_sia4010_official_results": {
         "en": "official SIA 4010 test results",
         "de": "offizielle Testergebnisse nach SIA 4010",

@@ -9,10 +9,12 @@ carries a company signature:
 - the overall SIA 380/2 statement is decided on the reviewed global
   project/reference comparison (SIA 380/2:2022 §7.2.5.2): with that comparison
   reviewed and satisfied and no determined failure, the statement is
-  ``COMPLIANT`` and any unverifiable component diagnostic is reported as a
-  visible reserve in ``outstanding`` rather than downgrading the verdict,
-  except incomplete ventilation evidence: airflow and Table-4 control are
-  treated as an essential gate because they materially affect the comparison;
+  ``COMPLIANT`` and any unverifiable component diagnostic that is only a Table 2
+  reference input is reported as a visible reserve in ``outstanding`` rather than
+  downgrading the verdict. The AUTONOMOUS SIA 380/2:2022 §7.1 requirements are
+  the exception (norm-analyst A4): incomplete ventilation (§7.1.1), unverified
+  solar-protection control (§7.1.2.2-5) and a DETERMINED summer-overheating
+  failure (§7.1.2.1 -> SIA 180) are essential gates, not reserves;
 - without the decisive comparison the statement stays ``NOT_DETERMINED`` -
   never silently compliant.
 
@@ -215,6 +217,19 @@ def build_compliance_verdict(
         item.domain == "ventilation" and item.status == NOT_DETERMINED
         for item in domains
     )
+    # Solar-protection control is an AUTONOMOUS SIA 380/2:2022 §7.1.2.2-5
+    # requirement, not just a Table 2 reference input: the global comparison does
+    # not subsume it (norm-analyst A4, 2026-08-20). So active solar protection
+    # whose control is not documented (SIA3802_SOLAR_PROTECTION_CONTROL_MISSING /
+    # _TYPE_MISSING, category "Openings") must force NOT_DETERMINED, exactly like
+    # ventilation -- never a silent COMPLIANT-with-reserve. It fires only when
+    # shading is actually present, so a model that legitimately needs none is not
+    # over-blocked.
+    solar_protection_control_incomplete = any(
+        "SOLAR_PROTECTION_CONTROL" in str(getattr(alert, "rule", "") or "").upper()
+        or "SOLAR_PROTECTION_TYPE" in str(getattr(alert, "rule", "") or "").upper()
+        for alert in alerts
+    )
     blocking_total = sum(item.blocking_count for item in domains)
     advisory_total = sum(item.advisory_count for item in domains)
 
@@ -238,8 +253,12 @@ def build_compliance_verdict(
     # SIA 380/2 statement is COMPLIANT, and unverifiable component diagnostics
     # remain visible reserves (in `outstanding`) rather than downgrading the
     # verdict. A determined out-of-range finding (blocking_total) or a comparison
-    # that contradicts its acceptance still fails closed.
-    # Product decision 2026-08-19; PENDING norm-analyst / qa-auditor sign-off.
+    # that contradicts its acceptance still fails closed. The autonomous §7.1
+    # requirements (ventilation, solar-protection control, summer comfort) are
+    # gated below, not treated as reserves.
+    # Product decision 2026-08-19; norm-analyst A4 ruling 2026-08-20
+    # (traceability/audit-A4-verdict-porte-decisive-sia3802.md); qa-auditor
+    # traceability sign-off still pending before commercial use.
     if not rooms_analysed:
         sia3802_status, sia3802_reason = NOT_DETERMINED, "no_room_analysed"
     elif blocking_total:
@@ -256,6 +275,11 @@ def build_compliance_verdict(
             NOT_DETERMINED,
             "ventilation_evidence_incomplete",
         )
+    elif solar_protection_control_incomplete:
+        sia3802_status, sia3802_reason = (
+            NOT_DETERMINED,
+            "solar_protection_control_incomplete",
+        )
     else:
         sia3802_status, sia3802_reason = COMPLIANT, (
             "comparison_reviewed_no_blocker_with_reserves"
@@ -268,6 +292,8 @@ def build_compliance_verdict(
         outstanding.append("sia3802_domain_evidence")
     if ventilation_evidence_incomplete:
         outstanding.append("sia3802_ventilation_evidence")
+    if solar_protection_control_incomplete:
+        outstanding.append("sia3802_solar_protection_control")
 
     # SIA 4010 reports the toolchain's validation-class state. Official class
     # validation additionally requires SIA sub-commission attestation, so the
