@@ -1,7 +1,7 @@
 {
-  "norme": "SIA 387/4:2017",
+  "norme": "SIA 387/4:2023",
   "titre": "Éclairage — Calcul et exigences (partie protection solaire)",
-  "statut": "FIGÉ pour l'édition 2017 — ⚠ ÉDITION DIVERGENTE, cf. `reserve_dedition`",
+  "statut": "FIGÉ — tableau 9 et équations 18-20 confirmés sur l'édition 2023 (réserve d'édition levée le 2026-08-21).",
   "date_extraction": "2026-08-04",
   "source": {
     "nature": "captures d'écran du document publié",
@@ -10,14 +10,26 @@
     "elements": [
       "chiffre 3.4.3.5",
       "tableau 9"
-    ]
+    ],
+    "complement_2023": {
+      "date_reception": "2026-08-21",
+      "elements": [
+        "chiffre 3.4.3.7",
+        "tableau 9 (équations 18, 19, 20)"
+      ],
+      "note": "Capture SIA 387/4:2023 fournie par Yiqiao Yang : confirme verbatim les formules encodées ci-dessous."
+    }
   },
   "reserve_dedition": {
-    "edition_recue": "SIA 387/4:2017",
+    "edition_recue": "SIA 387/4:2017 puis SIA 387/4:2023 (tableau 9)",
     "edition_citee_par_les_normes": "SIA 387/4:2023",
     "citation": "SIA 4010:2023 §3.1.5 (p. 10) : « les commandes de protection solaire de type X = 1 ou 2 selon le tableau 9 de SIA 387/4:2023 »",
-    "indice_de_stabilite": "La TYPOLOGIE X = 1 / 2 / 3 et le NUMÉRO de tableau (9) concordent entre l'édition 2017 reçue et la citation 2023 de SIA 4010. Présomption de stabilité, PAS une preuve.",
-    "statut": "⚠ À VÉRIFIER — les équations (18), (19), (20) de l'édition 2023 ne sont pas en notre possession."
+    "indice_de_stabilite": "La TYPOLOGIE X = 1 / 2 / 3, le NUMÉRO de tableau (9) ET les équations (18)(19)(20) concordent entre l'encodage et la capture SIA 387/4:2023 reçue.",
+    "statut": "✅ LEVÉE le 2026-08-21 — équations (18), (19), (20) de l'édition 2023 reçues et identiques aux formules encodées."
+  },
+  "chiffre_3_4_3_7": {
+    "enonce_de": "Der Lamellen-Anstellwinkel in (16) und (17) wird für die drei Funktionstypen der Sonnenschutzsteuerung gemäss Tabelle 9 berechnet.",
+    "renvoi": "introduit le tableau 9 (angle β utilisé dans les équations (16) et (17))."
   },
   "tableau_9": {
     "titre_de": "Berechnung des Lamellen-Anstellwinkels für die drei Funktionstypen der Sonnenschutzsteuerung",

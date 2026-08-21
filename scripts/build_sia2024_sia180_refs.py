@@ -523,29 +523,42 @@ def construire_sia387_4():
     """Build the source-traced SIA 387/4 solar-control payload."""
 
     return {
-        u'norme': u'SIA 387/4:2017',
+        u'norme': u'SIA 387/4:2023',
         u'titre': u"Éclairage — Calcul et exigences (partie protection solaire)",
-        u'statut': u'FIGÉ pour l\'édition 2017 — ⚠ ÉDITION DIVERGENTE, cf. '
-                   u'`reserve_dedition`',
+        u'statut': u'FIGÉ — tableau 9 et équations 18-20 confirmés sur l\'édition '
+                   u'2023 (réserve d\'édition levée le 2026-08-21).',
         u'date_extraction': u'2026-08-04',
         u'source': {
             u'nature': u"captures d'écran du document publié",
             u'fournisseur': u'Yiqiao Yang, SIA',
             u'date_reception': u'2026-08-04',
             u'elements': [u'chiffre 3.4.3.5', u'tableau 9'],
+            u'complement_2023': {
+                u'date_reception': u'2026-08-21',
+                u'elements': [u'chiffre 3.4.3.7', u'tableau 9 (équations 18, 19, 20)'],
+                u'note': u'Capture SIA 387/4:2023 fournie par Yiqiao Yang : '
+                         u'confirme verbatim les formules encodées ci-dessous.',
+            },
         },
         u'reserve_dedition': {
-            u'edition_recue': u'SIA 387/4:2017',
+            u'edition_recue': u'SIA 387/4:2017 puis SIA 387/4:2023 (tableau 9)',
             u'edition_citee_par_les_normes': u'SIA 387/4:2023',
             u'citation': u'SIA 4010:2023 §3.1.5 (p. 10) : « les commandes de '
                          u'protection solaire de type X = 1 ou 2 selon le '
                          u'tableau 9 de SIA 387/4:2023 »',
-            u'indice_de_stabilite': u"La TYPOLOGIE X = 1 / 2 / 3 et le NUMÉRO de "
-                                    u"tableau (9) concordent entre l'édition 2017 "
-                                    u"reçue et la citation 2023 de SIA 4010. "
-                                    u"Présomption de stabilité, PAS une preuve.",
-            u'statut': u'⚠ À VÉRIFIER — les équations (18), (19), (20) de '
-                       u'l\'édition 2023 ne sont pas en notre possession.',
+            u'indice_de_stabilite': u"La TYPOLOGIE X = 1 / 2 / 3, le NUMÉRO de "
+                                    u"tableau (9) ET les équations (18)(19)(20) "
+                                    u"concordent entre l'encodage et la capture "
+                                    u"SIA 387/4:2023 reçue.",
+            u'statut': u'✅ LEVÉE le 2026-08-21 — équations (18), (19), (20) de '
+                       u'l\'édition 2023 reçues et identiques aux formules encodées.',
+        },
+        u'chiffre_3_4_3_7': {
+            u'enonce_de': u'Der Lamellen-Anstellwinkel in (16) und (17) wird für '
+                          u'die drei Funktionstypen der Sonnenschutzsteuerung '
+                          u'gemäss Tabelle 9 berechnet.',
+            u'renvoi': u'introduit le tableau 9 (angle β utilisé dans les '
+                       u'équations (16) et (17)).',
         },
         u'tableau_9': {
             u'titre_de': u'Berechnung des Lamellen-Anstellwinkels für die drei '
