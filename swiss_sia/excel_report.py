@@ -5078,13 +5078,31 @@ class ExcelReportGenerator:
         if key == "lighting_control":
             lighting_rooms = int(stats.get("rooms_with_lighting", 0) or 0)
             dynamic_lighting_rows = int(stats.get("dynamic_lighting_rows", 0) or 0)
-            if lighting_rooms or dynamic_lighting_rows:
+            control_mappings = int(stats.get("lighting_control_mappings", 0) or 0)
+            # Best effort while SIA 387/4 (lighting-control reference) is absent:
+            # a reviewer-confirmed SIA 387/4 control-type mapping covering the lit
+            # rooms is credited AVAILABLE, but explicitly UNDER RESERVE -- the tool
+            # cannot itself verify the control type against SIA 387/4 (the numeric
+            # control tables are not in refs/). It is a reviewer attestation, not a
+            # proven pass. See docs/project/RESERVES_NORMATIVES.md.
+            if control_mappings and lighting_rooms and control_mappings >= lighting_rooms:
+                return (
+                    "AVAILABLE",
+                    (
+                        f"{control_mappings}/{lighting_rooms} lit room(s) carry a "
+                        "reviewer-confirmed SIA 387/4 control-type mapping "
+                        "[UNDER RESERVE: SIA 387/4 lighting-control tables absent; "
+                        "reviewer attestation, not an independently verified pass]."
+                    ),
+                )
+            if lighting_rooms or dynamic_lighting_rows or control_mappings:
                 return (
                     "PARTIAL",
                     (
                         f"{lighting_rooms} room(s) expose lighting gains; "
+                        f"{control_mappings} room(s) carry a reviewer control mapping; "
                         f"{dynamic_lighting_rows} APS room row(s) expose lighting energy; "
-                        "daylight/presence control strategy still needs SIA 387/4 mapping."
+                        "daylight/presence control strategy still needs the SIA 387/4 mapping."
                     ),
                 )
             return "MISSING", "No lighting power, lighting energy or control evidence extracted."

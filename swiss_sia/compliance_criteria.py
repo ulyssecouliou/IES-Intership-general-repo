@@ -102,8 +102,13 @@ _CAPABILITY_OVERRIDES = {
     },
     "SIA3802_LIGHTING_CONTROL": {
         "ve_capability_note": (
-            "Lighting power/schedules extractable, but SIA 387/4 (control reference) "
-            "is absent from refs/: the control verdict cannot be closed without it."
+            "Lighting power/schedules extractable. SIA 387/4 (the lighting-control "
+            "numeric tables) is absent from refs/, so the tool cannot itself verify "
+            "the control type. Best effort: a reviewer-confirmed SIA 387/4 control "
+            "mapping (SIA3874_lighting_control_mapping_<project>.csv) covering the "
+            "lit rooms is credited UNDER RESERVE -- a reviewer attestation, not an "
+            "independently verified pass. Only the shading control (table 9) is "
+            "fully referenced (SIA 387/4:2023 confirmed)."
         ),
     },
 }

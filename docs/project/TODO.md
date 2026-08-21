@@ -51,11 +51,8 @@ Modèle exemple `SIA_compatible_model_TEST` : **overall SIA 380/2 CONFORME (avec
 - [x] ✅ **Protection solaire** — *ingestion faite* (`2a78bef`) : le CSV relecteur `glazing_solar_protection_<project>.csv` (type protection + g_total avec store = quantum Table 10, par façade) est désormais scanné et crédite `solar_protection` → **AVAILABLE**, mais uniquement quand la couverture VE **plus** les fenêtres relues atteignent toutes les fenêtres externes (sinon PARTIAL, jamais de pass silencieux).
   - *Reste côté utilisateur* : modéliser les stores dans VE **ou** documenter le store hors VE (architecte/façadier + ingénieur g_total) et saisir le CSV.
 
-- ⬜ **Contrôle éclairage** (`PARTIAL`, `SIA3802_LIGHTING_CONTROL`)
-  - *Intérêt* : SIA 387/4 — puissance installée + contrôle présence/lumière du jour.
-  - *Quoi faire* : acquérir **SIA 387/4** ; renseigner puissance + contrôle par local.
-  - *Qui* : SIA 387/4 → SIA Shop / contact SIA (Yiqiao Yang) ; valeurs → électricien.
-  - *Dev outil* : crédit du gabarit `SIA3874_lighting_control_mapping_*.csv` (scanner présent) — **ingestion/couverture à finaliser**.
+- [x] ✅ **Contrôle éclairage** — *crédit câblé au mieux (sous réserve)* : un mapping relecteur `SIA3874_lighting_control_mapping_<project>.csv` couvrant les locaux éclairés crédite `SIA3802_LIGHTING_CONTROL` → **AVAILABLE SOUS RÉSERVE** (attestation relecteur ; SIA 387/4 tables contrôle absentes → pas une vérif indépendante) ; sans mapping → PARTIAL.
+  - ⬜ *Reste (source)* : **SIA 387/4:2023 (tables contrôle éclairage)** pour lever la réserve. Contact : SIA Shop / Yiqiao Yang. Valeurs par local : électricien.
 
 - [x] ✅ **Chauffage SCOP → NON_APPLICABLE** — *fait* (`8d441b4`) : un générateur de chauffage dimensionné que VE ne classe pas en PAC (chaudière) rend `SIA3802_HEATING_SCOP` **NON_APPLICABLE** (hors périmètre), au lieu de `NOT_CHECKABLE`. Une PAC sans SCOP reste bien `NOT_CHECKABLE` (vrai manque). L'efficacité de génération non-PAC passe par la comparaison globale.
 

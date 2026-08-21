@@ -284,6 +284,35 @@ class EvaluatorTests(unittest.TestCase):
         self.assertEqual(
             by_id["SIA3802_COOLING_EER_SEER"]["runtime_status"], "NOT_CHECKABLE")
 
+    def test_reviewer_lighting_control_mapping_credits_the_criterion(self):
+        """Best effort while SIA 387/4 is absent: a reviewer-confirmed control-type
+        mapping covering the lit rooms credits SIA3802_LIGHTING_CONTROL (under
+        reserve). Without a mapping the lit room stays PARTIAL."""
+        class _LitControlledRoom:
+            surfaces = []
+            openings = []
+            internal_gains = {"lighting": 8.0}
+            lighting_control_type = "two_speeds_time_schedule"
+
+        class _LitUncontrolledRoom:
+            surfaces = []
+            openings = []
+            internal_gains = {"lighting": 8.0}
+            lighting_control_type = ""
+
+        credited = evaluate_client_compliance(
+            self._base_sia3802("REVIEWED_RESULT_AVAILABLE"), {}, {},
+            [_LitControlledRoom()], [], scope="sia3802")
+        by_id = {c["id"]: c for c in credited["criteria"]}
+        self.assertEqual(by_id["SIA3802_LIGHTING_CONTROL"]["runtime_status"], "OK")
+
+        partial = evaluate_client_compliance(
+            self._base_sia3802("REVIEWED_RESULT_AVAILABLE"), {}, {},
+            [_LitUncontrolledRoom()], [], scope="sia3802")
+        by_id2 = {c["id"]: c for c in partial["criteria"]}
+        self.assertEqual(
+            by_id2["SIA3802_LIGHTING_CONTROL"]["runtime_status"], "PARTIAL")
+
     def test_reviewed_electrical_power_credits_the_724_criterion(self):
         sia3802 = self._base_sia3802("REVIEWED_RESULT_AVAILABLE")
         sia3802["electrical_power"] = {
