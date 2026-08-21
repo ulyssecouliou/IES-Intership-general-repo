@@ -60,7 +60,8 @@ Modèle exemple `SIA_compatible_model_TEST` : **overall SIA 380/2 CONFORME (avec
 - [x] ✅ **Chauffage SCOP → NON_APPLICABLE** — *fait* (`8d441b4`) : un générateur de chauffage dimensionné que VE ne classe pas en PAC (chaudière) rend `SIA3802_HEATING_SCOP` **NON_APPLICABLE** (hors périmètre), au lieu de `NOT_CHECKABLE`. Une PAC sans SCOP reste bien `NOT_CHECKABLE` (vrai manque). L'efficacité de génération non-PAC passe par la comparaison globale.
 
 ### ⬜ Sources normatives à acquérir (débloquent des verdicts)
-- ⬜ **SIA 387/4:2023** (contrôle éclairage, éq. 18-20 + tableau 9) — Yiqiao l'a envoyé le 2026-08-14 ; **à retrouver dans ce mail et intégrer** (édition 2017 déjà figée). · **SN EN 14825** (SCoP chaud) — accès habituel (SEER froid déjà bouclé, `615e03f`). · **SN EN 15316-2 / 16798-13** (énergie système) — accès habituel.
+- [x] ✅ **SIA 387/4:2023 — tableau 9 + éq. 18-20** (contrôle protection solaire X=1/2/3, angle β) reçu de Yiqiao (2026-08-21) et **confirmé/figé** (`cdac467`, réserve d'édition levée). Débloque la référence de **contrôle protection solaire** (test 2/2A). ⬜ *Nuance* : le contenu **éclairage** de SIA 387/4 (puissance installée + contrôle présence/lumière du jour) est distinct — vérifier s'il faut plus pour `SIA3802_LIGHTING_CONTROL`.
+- ⬜ **SN EN 14825** (SCoP chaud) — accès habituel (SEER froid déjà bouclé, `615e03f`). · **SN EN 15316-2 / 16798-13** (énergie système) — accès habituel.
 - [x] ✅ **SIA 180 Fig.3** — fournie par Yiqiao (2026-08-20), **figée** `348479e` (`chiffre_2_3_3_figure_3`). Réserve ZOER levée.
 - ❌ **SIA 380 faîtière — facteur de pondération national** (agrégation/pondération annuelle de l'indice) : **payant (achat uniquement), abandonné** (décision utilisateur 2026-08-20). Sans impact : l'indice global pondéré du §7.2.5.2 est **fourni par le relecteur** (CSV `SIA3802_global_reference_comparison`), jamais calculé par l'outil.
 
@@ -69,12 +70,12 @@ Modèle exemple `SIA_compatible_model_TEST` : **overall SIA 380/2 CONFORME (avec
 - [x] ✅ **A2** — scores de catégorie honnêtes : NOT_CHECKABLE plafonne à 60 (`9cc68fc`).
 - [x] ✅ **A1** — indicateur de tête renommé « couverture (diagnostic, ≠ conformité) » + verdict affiché en tête (porte-conscient).
 - [x] ✅ **A4 (norm-analyst) — porte décisive vs exigences autonomes §7.1** : §7.2.5.2 décisive + entrées Tableau 2 = réserves légitimes ; exigences **autonomes §7.1** gatées (forcent `NOT_DETERMINED` si non vérifiées) : ventilation + été (`677b3dd`) + **contrôle protection solaire §7.1.2.2-5** (`7e88404`). Décision produit assumée (COMPLIANT plus rare). Détail : `traceability/audit-A4-verdict-porte-decisive-sia3802.md`.
-- ⬜ **§7.2.4 (seuil électrique W/m² quand refroidissement présent)** — exigence non traitée aujourd'hui (signalée par norm-analyst), à instruire.
+- [x] ✅ **§7.2.4 (puissance électrique requise)** — implémenté (`11e3808`) : seuils 7 W/m² (neuf) / 12 W/m² (existant) sourcés §7.2.4.2 p32 ; voie relecteur `SIA3802_electrical_power_<projet>.csv` (puissance de dimensionnement, VE ne l'expose pas) ; checker compare + diagnostic si dépassement. ⬜ *Reste* : **[PENDING norm-analyst]** — un dépassement doit-il **bloquer** le verdict (gate) quand le refroidissement est présent ?
 - ⬜ **Ponts thermiques `NOT_AVAILABLE`** : corrompent la valeur projet de la comparaison → au cas par cas via attestation relecteur (le CSV global doit confirmer leur intégration).
 
 ### 🔶 À faire valider (indépendant)
-- 🔶 **norm-analyst** : (a) ✅ porte décisive §7.2.5.2 + exigences autonomes §7.1 (rendu 2026-08-20) ; (b) définition de **T° opérative** SIA 180 + fenêtre θrm + Fig.3 ; (c) variantes fenêtre Test 2 / critères SIA 4010 Tests 2-7.
-- 🔶 **qa-auditor** : signer les matrices de traçabilité avant tout « done ».
+- 🔶 **norm-analyst** : (a) ✅ porte décisive §7.2.5.2 + exigences autonomes §7.1 (rendu 2026-08-20) ; (b) définition de **T° opérative** SIA 180 + fenêtre θrm + Fig.3 ; (c) variantes fenêtre Test 2 / critères SIA 4010 Tests 2-7 ; (d) **§7.2.4 : gate ou diagnostic** quand refroidissement présent.
+- 🔶 **qa-auditor** : ✅ lot indicateurs+verdict A1-A4 **SIGNÉ** (`traceability/audit-lot-A1-A4-verification-2026-08-21.matrix.md`) ; reste : signer §7.2.4 + le reste avant « done » commercial.
 - 🔶 **Qualification VE réelle** : capability-check + readback par valeur (au-delà du fonctionnel prouvé).
 
 ---
