@@ -16,7 +16,10 @@ from swiss_sia.sia380_checker import SIA3802Checker
 from swiss_sia.sia4010_checker import SIA4010Checker
 from swiss_sia.reference_project import build_reference_project_specification
 from swiss_sia.validation_class_scope import derive_validation_class_scope
-from swiss_sia.client_report_context import ClientReportContext
+from swiss_sia.client_report_context import (
+    ClientReportContext,
+    building_strategy_text,
+)
 from swiss_sia.reference_model.sia4010.ui_translations import translate
 
 
@@ -302,6 +305,9 @@ class ClientSia3802OnlyReportTests(unittest.TestCase):
             prepared_by="U. Engineer",
             weather_file="CHE_GVE_2060_RCP85_DRY.fwt",
             solar_shading="YES",
+            window_operability="NO",
+            mechanical_cooling="YES",
+            building_strategy_notes="External blinds; cooling at 26 C.",
             model_viewer_image_path=str(viewer_image),
         )
         try:
@@ -333,7 +339,9 @@ class ClientSia3802OnlyReportTests(unittest.TestCase):
             self.assertIn("Client Alpine SA", report_text)
             self.assertIn("School North", report_text)
             self.assertIn("CHE_GVE_2060_RCP85_DRY.fwt", report_text)
-            self.assertIn(translate("field_solar_shading", "en"), report_text)
+            self.assertIn(building_strategy_text("field_building_strategy", "en"), report_text)
+            self.assertIn("Windows: NO", report_text)
+            self.assertIn("Client building-strategy notes", report_text)
             self.assertIn(translate("excel_client_summary_title", "en"), report_text)
             self.assertIn("IES |", report_text)
             self.assertNotIn("Model health score", report_text)

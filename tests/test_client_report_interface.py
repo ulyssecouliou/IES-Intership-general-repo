@@ -17,6 +17,7 @@ from swiss_sia.client_compliance_ui import (
 )
 from swiss_sia.client_report_context import (
     ClientReportContext,
+    building_strategy_summary,
     load_client_report_context,
     report_directory,
     save_client_report_context,
@@ -79,6 +80,10 @@ class ClientContextTests(unittest.TestCase):
         window = ClientComplianceWindow.__new__(ClientComplianceWindow)
         window.language = "fr"
         self.assertEqual(
+            window.t("client_ui_strategy_windows"),
+            "Fenetres prevues ouvrables",
+        )
+        self.assertEqual(
             window.t("client_ui_example_business_label"),
             "Example business label",
         )
@@ -127,6 +132,9 @@ class ClientContextTests(unittest.TestCase):
                 "language": "en",
                 "weather_file": "weather.fwt",
                 "solar_shading": "TO_CONFIRM",
+                "window_operability": "TO_CONFIRM",
+                "mechanical_cooling": "TO_CONFIRM",
+                "building_strategy_notes": "",
                 "client_logo_path": "",
                 "model_viewer_image_path": "",
             }.items()
@@ -167,6 +175,9 @@ class ClientContextTests(unittest.TestCase):
                 project_name="Project",
                 weather_file="weather.fwt",
                 solar_shading="YES",
+                window_operability="NO",
+                mechanical_cooling="YES",
+                building_strategy_notes="External blinds; cooling at 26 C.",
                 client_logo_path=str(source_logo),
                 model_viewer_image_path=str(source_view),
             ),
@@ -175,11 +186,64 @@ class ClientContextTests(unittest.TestCase):
         self.assertEqual(loaded.client_name, "Client")
         self.assertEqual(loaded.weather_file, "weather.fwt")
         self.assertEqual(loaded.solar_shading, "YES")
+        self.assertEqual(loaded.window_operability, "NO")
+        self.assertEqual(loaded.mechanical_cooling, "YES")
+        self.assertEqual(
+            loaded.building_strategy_notes,
+            "External blinds; cooling at 26 C.",
+        )
         self.assertEqual(loaded.language, "en")
         self.assertTrue(Path(stored.client_logo_path).is_file())
         self.assertTrue(Path(stored.model_viewer_image_path).is_file())
         self.assertTrue(Path(stored.client_logo_path).is_relative_to(project))
         self.assertEqual(report_directory(project), project / "SIA Compliance Reports")
+
+    def test_invalid_strategy_declarations_fail_closed_per_project(self) -> None:
+        context = ClientReportContext(
+            solar_shading="unknown",
+            window_operability="sometimes",
+            mechanical_cooling="",
+        ).normalized()
+
+        self.assertEqual(context.solar_shading, "TO_CONFIRM")
+        self.assertEqual(context.window_operability, "TO_CONFIRM")
+        self.assertEqual(context.mechanical_cooling, "TO_CONFIRM")
+        self.assertEqual(
+            building_strategy_summary(context, "fr"),
+            "Stores: TO_CONFIRM | Fenetres: TO_CONFIRM | Froid: TO_CONFIRM",
+        )
+
+    def test_building_strategy_is_isolated_between_ve_projects(self) -> None:
+        project_a = TMP_ROOT / "strategy_isolation" / "Model A"
+        project_b = TMP_ROOT / "strategy_isolation" / "Model B"
+        project_a.mkdir(parents=True, exist_ok=True)
+        project_b.mkdir(parents=True, exist_ok=True)
+
+        save_client_report_context(
+            project_a,
+            ClientReportContext(
+                solar_shading="YES",
+                window_operability="YES",
+                mechanical_cooling="NO",
+            ),
+        )
+        save_client_report_context(
+            project_b,
+            ClientReportContext(
+                solar_shading="NO",
+                window_operability="NO",
+                mechanical_cooling="YES",
+            ),
+        )
+
+        self.assertEqual(
+            building_strategy_summary(load_client_report_context(project_a), "en"),
+            "Shading: YES | Windows: YES | Cooling: NO",
+        )
+        self.assertEqual(
+            building_strategy_summary(load_client_report_context(project_b), "en"),
+            "Shading: NO | Windows: NO | Cooling: YES",
+        )
 
     def test_palette_exposes_only_compliance_statuses(self) -> None:
         self.assertEqual(compliance_palette("COMPLIANT")[2], "verdict_compliant")
@@ -246,6 +310,9 @@ class ClientPdfContextTests(unittest.TestCase):
             prepared_by="U. Engineer",
             weather_file="CHE_GVE_2060_RCP85_DRY.fwt",
             solar_shading="YES",
+            window_operability="NO",
+            mechanical_cooling="YES",
+            building_strategy_notes="External blinds and mechanical cooling.",
             client_logo_path=str(logo),
             model_viewer_image_path=str(viewer),
         )
@@ -266,7 +333,9 @@ class ClientPdfContextTests(unittest.TestCase):
         self.assertIn("Client Alpine SA", text)
         self.assertIn("School North", text)
         self.assertIn("CHE_GVE_2060_RCP85_DRY.fwt", text)
-        self.assertIn("YES", text)
+        self.assertIn("Solar shading YES", text)
+        self.assertIn("Operable windows NO", text)
+        self.assertIn("Mechanical cooling YES", text)
         self.assertNotIn("SIA 4010", full_text)
         images = reader.pages[0]["/Resources"]["/XObject"]
         self.assertGreaterEqual(len(images), 2)

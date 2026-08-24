@@ -17,6 +17,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
 
 from .company_profile import CompanyProfile, load_company_profile
+from .client_report_context import building_strategy_text
 from .compliance_criteria import CLIENT_LIMITATIONS
 from .config import SIA_COMPLIANCE_REQUIREMENT_MATRIX
 from .compliance_verdict import (
@@ -1295,6 +1296,8 @@ def render_compliance_report_pdf(
         (translate("client_ui_weather", code), str(context_value("weather_file", "") or translate("value_unavailable", code))),
         (translate("field_framework", code), "SIA 380/2:2022" if report_scope == "sia3802" else "SIA 380/2:2022 + SIA 4010:2023"),
         (translate("field_solar_shading", code), str(context_value("solar_shading", "TO_CONFIRM") or "TO_CONFIRM")),
+        (building_strategy_text("field_window_operability", code), str(context_value("window_operability", "TO_CONFIRM") or "TO_CONFIRM")),
+        (building_strategy_text("field_mechanical_cooling", code), str(context_value("mechanical_cooling", "TO_CONFIRM") or "TO_CONFIRM")),
     ]
     cursor = _draw_identification(page, cursor, identification, code)
     cursor = _draw_domain_table(page, cursor, verdict, code)

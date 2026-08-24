@@ -13,6 +13,7 @@ from typing import Any, Callable, Dict, Optional
 
 from .client_report_context import (
     ClientReportContext,
+    building_strategy_text,
     load_client_report_context,
     report_directory,
     save_client_report_context,
@@ -128,6 +129,15 @@ class ClientComplianceWindow:
             "language": tk.StringVar(value=self.language),
             "weather_file": tk.StringVar(value=weather_file or saved.weather_file),
             "solar_shading": tk.StringVar(value=saved.solar_shading or "TO_CONFIRM"),
+            "window_operability": tk.StringVar(
+                value=saved.window_operability or "TO_CONFIRM"
+            ),
+            "mechanical_cooling": tk.StringVar(
+                value=saved.mechanical_cooling or "TO_CONFIRM"
+            ),
+            "building_strategy_notes": tk.StringVar(
+                value=saved.building_strategy_notes
+            ),
             "client_logo_path": tk.StringVar(value=saved.client_logo_path),
             "model_viewer_image_path": tk.StringVar(
                 value=saved.model_viewer_image_path
@@ -141,6 +151,9 @@ class ClientComplianceWindow:
     def t(self, key: str) -> str:
         """Translate one label and never expose an internal translation key."""
 
+        strategy_label = building_strategy_text(key, self.language)
+        if strategy_label != key:
+            return strategy_label
         label = translate(key, self.language)
         if label != key:
             return label
@@ -375,40 +388,38 @@ class ClientComplianceWindow:
         weather.grid(row=1, column=1, sticky="ew", padx=(18, 0))
 
         self._section_heading(self.form, 5, "02", "client_ui_section_model")
-        shading = tk.Frame(self.form, background=self.COLORS["paper"], padx=12, pady=10)
-        shading.grid(row=6, column=0, columnspan=2, sticky="ew", pady=(0, 10))
+        strategy = tk.Frame(
+            self.form, background=self.COLORS["paper"], padx=12, pady=10
+        )
+        strategy.grid(row=6, column=0, columnspan=2, sticky="ew", pady=(0, 10))
         tk.Label(
-            shading, text=self.t("client_ui_shading_question"),
+            strategy, text=self.t("client_ui_strategy_title"),
             background=self.COLORS["paper"], foreground=self.COLORS["text"],
-            font=("Segoe UI Semibold", 9),
+            font=("Segoe UI Semibold", 10),
         ).pack(anchor="w")
         tk.Label(
-            shading, text=self.t("client_ui_shading_help"),
+            strategy, text=self.t("client_ui_strategy_help"),
             background=self.COLORS["paper"], foreground=self.COLORS["muted"],
-            font=("Segoe UI", 8),
-        ).pack(anchor="w", pady=(2, 7))
-        choice = tk.Frame(shading, background=self.COLORS["paper"])
-        choice.pack(anchor="w")
-        for value, key in (
-            ("YES", "client_ui_yes"),
-            ("NO", "client_ui_no"),
-            ("TO_CONFIRM", "client_ui_to_confirm"),
+            font=("Segoe UI", 8), wraplength=570, justify="left",
+        ).pack(anchor="w", pady=(2, 9))
+        for label_key, variable in (
+            ("client_ui_strategy_solar", "solar_shading"),
+            ("client_ui_strategy_windows", "window_operability"),
+            ("client_ui_strategy_cooling", "mechanical_cooling"),
         ):
-            tk.Radiobutton(
-                choice,
-                text=self.t(key),
-                variable=self.vars["solar_shading"],
-                value=value,
-                indicatoron=False,
-                relief="flat",
-                borderwidth=1,
-                padx=15,
-                pady=6,
-                background=self.COLORS["chip"],
-                activebackground="#d8e6ef",
-                selectcolor="#c7e5ed",
-                font=("Segoe UI Semibold", 9),
-            ).pack(side="left", padx=(0, 6))
+            self._strategy_declaration_row(strategy, label_key, variable)
+        tk.Label(
+            strategy, text=self.t("client_ui_strategy_notes"),
+            background=self.COLORS["paper"], foreground=self.COLORS["text"],
+            font=("Segoe UI Semibold", 8),
+        ).pack(anchor="w", pady=(7, 4))
+        notes = ttk.Entry(
+            strategy,
+            textvariable=self.vars["building_strategy_notes"],
+            style="Client.TEntry",
+        )
+        notes.pack(fill="x")
+        self.field_entries["building_strategy_notes"] = notes
 
         self._asset_row(
             row=7,
@@ -452,6 +463,43 @@ class ClientComplianceWindow:
         self.result_body = tk.Frame(self.result_panel, background=self.COLORS["card"])
         self.result_body.pack(fill="both", expand=True, pady=(13, 0))
         self._render_empty_result()
+
+    def _strategy_declaration_row(
+        self, parent: Any, label_key: str, variable: str
+    ) -> None:
+        """Draw one per-project YES/NO/TO_CONFIRM strategy declaration."""
+
+        row = tk.Frame(parent, background=self.COLORS["paper"])
+        row.pack(fill="x", pady=(0, 6))
+        tk.Label(
+            row,
+            text=self.t(label_key),
+            background=self.COLORS["paper"],
+            foreground=self.COLORS["text"],
+            width=34,
+            anchor="w",
+            font=("Segoe UI Semibold", 8),
+        ).pack(side="left")
+        for value, key in (
+            ("YES", "client_ui_yes"),
+            ("NO", "client_ui_no"),
+            ("TO_CONFIRM", "client_ui_to_confirm"),
+        ):
+            tk.Radiobutton(
+                row,
+                text=self.t(key),
+                variable=self.vars[variable],
+                value=value,
+                indicatoron=False,
+                relief="flat",
+                borderwidth=1,
+                padx=11,
+                pady=5,
+                background=self.COLORS["chip"],
+                activebackground="#d8e6ef",
+                selectcolor="#c7e5ed",
+                font=("Segoe UI Semibold", 8),
+            ).pack(side="left", padx=(0, 5))
 
     def _section_heading(
         self, parent: Any, row: int, number: str, key: str, pack: bool = False

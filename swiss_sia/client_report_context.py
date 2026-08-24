@@ -19,7 +19,65 @@ CONTEXT_FILE_NAME = "client_report_context.json"
 REPORT_DIR_NAME = "SIA Compliance Reports"
 ASSET_DIR_NAME = "report_assets"
 IMAGE_SUFFIXES = frozenset({".png", ".jpg", ".jpeg"})
-SHADING_DECLARATIONS = frozenset({"YES", "NO", "TO_CONFIRM"})
+BUILDING_STRATEGY_DECLARATIONS = frozenset({"YES", "NO", "TO_CONFIRM"})
+SHADING_DECLARATIONS = BUILDING_STRATEGY_DECLARATIONS
+
+BUILDING_STRATEGY_TEXT = {
+    "client_ui_strategy_title": {
+        "en": "Building strategy",
+        "de": "Gebaeudestrategie",
+        "fr": "Strategie du batiment",
+        "it": "Strategia dell'edificio",
+    },
+    "client_ui_strategy_help": {
+        "en": "Describe what is actually intended for this model. These declarations are saved per VE project and do not replace model evidence.",
+        "de": "Beschreiben Sie, was fuer dieses Modell tatsaechlich vorgesehen ist. Diese Angaben werden je VE-Projekt gespeichert und ersetzen keine Modellnachweise.",
+        "fr": "Indiquez ce qui est reellement prevu pour ce modele. Ces declarations sont enregistrees par projet VE et ne remplacent pas les preuves du modele.",
+        "it": "Indicare cio che e realmente previsto per questo modello. Le dichiarazioni sono salvate per progetto VE e non sostituiscono le prove del modello.",
+    },
+    "client_ui_strategy_solar": {
+        "en": "External solar protection / blinds",
+        "de": "Aussenliegender Sonnenschutz / Storen",
+        "fr": "Protections solaires exterieures / stores",
+        "it": "Schermature solari esterne / tende",
+    },
+    "client_ui_strategy_windows": {
+        "en": "Windows intended to be operable",
+        "de": "Fenster sollen oeffenbar sein",
+        "fr": "Fenetres prevues ouvrables",
+        "it": "Finestre previste apribili",
+    },
+    "client_ui_strategy_cooling": {
+        "en": "Mechanical cooling intended",
+        "de": "Mechanische Kuehlung vorgesehen",
+        "fr": "Refroidissement mecanique prevu",
+        "it": "Raffrescamento meccanico previsto",
+    },
+    "client_ui_strategy_notes": {
+        "en": "Design notes (controls, setpoints, capacities)",
+        "de": "Planungshinweise (Regelung, Sollwerte, Leistungen)",
+        "fr": "Notes de conception (regulation, consignes, capacites)",
+        "it": "Note di progetto (controlli, setpoint, capacita)",
+    },
+    "field_building_strategy": {
+        "en": "Building strategy",
+        "de": "Gebaeudestrategie",
+        "fr": "Strategie du batiment",
+        "it": "Strategia dell'edificio",
+    },
+    "field_window_operability": {
+        "en": "Operable windows",
+        "de": "Oeffenbare Fenster",
+        "fr": "Fenetres ouvrables",
+        "it": "Finestre apribili",
+    },
+    "field_mechanical_cooling": {
+        "en": "Mechanical cooling",
+        "de": "Mechanische Kuehlung",
+        "fr": "Refroidissement mecanique",
+        "it": "Raffrescamento meccanico",
+    },
+}
 
 
 @dataclass(frozen=True)
@@ -36,6 +94,9 @@ class ClientReportContext:
     language_selected: bool = False
     weather_file: str = ""
     solar_shading: str = "TO_CONFIRM"
+    window_operability: str = "TO_CONFIRM"
+    mechanical_cooling: str = "TO_CONFIRM"
+    building_strategy_notes: str = ""
     client_logo_path: str = ""
     model_viewer_image_path: str = ""
 
@@ -51,9 +112,11 @@ class ClientReportContext:
         language = str(self.language or "en").strip().lower()
         if language not in {"de", "en", "fr", "it"}:
             language = "en"
-        shading = str(self.solar_shading or "TO_CONFIRM").strip().upper()
-        if shading not in SHADING_DECLARATIONS:
-            shading = "TO_CONFIRM"
+        shading = normalize_building_strategy_declaration(self.solar_shading)
+        operability = normalize_building_strategy_declaration(
+            self.window_operability
+        )
+        cooling = normalize_building_strategy_declaration(self.mechanical_cooling)
         return ClientReportContext(
             client_name=str(self.client_name or "").strip(),
             project_name=str(self.project_name or "").strip(),
@@ -65,6 +128,11 @@ class ClientReportContext:
             language_selected=self.language_selected is True,
             weather_file=str(self.weather_file or "").strip(),
             solar_shading=shading,
+            window_operability=operability,
+            mechanical_cooling=cooling,
+            building_strategy_notes=str(
+                self.building_strategy_notes or ""
+            ).strip(),
             client_logo_path=str(self.client_logo_path or "").strip(),
             model_viewer_image_path=str(self.model_viewer_image_path or "").strip(),
         )
@@ -73,6 +141,53 @@ class ClientReportContext:
         """Return a JSON-safe record."""
 
         return asdict(self.normalized())
+
+
+def normalize_building_strategy_declaration(value: Any) -> str:
+    """Return one fail-closed YES/NO/TO_CONFIRM project declaration."""
+
+    normalized = str(value or "TO_CONFIRM").strip().upper()
+    if normalized not in BUILDING_STRATEGY_DECLARATIONS:
+        return "TO_CONFIRM"
+    return normalized
+
+
+def building_strategy_text(key: str, language: str = "en") -> str:
+    """Return a localized building-strategy label without changing the shared catalogue."""
+
+    code = str(language or "en").strip().lower()
+    if code not in {"de", "en", "fr", "it"}:
+        code = "en"
+    values = BUILDING_STRATEGY_TEXT.get(str(key or ""), {})
+    return values.get(code) or values.get("en") or str(key or "")
+
+
+def building_strategy_summary(context: Any, language: str = "en") -> str:
+    """Return the compact strategy string printed on report cover pages."""
+
+    labels = {
+        "en": ("Shading", "Windows", "Cooling"),
+        "de": ("Sonnenschutz", "Fenster", "Kuehlung"),
+        "fr": ("Stores", "Fenetres", "Froid"),
+        "it": ("Schermature", "Finestre", "Raffrescamento"),
+    }
+    code = str(language or "en").strip().lower()
+    if code not in labels:
+        code = "en"
+    getter = (
+        (lambda key: context.get(key, "TO_CONFIRM"))
+        if isinstance(context, dict)
+        else (lambda key: getattr(context, key, "TO_CONFIRM"))
+    )
+    values = (
+        normalize_building_strategy_declaration(getter("solar_shading")),
+        normalize_building_strategy_declaration(getter("window_operability")),
+        normalize_building_strategy_declaration(getter("mechanical_cooling")),
+    )
+    return " | ".join(
+        "{}: {}".format(label, value)
+        for label, value in zip(labels[code], values)
+    )
 
 
 def context_path(project_path: Union[str, Path]) -> Path:

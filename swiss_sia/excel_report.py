@@ -49,6 +49,7 @@ from .rule_engine import Alert, Severity
 from .evidence_manager import describe_justification, find_accepted_justification
 from .model_analyzer import has_active_solar_protection
 from .compliance_verdict import build_compliance_verdict
+from .client_report_context import building_strategy_summary, building_strategy_text
 from .reference_model.sia4010.ui_translations import normalize_language, translate
 
 logger = logging.getLogger(__name__)
@@ -492,14 +493,16 @@ class ExcelReportGenerator:
         worksheet.merge_range("C11:E11", self._context_value("project_address", unavailable), value_format)
         worksheet.write("B12", self._tr("client_ui_weather"), label_format)
         worksheet.merge_range("C12:E12", self._context_value("weather_file", unavailable), value_format)
-        worksheet.write("B13", self._tr("field_solar_shading"), label_format)
-        shading_code = str(self._context_value("solar_shading", "TO_CONFIRM") or "TO_CONFIRM").upper()
-        shading_label = self._tr(
-            {"YES": "client_ui_yes", "NO": "client_ui_no"}.get(
-                shading_code, "client_ui_to_confirm"
-            )
+        worksheet.write(
+            "B13",
+            building_strategy_text("field_building_strategy", self.report_language),
+            label_format,
         )
-        worksheet.merge_range("C13:E13", shading_label, value_format)
+        worksheet.merge_range(
+            "C13:E13",
+            building_strategy_summary(self.report_context or {}, self.report_language),
+            value_format,
+        )
         worksheet.write("B14", self._tr("field_generated"), label_format)
         worksheet.merge_range("C14:E14", datetime.now().strftime("%Y-%m-%d %H:%M:%S"), value_format)
         # Regulatory framework is fixed for the whole assessment (constrained
@@ -2588,6 +2591,9 @@ class ExcelReportGenerator:
                 ("Report reference", self._context_value("report_reference", "Not specified")),
                 ("Prepared by", self._context_value("prepared_by", "Not specified")),
                 ("Client-declared solar shading", self._context_value("solar_shading", "TO_CONFIRM")),
+                ("Client-declared window operability", self._context_value("window_operability", "TO_CONFIRM")),
+                ("Client-declared mechanical cooling", self._context_value("mechanical_cooling", "TO_CONFIRM")),
+                ("Client building-strategy notes", self._context_value("building_strategy_notes", "Not specified")),
                 ("Model Viewer image", self._context_value("model_viewer_image_path", "Not provided")),
             ]
         )

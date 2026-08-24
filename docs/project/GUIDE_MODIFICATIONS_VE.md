@@ -19,6 +19,24 @@ regarde le *tally* du manifeste évoluer.
 
 ---
 
+## 0. Stratégie du bâtiment propre à chaque modèle
+
+Avant de générer les rapports, ouvrir l'interface client avec
+`Run_VE_Swiss_Compliance.py` et compléter le bloc **Stratégie du bâtiment** :
+
+1. protections solaires extérieures / stores ;
+2. fenêtres prévues ouvrables ;
+3. refroidissement mécanique prévu ;
+4. notes de conception : régulation, consignes et capacités réelles.
+
+Ces valeurs sont enregistrées dans le projet VE actif sous
+`.sia_compliance/client_report_context.json`. Deux modèles peuvent donc porter
+des stratégies différentes. Les déclarations apparaissent dans les rapports,
+mais ne remplacent jamais la lecture des objets VE, les résultats APS ni les
+preuves relecteur. Une réponse `TO_CONFIRM` reste explicitement indéterminée.
+
+---
+
 ## 1. Ponts thermiques ψ/χ — `SIA3802_THERMAL_BRIDGES`
 
 **Lecture VE directe** (VE 2025.2 : `VESurface.get_thermal_bridges_non_repeating/_random`).
