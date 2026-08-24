@@ -33,6 +33,14 @@ ROOT = Path(__file__).resolve().parents[1]
 #: noticing.
 VERDICT_SOURCE = ROOT / "swiss_sia" / "compliance_verdict.py"
 
+DOMAIN_REASONS = (
+    "domain_not_evaluated",
+    "blocking_findings",
+    "evidence_incomplete",
+    "no_blocking_finding_with_limitations",
+    "no_blocking_finding",
+)
+
 
 def _outstanding_items() -> list[str]:
     text = VERDICT_SOURCE.read_text(encoding="utf-8")
@@ -106,6 +114,19 @@ class OutstandingKeyCoverageTests(unittest.TestCase):
                         item, language, rendered
                     ),
                 )
+
+
+class DomainReasonCoverageTests(unittest.TestCase):
+    """Prevent an internal domain-reason token from reaching a client PDF."""
+
+    def test_every_domain_reason_resolves_in_every_language(self) -> None:
+        for reason in DOMAIN_REASONS:
+            key = "report_domain_reason_" + reason
+            self.assertIn(key, TRANSLATIONS)
+            for language in LANGUAGES:
+                rendered = translate(key, language)
+                self.assertNotEqual(rendered, key)
+                self.assertTrue(rendered.strip())
 
 
 class ScopeSentenceTests(unittest.TestCase):

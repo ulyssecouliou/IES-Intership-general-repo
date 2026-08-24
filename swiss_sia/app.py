@@ -50,6 +50,10 @@ def _reload_local_module(module_name: str) -> Any:
 # VE Scripts keeps a Python interpreter alive between Run clicks. Reload every
 # provider before modules that import symbols from it, preventing mixed APIs
 # after the workspace code changes while VE remains open.
+ui_translations_module = importlib.import_module(
+    f"{__package__}.reference_model.sia4010.ui_translations"
+)
+ui_translations_module = importlib.reload(ui_translations_module)
 data_extractor_module = _reload_local_module("data_extractor")
 model_analyzer_module = _reload_local_module("model_analyzer")
 rule_engine_module = _reload_local_module("rule_engine")

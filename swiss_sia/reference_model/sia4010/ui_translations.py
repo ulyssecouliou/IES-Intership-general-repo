@@ -2860,6 +2860,12 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
         "en": "No determined blocking finding", "de": "Kein festgestellter Blocker",
         "fr": "Aucun point bloquant avere", "it": "Nessun blocco accertato",
     },
+    "report_domain_reason_no_blocking_finding_with_limitations": {
+        "en": "No determined blocking finding (with documented limitations)",
+        "de": "Kein festgestellter Blocker (mit dokumentierten Einschraenkungen)",
+        "fr": "Aucun point bloquant avere (avec limitations documentees)",
+        "it": "Nessun blocco accertato (con limitazioni documentate)",
+    },
     "report_ventilation_evidence_title": {
         "en": "Ventilation evidence",
         "de": "Lueftungsnachweise",
