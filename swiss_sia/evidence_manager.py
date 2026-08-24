@@ -33,6 +33,15 @@ ACCEPTED_DECISION_STATUSES = {
     "reviewed",
 }
 
+PLACEHOLDER_REVIEW_MARKERS = (
+    "demo",
+    "example",
+    "illustrative",
+    "placeholder",
+    "not a real review",
+    "not_a_real_review",
+)
+
 JUSTIFICATION_FILE_PATTERNS = (
     "SIA3802_justification_*.csv",
     "SIA3802_justifications_*.csv",
@@ -1104,6 +1113,7 @@ def _normalize_project_metadata_record(raw_row: Dict[str, Any]) -> Dict[str, Any
     record.setdefault("source_document", record.get("source_file", ""))
     record.setdefault("source_reference", "")
     record.setdefault("notes", "")
+    record["placeholder_provenance"] = _has_placeholder_review_provenance(record)
     record["accepted"] = (
         _status_key(record.get("review_status")) in ACCEPTED_REVIEW_STATUSES
         and bool(record.get("project_id"))
@@ -1111,6 +1121,7 @@ def _normalize_project_metadata_record(raw_row: Dict[str, Any]) -> Dict[str, Any
         and bool(record.get("reviewer"))
         and bool(record.get("review_date"))
         and bool(record.get("source_document") or record.get("source_reference"))
+        and not record["placeholder_provenance"]
     )
     return record
 
@@ -1135,6 +1146,7 @@ def _normalize_global_comparison_record(raw_row: Dict[str, Any]) -> Dict[str, An
     record.setdefault("source_document", record.get("source_file", ""))
     record.setdefault("source_reference", "")
     record.setdefault("notes", "")
+    record["placeholder_provenance"] = _has_placeholder_review_provenance(record)
     try:
         record["project_value_numeric"] = float(record.get("project_value"))
         record["reference_value_numeric"] = float(record.get("reference_value"))
@@ -1156,8 +1168,23 @@ def _normalize_global_comparison_record(raw_row: Dict[str, Any]) -> Dict[str, An
         and bool(record.get("reviewer"))
         and bool(record.get("review_date"))
         and bool(record.get("source_document") or record.get("source_reference"))
+        and not record["placeholder_provenance"]
     )
     return record
+
+
+def _has_placeholder_review_provenance(record: Dict[str, Any]) -> bool:
+    """Reject records that explicitly identify themselves as demo evidence."""
+    provenance = " ".join(
+        str(record.get(field) or "").strip().lower()
+        for field in (
+            "reviewer",
+            "source_document",
+            "source_reference",
+            "notes",
+        )
+    )
+    return any(marker in provenance for marker in PLACEHOLDER_REVIEW_MARKERS)
 
 
 def _read_justification_csv(file_path: Path) -> List[Dict[str, Any]]:

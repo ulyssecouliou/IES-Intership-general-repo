@@ -631,6 +631,8 @@ def _collect_dynamic_results(project: Any) -> Dict[str, Any]:
                 "occupied_hours_below_sia180_lower": item.occupied_hours_below_sia180_lower,
                 "annual_comfort_period_complete": item.annual_comfort_period_complete,
                 "comfort_curve_source": item.comfort_curve_source,
+                "comfort_method_status": item.comfort_method_status,
+                "comfort_method_note": item.comfort_method_note,
                 "source_notes": item.source_notes,
             })
 

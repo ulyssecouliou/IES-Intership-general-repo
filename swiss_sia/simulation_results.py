@@ -49,6 +49,8 @@ class RoomDynamicResult:
     occupied_hours_below_sia180_lower: Optional[float] = None
     annual_comfort_period_complete: bool = False
     comfort_curve_source: str = ""
+    comfort_method_status: str = "NOT_CHECKABLE"
+    comfort_method_note: str = ""
     source_notes: str = ""
 
 
@@ -824,6 +826,12 @@ def collect_room_dynamic_results(results_file: Any) -> List[RoomDynamicResult]:
                     sia180_source,
                 )
                 if part
+            )
+            result.comfort_method_status = "NOT_CHECKABLE"
+            result.comfort_method_note = (
+                "SIA 180 figure-4 vertices are source-traced, but the exact "
+                "operative-temperature quantity and theta_rm convention remain "
+                "pending normative review. Exceedance hours are screening values."
             )
             if not result.annual_comfort_period_complete:
                 notes.append("temperature, occupancy and both comfort-limit series are not aligned exact 365-day series")

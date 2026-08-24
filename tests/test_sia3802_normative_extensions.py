@@ -584,6 +584,32 @@ class CheckerBehaviorTests(unittest.TestCase):
         self.assertEqual(result["status"], "CHECKED")
         self.assertNotIn("SIA3802_SUMMER_COMFORT_DYNAMIC", rules)
 
+    def test_unverified_comfort_method_never_emits_determined_noncompliance(self):
+        """Keep computed exceedance hours as screening until the method is qualified."""
+        checker, _engine = self._new_checker()
+        result = checker._check_dynamic_method({
+            "status": "AVAILABLE",
+            "building_status": "NEW_BUILDING",
+            "reviewed_weather_match_status": "MATCH",
+            "rooms": [{
+                "room_id": "room-1",
+                "room_name": "Room 1",
+                "annual_comfort_period_complete": True,
+                "occupied_hours_above_sia180_upper": 1462.0,
+                "occupied_hours_below_sia180_lower": 1.0,
+                "window_operable": True,
+                "comfort_method_status": "NOT_CHECKABLE",
+                "comfort_method_note": "PENDING norm-analyst",
+            }],
+            "design_power_status": "NOT_CHECKABLE",
+        })
+        rules = {alert.rule for alert in result["alerts"]}
+
+        self.assertEqual(result["status"], "NOT_CHECKABLE")
+        self.assertIn("SIA3802_COMFORT_METHOD_NOT_VERIFIED", rules)
+        self.assertNotIn("SIA3802_SUMMER_COMFORT_DYNAMIC", rules)
+        self.assertEqual(result["comfort"]["unverified_method_room_count"], 1)
+
     def test_unknown_operability_uses_zero_hour_screening_without_passing(self):
         """Screen unknown operability strictly while preserving the evidence gap."""
         checker, _engine = self._new_checker()

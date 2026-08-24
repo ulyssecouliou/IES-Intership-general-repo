@@ -1586,13 +1586,24 @@ class SIA3802Checker:
             row for row in (dynamic_results.get("rooms", []) or [])
             if isinstance(row, dict)
         ]
-        complete_room_rows = [
+        series_complete_room_rows = [
             row for row in room_rows
             if row.get("annual_comfort_period_complete")
             and row.get("occupied_hours_above_sia180_upper") is not None
             and row.get("occupied_hours_below_sia180_lower") is not None
         ]
-        incomplete_room_rows = [row for row in room_rows if row not in complete_room_rows]
+        incomplete_room_rows = [
+            row for row in room_rows if row not in series_complete_room_rows
+        ]
+        unverified_method_rows = [
+            row for row in series_complete_room_rows
+            if str(row.get("comfort_method_status") or "VERIFIED").upper()
+            != "VERIFIED"
+        ]
+        complete_room_rows = [
+            row for row in series_complete_room_rows
+            if row not in unverified_method_rows
+        ]
         unknown_operability_rows = [
             row for row in complete_room_rows
             if row.get("window_operable") is None
@@ -1622,6 +1633,7 @@ class SIA3802Checker:
             "expected_room_count": len(room_rows),
             "complete_room_count": len(complete_room_rows),
             "incomplete_room_count": len(incomplete_room_rows),
+            "unverified_method_room_count": len(unverified_method_rows),
             "unknown_operability_room_count": len(unknown_operability_rows),
             "room_results": [],
         }
@@ -1654,6 +1666,24 @@ class SIA3802Checker:
                 category="Dynamic Method",
                 recommendation="Export aligned annual temperature, occupancy and both SIA 180 limit series for every applicable room.",
                 data=incomplete_room_rows,
+            )
+        elif unverified_method_rows:
+            self.rule_engine.add_alert(
+                rule="SIA3802_COMFORT_METHOD_NOT_VERIFIED",
+                description=(
+                    "Annual comfort series are available, but the exact SIA 180 "
+                    "operative-temperature quantity and running-mean convention "
+                    "have not yet been normatively verified. Reported exceedance "
+                    "hours remain screening values, not a determined verdict."
+                ),
+                severity=Severity.MEDIUM,
+                category="Dynamic Method",
+                recommendation=(
+                    "Validate the operative-temperature and theta_rm conventions "
+                    "against SIA 180, then qualify the calculation method before "
+                    "issuing a pass/fail comfort conclusion."
+                ),
+                data=unverified_method_rows,
             )
         else:
             if unknown_operability_rows:
@@ -1744,6 +1774,7 @@ class SIA3802Checker:
                 and climate_provenance_status == "MATCH"
                 and bool(room_rows)
                 and not incomplete_room_rows
+                and not unverified_method_rows
                 and not unknown_operability_rows
                 and not building_status_missing_for_non_operable
                 else "NOT_CHECKABLE"

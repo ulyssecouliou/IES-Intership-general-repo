@@ -103,6 +103,20 @@ class ProjectMetadataEvidenceTests(unittest.TestCase):
         self.assertEqual(result["accepted_count"], 0)
         self.assertIsNone(find_accepted_project_metadata(result, "Demo_Project"))
 
+    def test_explicit_demo_metadata_is_never_accepted(self) -> None:
+        """Do not promote an illustrative row to reviewed project evidence."""
+        self.csv_path.write_text(
+            "project_id,building_status,review_status,reviewer,review_date,source_document,source_reference,notes\n"
+            "Demo_Project,new building,accepted,DEMO_EXAMPLE_NOT_A_REAL_REVIEW,2026-07-15,DEMO_illustrative,SIA 380/2,Illustrative values only\n",
+            encoding="utf-8",
+        )
+
+        result = scan_sia3802_project_metadata(self.project_root, "tests")
+
+        self.assertEqual(result["status"], "PENDING_REVIEW")
+        self.assertTrue(result["records"][0]["placeholder_provenance"])
+        self.assertIsNone(find_accepted_project_metadata(result, "Demo_Project"))
+
     def test_dynamic_summary_uses_reviewed_matching_metadata(self) -> None:
         """Propagate accepted project status and weather match into APS summary."""
         metadata = {
@@ -158,6 +172,20 @@ class ProjectMetadataEvidenceTests(unittest.TestCase):
         result = scan_sia3802_global_comparisons(self.project_root, "tests")
 
         self.assertEqual(result["status"], "PENDING_REVIEW")
+        self.assertIsNone(find_accepted_global_comparison(result, "Demo Project"))
+
+    def test_explicit_demo_global_comparison_is_never_accepted(self) -> None:
+        """Reject accepted-looking values whose provenance says they are a demo."""
+        self.comparison_path.write_text(
+            "project_id,comparison_scope,comparison_metric,project_value,reference_value,unit,comparison_result,reviewer,review_date,review_status,source_document,source_reference,notes\n"
+            "Demo_Project,complete_sia3802_project,global_energy_expenditure_index_sia380,42.0,45.0,kWh/m2,compliant,DEMO_EXAMPLE_NOT_A_REAL_REVIEW,2026-07-15,accepted,DEMO_illustrative_calc,SIA 380/2,Not a real review\n",
+            encoding="utf-8",
+        )
+
+        result = scan_sia3802_global_comparisons(self.project_root, "tests")
+
+        self.assertEqual(result["status"], "PENDING_REVIEW")
+        self.assertTrue(result["records"][0]["placeholder_provenance"])
         self.assertIsNone(find_accepted_global_comparison(result, "Demo Project"))
 
 
