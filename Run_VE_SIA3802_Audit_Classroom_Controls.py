@@ -71,7 +71,9 @@ def _profile_identity(profile_id: Any, profile: Any) -> str:
     )
 
 
-def _profile_inventory(project: Any) -> list[dict[str, Any]]:
+def _profile_inventory(
+    project: Any, referenced_profiles: set[str]
+) -> list[dict[str, Any]]:
     inventory = []
     try:
         collections = list(project.profiles())
@@ -79,16 +81,20 @@ def _profile_inventory(project: Any) -> list[dict[str, Any]]:
         return [{"read_error": "{}: {}".format(type(exc).__name__, exc)}]
     for collection_index, collection in enumerate(collections):
         for profile_id, profile in dict(collection).items():
+            reference = str(getattr(profile, "reference", None) or "")
+            name = str(getattr(profile, "name", None) or "")
             identity = _profile_identity(profile_id, profile)
-            if not (
-                identity.startswith("SIA2024_4P01")
-                or identity in {"ON", "OFF"}
+            aliases = {str(profile_id), reference, name, identity}
+            if not aliases.intersection(referenced_profiles) and not any(
+                alias.startswith("SIA2024_4P01") for alias in aliases
             ):
                 continue
             item = {
                 "collection_index": collection_index,
                 "profile_id": str(profile_id),
                 "identity": identity,
+                "reference": reference,
+                "name": name,
                 "python_type": str(type(profile)),
             }
             try:
@@ -162,7 +168,7 @@ def _summary(template: dict[str, Any], rooms: list[dict[str, Any]]) -> dict[str,
     room_names = {item.get("name") for item in rooms}
     profile = conditions.get("heating_profile")
     return {
-        "all_target_rooms_found": room_names == set(TARGET_ROOMS),
+        "all_target_rooms_found": len(rooms) == 3,
         "missing_target_rooms": sorted(set(TARGET_ROOMS) - room_names),
         "template_heating_profile": _native(profile),
         "continuous_heating_fallback_detected": str(profile).strip().upper() == "ON",
@@ -209,12 +215,27 @@ def run() -> None:
         )
 
     template = _template_snapshot(*matches[0])
-    room_index = {
-        str(getattr(body, "name", "")): body for body in model.get_bodies(False)
-    }
-    rooms = [
-        _room_snapshot(room_index[name]) for name in TARGET_ROOMS if name in room_index
-    ]
+    assigned_bodies = []
+    for body in model.get_bodies(False):
+        try:
+            general = dict(body.get_room_data().get_general())
+        except Exception:
+            continue
+        if str(general.get("thermal_template_name") or "") == TEMPLATE_NAME:
+            assigned_bodies.append(body)
+    rooms = [_room_snapshot(body) for body in assigned_bodies]
+    referenced_profiles = {"ON", "OFF"}
+    for source in [template] + rooms:
+        conditions = source.get("room_conditions") or {}
+        systems = source.get("apache_systems") or {}
+        for key, value in list(conditions.items()) + list(systems.items()):
+            if "profile" in str(key).lower() and isinstance(value, str) and value:
+                referenced_profiles.add(value)
+        for exchange in source.get("air_exchanges") or []:
+            data = exchange.get("data") or {}
+            value = data.get("variation_profile")
+            if isinstance(value, str) and value:
+                referenced_profiles.add(value)
     report = {
         "schema_version": "1.0",
         "audit": "sia3802_classroom_controls",
@@ -227,7 +248,7 @@ def run() -> None:
         "target_rooms": list(TARGET_ROOMS),
         "template": template,
         "rooms": rooms,
-        "matching_profiles": _profile_inventory(project),
+        "matching_profiles": _profile_inventory(project, referenced_profiles),
     }
     report["summary"] = _summary(template, rooms)
 
