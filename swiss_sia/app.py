@@ -1408,12 +1408,14 @@ def main(
         return {
             "verdict_status": verdict.sia3802_status,
             "blocking_total": verdict.blocking_total,
+            "missing_total": verdict.missing_total,
             "advisory_total": verdict.advisory_total,
             "domains": [
                 {
                     "domain": domain.domain,
                     "status": domain.status,
                     "blocking_count": domain.blocking_count,
+                    "missing_count": domain.missing_count,
                     "advisory_count": domain.advisory_count,
                 }
                 for domain in verdict.domains

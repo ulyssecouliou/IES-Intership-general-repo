@@ -1717,10 +1717,10 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
         "it": "NON DETERMINATO",
     },
     "findings_blocking_advisory": {
-        "en": "Blocking / advisory findings",
-        "de": "Blockierende / hinweisende Befunde",
-        "fr": "Constats bloquants / indicatifs",
-        "it": "Riscontri bloccanti / indicativi",
+        "en": "Blocking / missing / advisory findings",
+        "de": "Blockierende / fehlende / hinweisende Befunde",
+        "fr": "Constats bloquants / preuves manquantes / indicatifs",
+        "it": "Riscontri bloccanti / mancanti / indicativi",
     },
     "section_identification": {
         "en": "Identification",
@@ -1769,6 +1769,12 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
         "de": "Blockierend",
         "fr": "Bloquants",
         "it": "Bloccanti",
+    },
+    "column_missing": {
+        "en": "Missing",
+        "de": "Fehlend",
+        "fr": "Manquants",
+        "it": "Mancanti",
     },
     "column_advisory": {
         "en": "Advisory",

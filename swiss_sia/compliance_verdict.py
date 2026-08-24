@@ -83,6 +83,7 @@ class DomainVerdict:
     domain: str
     status: str
     blocking_count: int
+    missing_count: int
     advisory_count: int
     reason: str
     limitation_count: int = 0
@@ -94,6 +95,7 @@ class DomainVerdict:
             "domain": self.domain,
             "status": self.status,
             "blocking_count": self.blocking_count,
+            "missing_count": self.missing_count,
             "advisory_count": self.advisory_count,
             "limitation_count": self.limitation_count,
             "reason": self.reason,
@@ -110,6 +112,7 @@ class ComplianceVerdict:
     sia4010_reason: str
     domains: Tuple[DomainVerdict, ...] = ()
     blocking_total: int = 0
+    missing_total: int = 0
     advisory_total: int = 0
     outstanding: Tuple[str, ...] = ()
 
@@ -133,6 +136,7 @@ class ComplianceVerdict:
             "sia4010_reason": self.sia4010_reason,
             "domains": [domain.to_dict() for domain in self.domains],
             "blocking_total": self.blocking_total,
+            "missing_total": self.missing_total,
             "advisory_total": self.advisory_total,
             "outstanding": list(self.outstanding),
         }
@@ -221,6 +225,7 @@ def build_compliance_verdict(
                 domain=key,
                 status=status,
                 blocking_count=blocking,
+                missing_count=indeterminate,
                 advisory_count=advisory,
                 limitation_count=limitation,
                 reason=reason,
@@ -248,6 +253,7 @@ def build_compliance_verdict(
         for alert in alerts
     )
     blocking_total = sum(item.blocking_count for item in domains)
+    missing_total = sum(item.missing_count for item in domains)
     advisory_total = sum(item.advisory_count for item in domains)
 
     # SIA 380/2 decides on the reviewed global project/reference comparison.
@@ -371,6 +377,7 @@ def build_compliance_verdict(
         sia4010_reason=sia4010_reason,
         domains=tuple(domains),
         blocking_total=blocking_total,
+        missing_total=missing_total,
         advisory_total=advisory_total,
         outstanding=tuple(dict.fromkeys(outstanding)),
     )

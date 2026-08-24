@@ -281,7 +281,7 @@ class SIA3802Checker:
 
         self.rule_engine.add_rule(Rule(
             name="SIA3802_SUMMER_COMFORT_DYNAMIC",
-            description="Annual occupied-hour temperatures satisfy the SIA 380/2 upper-hour allowance and never undercut the lower limit curve.",
+            description="Annual occupied-hour temperatures exceed the applicable SIA 180 upper-hour allowance or undercut the lower limit curve.",
             check=lambda data: (
                 data.get("upper_hours") is not None
                 and data.get("lower_hours") is not None

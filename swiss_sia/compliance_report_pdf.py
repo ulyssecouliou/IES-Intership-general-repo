@@ -297,7 +297,11 @@ def _draw_verdict_banner(
         bold=True,
         colour=colour,
     )
-    counts = "{} / {}".format(verdict.blocking_total, verdict.advisory_total)
+    counts = "{} / {} / {}".format(
+        verdict.blocking_total,
+        verdict.missing_total,
+        verdict.advisory_total,
+    )
     page.text(
         A4_MM[0] - MARGIN - 62.0,
         top + 10.0,
@@ -379,11 +383,12 @@ def _draw_domain_table(
     top += 3.0
     page.line(MARGIN, top, A4_MM[0] - MARGIN, top, width_pt=0.5, colour=LINE)
     top += 5.5
-    columns = (0.0, 62.0, 112.0, 142.0)
+    columns = (0.0, 62.0, 108.0, 132.0, 156.0)
     headers = (
         translate("column_domain", language),
         translate("column_status", language),
         translate("column_blocking", language),
+        translate("column_missing", language),
         translate("column_advisory", language),
     )
     for offset, header in zip(columns, headers):
@@ -417,6 +422,13 @@ def _draw_domain_table(
         )
         page.text(
             MARGIN + columns[3],
+            top,
+            str(domain.missing_count),
+            size_pt=8.0,
+            colour=WARN,
+        )
+        page.text(
+            MARGIN + columns[4],
             top,
             str(domain.advisory_count),
             size_pt=8.0,
@@ -803,6 +815,8 @@ def _model_data_text(alert: Any, language: str) -> str:
         "visible_transmittance", "frame_fraction", "air_exchange_rate",
         "infiltration_rate", "area", "orientation", "heating_setpoint",
         "cooling_setpoint", "power_density", "efficiency", "eer", "seer", "scop",
+        "upper_hours", "upper_limit_hours", "lower_hours", "window_operable",
+        "method",
     )
     parts: List[str] = []
     for key in preferred:
@@ -945,9 +959,10 @@ def _draw_detailed_pages(
         )
         page.text(
             A4_MM[0] - MARGIN - 53.0, cursor + 5.0,
-            "{}  |  {} / {}".format(
+            "{}  |  B:{} M:{} A:{}".format(
                 _status_label(domain.status, language),
                 domain.blocking_count,
+                domain.missing_count,
                 domain.advisory_count,
             ),
             size_pt=7.1, bold=True, colour=colour, align="right", width_mm=53.0,

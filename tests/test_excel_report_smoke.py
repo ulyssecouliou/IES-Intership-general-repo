@@ -11,7 +11,7 @@ from pathlib import Path
 from scripts.quality.fixtures import StaticModelAnalyzer, build_reference_room
 from swiss_sia.excel_report import ExcelReportGenerator
 from swiss_sia.health_score import HealthScoreCalculator
-from swiss_sia.rule_engine import RuleEngine
+from swiss_sia.rule_engine import Alert, RuleEngine, Severity
 from swiss_sia.sia380_checker import SIA3802Checker
 from swiss_sia.sia4010_checker import SIA4010Checker
 from swiss_sia.reference_project import build_reference_project_specification
@@ -89,6 +89,30 @@ def _build_report_inputs():
 
 class ExcelReportSmokeTests(unittest.TestCase):
     """Exercise the report generator with deterministic normalized VE data."""
+
+    def test_dynamic_alert_data_includes_observed_hours_and_limit(self) -> None:
+        """Keep the Excel alert row auditable for summer-comfort failures."""
+        helper = ExcelReportGenerator.__new__(ExcelReportGenerator)
+        alert = Alert(
+            rule="SIA3802_SUMMER_COMFORT_DYNAMIC",
+            description="Occupied hours exceed the applicable allowance.",
+            severity=Severity.HIGH,
+            category="Dynamic Method",
+            recommendation="Review the room.",
+            data={
+                "room_name": "Office_01",
+                "upper_hours": 1445.5,
+                "upper_limit_hours": 0.0,
+                "lower_hours": 0.0,
+                "method": "CONSERVATIVE_ZERO_HOUR_SCREENING_OPERABILITY_UNKNOWN",
+            },
+        )
+
+        evidence = helper._format_alert_data(alert)
+        self.assertIn("room_name=Office_01", evidence)
+        self.assertIn("upper_hours=1445.5 h", evidence)
+        self.assertIn("upper_limit_hours=0.0 h", evidence)
+        self.assertIn("lower_hours=0.0 h", evidence)
 
     def test_report_contains_readiness_dynamic_and_chart_parts(self) -> None:
         """Generate a workbook and verify its critical professional artifacts."""

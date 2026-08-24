@@ -274,6 +274,8 @@ class VerdictEngineTests(unittest.TestCase):
         )
         gains = next(d for d in verdict.domains if d.domain == "gains")
         self.assertEqual(gains.status, NOT_DETERMINED)
+        self.assertEqual(gains.missing_count, 1)
+        self.assertEqual(verdict.missing_total, 1)
         self.assertEqual(verdict.sia3802_status, COMPLIANT)
         self.assertEqual(
             verdict.sia3802_reason, "comparison_reviewed_no_blocker_with_reserves"
@@ -589,6 +591,52 @@ class RenderedReportTests(unittest.TestCase):
         self.assertIn(str(wall_entry["limit"]), full_text)
         self.assertIn("u value: 0.41", full_text)
         self.assertIn("Review the wall construction", full_text)
+
+    def test_summer_comfort_blocker_prints_failure_values_and_source(self):
+        """The client card must explain the exceedance instead of describing a pass."""
+        alert = Alert(
+            rule="SIA3802_SUMMER_COMFORT_DYNAMIC",
+            description=(
+                "Annual occupied-hour temperatures exceed the applicable SIA 180 "
+                "upper-hour allowance or undercut the lower limit curve."
+            ),
+            severity=Severity.HIGH,
+            category="Dynamic Method",
+            recommendation="Review the critical room and rerun the simulation.",
+            data={
+                "room_name": "Office_01",
+                "upper_hours": 1445.5,
+                "upper_limit_hours": 0.0,
+                "lower_hours": 0.0,
+                "window_operable": None,
+                "method": "CONSERVATIVE_ZERO_HOUR_SCREENING_OPERABILITY_UNKNOWN",
+            },
+        )
+        criterion = _criterion_for_alert(alert)
+        self.assertEqual(criterion["id"], "SIA3802_SUMMER_COMFORT")
+
+        sia3802 = {
+            "envelope": {}, "openings": {}, "ventilation": {}, "gains": {},
+            "setpoints": {}, "hvac": {}, "dynamic": {"status": "CHECKED"},
+            "global_reference_comparison": {"status": "REVIEWED_RESULT_AVAILABLE"},
+            "alerts": [alert],
+        }
+        path = render_compliance_report_pdf(
+            OUTPUT_ROOT / "report_summer_comfort_evidence.pdf",
+            project_label="P",
+            rooms_data=self.rooms,
+            sia3802_results=sia3802,
+            sia4010_results={},
+            profile=self.profile,
+            language="en",
+            scope="sia3802",
+        )
+        full_text = "\n".join(page.extract_text() for page in PdfReader(str(path)).pages)
+        self.assertIn("temperatures exceed", full_text)
+        self.assertNotIn("temperatures satisfy", full_text)
+        self.assertIn("upper hours: 1445.5", full_text)
+        self.assertIn("upper limit hours: 0.0", full_text)
+        self.assertIn(str(criterion["source"]), full_text)
 
     def test_sia3802_scope_omits_sia4010_readiness_from_client_banner(self):
         sia3802 = {

@@ -828,8 +828,10 @@ class ExcelReportGenerator:
                  "Decisive SIA 380/2 building conclusion; missing evidence remains visible."),
                 ("BLOCKING FINDINGS", str(compliance_verdict.blocking_total),
                  "Determined findings that prevent a compliant conclusion."),
-                ("ADVISORY FINDINGS", str(compliance_verdict.advisory_total),
-                 "Review items that remain visible in the report."),
+                ("MISSING / ADVISORY", "{} / {}".format(
+                    compliance_verdict.missing_total,
+                    compliance_verdict.advisory_total,
+                 ), "Incomplete evidence / review items that remain visible."),
             ])
         if self.include_sia4010:
             cards.append(("SIA 4010 EVIDENCE", f"{evidence_present}/{len(SIA4010_REQUIRED_EVIDENCE)}", "Official evidence items detected locally."))
@@ -899,12 +901,13 @@ class ExcelReportGenerator:
             worksheet.insert_chart("A15", score_chart, {"x_scale": 1.25, "y_scale": 1.25})
         else:
             worksheet.merge_range("A14:F14", "Compliance by Domain", section_format)
-            worksheet.write_row("A15", ["Domain", "Verdict", "Blocking", "Advisory"], header_format)
+            worksheet.write_row("A15", ["Domain", "Verdict", "Blocking", "Missing", "Advisory"], header_format)
             for row_index, domain in enumerate(compliance_verdict.domains, start=15):
                 worksheet.write(row_index, 0, domain.domain.title(), cell_format)
                 worksheet.write(row_index, 1, domain.status.replace("_", " "), cell_format)
                 worksheet.write(row_index, 2, domain.blocking_count, number_format)
-                worksheet.write(row_index, 3, domain.advisory_count, number_format)
+                worksheet.write(row_index, 3, domain.missing_count, number_format)
+                worksheet.write(row_index, 4, domain.advisory_count, number_format)
 
         worksheet.merge_range("G14:L14", "Risk Distribution", section_format)
         alert_chart = self.workbook.add_chart({"type": "doughnut"})
@@ -1126,7 +1129,11 @@ class ExcelReportGenerator:
             cards.extend([
                 ("COMPLIANCE VERDICT", compliance_verdict.sia3802_status.replace("_", " "),
                  "Actual SIA 380/2 conclusion supported by the available evidence."),
-                ("BLOCKING / ADVISORY", f"{compliance_verdict.blocking_total} / {compliance_verdict.advisory_total}",
+                ("BLOCKING / MISSING / ADVISORY", "{} / {} / {}".format(
+                    compliance_verdict.blocking_total,
+                    compliance_verdict.missing_total,
+                    compliance_verdict.advisory_total,
+                 ),
                  "Findings carried by the compliance verdict."),
             ])
         if self.include_sia4010:
@@ -1184,12 +1191,13 @@ class ExcelReportGenerator:
                 "max_value": 100,
             })
         else:
-            worksheet.write_row("A13", ["Domain", "Verdict", "Blocking", "Advisory"], header_format)
+            worksheet.write_row("A13", ["Domain", "Verdict", "Blocking", "Missing", "Advisory"], header_format)
             for row_index, domain in enumerate(compliance_verdict.domains, start=13):
                 worksheet.write(row_index, 0, domain.domain.title(), cell_format)
                 worksheet.write(row_index, 1, domain.status.replace("_", " "), cell_format)
                 worksheet.write(row_index, 2, domain.blocking_count, number_format)
-                worksheet.write(row_index, 3, domain.advisory_count, number_format)
+                worksheet.write(row_index, 3, domain.missing_count, number_format)
+                worksheet.write(row_index, 4, domain.advisory_count, number_format)
 
         if self.include_sia4010:
             worksheet.merge_range("I12:P12", "SIA 4010 Official Validation Scores", section_format)
@@ -7520,10 +7528,17 @@ class ExcelReportGenerator:
                     )
                 )
         if isinstance(data, dict):
-            for key in ("id", "type", "efficiency", "energy_consumption"):
+            for key in (
+                "id", "room_id", "room_name", "type", "efficiency",
+                "energy_consumption", "upper_hours", "upper_limit_hours",
+                "lower_hours", "window_operable", "method",
+            ):
                 value = data.get(key)
                 if value not in (None, ""):
-                    parts.append(f"{key}={value}")
+                    suffix = " h" if key in {
+                        "upper_hours", "upper_limit_hours", "lower_hours"
+                    } else ""
+                    parts.append(f"{key}={value}{suffix}")
 
         if str(alert.rule).upper() in {"SIA3802_WWR", "SIA3801_WWR"} and self.model_analyzer is not None:
             try:

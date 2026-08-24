@@ -665,6 +665,13 @@ class CheckerBehaviorTests(unittest.TestCase):
             "SIA3802_SUMMER_COMFORT_DYNAMIC",
             {alert.rule for alert in result["alerts"]},
         )
+        comfort_alert = next(
+            alert
+            for alert in result["alerts"]
+            if alert.rule == "SIA3802_SUMMER_COMFORT_DYNAMIC"
+        )
+        self.assertIn("temperatures exceed", comfort_alert.description)
+        self.assertNotIn("temperatures satisfy", comfort_alert.description)
 
     def test_incomplete_room_blocks_annual_comfort(self):
         """Reject an aggregate conclusion when one applicable room is incomplete."""
