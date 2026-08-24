@@ -89,10 +89,70 @@ Scoring
 .. automodule:: swiss_sia.health_score
    :members:
 
+Compliance Verdict
+------------------
+
+.. automodule:: swiss_sia.compliance_verdict
+   :members:
+
+Compliance Criteria
+-------------------
+
+.. automodule:: swiss_sia.compliance_criteria
+   :members:
+
+Compliance Criteria Evaluator
+-----------------------------
+
+.. automodule:: swiss_sia.compliance_criteria_evaluator
+   :members:
+
+Compliance Hub
+--------------
+
+.. automodule:: swiss_sia.compliance_hub
+   :members:
+
+Client Report Context
+---------------------
+
+.. automodule:: swiss_sia.client_report_context
+   :members:
+
+Company Profile
+---------------
+
+.. automodule:: swiss_sia.company_profile
+   :members:
+
 Excel Reporting
 ---------------
 
 .. automodule:: swiss_sia.excel_report
+   :members:
+
+PDF Reporting
+-------------
+
+.. automodule:: swiss_sia.pdf_writer
+   :members:
+
+.. automodule:: swiss_sia.compliance_report_pdf
+   :members:
+
+HTML Reporting
+--------------
+
+.. automodule:: swiss_sia.compliance_report_html
+   :members:
+
+.. automodule:: swiss_sia.compliance_report_html_template
+   :members:
+
+Report Style
+------------
+
+.. automodule:: swiss_sia.report_style
    :members:
 
 Simulation Results
@@ -117,6 +177,42 @@ Evidence Pack Export
 --------------------
 
 .. automodule:: swiss_sia.evidence_pack
+   :members:
+
+Client Template Remediation
+---------------------------
+
+.. automodule:: swiss_sia.client_template_remediation
+   :members:
+
+Reference Project
+-----------------
+
+.. automodule:: swiss_sia.reference_project
+   :members:
+
+SIA 380/2 Classroom Template
+-----------------------------
+
+.. automodule:: swiss_sia.sia3802_classroom_template
+   :members:
+
+Validation Class Scope
+----------------------
+
+.. automodule:: swiss_sia.validation_class_scope
+   :members:
+
+Runtime Inventory
+-----------------
+
+.. automodule:: swiss_sia.runtime_inventory
+   :members:
+
+Remediation Probe
+-----------------
+
+.. automodule:: swiss_sia.remediation_probe
    :members:
 
 Developer Scripts

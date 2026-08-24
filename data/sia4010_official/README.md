@@ -4,10 +4,10 @@ Ce dossier accueille les fichiers **officiels** du SIA. Il est volontairement
 vide dans le dépôt : ces fichiers ne sont pas redistribuables, et ils font foi.
 
 > **Aucun fichier de ce dossier ne doit être reconstitué, converti ou approché.**
-> `core/repositories/sia4010_repository.py` refuse de deviner un chemin : si un
-> fichier manque, il lève une erreur qui le nomme. Un dossier de validation bâti
-> sur un fichier approché serait invalidé par la sous-commission, et bien plus
-> tard.
+> The evidence registry (`swiss_sia/reference_model/sia4010/evidence_registry.py`)
+> refuses to guess a path: if a file is missing, it raises an error naming it.
+> A validation dossier built on an approximated file would be invalidated by the
+> sub-commission.
 
 ## Structure attendue
 

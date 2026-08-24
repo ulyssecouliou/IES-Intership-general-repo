@@ -1,4 +1,9 @@
-# Guide de conformite SIA 380/2 et SIA 4010 pour modeles IESVE
+# [OBSOLETE] Guide de conformite SIA 380/2 et SIA 4010 pour modeles IESVE
+
+> **This document is obsolete.** It has been superseded by
+> `SIA_3802_4010_PDF_TRACEABILITY.md` (normative matrix) and
+> `GUIDE_MODIFICATIONS_VE_EN.md` (criterion-by-criterion VE corrections guide).
+> Retained as project history only — do not use as a normative reference.
 
 Version: 2026-06-29  
 Projet: Swiss Compliance Checker pour IESVE  

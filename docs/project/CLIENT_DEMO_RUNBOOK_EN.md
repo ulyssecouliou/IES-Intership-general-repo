@@ -27,7 +27,7 @@ SIA 4010 software tests.
 
 Open:
 
-`C:\Users\ulysse.couliou\Documents\switzerland\ZOER_32_C1_TEST\ZOER_32_C1_TEST.mdl`
+`<VE_PROJECTS>\ZOER_32_C1_TEST\ZOER_32_C1_TEST.mdl`
 
 Purpose:
 
@@ -49,7 +49,7 @@ Known last audited state:
 
 Open:
 
-`C:\Users\ulysse.couliou\Documents\switzerland\Test_640_Test1\Test_640_Test1.mdl`
+`<VE_PROJECTS>\Test_640_Test1\Test_640_Test1.mdl`
 
 Purpose:
 
@@ -67,7 +67,7 @@ correct status is `REFERENCE_RESULTS_RECORDED_NO_ACCEPTANCE_CRITERION`, not PASS
 
 Open only if time allows:
 
-`C:\Users\ulysse.couliou\Documents\switzerland\SIA4010_TEST1_600FF\SIA4010_TEST1_600FF.mdl`
+`<VE_PROJECTS>\SIA4010_TEST1_600FF\SIA4010_TEST1_600FF.mdl`
 
 Purpose:
 
