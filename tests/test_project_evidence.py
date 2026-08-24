@@ -46,6 +46,13 @@ class ProjectEvidenceTests(unittest.TestCase):
                 "review_status": "accepted", "reviewer": "Energy engineer",
                 "review_date": "2026-08-24", "source_document": "Climate brief",
                 "source_reference": "p. 4", "notes": "Reviewed",
+                "ventilation_strategy": "MECHANICAL_PRESENT",
+                "ventilation_justification": "Mechanical ventilation documented in VE.",
+                "ventilation_flow_source": "VE room air-exchange readback",
+                "lighting_scope": "IN_SCOPE",
+                "lighting_power_source": "VE template readback",
+                "aps_outputs_required": "YES",
+                "aps_outputs_justification": "Required for the assessed systems.",
         }
         first = save_records(self.root, "project_metadata", "Project A", [record])
         second = save_records(self.root, "project_metadata", "Project A", [record])
@@ -54,6 +61,9 @@ class ProjectEvidenceTests(unittest.TestCase):
         self.assertTrue(Path(second["backup"]).is_file())
         loaded = load_records(self.root, "project_metadata", "Project A")
         self.assertEqual(loaded[0]["reviewer"], "Energy engineer")
+        self.assertEqual(loaded[0]["ventilation_strategy"], "MECHANICAL_PRESENT")
+        self.assertEqual(loaded[0]["lighting_scope"], "IN_SCOPE")
+        self.assertEqual(loaded[0]["aps_outputs_required"], "YES")
         self.assertEqual(
             evidence_path(self.root, "project_metadata", "Project A"), Path(first["path"])
         )

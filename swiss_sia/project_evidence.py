@@ -31,7 +31,15 @@ class EvidenceFamily:
 FAMILIES: Tuple[EvidenceFamily, ...] = (
     EvidenceFamily(
         "project_metadata", "Projet et climat", "SIA3802_project_metadata_{project}.csv",
-        ("project_id", "building_status", "weather_basis", "weather_file", "location", "altitude_m", "review_status", "reviewer", "review_date", "source_document", "source_reference", "notes"),
+        (
+            "project_id", "building_status", "weather_basis", "weather_file",
+            "location", "altitude_m", "review_status", "reviewer",
+            "review_date", "source_document", "source_reference", "notes",
+            "ventilation_strategy", "ventilation_justification",
+            "ventilation_flow_source", "lighting_scope",
+            "lighting_power_source", "aps_outputs_required",
+            "aps_outputs_justification",
+        ),
         "Statut du bâtiment et base climatique approuvés par le responsable énergie.",
     ),
     EvidenceFamily(
