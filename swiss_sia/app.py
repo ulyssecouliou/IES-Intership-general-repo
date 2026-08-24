@@ -489,11 +489,12 @@ def _collect_dynamic_results(project: Any) -> Dict[str, Any]:
     }
 
     try:
+        evidence_root = Path(str(getattr(project, "path", "") or PROJECT_ROOT))
         project_label = os.path.basename(
             os.path.normpath(str(getattr(project, "path", "") or ""))
         ) or "VE_Project"
         metadata_scan = scan_sia3802_project_metadata(
-            PROJECT_ROOT,
+            evidence_root,
             SIA4010_EVIDENCE_DIR,
             project_label,
         )
@@ -510,7 +511,7 @@ def _collect_dynamic_results(project: Any) -> Dict[str, Any]:
             summary["reviewed_altitude_m"] = metadata.get("altitude_m", "")
 
         comparison_scan = scan_sia3802_global_comparisons(
-            PROJECT_ROOT,
+            evidence_root,
             SIA4010_EVIDENCE_DIR,
             project_label,
         )
@@ -1077,6 +1078,7 @@ def main(
             raise RuntimeError("No active VE project found. Please open a project in IESVE.")
 
         logger.info("Loaded VE project: %s", project.path)
+        ve_project_root = Path(str(project.path)).resolve()
         project_label = os.path.basename(
             os.path.normpath(str(getattr(project, "path", "") or ""))
         ) or "VE_Project"
@@ -1094,9 +1096,10 @@ def main(
 
         logger.info("Preparing project-scoped evidence templates without overwriting reviews.")
         evidence_preparation = prepare_evidence_folder(
-            PROJECT_ROOT,
+            ve_project_root,
             project_label=project_label,
             overwrite=False,
+            template_root=PROJECT_ROOT,
         )
         logger.info(
             "Evidence templates: %s (%s created, %s existing, %s missing)",
@@ -1119,7 +1122,7 @@ def main(
         rooms_data = model_analyzer.analyze_all_rooms()
         ventilation_prefill = prefill_ventilation_control_evidence(
             rooms_data,
-            PROJECT_ROOT,
+            ve_project_root,
             project_label,
         )
         logger.info(
@@ -1145,7 +1148,11 @@ def main(
         )
 
         logger.info("Running SIA 380/2 checks.")
-        sia3802_checker = SIA3802Checker(model_analyzer, RuleEngine())
+        sia3802_checker = SIA3802Checker(
+            model_analyzer,
+            RuleEngine(),
+            project_root=ve_project_root,
+        )
         sia3802_results = sia3802_checker.check_all(
             rooms_data=rooms_data,
             dynamic_results=dynamic_results,
@@ -1174,6 +1181,7 @@ def main(
                 model_analyzer,
                 RuleEngine(),
                 project_label=project_label,
+                project_root=ve_project_root,
             )
             sia4010_results = sia4010_checker.check_all(rooms_data=rooms_data)
             _apply_dynamic_results_to_sia4010(sia4010_results, dynamic_results)
@@ -1203,7 +1211,7 @@ def main(
 
         logger.info("Scanning SIA 380/2 reviewer justifications.")
         justification_results = scan_sia3802_justifications(
-            PROJECT_ROOT,
+            ve_project_root,
             SIA4010_EVIDENCE_DIR,
             project_label,
         )
@@ -1359,6 +1367,7 @@ def main(
                 preflight_checks=preflight_checks,
                 evidence_dir_name=SIA4010_EVIDENCE_DIR,
                 project_label=project_label,
+                evidence_project_root=ve_project_root,
             )
             logger.info(
                 "Generated evidence pack ZIP: %s (%s included file(s))",

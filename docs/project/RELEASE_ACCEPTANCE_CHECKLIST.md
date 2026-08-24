@@ -42,6 +42,13 @@ The MVP is acceptable when all items below are true.
   applicable limits, normative sources and distinct blocking/missing/advisory counts.
 - Generates all 16 project-specific evidence CSV templates without overwriting
   reviewer-edited files.
+- Stores and scans those evidence CSVs under the active VE project, rather than
+  mixing evidence from the source-code repository or another client model.
+- The client interface opens the guided six-family evidence editor; incomplete
+  requested acceptance is forced back to `pending`, and existing CSVs receive a
+  recoverable `.bak` copy before replacement.
+- Every workbook sheet uses the shared IES report palette and a uniform printed
+  header/footer convention aligned with the client PDF family.
 
 ## MVP Known Limits
 
@@ -88,3 +95,5 @@ python scripts/quality/validate_release.py
 12. Confirm Excel opens the workbook without asking to repair it.
 13. Confirm the PDF contains no raw translation key, clipped finding or contradictory pass/fail wording.
 14. Run **Complete project evidence** and confirm 16 project-labelled CSV files are present.
+15. From the client interface, open **Compléter les preuves…**, save one pending
+    row, regenerate, and confirm the report reads it from the active VE project.

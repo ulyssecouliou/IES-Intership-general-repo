@@ -94,6 +94,32 @@ GLAZING_SOLAR_PROTECTION_FILE_PATTERNS = (
     "GLAZING_solar_protection_*.csv",
 )
 
+
+def normalize_reviewer_evidence(family: str, raw_row: Dict[str, Any]) -> Dict[str, Any]:
+    """Validate one interface-owned evidence row with the production rules.
+
+    This public adapter keeps the desktop form from duplicating acceptance
+    logic.  It deliberately returns the normalized record, including the
+    fail-closed ``accepted`` flag calculated by the same functions used by the
+    report scanner.
+    """
+
+    normalizers = {
+        "project_metadata": _normalize_project_metadata_record,
+        "global_comparison": _normalize_global_comparison_record,
+        "ventilation_control": _normalize_ventilation_control_record,
+        "cooling_generator": _normalize_cooling_generator_record,
+        "electrical_power": _normalize_electrical_power_record,
+    }
+    key = str(family or "").strip().lower()
+    if key == "lighting_mapping":
+        return _normalize_mapping_record(raw_row, "sia3874_control_type")
+    try:
+        normalizer = normalizers[key]
+    except KeyError as exc:
+        raise ValueError("Unsupported evidence family: {}".format(family)) from exc
+    return normalizer(raw_row)
+
 SIA3802_ELECTRICAL_POWER_FILE_PATTERNS = (
     "SIA3802_electrical_power_*.csv",
     "sia3802_electrical_power_*.csv",

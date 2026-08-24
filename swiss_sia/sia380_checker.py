@@ -74,10 +74,18 @@ _LOGGER = logging.getLogger(__name__)
 class SIA3802Checker:
     """Check VE model data against the implemented SIA 380/2 rules."""
 
-    def __init__(self, model_analyzer: ModelAnalyzer, rule_engine: RuleEngine):
+    def __init__(
+        self,
+        model_analyzer: ModelAnalyzer,
+        rule_engine: RuleEngine,
+        project_root: Optional[Path] = None,
+        evidence_dir_name: str = SIA4010_EVIDENCE_DIR,
+    ):
         """Initialize the SIA 380/2 checker."""
         self.model_analyzer = model_analyzer
         self.rule_engine = rule_engine
+        self.project_root = Path(project_root or PROJECT_ROOT)
+        self.evidence_dir_name = evidence_dir_name
         self._setup_rules()
 
     def _setup_rules(self):
@@ -315,13 +323,13 @@ class SIA3802Checker:
         if external_mappings is None:
             external_mappings = {
                 "sia2024_usage": scan_sia2024_usage_mappings(
-                    PROJECT_ROOT,
-                    SIA4010_EVIDENCE_DIR,
+                    self.project_root,
+                    self.evidence_dir_name,
                     project_label,
                 ),
                 "sia3874_lighting": scan_sia3874_lighting_mappings(
-                    PROJECT_ROOT,
-                    SIA4010_EVIDENCE_DIR,
+                    self.project_root,
+                    self.evidence_dir_name,
                     project_label,
                 ),
             }
@@ -331,7 +339,7 @@ class SIA3802Checker:
         # thermal-bridge conductance H_tb (W/K) is read directly. A reviewer
         # schedule stays as a fallback for older VE versions / unset data.
         thermal_bridge_scan = scan_sia3802_thermal_bridges(
-            PROJECT_ROOT, SIA4010_EVIDENCE_DIR, project_label
+            self.project_root, self.evidence_dir_name, project_label
         )
         thermal_bridge_record = find_accepted_thermal_bridges(
             thermal_bridge_scan, project_label or ""
@@ -342,7 +350,7 @@ class SIA3802Checker:
         # evidence when the VE generator is autosized (capacity greyed out), so
         # the SIA 380/2 Tables 5-7 power band cannot be resolved from the model.
         cooling_generator_scan = scan_sia3802_cooling_generators(
-            PROJECT_ROOT, SIA4010_EVIDENCE_DIR, project_label
+            self.project_root, self.evidence_dir_name, project_label
         )
         cooling_generator_record = find_accepted_cooling_generators(
             cooling_generator_scan, project_label or ""
@@ -356,11 +364,11 @@ class SIA3802Checker:
         # characteristics are supplied as reviewed evidence: VE exposes only the
         # identifiers, not the leakage class, seasonal efficiency or control band.
         ahu_scan = scan_sia3802_ahu_heat_recovery(
-            PROJECT_ROOT, SIA4010_EVIDENCE_DIR, project_label
+            self.project_root, self.evidence_dir_name, project_label
         )
         ahu_record = find_accepted_ahu_heat_recovery(ahu_scan, project_label or "")
         ventilation_control_scan = scan_sia3802_ventilation_control(
-            PROJECT_ROOT, SIA4010_EVIDENCE_DIR, project_label
+            self.project_root, self.evidence_dir_name, project_label
         )
         ventilation_control_record = find_accepted_ventilation_control(
             ventilation_control_scan, project_label or ""
@@ -376,7 +384,7 @@ class SIA3802Checker:
         # the shading type + g_total with shading. The reviewed window count is
         # reconciled against the external windows VE sees, never a silent pass.
         solar_protection_scan = scan_glazing_solar_protection(
-            PROJECT_ROOT, SIA4010_EVIDENCE_DIR, project_label
+            self.project_root, self.evidence_dir_name, project_label
         )
         solar_protection_windows = accepted_solar_protection_windows(
             solar_protection_scan, project_label or ""
@@ -385,7 +393,7 @@ class SIA3802Checker:
         # SIA 380/2:2022 §7.2.4 required electrical power (W/m2): a design sizing
         # figure VE does not expose, supplied as reviewed evidence.
         electrical_power_scan = scan_sia3802_electrical_power(
-            PROJECT_ROOT, SIA4010_EVIDENCE_DIR, project_label
+            self.project_root, self.evidence_dir_name, project_label
         )
         electrical_power_record = find_accepted_electrical_power(
             electrical_power_scan, project_label or ""

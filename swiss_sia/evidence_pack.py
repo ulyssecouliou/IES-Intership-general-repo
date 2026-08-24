@@ -60,9 +60,11 @@ def create_evidence_pack(
     preflight_checks: List[Dict[str, Any]],
     evidence_dir_name: str = "sia4010_evidence",
     project_label: Optional[str] = None,
+    evidence_project_root: Optional[Path] = None,
 ) -> Dict[str, Any]:
     """Create a ZIP evidence pack and return a report-ready status payload."""
     project_root = Path(project_root).resolve()
+    evidence_project_root = Path(evidence_project_root or project_root).resolve()
     report_path = Path(report_path).resolve()
     latest_report_path = Path(latest_report_path).resolve() if latest_report_path else None
     output_path = _build_pack_path(report_path)
@@ -76,6 +78,7 @@ def create_evidence_pack(
         preflight_checks=preflight_checks,
         evidence_dir_name=evidence_dir_name,
         project_label=project_label,
+        evidence_project_root=evidence_project_root,
     )
 
     file_entries: List[Dict[str, Any]] = []
@@ -84,7 +87,7 @@ def create_evidence_pack(
         _collect_file_entry(project_root, latest_report_path, file_entries, "reports")
 
     excluded_files: List[Dict[str, str]] = []
-    evidence_root = project_root / evidence_dir_name
+    evidence_root = evidence_project_root / evidence_dir_name
     for file_path in _iter_existing_files(evidence_root):
         if not matches_active_project_scope(file_path, project_label):
             excluded_files.append({
@@ -97,7 +100,7 @@ def create_evidence_pack(
             continue
         include_file, exclusion_reason = _should_include_evidence_file(file_path, evidence_root)
         if include_file:
-            _collect_file_entry(project_root, file_path, file_entries, evidence_dir_name)
+            _collect_file_entry(evidence_project_root, file_path, file_entries, evidence_dir_name)
         else:
             excluded_files.append({
                 "path": _relative_or_absolute(project_root, file_path),
@@ -176,6 +179,7 @@ def _build_manifest(
     preflight_checks: List[Dict[str, Any]],
     evidence_dir_name: str,
     project_label: Optional[str],
+    evidence_project_root: Optional[Path] = None,
 ) -> Dict[str, Any]:
     """Build the JSON manifest embedded in the ZIP evidence pack."""
     evidence = sia4010_results.get("evidence", {}) if isinstance(sia4010_results, dict) else {}
@@ -190,6 +194,7 @@ def _build_manifest(
         "generated_at": datetime.now().isoformat(timespec="seconds"),
         "purpose": "Manager/reviewer handoff package; not an official SIA certificate.",
         "project_root": str(project_root),
+        "evidence_project_root": str(evidence_project_root or project_root),
         "project_label": project_label or "",
         "report_path": _relative_or_absolute(project_root, report_path),
         "latest_report_alias": _relative_or_absolute(project_root, latest_report_path) if latest_report_path else "",

@@ -9,6 +9,7 @@ it does not grant an autonomous SIA 4010 pass for a client model.
 import logging
 import os
 import csv
+from pathlib import Path
 from typing import List, Dict, Optional, Any
 
 from .config import (
@@ -51,11 +52,13 @@ class SIA4010Checker:
         model_analyzer: ModelAnalyzer,
         rule_engine: RuleEngine,
         project_label: Optional[str] = None,
+        project_root: Optional[Path] = None,
     ):
         """Initialize the checker with an optional active VE project scope."""
         self.model_analyzer = model_analyzer
         self.rule_engine = rule_engine
         self.project_label = project_label or self._derive_project_label(model_analyzer)
+        self.project_root = Path(project_root or PROJECT_ROOT)
         self._setup_rules()
 
     @staticmethod
@@ -526,7 +529,7 @@ class SIA4010Checker:
 
     def _scan_sia4010_evidence(self) -> Dict[str, Any]:
         """Scan local SIA 4010 evidence files without granting official validation."""
-        repo_dir = str(PROJECT_ROOT)
+        repo_dir = str(self.project_root)
         evidence_dir = os.path.join(repo_dir, SIA4010_EVIDENCE_DIR)
         files: List[Dict[str, Any]] = []
         excluded_project_files: List[Dict[str, Any]] = []

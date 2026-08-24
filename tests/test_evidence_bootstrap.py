@@ -111,6 +111,25 @@ class EvidenceBootstrapTests(unittest.TestCase):
                 template_name,
             )
 
+    def test_templates_can_come_from_repository_while_target_is_ve_project(self) -> None:
+        """Keep product templates separate from project-local reviewer evidence."""
+        temporary_root = PROJECT_ROOT / "tests" / "_external_ve_project"
+        shutil.rmtree(temporary_root, ignore_errors=True)
+        try:
+            result = prepare_evidence_folder(
+                project_root=temporary_root,
+                project_label="Client model",
+                template_root=PROJECT_ROOT,
+            )
+            self.assertEqual(result["status"], "READY")
+            self.assertEqual(result["created_count"], len(TEMPLATE_TARGETS))
+            self.assertTrue(
+                (temporary_root / "sia4010_evidence" / "SIA3802_project_metadata_Client_model.csv").is_file()
+            )
+            self.assertFalse((temporary_root / "templates").exists())
+        finally:
+            shutil.rmtree(temporary_root, ignore_errors=True)
+
 
 if __name__ == "__main__":
     unittest.main()

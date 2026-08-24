@@ -19,6 +19,7 @@ from .client_report_context import (
     save_client_report_context,
 )
 from .pdf_writer import ImageError, load_image
+from .project_evidence_ui import launch_project_evidence_editor
 from .reference_model.sia4010.ui_translations import (
     normalize_language,
     translate,
@@ -436,6 +437,28 @@ class ClientComplianceWindow:
             wraplength=570,
         ).grid(row=9, column=0, columnspan=2, sticky="w", pady=(0, 10))
 
+        evidence_box = tk.Frame(
+            self.form, background="#eaf3f7", padx=12, pady=10
+        )
+        evidence_box.grid(row=10, column=0, columnspan=2, sticky="ew", pady=(0, 10))
+        evidence_box.columnconfigure(0, weight=1)
+        tk.Label(
+            evidence_box,
+            text="PREUVES TECHNIQUES SIA 380/2",
+            background="#eaf3f7", foreground=self.COLORS["navy"],
+            font=("Segoe UI Semibold", 9),
+        ).grid(row=0, column=0, sticky="w")
+        tk.Label(
+            evidence_box,
+            text="Projet, climat, comparaison globale, ventilation, froid, éclairage et puissance électrique.",
+            background="#eaf3f7", foreground=self.COLORS["muted"],
+            font=("Segoe UI", 8), wraplength=420, justify="left",
+        ).grid(row=1, column=0, sticky="w", pady=(3, 0))
+        ttk.Button(
+            evidence_box, text="Compléter les preuves…",
+            style="Client.TButton", command=self._open_project_evidence,
+        ).grid(row=0, column=1, rowspan=2, sticky="e", padx=(12, 0))
+
         self.status_text = tk.StringVar(value="")
         tk.Label(
             self.form,
@@ -443,14 +466,14 @@ class ClientComplianceWindow:
             background=self.COLORS["card"],
             foreground=self.COLORS["muted"],
             font=("Segoe UI", 9),
-        ).grid(row=10, column=0, sticky="w")
+        ).grid(row=11, column=0, sticky="w")
         self.generate_button = ttk.Button(
             self.form,
             text=self.t("client_ui_generate"),
             style="ClientPrimary.TButton",
             command=self._generate,
         )
-        self.generate_button.grid(row=10, column=1, sticky="e")
+        self.generate_button.grid(row=11, column=1, sticky="e")
 
         right_border = tk.Frame(
             container, background=self.COLORS["card"], highlightthickness=1,
@@ -607,6 +630,24 @@ class ClientComplianceWindow:
 
     def _choose_logo(self) -> None:
         self._choose_image(self.t("client_ui_choose_logo"), "client_logo_path")
+
+    def _open_project_evidence(self) -> None:
+        """Open the project-local evidence editor without mutating the VE model."""
+
+        try:
+            launch_project_evidence_editor(
+                self.project_path,
+                self.project_path.name,
+                self.vars["weather_file"].get(),
+                parent=self.root,
+            )
+        except Exception as exc:
+            if messagebox is not None:
+                messagebox.showerror(
+                    "Preuves SIA 380/2",
+                    "Impossible d'ouvrir l'éditeur de preuves.\n\n{}".format(exc),
+                    parent=self.root,
+                )
 
     def _choose_viewer(self) -> None:
         self._choose_image(

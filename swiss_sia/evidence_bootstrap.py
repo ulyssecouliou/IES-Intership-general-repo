@@ -40,11 +40,13 @@ def prepare_evidence_folder(
     project_root: Path = PROJECT_ROOT,
     project_label: Optional[str] = None,
     overwrite: bool = False,
+    template_root: Optional[Path] = None,
 ) -> Dict[str, Any]:
     """Copy evidence templates into the project evidence folder with safe names."""
     project_root = Path(project_root).resolve()
+    source_root = Path(template_root or PROJECT_ROOT).resolve()
     project_label = _safe_filename_part(project_label or _detect_ve_project_label() or "VE_Project")
-    template_dir = project_root / "templates" / "evidence"
+    template_dir = source_root / "templates" / "evidence"
     evidence_dir = project_root / SIA4010_EVIDENCE_DIR
     evidence_dir.mkdir(parents=True, exist_ok=True)
 

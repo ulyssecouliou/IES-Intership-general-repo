@@ -63,6 +63,9 @@ Prepare_SIA4010_Evidence_Folder.py
 
 The end user does not need PowerShell or command-line access.
 
+French end-user instructions, including the exact evidence to request and the
+responsible discipline, are in `docs/user/WORKFLOW_CLIENT_SIA3802_FR.md`.
+
 ## What The Tool Does
 
 - Opens the active IESVE project through the IESVE Python API.
@@ -128,6 +131,8 @@ The end user does not need PowerShell or command-line access.
 - `swiss_sia/evidence_manager.py`: reviewer-evidence scanner for retained SIA 380/2 justifications.
 - `swiss_sia/evidence_bootstrap.py`: evidence-template initializer for users without command-line access.
 - `swiss_sia/evidence_pack.py`: manager/reviewer evidence-pack ZIP export.
+- `swiss_sia/project_evidence.py`: safe project-local evidence storage and validation.
+- `swiss_sia/project_evidence_ui.py`: guided six-family evidence editor.
 - `swiss_sia/config.py`: PDF-traced values, requirement matrix and validation classes.
 - `docs/source/`: Sphinx documentation source.
 - `docs/project/`: project notes, handoff material and compliance traceability notes.
