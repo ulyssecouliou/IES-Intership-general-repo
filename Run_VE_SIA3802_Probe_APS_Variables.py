@@ -17,12 +17,180 @@ SIA3802_HEATING_COOLING_DEMANDS stay NOT_CHECKABLE:
 from __future__ import annotations
 
 import importlib
+import json
+import math
 import os
 import sys
 
 PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
+
+
+DIAGNOSTIC_VARIABLES = (
+    "Room units heating load",
+    "Heating set point",
+    "External ventilation rate",
+    "Ventilation gain from ext air",
+    "Aux mech vent",
+    "Aux mech vent gain",
+    "Aux mech vent temp",
+    "Conditioned ventilation rate",
+    "Conditioned ventilation gains",
+    "HVAC ventilation rate",
+    "ApSys air supply",
+    "Natural vent",
+    "Cooling vent",
+    "Room CO2 concentration",
+)
+
+
+def _exact_variable(variables, aps_name, level="z"):
+    """Return one exact APS variable tuple without guessing its identity."""
+    expected = aps_name.strip().lower()
+    for variable in variables:
+        if str(variable.get("aps_varname") or "").strip().lower() != expected:
+            continue
+        model_level = str(variable.get("model_level") or "").strip().lower()
+        if model_level and model_level != level:
+            continue
+        return (
+            str(variable.get("aps_varname") or ""),
+            str(variable.get("display_name") or aps_name),
+            model_level or level,
+            str(variable.get("resolved_metric_unit") or ""),
+            float(variable.get("resolved_metric_divisor") or 1.0),
+            float(variable.get("resolved_metric_offset") or 0.0),
+        )
+    return None
+
+
+def _series_summary(values, results_per_hour):
+    """Summarize one APS series without copying its 17,520 values."""
+    numeric = [
+        float(value)
+        for value in values
+        if isinstance(value, (int, float)) and math.isfinite(float(value))
+    ]
+    if not numeric:
+        return {"points": 0}
+    nonzero = [value for value in numeric if abs(value) > 1e-9]
+    positive = [value for value in numeric if value > 1e-9]
+    negative = [value for value in numeric if value < -1e-9]
+    return {
+        "points": len(numeric),
+        "minimum": min(numeric),
+        "maximum": max(numeric),
+        "mean": sum(numeric) / len(numeric),
+        "active_mean": sum(nonzero) / len(nonzero) if nonzero else 0.0,
+        "nonzero_hours": len(nonzero) / results_per_hour,
+        "positive_hours": len(positive) / results_per_hour,
+        "negative_hours": len(negative) / results_per_hour,
+        "positive_sum": sum(positive),
+        "negative_sum": sum(negative),
+    }
+
+
+def _correlation(left, right):
+    """Return Pearson correlation for aligned finite APS values."""
+    pairs = []
+    for left_value, right_value in zip(left, right):
+        try:
+            x = float(left_value)
+            y = float(right_value)
+        except (TypeError, ValueError):
+            continue
+        if math.isfinite(x) and math.isfinite(y):
+            pairs.append((x, y))
+    if len(pairs) < 2:
+        return None
+    mean_x = sum(item[0] for item in pairs) / len(pairs)
+    mean_y = sum(item[1] for item in pairs) / len(pairs)
+    numerator = sum((x - mean_x) * (y - mean_y) for x, y in pairs)
+    denominator_x = sum((x - mean_x) ** 2 for x, _ in pairs)
+    denominator_y = sum((y - mean_y) ** 2 for _, y in pairs)
+    denominator = math.sqrt(denominator_x * denominator_y)
+    return numerator / denominator if denominator > 0 else None
+
+
+def _write_ventilation_diagnostic(sim, reader, variables, rooms, aps_name):
+    """Read exact room ventilation/load series and write a compact JSON audit."""
+    results_per_hour = sim.get_results_per_hour(reader)
+    matches = {
+        name: _exact_variable(variables, name)
+        for name in DIAGNOSTIC_VARIABLES
+    }
+    report = {
+        "schema_version": 1,
+        "purpose": "Read-only APS ventilation/heating diagnostic",
+        "aps_file": aps_name,
+        "results_per_hour": results_per_hour,
+        "variables": {},
+        "rooms": [],
+    }
+    for name, variable in matches.items():
+        report["variables"][name] = {
+            "available": variable is not None,
+            "display_name": variable[1] if variable else "",
+            "model_level": variable[2] if variable else "",
+            "metric_unit": variable[3] if variable else "",
+        }
+
+    for room in rooms:
+        if isinstance(room, dict):
+            room_name = room.get("name") or room.get("room_name") or "Unknown"
+            room_id = room.get("id") or room.get("room_id")
+        elif isinstance(room, (list, tuple)) and len(room) >= 2:
+            room_name, room_id = room[0], room[1]
+        else:
+            continue
+        series = {}
+        summaries = {}
+        for name, variable in matches.items():
+            values = sim.read_metric_room_result(reader, room_id, variable)
+            series[name] = values
+            summaries[name] = _series_summary(values, results_per_hour)
+
+        heating = series.get("Room units heating load", [])
+        correlations = {}
+        for name in DIAGNOSTIC_VARIABLES:
+            if name in {"Room units heating load", "Heating set point"}:
+                continue
+            value = _correlation(heating, series.get(name, []))
+            if value is not None:
+                correlations[name] = value
+        report["rooms"].append({
+            "room_name": str(room_name),
+            "room_id": str(room_id),
+            "series": summaries,
+            "heating_correlations": correlations,
+        })
+
+    output_dir = os.path.join(PROJECT_ROOT, "outputs")
+    if not os.path.isdir(output_dir):
+        os.makedirs(output_dir)
+    output_path = os.path.join(output_dir, "sia3802_ventilation_aps_diagnostic.json")
+    with open(output_path, "w", encoding="utf-8") as handle:
+        json.dump(report, handle, ensure_ascii=False, indent=2)
+    print("\n--- TARGETED VENTILATION / HEATING DIAGNOSTIC ---")
+    print("  report:", output_path)
+    for room in report["rooms"]:
+        print("  room:", room["room_name"])
+        for name in (
+            "Room units heating load",
+            "External ventilation rate",
+            "Aux mech vent",
+            "Conditioned ventilation rate",
+            "HVAC ventilation rate",
+        ):
+            summary = room["series"].get(name, {})
+            print("    {:30s} points={} active_h={} max={}".format(
+                name,
+                summary.get("points", 0),
+                summary.get("nonzero_hours", 0),
+                summary.get("maximum"),
+            ))
+    return output_path
 
 def run() -> None:
     try:
@@ -118,6 +286,14 @@ def run() -> None:
                       "| sample:", series[:3])
             except Exception as exc:
                 print("  read_metric_room_result FAILED ->", exc)
+
+        _write_ventilation_diagnostic(
+            sim,
+            reader,
+            variables,
+            rooms,
+            newest,
+        )
     finally:
         try:
             reader.close()
