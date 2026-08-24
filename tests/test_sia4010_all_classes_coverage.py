@@ -54,6 +54,8 @@ class Sia4010AllClassesCoverageTests(unittest.TestCase):
         self.assertEqual(summary["source_bound_bundle_cases"], 13)
         # 6 -> 10: the deliverable for 1A through 1D is the annual hourly dataset
         self.assertEqual(summary["apachesim_qualification_cases"], 10)
+        # Exact-template route: judged diagnostic 1E plus Test 2A-2D.
+        self.assertEqual(summary["qualified_template_simulation_cases"], 5)
         # 11 -> 15: deliverable evaluation, without criterion or reference
         self.assertEqual(summary["qualified_aps_evaluation_cases"], 15)
         self.assertEqual(

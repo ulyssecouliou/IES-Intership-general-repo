@@ -3,8 +3,8 @@
   "description": "Fail-closed execution strategies for SIA 4010 cases whose VE topology is not fully exposed by the installed iesve API.",
   "families": {
     "1": {
-      "strategy": "DIRECT_VESCRIPT_PREFERRED",
-      "template_allowed": false,
+      "strategy": "DIRECT_VESCRIPT_OR_QUALIFIED_TEMPLATE",
+      "template_allowed": true,
       "required_evidence": [
         "source_traced_case_bundle",
         "ve_mutation_readback",

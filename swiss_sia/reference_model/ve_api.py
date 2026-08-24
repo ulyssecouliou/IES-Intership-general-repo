@@ -1131,24 +1131,42 @@ class IesVeGateway(VeGateway):
 
                             native_equivalent = equivalent_value(native_unit)
                             requested_equivalent = equivalent_value(requested_unit)
-                            try:
-                                converted_flow = (
-                                    float(native_equivalent)
-                                    * float(expected_flow)
-                                    / float(requested_equivalent)
-                                )
-                            except (TypeError, ValueError, ZeroDivisionError) as conversion_exc:
-                                raise VeMutationError(
-                                    "VE exposes a read-only system-air unit for '{}', "
-                                    "but its equivalent-flow conversion could not be "
-                                    "resolved (native unit={!r}, requested unit={!r}, "
-                                    "equivalents={!r})".format(
-                                        room_name,
-                                        native_unit,
-                                        requested_unit,
-                                        equivalent_flows,
+                            if _values_equivalent(native_unit, requested_unit):
+                                # VE 2025.0 exposes the selected unit on read-back
+                                # but rejects both documented unit-selector names.
+                                # No conversion is required when that immutable
+                                # native unit already equals the requested unit.
+                                # This also avoids the meaningless 0/0 produced by
+                                # VE's equivalent-flow map for a zero-flow system.
+                                converted_flow = expected_flow
+                                binding_mode = "preserved_matching_native_unit"
+                            elif _values_equivalent(expected_flow, 0.0):
+                                # A physical zero is invariant across flow units.
+                                # Preserve VE's read-only unit and set the exact
+                                # zero without deriving a ratio from all-zero
+                                # equivalent-flow values.
+                                converted_flow = 0.0
+                                binding_mode = "zero_flow_existing_native_unit"
+                            else:
+                                try:
+                                    converted_flow = (
+                                        float(native_equivalent)
+                                        * float(expected_flow)
+                                        / float(requested_equivalent)
                                     )
-                                ) from conversion_exc
+                                except (TypeError, ValueError, ZeroDivisionError) as conversion_exc:
+                                    raise VeMutationError(
+                                        "VE exposes a read-only system-air unit for '{}', "
+                                        "but its equivalent-flow conversion could not be "
+                                        "resolved (native unit={!r}, requested unit={!r}, "
+                                        "equivalents={!r})".format(
+                                            room_name,
+                                            native_unit,
+                                            requested_unit,
+                                            equivalent_flows,
+                                        )
+                                    ) from conversion_exc
+                                binding_mode = "converted_existing_native_unit"
                             native_payload = {
                                 "system_air_minimum_flowrate": converted_flow,
                                 "system_air_variation_profile": expected.get(
@@ -1157,7 +1175,6 @@ class IesVeGateway(VeGateway):
                             }
                             try:
                                 room_data.set_apache_systems(native_payload)
-                                binding_mode = "converted_existing_native_unit"
                             except Exception as native_exc:
                                 raise VeMutationError(
                                     "Apache system-air synchronization failed for '{}': "

@@ -24,7 +24,7 @@ class Sia4010TemplateStrategyTests(unittest.TestCase):
 
     def test_requirements_cover_all_base_tests(self):
         self.assertEqual(set(self.requirements), set("1234567"))
-        self.assertFalse(self.requirements["1"].template_allowed)
+        self.assertTrue(self.requirements["1"].template_allowed)
         self.assertEqual(
             self.requirements["7"].strategy,
             "QUALIFIED_VE_TEMPLATE_REQUIRED",
@@ -44,36 +44,33 @@ class Sia4010TemplateStrategyTests(unittest.TestCase):
             )
         self.assertEqual(
             by_case[("test_1", "1E")].status,
-            "SOURCE_PREPARATION_ONLY",
+            "BLOCKED_TEMPLATE_REQUIRED",
         )
 
     def test_unbound_complex_cases_are_blocked(self):
         plans = build_hybrid_case_plans(self.requirements, ())
         blocked = [item for item in plans if item.status == "BLOCKED_TEMPLATE_REQUIRED"]
-        # 23: all cases outside Test 1 for which no VE template is bound.
+        # 24: all cases outside the direct Test 1 route, including diagnostic 1E.
         #
         # The previous version expected 27 and placed 1A through 1D among them
         # "for lack of a bound template". That was the right count for the wrong
-        # reason, and the assertion just below now verifies why:
-        # Test 1 consumes NO VE template (template_allowed is false);
-        # it uses the generic idealized-load template that its own
-        # bundle builds. Those four cases were therefore blocked by the absence
-        # of a generator, not a template. The generator has existed since
-        # 2026-08-13, and their status follows that of the five other equipped cases.
-        self.assertEqual(len(blocked), 23)
-        self.assertFalse(self.requirements["1"].template_allowed)
+        # reason. Cases 600 through 1D keep their guarded direct route. Only 1E,
+        # which has no exposed generator, may use an independently qualified
+        # exact template.
+        self.assertEqual(len(blocked), 24)
+        self.assertTrue(self.requirements["1"].template_allowed)
         test1_bloques = {item.case_id for item in blocked
                          if item.base_test_id == "1"}
-        self.assertEqual(test1_bloques, set())
-        # The positive control: the four correctly follow the qualification path,
-        # and 1E remains at preparation, its generator not existing.
+        self.assertEqual(test1_bloques, {"1E"})
+        # The positive control: the four follow direct runtime qualification,
+        # while 1E fails closed until an exact template is bound.
         par_cas = {item.case_id: item.status for item in plans
                    if item.base_test_id == "1"}
         for case_id in ("1A", "1B", "1C", "1D"):
             self.assertEqual(
                 par_cas[case_id], "READY_FOR_REAL_VE_QUALIFICATION", case_id
             )
-        self.assertEqual(par_cas["1E"], "SOURCE_PREPARATION_ONLY")
+        self.assertEqual(par_cas["1E"], "BLOCKED_TEMPLATE_REQUIRED")
 
     @patch(
         "swiss_sia.reference_model.sia4010.template_strategy.validate_binding"
@@ -102,6 +99,29 @@ class Sia4010TemplateStrategyTests(unittest.TestCase):
             by_case[("test_5A", "5A")].status,
             "BLOCKED_TEMPLATE_REQUIRED",
         )
+
+    @patch(
+        "swiss_sia.reference_model.sia4010.template_strategy.validate_binding"
+    )
+    def test_verified_exact_template_unblocks_diagnostic_1e(self, validate):
+        validate.return_value = TemplateValidation(
+            "QUALIFIED_TEMPLATE_VERIFIED", "T1E", (), "def456"
+        )
+        binding = TemplateBinding(
+            template_id="T1E",
+            project_path=Path("C:/qualified/test1e"),
+            qualification_manifest=Path("C:/qualified/test1e-review.json"),
+            covered_cases=("test_1/1E",),
+            status="QUALIFIED",
+        )
+        plans = build_hybrid_case_plans(self.requirements, (binding,))
+        plan = next(
+            item
+            for item in plans
+            if (item.variant, item.case_id) == ("test_1", "1E")
+        )
+        self.assertEqual(plan.status, "READY_FROM_QUALIFIED_TEMPLATE")
+        self.assertEqual(plan.route, "QUALIFIED_VE_TEMPLATE")
 
     def test_required_evidence_is_specific_to_system_family(self):
         self.assertIn(

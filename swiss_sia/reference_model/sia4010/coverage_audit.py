@@ -169,6 +169,10 @@ def build_all_classes_coverage_audit(
                 item.apachesim_qualification_supported
                 for item in capabilities
             ),
+            "qualified_template_simulation_cases": sum(
+                item.qualified_template_simulation_supported
+                for item in capabilities
+            ),
             "qualified_aps_evaluation_cases": sum(
                 item.aps_evaluation_supported for item in capabilities
             ),

@@ -1176,6 +1176,79 @@ class VeGatewayMiscTests(unittest.TestCase):
             change["binding_mode"], "converted_existing_native_unit"
         )
 
+    def test_zero_mechanical_flow_preserves_matching_read_only_unit(self):
+        """VE's all-zero equivalent map must not trigger a 0/0 conversion."""
+
+        room = _default_room()
+        room_data = room.get_room_data()
+        room_data._apache = {
+            "HVAC_methodology": "apache_system",
+            "system_air_minimum_flowrate": 0.0,
+            "system_air_minimum_flowrate_unit": 3,
+            "system_air_minimum_flowrates": {
+                0: 0.0,
+                1: 0.0,
+                2: 0.0,
+                3: 0.0,
+                4: 0.0,
+            },
+            "system_air_variation_profile": "ON",
+        }
+
+        def set_apache_systems(data):
+            payload = dict(data)
+            for rejected in (
+                "system_air_minimum_flowrate_units",
+                "system_air_minimum_flowrate_unit",
+            ):
+                if rejected in payload:
+                    raise RuntimeError("unrecognised option: {}".format(rejected))
+            room_data._apache.update(payload)
+
+        room_data.set_apache_systems = set_apache_systems
+        iesve, project, model = _build_iesve(bodies=[room])
+        outdoor_air = SimpleNamespace(
+            get=lambda: {
+                "name": "SIA_TEST1_ZERO_MECHANICAL_AIR",
+                "type_str": "Auxiliary Ventilation",
+                "type_val": "mechanical_ventilation",
+                "max_flow": 0.0,
+                "units_val": 3,
+                "variation_profile": "OFF",
+            }
+        )
+        template = SimpleNamespace(
+            name="TEST TEMPLATE",
+            apply_changes=lambda: None,
+            get_casual_gains=lambda: [],
+            get_air_exchanges=lambda: [outdoor_air],
+            get_apache_systems=lambda: {},
+        )
+        project.thermal_templates = lambda assigned=False: {5: template}
+
+        def assign_template(_template, _room_ids):
+            room_data._general = {
+                "thermal_template": 5,
+                "thermal_template_name": "TEST TEMPLATE",
+            }
+
+        model.assign_thermal_template_to_rooms = assign_template
+        gateway = IesVeGateway(iesve_module=iesve)
+        gateway.assign_thermal_template(
+            _expected_geometry(["RM_Z1"]), _configured_parameters()
+        )
+
+        system = room_data.get_apache_systems()
+        self.assertEqual(system["system_air_minimum_flowrate"], 0.0)
+        self.assertEqual(system["system_air_minimum_flowrate_unit"], 3)
+        self.assertEqual(system["system_air_variation_profile"], "OFF")
+        change = gateway.consume_runtime_compatibility_warnings()[0][
+            "air_exchange_changes"
+        ][0]
+        self.assertEqual(
+            change["binding_mode"], "preserved_matching_native_unit"
+        )
+
     def test_assign_thermal_template_rejects_missing_native_readback(self):
         room = _default_room()
         room.get_room_data()._general = {

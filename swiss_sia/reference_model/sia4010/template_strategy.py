@@ -231,6 +231,22 @@ class TemplateInstantiationReceipt:
     report_path: Path
 
 
+@dataclass(frozen=True)
+class TemplateModelEvidenceReceipt:
+    """Checksum proof that an active disposable project is an exact template."""
+
+    status: str
+    variant: str
+    case_id: str
+    template_id: str
+    project_path: Path
+    scenario_path: Path
+    qualification_manifest: Path
+    instantiation_report: Path
+    template_signature_sha256: str
+    report_path: Path
+
+
 def load_requirements(path: Union[str, Path]) -> Dict[str, TemplateRequirement]:
     """Load and validate the immutable template-strategy contract."""
 
@@ -425,18 +441,45 @@ def build_hybrid_case_plans(
                 )
                 continue
             if variant == "test_1" and case_id == "1E":
-                plans.append(
-                    HybridCasePlan(
-                        variant,
-                        case_id,
-                        capability.base_test_id,
-                        "DIAGNOSTIC_ONLY",
-                        "SOURCE_PREPARATION_ONLY",
-                        "",
-                        capability.blocker_code,
-                        "Case 1E is diagnostic and is not one of the six ISO Test 1 cases.",
-                    )
+                key = _case_key(variant, case_id)
+                binding, validation = _find_template(
+                    key, requirement, binding_rows
                 )
+                if (
+                    binding is not None
+                    and validation is not None
+                    and validation.usable
+                ):
+                    plans.append(
+                        HybridCasePlan(
+                            variant,
+                            case_id,
+                            capability.base_test_id,
+                            "QUALIFIED_VE_TEMPLATE",
+                            "READY_FROM_QUALIFIED_TEMPLATE",
+                            binding.template_id,
+                            "",
+                            validation.template_signature_sha256,
+                        )
+                    )
+                else:
+                    issues = (
+                        validation.issues
+                        if validation is not None
+                        else ("NO_QUALIFIED_TEMPLATE_BINDING",)
+                    )
+                    plans.append(
+                        HybridCasePlan(
+                            variant,
+                            case_id,
+                            capability.base_test_id,
+                            "QUALIFIED_VE_TEMPLATE",
+                            "BLOCKED_TEMPLATE_REQUIRED",
+                            binding.template_id if binding is not None else "",
+                            capability.blocker_code,
+                            "; ".join(issues),
+                        )
+                    )
                 continue
             key = _case_key(variant, case_id)
             binding, validation = _find_template(key, requirement, binding_rows)
@@ -652,6 +695,181 @@ def instantiate_qualified_case(
         disposable_project=target,
         template_signature_sha256=signature,
         report_path=report_path,
+    )
+
+
+def qualify_instantiated_template_model(
+    project_root: Union[str, Path],
+    repository_root: Union[str, Path],
+) -> TemplateModelEvidenceReceipt:
+    """Prove that an active project is an unchanged, exact qualified copy.
+
+    This function deliberately accepts only projects created by
+    :func:`instantiate_qualified_case`.  It rechecks the source qualification,
+    the source signature, the disposable-project signature and the exact
+    official scenario before producing model evidence.  It does not inspect
+    or accept APS results and therefore cannot create a compliance claim.
+    """
+
+    project = Path(project_root).resolve()
+    if not project.is_dir():
+        raise ConfigurationError(
+            "Disposable VE project does not exist: {}".format(project)
+        )
+    scenario_path = project / "sia_model_scenario.json"
+    from .model_scenario import ModelScenario
+
+    scenario = ModelScenario.load(scenario_path)
+    if not scenario.is_official:
+        raise ConfigurationError(
+            "Only an official SIA 4010 scenario can produce model evidence"
+        )
+    key = _case_key(scenario.variant, scenario.case_id)
+    instantiation_path = (
+        project
+        / "sia4010_artifacts"
+        / "templates"
+        / "template_instantiation.json"
+    )
+    instantiation = _load_json(
+        instantiation_path,
+        "template instantiation report",
+    )
+    if instantiation.get("status") != "DISPOSABLE_TEMPLATE_COPY_VERIFIED":
+        raise ConfigurationError(
+            "Template instantiation is not verified: {!r}".format(
+                instantiation.get("status")
+            )
+        )
+    actual_key = "{}/{}".format(
+        instantiation.get("variant", ""),
+        instantiation.get("case_id", ""),
+    )
+    if actual_key != key:
+        raise ConfigurationError(
+            "Template instantiation belongs to {} instead of {}".format(
+                actual_key, key
+            )
+        )
+    try:
+        reported_project = Path(
+            str(instantiation.get("disposable_project") or "")
+        ).resolve()
+    except (OSError, RuntimeError) as exc:
+        raise ConfigurationError(
+            "Template instantiation contains an invalid project path"
+        ) from exc
+    if reported_project != project:
+        raise ConfigurationError(
+            "Template instantiation belongs to another project: {}".format(
+                reported_project
+            )
+        )
+    source = Path(str(instantiation.get("source_project") or "")).resolve()
+    qualification_path = Path(
+        str(instantiation.get("qualification_manifest") or "")
+    ).resolve()
+    template_id = str(instantiation.get("template_id") or "").strip()
+    if not template_id:
+        raise ConfigurationError("Template instantiation has no template ID")
+    qualification = _load_json(
+        qualification_path,
+        "template qualification manifest",
+    )
+    covered_cases = tuple(
+        str(item) for item in qualification.get("covered_cases", ())
+    )
+    if key not in covered_cases:
+        raise ConfigurationError(
+            "Qualified template does not cover {}".format(key)
+        )
+    base_test_id = get_case_capability(
+        scenario.variant, scenario.case_id
+    ).base_test_id
+    requirements = load_requirements(
+        Path(repository_root)
+        / "config"
+        / "sia4010_template_requirements.json"
+    )
+    requirement = requirements[base_test_id]
+    binding = TemplateBinding(
+        template_id=template_id,
+        project_path=source,
+        qualification_manifest=qualification_path,
+        covered_cases=(key,),
+        status=QUALIFIED,
+    )
+    validation = validate_binding(binding, requirement)
+    if not validation.usable:
+        raise ConfigurationError(
+            "Template qualification is no longer valid: {}".format(
+                "; ".join(validation.issues)
+            )
+        )
+    expected_signature = str(
+        instantiation.get("template_signature_sha256") or ""
+    ).lower()
+    if expected_signature != validation.template_signature_sha256.lower():
+        raise ConfigurationError(
+            "Instantiation signature no longer matches its qualified source"
+        )
+    current_signature = project_signature(project)
+    current_digest = str(
+        current_signature["template_signature_sha256"]
+    ).lower()
+    if current_digest != expected_signature:
+        raise ConfigurationError(
+            "Disposable VE model changed after the qualified copy was created"
+        )
+
+    output = (
+        project
+        / "sia4010_artifacts"
+        / "templates"
+        / "template_model_evidence.json"
+    )
+    payload = {
+        "schema_version": "1.0",
+        "status": "QUALIFIED_TEMPLATE_MODEL_VERIFIED",
+        "variant": scenario.variant,
+        "case_id": scenario.case_id,
+        "template_id": template_id,
+        "project_path": str(project),
+        "scenario_path": str(scenario_path),
+        "scenario_sha256": _sha256(scenario_path),
+        "instantiation_report": str(instantiation_path),
+        "instantiation_report_path": str(instantiation_path),
+        "instantiation_report_sha256": _sha256(instantiation_path),
+        "qualification_manifest": str(qualification_path),
+        "qualification_manifest_path": str(qualification_path),
+        "qualification_manifest_sha256": _sha256(qualification_path),
+        "source_project": str(source),
+        "template_signature_sha256": current_digest,
+        "critical_file_count": current_signature["critical_file_count"],
+        "verified_at": datetime.now(timezone.utc).isoformat(),
+        "workflow_status": "PASS",
+        "compliance_claim_allowed": False,
+        "claim_guardrail": (
+            "This proves only exact model identity with an independently "
+            "qualified template. Simulation and APS comparison remain required."
+        ),
+    }
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(
+        json.dumps(payload, indent=2, ensure_ascii=False) + "\n",
+        encoding="utf-8",
+    )
+    return TemplateModelEvidenceReceipt(
+        status=payload["status"],
+        variant=scenario.variant,
+        case_id=scenario.case_id,
+        template_id=template_id,
+        project_path=project,
+        scenario_path=scenario_path,
+        qualification_manifest=qualification_path,
+        instantiation_report=instantiation_path,
+        template_signature_sha256=current_digest,
+        report_path=output,
     )
 
 

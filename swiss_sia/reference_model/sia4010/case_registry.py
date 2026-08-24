@@ -83,7 +83,7 @@ class Sia4010CaseCapability:
 
     @property
     def apachesim_qualification_supported(self) -> bool:
-        """Return whether guarded annual ApacheSim execution is implemented."""
+        """Return whether the direct guarded annual ApacheSim route exists."""
 
         return (
             self.variant == "test_1"
@@ -95,6 +95,18 @@ class Sia4010CaseCapability:
                 or self.runtime_qualification_supported
             )
         )
+
+    @property
+    def qualified_template_simulation_supported(self) -> bool:
+        """Return whether an exact reviewed template can run and be evaluated."""
+
+        return (self.variant, self.case_id) in {
+            ("test_1", "1E"),
+            ("test_2A", "2A"),
+            ("test_2B", "2B"),
+            ("test_2C", "2C"),
+            ("test_2D", "2D"),
+        }
 
     @property
     def aps_evaluation_scope(self) -> str:
@@ -150,6 +162,9 @@ class Sia4010CaseCapability:
             "aps_evaluation_supported": self.aps_evaluation_supported,
             "apachesim_qualification_supported": (
                 self.apachesim_qualification_supported
+            ),
+            "qualified_template_simulation_supported": (
+                self.qualified_template_simulation_supported
             ),
             "aps_evaluation_scope": self.aps_evaluation_scope,
             "aps_full_evaluation_supported": (

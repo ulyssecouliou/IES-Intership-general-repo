@@ -19,6 +19,7 @@ from .evidence_registry import (
     build_all_class_navigators,
     register_case_evaluation,
     register_case_simulation,
+    register_template_case_simulation,
     register_model_outcome,
 )
 from .external_input_manifest import (
@@ -247,6 +248,7 @@ __all__ = [
     "prepare_class",
     "register_case_evaluation",
     "register_case_simulation",
+    "register_template_case_simulation",
     "register_model_outcome",
     "required_external_input_ids",
     "run_qualified_apachesim",

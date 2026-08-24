@@ -689,6 +689,189 @@ def register_case_simulation(
     return payload
 
 
+def register_template_case_simulation(
+    registry_path: Union[str, Path],
+    receipt: Any,
+    *,
+    project_path: Union[str, Path],
+) -> Dict[str, Any]:
+    """Record a Test 2 simulation backed by exact qualified-template proof."""
+
+    from .template_apachesim import (
+        SIMULATION_STATUS,
+        SUPPORTED_TEMPLATE_CASES,
+        TEST1E_SIMULATION_SOURCE,
+        TEST2_SIMULATION_SOURCE,
+        TEMPLATE_MODEL_STATUS,
+    )
+
+    pair = (str(receipt.variant), str(receipt.case_id))
+    if pair not in SUPPORTED_TEMPLATE_CASES:
+        raise ConfigurationError(
+            "Template ApacheSim evidence is unsupported for {}/{}".format(*pair)
+        )
+    if receipt.status != SIMULATION_STATUS:
+        raise ConfigurationError(
+            "Template ApacheSim receipt is not successful: {}".format(
+                receipt.status
+            )
+        )
+    if (
+        receipt.compliance_claim_allowed is not False
+        or receipt.aps_evaluation_required is not True
+        or receipt.template_qualification_required is not True
+    ):
+        raise ConfigurationError(
+            "Template ApacheSim receipt guardrails are incomplete or unsafe"
+        )
+    expected_options = {
+        "start_day": 1,
+        "start_month": 1,
+        "end_day": 31,
+        "end_month": 12,
+        "reporting_interval": 3,
+        "results_filename": Path(receipt.results_path).name,
+    }
+    for key, expected in expected_options.items():
+        if receipt.requested_options.get(key) != expected:
+            raise ConfigurationError(
+                "Template ApacheSim receipt option {} mismatch".format(key)
+            )
+        if receipt.options_after.get(key) != expected:
+            raise ConfigurationError(
+                "Template ApacheSim option read-back {} mismatch".format(key)
+            )
+    if not _same_path(receipt.project_path, project_path):
+        raise ConfigurationError("Template ApacheSim project mismatch")
+
+    audit_path = Path(receipt.audit_path)
+    if not audit_path.is_file():
+        raise ConfigurationError(
+            "Template ApacheSim audit does not exist: {}".format(audit_path)
+        )
+    scenario_path = _verified_file(
+        receipt.scenario_path,
+        receipt.scenario_sha256,
+        "Template ApacheSim scenario",
+    )
+    model_path = _verified_file(
+        receipt.model_report_path,
+        receipt.model_report_sha256,
+        "qualified template model evidence",
+    )
+    results_path = _verified_file(
+        receipt.results_path,
+        receipt.results_sha256,
+        "Template ApacheSim APS",
+    )
+    source_path = _verified_file(
+        receipt.source_path,
+        receipt.source_sha256,
+        "Test 2 specification",
+    )
+    if results_path.stat().st_size != int(receipt.results_size_bytes):
+        raise ConfigurationError("Template ApacheSim APS size mismatch")
+    scenario = ModelScenario.load(scenario_path)
+    if not scenario.is_official or (scenario.variant, scenario.case_id) != pair:
+        raise ConfigurationError("Template ApacheSim scenario identity mismatch")
+    model_payload = _load_json_artifact(model_path, "qualified template model")
+    if (
+        model_payload.get("status") != TEMPLATE_MODEL_STATUS
+        or model_payload.get("compliance_claim_allowed") is not False
+        or str(model_payload.get("variant") or "") != pair[0]
+        or str(model_payload.get("case_id") or "") != pair[1]
+        or not _same_path(model_payload.get("project_path"), project_path)
+    ):
+        raise ConfigurationError("Qualified template model evidence mismatch")
+
+    audit = _load_json_artifact(audit_path, "template ApacheSim qualification")
+    for key, expected in (
+        ("status", receipt.status),
+        ("variant", pair[0]),
+        ("case_id", pair[1]),
+        ("results_sha256", receipt.results_sha256),
+        ("scenario_sha256", receipt.scenario_sha256),
+        ("model_report_sha256", receipt.model_report_sha256),
+    ):
+        if str(audit.get(key, "")) != str(expected):
+            raise ConfigurationError(
+                "Template ApacheSim audit {} mismatch".format(key)
+            )
+    expected_source = (
+        TEST1E_SIMULATION_SOURCE
+        if pair == ("test_1", "1E")
+        else TEST2_SIMULATION_SOURCE
+    )
+    if (
+        audit.get("source") != expected_source
+        or audit.get("compliance_claim_allowed") is not False
+        or audit.get("aps_evaluation_required") is not True
+        or audit.get("template_qualification_required") is not True
+    ):
+        raise ConfigurationError(
+            "Template ApacheSim audit source or guardrails are invalid"
+        )
+    source_evidence = audit.get("source_file") or {}
+    if (
+        not _same_path(source_evidence.get("path"), source_path)
+        or str(source_evidence.get("sha256") or "").lower()
+        != receipt.source_sha256.lower()
+    ):
+        raise ConfigurationError("Template ApacheSim source trace mismatch")
+    calendar_evidence = audit.get("calendar_source_file") or {}
+    calendar_path = _verified_file(
+        calendar_evidence.get("path"),
+        calendar_evidence.get("sha256"),
+        "Test 2 calendar specification",
+    )
+    if calendar_path.name != "Spezifikation_Test2.pdf":
+        raise ConfigurationError("Template ApacheSim calendar source mismatch")
+    contract = audit.get("confirmed_contract") or {}
+    if (
+        contract.get("simulation_period")
+        != "2022-01-01 through 2022-12-31"
+        or contract.get("required_result_frequency") != "hourly"
+        or contract.get("requested_apachesim_options")
+        != dict(receipt.requested_options)
+    ):
+        raise ConfigurationError("Template ApacheSim temporal contract mismatch")
+
+    path = Path(registry_path)
+    payload = load_registry(path)
+    record = payload["cases"][_case_key(*pair)]
+    model = record["model_evidence"]
+    model_linked = (
+        model.get("status") == "VERIFIED"
+        and _artifact_is_valid(model)
+        and _same_path(model.get("artifact_path"), model_path)
+        and _same_path(model.get("project_path"), project_path)
+    )
+    if not model_linked:
+        raise ConfigurationError(
+            "Register the qualified template model before its simulation"
+        )
+    record["simulation_evidence"] = {
+        "status": receipt.status,
+        "artifact_path": str(audit_path),
+        "artifact_sha256": _sha256(audit_path),
+        "project_path": str(project_path),
+        "scenario_path": str(scenario_path),
+        "scenario_sha256": receipt.scenario_sha256,
+        "model_report_path": str(model_path),
+        "model_report_sha256": receipt.model_report_sha256,
+        "results_path": str(results_path),
+        "results_sha256": receipt.results_sha256,
+        "results_size_bytes": receipt.results_size_bytes,
+        "model_evidence_link_status": "VERIFIED",
+        "aps_evaluation_required": True,
+        "compliance_claim_allowed": False,
+        "verification_basis": "QUALIFIED_EXACT_TEMPLATE",
+    }
+    payload["updated_at_utc"] = datetime.now(timezone.utc).isoformat()
+    _write_json(path, payload)
+    return payload
+
+
 def _artifact_is_valid(evidence: Mapping[str, Any]) -> bool:
     """Return whether an evidence locator still exists with the stored digest."""
 

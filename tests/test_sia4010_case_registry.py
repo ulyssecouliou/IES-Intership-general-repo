@@ -211,6 +211,26 @@ class Sia4010CaseRegistryTests(unittest.TestCase):
             ).apachesim_qualification_supported
         )
 
+    def test_qualified_template_simulation_closes_1e_and_test2_routes(self):
+        supported = {
+            (item.variant, item.case_id)
+            for item in all_case_capabilities()
+            if item.qualified_template_simulation_supported
+        }
+        self.assertEqual(
+            supported,
+            {
+                ("test_1", "1E"),
+                ("test_2A", "2A"),
+                ("test_2B", "2B"),
+                ("test_2C", "2C"),
+                ("test_2D", "2D"),
+            },
+        )
+        payload = get_case_capability("test_2A", "2A").to_dict()
+        self.assertTrue(payload["qualified_template_simulation_supported"])
+        self.assertFalse(payload["apachesim_qualification_supported"])
+
     def test_tests1_to3_can_prepare_geometry_without_enabling_mutation(self):
         for variant, case_id in (
             ("test_1", "600FF"),
