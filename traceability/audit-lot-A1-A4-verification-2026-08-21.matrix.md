@@ -3,6 +3,7 @@
 Branche : `sia4010-evidence-hardening-20260812`
 Auditeur : qa-auditor (indépendant, lecture seule du code de production)
 Date : 2026-08-21
+Statut : **SIGNÉ**
 Commits vérifiés : `677b3dd` (A3), `9cc68fc` (A2), `3c48a77` (A1), `7e88404` (A4)
 Suite exécutée : `python -m pytest tests/ -k "verdict or robustness or report or criteria or claim or health or excel or translation" -q`
 Résultat : **301 passed, 1025 deselected, 2061 subtests passed** (67 s), 0 échec.

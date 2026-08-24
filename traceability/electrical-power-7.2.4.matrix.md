@@ -5,6 +5,8 @@ aucune modification.** Commits audités : `11e3808` (implémentation §7.2.4),
 `3d6d790` (gate conditionnel norm-analyst A5). Ruling normatif de référence :
 `traceability/audit-A5-verdict-porte-7.2.4-puissance-electrique-sia3802.md`.
 
+Statut : **SIGNÉ POUR LA STRUCTURE DE PORTE**
+
 Modules audités :
 - `swiss_sia/config.py` (`SIA3802_ELECTRICAL_POWER_LIMITS_W_M2`, `..._SOURCE`)
 - `swiss_sia/sia380_checker.py::_evaluate_electrical_power` (L.1425-1511) +

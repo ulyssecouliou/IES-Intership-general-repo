@@ -174,6 +174,10 @@ File presence and classification are readiness indicators only. The content, off
 
 ## MVP Status
 
+Current release truth and the exact distinction between finished evidence
+templates, MVP readiness and remaining MSP/real-VE work are recorded in
+`docs/project/ETAT_FINAL_MVP_MSP_2026-08-24.md`.
+
 The MVP is suitable for internal manager review when:
 
 - It runs from the IESVE Run button.
@@ -192,6 +196,10 @@ python scripts/quality/validate_release.py
 ```
 
 ## MSP Direction
+
+The current build contains part of this MSP scope, but MSP completion is not
+claimed until the remaining real-VE qualifications and reviewer evidence listed
+in `docs/project/ETAT_FINAL_MVP_MSP_2026-08-24.md` are closed.
 
 The minimum saleable product should add:
 

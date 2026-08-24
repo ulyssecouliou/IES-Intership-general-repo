@@ -8,6 +8,7 @@ import unittest
 from pathlib import Path
 
 from swiss_sia.evidence_bootstrap import (
+    TEMPLATE_TARGETS,
     prepare_evidence_folder,
     prefill_ventilation_control_evidence,
 )
@@ -36,7 +37,7 @@ class EvidenceBootstrapTests(unittest.TestCase):
             )
 
             self.assertEqual(result["status"], "READY")
-            self.assertEqual(result["created_count"], 15)
+            self.assertEqual(result["created_count"], 16)
             evidence_dir = Path(result["evidence_dir"])
             g_values_path = evidence_dir / "g_values_audit_SIA_compatible_model.csv"
             metadata_path = evidence_dir / "SIA3802_project_metadata_SIA_compatible_model.csv"
@@ -50,6 +51,11 @@ class EvidenceBootstrapTests(unittest.TestCase):
             self.assertEqual(g_values_row["review_status"], "pending")
             self.assertEqual(metadata_row["project_id"], "SIA_compatible_model")
             self.assertNotIn("ZOER_32_C1", g_values_path.read_text(encoding="utf-8"))
+
+            software_register = evidence_dir / (
+                "SIA4010_software_register_review_SIA_compatible_model.csv"
+            )
+            self.assertTrue(software_register.is_file())
 
             room = RoomData(
                 id="ROOM-1",
@@ -75,6 +81,35 @@ class EvidenceBootstrapTests(unittest.TestCase):
             self.assertEqual(ventilation_row["review_status"], "pending")
         finally:
             shutil.rmtree(temporary_root, ignore_errors=True)
+
+    def test_every_csv_template_is_registered_and_auditable(self) -> None:
+        """Keep the evidence directory, bootstrap and reviewer fields in sync."""
+        template_dir = PROJECT_ROOT / "templates" / "evidence"
+        disk_templates = {
+            path.name for path in template_dir.glob("*_template.csv")
+        }
+        registered_templates = {source for source, _target in TEMPLATE_TARGETS}
+        self.assertEqual(disk_templates, registered_templates)
+
+        target_patterns = [target for _source, target in TEMPLATE_TARGETS]
+        self.assertEqual(len(target_patterns), len(set(target_patterns)))
+        for template_name in sorted(disk_templates):
+            with (template_dir / template_name).open(
+                encoding="utf-8-sig", newline=""
+            ) as handle:
+                rows = list(csv.reader(handle))
+            self.assertGreaterEqual(len(rows), 2, template_name)
+            header = rows[0]
+            self.assertTrue(all(header), template_name)
+            self.assertEqual(len(header), len(set(header)), template_name)
+            self.assertTrue(
+                "review_status" in header or "status" in header,
+                template_name,
+            )
+            self.assertTrue(
+                "source_document" in header or "source_authority" in header,
+                template_name,
+            )
 
 
 if __name__ == "__main__":

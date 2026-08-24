@@ -113,6 +113,21 @@ scope `test_3A` to `test_3L`, and a generic `test_5` row cannot replace
 - `sia3802_global_reference_comparison_template.csv`: reviewer-approved global
   project/reference result. Component deviations remain diagnostic until this
   project-level comparison is documented and accepted.
+- `sia3802_thermal_bridges_template.csv`: reviewed thermal-bridge method and
+  either the total `psi.L + chi` contribution or a traceable junction schedule.
+  An empty value or an unreviewed zero never becomes evidence.
+- `sia3802_cooling_generators_template.csv`: reviewer-confirmed cooling
+  generator class, capacity and EER/SEER provenance when VE cannot expose the
+  condenser or heat-rejection class unambiguously.
+- `sia3802_ahu_heat_recovery_template.csv`: AHU leakage, heat-recovery,
+  pressure-drop and SFP evidence that cannot be reconstructed safely from the
+  limited VE identifiers.
+- `sia3802_ventilation_control_template.csv`: system/zone control evidence for
+  the SIA 380/2 Table-4 airflow band and canonical control class. The workflow
+  may prefill VE identifiers, but the row remains pending until reviewed.
+- `sia3802_electrical_power_template.csv`: reviewed SIA 380/2 section 7.2.4
+  design electrical power, conditioned area, building status and cooling
+  category. Annual simulated peaks are not a substitute for this sizing input.
 - `glazing_solar_protection_template.csv`: glazing, frame and shading evidence
   needed for SIA 380/2 opening and solar-protection checks.
 - `g_values_audit_template.csv`: VE/CDB g-value traceability template for
@@ -144,3 +159,7 @@ documented VEScript API and which fields still need external reviewer evidence.
 
 Evidence templates do not create official SIA validation by themselves. The
 responsible reviewer must confirm source, applicability, version and acceptance.
+
+The Run-button evidence preparation workflow generates all 16 CSV templates
+above with the active project label. Release tests enforce exact synchronization
+between this directory and `swiss_sia.evidence_bootstrap.TEMPLATE_TARGETS`.

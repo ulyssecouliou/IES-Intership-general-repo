@@ -3,6 +3,7 @@
 Branche : `sia4010-evidence-hardening-20260812`
 Auditeur : qa-auditor (indépendant, **lecture seule** du code de production ; aucune modification)
 Date : 2026-08-21
+Statut : **SIGNÉ SOUS CONDITIONS**
 Périmètre : cohérence d'ensemble de la chaîne conformité client SIA 380/2 (verdict,
 indicateurs, ingestion d'évidence, diagnostic vs gate, données de référence figées,
 réserves normatives, séparation dur/pur) + décision de signature globale.

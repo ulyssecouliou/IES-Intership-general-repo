@@ -15,6 +15,7 @@ TEMPLATE_TARGETS = [
     ("sia4010_evidence_index_template.csv", "SIA4010_evidence_index_{project}.csv"),
     ("sia4010_class_validation_template.csv", "SIA4010_class_validation_{project}.csv"),
     ("sia4010_official_test_results_template.csv", "SIA4010_official_test_results_{project}.csv"),
+    ("sia4010_software_register_review_template.csv", "SIA4010_software_register_review_{project}.csv"),
     ("sia3802_justifications_template.csv", "SIA3802_justifications_{project}.csv"),
     ("sia2024_usage_mapping_template.csv", "SIA2024_usage_mapping_{project}.csv"),
     ("sia3874_lighting_control_mapping_template.csv", "SIA3874_lighting_control_mapping_{project}.csv"),

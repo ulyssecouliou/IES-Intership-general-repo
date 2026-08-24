@@ -4,11 +4,22 @@
 
 The MVP is acceptable when all items below are true.
 
-- Runs from `Run_VE_Swiss_Compliance.py` inside IESVE with the Run button.
+- Runs from `Run_VE_Swiss_Compliance_Hub.py` inside IESVE with the Run button;
+  the Hub delegates the client audit/report to the maintained compliance path.
 - Does not require PowerShell or command-line arguments.
 - Creates a timestamped Excel report in `reports/`.
-- Opens with `MANAGER DASHBOARD` as the first worksheet.
-- Includes `CLIENT SUMMARY`, `PREFLIGHT`, `P1 REMEDIATION`, `FACADE GLAZING REVIEW`, `FRAME FRACTION AUDIT`, `ENVELOPE U REVIEW`, `VE G-VALUES AUDIT`, `ASSUMPTIONS LIMITS`, `AUDIT LOG`, `SUMMARY`, `ACTION PLAN`, `COMPLIANCE RESULTS`, `SIA REQUIREMENTS`, `SIA DATA COVERAGE`, `INPUT REQUEST`, `SIA3802 JUSTIFICATIONS`, `OPEN ITEMS BACKLOG`, `SIA4010 READINESS`, `SIA4010 PREVALIDATION`, `SIA4010 CLASS MATRIX`, `SIA4010 SOFTWARE REGISTER`, `NAVIGATOR BACKLOG`, `DYNAMIC RESULTS`, `ALERT SUMMARY`, `ALERTS`, `DATA QUALITY`, `DETAILED SCORES`, and `ROOMS`.
+- Opens on the compact `COVER`/`INDEX` navigation path and exposes
+  `MANAGER DASHBOARD` as the primary executive worksheet.
+- A SIA 380/2 client-scope workbook includes `COVER`, `MODEL VIEWER`, `INDEX`,
+  `MANAGER DASHBOARD`, `ACTION DASHBOARD`, `CLIENT SUMMARY`, `PREFLIGHT`,
+  `P1 REMEDIATION`, `FACADE GLAZING REVIEW`, `FRAME FRACTION AUDIT`,
+  `ENVELOPE U REVIEW`, `VE G-VALUES AUDIT`, `ASSUMPTIONS LIMITS`, `AUDIT LOG`,
+  `COMPLIANCE RESULTS`, `REFERENCE PROJECT`, `SIA REQUIREMENTS`,
+  `SIA DATA COVERAGE`, `INPUT REQUEST`, `SIA3802 JUSTIFICATIONS`,
+  `OPEN ITEMS BACKLOG`, `NAVIGATOR BACKLOG`, `DYNAMIC RESULTS`,
+  `ALERT SUMMARY`, `ALERTS`, `DATA QUALITY` and `ROOMS`.
+- A combined SIA 380/2 + SIA 4010 scope additionally exposes the maintained
+  SIA 4010 readiness, prevalidation, class-matrix and software-register sheets.
 - Separates SIA 380/2 automated checks from SIA 4010 official evidence status.
 - Never treats missing SIA 4010 evidence as a building `PASS`.
 - Never treats `NOT_CHECKABLE` as a red `FAIL` in the executive view.
@@ -27,6 +38,10 @@ The MVP is acceptable when all items below are true.
 - Compiles without Python syntax errors.
 - Opens in Excel without a repair prompt.
 - Contains no obvious formula error values such as `#REF!`, `#DIV/0!`, `#VALUE!`, `#NAME?` or `#N/A`.
+- Produces a paginated PDF with readable findings, observed model values,
+  applicable limits, normative sources and distinct blocking/missing/advisory counts.
+- Generates all 16 project-specific evidence CSV templates without overwriting
+  reviewer-edited files.
 
 ## MVP Known Limits
 
@@ -60,14 +75,16 @@ python scripts/quality/validate_release.py
 ```
 
 1. Open a known VE model.
-2. Run `Run_VE_Swiss_Compliance.py` from VE.
+2. Run `Run_VE_Swiss_Compliance_Hub.py` from VE and choose the client audit/report action.
 3. Confirm a timestamped workbook appears in `reports/`.
-4. Confirm `MANAGER DASHBOARD` is the first worksheet.
+4. Confirm the `COVER`/`INDEX` navigation and `MANAGER DASHBOARD` are readable.
 5. Confirm `CLIENT SUMMARY`, `P1 REMEDIATION`, `ASSUMPTIONS LIMITS` and `AUDIT LOG` are present.
 6. Confirm `PREFLIGHT` has no unexpected `FAIL`.
 7. Confirm SIA 4010 tests remain `NOT_CHECKABLE` unless official evidence was provided.
-8. Confirm `SIA4010 PREVALIDATION` lists tests `1` to `7`.
-9. Confirm `SIA4010 CLASS MATRIX` lists all classes from `1A` to `5`.
+8. In combined scope, confirm `SIA4010 PREVALIDATION` lists tests `1` to `7`.
+9. In combined scope, confirm `SIA4010 CLASS MATRIX` lists all classes from `1A` to `5`.
 10. Confirm no worksheet is blank or unreadable.
-11. Confirm `SUMMARY`, `COMPLIANCE RESULTS`, `ALERT SUMMARY` and `DETAILED SCORES` are present.
+11. Confirm `COMPLIANCE RESULTS`, `ALERT SUMMARY`, `ALERTS` and `DATA QUALITY` are present.
 12. Confirm Excel opens the workbook without asking to repair it.
+13. Confirm the PDF contains no raw translation key, clipped finding or contradictory pass/fail wording.
+14. Run **Complete project evidence** and confirm 16 project-labelled CSV files are present.

@@ -717,7 +717,7 @@ def check_scoring_guardrails(validator: Validator) -> None:
         validator.require(
             "Evidence bootstrap creates project-named CSV handoff files",
             bootstrap_result.get("status") == "READY"
-            and bootstrap_result.get("created_count") == 10
+            and bootstrap_result.get("created_count") == 16
             and all(path.exists() for path in bootstrap_targets),
         )
     finally:
@@ -777,12 +777,12 @@ def check_internal_fixture_scenarios(validator: Validator) -> None:
         "; ".join(sorted(reference_high_rules)),
     )
     validator.require(
-        "SIA 380/2 reference fixture scores core categories",
+        "SIA 380/2 reference fixture scores complete categories and caps incomplete ventilation",
         reference_results["envelope"]["score"] == 100.0
         and reference_results["openings"]["score"] == 100.0
         and reference_results["gains"]["score"] == 100.0
         and reference_results["hvac"]["score"] == 100.0
-        and reference_results["ventilation"]["score"] >= 90.0,
+        and reference_results["ventilation"]["score"] == 60.0,
     )
     validator.require(
         "SIA 380/2 reference fixture has no value-integrity alerts",
@@ -1000,6 +1000,7 @@ def check_documentation_entry_points(validator: Validator) -> None:
         PROJECT_ROOT / "docs" / "requirements-docs.txt",
         PROJECT_ROOT / "docs" / "README.md",
         PROJECT_ROOT / "docs" / "project" / "RELEASE_ACCEPTANCE_CHECKLIST.md",
+        PROJECT_ROOT / "docs" / "project" / "ETAT_FINAL_MVP_MSP_2026-08-24.md",
         PROJECT_ROOT / "docs" / "project" / "GLAZING_EVIDENCE_GUIDE.md",
         PROJECT_ROOT / "docs" / "project" / "MANAGER_REFERENCE_INTEGRATION.md",
         PROJECT_ROOT / "docs" / "project" / "SIA4010_PDF_PREVALIDATION_STRATEGY.md",
@@ -1023,6 +1024,11 @@ def check_documentation_entry_points(validator: Validator) -> None:
         PROJECT_ROOT / "templates" / "evidence" / "sia3874_lighting_control_mapping_template.csv",
         PROJECT_ROOT / "templates" / "evidence" / "sia3802_project_metadata_template.csv",
         PROJECT_ROOT / "templates" / "evidence" / "sia3802_global_reference_comparison_template.csv",
+        PROJECT_ROOT / "templates" / "evidence" / "sia3802_thermal_bridges_template.csv",
+        PROJECT_ROOT / "templates" / "evidence" / "sia3802_cooling_generators_template.csv",
+        PROJECT_ROOT / "templates" / "evidence" / "sia3802_ahu_heat_recovery_template.csv",
+        PROJECT_ROOT / "templates" / "evidence" / "sia3802_ventilation_control_template.csv",
+        PROJECT_ROOT / "templates" / "evidence" / "sia3802_electrical_power_template.csv",
         PROJECT_ROOT / "templates" / "evidence" / "sia4010_evidence_index_template.csv",
         PROJECT_ROOT / "templates" / "evidence" / "sia4010_class_validation_template.csv",
         PROJECT_ROOT / "templates" / "evidence" / "sia4010_official_test_results_template.csv",
