@@ -27,6 +27,8 @@ def test_probe_source_never_invokes_the_macroflo_setter_or_project_save() -> Non
     ).read_text(encoding="utf-8")
 
     assert "macroflo.set(" not in source
+    assert "iesve.VEMacroFlo()" not in source
+    assert "get_macro_flo_opening_types" in source
     assert ".save_project(" not in source
     assert '"mutation_performed": False' in source
     assert '"project_saved": False' in source

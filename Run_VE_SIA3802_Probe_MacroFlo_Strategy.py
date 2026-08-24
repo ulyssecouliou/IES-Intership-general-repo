@@ -93,15 +93,36 @@ def main() -> None:
 
     project_path = Path(str(project.path))
     context = context_module.load_client_report_context(project_path)
-    macroflo = iesve.VEMacroFlo()
-    get_method = getattr(macroflo, "get", None)
-    set_method = getattr(macroflo, "set", None)
+    macroflo_class = getattr(iesve, "VEMacroFlo", None)
+    project_getter = getattr(project, "get_macro_flo_opening_types", None)
     definitions_error = ""
     try:
-        definitions = _native(get_method()) if callable(get_method) else None
+        opening_types = list(project_getter()) if callable(project_getter) else []
     except Exception as exc:
-        definitions = None
+        opening_types = []
         definitions_error = "{}: {}".format(type(exc).__name__, exc)
+
+    definitions = []
+    for index, opening_type in enumerate(opening_types):
+        get_method = getattr(opening_type, "get", None)
+        set_method = getattr(opening_type, "set", None)
+        read_error = ""
+        try:
+            data = _native(get_method()) if callable(get_method) else None
+        except Exception as exc:
+            data = None
+            read_error = "{}: {}".format(type(exc).__name__, exc)
+        definitions.append({
+            "index": index,
+            "python_type": str(type(opening_type)),
+            "public_members": sorted(
+                name for name in dir(opening_type) if not name.startswith("_")
+            ),
+            "get": _callable_contract(get_method),
+            "set": _callable_contract(set_method),
+            "data": data,
+            "read_error": read_error,
+        })
 
     extractor = extractor_module.VEDataExtractor(project)
     rooms = analyzer_module.ModelAnalyzer(extractor).analyze_all_rooms()
@@ -130,12 +151,21 @@ def main() -> None:
         "project_path": str(project_path),
         "building_strategy": context.to_dict(),
         "api": {
-            "python_type": str(type(macroflo)),
-            "public_members": sorted(
-                name for name in dir(macroflo) if not name.startswith("_")
+            "vemacroflo_class_type": str(type(macroflo_class)),
+            "vemacroflo_public_members": sorted(
+                name for name in dir(macroflo_class) if not name.startswith("_")
             ),
-            "get": _callable_contract(get_method),
-            "set": _callable_contract(set_method),
+            "project_get_macro_flo_opening_types": _callable_contract(
+                project_getter
+            ),
+            "official_installed_example": str(
+                Path(iesve.__file__).resolve().parents[2]
+                / "apps"
+                / "Scripts"
+                / "api_examples"
+                / "vemacroflo"
+                / "macroflo.py"
+            ) if getattr(iesve, "__file__", None) else "",
         },
         "definitions": definitions,
         "definitions_read_error": definitions_error,
@@ -163,6 +193,7 @@ def main() -> None:
     print("Project:", project_path)
     print("Declared operable windows:", context.window_operability)
     print("External windows:", len(window_rows))
+    print("MacroFlo opening types:", len(definitions))
     print("MacroFlo assignments:", report["summary"]["assigned_macroflo_count"])
     print("Status:", report["summary"]["strategy_status"])
     print("No VE value was changed and the project was not saved.")
