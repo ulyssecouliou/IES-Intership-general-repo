@@ -388,6 +388,24 @@ class CheckerBehaviorTests(unittest.TestCase):
                     [case["rule"] + "_VALUE_MISSING"],
                 )
 
+    def test_hvac_project_system_is_checked_once_across_room_assignments(self):
+        checker, engine = self._new_checker()
+        shared_system = {"id": "SYST0000", "seer": 2.5}
+        rooms = [
+            RoomData(id="room-1", hvac_systems=[dict(shared_system)]),
+            RoomData(id="room-2", hvac_systems=[dict(shared_system)]),
+            RoomData(id="room-3", hvac_systems=[dict(shared_system)]),
+        ]
+
+        checker._check_hvac(rooms)
+
+        matching_alerts = [
+            alert
+            for alert in engine.get_alerts_by_category("HVAC")
+            if alert.rule == "SIA3802_COOLING_GENERATOR_CLASS_MISSING"
+        ]
+        self.assertEqual(len(matching_alerts), 1)
+
     def test_table_4_ventilation_control_pass_fail_and_missing(self):
         common = {
             "ventilation_rate": 1.0,

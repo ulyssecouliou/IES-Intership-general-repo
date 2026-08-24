@@ -1282,6 +1282,7 @@ class SIA3802Checker:
                 data=None,
             )
 
+        checked_hvac_system_ids = set()
         for room in rooms_data:
             if not room.hvac_systems:
                 self.rule_engine.add_alert(
@@ -1293,6 +1294,15 @@ class SIA3802Checker:
                     data=room,
                 )
             for hvac in room.hvac_systems:
+                # Apache Systems are project-level objects referenced by every
+                # served room. Check a named system once so its evidence and
+                # reservations are not repeated for each room assignment.
+                system_id = str(hvac.get("id") or "").strip().casefold()
+                if system_id:
+                    if system_id in checked_hvac_system_ids:
+                        continue
+                    checked_hvac_system_ids.add(system_id)
+
                 cooling_class = hvac.get("cooling_generator_class")
                 heating_class = hvac.get("heating_generator_class")
                 if cooling_class in {"air_cooled", "water_cooled"}:
