@@ -379,24 +379,34 @@ class IESVEExtractionContractTests(unittest.TestCase):
         room_groups.get_zones.assert_called_once_with("GROUP-1")
 
     def test_macroflo_definitions_and_opening_assignments_preserve_ids(self):
-        macroflo = Mock()
-        macroflo.get.return_value = [
-            {"reference_id": " MF-01 ", "description": "Operable window"},
-            {"reference_id": "MF-02", "description": "Door"},
-            {"reference_id": "", "description": "No ID"},
-            ("not", "a mapping"),
+        opening_types = [
+            Mock(get=Mock(return_value={
+                "reference_id": " MF-01 ",
+                "description": "Operable window",
+            })),
+            Mock(get=Mock(return_value={
+                "reference_id": "MF-02",
+                "description": "Door",
+            })),
+            Mock(get=Mock(return_value={
+                "reference_id": "",
+                "description": "No ID",
+            })),
+            Mock(get=Mock(return_value=("not", "a mapping"))),
         ]
-        iesve_module = SimpleNamespace(VEMacroFlo=Mock(return_value=macroflo))
-        extractor = self.make_extractor()
+        get_opening_types = Mock(return_value=opening_types)
+        extractor = self.make_extractor(
+            get_macro_flo_opening_types=get_opening_types
+        )
 
-        with patch.dict(sys.modules, {"iesve": iesve_module}):
-            definitions = extractor.get_macroflo_openings()
-            self.assertEqual(extractor.get_macroflo_openings(), definitions)
+        definitions = extractor.get_macroflo_openings()
+        self.assertEqual(extractor.get_macroflo_openings(), definitions)
 
         self.assertEqual(set(definitions), {"MF-01", "MF-02"})
         self.assertEqual(definitions["MF-01"]["description"], "Operable window")
-        iesve_module.VEMacroFlo.assert_called_once_with()
-        macroflo.get.assert_called_once_with()
+        get_opening_types.assert_called_once_with()
+        for opening_type in opening_types:
+            opening_type.get.assert_called_once_with()
 
         opening = SimpleNamespace(
             get_properties=Mock(return_value={"area": 2.5, "type": "window"}),
@@ -411,9 +421,12 @@ class IESVEExtractionContractTests(unittest.TestCase):
     def test_optional_roomgroups_and_macroflo_apis_fail_closed(self):
         iesve_module = SimpleNamespace(
             RoomGroups=Mock(side_effect=RuntimeError("RoomGroups unavailable")),
-            VEMacroFlo=Mock(side_effect=RuntimeError("MacroFlo unavailable")),
         )
-        extractor = self.make_extractor()
+        extractor = self.make_extractor(
+            get_macro_flo_opening_types=Mock(
+                side_effect=RuntimeError("MacroFlo unavailable")
+            )
+        )
 
         with patch.dict(sys.modules, {"iesve": iesve_module}):
             self.assertEqual(extractor.get_room_zone_membership(), {})

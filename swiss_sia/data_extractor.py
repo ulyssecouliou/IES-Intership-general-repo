@@ -794,10 +794,11 @@ class VEDataExtractor:
             return dict(self._macroflo_openings)
         openings: Dict[str, Dict[str, Any]] = {}
         try:
-            import importlib
-
-            iesve = importlib.import_module("iesve")
-            for row in self._as_list(iesve.VEMacroFlo().get()):
+            opening_types = self._as_list(
+                self.project.get_macro_flo_opening_types()
+            )
+            for opening_type in opening_types:
+                row = opening_type.get()
                 if not isinstance(row, dict):
                     continue
                 reference_id = str(row.get("reference_id") or "").strip()

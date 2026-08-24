@@ -68,6 +68,12 @@ DIAGNOSTIC_VARIABLES = (
     "ApSys air supply",
     "Natural vent",
     "Cooling vent",
+    "MacroFlo external vent",
+    "MacroFlo internal vent",
+    "MacroFlo ext vent gain",
+    "MacroFlo int vent gain",
+    "MacroFlo ext vent lat gain",
+    "MacroFlo int vent lat gain",
     "Room CO2 concentration",
 )
 
@@ -209,6 +215,7 @@ def _write_ventilation_diagnostic(sim, reader, variables, rooms, aps_name):
             "Aux mech vent",
             "Conditioned ventilation rate",
             "HVAC ventilation rate",
+            "MacroFlo external vent",
         ):
             summary = room["series"].get(name, {})
             print("    {:30s} points={} active_h={} max={}".format(
