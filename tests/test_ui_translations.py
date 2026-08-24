@@ -71,6 +71,13 @@ class CatalogueCompletenessTests(unittest.TestCase):
             with self.subTest(language=code):
                 self.assertIn("SIA 4010", translate("option_official", code))
 
+    def test_dynamic_domain_has_a_human_label_in_every_language(self):
+        for code in LANGUAGES:
+            with self.subTest(language=code):
+                label = translate("domain_dynamic", code)
+                self.assertNotEqual(label, "domain_dynamic")
+                self.assertIn("SIA 180", label)
+
 
 class LanguageResolutionTests(unittest.TestCase):
     def test_exact_codes_resolve(self):

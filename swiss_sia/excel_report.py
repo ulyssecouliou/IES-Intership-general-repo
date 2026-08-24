@@ -2324,8 +2324,45 @@ class ExcelReportGenerator:
             worksheet.write(row, 1, value, number_format)
             worksheet.write(row, 2, meaning, cell_format)
 
+        # -- Per-category compliance coverage summary --
+        cat_header_format = self.workbook.add_format(SHARED_FORMATS["header"])
+        cat_pass_format = self.workbook.add_format(report_style.xw_status("pass", valign="top"))
+        cat_partial_format = self.workbook.add_format(report_style.xw_status("warning", valign="top"))
+        cat_nc_format = self.workbook.add_format(report_style.xw_status("not_checkable", valign="top"))
+
+        worksheet.merge_range("A12:F12", "Per-Category SIA 380/2 Coverage Summary", cat_header_format)
+        cat_headers = ["Domain", "VE-testable criteria", "Reserves (external evidence)", "Category verdict", "VE coverage", "SIA article"]
+        cat_start = 13
+        worksheet.write_row(cat_start, 0, cat_headers, cat_header_format)
+        category_rows = [
+            ("Envelope", "U-values walls, roof, floor — extracted and compared to table 3", "Thermal bridges: VE reads psi/chi but all-zero must be reviewed", "TESTABLE", "Automated", "SIA 380/2:2022 table 3"),
+            ("Openings", "Uw, g_perp, tau_v, frame fraction, WWR — extracted from CDB", "g-value EN 410 mapping; active g_total with shading", "TESTABLE", "Automated + review", "SIA 380/2:2022 table 2"),
+            ("Ventilation", "Infiltration rate, mechanical ventilation rate, control class", "AHU heat recovery, duct leakage class, control strategy evidence", "TESTABLE WITH RESERVES", "Partial + evidence", "SIA 380/2:2022 tables 2 and 4"),
+            ("Internal gains", "Lighting power, equipment power presence", "SIA 2024 use-category mapping, weekly schedules", "TESTABLE WITH RESERVES", "Partial + evidence", "SIA 380/2:2022 ch. 4; SIA 2024"),
+            ("HVAC efficiency", "EER/SEER by capacity band, SCOP indicative", "Generator class, EN 14825 SEER/SCoP verification; EER+ is documented reserve (VE cannot decompose)", "TESTABLE WITH RESERVES", "Partial + evidence", "SIA 380/2:2022 tables 5-9"),
+            ("Solar protection", "Shading device type detection", "Control strategy, active g_total, table 10 category", "BLOCKED UNTIL EVIDENCE", "VE partial", "SIA 380/2:2022 table 10; §7.1.2"),
+            ("Summer comfort", "SIA 180 upper/lower occupied-hour check from APS", "Weather provenance; unknown window operability uses 0 h screening but remains NOT_DETERMINED; unknown building status uses NEW (100 h) screening", "TESTABLE WITH RESERVES", "APS + conservative screening", "SIA 380/2:2022 §7.1.2.1; SIA 180"),
+            ("Electrical power §7.2.4", "Comparison to 7/12 W/m2 limit", "Required power figure is external evidence (design sizing)", "TESTABLE WITH EVIDENCE", "Evidence scan", "SIA 380/2:2022 §7.2.4"),
+            ("Design-day power", "Not implemented — documented reserve", "Dedicated design-day simulation workflow; does not block domain verdict", "RESERVE (NOT TESTABLE)", "Not implemented", "SIA 380/2:2022 §5.3.4-5"),
+            ("Global comparison §7.2.5.2", "Comparison logic implemented", "Project/reference index is external (reviewer)", "DECISIVE GATE — EXTERNAL", "Evidence scan", "SIA 380/2:2022 §7.2.5.2"),
+        ]
+        for offset, (domain, testable, reserves, verdict, coverage, article) in enumerate(category_rows, start=cat_start + 1):
+            if verdict in ("TESTABLE", "TESTABLE WITH EVIDENCE"):
+                fmt = cat_pass_format
+            elif verdict in ("TESTABLE WITH RESERVES",):
+                fmt = cat_partial_format
+            else:
+                fmt = cat_nc_format
+            worksheet.write(offset, 0, domain, subheader_format)
+            worksheet.write(offset, 1, testable, cell_format)
+            worksheet.write(offset, 2, reserves, cell_format)
+            worksheet.write(offset, 3, verdict, fmt)
+            worksheet.write(offset, 4, coverage, cell_format)
+            worksheet.write(offset, 5, article, cell_format)
+            worksheet.set_row(offset, 42)
+
         headers = ["Status", "Assumption / limitation", "Why it matters", "Impact on claim", "Mitigation", "Source"]
-        start_row = 14
+        start_row = cat_start + len(category_rows) + 3
         worksheet.write_row(start_row, 0, headers, header_format)
         rows = [
             (
@@ -2375,6 +2412,54 @@ class ExcelReportGenerator:
                 "MSP required for sale-grade complete compliance workflow.",
                 "Add dynamic result readers and system mapping worksheets.",
                 "SIA 380/2 tables 4-10; SIA 4010 system tables.",
+            ),
+            (
+                "REVIEW",
+                "Summer comfort (SIA 180) requires complete APS, weather provenance, building status and window operability.",
+                "Missing any element makes the overheating verdict NOT_CHECKABLE, never a silent pass.",
+                "Summer comfort cannot be confirmed without a full annual simulation and reviewed metadata.",
+                "Run an annual ApacheSim simulation; supply project metadata CSV with building status and weather provenance.",
+                "SIA 380/2:2022 §7.1.2.1; SIA 180:2014 fig. 4.",
+            ),
+            (
+                "REVIEW",
+                "Solar protection control strategy (SIA 380/2 table 10) is not exposed by VE.",
+                "The autonomous gate §7.1.2 blocks the overall verdict when the control category is missing.",
+                "Overall verdict stays NOT_DETERMINED until control evidence is supplied.",
+                "Provide SIA3802_solar_protection_<project>.csv with table 10 categories and active g_total.",
+                "SIA 380/2:2022 tables 2 and 10; §7.1.2.2-5.",
+            ),
+            (
+                "REVIEW",
+                "SIA 2024 use-category mapping requires reviewer confirmation per thermal zone.",
+                "Without it, internal gains, schedules and glazing assumptions are not comparable to normative references.",
+                "Gains and schedules diagnostics remain informational, not verdict-bearing.",
+                "Provide SIA2024_usage_mapping_<project>.csv reviewed and accepted.",
+                "SIA 380/2:2022 chapter 4; SIA 2024:2021.",
+            ),
+            (
+                "REVIEW",
+                "AHU heat recovery, duct leakage class and pressure drops are only partially exposed by VE.",
+                "Full evidence (L1/L2 class, recovery efficiency, pressure drops) must be supplied externally.",
+                "Ventilation control comparison is incomplete without AHU technical data.",
+                "Provide SIA3802_ahu_heat_recovery_<project>.csv with leakage class and recovery data.",
+                "SIA 380/2:2022 table 4; SN EN 16798-3.",
+            ),
+            (
+                "CONTROLLED",
+                "Design-day power (heating/cooling) workflow is not implemented.",
+                "SIA 380/2 prescribes dedicated design-day sequences; annual room peaks are not a substitute.",
+                "Design power claims cannot be made until the dedicated workflow exists.",
+                "Use annual peak loads as informational only; do not claim design-day compliance.",
+                "SIA 380/2:2022 §5.3.4 and §5.3.5.",
+            ),
+            (
+                "CONTROLLED",
+                "Weekly schedules and exceptions are extracted as daily-equivalent profiles only.",
+                "Full weekly/exception schedules are needed for normative traceability.",
+                "Schedule compliance is informational until full profiles are exported and reviewed.",
+                "Export complete weekly schedules from VE templates or supply reviewer confirmation.",
+                "SIA 380/2:2022 chapter 4; SIA 2024:2021.",
             ),
         ]
         if not self.include_sia4010:

@@ -102,9 +102,25 @@ def wrap_to_width(
     return lines
 
 
+_GREEK_TO_ASCII = {
+    "ψ": "psi",   # ψ
+    "χ": "chi",   # χ
+    "Ψ": "Psi",   # Ψ
+    "Χ": "Chi",   # Χ
+    "Δ": "Delta",  # Δ
+    "α": "alpha",  # α
+    "β": "beta",   # β
+    "ε": "eps",    # ε
+    "η": "eta",    # η
+    "λ": "lambda", # λ
+}
+
+
 def _escape(text: str) -> bytes:
     """Return a PDF string body, WinAnsi encoded with the reserved bytes escaped."""
 
+    for greek, ascii_eq in _GREEK_TO_ASCII.items():
+        text = str(text).replace(greek, ascii_eq)
     encoded = str(text).encode("cp1252", errors="replace")
     for source, target in ((b"\\", b"\\\\"), (b"(", b"\\("), (b")", b"\\)")):
         encoded = encoded.replace(source, target)

@@ -1608,6 +1608,9 @@ class SIA3802Checker:
             upper_limit_hours = SIA3802_DYNAMIC_COMFORT["new_building_upper_exceedance_hours"]
         elif building_status in {"EXISTING", "EXISTING_BUILDING"}:
             upper_limit_hours = SIA3802_DYNAMIC_COMFORT["existing_building_upper_exceedance_hours"]
+        building_status_missing_for_non_operable = bool(
+            non_operable_rows and upper_limit_hours is None
+        )
 
         comfort_data = {
             "status": status,
@@ -1652,28 +1655,50 @@ class SIA3802Checker:
                 recommendation="Export aligned annual temperature, occupancy and both SIA 180 limit series for every applicable room.",
                 data=incomplete_room_rows,
             )
-        elif unknown_operability_rows:
-            self.rule_engine.add_alert(
-                rule="SIA3802_WINDOW_OPERABILITY_EVIDENCE_MISSING",
-                description="Window operability is unknown for at least one comfort room, so clauses 3.2.4.2 and 3.2.4.3 cannot be selected safely.",
-                severity=Severity.MEDIUM,
-                category="Dynamic Method",
-                recommendation="Provide reviewed MacroFlo/window-opening evidence for every applicable room.",
-                data=unknown_operability_rows,
-            )
-        elif non_operable_rows and upper_limit_hours is None:
-            self.rule_engine.add_alert(
-                rule="SIA3802_BUILDING_STATUS_MISSING",
-                description="New/existing building status is not set, so the 100 h/year or 400 h/year upper-limit allowance cannot be selected.",
-                severity=Severity.MEDIUM,
-                category="Dynamic Method",
-                recommendation="Set dynamic_results['building_status'] to NEW_BUILDING or EXISTING_BUILDING from reviewed project metadata.",
-                data=dynamic_results,
-            )
         else:
+            if unknown_operability_rows:
+                self.rule_engine.add_alert(
+                    rule="SIA3802_WINDOW_OPERABILITY_EVIDENCE_MISSING",
+                    description=(
+                        f"Window operability is unknown for {len(unknown_operability_rows)} room(s); "
+                        "using the 0 h upper-limit allowance as a conservative screening value. "
+                        "The comfort domain remains not determined until reviewed "
+                        "MacroFlo/window-opening evidence is supplied."
+                    ),
+                    severity=Severity.MEDIUM,
+                    category="Dynamic Method",
+                    recommendation="Provide reviewed MacroFlo/window-opening evidence for every applicable room.",
+                    data=unknown_operability_rows,
+                )
+                comfort_data["conservative_zero_hour_screening_count"] = len(
+                    unknown_operability_rows
+                )
+            if non_operable_rows and upper_limit_hours is None:
+                building_status = "NEW_BUILDING"
+                upper_limit_hours = SIA3802_DYNAMIC_COMFORT["new_building_upper_exceedance_hours"]
+                comfort_data["building_status"] = building_status
+                comfort_data["upper_limit_hours"] = upper_limit_hours
+                comfort_data["building_status_assumed"] = True
+                self.rule_engine.add_alert(
+                    rule="SIA3802_BUILDING_STATUS_MISSING_ASSUMED_NEW",
+                    description=(
+                        "Building status is not set; using the NEW_BUILDING 100 h/year "
+                        "allowance as a conservative screening value. The comfort domain "
+                        "remains not determined until reviewed project metadata is supplied."
+                    ),
+                    severity=Severity.MEDIUM,
+                    category="Dynamic Method",
+                    recommendation="Set dynamic_results['building_status'] to NEW_BUILDING or EXISTING_BUILDING from reviewed project metadata.",
+                    data=dynamic_results,
+                )
             for row in complete_room_rows:
                 is_user_operable = row.get("window_operable") is True
-                room_limit = 0.0 if is_user_operable else upper_limit_hours
+                operability_unknown = row.get("window_operable") is None
+                room_limit = (
+                    0.0
+                    if is_user_operable or operability_unknown
+                    else upper_limit_hours
+                )
                 room_data = {
                     "room_id": row.get("room_id"),
                     "room_name": row.get("room_name"),
@@ -1681,7 +1706,11 @@ class SIA3802Checker:
                     "method": (
                         "SIA3802_3.2.4.2_USER_OPERABLE"
                         if is_user_operable
-                        else "SIA3802_3.2.4.3_TO_3.2.4.5_ANNUAL_ALLOWANCE"
+                        else (
+                            "CONSERVATIVE_ZERO_HOUR_SCREENING_OPERABILITY_UNKNOWN"
+                            if operability_unknown
+                            else "SIA3802_3.2.4.3_TO_3.2.4.5_ANNUAL_ALLOWANCE"
+                        )
                     ),
                     "upper_hours": row.get("occupied_hours_above_sia180_upper"),
                     "lower_hours": row.get("occupied_hours_below_sia180_lower"),
@@ -1716,7 +1745,7 @@ class SIA3802Checker:
                 and bool(room_rows)
                 and not incomplete_room_rows
                 and not unknown_operability_rows
-                and (not non_operable_rows or upper_limit_hours is not None)
+                and not building_status_missing_for_non_operable
                 else "NOT_CHECKABLE"
             ),
             "comfort": comfort_data,
@@ -1863,16 +1892,13 @@ class SIA3802Checker:
             row["reason"] = "daily internal gains could not be integrated from VE profiles"
             return row
         if not isinstance(thresholds, dict):
-            placeholder = str(
-                getattr(room, "window_ventilation_support_placeholder", "") or ""
-            )
-            note = str(getattr(room, "window_ventilation_support_note", "") or "")
-            row["reason"] = (
-                "window ventilation support is missing or not comparable; "
-                f"{placeholder or 'WINDOW_SUPPORT_THRESHOLD_TO_VERIFY'}; "
-                f"{note or SIA_COMPLIANCE_VALUE_PROVENANCE['window_support_full_day_threshold']['locator']}"
-            )
-            return row
+            thresholds = SIA3802_COOLING_NEED_SCREENING.get("no_window_support")
+            if not isinstance(thresholds, dict):
+                row["reason"] = "no_window_support threshold missing from config"
+                return row
+            row["window_ventilation_support"] = "no_window_support"
+            row["window_ventilation_support_assumed"] = True
+            support = "no_window_support"
         necessary_above = float(thresholds["necessary_above_wh_m2_day"])
         desirable_min = float(thresholds["desirable_min_wh_m2_day"])
         if gains > necessary_above:

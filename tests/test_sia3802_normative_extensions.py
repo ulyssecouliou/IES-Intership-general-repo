@@ -518,7 +518,7 @@ class CheckerBehaviorTests(unittest.TestCase):
             (120.0, "no_window_support", "DESIRABLE"),
             (79.0, "no_window_support", "NOT_NECESSARY"),
             (None, "no_window_support", "NOT_CHECKABLE"),
-            (100.0, None, "NOT_CHECKABLE"),
+            (100.0, None, "DESIRABLE"),
         )
         for gains, support, expected_status in cases:
             with self.subTest(
@@ -583,6 +583,60 @@ class CheckerBehaviorTests(unittest.TestCase):
 
         self.assertEqual(result["status"], "CHECKED")
         self.assertNotIn("SIA3802_SUMMER_COMFORT_DYNAMIC", rules)
+
+    def test_unknown_operability_uses_zero_hour_screening_without_passing(self):
+        """Screen unknown operability strictly while preserving the evidence gap."""
+        checker, _engine = self._new_checker()
+        result = checker._check_dynamic_method({
+            "status": "AVAILABLE",
+            "building_status": "NEW_BUILDING",
+            "reviewed_weather_match_status": "MATCH",
+            "rooms": [{
+                "room_id": "room-1",
+                "room_name": "Room 1",
+                "annual_comfort_period_complete": True,
+                "occupied_hours_above_sia180_upper": 0.0,
+                "occupied_hours_below_sia180_lower": 0.0,
+                "window_operable": None,
+            }],
+            "design_power_status": "NOT_CHECKABLE",
+        })
+
+        self.assertEqual(result["status"], "NOT_CHECKABLE")
+        room_result = result["comfort"]["room_results"][0]
+        self.assertEqual(room_result["upper_limit_hours"], 0.0)
+        self.assertEqual(
+            room_result["method"],
+            "CONSERVATIVE_ZERO_HOUR_SCREENING_OPERABILITY_UNKNOWN",
+        )
+        self.assertIn(
+            "SIA3802_WINDOW_OPERABILITY_EVIDENCE_MISSING",
+            {alert.rule for alert in result["alerts"]},
+        )
+
+    def test_unknown_building_status_is_screened_as_new_without_passing(self):
+        """Use the stricter new-building allowance but retain missing evidence."""
+        checker, _engine = self._new_checker()
+        result = checker._check_dynamic_method({
+            "status": "AVAILABLE",
+            "reviewed_weather_match_status": "MATCH",
+            "rooms": [{
+                "room_id": "room-1",
+                "room_name": "Room 1",
+                "annual_comfort_period_complete": True,
+                "occupied_hours_above_sia180_upper": 0.0,
+                "occupied_hours_below_sia180_lower": 0.0,
+                "window_operable": False,
+            }],
+            "design_power_status": "NOT_CHECKABLE",
+        })
+
+        self.assertEqual(result["status"], "NOT_CHECKABLE")
+        self.assertEqual(result["comfort"]["upper_limit_hours"], 100.0)
+        self.assertIn(
+            "SIA3802_BUILDING_STATUS_MISSING_ASSUMED_NEW",
+            {alert.rule for alert in result["alerts"]},
+        )
 
     def test_user_operable_room_uses_zero_hour_upper_limit(self):
         """Apply clause 3.2.4.2 without the 100/400-hour allowance."""

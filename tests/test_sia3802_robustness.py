@@ -267,6 +267,30 @@ class Sia3802UndeterminedNotFailedTests(unittest.TestCase):
         # A reserve does not fail the model; overall stays COMPLIANT-with-reserves.
         self.assertEqual(verdict["sia3802_status"], "COMPLIANT")
 
+    def test_conservative_dynamic_screening_does_not_hide_missing_evidence(self):
+        """A screening default can expose failures but cannot make the domain pass."""
+        engine = RuleEngine()
+        engine.add_alert(
+            rule="SIA3802_WINDOW_OPERABILITY_EVIDENCE_MISSING",
+            description="Zero-hour screening used because operability is unknown.",
+            severity=Severity.MEDIUM,
+            category="Dynamic Method",
+            recommendation="Provide reviewed opening evidence.",
+            data=None,
+        )
+        results = {
+            "dynamic": {"status": "NOT_CHECKABLE"},
+            "alerts": list(engine.alerts),
+            "global_reference_comparison": {"status": "REVIEWED_RESULT_AVAILABLE"},
+        }
+
+        verdict = build_compliance_verdict(results, None, rooms_analysed=1).to_dict()
+        dynamic = next(
+            item for item in verdict["domains"] if item["domain"] == "dynamic"
+        )
+        self.assertEqual(dynamic["status"], "NOT_DETERMINED")
+        self.assertEqual(dynamic["reason"], "evidence_incomplete")
+
 
     def test_unverified_solar_protection_control_gates_the_verdict(self):
         """Audit A4: solar-protection control is an autonomous SIA 380/2 §7.1.2.2-5

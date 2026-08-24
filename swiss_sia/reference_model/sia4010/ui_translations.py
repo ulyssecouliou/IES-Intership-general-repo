@@ -1812,6 +1812,12 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
         "fr": "Installations CVC",
         "it": "Impianti HVAC",
     },
+    "domain_dynamic": {
+        "en": "Dynamic comfort (SIA 180)",
+        "de": "Dynamischer Komfort (SIA 180)",
+        "fr": "Confort dynamique (SIA 180)",
+        "it": "Comfort dinamico (SIA 180)",
+    },
     "legend_opaque": {
         "en": "Opaque envelope",
         "de": "Opake Hülle",

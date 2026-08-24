@@ -24,7 +24,7 @@ from swiss_sia.compliance_verdict import (
     build_compliance_verdict,
 )
 from swiss_sia.model_analyzer import OpeningData, RoomData, SurfaceData
-from swiss_sia.pdf_writer import PdfDocument, wrap_to_width
+from swiss_sia.pdf_writer import PdfDocument, _escape, wrap_to_width
 from swiss_sia.reference_model.sia4010.ui_translations import LANGUAGES, translate
 from swiss_sia.rule_engine import Alert, RuleEngine, Severity
 from swiss_sia.sia380_checker import SIA3802Checker
@@ -32,6 +32,13 @@ from swiss_sia.sia4010_checker import SIA4010Checker
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 OUTPUT_ROOT = REPO_ROOT / ".codex_tmp" / "compliance_pdf_tests"
+
+
+class PdfEncodingTests(unittest.TestCase):
+    """Protect readable normative symbols in the WinAnsi-only PDF writer."""
+
+    def test_greek_thermal_bridge_symbols_are_transliterated(self):
+        self.assertEqual(_escape("Ponts thermiques (ψ/χ)"), b"Ponts thermiques \\(psi/chi\\)")
 
 
 def _write_test_png(path: Path, width: int = 12, height: int = 8) -> Path:

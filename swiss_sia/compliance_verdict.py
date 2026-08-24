@@ -59,6 +59,22 @@ _INDETERMINATE_RULE_MARKERS = (
     "RULE_EXECUTION_ERROR",
 )
 
+# Rules that correspond to documented structural limitations of the toolchain
+# (NOT_AVAILABLE capability or explicitly informational diagnostics).  These
+# carry indeterminate markers in their name but must NOT downgrade a domain to
+# NOT_DETERMINED: the tool structurally cannot check them, so they are reported
+# as visible reserves rather than evidence gaps.
+# SIA 380/2:2022 §5.3.4-5 design-day: no dedicated workflow exists.
+# Table 7 EER+: VE cannot decompose post-cooling auxiliary power shares.
+# Table 1 cooling-need screening: explicitly informational, "not an autonomous
+# compliance verdict" per the checker docstring.
+_KNOWN_LIMITATION_RULES = frozenset({
+    "SIA3802_HEATING_DESIGN_POWER_NOT_CHECKABLE",
+    "SIA3802_COOLING_DESIGN_POWER_NOT_CHECKABLE",
+    "SIA3802_COOLING_EERPLUS_NOT_CHECKABLE",
+    "SIA3802_COOLING_NEED_SCREENING_NOT_CHECKABLE",
+})
+
 
 @dataclass(frozen=True)
 class DomainVerdict:
@@ -69,6 +85,7 @@ class DomainVerdict:
     blocking_count: int
     advisory_count: int
     reason: str
+    limitation_count: int = 0
 
     def to_dict(self) -> Dict[str, Any]:
         """Return the domain verdict as serializable data."""
@@ -78,6 +95,7 @@ class DomainVerdict:
             "status": self.status,
             "blocking_count": self.blocking_count,
             "advisory_count": self.advisory_count,
+            "limitation_count": self.limitation_count,
             "reason": self.reason,
         }
 
@@ -141,18 +159,12 @@ def _count_by_category(alerts: Sequence[Any]) -> Dict[str, Dict[str, int]]:
     for alert in alerts or ():
         bucket = counts.setdefault(
             _category(alert),
-            {"blocking": 0, "advisory": 0, "indeterminate": 0},
+            {"blocking": 0, "advisory": 0, "indeterminate": 0, "limitation": 0},
         )
         rule_name = str(getattr(alert, "rule", "") or "").upper()
-        # A "cannot check" alert (missing data, unavailable evidence, a rule
-        # that raised) means the domain is undetermined -- never that it failed.
-        # It is counted as indeterminate ONLY, even at CRITICAL severity, so it
-        # cannot make the domain read as NOT_COMPLIANT.  Reporting a client's
-        # building as non-compliant because the tool could not read it is a
-        # false failure, as dishonest as a false pass. A determined violation is
-        # a rule that ran and found the value out of range; those carry no
-        # indeterminate marker and still count as blocking below.
-        if any(marker in rule_name for marker in _INDETERMINATE_RULE_MARKERS):
+        if rule_name in _KNOWN_LIMITATION_RULES:
+            bucket["limitation"] += 1
+        elif any(marker in rule_name for marker in _INDETERMINATE_RULE_MARKERS):
             bucket["indeterminate"] += 1
         elif _severity_name(alert) in _BLOCKING_SEVERITIES:
             bucket["blocking"] += 1
@@ -183,11 +195,12 @@ def build_compliance_verdict(
     domains: List[DomainVerdict] = []
     for key, category in DOMAINS:
         bucket = counts.get(
-            category, {"blocking": 0, "advisory": 0, "indeterminate": 0}
+            category, {"blocking": 0, "advisory": 0, "indeterminate": 0, "limitation": 0}
         )
         blocking = bucket["blocking"]
         advisory = bucket["advisory"]
         indeterminate = bucket["indeterminate"]
+        limitation = bucket["limitation"]
         if not rooms_analysed or not _domain_evaluated(sia3802, key):
             status = NOT_DETERMINED
             reason = "domain_not_evaluated"
@@ -197,6 +210,9 @@ def build_compliance_verdict(
         elif indeterminate:
             status = NOT_DETERMINED
             reason = "evidence_incomplete"
+        elif limitation:
+            status = COMPLIANT
+            reason = "no_blocking_finding_with_limitations"
         else:
             status = COMPLIANT
             reason = "no_blocking_finding"
@@ -206,6 +222,7 @@ def build_compliance_verdict(
                 status=status,
                 blocking_count=blocking,
                 advisory_count=advisory,
+                limitation_count=limitation,
                 reason=reason,
             )
         )
