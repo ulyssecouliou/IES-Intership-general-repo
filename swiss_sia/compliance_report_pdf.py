@@ -69,6 +69,7 @@ WARN_BG = _status("warning").pdf_ground
 
 MARGIN = 16.0
 CONTENT_WIDTH = A4_MM[0] - 2 * MARGIN
+ANNEX_CONTENT_BOTTOM = A4_MM[1] - 24.0
 
 _STATUS_COLOURS = {
     COMPLIANT: (OK, OK_BG),
@@ -1178,9 +1179,24 @@ def _draw_annex_page(
         cursor += 5.0
     cursor += 4.0
 
-    # 3. Methodology and data sources.
+    # 3. Methodology and data sources.  Dynamic reserves can occupy most of
+    # the annex, so keep this section clear of the footer instead of assuming
+    # that every run fits on one page.
+    method_lines = wrap_to_width(
+        translate("annex_method_body", language), 7.8, CONTENT_WIDTH - 4.0
+    )
+    method_height = 8.5 + len(method_lines) * 4.2
+    if cursor + method_height > ANNEX_CONTENT_BOTTOM:
+        page = document.add_page()
+        cursor = _draw_letterhead(page, office, language)
+        page.text(
+            MARGIN, cursor, translate("annex_title", language),
+            size_pt=15.0, bold=True, colour=INK,
+        )
+        cursor += 9.0
+
     cursor = _section_header(cursor, "annex_method_title")
-    for line in wrap_to_width(translate("annex_method_body", language), 7.8, CONTENT_WIDTH - 4.0):
+    for line in method_lines:
         page.text(MARGIN + 2.0, cursor, line, size_pt=7.8, colour=INK)
         cursor += 4.2
     return page

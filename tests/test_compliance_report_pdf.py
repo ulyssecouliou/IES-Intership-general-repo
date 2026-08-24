@@ -556,6 +556,29 @@ class RenderedReportTests(unittest.TestCase):
             full_text,
         )
 
+    def test_long_annex_moves_methodology_clear_of_the_footer(self):
+        path = render_compliance_report_pdf(
+            OUTPUT_ROOT / "report_long_annex.pdf",
+            project_label="ZOER_32_C1",
+            rooms_data=self.rooms,
+            sia3802_results=self.sia3802,
+            sia4010_results=self.sia4010,
+            profile=self.profile,
+            language="en",
+            scope="both",
+        )
+        page_text = [page.extract_text() for page in PdfReader(str(path)).pages]
+        reserves_page = next(
+            index for index, text in enumerate(page_text)
+            if translate("annex_reserves_title", "en").upper() in text
+        )
+        methodology_page = next(
+            index for index, text in enumerate(page_text)
+            if translate("annex_method_title", "en").upper() in text
+        )
+        self.assertGreater(methodology_page, reserves_page)
+        self.assertIn(translate("annex_title", "en"), page_text[methodology_page])
+
     def test_configured_limit_and_model_value_are_printed_for_a_blocker(self):
         wall_entry = next(
             item
