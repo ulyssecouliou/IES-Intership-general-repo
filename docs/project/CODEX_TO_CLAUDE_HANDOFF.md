@@ -1,11 +1,12 @@
 # Passation Codex vers Claude — SIA 380/2 et SIA 4010
 
-**Date de l'état :** 2026-08-12  
+**Date de l'état :** 2026-08-24  
 **Dépôt :** `C:\Users\ulysse.couliou\Documents\IES Internship\IES-Intership-general-repo`  
-**Branche observée :** `main`  
-**HEAD observé :** `26ff677ab30c9be006f6d84f1a69f9b6197afe5f`  
+**Branche observée :** `sia4010-evidence-hardening-20260812`  
+**HEAD observé :** `7948c21`  
 **Environnement VE réel :** IESVE 2025, Python VE 3.12.3  
-**Environnement des tests locaux de cette passation :** Python 3.13
+**Environnement des tests locaux de cette passation :** Python 3.13  
+**Document de continuation détaillé :** `docs/project/CLAUDE_CONTINUATION_PROMPT.md` (état au 24 août, priorités P0-P4)
 
 ## 1. Mission et limite de la revendication
 
