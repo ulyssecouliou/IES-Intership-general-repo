@@ -68,11 +68,18 @@ _INDETERMINATE_RULE_MARKERS = (
 # Table 7 EER+: VE cannot decompose post-cooling auxiliary power shares.
 # Table 1 cooling-need screening: explicitly informational, "not an autonomous
 # compliance verdict" per the checker docstring.
+# Cooling generator class: VE NCM chiller-type field is UK-specific and
+# typically unpopulated on Swiss models; EER/SEER values are read directly.
+# SIA 2024 mapping: requires licensed SIA 2024 standard, external to VE.
+# SIA 387/4 lighting control: requires licensed SIA 387/4, external to VE.
 _KNOWN_LIMITATION_RULES = frozenset({
     "SIA3802_HEATING_DESIGN_POWER_NOT_CHECKABLE",
     "SIA3802_COOLING_DESIGN_POWER_NOT_CHECKABLE",
     "SIA3802_COOLING_EERPLUS_NOT_CHECKABLE",
     "SIA3802_COOLING_NEED_SCREENING_NOT_CHECKABLE",
+    "SIA3802_COOLING_GENERATOR_CLASS_MISSING",
+    "SIA3802_SIA2024_MAPPING_MISSING",
+    "SIA3802_LIGHTING_CONTROL_TYPE_MISSING",
 })
 
 
