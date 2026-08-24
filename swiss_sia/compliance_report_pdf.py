@@ -206,66 +206,59 @@ def summarise_model(rooms_data: Optional[Sequence[Any]]) -> Dict[str, Any]:
 
 
 def _draw_letterhead(
-    page: PdfPage, profile: CompanyProfile, language: str
+    page: PdfPage,
+    profile: CompanyProfile,
+    language: str,
+    project_label: str = "",
 ) -> float:
-    """Draw the company letterhead and return the y position below it."""
+    """Draw the compact IESVE-style report masthead."""
 
-    if not profile.is_configured:
-        # No invented issuer and no shipped placeholder logo.  A compact,
-        # factual report identity is preferable to a large warning-like
-        # "engineering office not configured" banner on a client document.
-        page.rect(0, 0, A4_MM[0], 20.0, fill=BRAND_DEEP)
-        page.rect(0, 20.0, A4_MM[0], 1.4, fill=ACCENT)
-        page.text(MARGIN, 12.5, "SIA 380/2", size_pt=13.0, bold=True, colour=WHITE)
-        page.text(
-            A4_MM[0] - MARGIN - 70.0,
-            12.5,
-            translate("report_neutral_header", language),
-            size_pt=8.5,
-            colour=(0.741, 0.882, 0.831),
-            align="right",
-            width_mm=70.0,
-        )
-        return 30.0
-
-    page.rect(0, 0, A4_MM[0], 30.0, fill=BRAND_DEEP)
-    page.rect(0, 30.0, A4_MM[0], 1.4, fill=ACCENT)
+    page.rect(0, 0, A4_MM[0], 15.0, fill=BRAND_DEEP)
+    page.rect(0, 15.0, A4_MM[0], 0.8, fill=ACCENT)
     text_left = MARGIN
     if profile.logo_path is not None:
         try:
-            page.image_contain(MARGIN, 6.5, 17.0, 17.0, profile.logo_path)
-            text_left = MARGIN + 21.0
+            page.image_contain(MARGIN, 3.2, 8.5, 8.5, profile.logo_path)
+            text_left = MARGIN + 12.0
         except Exception:
             # A logo that cannot be embedded must never block the report.
             text_left = MARGIN
+    report_name = translate("report_title", language)
+    if profile.is_configured and profile.name.strip().casefold() != "ies":
+        report_name = "{}  ·  {}".format(profile.name.strip(), report_name)
+    elif not profile.is_configured:
+        report_name = "SIA 380/2  ·  {}".format(
+            translate("report_neutral_header", language)
+        )
+    title_y = 7.7 if profile.address_lines else 9.4
     page.text(
         text_left,
-        13.5,
-        truncate_to_width(profile.name, 15.0, 120.0, bold=True),
-        size_pt=15.0,
+        title_y,
+        truncate_to_width(report_name, 9.5, 120.0, bold=True),
+        size_pt=9.5,
         bold=True,
         colour=WHITE,
     )
-    if profile.tagline:
+    if profile.address_lines:
+        address = "  ·  ".join(profile.address_lines[:2])
         page.text(
             text_left,
-            19.5,
-            truncate_to_width(profile.tagline, 8.5, 120.0),
-            size_pt=8.5,
+            11.8,
+            truncate_to_width(address, 6.0, 120.0),
+            size_pt=6.0,
             colour=(0.741, 0.882, 0.831),
         )
-    right_lines = list(profile.address_lines) + list(profile.contact_lines)
-    for index, line in enumerate(right_lines[:4]):
+    if project_label:
         page.text(
-            A4_MM[0] - MARGIN - 62.0,
-            9.0 + index * 4.2,
-            truncate_to_width(line, 7.5, 62.0),
-            size_pt=7.5,
-            colour=(0.741, 0.882, 0.831),
+            A4_MM[0] - MARGIN - 55.0,
+            9.4,
+            truncate_to_width(project_label, 8.0, 55.0),
+            size_pt=8.0,
+            colour=WHITE,
             align="right",
-            width_mm=62.0,
+            width_mm=55.0,
         )
-    return 40.0
+    return 25.0
 
 
 def _draw_verdict_banner(
@@ -643,44 +636,32 @@ def _draw_footer(
     total: int,
     language: str,
     ies_logo_path: Optional[Path] = None,
+    generated_date: str = "",
 ) -> None:
-    """Draw the page footer: non-certification reminder, IES brand mark, page no.
+    """Draw the restrained IESVE footer used by sibling compliance reports."""
 
-    ``ies_logo_path`` embeds the real IES logo when the asset is present; when it
-    is absent the footer falls back to the "Powered by IES Virtual Environment"
-    wordmark so the report always carries the product provenance without ever
-    reproducing a logo the project does not ship.
-    """
-
-    y = A4_MM[1] - 10.0
-    page.line(MARGIN, y - 4.0, A4_MM[0] - MARGIN, y - 4.0, width_pt=0.4, colour=LINE)
-    page.text(MARGIN, y, translate("footer_not_certificate", language), size_pt=6.5, colour=MUTED)
-
-    powered_by = translate("footer_powered_by", language)
+    del total, language, ies_logo_path  # retained for call-site compatibility
+    y = A4_MM[1] - 9.0
+    page.line(MARGIN, y - 5.0, A4_MM[0] - MARGIN, y - 5.0, width_pt=0.4, colour=LINE)
+    page.text(MARGIN, y, "IES  ·  www.iesve.com", size_pt=6.5, colour=MUTED)
     centre = A4_MM[0] / 2.0
-    logo_drawn = False
-    if ies_logo_path is not None:
-        try:
-            page.image_contain(centre - 26.0, y - 4.2, 6.0, 6.0, ies_logo_path)
-            logo_drawn = True
-        except Exception:
-            # A logo that cannot be embedded must never block the report.
-            logo_drawn = False
     page.text(
-        centre - (18.0 if logo_drawn else 30.0),
+        centre - 20.0,
         y,
-        powered_by,
+        generated_date,
         size_pt=6.5,
-        colour=BRAND,
+        colour=MUTED,
+        align="center",
+        width_mm=40.0,
     )
     page.text(
-        A4_MM[0] - MARGIN - 30.0,
+        A4_MM[0] - MARGIN - 12.0,
         y,
-        translate("footer_page", language).format(page=page_number, total=total),
+        str(page_number),
         size_pt=6.5,
         colour=MUTED,
         align="right",
-        width_mm=30.0,
+        width_mm=12.0,
     )
 
 
@@ -860,6 +841,7 @@ def _draw_detailed_pages(
     sia3802_results: Optional[Dict[str, Any]],
     language: str,
     rooms_data: Optional[Sequence[Any]] = None,
+    project_label: str = "",
 ) -> List[PdfPage]:
     """Add a paginated decision rationale and every SIA 380/2 finding."""
 
@@ -872,7 +854,7 @@ def _draw_detailed_pages(
     def new_page(continued: bool = False) -> Tuple[PdfPage, float]:
         detail_page = document.add_page()
         pages.append(detail_page)
-        top = _draw_letterhead(detail_page, office, language)
+        top = _draw_letterhead(detail_page, office, language, project_label)
         detail_page.text(
             MARGIN,
             top,
@@ -1134,11 +1116,12 @@ def _draw_annex_page(
     verdict: ComplianceVerdict,
     language: str,
     scope: str = "both",
+    project_label: str = "",
 ) -> PdfPage:
     """Draw the second-page annex: limitations, reserves and methodology."""
 
     page = document.add_page()
-    cursor = _draw_letterhead(page, office, language)
+    cursor = _draw_letterhead(page, office, language, project_label)
     page.text(
         MARGIN, cursor, translate("annex_title", language),
         size_pt=15.0, bold=True, colour=INK,
@@ -1189,7 +1172,7 @@ def _draw_annex_page(
     method_height = 8.5 + len(method_lines) * 4.2
     if cursor + method_height > ANNEX_CONTENT_BOTTOM:
         page = document.add_page()
-        cursor = _draw_letterhead(page, office, language)
+        cursor = _draw_letterhead(page, office, language, project_label)
         page.text(
             MARGIN, cursor, translate("annex_title", language),
             size_pt=15.0, bold=True, colour=INK,
@@ -1241,7 +1224,8 @@ def render_compliance_report_pdf(
         title="{} - {}".format(translate("report_title", code), project_label)
     )
     page = document.add_page()
-    cursor = _draw_letterhead(page, office, code)
+    generated_at = datetime.now()
+    cursor = _draw_letterhead(page, office, code, project_label)
     context_value = (
         (lambda key, default="": report_context.get(key, default))
         if isinstance(report_context, dict)
@@ -1290,7 +1274,7 @@ def render_compliance_report_pdf(
         (translate("field_mandate", code), str(context_value("report_reference", "") or office.report_reference or to_complete)),
         (
             translate("field_generated", code),
-            datetime.now().strftime("%Y-%m-%d %H:%M"),
+            generated_at.strftime("%Y-%m-%d %H:%M"),
         ),
         (translate("field_prepared_by", code), str(context_value("prepared_by", "") or office.author_name or to_complete)),
         (translate("client_ui_weather", code), str(context_value("weather_file", "") or translate("value_unavailable", code))),
@@ -1327,9 +1311,22 @@ def render_compliance_report_pdf(
     ies_logo = _resolve_ies_logo(project_root)
 
     _draw_detailed_pages(
-        document, office, verdict, sia3802_results, code, rooms_data=rooms
+        document,
+        office,
+        verdict,
+        sia3802_results,
+        code,
+        rooms_data=rooms,
+        project_label=project_label,
     )
-    _draw_annex_page(document, office, verdict, code, report_scope)
+    _draw_annex_page(
+        document,
+        office,
+        verdict,
+        code,
+        report_scope,
+        project_label=project_label,
+    )
     total_pages = len(document.pages)
     for page_number, report_page in enumerate(document.pages, 1):
         _draw_footer(
@@ -1338,5 +1335,6 @@ def render_compliance_report_pdf(
             total_pages,
             code,
             ies_logo_path=ies_logo,
+            generated_date=generated_at.strftime("%d/%m/%Y"),
         )
     return document.save(output_path)

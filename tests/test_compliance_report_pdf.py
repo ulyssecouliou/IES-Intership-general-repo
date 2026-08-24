@@ -525,7 +525,14 @@ class RenderedReportTests(unittest.TestCase):
                     statement = translate(key, code)
                     tail = statement.split()[-1].strip(".")
                     self.assertIn(tail, text)
-                self.assertIn(translate("footer_not_certificate", code)[:40], text)
+                self.assertIn(translate("scope_line_1", code)[:40], text)
+
+    def test_header_and_footer_follow_the_ies_compliance_report_pattern(self):
+        text = self._render("en")
+        self.assertIn("SIA Compliance Report", text)
+        self.assertIn("ZOER_32_C1", text)
+        self.assertIn("IES  ·  www.iesve.com", text)
+        self.assertRegex(text, r"\d{2}/\d{2}/\d{4}\s+1$")
 
     def test_undetermined_verdict_is_reported_not_hidden(self):
         # The fixture supplies no reviewed global comparison, so the headline
