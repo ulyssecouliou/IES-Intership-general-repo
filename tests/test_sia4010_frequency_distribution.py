@@ -6,7 +6,6 @@ exercise PASS / FAIL / NOT_CHECKABLE. Nothing is fabricated: bins come verbatim
 from the legend and the band comes only from the reference programs' counts.
 """
 
-import glob
 import unittest
 import warnings
 from pathlib import Path
@@ -28,8 +27,12 @@ from swiss_sia.reference_model.sia4010.frequency_distribution import (
 )
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-TEST2_WB = REPO_ROOT / "SIA_4010_geteilter_Link" / "Test2" / "Resultaterfassung_Test2.xlsx"
-TEST3_WB = REPO_ROOT / "SIA_4010_geteilter_Link" / "Test3" / "Resultaterfassung_Test3.xlsx"
+TEST2_WB = (
+    REPO_ROOT / "SIA_4010_geteilter_Link" / "Test2" / "Resultaterfassung_Test2.xlsx"
+)
+TEST3_WB = (
+    REPO_ROOT / "SIA_4010_geteilter_Link" / "Test3" / "Resultaterfassung_Test3.xlsx"
+)
 HAS_TEST2 = TEST2_WB.is_file()
 HAS_TEST3 = TEST3_WB.is_file()
 # The real Test 2/3/5 extractions read several ~8760-row reference sheets
@@ -81,7 +84,9 @@ class HistogramEngineTests(unittest.TestCase):
         # edges [10, 100, 150]: class0 v<=10, class1 10<v<=100, class2 100<v<=150,
         # overflow v>150. Values chosen to land one in each, incl. a boundary hit.
         counts = histogram_counts([5, 10, 15, 150, 1000, None, "x"], [10, 100, 150])
-        self.assertEqual(counts, (2, 1, 1, 1))  # 5 and 10 -> class0; 15 -> c1; 150 -> c2; 1000 -> overflow
+        self.assertEqual(
+            counts, (2, 1, 1, 1)
+        )  # 5 and 10 -> class0; 15 -> c1; 150 -> c2; 1000 -> overflow
 
     def test_official_displayed_classes_keep_overflow_separate(self):
         counts = histogram_counts(
@@ -122,9 +127,7 @@ class HistogramEngineTests(unittest.TestCase):
         self.assertEqual(band.envelope_lower_counts, (8.0, 4.0, 1.0))
         self.assertEqual(band.envelope_upper_counts, (12.0, 7.0, 3.0))
         for index, expected in enumerate((8.0, 11.0 / 3.0, 1.0)):
-            self.assertAlmostEqual(
-                band.symmetric_lower_counts[index], expected, places=9
-            )
+            self.assertAlmostEqual(band.symmetric_lower_counts[index], expected, places=9)
         self.assertEqual(band.symmetric_upper_counts, (12.0, 7.0, 3.0))
 
     def test_accepted_envelope_is_inside_the_old_diagnostic_band(self):
@@ -137,7 +140,10 @@ class HistogramEngineTests(unittest.TestCase):
             [(0, 100, 3), (2, 1, 0), (7, 7, 7)],
         ):
             band = build_scatter_band(
-                programs, quantity="Q", unit="W", upper_edges=[10, 100],
+                programs,
+                quantity="Q",
+                unit="W",
+                upper_edges=[10, 100],
                 source_locator="loc",
             )
             for index in range(len(band.lower_counts)):
@@ -155,19 +161,27 @@ class HistogramEngineTests(unittest.TestCase):
     def test_build_scatter_band_rejects_mismatched_bin_lengths(self):
         band = build_scatter_band(
             [(10, 5, 2), (1, 2)],  # second program has wrong length -> dropped
-            quantity="Q", unit="W", upper_edges=[10, 100], source_locator="loc",
+            quantity="Q",
+            unit="W",
+            upper_edges=[10, 100],
+            source_locator="loc",
         )
         self.assertEqual(band.program_count, 1)
 
     def test_build_scatter_band_none_when_no_program_contributes(self):
         self.assertIsNone(
-            build_scatter_band([], quantity="Q", unit="W", upper_edges=[10], source_locator="loc")
+            build_scatter_band(
+                [], quantity="Q", unit="W", upper_edges=[10], source_locator="loc"
+            )
         )
 
     def _band(self):
         return build_scatter_band(
             [(10, 5, 2), (8, 7, 3), (12, 4, 1)],
-            quantity="Q", unit="W", upper_edges=[10, 100], source_locator="loc",
+            quantity="Q",
+            unit="W",
+            upper_edges=[10, 100],
+            source_locator="loc",
         )
 
     def test_candidate_within_band_passes(self):
@@ -204,11 +218,11 @@ class HistogramEngineTests(unittest.TestCase):
         """Backward compatibility does not change new comparison behavior."""
 
         self.assertTrue(DistributionStatus.is_passing(DistributionStatus.PASS))
-        self.assertTrue(DistributionStatus.is_passing(
-            DistributionStatus.PASS_WITH_RESERVATION))
+        self.assertTrue(
+            DistributionStatus.is_passing(DistributionStatus.PASS_WITH_RESERVATION)
+        )
         self.assertFalse(DistributionStatus.is_passing(DistributionStatus.FAIL))
-        self.assertFalse(DistributionStatus.is_passing(
-            DistributionStatus.NOT_CHECKABLE))
+        self.assertFalse(DistributionStatus.is_passing(DistributionStatus.NOT_CHECKABLE))
 
     def test_no_reservation_when_the_envelope_is_unknown(self):
         """A band built without envelope data never raises a false reservation."""
@@ -218,9 +232,13 @@ class HistogramEngineTests(unittest.TestCase):
         )
 
         band = DistributionBand(
-            quantity="Q", unit="W", upper_edges=(10.0, 100.0),
-            lower_counts=(0.0, 0.0, 0.0), upper_counts=(20.0, 20.0, 20.0),
-            program_count=3, source_locator="loc",
+            quantity="Q",
+            unit="W",
+            upper_edges=(10.0, 100.0),
+            lower_counts=(0.0, 0.0, 0.0),
+            upper_counts=(20.0, 20.0, 20.0),
+            program_count=3,
+            source_locator="loc",
         )
         outcome = compare_distribution((1, 2, 3), band)
         self.assertEqual(outcome.status, DistributionStatus.PASS)
@@ -255,7 +273,9 @@ class RealLegendAndDataTests(unittest.TestCase):
             (
                 index
                 for index, row in enumerate(rows)
-                if any(isinstance(v, str) and "Solarer Wärmeeintrag gesamt" in v for v in row)
+                if any(
+                    isinstance(v, str) and "Solarer Wärmeeintrag gesamt" in v for v in row
+                )
             ),
             None,
         )
@@ -266,11 +286,15 @@ class RealLegendAndDataTests(unittest.TestCase):
             for index, value in enumerate(header)
             if isinstance(value, str) and "Solarer Wärmeeintrag gesamt" in value
         )
-        series = [row[col] for row in rows[header_row_idx + 1:] if col < len(row)]
-        numeric = [v for v in series if isinstance(v, (int, float)) and not isinstance(v, bool)]
+        series = [row[col] for row in rows[header_row_idx + 1 :] if col < len(row)]
+        numeric = [
+            v for v in series if isinstance(v, (int, float)) and not isinstance(v, bool)
+        ]
         counts = histogram_counts(series, edges)
         self.assertEqual(len(counts), len(edges) + 1)
-        self.assertEqual(sum(counts), len(numeric))  # every hour lands in exactly one class
+        self.assertEqual(
+            sum(counts), len(numeric)
+        )  # every hour lands in exactly one class
 
 
 class SyntheticExtractionTests(unittest.TestCase):
@@ -343,12 +367,15 @@ class SyntheticExtractionTests(unittest.TestCase):
         # No candidate supplied -> every (case, quantity) is NOT_CHECKABLE.
         without = evaluate_distribution_criteria(SYNTHETIC_WB, ["1A", "1B"], quantities)
         self.assertTrue(without)
-        self.assertTrue(all(o.status == DistributionStatus.NOT_CHECKABLE for o in without))
+        self.assertTrue(
+            all(o.status == DistributionStatus.NOT_CHECKABLE for o in without)
+        )
         # Candidate inside the band -> PASS.
         band_1a = self.bands[("1A", "Q1")]
         candidate = {
             ("1A", "Q1"): tuple(
-                (lo + hi) // 2 for lo, hi in zip(band_1a.lower_counts, band_1a.upper_counts)
+                (lo + hi) // 2
+                for lo, hi in zip(band_1a.lower_counts, band_1a.upper_counts)
             ),
             ("1B", "Q1"): self.bands[("1B", "Q1")].lower_counts,
         }
@@ -374,7 +401,9 @@ class Test2ReferenceBandTests(unittest.TestCase):
         cls.bands = build_distribution_bands(
             TEST2_WB,
             case_ids=["2A", "2B", "2C", "2D"],
-            quantities=[DistributionQuantity(header_label=cls.SOLAR, legend_key=cls.SOLAR)],
+            quantities=[
+                DistributionQuantity(header_label=cls.SOLAR, legend_key=cls.SOLAR)
+            ],
         )
 
     def test_bands_built_for_all_scored_cases(self):
@@ -514,9 +543,7 @@ class Test3ReferenceBandTests(unittest.TestCase):
         )
 
     def test_every_scored_case_gets_a_band(self):
-        self.assertEqual(
-            {case for case, _ in self.bands}, set(self.entry["case_ids"])
-        )
+        self.assertEqual({case for case, _ in self.bands}, set(self.entry["case_ids"]))
 
     def test_bands_are_in_watts_with_contributing_programs(self):
         for key, band in self.bands.items():
@@ -569,12 +596,12 @@ def _build_split_header_workbook(path: Path) -> Path:
         """Add one data sheet: case marker + sections on row 1, labels on row 3."""
         sheet = workbook.create_sheet(title)
         sheet.cell(row=1, column=1, value="Resultate")
-        sheet.cell(row=1, column=2, value="Case A")       # case marker
+        sheet.cell(row=1, column=2, value="Case A")  # case marker
         sheet.cell(row=1, column=3, value="Testgroessen")  # scored section label
         if with_boundary:
-            sheet.cell(row=1, column=4, value="Diag")     # diagnostic boundary
-        sheet.cell(row=3, column=3, value="FanPower")     # scored quantity
-        sheet.cell(row=3, column=4, value="Noise")        # diagnostic quantity
+            sheet.cell(row=1, column=4, value="Diag")  # diagnostic boundary
+        sheet.cell(row=3, column=3, value="FanPower")  # scored quantity
+        sheet.cell(row=3, column=4, value="Noise")  # diagnostic quantity
         for offset, value in enumerate(scored_values):
             sheet.cell(row=4 + offset, column=3, value=value)
         for offset, value in enumerate(diag_values):
@@ -603,7 +630,9 @@ class SplitHeaderExtractionTests(unittest.TestCase):
         cls.bands = build_split_header_distribution_bands(
             SPLIT_WB,
             case_ids=["Case A"],
-            quantities=[DistributionQuantity(header_label="FanPower", legend_key="FanPower")],
+            quantities=[
+                DistributionQuantity(header_label="FanPower", legend_key="FanPower")
+            ],
             scored_section="Testgroessen",
             diagnostic_section="Diag",
             candidate_sheet="Daten Testprogramm",
@@ -639,13 +668,9 @@ class SplitHeaderExtractionTests(unittest.TestCase):
             {"Daten ProgA": 1, "Daten ProgB": 1, "Daten ProgC": 0},
         )
         for index, expected in enumerate((0.0, -1.0 / 3.0)):
-            self.assertAlmostEqual(
-                band.symmetric_lower_counts[index], expected, places=9
-            )
+            self.assertAlmostEqual(band.symmetric_lower_counts[index], expected, places=9)
         for index, expected in enumerate((2.0, 3.0)):
-            self.assertAlmostEqual(
-                band.symmetric_upper_counts[index], expected, places=9
-            )
+            self.assertAlmostEqual(band.symmetric_upper_counts[index], expected, places=9)
 
     def test_single_program_bands_are_refused(self):
         from swiss_sia.reference_model.sia4010.distribution_reference import (
@@ -673,7 +698,9 @@ class SplitHeaderExtractionTests(unittest.TestCase):
         bands = build_split_header_distribution_bands(
             lonely,
             case_ids=["Case A"],
-            quantities=[DistributionQuantity(header_label="FanPower", legend_key="FanPower")],
+            quantities=[
+                DistributionQuantity(header_label="FanPower", legend_key="FanPower")
+            ],
             scored_section="Testgroessen",
             diagnostic_section="Diag",
             candidate_sheet="Daten Testprogramm",
@@ -737,10 +764,7 @@ class Test5ReferenceBandTests(unittest.TestCase):
                 self.assertFalse(band.include_overflow)
                 self.assertEqual(len(band.lower_counts), len(band.upper_edges))
                 self.assertTrue(
-                    all(
-                        count >= 0
-                        for count in dict(band.outside_class_counts).values()
-                    )
+                    all(count >= 0 for count in dict(band.outside_class_counts).values())
                 )
                 self.assertTrue(
                     all(lo <= hi for lo, hi in zip(band.lower_counts, band.upper_counts))
@@ -749,9 +773,7 @@ class Test5ReferenceBandTests(unittest.TestCase):
     def test_diagnostic_fan_column_is_not_scored_for_case_5b(self):
         # Only the Daten Tas sheet omits the diagnostic boundary for 5B; the
         # agreed scored set must still exclude the fan power there.
-        self.assertNotIn(
-            ("Test 5B", "Leistung Zu- und Abluftventilator"), self.bands
-        )
+        self.assertNotIn(("Test 5B", "Leistung Zu- und Abluftventilator"), self.bands)
 
 
 if __name__ == "__main__":

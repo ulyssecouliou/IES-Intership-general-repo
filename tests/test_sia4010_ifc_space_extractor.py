@@ -7,7 +7,6 @@ from swiss_sia.reference_model.sia4010.ifc_space_extractor import (
     AbstractBimIfcSpaceExtractor,
 )
 
-
 ROOT = Path(__file__).resolve().parents[1]
 IFC = (
     ROOT

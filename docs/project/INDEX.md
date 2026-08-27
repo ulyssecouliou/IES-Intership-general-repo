@@ -8,6 +8,7 @@
 
 | Document | Rôle |
 |---|---|
+| `HANDOVER_2026-08-28.md` | **Passation finale : état vérifié, commandes, limites et prochaines actions** |
 | `../../CLAUDE.md` | Doctrine non négociable (chargée à chaque session) |
 | `../CLAUDE_REFERENCE.md` | Layout réel, workflow, conventions (corrigé 2026-08-16) |
 | `../ADR-001-architecture-MSP.md` | Décision d'architecture (mono-processus VE, Tkinter, cas générés par script) |

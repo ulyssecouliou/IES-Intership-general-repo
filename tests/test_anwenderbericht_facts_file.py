@@ -15,16 +15,13 @@ import tempfile
 import unittest
 from pathlib import Path
 
-
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / "scripts" / "build_anwenderbericht.py"
 TEST1_FACTS = ROOT / "config" / "anwenderbericht_test1_facts.json"
 
 
 def _load_script():
-    spec = importlib.util.spec_from_file_location(
-        "build_anwenderbericht_script", SCRIPT
-    )
+    spec = importlib.util.spec_from_file_location("build_anwenderbericht_script", SCRIPT)
     module = importlib.util.module_from_spec(spec)
     assert spec.loader is not None
     spec.loader.exec_module(module)
@@ -53,9 +50,7 @@ class FactsFileTests(unittest.TestCase):
             with self.subTest(key=key):
                 with tempfile.TemporaryDirectory() as folder:
                     path = Path(folder) / "facts.json"
-                    path.write_text(
-                        json.dumps({key: ["anything"]}), encoding="utf-8"
-                    )
+                    path.write_text(json.dumps({key: ["anything"]}), encoding="utf-8")
                     with self.assertRaises(SystemExit):
                         self.script._load_facts(path)
 
@@ -83,19 +78,13 @@ class Test1FactsContentTests(unittest.TestCase):
     def test_the_ve_version_matches_the_recorded_snapshot(self) -> None:
         """The version is read from an artifact, so it must not be edited free-hand."""
 
-        self.assertEqual(
-            self.facts["program"]["software_version"], "2025.2.0.0"
-        )
+        self.assertEqual(self.facts["program"]["software_version"], "2025.2.0.0")
 
     def test_the_climate_entry_denies_being_sia_2028(self) -> None:
         """Test 1 runs on ISO 52016-1 DRYCOLD; confusing it with SIA 2028 would
         misdescribe the submission to the authority."""
 
-        climate = [
-            entry
-            for entry in self.facts["data_sources"]
-            if "DRYCOLD" in entry
-        ]
+        climate = [entry for entry in self.facts["data_sources"] if "DRYCOLD" in entry]
         self.assertEqual(len(climate), 1)
         self.assertIn("NOT SIA 2028", climate[0])
 

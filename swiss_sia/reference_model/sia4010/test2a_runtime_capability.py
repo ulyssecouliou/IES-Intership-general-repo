@@ -14,7 +14,7 @@ import hashlib
 import json
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence, Set
+from typing import Any, Dict, List, Mapping, Optional, Sequence, Set
 
 from .external_input_manifest import external_input_readiness
 from .normalized_external_inputs import load_test2a_external_bindings
@@ -30,7 +30,6 @@ from .qualified_aps import QualifiedApsBindings
 from .test2a_diagnostic_aps import (
     build_test2a_2e1_aps_binding_contract,
 )
-
 
 REPORT_SCHEMA_VERSION = "1.0"
 REPORT_DIRECTORY = Path("sia4010_artifacts") / "diagnostics"
@@ -145,8 +144,7 @@ def _profile_inventory(project: Any) -> Dict[str, Any]:
 
     result: Dict[str, Any] = {
         "project_methods": {
-            name: hasattr(project, name)
-            for name in REQUIRED_PROJECT_PROFILE_METHODS
+            name: hasattr(project, name) for name in REQUIRED_PROJECT_PROFILE_METHODS
         },
         "profiles": [],
         "errors": [],
@@ -182,8 +180,7 @@ def _profile_inventory(project: Any) -> Dict[str, Any]:
                     )
                 ),
                 "predicates": {
-                    name: _safe_call(profile, name)
-                    for name in PROFILE_PREDICATES
+                    name: _safe_call(profile, name) for name in PROFILE_PREDICATES
                 },
                 "relevant_members": _relevant_members(profile),
             }
@@ -289,19 +286,13 @@ def _glazed_construction_inventory(
         return result
     result["available"] = True
     try:
-        identifiers = list(
-            cdb_project.get_construction_ids(construction_class)
-        )[:limit]
+        identifiers = list(cdb_project.get_construction_ids(construction_class))[:limit]
     except Exception as exc:
-        result["errors"].append(
-            "get_construction_ids(glazed): {}".format(exc)
-        )
+        result["errors"].append("get_construction_ids(glazed): {}".format(exc))
         return result
     observed: Set[str] = set()
     for identifier in identifiers:
-        construction = _get_construction(
-            cdb_project, identifier, construction_class
-        )
+        construction = _get_construction(cdb_project, identifier, construction_class)
         if construction is None:
             result["constructions"].append(
                 {"identifier": str(identifier), "error": "unresolved"}
@@ -326,17 +317,13 @@ def _glazed_construction_inventory(
                 )
             }
             row["shading_properties"] = shading
-            row["all_property_keys"] = sorted(
-                str(key) for key in properties
-            )
+            row["all_property_keys"] = sorted(str(key) for key in properties)
             observed.update(shading)
         except Exception as exc:
             row["property_error"] = str(exc)
         result["constructions"].append(row)
     result["observed_shading_fields"] = sorted(observed)
-    result["missing_required_fields"] = sorted(
-        REQUIRED_EXTERNAL_SHADE_FIELDS - observed
-    )
+    result["missing_required_fields"] = sorted(REQUIRED_EXTERNAL_SHADE_FIELDS - observed)
     return result
 
 
@@ -394,16 +381,12 @@ def _opening_inventory(project: Any, limit: int = 100) -> Dict[str, Any]:
             try:
                 openings = _as_sequence(get_openings())
             except Exception as exc:
-                result["errors"].append(
-                    "VESurface.get_openings: {}".format(exc)
-                )
+                result["errors"].append("VESurface.get_openings: {}".format(exc))
                 continue
             for opening in openings:
                 result["openings"].append(
                     {
-                        "body": str(
-                            getattr(body, "name", getattr(body, "id", ""))
-                        ),
+                        "body": str(getattr(body, "name", getattr(body, "id", ""))),
                         "surface": str(
                             getattr(
                                 surface,
@@ -506,18 +489,14 @@ def _official_shading_control_status() -> Dict[str, Any]:
     )
     try:
         contract = Sia4010OfficialInputContract.load(contract_path)
-        control = build_test2a_fabric_awning_control(
-            contract.test("2").confirmed_inputs
-        )
+        control = build_test2a_fabric_awning_control(contract.test("2").confirmed_inputs)
         workbook_path = (
             Path(__file__).resolve().parents[3]
             / "SIA_4010_geteilter_Link"
             / "Test2"
             / "Resultaterfassung_Test2.xlsx"
         )
-        workbook_binding = load_test2a_diagnostic_workbook_binding(
-            workbook_path
-        )
+        workbook_binding = load_test2a_diagnostic_workbook_binding(workbook_path)
         diagnostic = build_test2a_optical_diagnostic_contract(
             control,
             workbook_binding.to_dict(),
@@ -577,9 +556,7 @@ def build_test2a_runtime_capability_report(
     source_binding = _source_binding_status(project_path)
     shading_control = _official_shading_control_status()
     missing_project_methods = sorted(
-        name
-        for name, available in profiles["project_methods"].items()
-        if not available
+        name for name, available in profiles["project_methods"].items() if not available
     )
     technical_blockers = []
     if missing_project_methods:
@@ -597,13 +574,9 @@ def build_test2a_runtime_capability_report(
     if not source_binding["ready_for_binding"]:
         technical_blockers.append("TEST2A_SOURCE_BINDINGS_NOT_READY")
     elif not source_binding["native_ve_profile_graph_present"]:
-        technical_blockers.append(
-            "SIA2024_NATIVE_VE_PROFILE_GRAPH_NOT_SUPPLIED"
-        )
+        technical_blockers.append("SIA2024_NATIVE_VE_PROFILE_GRAPH_NOT_SUPPLIED")
     if not shading_control["available"]:
-        technical_blockers.append(
-            "TEST2A_OFFICIAL_SHADING_CONTROL_CONTRACT_UNAVAILABLE"
-        )
+        technical_blockers.append("TEST2A_OFFICIAL_SHADING_CONTROL_CONTRACT_UNAVAILABLE")
 
     if not source_binding["ready_for_binding"]:
         status = "SOURCE_BINDINGS_REQUIRED"
@@ -621,9 +594,11 @@ def build_test2a_runtime_capability_report(
         "project": {
             "name": str(getattr(project, "name", "")),
             "path": str(project_path),
-            "version": str(project.get_version())
-            if hasattr(project, "get_version")
-            else "unavailable",
+            "version": (
+                str(project.get_version())
+                if hasattr(project, "get_version")
+                else "unavailable"
+            ),
         },
         "variant": "test_2A",
         "case_id": "2A",

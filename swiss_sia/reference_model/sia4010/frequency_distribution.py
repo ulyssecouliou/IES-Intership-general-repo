@@ -117,8 +117,10 @@ class DistributionStatus:
         Historical reserved passes remain passing when old reports are read.
         """
 
-        return status in (DistributionStatus.PASS,
-                          DistributionStatus.PASS_WITH_RESERVATION)
+        return status in (
+            DistributionStatus.PASS,
+            DistributionStatus.PASS_WITH_RESERVATION,
+        )
 
 
 @dataclass(frozen=True)
@@ -311,24 +313,32 @@ def compare_distribution(
 
     if band is None:
         return DistributionOutcome(
-            quantity="", unit="", status=DistributionStatus.NOT_CHECKABLE,
+            quantity="",
+            unit="",
+            status=DistributionStatus.NOT_CHECKABLE,
             message="No reference scatter band was available",
-            out_of_band_bins=(), program_count=0, source_locator="",
+            out_of_band_bins=(),
+            program_count=0,
+            source_locator="",
         )
     if candidate_counts is None:
         return DistributionOutcome(
-            quantity=band.quantity, unit=band.unit,
+            quantity=band.quantity,
+            unit=band.unit,
             status=DistributionStatus.NOT_CHECKABLE,
             message="Candidate distribution is missing",
-            out_of_band_bins=(), program_count=band.program_count,
+            out_of_band_bins=(),
+            program_count=band.program_count,
             source_locator=band.source_locator,
         )
     if len(candidate_counts) != len(band.lower_counts):
         return DistributionOutcome(
-            quantity=band.quantity, unit=band.unit,
+            quantity=band.quantity,
+            unit=band.unit,
             status=DistributionStatus.NOT_CHECKABLE,
             message="Candidate and reference bin counts differ; no implicit re-bin",
-            out_of_band_bins=(), program_count=band.program_count,
+            out_of_band_bins=(),
+            program_count=band.program_count,
             source_locator=band.source_locator,
         )
     quality_suffix = ""

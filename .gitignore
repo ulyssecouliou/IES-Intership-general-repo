@@ -229,6 +229,36 @@ roadmap_render/
 tmp/
 docs/build/
 
+# Local tooling/runtime directories. These can inherit restrictive Windows
+# ACLs and must never appear in handover commits.
+.codex_deps/
+.codex_test_runs/
+.codex-test-tmp-*/
+.docx_pip_tmp/
+.docx_render_tmp/
+.pytest_sia4010_test1e_review/
+.test-surface-coeff-*/
+.test-tmp-review/
+.test-tmp-sia3802/
+.test-tmp-weather/
+.test_tmp_equivalent_diagnostic/
+.tmp_pytest_authority/
+.tmp_test_runtime/
+tests/_pytest_full_release_*/
+tmp_*/
+
+# Microsoft Office lock files.
+~$*
+**/~$*
+
+# Raw project correspondence may contain personal/internal information. Keep
+# the Markdown index, but never publish Outlook messages on a public branch.
+docs/project/emails/*.msg
+
+# Controlled external workbook retained locally with its provenance record;
+# redistribution rights are not established for the binary workbook.
+references/standards/en16798/*.xlsm
+
 # --------------------------------------------------------------------------
 # Ajouts 2026-08-01 : repertoires lourds qui n'etaient couverts par AUCUNE
 # regle ci-dessus. Mesure avant ajout : 821 Mo au total, tous non ignores.

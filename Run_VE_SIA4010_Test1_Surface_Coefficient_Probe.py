@@ -40,6 +40,44 @@ def _write_json(path, payload):
     temporary.replace(path)
 
 
+def _resolve_source_aps(project_root):
+    """Return the most relevant qualified Test 1 APS and its audit record.
+
+    The original diagnostic was written for case 640 only.  A qualified-template
+    Test 1E run records the APS directly in its simulation audit, so support both
+    evidence shapes without selecting an untracked ``Vista`` file by timestamp.
+    """
+
+    candidates = (
+        project_root
+        / "sia4010_artifacts"
+        / "simulation"
+        / "SIA4010_test_1_1E_template_apachesim.json",
+        project_root
+        / "sia4010_artifacts"
+        / "diagnostics"
+        / "SIA4010_test_1_640_iso_weather_ab.json",
+    )
+    for audit_path in candidates:
+        if not audit_path.is_file():
+            continue
+        audit = json.loads(audit_path.read_text(encoding="utf-8"))
+        aps_value = audit.get("results_path")
+        if not aps_value:
+            aps_value = (audit.get("aps") or {}).get("path")
+        aps_path = Path(str(aps_value or ""))
+        if not aps_path.is_file():
+            raise RuntimeError(
+                "Surface-coefficient source APS is missing: {}".format(aps_path)
+            )
+        variant = str(audit.get("variant") or "test_1")
+        case_id = str(audit.get("case_id") or "640")
+        return audit_path, aps_path, "{}/{}".format(variant, case_id)
+    raise RuntimeError(
+        "No qualified Test 1 APS audit is available for the active project"
+    )
+
+
 def _room_id(item):
     if isinstance(item, dict):
         return item.get("id") or item.get("room_id")
@@ -107,18 +145,7 @@ def run():
 
     project = iesve.VEProject.get_current_project()
     project_root = Path(str(project.path)).resolve()
-    source_audit = (
-        project_root
-        / "sia4010_artifacts"
-        / "diagnostics"
-        / "SIA4010_test_1_640_iso_weather_ab.json"
-    )
-    if not source_audit.is_file():
-        raise RuntimeError("ISO weather A/B audit is missing: {}".format(source_audit))
-    source = json.loads(source_audit.read_text(encoding="utf-8"))
-    aps_path = Path(str(source.get("aps", {}).get("path", "")))
-    if not aps_path.is_file():
-        raise RuntimeError("Diagnostic APS is missing: {}".format(aps_path))
+    source_audit, aps_path, case_label = _resolve_source_aps(project_root)
 
     results = open_results_reader(aps_path.name)
     variables = get_available_variables(results)
@@ -257,7 +284,7 @@ def run():
         "schema_version": "1.0",
         "generated_at_utc": datetime.now(timezone.utc).isoformat(),
         "status": status,
-        "case": "test_1/640",
+        "case": case_label,
         "source_aps": str(aps_path),
         "source_audit": str(source_audit),
         "available_bindings": sorted(bindings),
@@ -287,7 +314,7 @@ def run():
     _write_json(output, payload)
 
     print("SIA 4010 TEST 1 SURFACE-COEFFICIENT PROBE: {}".format(status))
-    print("Case: test_1/640")
+    print("Case: {}".format(case_label))
     print("APS: {}".format(aps_path))
     print("Bindings: {}".format(sorted(bindings)))
     unresolved = [name for name in VARIABLES if name not in bindings]

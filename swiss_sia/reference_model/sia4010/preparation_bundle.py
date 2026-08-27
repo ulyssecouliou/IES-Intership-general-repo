@@ -33,7 +33,6 @@ from .model_scenario import TEST_CASES
 from .official_input_contract import Sia4010OfficialInputContract
 from .test_loader import BundleFile, OfficialTestBundle, Sia4010TestLoader
 
-
 _OFFICIAL_IFC_SPACE_NUMBERS = {
     "4": ("101",),
     "5": ("100", "102", "200", "201", "202", "203", "204", "205"),
@@ -67,9 +66,7 @@ def _source_files(
     """Return all verified official files required by one preparation record."""
 
     selected = tuple(
-        item
-        for item in bundle.files
-        if test_id in item.test_ids and item.role in roles
+        item for item in bundle.files if test_id in item.test_ids and item.role in roles
     )
     available_roles = {item.role for item in selected}
     missing_roles = sorted(set(roles) - available_roles)
@@ -207,9 +204,7 @@ def prepare_case(
     )
 
     case_manifest_path = repository / "config" / "sia4010_all_classes.json"
-    cell_geometry_manifest_path = (
-        repository / "config" / "sia4010_classes_1a_1b.json"
-    )
+    cell_geometry_manifest_path = repository / "config" / "sia4010_classes_1a_1b.json"
     config_path = repository / "config" / "reference_model_config.json"
     asset_path = repository / "config" / "reference_model_assets.json"
     manifest = _case_manifest or Sia4010CaseManifest.load(case_manifest_path)
@@ -220,9 +215,7 @@ def prepare_case(
         case_id,
         manifest=_external_inputs,
     )
-    input_contract_path = (
-        repository / "config" / "sia4010_official_input_contract.json"
-    )
+    input_contract_path = repository / "config" / "sia4010_official_input_contract.json"
     official_inputs = _official_inputs
     if official_inputs is None and capability.base_test_id != "1":
         official_inputs = Sia4010OfficialInputContract.load(input_contract_path)
@@ -241,9 +234,7 @@ def prepare_case(
                 "Official Test {} preparation expected exactly one IFC source, "
                 "found {}".format(capability.base_test_id, len(ifc_sources))
             )
-        extractor = _ifc_extractor or AbstractBimIfcSpaceExtractor(
-            ifc_sources[0].path
-        )
+        extractor = _ifc_extractor or AbstractBimIfcSpaceExtractor(ifc_sources[0].path)
         if Path(extractor.path).resolve() != Path(ifc_sources[0].path).resolve():
             raise ConfigurationError(
                 "Cached official IFC extractor does not match the verified "
@@ -283,9 +274,7 @@ def prepare_case(
     geometry_audit_path = None
     geometry_validation = None
     if capability.geometry_artifact_supported:
-        geometry_manifest = Sia4010CaseManifest.load(
-            cell_geometry_manifest_path
-        )
+        geometry_manifest = Sia4010CaseManifest.load(cell_geometry_manifest_path)
         parameters = load_configuration(config_path)
         geometry = Sia4010CellGeometryGenerator(geometry_manifest).generate(
             identifier="SIA4010_{}_{}".format(
@@ -379,9 +368,7 @@ def prepare_case(
                 else None
             ),
             "audit_path": (
-                str(geometry_audit_path)
-                if geometry_audit_path is not None
-                else None
+                str(geometry_audit_path) if geometry_audit_path is not None else None
             ),
             "validation": geometry_validation,
         },
@@ -491,9 +478,7 @@ def prepare_class(
     # The official bundle may contain large IFC/DWG/PDF files. Verify every
     # checksum once per class preparation, then reuse the immutable result for
     # each case instead of re-hashing the package dozens of times.
-    verified_bundle = (
-        _verified_bundle or Sia4010TestLoader().load_bundle(official_root)
-    )
+    verified_bundle = _verified_bundle or Sia4010TestLoader().load_bundle(official_root)
     case_manifest = _case_manifest or Sia4010CaseManifest.load(
         repository / "config" / "sia4010_all_classes.json"
     )
@@ -503,9 +488,7 @@ def prepare_class(
     external_inputs = _external_inputs
     external_input_path = project / EXTERNAL_INPUT_FILENAME
     if external_inputs is None and external_input_path.is_file():
-        external_inputs = Sia4010ExternalInputManifest.load(
-            external_input_path
-        )
+        external_inputs = Sia4010ExternalInputManifest.load(external_input_path)
     class_variants = SIA4010_CLASS_TEST_MATRIX[class_id]
     requires_ifc = any(
         get_case_capability(variant, TEST_CASES[variant][0]).base_test_id
@@ -515,9 +498,7 @@ def prepare_class(
     ifc_extractor = _ifc_extractor
     if requires_ifc:
         ifc_sources = tuple(
-            item
-            for item in verified_bundle.files
-            if item.role == "example_building_ifc"
+            item for item in verified_bundle.files if item.role == "example_building_ifc"
         )
         unique_ifc_paths = tuple(dict.fromkeys(item.path for item in ifc_sources))
         if len(unique_ifc_paths) != 1:
@@ -527,9 +508,7 @@ def prepare_class(
             )
         if ifc_extractor is None:
             ifc_extractor = AbstractBimIfcSpaceExtractor(unique_ifc_paths[0])
-        elif Path(ifc_extractor.path).resolve() != Path(
-            unique_ifc_paths[0]
-        ).resolve():
+        elif Path(ifc_extractor.path).resolve() != Path(unique_ifc_paths[0]).resolve():
             raise ConfigurationError(
                 "Cached official IFC extractor does not match the verified "
                 "class source"
@@ -676,9 +655,7 @@ def prepare_all_classes(
         manifest=external_inputs,
     )
     ifc_sources = tuple(
-        item
-        for item in verified_bundle.files
-        if item.role == "example_building_ifc"
+        item for item in verified_bundle.files if item.role == "example_building_ifc"
     )
     unique_ifc_paths = tuple(dict.fromkeys(item.path for item in ifc_sources))
     if len(unique_ifc_paths) != 1:

@@ -13,7 +13,7 @@ import re
 import tempfile
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Mapping, Optional, Tuple
+from typing import Any, Dict, Iterable, List, Mapping, Tuple
 
 from .config import SIA4010_EVIDENCE_DIR
 from .evidence_manager import normalize_reviewer_evidence
@@ -30,41 +30,168 @@ class EvidenceFamily:
 
 FAMILIES: Tuple[EvidenceFamily, ...] = (
     EvidenceFamily(
-        "project_metadata", "Projet et climat", "SIA3802_project_metadata_{project}.csv",
+        "project_metadata",
+        "Projet et climat",
+        "SIA3802_project_metadata_{project}.csv",
         (
-            "project_id", "building_status", "weather_basis", "weather_file",
-            "location", "altitude_m", "review_status", "reviewer",
-            "review_date", "source_document", "source_reference", "notes",
-            "ventilation_strategy", "ventilation_justification",
-            "ventilation_flow_source", "lighting_scope",
-            "lighting_power_source", "aps_outputs_required",
+            "project_id",
+            "building_status",
+            "weather_basis",
+            "weather_file",
+            "location",
+            "altitude_m",
+            "weather_source_authority",
+            "weather_use_case",
+            "weather_scenario_period",
+            "location_source",
+            "altitude_source",
+            "review_status",
+            "reviewer",
+            "reviewer_role",
+            "reviewer_organisation",
+            "reviewer_competence_basis",
+            "reviewer_acceptance_scope",
+            "review_date",
+            "source_document",
+            "source_reference",
+            "notes",
+            "assumptions_status",
+            "assumptions_register",
+            "report_use_acknowledgement",
+            "ventilation_strategy",
+            "ventilation_justification",
+            "ventilation_flow_source",
+            "ventilation_scope",
+            "lighting_scope",
+            "lighting_power_source",
+            "lighting_scope_justification",
+            "system_power_source",
+            "aps_outputs_required",
             "aps_outputs_justification",
         ),
         "Statut du bâtiment et base climatique approuvés par le responsable énergie.",
     ),
     EvidenceFamily(
-        "global_comparison", "Comparaison globale", "SIA3802_global_reference_comparison_{project}.csv",
-        ("project_id", "comparison_scope", "comparison_metric", "project_value", "reference_value", "unit", "comparison_result", "reviewer", "review_date", "review_status", "source_document", "source_reference", "notes"),
+        "usage_mapping",
+        "Affectation SIA 2024",
+        "SIA2024_usage_mapping_{project}.csv",
+        (
+            "room_id",
+            "thermal_template_id",
+            "sia2024_category",
+            "review_status",
+            "reviewer",
+            "source_document",
+            "source_reference",
+            "notes",
+        ),
+        "Correspondance revue entre une pièce ou un template VE et sa catégorie SIA 2024.",
+    ),
+    EvidenceFamily(
+        "global_comparison",
+        "Comparaison globale",
+        "SIA3802_global_reference_comparison_{project}.csv",
+        (
+            "project_id",
+            "comparison_scope",
+            "comparison_metric",
+            "project_value",
+            "reference_value",
+            "unit",
+            "comparison_result",
+            "reviewer",
+            "review_date",
+            "review_status",
+            "source_document",
+            "source_reference",
+            "notes",
+        ),
         "Comparaison du projet complet avec la référence SIA, issue du calcul signé.",
     ),
     EvidenceFamily(
-        "ventilation_control", "Commande ventilation", "SIA3802_ventilation_control_{project}.csv",
-        ("project_id", "system_id", "room_or_zone", "system_type", "control_class", "airflow_band", "specific_airflow_m3_h_m2", "unit", "air_flow_control", "fan_control", "demand_sensor", "control_scope", "minimum_airflow_percent", "time_schedule", "review_status", "reviewer", "review_date", "source_document", "source_reference", "notes"),
+        "ventilation_control",
+        "Commande ventilation",
+        "SIA3802_ventilation_control_{project}.csv",
+        (
+            "project_id",
+            "system_id",
+            "room_or_zone",
+            "system_type",
+            "control_class",
+            "airflow_band",
+            "specific_airflow_m3_h_m2",
+            "unit",
+            "air_flow_control",
+            "fan_control",
+            "demand_sensor",
+            "control_scope",
+            "minimum_airflow_percent",
+            "time_schedule",
+            "review_status",
+            "reviewer",
+            "review_date",
+            "source_document",
+            "source_reference",
+            "notes",
+        ),
         "Une ligne par système ou zone. Les valeurs préremplies depuis VE restent à confirmer.",
     ),
     EvidenceFamily(
-        "cooling_generator", "Générateur froid", "SIA3802_cooling_generators_{project}.csv",
-        ("project_id", "generator_class", "capacity_kw", "nominal_eer", "seer", "unit", "review_status", "reviewer", "review_date", "source_document", "source_reference", "notes"),
+        "cooling_generator",
+        "Générateur froid",
+        "SIA3802_cooling_generators_{project}.csv",
+        (
+            "project_id",
+            "generator_class",
+            "capacity_kw",
+            "nominal_eer",
+            "seer",
+            "unit",
+            "review_status",
+            "reviewer",
+            "review_date",
+            "source_document",
+            "source_reference",
+            "notes",
+        ),
         "Classe, puissance et EER/SEER d'après la fiche fabricant approuvée.",
     ),
     EvidenceFamily(
-        "lighting_mapping", "Commande éclairage", "SIA3874_lighting_control_mapping_{project}.csv",
-        ("room_id", "thermal_template_id", "sia3874_control_type", "daylight_control", "review_status", "reviewer", "source_document", "source_reference", "notes"),
+        "lighting_mapping",
+        "Commande éclairage",
+        "SIA3874_lighting_control_mapping_{project}.csv",
+        (
+            "room_id",
+            "thermal_template_id",
+            "sia3874_control_type",
+            "daylight_control",
+            "review_status",
+            "reviewer",
+            "source_document",
+            "source_reference",
+            "notes",
+        ),
         "Correspondance pièce ou template avec le type de commande SIA 387/4.",
     ),
     EvidenceFamily(
-        "electrical_power", "Puissance électrique", "SIA3802_electrical_power_{project}.csv",
-        ("project_id", "building_status", "required_electrical_power_w_m2", "conditioned_area_m2", "cooling_present", "cooling_category", "unit", "review_status", "reviewer", "review_date", "source_document", "source_reference", "notes"),
+        "electrical_power",
+        "Puissance électrique",
+        "SIA3802_electrical_power_{project}.csv",
+        (
+            "project_id",
+            "building_status",
+            "required_electrical_power_w_m2",
+            "conditioned_area_m2",
+            "cooling_present",
+            "cooling_category",
+            "unit",
+            "review_status",
+            "reviewer",
+            "review_date",
+            "source_document",
+            "source_reference",
+            "notes",
+        ),
         "Puissance de dimensionnement en W/m² et catégorie de nécessité du froid.",
     ),
 )
@@ -74,11 +201,45 @@ FAMILY_BY_KEY = {item.key: item for item in FAMILIES}
 FIELD_CHOICES: Dict[str, Tuple[str, ...]] = {
     "building_status": ("", "NEW_BUILDING", "EXISTING_BUILDING"),
     "review_status": ("pending", "accepted"),
+    "weather_use_case": (
+        "",
+        "SIA3802_COOLING_NEED",
+        "SIA180_SUMMER_COMFORT",
+        "HVAC_SIZING",
+        "MULTIPLE_REVIEWED_USES",
+    ),
+    "assumptions_status": (
+        "",
+        "NO_UNRESOLVED_ASSUMPTIONS",
+        "OPEN_ASSUMPTIONS",
+        "UNDER_REVIEW",
+    ),
+    "report_use_acknowledgement": (
+        "",
+        "ENGINEERING_ASSESSMENT_ONLY",
+        "UNDER_REVIEW",
+    ),
+    "ventilation_strategy": (
+        "",
+        "NATURAL_ONLY",
+        "MECHANICAL_PRESENT",
+        "MECHANICAL_EXPECTED",
+        "UNDER_REVIEW",
+    ),
+    "lighting_scope": ("", "IN_SCOPE", "OUT_OF_SCOPE", "UNDER_REVIEW"),
+    "aps_outputs_required": ("", "YES", "NO", "UNDER_REVIEW"),
     "comparison_scope": ("complete_sia3802_project",),
     "comparison_metric": ("global_energy_expenditure_index_sia380",),
     "comparison_result": ("", "pass", "fail"),
     "system_type": ("", "monozone", "multizone"),
-    "control_class": ("", "one_speed_time_schedule", "two_speeds_time_schedule", "two_speeds_occupancy", "variable_occupancy", "variable_gas_sensor"),
+    "control_class": (
+        "",
+        "one_speed_time_schedule",
+        "two_speeds_time_schedule",
+        "two_speeds_occupancy",
+        "variable_occupancy",
+        "variable_gas_sensor",
+    ),
     "airflow_band": ("", "LE_3", "3_TO_6", "GT_6"),
     "generator_class": ("", "air_cooled", "water_cooled"),
     "cooling_present": ("", "YES", "NO"),
@@ -102,17 +263,21 @@ UNIT_DEFAULTS = {
 
 def safe_project_label(value: object) -> str:
     text = str(value or "VE_Project").strip() or "VE_Project"
-    return (re.sub(r'[^A-Za-z0-9_.-]+', "_", text).strip("._") or "VE_Project")[:80]
+    return (re.sub(r"[^A-Za-z0-9_.-]+", "_", text).strip("._") or "VE_Project")[:80]
 
 
 def evidence_path(project_root: Path, family: str, project_label: str) -> Path:
     spec = FAMILY_BY_KEY[family]
-    return Path(project_root).resolve() / SIA4010_EVIDENCE_DIR / spec.filename.format(
-        project=safe_project_label(project_label)
+    return (
+        Path(project_root).resolve()
+        / SIA4010_EVIDENCE_DIR
+        / spec.filename.format(project=safe_project_label(project_label))
     )
 
 
-def empty_record(family: str, project_label: str, weather_file: str = "") -> Dict[str, str]:
+def empty_record(
+    family: str, project_label: str, weather_file: str = ""
+) -> Dict[str, str]:
     spec = FAMILY_BY_KEY[family]
     row = {field: DEFAULTS.get(field, "") for field in spec.fields}
     if "project_id" in row:
@@ -124,7 +289,9 @@ def empty_record(family: str, project_label: str, weather_file: str = "") -> Dic
     return row
 
 
-def load_records(project_root: Path, family: str, project_label: str, weather_file: str = "") -> List[Dict[str, str]]:
+def load_records(
+    project_root: Path, family: str, project_label: str, weather_file: str = ""
+) -> List[Dict[str, str]]:
     path = evidence_path(project_root, family, project_label)
     if not path.is_file():
         return [empty_record(family, project_label, weather_file)]
@@ -133,7 +300,12 @@ def load_records(project_root: Path, family: str, project_label: str, weather_fi
     return rows or [empty_record(family, project_label, weather_file)]
 
 
-def save_records(project_root: Path, family: str, project_label: str, records: Iterable[Mapping[str, Any]]) -> Dict[str, Any]:
+def save_records(
+    project_root: Path,
+    family: str,
+    project_label: str,
+    records: Iterable[Mapping[str, Any]],
+) -> Dict[str, Any]:
     """Validate and atomically save rows; invalid acceptance is forced pending."""
 
     spec = FAMILY_BY_KEY[family]
@@ -147,11 +319,18 @@ def save_records(project_root: Path, family: str, project_label: str, records: I
         if "project_id" in row:
             row["project_id"] = safe_project_label(project_label)
         normalized = normalize_reviewer_evidence(family, row)
-        requested = row.get("review_status", "").lower() in {"accepted", "approved", "validated"}
-        if requested and not normalized.get("accepted"):
+        governance_complete = family != "project_metadata" or bool(
+            normalized.get("governance_complete")
+        )
+        requested = row.get("review_status", "").lower() in {
+            "accepted",
+            "approved",
+            "validated",
+        }
+        if requested and (not normalized.get("accepted") or not governance_complete):
             row["review_status"] = "pending"
             forced_pending += 1
-        elif normalized.get("accepted"):
+        elif normalized.get("accepted") and governance_complete:
             accepted_count += 1
         cleaned.append(row)
     if not cleaned:
@@ -161,10 +340,14 @@ def save_records(project_root: Path, family: str, project_label: str, records: I
     if target.exists():
         backup = target.with_suffix(target.suffix + ".bak")
         backup.write_bytes(target.read_bytes())
-    fd, temporary_name = tempfile.mkstemp(prefix=target.stem + "_", suffix=".tmp", dir=str(target.parent))
+    fd, temporary_name = tempfile.mkstemp(
+        prefix=target.stem + "_", suffix=".tmp", dir=str(target.parent)
+    )
     try:
         with os.fdopen(fd, "w", encoding="utf-8", newline="") as handle:
-            writer = csv.DictWriter(handle, fieldnames=list(spec.fields), extrasaction="ignore")
+            writer = csv.DictWriter(
+                handle, fieldnames=list(spec.fields), extrasaction="ignore"
+            )
             writer.writeheader()
             writer.writerows(cleaned)
         os.replace(temporary_name, target)
@@ -175,7 +358,9 @@ def save_records(project_root: Path, family: str, project_label: str, records: I
             pass
         raise
     return {
-        "path": str(target), "row_count": len(cleaned),
-        "accepted_count": accepted_count, "forced_pending_count": forced_pending,
+        "path": str(target),
+        "row_count": len(cleaned),
+        "accepted_count": accepted_count,
+        "forced_pending_count": forced_pending,
         "backup": str(backup) if backup else "",
     }

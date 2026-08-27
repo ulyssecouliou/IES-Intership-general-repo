@@ -9,14 +9,8 @@ from swiss_sia.reference_model.sia4010.test2a_diagnostic_workbook import (
     load_test2a_diagnostic_workbook_binding,
 )
 
-
 ROOT = Path(__file__).resolve().parents[1]
-WORKBOOK = (
-    ROOT
-    / "SIA_4010_geteilter_Link"
-    / "Test2"
-    / "Resultaterfassung_Test2.xlsx"
-)
+WORKBOOK = ROOT / "SIA_4010_geteilter_Link" / "Test2" / "Resultaterfassung_Test2.xlsx"
 
 
 @unittest.skipUnless(WORKBOOK.is_file(), "official Test 2 workbook unavailable")
@@ -62,4 +56,3 @@ class Test2ADiagnosticWorkbookTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

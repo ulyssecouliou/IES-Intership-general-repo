@@ -68,7 +68,9 @@ class Sia4010FutureHookTests(unittest.TestCase):
             ComparisonStatus.PASS,
         )
         self.assertEqual(
-            self.comparator.compare_one(_expected(absolute=1.0), _observed(101.01)).status,
+            self.comparator.compare_one(
+                _expected(absolute=1.0), _observed(101.01)
+            ).status,
             ComparisonStatus.FAIL,
         )
 
@@ -89,11 +91,15 @@ class Sia4010FutureHookTests(unittest.TestCase):
 
     def test_official_band_rejects_value_below_and_above_bounds(self):
         self.assertEqual(
-            self.comparator.compare_one(_expected_band(90.0, 110.0), _observed(89.9)).status,
+            self.comparator.compare_one(
+                _expected_band(90.0, 110.0), _observed(89.9)
+            ).status,
             ComparisonStatus.FAIL,
         )
         self.assertEqual(
-            self.comparator.compare_one(_expected_band(90.0, 110.0), _observed(110.1)).status,
+            self.comparator.compare_one(
+                _expected_band(90.0, 110.0), _observed(110.1)
+            ).status,
             ComparisonStatus.FAIL,
         )
 

@@ -8,7 +8,6 @@ from swiss_sia.sia3802_classroom_template import (
     load_classroom_reference,
 )
 
-
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -39,8 +38,7 @@ def test_operational_plan_is_complete_and_preserves_review_boundaries():
     }
     assert summary["automatic_compliance_claim"] is False
     statuses = {
-        item["status"]
-        for item in summary["ve_mappings_requiring_review"].values()
+        item["status"] for item in summary["ve_mappings_requiring_review"].values()
     }
     assert "ENGINEERING_MAPPING_REQUIRES_REVIEW" in statuses
     assert "IMPLEMENTATION_PROXY_REQUIRES_PROJECT_OVERRIDE" in statuses
@@ -53,7 +51,9 @@ def test_operational_fields_have_valid_traceability_and_exact_unit_conversion():
         assert profile.data.validation_error() is None
     for definition in (*plan.gains, *plan.air_exchanges):
         assert definition.evidence.validation_error() is None
-        assert all(field.validation_error() is None for field in definition.properties.values())
+        assert all(
+            field.validation_error() is None for field in definition.properties.values()
+        )
     assert all(
         field.validation_error() is None
         for field in plan.thermal_template.room_conditions.values()

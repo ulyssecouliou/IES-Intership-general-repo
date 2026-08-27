@@ -10,21 +10,38 @@ from typing import Any, Dict, List, Optional
 
 from .config import PROJECT_ROOT, SIA4010_EVIDENCE_DIR
 
-
 TEMPLATE_TARGETS = [
     ("sia4010_evidence_index_template.csv", "SIA4010_evidence_index_{project}.csv"),
     ("sia4010_class_validation_template.csv", "SIA4010_class_validation_{project}.csv"),
-    ("sia4010_official_test_results_template.csv", "SIA4010_official_test_results_{project}.csv"),
-    ("sia4010_software_register_review_template.csv", "SIA4010_software_register_review_{project}.csv"),
+    (
+        "sia4010_official_test_results_template.csv",
+        "SIA4010_official_test_results_{project}.csv",
+    ),
+    (
+        "sia4010_software_register_review_template.csv",
+        "SIA4010_software_register_review_{project}.csv",
+    ),
     ("sia3802_justifications_template.csv", "SIA3802_justifications_{project}.csv"),
     ("sia2024_usage_mapping_template.csv", "SIA2024_usage_mapping_{project}.csv"),
-    ("sia3874_lighting_control_mapping_template.csv", "SIA3874_lighting_control_mapping_{project}.csv"),
+    (
+        "sia3874_lighting_control_mapping_template.csv",
+        "SIA3874_lighting_control_mapping_{project}.csv",
+    ),
     ("sia3802_project_metadata_template.csv", "SIA3802_project_metadata_{project}.csv"),
-    ("sia3802_global_reference_comparison_template.csv", "SIA3802_global_reference_comparison_{project}.csv"),
+    (
+        "sia3802_global_reference_comparison_template.csv",
+        "SIA3802_global_reference_comparison_{project}.csv",
+    ),
     ("sia3802_thermal_bridges_template.csv", "SIA3802_thermal_bridges_{project}.csv"),
-    ("sia3802_cooling_generators_template.csv", "SIA3802_cooling_generators_{project}.csv"),
+    (
+        "sia3802_cooling_generators_template.csv",
+        "SIA3802_cooling_generators_{project}.csv",
+    ),
     ("sia3802_ahu_heat_recovery_template.csv", "SIA3802_ahu_heat_recovery_{project}.csv"),
-    ("sia3802_ventilation_control_template.csv", "SIA3802_ventilation_control_{project}.csv"),
+    (
+        "sia3802_ventilation_control_template.csv",
+        "SIA3802_ventilation_control_{project}.csv",
+    ),
     ("sia3802_electrical_power_template.csv", "SIA3802_electrical_power_{project}.csv"),
     ("glazing_solar_protection_template.csv", "glazing_solar_protection_{project}.csv"),
     ("g_values_audit_template.csv", "g_values_audit_{project}.csv"),
@@ -45,7 +62,9 @@ def prepare_evidence_folder(
     """Copy evidence templates into the project evidence folder with safe names."""
     project_root = Path(project_root).resolve()
     source_root = Path(template_root or PROJECT_ROOT).resolve()
-    project_label = _safe_filename_part(project_label or _detect_ve_project_label() or "VE_Project")
+    project_label = _safe_filename_part(
+        project_label or _detect_ve_project_label() or "VE_Project"
+    )
     template_dir = source_root / "templates" / "evidence"
     evidence_dir = project_root / SIA4010_EVIDENCE_DIR
     evidence_dir.mkdir(parents=True, exist_ok=True)
@@ -55,30 +74,36 @@ def prepare_evidence_folder(
         source = template_dir / template_name
         target = evidence_dir / target_pattern.format(project=project_label)
         if not source.exists():
-            results.append({
-                "template": template_name,
-                "target": str(target),
-                "status": "MISSING_TEMPLATE",
-                "message": f"Template not found: {source}",
-            })
+            results.append(
+                {
+                    "template": template_name,
+                    "target": str(target),
+                    "status": "MISSING_TEMPLATE",
+                    "message": f"Template not found: {source}",
+                }
+            )
             continue
         if target.exists() and not overwrite:
-            results.append({
-                "template": template_name,
-                "target": str(target),
-                "status": "EXISTS",
-                "message": "Kept existing file. Use overwrite=True only if a reset is intentional.",
-            })
+            results.append(
+                {
+                    "template": template_name,
+                    "target": str(target),
+                    "status": "EXISTS",
+                    "message": "Kept existing file. Use overwrite=True only if a reset is intentional.",
+                }
+            )
             continue
 
         target_existed = target.exists()
         _copy_project_template(source, target, project_label)
-        results.append({
-            "template": template_name,
-            "target": str(target),
-            "status": "OVERWRITTEN" if target_existed else "CREATED",
-            "message": "Project evidence template is ready.",
-        })
+        results.append(
+            {
+                "template": template_name,
+                "target": str(target),
+                "status": "OVERWRITTEN" if target_existed else "CREATED",
+                "message": "Project evidence template is ready.",
+            }
+        )
 
     created = sum(1 for item in results if item["status"] in {"CREATED", "OVERWRITTEN"})
     existing = sum(1 for item in results if item["status"] == "EXISTS")
@@ -123,8 +148,8 @@ def prefill_ventilation_control_evidence(
     """
     root = Path(project_root).resolve()
     label = _safe_filename_part(project_label or "VE_Project")
-    target = root / SIA4010_EVIDENCE_DIR / (
-        "SIA3802_ventilation_control_{}.csv".format(label)
+    target = (
+        root / SIA4010_EVIDENCE_DIR / ("SIA3802_ventilation_control_{}.csv".format(label))
     )
     if not target.is_file():
         return {"status": "MISSING", "file": str(target), "row_count": 0}
@@ -169,36 +194,56 @@ def prefill_ventilation_control_evidence(
                 airflow_number = None
             band = ""
             if airflow_number is not None:
-                band = "<=3" if airflow_number <= 3 else ("3-6" if airflow_number <= 6 else ">6")
-            profiles = sorted({
-                str(item.get("variation_profile") or "")
-                for item in (getattr(room, "air_exchange_evidence", []) or [])
-                if isinstance(item, dict) and item.get("variation_profile")
-            })
+                band = (
+                    "LE_3"
+                    if airflow_number <= 3
+                    else ("3_TO_6" if airflow_number <= 6 else "GT_6")
+                )
+            profiles = sorted(
+                {
+                    str(item.get("variation_profile") or "")
+                    for item in (getattr(room, "air_exchange_evidence", []) or [])
+                    if isinstance(item, dict) and item.get("variation_profile")
+                }
+            )
             level = getattr(room, "ventilation_control_level", None)
             row = {name: "" for name in fieldnames}
-            row.update({
-                "project_id": label,
-                "system_id": str(system.get("id") or ""),
-                "room_or_zone": str(getattr(room, "id", "") or getattr(room, "name", "") or ""),
-                "system_type": str(getattr(room, "ventilation_installation_type", "") or ""),
-                "control_class": control_class_by_level.get(level, ""),
-                "airflow_band": band,
-                "specific_airflow_m3_h_m2": "" if airflow_number is None else "{:.6g}".format(airflow_number),
-                "unit": "m3/(h.m2)",
-                "air_flow_control": str(system.get("air_flow_control") or ""),
-                "fan_control": str(system.get("fan_control") or ""),
-                "demand_sensor": str(system.get("demand_controlled_ventilation") or ""),
-                "control_scope": "room" if getattr(room, "hvac_zone", None) else "system",
-                "time_schedule": " | ".join(profiles),
-                "review_status": "pending",
-                "source_document": "IESVE model readback; reviewer confirmation required",
-                "source_reference": (
-                    "VERoomData.get_air_exchanges/get_apache_systems; "
-                    "VEApacheSystem ventilation_ncm/system_controls_ncm"
-                ),
-                "notes": str(getattr(room, "ventilation_control_evidence_note", "") or ""),
-            })
+            row.update(
+                {
+                    "project_id": label,
+                    "system_id": str(system.get("id") or ""),
+                    "room_or_zone": str(
+                        getattr(room, "id", "") or getattr(room, "name", "") or ""
+                    ),
+                    "system_type": str(
+                        getattr(room, "ventilation_installation_type", "") or ""
+                    ),
+                    "control_class": control_class_by_level.get(level, ""),
+                    "airflow_band": band,
+                    "specific_airflow_m3_h_m2": (
+                        "" if airflow_number is None else "{:.6g}".format(airflow_number)
+                    ),
+                    "unit": "m3/(h.m2)",
+                    "air_flow_control": str(system.get("air_flow_control") or ""),
+                    "fan_control": str(system.get("fan_control") or ""),
+                    "demand_sensor": str(
+                        system.get("demand_controlled_ventilation") or ""
+                    ),
+                    "control_scope": (
+                        "room" if getattr(room, "hvac_zone", None) else "system"
+                    ),
+                    "time_schedule": " | ".join(profiles),
+                    "review_status": "pending",
+                    "source_document": "IESVE model readback; reviewer confirmation required",
+                    "source_reference": (
+                        "VERoomData.get_air_exchanges/get_apache_systems; "
+                        "VEApacheSystem ventilation_ncm/system_controls_ncm"
+                    ),
+                    "notes": str(
+                        getattr(room, "ventilation_control_evidence_note", "") or ""
+                    ),
+                }
+            )
             generated.append(row)
     if not generated:
         return {"status": "NO_MECHANICAL_ROOMS", "file": str(target), "row_count": 0}
@@ -210,6 +255,234 @@ def prefill_ventilation_control_evidence(
     except Exception as exc:
         return {"status": "ERROR", "file": str(target), "error": str(exc), "row_count": 0}
     return {"status": "PREFILLED", "file": str(target), "row_count": len(generated)}
+
+
+def _untouched_placeholder(
+    target: Path, placeholder_tokens: tuple[str, ...]
+) -> tuple[List[Dict[str, Any]], Optional[Dict[str, Any]], Optional[str]]:
+    """Read one evidence CSV and identify its untouched generated placeholder."""
+
+    if not target.is_file():
+        return [], None, "MISSING"
+    try:
+        with target.open("r", encoding="utf-8-sig", newline="") as handle:
+            rows = list(csv.DictReader(handle))
+    except Exception:
+        return [], None, "ERROR"
+    if not rows:
+        return [], None, "EMPTY"
+    first = rows[0]
+    payload = " ".join(str(value or "") for value in first.values())
+    untouched = (
+        len(rows) == 1
+        and str(first.get("review_status") or "").strip().lower() == "pending"
+        and any(token in payload for token in placeholder_tokens)
+    )
+    return rows, first if untouched else None, None if untouched else "PRESERVED"
+
+
+def _write_pending_rows(
+    target: Path, fieldnames: List[str], rows: List[Dict[str, Any]]
+) -> Dict[str, Any]:
+    try:
+        with target.open("w", encoding="utf-8", newline="") as handle:
+            writer = csv.DictWriter(handle, fieldnames=fieldnames, extrasaction="ignore")
+            writer.writeheader()
+            writer.writerows(rows)
+    except Exception as exc:
+        return {"status": "ERROR", "file": str(target), "error": str(exc), "row_count": 0}
+    return {"status": "PREFILLED", "file": str(target), "row_count": len(rows)}
+
+
+def _sia2024_category_from_template(template_id: str) -> str:
+    """Extract only an explicit SIA 2024 category encoded in a template name."""
+
+    match = re.search(
+        r"SIA\s*2024[_ -]*(\d{1,2}(?:[._Pp]\d{1,2})?)",
+        str(template_id or ""),
+        flags=re.IGNORECASE,
+    )
+    if not match:
+        return ""
+    return match.group(1).replace("P", ".").replace("p", ".").replace("_", ".")
+
+
+def prefill_cooling_generator_evidence(
+    rooms_data: Any,
+    project_root: Path = PROJECT_ROOT,
+    project_label: Optional[str] = None,
+) -> Dict[str, Any]:
+    """Prefill cooling-generator values explicitly exposed by VE, never inferred ones.
+
+    The rows remain pending because the reviewer must confirm the generator class,
+    manufacturer basis and applicability of the SIA table. Existing edited rows
+    are preserved.
+    """
+
+    root = Path(project_root).resolve()
+    label = _safe_filename_part(project_label or "VE_Project")
+    target = (
+        root / SIA4010_EVIDENCE_DIR / ("SIA3802_cooling_generators_{}.csv".format(label))
+    )
+    rows, placeholder, status = _untouched_placeholder(
+        target,
+        (
+            "air_cooled_OR_water_cooled",
+            "NOMINAL_CAPACITY_KW",
+            "REVIEWER_NAME",
+        ),
+    )
+    if placeholder is None:
+        return {"status": status, "file": str(target), "row_count": len(rows)}
+
+    fieldnames = list(placeholder.keys())
+    generated: List[Dict[str, Any]] = []
+    seen: set[tuple[str, str, str, str, str]] = set()
+    for room in list(rooms_data or []):
+        for system in getattr(room, "hvac_systems", []) or []:
+            if not isinstance(system, dict):
+                continue
+            generator_class = str(system.get("cooling_generator_class") or "").strip()
+            capacity = system.get("cooling_capacity_kw")
+            eer = system.get("eer")
+            seer = system.get("seer")
+            if not any(
+                value not in (None, "")
+                for value in (generator_class, capacity, eer, seer)
+            ):
+                continue
+            identity = tuple(
+                str(value or "")
+                for value in (
+                    system.get("id"),
+                    generator_class,
+                    capacity,
+                    eer,
+                    seer,
+                )
+            )
+            if identity in seen:
+                continue
+            seen.add(identity)
+            row = {name: "" for name in fieldnames}
+            row.update(
+                {
+                    "project_id": label,
+                    "generator_class": generator_class,
+                    "capacity_kw": "" if capacity is None else str(capacity),
+                    "nominal_eer": "" if eer is None else str(eer),
+                    "seer": "" if seer is None else str(seer),
+                    "unit": "EER/SEER=W/W;kW",
+                    "review_status": "pending",
+                    "source_document": "IESVE Apache system readback; manufacturer confirmation required",
+                    "source_reference": "VEApacheSystem cooling/cooling_ncm",
+                    "notes": (
+                        "VE system {}. Values are copied without inference; blank class or "
+                        "performance fields remain unresolved until reviewer confirmation."
+                    ).format(system.get("id") or system.get("name") or "not identified"),
+                }
+            )
+            generated.append(row)
+    if not generated:
+        return {"status": "NO_EXPOSED_COOLING_DATA", "file": str(target), "row_count": 0}
+    return _write_pending_rows(target, fieldnames, generated)
+
+
+def prefill_sia2024_usage_evidence(
+    rooms_data: Any,
+    project_root: Path = PROJECT_ROOT,
+    project_label: Optional[str] = None,
+) -> Dict[str, Any]:
+    """Prefill explicit template-encoded SIA 2024 categories as pending evidence."""
+
+    root = Path(project_root).resolve()
+    label = _safe_filename_part(project_label or "VE_Project")
+    target = root / SIA4010_EVIDENCE_DIR / ("SIA2024_usage_mapping_{}.csv".format(label))
+    rows, placeholder, status = _untouched_placeholder(
+        target, ("ROOM_ID_OR_BLANK", "TEMPLATE_ID_OR_BLANK", "REVIEWER_TO_COMPLETE")
+    )
+    if placeholder is None:
+        return {"status": status, "file": str(target), "row_count": len(rows)}
+    fieldnames = list(placeholder.keys())
+    generated: List[Dict[str, Any]] = []
+    seen: set[str] = set()
+    for room in list(rooms_data or []):
+        template_id = str(getattr(room, "thermal_template_id", "") or "").strip()
+        category = _sia2024_category_from_template(template_id)
+        if not template_id or not category or template_id in seen:
+            continue
+        seen.add(template_id)
+        row = {name: "" for name in fieldnames}
+        row.update(
+            {
+                "thermal_template_id": template_id,
+                "sia2024_category": category,
+                "review_status": "pending",
+                "source_document": "IESVE thermal-template name readback",
+                "source_reference": "VERoomData thermal_template_id",
+                "notes": (
+                    "Category was explicitly encoded in the VE template name; "
+                    "reviewer must confirm the intended room use before acceptance."
+                ),
+            }
+        )
+        generated.append(row)
+    if not generated:
+        return {"status": "NO_EXPLICIT_CATEGORY", "file": str(target), "row_count": 0}
+    return _write_pending_rows(target, fieldnames, generated)
+
+
+def prefill_lighting_control_evidence(
+    rooms_data: Any,
+    project_root: Path = PROJECT_ROOT,
+    project_label: Optional[str] = None,
+) -> Dict[str, Any]:
+    """Prefill VE lighting-control facts while leaving the SIA 387/4 class pending."""
+
+    root = Path(project_root).resolve()
+    label = _safe_filename_part(project_label or "VE_Project")
+    target = (
+        root
+        / SIA4010_EVIDENCE_DIR
+        / ("SIA3874_lighting_control_mapping_{}.csv".format(label))
+    )
+    rows, placeholder, status = _untouched_placeholder(
+        target, ("ROOM_ID_OR_BLANK", "TEMPLATE_ID_OR_BLANK", "REVIEWER_TO_COMPLETE")
+    )
+    if placeholder is None:
+        return {"status": status, "file": str(target), "row_count": len(rows)}
+    fieldnames = list(placeholder.keys())
+    generated: List[Dict[str, Any]] = []
+    for room in list(rooms_data or []):
+        profile = str(getattr(room, "daylight_dimming_profile", "") or "").strip()
+        template_id = str(getattr(room, "thermal_template_id", "") or "").strip()
+        room_id = str(getattr(room, "id", "") or "").strip()
+        if not profile and not template_id:
+            continue
+        row = {name: "" for name in fieldnames}
+        row.update(
+            {
+                "room_id": room_id,
+                "thermal_template_id": template_id,
+                "sia3874_control_type": "",
+                "daylight_control": profile,
+                "review_status": "pending",
+                "source_document": "IESVE lighting-control readback",
+                "source_reference": "VERoomData daylight_dimming_profile",
+                "notes": (
+                    "VE facts were prefilled; the SIA 387/4 control type remains "
+                    "blank until confirmed from the controlled source."
+                ),
+            }
+        )
+        generated.append(row)
+    if not generated:
+        return {
+            "status": "NO_LIGHTING_CONTROL_FACTS",
+            "file": str(target),
+            "row_count": 0,
+        }
+    return _write_pending_rows(target, fieldnames, generated)
 
 
 def _detect_ve_project_label() -> str:

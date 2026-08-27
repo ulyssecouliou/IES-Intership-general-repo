@@ -10,7 +10,6 @@ n'est pas reproductible. Ils ne sont pas des outils du projet.
 |---|---|
 | `generate_corrected_ref.py` | a produit les corrections des Tables 30 et 32 après le défaut n°1 de l'audit |
 | `update_json.py` | **écrit** `refs/reference-data/test-1.ref.json` |
-| `inspect_extremes.py`, `inspect_zone3.py` | sondes ponctuelles d'inspection du classeur |
 | `table_30_corrected.json`, `table_32_corrected.json` | intermédiaires produits par `generate_corrected_ref.py`, **jamais audités ni signés** |
 
 Les deux `.json` vivaient dans `refs/reference-data/`, que `CLAUDE.md` déclare
@@ -20,13 +19,12 @@ auditée. Ils sont conservés ici comme pièces d'historique.
 
 ## Pourquoi ils ne sont pas réutilisables
 
-**Chemins absolus.** Sept occurrences de `C:\Users\ulysse.couliou\...` réparties
-dans `generate_corrected_ref.py` (l. 5, 215), `update_json.py` (l. 7, 10, 246),
-`inspect_extremes.py` (l. 3) et `inspect_zone3.py` (l. 3). Ils ne tournent sur
-aucune autre machine.
+Les chemins sont désormais relatifs au dépôt. Le dossier officiel SIA 4010
+peut être fourni par `SIA_4010_DOSSIER`; sinon le script cherche
+`SIA_4010_geteilter_Link/` à la racine du dépôt.
 
-**Aucun test, aucune idempotence.** `update_json.py` réécrit le fichier de
-référence sans vérification préalable ni sauvegarde.
+`update_json.py` est un outil de migration historique : il refuse toute
+écriture sans l'option explicite `--write`. Il ne fait pas partie du produit.
 
 ## Ce qu'il faut faire à la place
 

@@ -21,16 +21,11 @@ from .normalized_external_inputs import (
     load_normalized_binding_payload,
 )
 
-
 CONTROL_INPUT_ID = "sia3874_2017_tables9_10_controls"
 SHADING_DEVICE_INPUT_ID = "sia_example_building_fabric_awning_detail"
 AUTHORITY_INPUT_ID = "sia_authority_test3_3k_3l_device_clarification"
-SHADING_CONTROL_IDS = tuple(
-    "shade_type_{}".format(index) for index in range(1, 4)
-)
-LIGHTING_CONTROL_IDS = tuple(
-    "lighting_type_{}".format(index) for index in range(1, 7)
-)
+SHADING_CONTROL_IDS = tuple("shade_type_{}".format(index) for index in range(1, 4))
+LIGHTING_CONTROL_IDS = tuple("lighting_type_{}".format(index) for index in range(1, 7))
 FORBIDDEN_PLACEHOLDERS = {
     "assumed",
     "missing",
@@ -82,13 +77,10 @@ def _text(value: Any, context: str) -> str:
     if not result:
         raise ConfigurationError("{} must be non-empty text".format(context))
     lowered = result.casefold()
-    if (
-        lowered in FORBIDDEN_PLACEHOLDERS
-        or (result.startswith("<") and result.endswith(">"))
+    if lowered in FORBIDDEN_PLACEHOLDERS or (
+        result.startswith("<") and result.endswith(">")
     ):
-        raise ConfigurationError(
-            "{} contains a forbidden placeholder".format(context)
-        )
+        raise ConfigurationError("{} contains a forbidden placeholder".format(context))
     return result
 
 
@@ -105,9 +97,7 @@ def _exact_keys(
     unknown = sorted(set(payload) - required - optional)
     if missing or unknown:
         raise ConfigurationError(
-            "{} keys mismatch; missing={}, unknown={}".format(
-                context, missing, unknown
-            )
+            "{} keys mismatch; missing={}, unknown={}".format(context, missing, unknown)
         )
 
 
@@ -152,9 +142,7 @@ def _json_value(value: Any, context: str) -> Any:
             for index, item in enumerate(value)
         )
     raise ConfigurationError(
-        "{} contains unsupported JSON value {}".format(
-            context, type(value).__name__
-        )
+        "{} contains unsupported JSON value {}".format(context, type(value).__name__)
     )
 
 
@@ -237,9 +225,7 @@ class NormalizedSia3874Controls:
                 "source_locator": parameter.source_locator,
             }
             if parameter.source_kind == "SCENARIO_PARAMETER":
-                row["scenario_parameter_ref"] = (
-                    parameter.scenario_parameter_ref
-                )
+                row["scenario_parameter_ref"] = parameter.scenario_parameter_ref
             else:
                 row["value"] = parameter.value
             parameters.append(row)
@@ -258,12 +244,8 @@ class NormalizedSia3874Controls:
                 for item in self.signals
             ],
             "parameters": parameters,
-            "shading_controls": [
-                item.to_dict() for item in self.shading_controls
-            ],
-            "lighting_controls": [
-                item.to_dict() for item in self.lighting_controls
-            ],
+            "shading_controls": [item.to_dict() for item in self.shading_controls],
+            "lighting_controls": [item.to_dict() for item in self.lighting_controls],
             "source_locator": self.source_locator,
         }
 
@@ -350,9 +332,7 @@ def _load_signals(payload: Any) -> Tuple[NormalizedControlSignal, ...]:
         )
         value_type = _text(item["value_type"], context + ".value_type")
         if value_type not in {"boolean", "integer", "number", "string"}:
-            raise ConfigurationError(
-                "{} has unsupported value_type".format(context)
-            )
+            raise ConfigurationError("{} has unsupported value_type".format(context))
         signals.append(
             NormalizedControlSignal(
                 signal_id=_identifier(item["id"], context + ".id"),
@@ -361,9 +341,7 @@ def _load_signals(payload: Any) -> Tuple[NormalizedControlSignal, ...]:
                 ),
                 unit=_text(item["unit"], context + ".unit"),
                 value_type=value_type,
-                source_locator=_text(
-                    item["source_locator"], context + ".source_locator"
-                ),
+                source_locator=_text(item["source_locator"], context + ".source_locator"),
             )
         )
     identifiers = [item.signal_id for item in signals]
@@ -391,17 +369,13 @@ def _load_parameters(payload: Any) -> Tuple[NormalizedControlParameter, ...]:
             context,
             optional={"value", "scenario_parameter_ref"},
         )
-        source_kind = _text(
-            item["source_kind"], context + ".source_kind"
-        )
+        source_kind = _text(item["source_kind"], context + ".source_kind")
         if source_kind not in {
             "DERIVED_NORMATIVE_VALUE",
             "NORMATIVE_CONSTANT",
             "SCENARIO_PARAMETER",
         }:
-            raise ConfigurationError(
-                "{} has unsupported source_kind".format(context)
-            )
+            raise ConfigurationError("{} has unsupported source_kind".format(context))
         has_value = "value" in item
         has_reference = "scenario_parameter_ref" in item
         if source_kind == "SCENARIO_PARAMETER":
@@ -414,13 +388,9 @@ def _load_parameters(payload: Any) -> Tuple[NormalizedControlParameter, ...]:
             raise ConfigurationError(
                 "{} normative parameter must have only value".format(context)
             )
-        value_type = _text(
-            item["value_type"], context + ".value_type"
-        )
+        value_type = _text(item["value_type"], context + ".value_type")
         if value_type not in {"boolean", "integer", "number", "string"}:
-            raise ConfigurationError(
-                "{} has unsupported value_type".format(context)
-            )
+            raise ConfigurationError("{} has unsupported value_type".format(context))
         parameters.append(
             NormalizedControlParameter(
                 parameter_id=_identifier(item["id"], context + ".id"),
@@ -428,9 +398,7 @@ def _load_parameters(payload: Any) -> Tuple[NormalizedControlParameter, ...]:
                 unit=_text(item["unit"], context + ".unit"),
                 source_kind=source_kind,
                 value=(
-                    _json_value(item["value"], context + ".value")
-                    if has_value
-                    else None
+                    _json_value(item["value"], context + ".value") if has_value else None
                 ),
                 scenario_parameter_ref=(
                     _identifier(
@@ -440,9 +408,7 @@ def _load_parameters(payload: Any) -> Tuple[NormalizedControlParameter, ...]:
                     if has_reference
                     else ""
                 ),
-                source_locator=_text(
-                    item["source_locator"], context + ".source_locator"
-                ),
+                source_locator=_text(item["source_locator"], context + ".source_locator"),
             )
         )
     identifiers = [item.parameter_id for item in parameters]
@@ -499,9 +465,7 @@ def _validate_ast(
                     "{} references unknown {}".format(context, reference)
                 )
     if operator == "comparison":
-        comparison = _text(
-            payload["operator"], context + ".operator"
-        )
+        comparison = _text(payload["operator"], context + ".operator")
         if comparison not in {"<", "<=", "==", "!=", ">=", ">"}:
             raise ConfigurationError(
                 "{} has unsupported comparison operator".format(context)
@@ -526,9 +490,7 @@ def _validate_ast(
                 state_ids=state_ids,
             )
     if operator in {"and", "or"}:
-        for index, child in enumerate(
-            _array(payload["args"], context + ".args")
-        ):
+        for index, child in enumerate(_array(payload["args"], context + ".args")):
             _validate_ast(
                 child,
                 "{}.args[{}]".format(context, index),
@@ -537,9 +499,7 @@ def _validate_ast(
                 state_ids=state_ids,
             )
     if operator == "linear_interpolation":
-        for index, point_raw in enumerate(
-            _array(payload["points"], context + ".points")
-        ):
+        for index, point_raw in enumerate(_array(payload["points"], context + ".points")):
             point_context = "{}.points[{}]".format(context, index)
             point = _mapping(point_raw, point_context)
             _exact_keys(point, {"x", "y"}, point_context)
@@ -601,9 +561,7 @@ def _load_control(
     )
     normative_type = item["normative_type"]
     if isinstance(normative_type, bool) or not isinstance(normative_type, int):
-        raise ConfigurationError(
-            "{}.normative_type must be an integer".format(context)
-        )
+        raise ConfigurationError("{}.normative_type must be an integer".format(context))
     inputs = tuple(
         _identifier(value, context + ".inputs")
         for value in _array(item["inputs"], context + ".inputs")
@@ -614,9 +572,7 @@ def _load_control(
     )
     parameters = tuple(
         _identifier(value, context + ".parameters")
-        for value in _array(
-            item["parameters"], context + ".parameters", allow_empty=True
-        )
+        for value in _array(item["parameters"], context + ".parameters", allow_empty=True)
     )
     unknown_signals = sorted((set(inputs) | set(outputs)) - signal_ids)
     unknown_parameters = sorted(set(parameters) - parameter_ids)
@@ -674,21 +630,13 @@ def _load_control(
         for action_index, action_raw in enumerate(
             _array(rule["actions"], rule_context + ".actions")
         ):
-            action_context = "{}.actions[{}]".format(
-                rule_context, action_index
-            )
+            action_context = "{}.actions[{}]".format(rule_context, action_index)
             action = _mapping(action_raw, action_context)
-            _exact_keys(
-                action, {"target_ref", "value"}, action_context
-            )
-            target = _identifier(
-                action["target_ref"], action_context + ".target_ref"
-            )
+            _exact_keys(action, {"target_ref", "value"}, action_context)
+            target = _identifier(action["target_ref"], action_context + ".target_ref")
             if target not in set(outputs) | state_ids:
                 raise ConfigurationError(
-                    "{} references unknown target {}".format(
-                        action_context, target
-                    )
+                    "{} references unknown target {}".format(action_context, target)
                 )
             actions.append(
                 {
@@ -730,14 +678,10 @@ def _load_control(
         action_context = "{}.default_actions[{}]".format(context, index)
         action = _mapping(action_raw, action_context)
         _exact_keys(action, {"target_ref", "value"}, action_context)
-        target = _identifier(
-            action["target_ref"], action_context + ".target_ref"
-        )
+        target = _identifier(action["target_ref"], action_context + ".target_ref")
         if target not in set(outputs) | state_ids:
             raise ConfigurationError(
-                "{} references unknown target {}".format(
-                    action_context, target
-                )
+                "{} references unknown target {}".format(action_context, target)
             )
         default_actions.append(
             {
@@ -761,9 +705,7 @@ def _load_control(
     return NormalizedControlFunction(
         control_id=_identifier(item["id"], context + ".id"),
         normative_type=normative_type,
-        source_locator=_text(
-            item["source_locator"], context + ".source_locator"
-        ),
+        source_locator=_text(item["source_locator"], context + ".source_locator"),
         input_refs=inputs,
         parameter_refs=parameters,
         states=tuple(states),
@@ -803,12 +745,8 @@ def load_sia3874_controls(
         for value in _array(payload["tables"], "SIA 387/4 tables")
     )
     if tables != ("9", "10"):
-        raise ConfigurationError(
-            "SIA 387/4 controls must bind exactly Tables 9 and 10"
-        )
-    conventions = _mapping(
-        payload["conventions"], "SIA 387/4 conventions"
-    )
+        raise ConfigurationError("SIA 387/4 controls must bind exactly Tables 9 and 10")
+    conventions = _mapping(payload["conventions"], "SIA 387/4 conventions")
     required_conventions = {
         "angle_convention",
         "boundary_comparisons",
@@ -838,9 +776,7 @@ def load_sia3874_controls(
             signal_ids=signal_ids,
             parameter_ids=parameter_ids,
         )
-        for index, raw in enumerate(
-            _array(controls["shading"], "controls.shading")
-        )
+        for index, raw in enumerate(_array(controls["shading"], "controls.shading"))
     )
     lighting = tuple(
         _load_control(
@@ -849,9 +785,7 @@ def load_sia3874_controls(
             signal_ids=signal_ids,
             parameter_ids=parameter_ids,
         )
-        for index, raw in enumerate(
-            _array(controls["lighting"], "controls.lighting")
-        )
+        for index, raw in enumerate(_array(controls["lighting"], "controls.lighting"))
     )
     shading_ids = tuple(item.control_id for item in shading)
     lighting_ids = tuple(item.control_id for item in lighting)
@@ -870,21 +804,15 @@ def load_sia3874_controls(
     for control in shading:
         if control.normative_type != int(control.control_id.rsplit("_", 1)[1]):
             raise ConfigurationError(
-                "{} normative_type does not match its id".format(
-                    control.control_id
-                )
+                "{} normative_type does not match its id".format(control.control_id)
             )
     for control in lighting:
         if control.normative_type != int(control.control_id.rsplit("_", 1)[1]):
             raise ConfigurationError(
-                "{} normative_type does not match its id".format(
-                    control.control_id
-                )
+                "{} normative_type does not match its id".format(control.control_id)
             )
     return NormalizedSia3874Controls(
-        standard_edition=_text(
-            payload["standard_edition"], "standard_edition"
-        ),
+        standard_edition=_text(payload["standard_edition"], "standard_edition"),
         tables=tables,
         conventions=normalized_conventions,
         signals=signals,
@@ -930,9 +858,7 @@ def load_shading_device(
         states.append(
             {
                 "id": _identifier(state["id"], context + ".id"),
-                "properties": _json_value(
-                    properties, context + ".properties"
-                ),
+                "properties": _json_value(properties, context + ".properties"),
                 "source_locator": _text(
                     state["source_locator"], context + ".source_locator"
                 ),
@@ -946,9 +872,7 @@ def load_shading_device(
     return NormalizedShadingDevice(
         device_id=_identifier(payload["device_id"], "device_id"),
         device_type=_text(payload["device_type"], "device_type"),
-        mounting_position=_text(
-            payload["mounting_position"], "mounting_position"
-        ),
+        mounting_position=_text(payload["mounting_position"], "mounting_position"),
         states=tuple(states),
         source_locator=_text(payload["source_locator"], "source_locator"),
     )
@@ -996,9 +920,7 @@ def load_authority_decision(
     ):
         context = "resolved_parameters[{}]".format(index)
         item = _mapping(raw, context)
-        _exact_keys(
-            item, {"id", "value", "unit", "source_locator"}, context
-        )
+        _exact_keys(item, {"id", "value", "unit", "source_locator"}, context)
         resolved.append(
             {
                 "id": _identifier(item["id"], context + ".id"),
@@ -1009,9 +931,7 @@ def load_authority_decision(
                 ),
             }
         )
-    if "test3_3k_3l_shading_device_identity" not in {
-        item["id"] for item in resolved
-    }:
+    if "test3_3k_3l_shading_device_identity" not in {item["id"] for item in resolved}:
         raise ConfigurationError(
             "Authority decision does not resolve the 3K/3L shading device identity"
         )
@@ -1019,9 +939,7 @@ def load_authority_decision(
         decision_id=_identifier(payload["decision_id"], "decision_id"),
         issued_by=_text(payload["issued_by"], "issued_by"),
         issued_date=_text(payload["issued_date"], "issued_date"),
-        document_reference=_text(
-            payload["document_reference"], "document_reference"
-        ),
+        document_reference=_text(payload["document_reference"], "document_reference"),
         question=_text(payload["question"], "question"),
         decision=_text(payload["decision"], "decision"),
         applicable_cases=cases,
@@ -1048,9 +966,7 @@ def load_test3_external_bindings(
                 readiness.blocked_input_ids
             )
         )
-    expected = required_external_input_ids(
-        readiness.variant, readiness.case_id
-    )
+    expected = required_external_input_ids(readiness.variant, readiness.case_id)
     indexed = {item.input_id: item for item in readiness.evidence}
     if set(indexed) != set(expected) or len(indexed) != len(expected):
         raise ConfigurationError(
@@ -1066,12 +982,9 @@ def load_test3_external_bindings(
     return Test3ExternalBindings(
         common=load_common_cell_external_bindings(readiness),
         controls=load_sia3874_controls(indexed[CONTROL_INPUT_ID]),
-        shading_device=load_shading_device(
-            indexed[SHADING_DEVICE_INPUT_ID]
-        ),
+        shading_device=load_shading_device(indexed[SHADING_DEVICE_INPUT_ID]),
         authority_decision=authority,
         evidence_sha256=tuple(
-            (input_id, indexed[input_id].binding_artifact_sha256)
-            for input_id in expected
+            (input_id, indexed[input_id].binding_artifact_sha256) for input_id in expected
         ),
     )

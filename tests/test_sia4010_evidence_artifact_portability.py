@@ -19,7 +19,6 @@ import subprocess
 import unittest
 from pathlib import Path
 
-
 ROOT = Path(__file__).resolve().parents[1]
 
 #: Validation report -> the schema its binding artifact must declare.
@@ -90,9 +89,7 @@ class EvidenceArtifactPortabilityTests(unittest.TestCase):
                 with self.subTest(artifact=relative, field=trail):
                     self.assertIsNone(
                         _ABSOLUTE.search(value),
-                        "{}{} is absolute: {!r}".format(
-                            relative, trail, value
-                        ),
+                        "{}{} is absolute: {!r}".format(relative, trail, value),
                     )
 
     def test_report_binding_paths_resolve_from_the_report_directory(self):
@@ -105,9 +102,7 @@ class EvidenceArtifactPortabilityTests(unittest.TestCase):
             with self.subTest(report=relative):
                 report = _load(relative)
                 binding = report["binding_artifact"]
-                self.assertIsNotNone(
-                    binding, "{} declares no binding".format(relative)
-                )
+                self.assertIsNotNone(binding, "{} declares no binding".format(relative))
                 declared = Path(binding["path"])
                 self.assertFalse(
                     declared.is_absolute(),
@@ -116,13 +111,11 @@ class EvidenceArtifactPortabilityTests(unittest.TestCase):
                 resolved = ((ROOT / relative).parent / declared).resolve()
                 self.assertTrue(
                     resolved.is_file(),
-                    "{} binding does not resolve to {}".format(
-                        relative, resolved
-                    ),
+                    "{} binding does not resolve to {}".format(relative, resolved),
                 )
-                self.assertEqual(_load(
-                    resolved.relative_to(ROOT).as_posix()
-                )["schema_id"], schema_id)
+                self.assertEqual(
+                    _load(resolved.relative_to(ROOT).as_posix())["schema_id"], schema_id
+                )
 
     def test_binding_artifacts_are_not_in_a_git_ignored_directory(self):
         """A binding excluded by .gitignore is absent from every fresh clone."""
@@ -139,9 +132,7 @@ class EvidenceArtifactPortabilityTests(unittest.TestCase):
                 self.assertNotEqual(
                     result.returncode,
                     0,
-                    "{} is git-ignored: {}".format(
-                        relative, result.stdout.strip()
-                    ),
+                    "{} is git-ignored: {}".format(relative, result.stdout.strip()),
                 )
 
     def test_weather_binding_declares_how_to_regenerate_its_derived_epw(self):
@@ -159,9 +150,7 @@ class EvidenceArtifactPortabilityTests(unittest.TestCase):
         self.assertIn("generated_weather", declared["why"])
         self.assertIn("KLO", declared["regenerate_with"])
         source = (
-            ROOT
-            / "references/standards/sia2028"
-            / declared["source_of_truth"]
+            ROOT / "references/standards/sia2028" / declared["source_of_truth"]
         ).resolve()
         self.assertTrue(source.is_file(), source)
 
@@ -170,16 +159,12 @@ class EvidenceArtifactPortabilityTests(unittest.TestCase):
 
         import scripts.build_iso52016_chapter7_binding as producteur
 
-        source = str(
-            ROOT / "config" / "iso52016_chapter7_confirmed_inputs.json"
-        )
+        source = str(ROOT / "config" / "iso52016_chapter7_confirmed_inputs.json")
         first = json.dumps(producteur.construire(source), sort_keys=True)
         second = json.dumps(producteur.construire(source), sort_keys=True)
         self.assertEqual(first, second)
 
-        on_disk = _load(
-            "refs/reference-data/iso52016_chapter7_test_cell.binding.json"
-        )
+        on_disk = _load("refs/reference-data/iso52016_chapter7_test_cell.binding.json")
         self.assertEqual(
             json.dumps(on_disk, sort_keys=True),
             first,

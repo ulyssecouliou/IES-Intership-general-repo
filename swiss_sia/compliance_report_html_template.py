@@ -12,7 +12,7 @@ Aleo-style slab display paired with a Camphor-Pro-style geometric sans (system
 fallbacks, since the CSP does not load web fonts).
 """
 
-TEMPLATE = r'''<title>__PAGE_TITLE__</title>
+TEMPLATE = r"""<title>__PAGE_TITLE__</title>
 <style>
   :root{
     --bg:#F5F7F9; --surface:#FFFFFF; --surface-2:#ECEFF3;
@@ -116,6 +116,16 @@ TEMPLATE = r'''<title>__PAGE_TITLE__</title>
   .limitations .lt{font-weight:650; font-size:13px; color:var(--ink); display:flex; align-items:center; gap:8px;}
   .limitations .lt::before{content:""; width:7px; height:7px; border-radius:2px; background:var(--unknown); flex:0 0 auto;}
   .limitations .lw{font-size:12.5px; color:var(--ink-2); line-height:1.5; margin-top:3px;}
+  .governance{margin-top:24px; background:var(--surface); border:1px solid var(--border); border-radius:var(--r); padding:16px 18px; box-shadow:var(--shadow);}
+  .governance h2{margin:0 0 5px; font-family:var(--font-display); font-size:15px; color:var(--ink);}
+  .governance .legal{font-size:12.5px; line-height:1.5; color:var(--ink-2); margin:8px 0 14px; padding:10px 12px; background:var(--bg); border-left:4px solid var(--unknown);}
+  .gov-item{border-top:1px solid var(--border); padding:11px 0;}
+  .gov-item:first-of-type{border-top:0;}
+  .gov-head{display:flex; justify-content:space-between; gap:12px; align-items:center; font-weight:650;}
+  .gov-status{font-size:11px; padding:3px 7px; border-radius:999px; background:var(--bg); white-space:nowrap;}
+  .gov-grid{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:7px 18px; margin-top:7px; font-size:12px; line-height:1.45; color:var(--ink-2);}
+  .gov-grid b{display:block; color:var(--ink-3); font-size:10px; text-transform:uppercase; letter-spacing:.04em;}
+  @media(max-width:760px){.gov-grid{grid-template-columns:1fr;}}
 
   .summary{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin-top:24px;}
   .tile{background:var(--surface); border:1px solid var(--border); border-radius:var(--r); padding:14px 16px; box-shadow:var(--shadow); position:relative; overflow:hidden; cursor:pointer; text-align:left; transition:transform .12s ease, border-color .12s ease;}
@@ -242,6 +252,7 @@ TEMPLATE = r'''<title>__PAGE_TITLE__</title>
     <div id="rows"></div>
   </div>
   <section class="limitations" id="limitations" hidden></section>
+  <section class="governance" id="governance" hidden></section>
   <div class="foot" id="foot"></div>
 </div>
 
@@ -269,6 +280,7 @@ window.__SIA_DATA__ = __DATA_JSON__;
     $("verdictTitle").textContent=v.title||""; $("verdictDetail").innerHTML=v.detail||"";
     outstanding();
     limitations();
+    governance();
     $("search").placeholder=UI.search||""; $("sortLbl").textContent=UI.sort||""; $("reset").textContent=UI.reset||"";
     $("foot").innerHTML=UI.scope||"";
     var so=[["section",UI.sort_section],["status",UI.sort_status],["severity",UI.sort_severity],["name",UI.sort_name],["type",UI.sort_type]];
@@ -311,6 +323,21 @@ window.__SIA_DATA__ = __DATA_JSON__;
         return '<li><div class="lt">'+esc(it.title||"")+'</div>'+
           '<div class="lw">'+esc(it.why||"")+'</div></li>';
       }).join("")+'</ul>';
+  }
+
+  function governance(){
+    var el=$("governance"), g=M.governance||{}, items=g.findings||[], l=g.labels||{};
+    if(!el||!items.length){if(el)el.hidden=true;return;}
+    el.hidden=false;
+    el.innerHTML='<h2>'+esc(g.title||"")+'</h2>'+
+      '<div><strong>'+esc(g.overall_label||"")+':</strong> '+esc(g.overall_status_label||"")+'</div>'+
+      '<div class="legal">'+esc(g.legal_wording||"")+'</div>'+
+      items.map(function(it){return '<div class="gov-item">'+
+        '<div class="gov-head"><span>'+esc(it.title||"")+'</span><span class="gov-status">'+esc(it.status_label||it.status||"")+'</span></div>'+
+        '<div class="gov-grid"><div><b>'+esc(l.evidence||"")+'</b>'+esc(it.evidence||"")+'</div>'+
+        '<div><b>'+esc(l.uncertainty||"")+'</b>'+esc(it.uncertainty||"")+'</div>'+
+        '<div><b>'+esc(l.action||"")+'</b>'+esc(it.required_action||"")+'</div>'+
+        '<div><b>'+esc(l.responsible||"")+'</b>'+esc(it.responsible_party||"")+'</div></div></div>';}).join('');
   }
 
   function filtered(){
@@ -418,4 +445,4 @@ window.__SIA_DATA__ = __DATA_JSON__;
   $("themeLbl").textContent=curDark()?UI.dark:UI.light;
 })();
 </script>
-'''
+"""

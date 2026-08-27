@@ -23,7 +23,6 @@ except Exception:  # pragma: no cover - only available inside IESVE.
 from swiss_sia.config import OUTPUT_DIR
 from swiss_sia import data_extractor, simulation_results
 
-
 data_extractor = importlib.reload(data_extractor)
 simulation_results = importlib.reload(simulation_results)
 VEDataExtractor = data_extractor.VEDataExtractor
@@ -44,8 +43,7 @@ def jsonable(value: Any, depth: int = 0) -> Any:
         return value
     if isinstance(value, dict):
         return {
-            str(key): jsonable(val, depth + 1)
-            for key, val in list(value.items())[:80]
+            str(key): jsonable(val, depth + 1) for key, val in list(value.items())[:80]
         }
     if isinstance(value, (list, tuple, set)):
         return [jsonable(item, depth + 1) for item in list(value)[:80]]
@@ -139,6 +137,7 @@ def probe_cdb(extractor: VEDataExtractor, construction_ids: List[str]) -> Dict[s
 
     try:
         import iesve
+
         classes = extractor._get_cdb_construction_classes(iesve)
     except Exception as exc:
         diagnostics["class_error"] = str(exc)
@@ -172,21 +171,27 @@ def probe_cdb(extractor: VEDataExtractor, construction_ids: List[str]) -> Dict[s
                 else:
                     ids = cdb_project.get_construction_ids(construction_class)
                 ids_list = [str(item) for item in list(ids)[:20]]
-                project_info["construction_id_samples"].append({
-                    "class": class_label,
-                    "count_or_sample_size": len(ids_list),
-                    "sample": ids_list,
-                })
+                project_info["construction_id_samples"].append(
+                    {
+                        "class": class_label,
+                        "count_or_sample_size": len(ids_list),
+                        "sample": ids_list,
+                    }
+                )
             except Exception as exc:
-                project_info["construction_id_samples"].append({
-                    "class": class_label,
-                    "error": str(exc),
-                })
+                project_info["construction_id_samples"].append(
+                    {
+                        "class": class_label,
+                        "error": str(exc),
+                    }
+                )
 
             for construction_id in construction_ids[:12]:
                 if construction_id in project_info["target_resolution"]:
                     continue
-                construction = extractor._safe_get_cdb_construction(cdb_project, construction_id, construction_class)
+                construction = extractor._safe_get_cdb_construction(
+                    cdb_project, construction_id, construction_class
+                )
                 if construction is not None:
                     project_info["target_resolution"][construction_id] = {
                         "class": class_label,
@@ -228,25 +233,45 @@ def probe_results_reader(project: Any) -> Dict[str, Any]:
             variables = simulation_results.get_available_variables(results_file)
             levels: Dict[str, int] = {}
             for variable in variables:
-                level = str(variable.get("model_level") or variable.get("level") or "unknown")
+                level = str(
+                    variable.get("model_level") or variable.get("level") or "unknown"
+                )
                 levels[level] = levels.get(level, 0) + 1
 
-            file_info.update({
-                "opened": True,
-                "results_per_hour": simulation_results.get_results_per_hour(results_file),
-                "results_per_day_attr": jsonable(safe_attr(results_file, "results_per_day")),
-                "first_day_attr": jsonable(safe_attr(results_file, "first_day")),
-                "last_day_attr": jsonable(safe_attr(results_file, "last_day")),
-                "variable_count": len(variables),
-                "variable_levels": levels,
-                "variables_sample": jsonable(variables[:250]),
-                "room_list_sample": jsonable(safe_call(results_file, "get_room_list")),
-                "apache_systems_sample": jsonable(safe_call(results_file, "get_apache_systems")),
-                "energy_uses_sample": jsonable(safe_call(results_file, "get_energy_uses")),
-                "energy_sources_sample": jsonable(safe_call(results_file, "get_energy_sources")),
-                "energy_meters_sample": jsonable(safe_call(results_file, "get_energy_meters")),
-                "component_objects_sample": jsonable(safe_call(results_file, "get_component_objects")),
-            })
+            file_info.update(
+                {
+                    "opened": True,
+                    "results_per_hour": simulation_results.get_results_per_hour(
+                        results_file
+                    ),
+                    "results_per_day_attr": jsonable(
+                        safe_attr(results_file, "results_per_day")
+                    ),
+                    "first_day_attr": jsonable(safe_attr(results_file, "first_day")),
+                    "last_day_attr": jsonable(safe_attr(results_file, "last_day")),
+                    "variable_count": len(variables),
+                    "variable_levels": levels,
+                    "variables_sample": jsonable(variables[:250]),
+                    "room_list_sample": jsonable(
+                        safe_call(results_file, "get_room_list")
+                    ),
+                    "apache_systems_sample": jsonable(
+                        safe_call(results_file, "get_apache_systems")
+                    ),
+                    "energy_uses_sample": jsonable(
+                        safe_call(results_file, "get_energy_uses")
+                    ),
+                    "energy_sources_sample": jsonable(
+                        safe_call(results_file, "get_energy_sources")
+                    ),
+                    "energy_meters_sample": jsonable(
+                        safe_call(results_file, "get_energy_meters")
+                    ),
+                    "component_objects_sample": jsonable(
+                        safe_call(results_file, "get_component_objects")
+                    ),
+                }
+            )
         except Exception as exc:
             file_info["error"] = str(exc)
         finally:
@@ -260,7 +285,9 @@ def probe_results_reader(project: Any) -> Dict[str, Any]:
     return diagnostics
 
 
-def probe_project(body_limit: int, surface_limit: int, opening_limit: int) -> Dict[str, Any]:
+def probe_project(
+    body_limit: int, surface_limit: int, opening_limit: int
+) -> Dict[str, Any]:
     """Capture a diagnostic snapshot of the active IESVE project."""
     if iesve is None:
         raise RuntimeError("The iesve Python module is only available inside IESVE.")
@@ -274,7 +301,9 @@ def probe_project(body_limit: int, surface_limit: int, opening_limit: int) -> Di
     payload: Dict[str, Any] = {
         "probe_schema_version": PROBE_SCHEMA_VERSION,
         "data_extractor_path": DATA_EXTRACTOR_MODULE_PATH,
-        "data_extractor_has_cdb_helper": hasattr(VEDataExtractor, "_get_cdb_construction_classes"),
+        "data_extractor_has_cdb_helper": hasattr(
+            VEDataExtractor, "_get_cdb_construction_classes"
+        ),
         "generated_at": datetime.now().isoformat(timespec="seconds"),
         "project_path": jsonable(safe_attr(project, "path")),
         "body_count": len(bodies),
@@ -291,10 +320,22 @@ def probe_project(body_limit: int, surface_limit: int, opening_limit: int) -> Di
         room_data = extractor.get_room_data(body)
         body_info["room_data"] = {
             "class": room_data.__class__.__name__ if room_data is not None else None,
-            "conditions": jsonable(extractor.get_room_conditions(room_data)) if room_data else {},
-            "apache_systems": jsonable(extractor.get_apache_systems(room_data)) if room_data else {},
-            "internal_gains": child_get_values(extractor.get_internal_gains(room_data)) if room_data else [],
-            "air_exchanges": child_get_values(extractor.get_air_exchanges(room_data)) if room_data else [],
+            "conditions": (
+                jsonable(extractor.get_room_conditions(room_data)) if room_data else {}
+            ),
+            "apache_systems": (
+                jsonable(extractor.get_apache_systems(room_data)) if room_data else {}
+            ),
+            "internal_gains": (
+                child_get_values(extractor.get_internal_gains(room_data))
+                if room_data
+                else []
+            ),
+            "air_exchanges": (
+                child_get_values(extractor.get_air_exchanges(room_data))
+                if room_data
+                else []
+            ),
         }
 
         surfaces = extractor.get_surfaces(body)
@@ -305,32 +346,44 @@ def probe_project(body_limit: int, surface_limit: int, opening_limit: int) -> Di
             surface_info = object_header(extractor, surface)
             raw_properties = safe_call(surface, "get_properties")
             raw_areas = safe_call(surface, "get_areas")
-            surface_info.update({
-                "normalized_properties": jsonable(extractor.get_surface_properties(surface)),
-                "raw_properties": jsonable(raw_properties),
-                "areas": jsonable(raw_areas),
-                "constructions": jsonable(extractor.get_constructions(surface)),
-                "resolved_constructions": jsonable([
-                    extractor.get_construction_properties(construction_id)
-                    for construction_id in extractor.get_constructions(surface)
-                ]),
-                "adjacencies": jsonable(extractor.get_adjacencies(surface)),
-            })
+            surface_info.update(
+                {
+                    "normalized_properties": jsonable(
+                        extractor.get_surface_properties(surface)
+                    ),
+                    "raw_properties": jsonable(raw_properties),
+                    "areas": jsonable(raw_areas),
+                    "constructions": jsonable(extractor.get_constructions(surface)),
+                    "resolved_constructions": jsonable(
+                        [
+                            extractor.get_construction_properties(construction_id)
+                            for construction_id in extractor.get_constructions(surface)
+                        ]
+                    ),
+                    "adjacencies": jsonable(extractor.get_adjacencies(surface)),
+                }
+            )
 
             openings = extractor.get_openings(surface)
             surface_info["opening_count"] = len(openings)
             surface_info["openings"] = []
             for opening in openings[:opening_limit]:
                 opening_info = object_header(extractor, opening)
-                opening_info.update({
-                    "normalized_properties": jsonable(extractor.get_opening_properties(opening)),
-                    "raw_properties": jsonable(safe_call(opening, "get_properties")),
-                    "areas": jsonable(safe_call(opening, "get_areas")),
-                    "construction": jsonable(safe_call(opening, "get_construction")),
-                    "resolved_construction": jsonable(
-                        extractor.get_construction_properties(extractor.get_opening_construction(opening))
-                    ),
-                })
+                opening_info.update(
+                    {
+                        "normalized_properties": jsonable(
+                            extractor.get_opening_properties(opening)
+                        ),
+                        "raw_properties": jsonable(safe_call(opening, "get_properties")),
+                        "areas": jsonable(safe_call(opening, "get_areas")),
+                        "construction": jsonable(safe_call(opening, "get_construction")),
+                        "resolved_construction": jsonable(
+                            extractor.get_construction_properties(
+                                extractor.get_opening_construction(opening)
+                            )
+                        ),
+                    }
+                )
                 surface_info["openings"].append(opening_info)
 
             body_info["surfaces"].append(surface_info)
@@ -363,7 +416,9 @@ def run_with_defaults() -> str:
 
 def main() -> None:
     """Command-line entry point for running the diagnostic probe."""
-    parser = argparse.ArgumentParser(description="Dump a small diagnostic snapshot of the active IESVE model.")
+    parser = argparse.ArgumentParser(
+        description="Dump a small diagnostic snapshot of the active IESVE model."
+    )
     parser.add_argument("--body-limit", type=int, default=DEFAULT_BODY_LIMIT)
     parser.add_argument("--surface-limit", type=int, default=DEFAULT_SURFACE_LIMIT)
     parser.add_argument("--opening-limit", type=int, default=DEFAULT_OPENING_LIMIT)

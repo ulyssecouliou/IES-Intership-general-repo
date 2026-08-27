@@ -67,7 +67,8 @@ class HealthScoreCalculator:
                 category_scores.append(category_score * weight)
 
         total_weight = sum(
-            weight for category, weight in CATEGORY_WEIGHTS.items()
+            weight
+            for category, weight in CATEGORY_WEIGHTS.items()
             if category in score_categories
         )
         return sum(category_scores) / total_weight if category_scores else 0.0
@@ -94,10 +95,7 @@ class HealthScoreCalculator:
     def _calculate_completeness_score(self, sia3802_results: Dict[str, Any]) -> float:
         """Score missing or non-checkable data alerts."""
         alerts = sia3802_results.get("alerts", [])
-        missing_alerts = [
-            alert for alert in alerts
-            if self._is_missing_data_alert(alert)
-        ]
+        missing_alerts = [alert for alert in alerts if self._is_missing_data_alert(alert)]
         return self._score_from_alerts(missing_alerts)
 
     def _calculate_consistency_score(self, sia3802_results: Dict[str, Any]) -> float:
@@ -107,9 +105,7 @@ class HealthScoreCalculator:
             for category in ["envelope", "openings", "ventilation", "gains", "hvac"]
         ]
         numeric_scores = [
-            float(score)
-            for score in category_scores
-            if isinstance(score, (int, float))
+            float(score) for score in category_scores if isinstance(score, (int, float))
         ]
         if not numeric_scores:
             return 0.0
@@ -122,7 +118,9 @@ class HealthScoreCalculator:
     ) -> float:
         """Score the absence of critical alerts."""
         alerts = sia3802_results.get("alerts", []) + sia4010_results.get("alerts", [])
-        critical_errors = [alert for alert in alerts if alert.severity == Severity.CRITICAL]
+        critical_errors = [
+            alert for alert in alerts if alert.severity == Severity.CRITICAL
+        ]
         if not critical_errors:
             return 100.0
         return max(0.0, 100.0 - len(critical_errors) * 10)
@@ -131,10 +129,12 @@ class HealthScoreCalculator:
     def _is_missing_data_alert(alert: Alert) -> bool:
         """Return true when an alert indicates missing or non-checkable data."""
         rule = str(alert.rule or "").upper()
-        text = " ".join([
-            str(alert.description or ""),
-            str(alert.recommendation or ""),
-        ]).lower()
+        text = " ".join(
+            [
+                str(alert.description or ""),
+                str(alert.recommendation or ""),
+            ]
+        ).lower()
         markers = (
             "MISSING",
             "UNAVAILABLE",
@@ -185,9 +185,13 @@ class HealthScoreCalculator:
         # client building: it is omitted from the client SIA 380/2-only scope.
         if include_sia4010:
             detailed_scores["SIA4010_ENERGY"] = sia4010_results.get("score", 0.0)
-            detailed_scores["SIA4010_EVIDENCE_READINESS"] = sia4010_results.get("readiness_score", 0.0)
+            detailed_scores["SIA4010_EVIDENCE_READINESS"] = sia4010_results.get(
+                "readiness_score", 0.0
+            )
 
             for test_name, test_data in sia4010_results.get("tests", {}).items():
-                detailed_scores[f"SIA4010_{test_name.upper()}"] = test_data.get("score", 0.0)
+                detailed_scores[f"SIA4010_{test_name.upper()}"] = test_data.get(
+                    "score", 0.0
+                )
 
         return detailed_scores

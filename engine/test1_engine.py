@@ -59,7 +59,8 @@ from engine import scatter_band
 _ICI = os.path.dirname(os.path.abspath(__file__))
 _RACINE = os.path.abspath(os.path.join(_ICI, os.pardir))
 CHEMIN_REFERENCE_DEFAUT = os.path.join(
-    _RACINE, 'refs', 'reference-data', 'test-1.ref.json')
+    _RACINE, "refs", "reference-data", "test-1.ref.json"
+)
 
 
 # --------------------------------------------------------------------------
@@ -68,26 +69,36 @@ CHEMIN_REFERENCE_DEFAUT = os.path.join(
 
 # Monthly keys as they appear in test-1.ref.json.
 MOIS = (
-    'month_01', 'month_02', 'month_03', 'month_04', 'month_05', 'month_06',
-    'month_07', 'month_08', 'month_09', 'month_10', 'month_11', 'month_12',
+    "month_01",
+    "month_02",
+    "month_03",
+    "month_04",
+    "month_05",
+    "month_06",
+    "month_07",
+    "month_08",
+    "month_09",
+    "month_10",
+    "month_11",
+    "month_12",
 )
 
 # The 4 reference programs that define the Streubereich for case 1E.
 # Case 1E has no ISO 52016-1 column (AUDIT.md pt 3; traceability/
 # test-1.spec.md §6, identified in the Test 1 Anwenderberichte).
 PROGRAMMES_REFERENCE_1E = (
-    'ida_ice_5_0_beta_23',
-    'excel_sia_380_2',
-    'energyplus_openstudio_9_1_0',
-    'tas_edsl_9_5_2',
+    "ida_ice_5_0_beta_23",
+    "excel_sia_380_2",
+    "energyplus_openstudio_9_1_0",
+    "tas_edsl_9_5_2",
 )
 
 # The only Test 1 case that carries a pass/fail criterion (traceability/test-1.spec.md §6).
-CAS_AVEC_CRITERE = ('1E',)
+CAS_AVEC_CRITERE = ("1E",)
 
 # Validation classes that require Test 1 (traceability/test-1.spec.md §2,
 # SIA 4010:2023 §4.5 tab. 63 -- confirmed: all classes EXCEPT class 5).
-CLASSES_REQUERANT_TEST1 = ('1A', '1B', '2A', '2B', '3', '4A', '4B')
+CLASSES_REQUERANT_TEST1 = ("1A", "1B", "2A", "2B", "3", "4A", "4B")
 
 TOLERANCE_DEFAUT = 1e-6
 
@@ -95,6 +106,7 @@ TOLERANCE_DEFAUT = 1e-6
 # --------------------------------------------------------------------------
 # Loading the frozen reference
 # --------------------------------------------------------------------------
+
 
 def charger_reference(chemin=None):
     """Load the frozen and signed reference values for Test 1.
@@ -109,13 +121,14 @@ def charger_reference(chemin=None):
     """
     if chemin is None:
         chemin = CHEMIN_REFERENCE_DEFAUT
-    with open(chemin, encoding='utf-8') as flux:
+    with open(chemin, encoding="utf-8") as flux:
         return json.load(flux)
 
 
 # --------------------------------------------------------------------------
 # Scalar value extraction
 # --------------------------------------------------------------------------
+
 
 def _valeur_reelle(feuille):
     """Extract `value` from a reference cell `{value, unit, cell, [note]}`.
@@ -126,7 +139,7 @@ def _valeur_reelle(feuille):
     """
     if not feuille:
         return None
-    valeur = feuille.get('value')
+    valeur = feuille.get("value")
     if isinstance(valeur, bool):
         return None
     return float(valeur) if isinstance(valeur, (int, float)) else None
@@ -146,12 +159,12 @@ def _valeur_candidate(valeur):
     if valeur is None:
         return None
     if isinstance(valeur, bool):
-        raise TypeError('Valeur candidate booleenne inattendue : ' + repr(valeur))
+        raise TypeError("Valeur candidate booleenne inattendue : " + repr(valeur))
     if isinstance(valeur, (int, float)):
         return float(valeur)
-    if isinstance(valeur, dict) and 'value' in valeur:
-        return _valeur_candidate(valeur['value'])
-    raise TypeError('Forme de valeur candidate non supportee : ' + repr(valeur))
+    if isinstance(valeur, dict) and "value" in valeur:
+        return _valeur_candidate(valeur["value"])
+    raise TypeError("Forme de valeur candidate non supportee : " + repr(valeur))
 
 
 # --------------------------------------------------------------------------
@@ -161,6 +174,7 @@ def _valeur_candidate(valeur):
 # Streubereich der enthaltenen Referenzprogramme liegen" -- confirmed word for
 # word in `Spezifikation_Test1.pdf`, section "Testkriterien".
 # --------------------------------------------------------------------------
+
 
 def calculer_plage_dispersion(valeurs_programmes):
     """Compute the Streubereich (dispersion band) of the reference programs.
@@ -188,13 +202,14 @@ def calculer_plage_dispersion(valeurs_programmes):
     the SIA in `engine/tests/test_scatter_band.py`).
     """
     if not valeurs_programmes:
-        raise ValueError('Aucune valeur de programme de reference fournie.')
+        raise ValueError("Aucune valeur de programme de reference fournie.")
     bande = scatter_band.build_band(valeurs_programmes, floor_at_zero=True)
     return (bande.mean, bande.max_deviation, bande.lower_bound, bande.upper_bound)
 
 
-def evaluer_periode_1e(enregistrement_reference, valeur_candidate,
-                        tolerance=TOLERANCE_DEFAUT):
+def evaluer_periode_1e(
+    enregistrement_reference, valeur_candidate, tolerance=TOLERANCE_DEFAUT
+):
     """Pass/fail verdict for case 1E for ONE period (a month or the annual) of ONE
     quantity (heating OR cooling).
 
@@ -212,45 +227,52 @@ def evaluer_periode_1e(enregistrement_reference, valeur_candidate,
         valeur = _valeur_reelle(enregistrement_reference.get(programme))
         if valeur is None:
             raise ValueError(
-                'Programme de reference manquant ou non numerique (' + programme +
-                ') dans un enregistrement du cas 1E : ' + repr(enregistrement_reference))
+                "Programme de reference manquant ou non numerique ("
+                + programme
+                + ") dans un enregistrement du cas 1E : "
+                + repr(enregistrement_reference)
+            )
         valeurs_programmes.append(valeur)
 
     moyenne, ecart_max, plage_min, plage_max = calculer_plage_dispersion(
-        valeurs_programmes)
+        valeurs_programmes
+    )
 
-    plage_max_stockee = _valeur_reelle(enregistrement_reference.get('range_max'))
-    plage_min_stockee = _valeur_reelle(enregistrement_reference.get('range_min'))
+    plage_max_stockee = _valeur_reelle(enregistrement_reference.get("range_max"))
+    plage_min_stockee = _valeur_reelle(enregistrement_reference.get("range_min"))
     coherence_reference = (
-        plage_max_stockee is not None and plage_min_stockee is not None and
-        abs(plage_max_stockee - plage_max) <= tolerance and
-        abs(plage_min_stockee - plage_min) <= tolerance)
+        plage_max_stockee is not None
+        and plage_min_stockee is not None
+        and abs(plage_max_stockee - plage_max) <= tolerance
+        and abs(plage_min_stockee - plage_min) <= tolerance
+    )
 
     valeur = _valeur_candidate(valeur_candidate)
 
     resultat = {
-        'valeur_candidate': valeur,
-        'moyenne_programmes': moyenne,
-        'ecart_max': ecart_max,
-        'plage_min': plage_min,
-        'plage_max': plage_max,
-        'coherence_reference': coherence_reference,
+        "valeur_candidate": valeur,
+        "moyenne_programmes": moyenne,
+        "ecart_max": ecart_max,
+        "plage_min": plage_min,
+        "plage_max": plage_max,
+        "coherence_reference": coherence_reference,
     }
 
     if valeur is None:
-        resultat['conforme'] = None
-        resultat['motif'] = 'Candidat non fourni (VE Script pas encore execute).'
+        resultat["conforme"] = None
+        resultat["motif"] = "Candidat non fourni (VE Script pas encore execute)."
         return resultat
 
-    resultat['conforme'] = (plage_min - tolerance) <= valeur <= (plage_max + tolerance)
-    resultat['marge_min'] = valeur - plage_min
-    resultat['marge_max'] = plage_max - valeur
+    resultat["conforme"] = (plage_min - tolerance) <= valeur <= (plage_max + tolerance)
+    resultat["marge_min"] = valeur - plage_min
+    resultat["marge_max"] = plage_max - valeur
     return resultat
 
 
 # --------------------------------------------------------------------------
 # Informative cases -- NO verdict (traceability/test-1.spec.md §6)
 # --------------------------------------------------------------------------
+
 
 def comparer_periode_informative(enregistrement_reference, valeur_candidate):
     """Comparison WITHOUT pass/fail verdict (cases 600/640/900/940/600FF/900FF).
@@ -265,32 +287,35 @@ def comparer_periode_informative(enregistrement_reference, valeur_candidate):
     Energy+/OpenStudio, EDSL-Tas).
     """
     valeur = _valeur_candidate(valeur_candidate)
-    noms_programmes = [cle for cle in enregistrement_reference
-                        if cle != 'testprogramm_candidate']
+    noms_programmes = [
+        cle for cle in enregistrement_reference if cle != "testprogramm_candidate"
+    ]
 
     comparaisons = {}
     for nom in noms_programmes:
         valeur_reference = _valeur_reelle(enregistrement_reference[nom])
         if valeur is None or valeur_reference is None:
             comparaisons[nom] = {
-                'reference': valeur_reference,
-                'delta_absolu': None,
-                'delta_relatif_pct': None,
+                "reference": valeur_reference,
+                "delta_absolu": None,
+                "delta_relatif_pct": None,
             }
             continue
         delta = valeur - valeur_reference
-        delta_relatif = (delta / valeur_reference * 100.0) if valeur_reference != 0 else None
+        delta_relatif = (
+            (delta / valeur_reference * 100.0) if valeur_reference != 0 else None
+        )
         comparaisons[nom] = {
-            'reference': valeur_reference,
-            'delta_absolu': delta,
-            'delta_relatif_pct': delta_relatif,
+            "reference": valeur_reference,
+            "delta_absolu": delta,
+            "delta_relatif_pct": delta_relatif,
         }
 
     return {
-        'valeur_candidate': valeur,
-        'comparaisons': comparaisons,
-        'type_controle': 'informatif',
-        'conforme': None,  # explicit: NO criterion for this case (spec §6)
+        "valeur_candidate": valeur,
+        "comparaisons": comparaisons,
+        "type_controle": "informatif",
+        "conforme": None,  # explicit: NO criterion for this case (spec §6)
     }
 
 
@@ -302,33 +327,34 @@ def comparer_periode_informative(enregistrement_reference, valeur_candidate):
 #   - Table 32 (annual extremes, 600FF/900FF only): `extremes` node.
 # --------------------------------------------------------------------------
 
+
 def _perioder_energie(noeud_cas, candidat_cas):
     """Sensible heating/cooling (Tables 28/29): monthly + `annual`
     at the case root level."""
     candidat_cas = candidat_cas or {}
-    candidat_mensuel = candidat_cas.get('monthly') or {}
+    candidat_mensuel = candidat_cas.get("monthly") or {}
     for mois in MOIS:
-        yield mois, noeud_cas['monthly'][mois], candidat_mensuel.get(mois)
-    yield 'annual', noeud_cas['annual'], candidat_cas.get('annual')
+        yield mois, noeud_cas["monthly"][mois], candidat_mensuel.get(mois)
+    yield "annual", noeud_cas["annual"], candidat_cas.get("annual")
 
 
 def _perioder_temperature_mensuelle(noeud_cas, candidat_cas):
     """Monthly mean operative temperature (Table 30): `annual` nested
     under `monthly.annual` -- NOT at the case root level (cf. AUDIT.md)."""
     candidat_cas = candidat_cas or {}
-    candidat_mensuel = candidat_cas.get('monthly') or {}
+    candidat_mensuel = candidat_cas.get("monthly") or {}
     for mois in MOIS:
-        yield mois, noeud_cas['monthly'][mois], candidat_mensuel.get(mois)
-    yield 'annual', noeud_cas['monthly']['annual'], candidat_mensuel.get('annual')
+        yield mois, noeud_cas["monthly"][mois], candidat_mensuel.get(mois)
+    yield "annual", noeud_cas["monthly"]["annual"], candidat_mensuel.get("annual")
 
 
 def _perioder_extremes(noeud_cas, candidat_cas):
     """Annual operative temperature extremes (Table 32, 600FF/900FF
     only): `extremes.{max,min,average}` node."""
     candidat_cas = candidat_cas or {}
-    candidat_extremes = candidat_cas.get('extremes') or {}
-    for cle in ('max', 'min', 'average'):
-        yield cle, noeud_cas['extremes'][cle], candidat_extremes.get(cle)
+    candidat_extremes = candidat_cas.get("extremes") or {}
+    for cle in ("max", "min", "average"):
+        yield cle, noeud_cas["extremes"][cle], candidat_extremes.get(cle)
 
 
 def _perioder_pointe(noeud_cas, candidat_cas):
@@ -341,23 +367,24 @@ def _perioder_pointe(noeud_cas, candidat_cas):
     (AUDIT-swiss-sia-existant.md, item 3).
     """
     candidat_cas = candidat_cas or {}
-    candidat_pointe = candidat_cas.get('peak') or {}
-    for cle in ('heating', 'cooling'):
-        yield cle, noeud_cas['peak'][cle], candidat_pointe.get(cle)
+    candidat_pointe = candidat_cas.get("peak") or {}
+    for cle in ("heating", "cooling"):
+        yield cle, noeud_cas["peak"][cle], candidat_pointe.get(cle)
 
 
 _ITERATEURS_PAR_GRANDEUR = {
-    'sensible_heating_demand_kwh': _perioder_energie,
-    'sensible_cooling_demand_kwh': _perioder_energie,
-    'operative_temperature_monthly_celsius': _perioder_temperature_mensuelle,
-    'operative_temperature_annual_extremes_celsius': _perioder_extremes,
-    'annual_hourly_peak_load_kwh': _perioder_pointe,
+    "sensible_heating_demand_kwh": _perioder_energie,
+    "sensible_cooling_demand_kwh": _perioder_energie,
+    "operative_temperature_monthly_celsius": _perioder_temperature_mensuelle,
+    "operative_temperature_annual_extremes_celsius": _perioder_extremes,
+    "annual_hourly_peak_load_kwh": _perioder_pointe,
 }
 
 
 # --------------------------------------------------------------------------
 # Orchestration -- one case, then the full Test 1
 # --------------------------------------------------------------------------
+
 
 def evaluer_cas(reference, grandeur, cas, candidat_cas):
     """Evaluate all periods of a case for a given quantity.
@@ -367,17 +394,20 @@ def evaluer_cas(reference, grandeur, cas, candidat_cas):
       - any other case -> informative comparison only, no verdict
         (`comparer_periode_informative`).
     """
-    noeud_cas = reference['reference_values'][grandeur][cas]
+    noeud_cas = reference["reference_values"][grandeur][cas]
     iterateur = _ITERATEURS_PAR_GRANDEUR[grandeur]
     resultats = {}
     for label, enregistrement_reference, valeur_candidate in iterateur(
-            noeud_cas, candidat_cas):
+        noeud_cas, candidat_cas
+    ):
         if cas in CAS_AVEC_CRITERE:
             resultats[label] = evaluer_periode_1e(
-                enregistrement_reference, valeur_candidate)
+                enregistrement_reference, valeur_candidate
+            )
         else:
             resultats[label] = comparer_periode_informative(
-                enregistrement_reference, valeur_candidate)
+                enregistrement_reference, valeur_candidate
+            )
     return resultats
 
 
@@ -390,16 +420,19 @@ def _verdict_global_1e(cas_resultats):
     """
     periodes_1e = []
     for bloc in cas_resultats.values():
-        if bloc['cas'] not in CAS_AVEC_CRITERE:
+        if bloc["cas"] not in CAS_AVEC_CRITERE:
             continue
-        for label, verdict in bloc['periodes'].items():
-            periodes_1e.append((bloc['grandeur'], label, verdict))
+        for label, verdict in bloc["periodes"].items():
+            periodes_1e.append((bloc["grandeur"], label, verdict))
 
     if not periodes_1e:
-        return {'conforme': None, 'motif': 'Cas 1E absent de la reference ou du candidat.'}
+        return {
+            "conforme": None,
+            "motif": "Cas 1E absent de la reference ou du candidat.",
+        }
 
-    echecs = [p for p in periodes_1e if p[2]['conforme'] is False]
-    non_evaluees = [p for p in periodes_1e if p[2]['conforme'] is None]
+    echecs = [p for p in periodes_1e if p[2]["conforme"] is False]
+    non_evaluees = [p for p in periodes_1e if p[2]["conforme"] is None]
 
     if echecs:
         conforme = False
@@ -409,10 +442,10 @@ def _verdict_global_1e(cas_resultats):
         conforme = True
 
     return {
-        'conforme': conforme,
-        'nb_periodes_totales': len(periodes_1e),
-        'nb_periodes_non_evaluees': len(non_evaluees),
-        'echecs': [{'grandeur': g, 'periode': p} for g, p, _v in echecs],
+        "conforme": conforme,
+        "nb_periodes_totales": len(periodes_1e),
+        "nb_periodes_non_evaluees": len(non_evaluees),
+        "echecs": [{"grandeur": g, "periode": p} for g, p, _v in echecs],
     }
 
 
@@ -452,22 +485,23 @@ def evaluer_test1(reference, candidat=None):
     """
     candidat = candidat or {}
     resultat = {
-        'test_id': reference.get('test_id', 'SIA-4010-Test-1'),
-        'cas': {},
+        "test_id": reference.get("test_id", "SIA-4010-Test-1"),
+        "cas": {},
     }
-    for grandeur, cas_disponibles in reference['reference_values'].items():
+    for grandeur, cas_disponibles in reference["reference_values"].items():
         candidat_grandeur = candidat.get(grandeur) or {}
         for cas in cas_disponibles:
             candidat_cas = candidat_grandeur.get(cas)
-            cle = grandeur + '/' + cas
-            resultat['cas'][cle] = {
-                'grandeur': grandeur,
-                'cas': cas,
-                'type_controle': ('critere_pass_fail' if cas in CAS_AVEC_CRITERE
-                                   else 'informatif'),
-                'periodes': evaluer_cas(reference, grandeur, cas, candidat_cas),
+            cle = grandeur + "/" + cas
+            resultat["cas"][cle] = {
+                "grandeur": grandeur,
+                "cas": cas,
+                "type_controle": (
+                    "critere_pass_fail" if cas in CAS_AVEC_CRITERE else "informatif"
+                ),
+                "periodes": evaluer_cas(reference, grandeur, cas, candidat_cas),
             }
 
-    resultat['verdict_test1'] = _verdict_global_1e(resultat['cas'])
-    resultat['classes_concernees'] = list(CLASSES_REQUERANT_TEST1)
+    resultat["verdict_test1"] = _verdict_global_1e(resultat["cas"])
+    resultat["classes_concernees"] = list(CLASSES_REQUERANT_TEST1)
     return resultat

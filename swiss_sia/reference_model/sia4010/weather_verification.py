@@ -12,12 +12,11 @@ from __future__ import annotations
 
 import hashlib
 import json
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Mapping, Sequence, Union
 
 from ..exceptions import ConfigurationError
-
 
 PathLike = Union[str, Path]
 EXPECTED_ANNUAL_HOURS = 8760
@@ -66,9 +65,7 @@ def parse_tmy1(path: PathLike) -> List[Tmy1Record]:
             continue
         if len(line) < 120:
             raise ConfigurationError(
-                "TMY1 line {} is too short ({} characters)".format(
-                    line_number, len(line)
-                )
+                "TMY1 line {} is too short ({} characters)".format(line_number, len(line))
             )
         try:
             source_year_two_digits = int(line[5:7])
@@ -77,11 +74,7 @@ def parse_tmy1(path: PathLike) -> List[Tmy1Record]:
                 if source_year_two_digits < 20
                 else 1900 + source_year_two_digits
             )
-            ghi = (
-                None
-                if line[53] == "9"
-                else max(0.0, float(line[54:58]) / 3.6)
-            )
+            ghi = None if line[53] == "9" else max(0.0, float(line[54:58]) / 3.6)
             record = Tmy1Record(
                 station_id=line[0:5],
                 source_year=source_year,
@@ -98,23 +91,17 @@ def parse_tmy1(path: PathLike) -> List[Tmy1Record]:
             ) from exc
         if not 1 <= record.month <= 12:
             raise ConfigurationError(
-                "TMY1 line {} has invalid month {}".format(
-                    line_number, record.month
-                )
+                "TMY1 line {} has invalid month {}".format(line_number, record.month)
             )
         if not 1 <= record.hour_ending <= 24:
             raise ConfigurationError(
-                "TMY1 line {} has invalid hour {}".format(
-                    line_number, record.hour_ending
-                )
+                "TMY1 line {} has invalid hour {}".format(line_number, record.hour_ending)
             )
         records.append(record)
     return records
 
 
-def _maximum_absolute_difference(
-    left: Iterable[float], right: Iterable[float]
-) -> float:
+def _maximum_absolute_difference(left: Iterable[float], right: Iterable[float]) -> float:
     """Return the largest absolute difference between two aligned series."""
 
     differences = [abs(a - b) for a, b in zip(left, right)]
@@ -160,9 +147,7 @@ def verify_tmy1_against_iso_workbook(
         sheet = xlrd.open_workbook(str(workbook)).sheet_by_index(0)
     except (OSError, IndexError, xlrd.biffh.XLRDError) as exc:
         raise ConfigurationError(
-            "Unable to read ISO climate workbook '{}': {}".format(
-                workbook, exc
-            )
+            "Unable to read ISO climate workbook '{}': {}".format(workbook, exc)
         ) from exc
 
     header = str(sheet.cell_value(1, 5))
@@ -187,10 +172,7 @@ def verify_tmy1_against_iso_workbook(
         for index, (record, row) in enumerate(
             zip(records[:paired_count], iso_rows[:paired_count])
         )
-        if (
-            record.month != int(row[1])
-            or record.hour_ending != int(row[4])
-        )
+        if (record.month != int(row[1]) or record.hour_ending != int(row[4]))
     ]
     dry_bulb_max_difference = _maximum_absolute_difference(
         (record.dry_bulb_c for record in records[:paired_count]),
@@ -223,11 +205,7 @@ def verify_tmy1_against_iso_workbook(
             "observed": header,
         },
         "annual_record_count": {
-            "status": (
-                "PASS"
-                if len(records) == EXPECTED_ANNUAL_HOURS
-                else "FAIL"
-            ),
+            "status": ("PASS" if len(records) == EXPECTED_ANNUAL_HOURS else "FAIL"),
             "expected": EXPECTED_ANNUAL_HOURS,
             "observed": len(records),
         },
@@ -237,17 +215,11 @@ def verify_tmy1_against_iso_workbook(
             "first_mismatch_hours": timestamp_mismatches[:10],
         },
         "dry_bulb_identity": {
-            "status": (
-                "PASS"
-                if dry_bulb_max_difference <= tolerance
-                else "FAIL"
-            ),
+            "status": ("PASS" if dry_bulb_max_difference <= tolerance else "FAIL"),
             "maximum_absolute_difference_c": dry_bulb_max_difference,
         },
         "wind_speed_identity": {
-            "status": (
-                "PASS" if wind_max_difference <= tolerance else "FAIL"
-            ),
+            "status": ("PASS" if wind_max_difference <= tolerance else "FAIL"),
             "maximum_absolute_difference_m_s": wind_max_difference,
         },
         "solar_series_relationship": {
@@ -284,9 +256,7 @@ def verify_tmy1_against_iso_workbook(
             "path": str(tmy),
             "sha256": sha256_file(tmy),
             "format": "NOAA_TMY1_FIXED_WIDTH",
-            "station_ids": sorted(
-                {record.station_id for record in records}
-            ),
+            "station_ids": sorted({record.station_id for record in records}),
         },
         "iso_climate_workbook": {
             "path": str(workbook),
@@ -294,9 +264,7 @@ def verify_tmy1_against_iso_workbook(
             "sheet_name": sheet.name,
             "header": header,
             "initialization_hours_excluded": ISO_INITIALIZATION_HOURS,
-            "annual_data_start_excel_row": (
-                ISO_DATA_START_ROW_ZERO_BASED + 1
-            ),
+            "annual_data_start_excel_row": (ISO_DATA_START_ROW_ZERO_BASED + 1),
         },
         "controls": controls,
         "limitations": [
@@ -317,4 +285,3 @@ def verify_tmy1_against_iso_workbook(
     if report_path is not None:
         _write_json(Path(report_path), payload)
     return payload
-

@@ -45,9 +45,7 @@ class Test1FastStartTests(unittest.TestCase):
                 )
 
     def test_reload_launcher_refreshes_a_cached_ve_launcher(self):
-        module = _reload_launcher(
-            "Run_VE_SIA4010_Test1_Active_Case_One_Click"
-        )
+        module = _reload_launcher("Run_VE_SIA4010_Test1_Active_Case_One_Click")
         refreshed = _reload_launcher(module.__name__)
         self.assertEqual(refreshed.__name__, module.__name__)
 

@@ -12,7 +12,6 @@ from swiss_sia.reference_model.compliance_config import build_default_registry
 from swiss_sia.reference_model.domain import SurfaceType
 from swiss_sia.reference_model.validator import ReferenceModelValidator
 
-
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -35,7 +34,9 @@ class Sia4010CaseGeometryTests(unittest.TestCase):
         bounds = [opening.polygon.bounds for opening in self.model.openings]
         self.assertEqual(bounds[0], (0.5, 3.5, 0.0, 0.0, 0.2, 2.2))
         self.assertEqual(bounds[1], (4.5, 7.5, 0.0, 0.0, 0.2, 2.2))
-        self.assertTrue(all(opening.polygon.area == 6.0 for opening in self.model.openings))
+        self.assertTrue(
+            all(opening.polygon.area == 6.0 for opening in self.model.openings)
+        )
 
     def test_dedicated_validator_passes(self):
         result = validate_cell_geometry(self.model, self.manifest)

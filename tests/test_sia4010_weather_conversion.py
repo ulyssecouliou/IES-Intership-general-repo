@@ -88,10 +88,7 @@ class WeatherConversionTests(unittest.TestCase):
         self.assertNotEqual(fields[12], "9999")
         decoded = _apparent_sky_temperature_c(float(fields[12]))
         self.assertLess(
-            abs(
-                (record.dry_bulb_c - decoded)
-                - APPARENT_SKY_TEMPERATURE_OFFSET_K
-            ),
+            abs((record.dry_bulb_c - decoded) - APPARENT_SKY_TEMPERATURE_OFFSET_K),
             0.1,
         )
 

@@ -5,8 +5,7 @@ from typing import Optional, Union
 from xml.etree import ElementTree as ET
 
 from .compliance_config import ParameterRegistry
-from .domain import GeometryModel, Polygon3D, SurfaceType
-
+from .domain import GeometryModel, Polygon3D
 
 GBXML_NAMESPACE = "http://www.gbxml.org/schema"
 XSI_NAMESPACE = "http://www.w3.org/2001/XMLSchema-instance"
@@ -20,7 +19,9 @@ def _qname(name: str) -> str:
     return "{{{}}}{}".format(GBXML_NAMESPACE, name)
 
 
-def _child(parent: ET.Element, name: str, text: Optional[object] = None, **attrs) -> ET.Element:
+def _child(
+    parent: ET.Element, name: str, text: Optional[object] = None, **attrs
+) -> ET.Element:
     """Append and return one namespaced XML child element."""
 
     element = ET.SubElement(parent, _qname(name), attrs)
@@ -96,7 +97,11 @@ class GbxmlWriter:
         )
         campus = _child(root, "Campus", id="{}_CAMPUS".format(model.identifier))
         location = _child(campus, "Location")
-        _child(location, "Name", self.parameters.value("weather_station") or "UNCONFIRMED_LOCATION")
+        _child(
+            location,
+            "Name",
+            self.parameters.value("weather_station") or "UNCONFIRMED_LOCATION",
+        )
         latitude = self.parameters.value("site_latitude_degrees")
         longitude = self.parameters.value("site_longitude_degrees")
         if latitude is not None:

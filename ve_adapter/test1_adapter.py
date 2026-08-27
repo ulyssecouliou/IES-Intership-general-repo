@@ -143,25 +143,38 @@ import calendar
 import json
 import os
 
-
 # --------------------------------------------------------------------------
 # Normative constants -- all sourced, no invented values.
 # --------------------------------------------------------------------------
 
 # The 7 mandatory cases of Test 1 (docs/ADR-001-architecture-MSP.md §5 ;
 # traceability/test-1.spec.md §7). "1E" is the only one carrying a criterion.
-CAS_TEST1 = ('600', '640', '900', '940', '1E', '600FF', '900FF')
+CAS_TEST1 = ("600", "640", "900", "940", "1E", "600FF", "900FF")
 
 MASSE_PAR_CAS = {
-    '600': 'legere', '640': 'legere', '600FF': 'legere',
-    '900': 'lourde', '940': 'lourde', '900FF': 'lourde',
-    '1E': 'legere',  # 1E = 1D diagnostic case, based on case 600 (light).
+    "600": "legere",
+    "640": "legere",
+    "600FF": "legere",
+    "900": "lourde",
+    "940": "lourde",
+    "900FF": "lourde",
+    "1E": "legere",  # 1E = 1D diagnostic case, based on case 600 (light).
 }
 
 # Monthly keys identical to those in `test-1.ref.json` / `test1_engine.py`.
 MOIS = (
-    'month_01', 'month_02', 'month_03', 'month_04', 'month_05', 'month_06',
-    'month_07', 'month_08', 'month_09', 'month_10', 'month_11', 'month_12',
+    "month_01",
+    "month_02",
+    "month_03",
+    "month_04",
+    "month_05",
+    "month_06",
+    "month_07",
+    "month_08",
+    "month_09",
+    "month_10",
+    "month_11",
+    "month_12",
 )
 
 ANNEE_SIMULATION = 2011  # traceability/test-1.spec.md §4 : "1.1.2011-31.12.2011".
@@ -176,30 +189,32 @@ assert not calendar.isleap(ANNEE_SIMULATION)  # safeguard: the monthly aggregati
 # close dimensionally (2*0.5 + 2*3.0 + 1.0 = 8.0 m = south facade width).
 # Audit verdict: KEEP (AUDIT.md, "Element audite n 2", §A).
 GEOMETRIE_CELLULE = {
-    'largeur_facade_sud_m': 8.0,
-    'profondeur_m': 6.0,
-    'hauteur_m': 2.7,
-    'nombre_fenetres_sud': 2,
-    'largeur_fenetre_m': 3.0,
-    'hauteur_fenetre_m': 2.0,
-    'allege_m': 0.2,
-    'trumeau_lateral_m': 0.5,
-    'trumeau_central_m': 1.0,
+    "largeur_facade_sud_m": 8.0,
+    "profondeur_m": 6.0,
+    "hauteur_m": 2.7,
+    "nombre_fenetres_sud": 2,
+    "largeur_fenetre_m": 3.0,
+    "hauteur_fenetre_m": 2.0,
+    "allege_m": 0.2,
+    "trumeau_lateral_m": 0.5,
+    "trumeau_central_m": 1.0,
 }
 
 
 def _verifier_fermeture_geometrie(g=GEOMETRIE_CELLULE):
     """Safeguard: the geometry must close dimensionally (cf. spec §4)."""
     largeur_calculee = (
-        2.0 * g['trumeau_lateral_m'] +
-        g['nombre_fenetres_sud'] * g['largeur_fenetre_m'] +
-        g['trumeau_central_m']
+        2.0 * g["trumeau_lateral_m"]
+        + g["nombre_fenetres_sud"] * g["largeur_fenetre_m"]
+        + g["trumeau_central_m"]
     )
-    if abs(largeur_calculee - g['largeur_facade_sud_m']) > 1e-9:
+    if abs(largeur_calculee - g["largeur_facade_sud_m"]) > 1e-9:
         raise ValueError(
-            'Geometrie de la cellule Test 1 incoherente : facade calculee '
-            '{0} m != largeur declaree {1} m'.format(
-                largeur_calculee, g['largeur_facade_sud_m']))
+            "Geometrie de la cellule Test 1 incoherente : facade calculee "
+            "{0} m != largeur declaree {1} m".format(
+                largeur_calculee, g["largeur_facade_sud_m"]
+            )
+        )
 
 
 _verifier_fermeture_geometrie()
@@ -216,13 +231,28 @@ _verifier_fermeture_geometrie()
 # Fields: conductivity [W/(m.K)], thickness [m], density [kg/m3],
 # specific heat capacity [J/(kg.K)]. Order: interior -> exterior.
 MATERIAUX_LEGERS = {
-    'mur': (
-        {'nom': 'plasterboard', 'conductivite': 0.16, 'epaisseur': 0.012,
-         'masse_volumique': 950.0, 'capacite_thermique': 840.0},
-        {'nom': 'fiberglass_quilt', 'conductivite': 0.04, 'epaisseur': 0.066,
-         'masse_volumique': 12.0, 'capacite_thermique': 840.0},
-        {'nom': 'wood_siding', 'conductivite': 0.14, 'epaisseur': 0.009,
-         'masse_volumique': 530.0, 'capacite_thermique': 900.0},
+    "mur": (
+        {
+            "nom": "plasterboard",
+            "conductivite": 0.16,
+            "epaisseur": 0.012,
+            "masse_volumique": 950.0,
+            "capacite_thermique": 840.0,
+        },
+        {
+            "nom": "fiberglass_quilt",
+            "conductivite": 0.04,
+            "epaisseur": 0.066,
+            "masse_volumique": 12.0,
+            "capacite_thermique": 840.0,
+        },
+        {
+            "nom": "wood_siding",
+            "conductivite": 0.14,
+            "epaisseur": 0.009,
+            "masse_volumique": 530.0,
+            "capacite_thermique": 900.0,
+        },
     ),
     # RESERVATION LIFTED on 2026-08-07. The cp values for the roof were marked
     # None because the TEXT EXTRACTION of the table shifted them by one column.
@@ -233,19 +263,44 @@ MATERIAUX_LEGERS = {
     #
     # The densities already present (950, 12, 530) also agree there,
     # which corroborates the column alignment.
-    'toit': (
-        {'nom': 'plasterboard_toit', 'conductivite': 0.16, 'epaisseur': 0.010,
-         'masse_volumique': 950.0, 'capacite_thermique': 840.0},
-        {'nom': 'fiberglass_quilt_toit', 'conductivite': 0.04, 'epaisseur': 0.1118,
-         'masse_volumique': 12.0, 'capacite_thermique': 840.0},
-        {'nom': 'roofdeck', 'conductivite': 0.14, 'epaisseur': 0.019,
-         'masse_volumique': 530.0, 'capacite_thermique': 900.0},
+    "toit": (
+        {
+            "nom": "plasterboard_toit",
+            "conductivite": 0.16,
+            "epaisseur": 0.010,
+            "masse_volumique": 950.0,
+            "capacite_thermique": 840.0,
+        },
+        {
+            "nom": "fiberglass_quilt_toit",
+            "conductivite": 0.04,
+            "epaisseur": 0.1118,
+            "masse_volumique": 12.0,
+            "capacite_thermique": 840.0,
+        },
+        {
+            "nom": "roofdeck",
+            "conductivite": 0.14,
+            "epaisseur": 0.019,
+            "masse_volumique": 530.0,
+            "capacite_thermique": 900.0,
+        },
     ),
-    'plancher': (
-        {'nom': 'timber_flooring', 'conductivite': 0.14, 'epaisseur': 0.025,
-         'masse_volumique': 650.0, 'capacite_thermique': 1200.0},
-        {'nom': 'floor_insulation', 'conductivite': 0.04, 'epaisseur': 1.003,
-         'masse_volumique': 0.0, 'capacite_thermique': 0.0},  # cf. note
+    "plancher": (
+        {
+            "nom": "timber_flooring",
+            "conductivite": 0.14,
+            "epaisseur": 0.025,
+            "masse_volumique": 650.0,
+            "capacite_thermique": 1200.0,
+        },
+        {
+            "nom": "floor_insulation",
+            "conductivite": 0.04,
+            "epaisseur": 1.003,
+            "masse_volumique": 0.0,
+            "capacite_thermique": 0.0,
+        },  # cf. note
     ),
 }
 # The reservation on roof cp values (traceability/test-1.spec.md §4, column
@@ -272,27 +327,52 @@ MATERIAUX_LEGERS = {
 # (noted in AUDIT.md as an undocumented choice) was indeed excessive.
 
 MATERIAUX_LOURDS = {
-    'mur': (
-        {'nom': 'concrete_block', 'conductivite': 0.51, 'epaisseur': 0.100,
-         'masse_volumique': 1400.0, 'capacite_thermique': 1000.0},
-        {'nom': 'foam_insulation', 'conductivite': 0.04, 'epaisseur': 0.0615,
-         'masse_volumique': 10.0, 'capacite_thermique': 1400.0},
-        {'nom': 'wood_siding', 'conductivite': 0.14, 'epaisseur': 0.009,
-         'masse_volumique': 530.0, 'capacite_thermique': 900.0},
+    "mur": (
+        {
+            "nom": "concrete_block",
+            "conductivite": 0.51,
+            "epaisseur": 0.100,
+            "masse_volumique": 1400.0,
+            "capacite_thermique": 1000.0,
+        },
+        {
+            "nom": "foam_insulation",
+            "conductivite": 0.04,
+            "epaisseur": 0.0615,
+            "masse_volumique": 10.0,
+            "capacite_thermique": 1400.0,
+        },
+        {
+            "nom": "wood_siding",
+            "conductivite": 0.14,
+            "epaisseur": 0.009,
+            "masse_volumique": 530.0,
+            "capacite_thermique": 900.0,
+        },
     ),
     # Roof identical to the light case (ASHRAE 140:2023, note c, confirmed
     # word for word by norm-analyst: "high-mass case roof is the same as
     # the low-mass case roof").
-    'toit': MATERIAUX_LEGERS['toit'],
-    'plancher': (
-        {'nom': 'concrete_slab', 'conductivite': 1.13, 'epaisseur': 0.080,
-         'masse_volumique': 1400.0, 'capacite_thermique': 1000.0},
-        {'nom': 'floor_insulation_lourd', 'conductivite': 0.04, 'epaisseur': 1.007,
-         'masse_volumique': 0.0, 'capacite_thermique': 0.0},  # same note as above
+    "toit": MATERIAUX_LEGERS["toit"],
+    "plancher": (
+        {
+            "nom": "concrete_slab",
+            "conductivite": 1.13,
+            "epaisseur": 0.080,
+            "masse_volumique": 1400.0,
+            "capacite_thermique": 1000.0,
+        },
+        {
+            "nom": "floor_insulation_lourd",
+            "conductivite": 0.04,
+            "epaisseur": 1.007,
+            "masse_volumique": 0.0,
+            "capacite_thermique": 0.0,
+        },  # same note as above
     ),
 }
 
-MATERIAUX_PAR_MASSE = {'legere': MATERIAUX_LEGERS, 'lourde': MATERIAUX_LOURDS}
+MATERIAUX_PAR_MASSE = {"legere": MATERIAUX_LEGERS, "lourde": MATERIAUX_LOURDS}
 
 
 # Table 7-7 ASHRAE 140:2023 -- alternative EXTERNAL surface coefficients,
@@ -300,10 +380,10 @@ MATERIAUX_PAR_MASSE = {'legere': MATERIAUX_LEGERS, 'lourde': MATERIAUX_LOURDS}
 # choice = function of ApacheSim convection algorithm
 # (§7.2.1.9.3 (a)/(b.1)/(b.2), NOT SETTLED -- cf. point 2 of the docstring).
 COEFFICIENTS_SURFACE_TABLE_7_7 = {
-    'mur': {'convectif_seul': 11.9, 'combine': 21.6},
-    'toit': {'convectif_seul': 14.4, 'combine': 21.8},
-    'plancher_surelevee': {'convectif_seul': 0.8, 'combine': 5.2},
-    'fenetre': {'convectif_seul': 8.0, 'combine': 17.8},
+    "mur": {"convectif_seul": 11.9, "combine": 21.6},
+    "toit": {"convectif_seul": 14.4, "combine": 21.8},
+    "plancher_surelevee": {"convectif_seul": 0.8, "combine": 5.2},
+    "fenetre": {"convectif_seul": 8.0, "combine": 17.8},
 }
 
 # Setpoints (traceability/test-1.spec.md §4) -- ideal elements, no real HVAC
@@ -311,13 +391,13 @@ COEFFICIENTS_SURFACE_TABLE_7_7 = {
 CONSIGNE_CHAUFFAGE_C = 20.0
 CONSIGNE_REFROIDISSEMENT_C = 27.0
 CONSIGNE_CHAUFFAGE_REDUITE_C = 10.0  # cases 640/940, 23:00-07:00
-HEURE_DEBUT_CONFORT = 7   # 07:00
-HEURE_FIN_CONFORT = 23    # 23:00
+HEURE_DEBUT_CONFORT = 7  # 07:00
+HEURE_FIN_CONFORT = 23  # 23:00
 GAIN_EQUIPEMENT_W = 200.0  # constant, 24h/24, all year.
 
-CAS_AVEC_CONSIGNE_REDUITE = ('640', '940')
-CAS_FLOTTEMENT_LIBRE = ('600FF', '900FF')
-CAS_AVEC_CONDITIONNEMENT = ('600', '640', '900', '940', '1E')
+CAS_AVEC_CONSIGNE_REDUITE = ("640", "940")
+CAS_FLOTTEMENT_LIBRE = ("600FF", "900FF")
+CAS_AVEC_CONDITIONNEMENT = ("600", "640", "900", "940", "1E")
 
 
 # --------------------------------------------------------------------------
@@ -326,16 +406,19 @@ CAS_AVEC_CONDITIONNEMENT = ('600', '640', '900', '940', '1E')
 # (cf. convention already adopted in `ve_adapter/Run_VE_Probe_Runtime.py`).
 # --------------------------------------------------------------------------
 
+
 def _iesve():
     """Imports `iesve` on demand; precise error if VE is unavailable."""
     try:
         import iesve
+
         return iesve
     except ImportError as erreur:
         raise ImportError(
             "Module 'iesve' indisponible : ce code doit s'executer depuis "
             "la fenetre Scripts d'IESVE (VEScripts), pas en Python autonome. "
-            "Erreur d'origine : " + str(erreur))
+            "Erreur d'origine : " + str(erreur)
+        )
 
 
 def _resoudre_membre_enum(conteneur, nom_attribut_enum, nom_membre):
@@ -350,14 +433,17 @@ def _resoudre_membre_enum(conteneur, nom_attribut_enum, nom_membre):
         raise AttributeError(
             "Enum 'iesve.{0}.{1}' introuvable -- l'API a peut-etre change de "
             "nom depuis VEScripts-API-VE2023.pdf §6.1.32.".format(
-                conteneur, nom_attribut_enum))
+                conteneur, nom_attribut_enum
+            )
+        )
     membre = getattr(enum, nom_membre, None)
     if membre is None:
         raise AttributeError(
             "Membre '{0}' introuvable dans l'enum 'iesve.{1}.{2}' -- "
             "verifier l'orthographe exacte cote VE (non lisible de facon "
             "fiable dans refs/VEScripts-API-VE2023.pdf, tableau corrompu par "
-            "l'extraction texte).".format(nom_membre, conteneur, nom_attribut_enum))
+            "l'extraction texte).".format(nom_membre, conteneur, nom_attribut_enum)
+        )
     return membre
 
 
@@ -378,6 +464,7 @@ def _resoudre_membre_enum(conteneur, nom_attribut_enum, nom_membre):
 # case_registry.py).
 # --------------------------------------------------------------------------
 
+
 def creer_materiau(cdb_project, definition):
     """Creates an opaque CDB material and VERIFIES the readback of its properties.
 
@@ -387,13 +474,14 @@ def creer_materiau(cdb_project, definition):
     this module refuses to create a material with an invented property.
     """
     iesve = _iesve()
-    for cle in ('conductivite', 'epaisseur', 'masse_volumique', 'capacite_thermique'):
+    for cle in ("conductivite", "epaisseur", "masse_volumique", "capacite_thermique"):
         if definition.get(cle) is None:
             raise ValueError(
                 "Materiau '{0}' : propriete '{1}' non confirmee (cf. "
                 "reserves documentees dans test1_adapter.py sur les Tables "
                 "7-2/7-27 ASHRAE 140:2023) -- creation refusee plutot que "
-                "d'inventer une valeur.".format(definition['nom'], cle))
+                "d'inventer une valeur.".format(definition["nom"], cle)
+            )
     # CORRECTED on 2026-08-06, after probe v2 in a real VE.
     #
     # Two cumulative errors here:
@@ -408,8 +496,7 @@ def creer_materiau(cdb_project, definition):
     # simulation -- the physical properties are carried by `definition`.
     # Stating it clearly rather than leaving the impression it is a physical
     # parameter.
-    categorie_materiau = _resoudre_membre_enum(
-        iesve, 'material_categories', 'other')
+    categorie_materiau = _resoudre_membre_enum(iesve, "material_categories", "other")
     materiau = cdb_project.create_material(categorie_materiau)
     # CORRECTED on 2026-08-07, against a real VE. `set_properties` converts
     # ALL values to float: passing a string raises
@@ -427,12 +514,12 @@ def creer_materiau(cdb_project, definition):
     #     the same material can be used at several thicknesses. The module
     #     docstring already noted this; the code contradicted it.
     proprietes = {
-        'conductivity': definition['conductivite'],
-        'density': definition['masse_volumique'],
-        'specific_heat_capacity': definition['capacite_thermique'],
+        "conductivity": definition["conductivite"],
+        "density": definition["masse_volumique"],
+        "specific_heat_capacity": definition["capacite_thermique"],
     }
     materiau.set_properties(proprietes)
-    _verifier_proprietes_ecrites(materiau, proprietes, definition['nom'])
+    _verifier_proprietes_ecrites(materiau, proprietes, definition["nom"])
     relu = dict(materiau.get_properties())
     for cle, valeur in proprietes.items():
         valeur_relue = relu.get(cle)
@@ -440,13 +527,16 @@ def creer_materiau(cdb_project, definition):
             raise RuntimeError(
                 "VECdbMaterial.set_properties() : releture divergente pour "
                 "'{0}' du materiau '{1}' (ecrit={2}, relu={3}). Le materiau "
-                "cree ne correspond pas a la demande -- ne pas continuer."
-                .format(cle, definition['nom'], valeur, valeur_relue))
+                "cree ne correspond pas a la demande -- ne pas continuer.".format(
+                    cle, definition["nom"], valeur, valeur_relue
+                )
+            )
     return materiau
 
 
-def creer_construction_opaque(cdb_project, categorie_element, classe_construction,
-                               couches):
+def creer_construction_opaque(
+    cdb_project, categorie_element, classe_construction, couches
+):
     """Creates a multi-layer opaque construction (wall/roof/floor).
 
     `categorie_element`: name of the `element_categories` enum member
@@ -467,10 +557,8 @@ def creer_construction_opaque(cdb_project, categorie_element, classe_constructio
     # element_categories -> roof=0, ceiling/int_floor=1, wall=2, partition=3,
     # ground_floor=4, roof_light=5, ext_glazing=6, int_glazing=7, door=8;
     # construction_class -> opaque=0, glazed=1, shade=4, misc=5, none=-1.
-    categorie = _resoudre_membre_enum(
-        iesve, 'element_categories', categorie_element)
-    classe = _resoudre_membre_enum(
-        iesve, 'construction_class', classe_construction)
+    categorie = _resoudre_membre_enum(iesve, "element_categories", categorie_element)
+    classe = _resoudre_membre_enum(iesve, "construction_class", classe_construction)
     construction = cdb_project.create_construction(categorie)
     construction.set_const_class(classe)
 
@@ -485,8 +573,8 @@ def creer_construction_opaque(cdb_project, categorie_element, classe_constructio
         if materiau_id is None:
             raise RuntimeError(
                 "Materiau '{0}' cree sans identifiant persistant -- "
-                "impossible de l'ajouter a la construction.".format(
-                    definition['nom']))
+                "impossible de l'ajouter a la construction.".format(definition["nom"])
+            )
         construction.add_layer(materiau_id, False)  # False = not a cavity
         _poser_epaisseur_de_couche(construction, definition)
 
@@ -498,7 +586,8 @@ def creer_construction_opaque(cdb_project, categorie_element, classe_constructio
         raise RuntimeError(
             "Construction : {0} couches demandees, {1} persistees apres "
             "creation -- ne pas continuer avec une construction "
-            "incomplete.".format(len(couches), len(couches_finales)))
+            "incomplete.".format(len(couches), len(couches_finales))
+        )
     return construction, materiaux_crees
 
 
@@ -539,18 +628,22 @@ def _poser_epaisseur_de_couche(construction, definition):
     if not couches:
         raise RuntimeError(
             "Couche '{0}' ajoutee mais introuvable dans get_layers().".format(
-                definition['nom']))
+                definition["nom"]
+            )
+        )
     couche = couches[-1]
-    attendue = definition['epaisseur']
-    couche.set_properties({'thickness': attendue})
+    attendue = definition["epaisseur"]
+    couche.set_properties({"thickness": attendue})
 
-    relue = (couche.get_properties() or {}).get('thickness')
+    relue = (couche.get_properties() or {}).get("thickness")
     if relue is None or abs(relue - attendue) > TOLERANCE_RELECTURE * attendue:
         raise RuntimeError(
             "Couche '{0}' : epaisseur ecrite {1} m, relue {2} m. VE donne "
             "{3} m par defaut -- une couche laissee a cette valeur simulerait "
             "sans rien signaler.".format(
-                definition['nom'], attendue, relue, EPAISSEUR_PAR_DEFAUT_VE_M))
+                definition["nom"], attendue, relue, EPAISSEUR_PAR_DEFAUT_VE_M
+            )
+        )
 
 
 def _identifiant_materiau(materiau):
@@ -570,11 +663,11 @@ def _identifiant_materiau(materiau):
     Returns:
         str | None: Identifier, or `None` if not found.
     """
-    direct = getattr(materiau, 'id', None)
+    direct = getattr(materiau, "id", None)
     if direct is not None:
         return direct
     try:
-        return (materiau.get_properties() or {}).get('id')
+        return (materiau.get_properties() or {}).get("id")
     except Exception:  # noqa: BLE001 -- absence is a result, not a crash
         return None
 
@@ -601,17 +694,18 @@ def _verifier_proprietes_ecrites(materiau, proprietes, nom):
     for cle, attendu in proprietes.items():
         obtenu = relues.get(cle)
         if obtenu is None:
-            ecarts.append(u'%s : absent de la relecture' % cle)
+            ecarts.append("%s : absent de la relecture" % cle)
             continue
         reference = abs(attendu) if attendu else 1.0
         if abs(obtenu - attendu) > TOLERANCE_RELECTURE * reference:
-            ecarts.append(u'%s : ecrit %r, relu %r' % (cle, attendu, obtenu))
+            ecarts.append("%s : ecrit %r, relu %r" % (cle, attendu, obtenu))
     if ecarts:
         raise RuntimeError(
-            u'materiau %r : %d propriete(s) non prise(s) par VE -- %s. '
-            u'Cles acceptees par set_properties : conductivity, density, '
-            u'specific_heat_capacity, vapour_resistivity.'
-            % (nom, len(ecarts), u' ; '.join(ecarts)))
+            "materiau %r : %d propriete(s) non prise(s) par VE -- %s. "
+            "Cles acceptees par set_properties : conductivity, density, "
+            "specific_heat_capacity, vapour_resistivity."
+            % (nom, len(ecarts), " ; ".join(ecarts))
+        )
 
 
 def creer_constructions_cas(cdb_project, masse):
@@ -631,17 +725,21 @@ def creer_constructions_cas(cdb_project, masse):
     """
     materiaux = MATERIAUX_PAR_MASSE[masse]
     constructions = {}
-    constructions['mur'], _ = creer_construction_opaque(
-        cdb_project, 'wall', 'opaque', materiaux['mur'])
-    constructions['toit'], _ = creer_construction_opaque(
-        cdb_project, 'roof', 'opaque', materiaux['toit'])
-    constructions['plancher'], _ = creer_construction_opaque(
-        cdb_project, 'ground_floor', 'opaque', materiaux['plancher'])
+    constructions["mur"], _ = creer_construction_opaque(
+        cdb_project, "wall", "opaque", materiaux["mur"]
+    )
+    constructions["toit"], _ = creer_construction_opaque(
+        cdb_project, "roof", "opaque", materiaux["toit"]
+    )
+    constructions["plancher"], _ = creer_construction_opaque(
+        cdb_project, "ground_floor", "opaque", materiaux["plancher"]
+    )
     return constructions
 
 
-def appliquer_coefficient_surface_externe_table_7_7(construction, type_surface,
-                                                      branche, appliquer=False):
+def appliquer_coefficient_surface_externe_table_7_7(
+    construction, type_surface, branche, appliquer=False
+):
     """Applies -- OR NOT -- an external surface coefficient from Table 7-7.
 
     DISABLED BY DEFAULT (`appliquer=False`): cf. point 2 of the module
@@ -666,17 +764,19 @@ def appliquer_coefficient_surface_externe_table_7_7(construction, type_surface,
     valeur = COEFFICIENTS_SURFACE_TABLE_7_7[type_surface][branche]
     couches = list(construction.get_layers())
     if not couches:
-        raise RuntimeError('Construction sans couche : impossible de fixer '
-                            'le coefficient de surface externe.')
+        raise RuntimeError(
+            "Construction sans couche : impossible de fixer "
+            "le coefficient de surface externe."
+        )
     couche_exterieure = couches[-1]
-    couche_exterieure.set_properties({'convection_coefficient': valeur})
+    couche_exterieure.set_properties({"convection_coefficient": valeur})
     relu = dict(couche_exterieure.get_properties())
-    valeur_relue = relu.get('convection_coefficient')
+    valeur_relue = relu.get("convection_coefficient")
     if valeur_relue is None or abs(float(valeur_relue) - valeur) > 1e-6:
         raise RuntimeError(
-            'VECdbLayer.set_properties() : relecture divergente pour '
-            'convection_coefficient (ecrit={0}, relu={1}).'.format(
-                valeur, valeur_relue))
+            "VECdbLayer.set_properties() : relecture divergente pour "
+            "convection_coefficient (ecrit={0}, relu={1}).".format(valeur, valeur_relue)
+        )
     return valeur
 
 
@@ -684,6 +784,7 @@ def appliquer_coefficient_surface_externe_table_7_7(construction, type_surface,
 # Thermal template -- setpoints, profiles, gains, infiltration
 # (VEThermalTemplate, VEProfile, AirExchange, EnergyGain -- §6.1.2/5/39/46).
 # --------------------------------------------------------------------------
+
 
 def creer_profil_consigne_chauffage(project, cas_id):
     """Creates the daily heating setpoint profile for a case.
@@ -698,8 +799,9 @@ def creer_profil_consigne_chauffage(project, cas_id):
     """
     if cas_id not in CAS_AVEC_CONSIGNE_REDUITE:
         return None
-    profil = project.create_profile('daily', 'SIA4010_T1_chauffage_reduit_' + cas_id,
-                                     False, 0)
+    profil = project.create_profile(
+        "daily", "SIA4010_T1_chauffage_reduit_" + cas_id, False, 0
+    )
     # VEProfile.set_data() -- daily profile: list [x, y, formula].
     # x = hour (0-24), y = value (degC). Two steps, sharp transitions.
     donnees = [
@@ -711,10 +813,11 @@ def creer_profil_consigne_chauffage(project, cas_id):
     if profil.set_data(donnees) is not True:
         raise RuntimeError(
             "VEProfile.set_data() a echoue pour le profil de consigne "
-            "reduite du cas {0}.".format(cas_id))
+            "reduite du cas {0}.".format(cas_id)
+        )
     if project.save_profiles() is not True:
-        raise RuntimeError('VEProject.save_profiles() a echoue.')
-    return getattr(profil, 'id', None) or getattr(profil, 'reference', None)
+        raise RuntimeError("VEProject.save_profiles() a echoue.")
+    return getattr(profil, "id", None) or getattr(profil, "reference", None)
 
 
 def construire_conditions_ambiance(cas_id, profil_chauffage_id=None):
@@ -732,7 +835,7 @@ def construire_conditions_ambiance(cas_id, profil_chauffage_id=None):
     exact expected return form.
     """
     conditions = {
-        'cooling_setpoint': CONSIGNE_REFROIDISSEMENT_C,
+        "cooling_setpoint": CONSIGNE_REFROIDISSEMENT_C,
     }
     if cas_id in CAS_FLOTTEMENT_LIBRE:
         # Free float: no active ideal element. Do NOT write a
@@ -744,10 +847,11 @@ def construire_conditions_ambiance(cas_id, profil_chauffage_id=None):
         if not profil_chauffage_id:
             raise ValueError(
                 "Cas {0} exige un profil de consigne reduite -- appeler "
-                "creer_profil_consigne_chauffage() d'abord.".format(cas_id))
-        conditions['heating_profile'] = profil_chauffage_id
+                "creer_profil_consigne_chauffage() d'abord.".format(cas_id)
+            )
+        conditions["heating_profile"] = profil_chauffage_id
     else:
-        conditions['heating_setpoint'] = CONSIGNE_CHAUFFAGE_C
+        conditions["heating_setpoint"] = CONSIGNE_CHAUFFAGE_C
     return conditions
 
 
@@ -766,15 +870,17 @@ def creer_gain_equipement(project):
     """
     iesve = _iesve()
     gain = iesve.EnergyGain()  # ⚠ A VERIFIER API -- cf. docstring above.
-    gain.set({
-        'max_power_consumption': GAIN_EQUIPEMENT_W,
-        'max_sensible_gain': GAIN_EQUIPEMENT_W,
-        'radiant_fraction': 0.0,  # ⚠ A VERIFIER: not specified by Test 1 spec;
-        # 0.0 = all convective, DEFAULT value in this module and not a
-        # normative value -- to confirm with norm-analyst before real use.
-        'type_str': 'Miscellaneous',
-        'units_val': 1,  # 1 = W (total), not W/m2 -- §6.1.5.
-    })
+    gain.set(
+        {
+            "max_power_consumption": GAIN_EQUIPEMENT_W,
+            "max_sensible_gain": GAIN_EQUIPEMENT_W,
+            "radiant_fraction": 0.0,  # ⚠ A VERIFIER: not specified by Test 1 spec;
+            # 0.0 = all convective, DEFAULT value in this module and not a
+            # normative value -- to confirm with norm-analyst before real use.
+            "type_str": "Miscellaneous",
+            "units_val": 1,  # 1 = W (total), not W/m2 -- §6.1.5.
+        }
+    )
     return gain
 
 
@@ -795,17 +901,19 @@ def creer_infiltration(project, taux_infiltration_ach):
         raise ValueError(
             "Taux d'infiltration non fourni : traceability/test-1.spec.md "
             "§8 pt 4 le maintient '[REQUIS]' (EN ISO 52016-1 ch. 7, absent "
-            "de /refs). Ne pas inventer une valeur par defaut ici.")
+            "de /refs). Ne pas inventer une valeur par defaut ici."
+        )
     iesve = _iesve()
     infiltration = iesve.AirExchange()  # ⚠ A VERIFIER API.
-    type_infiltration = _resoudre_membre_enum(
-        iesve, 'AirExchange_type', 'infiltration')
-    infiltration.set({
-        'type_val': type_infiltration,
-        'max_flow': taux_infiltration_ach,
-        'units_val': 0,  # 0 = ach, §6.1.2.
-        'adjacent_condition_val': 1,  # 1 = External air, §6.1.2.
-    })
+    type_infiltration = _resoudre_membre_enum(iesve, "AirExchange_type", "infiltration")
+    infiltration.set(
+        {
+            "type_val": type_infiltration,
+            "max_flow": taux_infiltration_ach,
+            "units_val": 0,  # 0 = ach, §6.1.2.
+            "adjacent_condition_val": 1,  # 1 = External air, §6.1.2.
+        }
+    )
     return infiltration
 
 
@@ -813,8 +921,10 @@ def creer_infiltration(project, taux_infiltration_ach):
 # Case orchestration -- assembles materials/constructions/template.
 # --------------------------------------------------------------------------
 
-def generer_cas_test1(project, cdb_project, gabarit_thermique, cas_id,
-                       taux_infiltration_ach=None):
+
+def generer_cas_test1(
+    project, cdb_project, gabarit_thermique, cas_id, taux_infiltration_ach=None
+):
     """Generates a Test 1 case (excluding 1E) in the current VE project.
 
     `gabarit_thermique`: `VEThermalTemplate` object already assigned to the
@@ -830,14 +940,16 @@ def generer_cas_test1(project, cdb_project, gabarit_thermique, cas_id,
     cases -- a cross-check that reinforces the decision to leave it out of
     scope here rather than improvising a blind model.
     """
-    if cas_id == '1E':
+    if cas_id == "1E":
         raise NotImplementedError(
             "Cas 1E non supporte par generer_cas_test1() : necessite le "
             "store tissu du test diagnostic 2 E1 (Test 2), hors perimetre "
-            "de cet adaptateur Test 1. Voir traceability/test-1.spec.md §7.")
+            "de cet adaptateur Test 1. Voir traceability/test-1.spec.md §7."
+        )
     if cas_id not in CAS_TEST1:
-        raise ValueError("Cas Test 1 inconnu : {0!r} (attendus : {1})".format(
-            cas_id, CAS_TEST1))
+        raise ValueError(
+            "Cas Test 1 inconnu : {0!r} (attendus : {1})".format(cas_id, CAS_TEST1)
+        )
 
     masse = MASSE_PAR_CAS[cas_id]
     constructions = creer_constructions_cas(cdb_project, masse)
@@ -850,7 +962,8 @@ def generer_cas_test1(project, cdb_project, gabarit_thermique, cas_id,
     if gabarit_thermique.set_room_conditions(conditions) is False:
         raise RuntimeError(
             "VEThermalTemplate.set_room_conditions() a renvoye False pour "
-            "le cas {0}.".format(cas_id))
+            "le cas {0}.".format(cas_id)
+        )
 
     gain = creer_gain_equipement(project)
     gabarit_thermique.add_gain(gain)
@@ -863,12 +976,12 @@ def generer_cas_test1(project, cdb_project, gabarit_thermique, cas_id,
     gabarit_thermique.apply_changes()
 
     return {
-        'cas_id': cas_id,
-        'masse': masse,
-        'constructions': constructions,
-        'profil_chauffage_id': profil_chauffage_id,
-        'gain_equipement': gain,
-        'infiltration': infiltration,
+        "cas_id": cas_id,
+        "masse": masse,
+        "constructions": constructions,
+        "profil_chauffage_id": profil_chauffage_id,
+        "gain_equipement": gain,
+        "infiltration": infiltration,
     }
 
 
@@ -882,9 +995,9 @@ def assigner_meteo_drycold(chemin_fichier_meteo):
     iesve = _iesve()
     locate = iesve.VELocate()
     if locate.open_wea_data() == -1:
-        raise RuntimeError('VELocate.open_wea_data() a echoue.')
+        raise RuntimeError("VELocate.open_wea_data() a echoue.")
     try:
-        locate.set({'weather_file': chemin_fichier_meteo})
+        locate.set({"weather_file": chemin_fichier_meteo})
     finally:
         locate.save_and_close()
 
@@ -904,6 +1017,7 @@ def assigner_meteo_drycold(chemin_fichier_meteo):
 # `norm-analyst`/`ve-adapter-engineer`: correct the ADR-001 §3 citation.
 # --------------------------------------------------------------------------
 
+
 def lancer_apachesim_cas(nom_fichier_aps, options_supplementaires=None):
     """Launches an annual ApacheSim simulation for one case and returns the
     name of the generated .aps file.
@@ -915,21 +1029,24 @@ def lancer_apachesim_cas(nom_fichier_aps, options_supplementaires=None):
     """
     iesve = _iesve()
     sim = iesve.ApacheSim()
-    for methode in ('get_options', 'set_options', 'run_simulation'):
+    for methode in ("get_options", "set_options", "run_simulation"):
         if not hasattr(sim, methode):
             raise RuntimeError(
                 "ApacheSim.{0} indisponible dans cette version de VE -- "
-                "verifier refs/VEScripts-API-VE2023.pdf §6.1.3.".format(methode))
+                "verifier refs/VEScripts-API-VE2023.pdf §6.1.3.".format(methode)
+            )
     options = {
-        'start_month': 1, 'start_day': 1,
-        'end_month': 12, 'end_day': 31,
-        'HVAC': False,  # Test 1: ideal elements, no real HVAC network.
-        'results_filename': nom_fichier_aps,
+        "start_month": 1,
+        "start_day": 1,
+        "end_month": 12,
+        "end_day": 31,
+        "HVAC": False,  # Test 1: ideal elements, no real HVAC network.
+        "results_filename": nom_fichier_aps,
     }
     if options_supplementaires:
         options.update(options_supplementaires)
     if sim.set_options(options) is not True:
-        raise RuntimeError('ApacheSim.set_options() n a pas renvoye True.')
+        raise RuntimeError("ApacheSim.set_options() n a pas renvoye True.")
     relues = dict(sim.get_options())
     divergences = {}
     for cle, valeur in options.items():
@@ -938,12 +1055,14 @@ def lancer_apachesim_cas(nom_fichier_aps, options_supplementaires=None):
             divergences[cle] = (valeur, valeur_relue)
     if divergences:
         raise RuntimeError(
-            'ApacheSim.get_options() : relecture divergente apres '
-            'set_options() : {0}'.format(divergences))
+            "ApacheSim.get_options() : relecture divergente apres "
+            "set_options() : {0}".format(divergences)
+        )
     if sim.run_simulation(queue_to_tasks=False) is not True:
         raise RuntimeError(
-            'ApacheSim.run_simulation(queue_to_tasks=False) n a pas '
-            'renvoye True pour {0}.'.format(nom_fichier_aps))
+            "ApacheSim.run_simulation(queue_to_tasks=False) n a pas "
+            "renvoye True pour {0}.".format(nom_fichier_aps)
+        )
     return nom_fichier_aps
 
 
@@ -986,29 +1105,29 @@ def lancer_apachesim_cas(nom_fichier_aps, options_supplementaires=None):
 # `extraire_candidat_test1()` refuses to use them without explicit
 # `accepter_liaisons_non_confirmees=True`.
 LIAISONS_APS_CANDIDATES = {
-    'sensible_heating_power': {
-        'aps_varname': 'Room units heating load',
-        'display_name': 'Heating plant sensible load',
-        'model_level': 'z',
-        'unite_attendue': 'kW',
+    "sensible_heating_power": {
+        "aps_varname": "Room units heating load",
+        "display_name": "Heating plant sensible load",
+        "model_level": "z",
+        "unite_attendue": "kW",
     },
-    'sensible_cooling_power': {
-        'aps_varname': 'Room units cooling load',
-        'display_name': 'Cooling plant sensible load',
-        'model_level': 'z',
-        'unite_attendue': 'kW',
+    "sensible_cooling_power": {
+        "aps_varname": "Room units cooling load",
+        "display_name": "Cooling plant sensible load",
+        "model_level": "z",
+        "unite_attendue": "kW",
     },
-    'room_air_temperature': {
-        'aps_varname': 'Room air temperature',
-        'display_name': 'Air temperature',
-        'model_level': 'z',
-        'unite_attendue': '°C',
+    "room_air_temperature": {
+        "aps_varname": "Room air temperature",
+        "display_name": "Air temperature",
+        "model_level": "z",
+        "unite_attendue": "°C",
     },
-    'operative_temperature': {
-        'aps_varname': 'Comfort temperature',
-        'display_name': 'Dry resultant temperature',
-        'model_level': 'z',
-        'unite_attendue': '°C',
+    "operative_temperature": {
+        "aps_varname": "Comfort temperature",
+        "display_name": "Dry resultant temperature",
+        "model_level": "z",
+        "unite_attendue": "°C",
         # The external repo cites https://help.iesve.com/ve2025/... to
         # justify "dry resultant temperature" = "operative temperature"
         # in still air -- VE2025 page, whereas our refs/ are VE2023:
@@ -1031,14 +1150,13 @@ def decouvrir_candidats_variable(results_file, jetons_requis, niveau=None):
     try:
         variables = results_file.get_variables()
     except Exception as erreur:
-        raise RuntimeError(
-            'ResultsReader.get_variables() a echoue : {0}'.format(erreur))
+        raise RuntimeError("ResultsReader.get_variables() a echoue : {0}".format(erreur))
     jetons = [jeton.lower() for jeton in jetons_requis]
     for variable in variables or []:
-        aps_varname = str(variable.get('aps_varname') or '')
-        display_name = str(variable.get('display_name') or '')
-        niveau_variable = str(variable.get('model_level') or '')
-        hay = (aps_varname + ' ' + display_name).lower()
+        aps_varname = str(variable.get("aps_varname") or "")
+        display_name = str(variable.get("display_name") or "")
+        niveau_variable = str(variable.get("model_level") or "")
+        hay = (aps_varname + " " + display_name).lower()
         if niveau and niveau_variable and niveau_variable.lower() != niveau.lower():
             continue
         if all(jeton in hay for jeton in jetons):
@@ -1053,18 +1171,22 @@ def _resoudre_liaison(results_file, quantite_id, liaisons):
     liaison = liaisons.get(quantite_id)
     if liaison is None:
         raise KeyError(
-            "Aucune liaison APS fournie pour la grandeur '{0}'.".format(
-                quantite_id))
+            "Aucune liaison APS fournie pour la grandeur '{0}'.".format(quantite_id)
+        )
     variables = results_file.get_variables()
     for variable in variables or []:
-        if (str(variable.get('aps_varname') or '') == liaison['aps_varname'] and
-                str(variable.get('model_level') or '') == liaison['model_level']):
+        if (
+            str(variable.get("aps_varname") or "") == liaison["aps_varname"]
+            and str(variable.get("model_level") or "") == liaison["model_level"]
+        ):
             return liaison
     raise RuntimeError(
         "Variable APS '{0}' (niveau '{1}') introuvable dans ce fichier .aps "
         "-- la liaison candidate pour '{2}' ne correspond pas a ce resultat "
-        "de simulation. Ne pas deviner une autre variable en remplacement."
-        .format(liaison['aps_varname'], liaison['model_level'], quantite_id))
+        "de simulation. Ne pas deviner une autre variable en remplacement.".format(
+            liaison["aps_varname"], liaison["model_level"], quantite_id
+        )
+    )
 
 
 def _lire_serie_horaire(results_file, room_id, liaison, resultats_par_jour):
@@ -1072,34 +1194,37 @@ def _lire_serie_horaire(results_file, room_id, liaison, resultats_par_jour):
     resamples it to HOURLY (average of sub-steps), regardless of the actual
     simulation time step."""
     brute = results_file.get_room_results(
-        room_id, liaison['aps_varname'], liaison['display_name'],
-        liaison['model_level'])  # start_day/end_day omitted = full year.
-    if hasattr(brute, 'tolist'):
+        room_id, liaison["aps_varname"], liaison["display_name"], liaison["model_level"]
+    )  # start_day/end_day omitted = full year.
+    if hasattr(brute, "tolist"):
         brute = brute.tolist()
     valeurs = [float(v) for v in brute]
     pas_par_jour = float(resultats_par_jour)
     pas_par_heure = pas_par_jour / 24.0
     if pas_par_heure <= 0:
-        raise RuntimeError('results_per_day invalide ({0}).'.format(
-            resultats_par_jour))
+        raise RuntimeError("results_per_day invalide ({0}).".format(resultats_par_jour))
     pas_entiers = int(round(pas_par_heure))
     if abs(pas_par_heure - pas_entiers) > 1e-9 or pas_entiers <= 0:
         raise RuntimeError(
-            'Pas de simulation non multiple entier de l heure '
-            '(results_per_day={0}) -- agregation horaire non fiable.'
-            .format(resultats_par_jour))
+            "Pas de simulation non multiple entier de l heure "
+            "(results_per_day={0}) -- agregation horaire non fiable.".format(
+                resultats_par_jour
+            )
+        )
     if len(valeurs) % pas_entiers != 0:
         raise RuntimeError(
-            'Serie de {0} valeurs non divisible par {1} pas/heure -- '
-            'annee incomplete ?'.format(len(valeurs), pas_entiers))
+            "Serie de {0} valeurs non divisible par {1} pas/heure -- "
+            "annee incomplete ?".format(len(valeurs), pas_entiers)
+        )
     horaire = []
     for debut in range(0, len(valeurs), pas_entiers):
-        fenetre = valeurs[debut:debut + pas_entiers]
+        fenetre = valeurs[debut : debut + pas_entiers]
         horaire.append(sum(fenetre) / pas_entiers)
     if len(horaire) != 365 * 24:
         raise RuntimeError(
-            'Serie horaire de {0} valeurs != 8760 (annee {1} non complete '
-            'ou non standard).'.format(len(horaire), ANNEE_SIMULATION))
+            "Serie horaire de {0} valeurs != 8760 (annee {1} non complete "
+            "ou non standard).".format(len(horaire), ANNEE_SIMULATION)
+        )
     return horaire
 
 
@@ -1107,13 +1232,14 @@ def _agreger_mensuel_sommes(serie_horaire, annee=ANNEE_SIMULATION):
     """Returns a dict {'month_01': sum, ..., 'month_12': sum} plus the
     annual total, from a complete hourly series (8760 values)."""
     if calendar.isleap(annee) or len(serie_horaire) != 365 * 24:
-        raise ValueError('Agregation mensuelle : annee non standard ou '
-                          'serie incomplete.')
+        raise ValueError(
+            "Agregation mensuelle : annee non standard ou " "serie incomplete."
+        )
     mensuel = {}
     curseur = 0
     for indice_mois in range(1, 13):
         nb_heures = calendar.monthrange(annee, indice_mois)[1] * 24
-        fenetre = serie_horaire[curseur:curseur + nb_heures]
+        fenetre = serie_horaire[curseur : curseur + nb_heures]
         mensuel[MOIS[indice_mois - 1]] = sum(fenetre)
         curseur += nb_heures
     return mensuel, sum(serie_horaire)
@@ -1142,13 +1268,14 @@ def _agreger_mensuel_moyennes(serie_horaire, annee=ANNEE_SIMULATION):
     prevent from being reintroduced.
     """
     if calendar.isleap(annee) or len(serie_horaire) != 365 * 24:
-        raise ValueError('Agregation mensuelle : annee non standard ou '
-                          'serie incomplete.')
+        raise ValueError(
+            "Agregation mensuelle : annee non standard ou " "serie incomplete."
+        )
     mensuel = {}
     curseur = 0
     for indice_mois in range(1, 13):
         nb_heures = calendar.monthrange(annee, indice_mois)[1] * 24
-        fenetre = serie_horaire[curseur:curseur + nb_heures]
+        fenetre = serie_horaire[curseur : curseur + nb_heures]
         mensuel[MOIS[indice_mois - 1]] = sum(fenetre) / len(fenetre)
         curseur += nb_heures
     moyenne_des_mensuelles = sum(mensuel.values()) / 12.0
@@ -1156,8 +1283,9 @@ def _agreger_mensuel_moyennes(serie_horaire, annee=ANNEE_SIMULATION):
     return mensuel, moyenne_des_mensuelles, moyenne_horaire
 
 
-def extraire_candidat_cas(results_file, room_id, cas_id, resultats_par_jour,
-                           liaisons=LIAISONS_APS_CANDIDATES):
+def extraire_candidat_cas(
+    results_file, room_id, cas_id, resultats_par_jour, liaisons=LIAISONS_APS_CANDIDATES
+):
     """Extracts, for ONE already-simulated case (open .aps file), the
     candidate Test 1 quantities in the MIRROR form of `test-1.ref.json`
     (terminal leaves = raw scalars). Fills ONLY the quantities relevant
@@ -1170,56 +1298,69 @@ def extraire_candidat_cas(results_file, room_id, cas_id, resultats_par_jour,
 
     if cas_id in CAS_AVEC_CONDITIONNEMENT:
         liaison_chauffage = _resoudre_liaison(
-            results_file, 'sensible_heating_power', liaisons)
+            results_file, "sensible_heating_power", liaisons
+        )
         liaison_refroidissement = _resoudre_liaison(
-            results_file, 'sensible_cooling_power', liaisons)
+            results_file, "sensible_cooling_power", liaisons
+        )
         serie_chauffage_kw = _lire_serie_horaire(
-            results_file, room_id, liaison_chauffage, resultats_par_jour)
+            results_file, room_id, liaison_chauffage, resultats_par_jour
+        )
         serie_refroidissement_kw = _lire_serie_horaire(
-            results_file, room_id, liaison_refroidissement, resultats_par_jour)
+            results_file, room_id, liaison_refroidissement, resultats_par_jour
+        )
         # Mean kW over the hour -> kWh (hourly step => energy = power).
-        mensuel_chauffage, annuel_chauffage = _agreger_mensuel_sommes(
-            serie_chauffage_kw)
+        mensuel_chauffage, annuel_chauffage = _agreger_mensuel_sommes(serie_chauffage_kw)
         mensuel_refroidissement, annuel_refroidissement = _agreger_mensuel_sommes(
-            serie_refroidissement_kw)
-        resultat['sensible_heating_demand_kwh'] = {
-            'monthly': mensuel_chauffage, 'annual': annuel_chauffage,
+            serie_refroidissement_kw
+        )
+        resultat["sensible_heating_demand_kwh"] = {
+            "monthly": mensuel_chauffage,
+            "annual": annuel_chauffage,
         }
-        resultat['sensible_cooling_demand_kwh'] = {
-            'monthly': mensuel_refroidissement, 'annual': annuel_refroidissement,
+        resultat["sensible_cooling_demand_kwh"] = {
+            "monthly": mensuel_refroidissement,
+            "annual": annuel_refroidissement,
         }
 
-    if cas_id not in ('1E',):  # Table 30: no column for 1E (AUDIT.md pt 3).
+    if cas_id not in ("1E",):  # Table 30: no column for 1E (AUDIT.md pt 3).
         liaison_temperature = _resoudre_liaison(
-            results_file, 'operative_temperature', liaisons)
+            results_file, "operative_temperature", liaisons
+        )
         serie_temperature = _lire_serie_horaire(
-            results_file, room_id, liaison_temperature, resultats_par_jour)
-        (mensuel_temp, annuel_des_mensuelles,
-         annuel_horaire) = _agreger_mensuel_moyennes(serie_temperature)
+            results_file, room_id, liaison_temperature, resultats_par_jour
+        )
+        mensuel_temp, annuel_des_mensuelles, annuel_horaire = _agreger_mensuel_moyennes(
+            serie_temperature
+        )
         mensuel_temp_avec_annuel = dict(mensuel_temp)
         # Table 30 row `Annual` = AVERAGE of the 12 monthly means (B70 in the
         # workbook), NOT the hourly mean: systematic difference of about 0.04 K.
-        mensuel_temp_avec_annuel['annual'] = annuel_des_mensuelles
-        resultat['operative_temperature_monthly_celsius'] = {
-            'monthly': mensuel_temp_avec_annuel,
+        mensuel_temp_avec_annuel["annual"] = annuel_des_mensuelles
+        resultat["operative_temperature_monthly_celsius"] = {
+            "monthly": mensuel_temp_avec_annuel,
         }
 
         if cas_id in CAS_FLOTTEMENT_LIBRE:
-            resultat['operative_temperature_annual_extremes_celsius'] = {
-                'extremes': {
-                    'max': max(serie_temperature),
-                    'min': min(serie_temperature),
+            resultat["operative_temperature_annual_extremes_celsius"] = {
+                "extremes": {
+                    "max": max(serie_temperature),
+                    "min": min(serie_temperature),
                     # Table 32 row `Average`: here it is indeed the HOURLY
                     # mean, in accordance with Daten_Testprogramm!C104.
-                    'average': annuel_horaire,
+                    "average": annuel_horaire,
                 },
             }
 
     return resultat
 
 
-def extraire_candidat_test1(chemins_aps_par_cas, resolveur_room_id=None,
-                             liaisons=None, accepter_liaisons_non_confirmees=False):
+def extraire_candidat_test1(
+    chemins_aps_par_cas,
+    resolveur_room_id=None,
+    liaisons=None,
+    accepter_liaisons_non_confirmees=False,
+):
     """Main entry point for extraction -- builds the complete JSON expected
     by `engine/test1_engine.py::evaluer_test1(reference, candidat)`.
 
@@ -1244,7 +1385,8 @@ def extraire_candidat_test1(chemins_aps_par_cas, resolveur_room_id=None,
                 "(pas de VE disponible) -- passer explicitement "
                 "accepter_liaisons_non_confirmees=True pour les utiliser "
                 "en connaissance de cause, ou fournir vos propres liaisons "
-                "confirmees via le parametre `liaisons`.")
+                "confirmees via le parametre `liaisons`."
+            )
         liaisons = LIAISONS_APS_CANDIDATES
 
     def _room_id_unique(results_file):
@@ -1252,7 +1394,8 @@ def extraire_candidat_test1(chemins_aps_par_cas, resolveur_room_id=None,
         if len(pieces) != 1:
             raise RuntimeError(
                 "Attendu exactement 1 piece dans le fichier .aps du Test 1 "
-                "(zone unique) ; trouve {0}.".format(len(pieces)))
+                "(zone unique) ; trouve {0}.".format(len(pieces))
+            )
         # get_room_list() -> [(name, id, area, volume), ...] (§6.1.14).
         return pieces[0][1]
 
@@ -1263,24 +1406,25 @@ def extraire_candidat_test1(chemins_aps_par_cas, resolveur_room_id=None,
     provenance_par_cas = {}
     for cas_id, chemin_aps in chemins_aps_par_cas.items():
         if cas_id not in CAS_TEST1:
-            raise ValueError('Cas Test 1 inconnu : {0!r}'.format(cas_id))
+            raise ValueError("Cas Test 1 inconnu : {0!r}".format(cas_id))
         results_file = iesve.ResultsReader.open(chemin_aps)
         try:
             room_id = resolveur_room_id(results_file)
-            resultats_par_jour = getattr(results_file, 'results_per_day', 24)
+            resultats_par_jour = getattr(results_file, "results_per_day", 24)
             valeurs_cas = extraire_candidat_cas(
-                results_file, room_id, cas_id, resultats_par_jour, liaisons)
+                results_file, room_id, cas_id, resultats_par_jour, liaisons
+            )
         finally:
             results_file.close()
         for grandeur, noeud in valeurs_cas.items():
             candidat.setdefault(grandeur, {})[cas_id] = noeud
         provenance_par_cas[cas_id] = chemin_aps
 
-    candidat['_provenance'] = {
-        'source': 've_adapter.test1_adapter.extraire_candidat_test1',
-        'liaisons_confirmees': liaisons is not LIAISONS_APS_CANDIDATES,
-        'fichiers_aps': provenance_par_cas,
-        'annee_simulation': ANNEE_SIMULATION,
+    candidat["_provenance"] = {
+        "source": "ve_adapter.test1_adapter.extraire_candidat_test1",
+        "liaisons_confirmees": liaisons is not LIAISONS_APS_CANDIDATES,
+        "fichiers_aps": provenance_par_cas,
+        "annee_simulation": ANNEE_SIMULATION,
     }
     return candidat
 
@@ -1293,7 +1437,7 @@ def extraire_candidat_test1(chemins_aps_par_cas, resolveur_room_id=None,
 # --------------------------------------------------------------------------
 
 _ICI = os.path.dirname(os.path.abspath(__file__))
-CHEMIN_FIXTURE_DEFAUT = os.path.join(_ICI, 'fixtures', 'test1_candidat.exemple.json')
+CHEMIN_FIXTURE_DEFAUT = os.path.join(_ICI, "fixtures", "test1_candidat.exemple.json")
 
 
 def charger_fixture_test1(chemin=None):
@@ -1305,5 +1449,5 @@ def charger_fixture_test1(chemin=None):
     states this explicitly to avoid any downstream confusion.
     """
     chemin = chemin or CHEMIN_FIXTURE_DEFAUT
-    with open(chemin, encoding='utf-8') as flux:
+    with open(chemin, encoding="utf-8") as flux:
         return json.load(flux)

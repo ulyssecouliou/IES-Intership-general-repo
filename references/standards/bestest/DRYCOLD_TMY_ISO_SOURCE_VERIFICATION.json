@@ -5,7 +5,7 @@
   "source_identity_supported": true,
   "compliance_claim_allowed": false,
   "weather": {
-    "path": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\references\\standards\\bestest\\DRYCOLD.TMY",
+    "path": "references/standards/bestest/DRYCOLD.TMY",
     "sha256": "C33778B4E89C82245A12E17903225F2EB3AFF89C526E9E69A7DC3798D52B2D4E",
     "format": "NOAA_TMY1_FIXED_WIDTH",
     "station_ids": [
@@ -13,7 +13,7 @@
     ]
   },
   "iso_climate_workbook": {
-    "path": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\references\\standards\\iso52016\\ISO_52016_1_BESTEST_ClimData_2016.08.24.xls",
+    "path": "references/standards/iso52016/ISO_52016_1_BESTEST_ClimData_2016.08.24.xls",
     "sha256": "5C1E19F9DC508D28371552992EA8AA67EA0EF7FFE87E72C903F1A3BDF03B8347",
     "sheet_name": "ISO_FDIS_52016_1_BESTEST_ClimDa",
     "header": "Climate data: DRYCOLD.TMY (BESTESTS), converted according to draft ISO/FDIS 52010-1, spreadsheet version 2015.09.06",

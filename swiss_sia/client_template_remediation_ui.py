@@ -8,7 +8,6 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 from .client_template_remediation import (
-    ClientTemplateRemediationError,
     apply_preview_plan,
     automatic_template_evidence,
     build_preview_plan,
@@ -55,9 +54,7 @@ class ClientTemplateRemediationUI:
         self.model = model
         self.project_path = str(Path(project_path).resolve())
         self.project_name = str(getattr(project, "name", "") or Path(project_path).name)
-        self.language = normalize_language(
-            os.environ.get("SWISS_SIA_UI_LANGUAGE", "en")
-        )
+        self.language = normalize_language(os.environ.get("SWISS_SIA_UI_LANGUAGE", "en"))
         self.inventory = collect_inventory(project, model)
         self.plan: Optional[Dict[str, Any]] = None
         self.plan_path: Optional[Path] = None
@@ -151,7 +148,8 @@ class ClientTemplateRemediationUI:
         self.content = ttk.Frame(canvas, style="Card.TFrame", padding=16)
         window = canvas.create_window((0, 0), window=self.content, anchor="nw")
         self.content.bind(
-            "<Configure>", lambda _event: canvas.configure(scrollregion=canvas.bbox("all"))
+            "<Configure>",
+            lambda _event: canvas.configure(scrollregion=canvas.bbox("all")),
         )
         canvas.bind(
             "<Configure>", lambda event: canvas.itemconfigure(window, width=event.width)
@@ -384,9 +382,7 @@ class ClientTemplateRemediationUI:
             return
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         folder = (
-            Path(self.project_path)
-            / "sia_compliance_artifacts"
-            / "template_remediation"
+            Path(self.project_path) / "sia_compliance_artifacts" / "template_remediation"
         )
         path = folder / "sia3802_template_plan_{}.json".format(timestamp)
         write_json_artifact(path, plan)
@@ -395,13 +391,9 @@ class ClientTemplateRemediationUI:
         self.preview_signature = self._form_signature()
         ready_to_apply = plan["status"] == "READY_FOR_APPLY"
         self.apply_button.configure(state="normal" if ready_to_apply else "disabled")
-        structure = plan.get("capability_assessment", {}).get(
-            "room_gain_structure", {}
-        )
+        structure = plan.get("capability_assessment", {}).get("room_gain_structure", {})
         blocked_rooms = [
-            room
-            for room in structure.get("rooms", [])
-            if room.get("status") == "BLOCKED"
+            room for room in structure.get("rooms", []) if room.get("status") == "BLOCKED"
         ]
         bridge_required = structure.get("status") == (
             "TRANSIENT_SOURCE_TEMPLATE_GAIN_BRIDGE_AVAILABLE"
@@ -411,9 +403,7 @@ class ClientTemplateRemediationUI:
             "Template: {}".format(plan["template"]["name"]),
             "Template fingerprint: {}".format(plan["template"]["fingerprint_sha256"]),
             "Selected rooms: {}".format(len(plan["rooms"])),
-            "Target gains: {}".format(
-                len(plan["template"]["content"]["casual_gains"])
-            ),
+            "Target gains: {}".format(len(plan["template"]["content"]["casual_gains"])),
             "Target air exchanges: {}".format(
                 len(plan["template"]["content"]["air_exchanges"])
             ),
@@ -424,9 +414,7 @@ class ClientTemplateRemediationUI:
                 len(plan["template"]["content"]["apache_systems"])
             ),
             "Lighting gain detected (review aid): {}".format(
-                plan["template"]["review_observations"][
-                    "lighting_gain_detected"
-                ]
+                plan["template"]["review_observations"]["lighting_gain_detected"]
             ),
             "Non-infiltration air exchange detected (review aid): {}".format(
                 plan["template"]["review_observations"][
@@ -450,22 +438,25 @@ class ClientTemplateRemediationUI:
                     ", ".join(room.get("missing_gain_families", [])) or "[TO VERIFY]",
                 )
             )
-        lines.extend([
-            "",
-            "No VE object was changed by this preview.",
-            (
-                self._t("template_remediation_gain_structure_bridge")
-                if ready_to_apply and bridge_required
-                else "Applying will change only the selected rooms in the active copy."
-                if ready_to_apply
-                else (
-                    self._t("template_remediation_gain_structure_blocked")
-                    if plan["status"]
-                    == "BLOCKED_UNSUPPORTED_ROOM_GAIN_STRUCTURE"
-                    else self._t("template_remediation_apply_locked")
-                )
-            ),
-        ])
+        lines.extend(
+            [
+                "",
+                "No VE object was changed by this preview.",
+                (
+                    self._t("template_remediation_gain_structure_bridge")
+                    if ready_to_apply and bridge_required
+                    else (
+                        "Applying will change only the selected rooms in the active copy."
+                        if ready_to_apply
+                        else (
+                            self._t("template_remediation_gain_structure_blocked")
+                            if plan["status"] == "BLOCKED_UNSUPPORTED_ROOM_GAIN_STRUCTURE"
+                            else self._t("template_remediation_apply_locked")
+                        )
+                    )
+                ),
+            ]
+        )
         self._set_preview_text("\n".join(lines))
         if ready_to_apply:
             status_text = self._t("template_remediation_preview_ready")
@@ -489,9 +480,7 @@ class ClientTemplateRemediationUI:
         ):
             return
         folder = (
-            Path(self.project_path)
-            / "sia_compliance_artifacts"
-            / "template_remediation"
+            Path(self.project_path) / "sia_compliance_artifacts" / "template_remediation"
         )
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         receipt_path = folder / "sia3802_template_receipt_{}.json".format(timestamp)
@@ -512,8 +501,9 @@ class ClientTemplateRemediationUI:
             write_json_artifact(receipt_path, failure)
             self.status_var.set("Application failed: {}".format(exc))
             self._set_preview_text(
-                "APPLICATION FAILED\n{}\n\nReceipt: {}\n\nClose VE without saving."
-                .format(exc, receipt_path)
+                "APPLICATION FAILED\n{}\n\nReceipt: {}\n\nClose VE without saving.".format(
+                    exc, receipt_path
+                )
             )
             self.apply_button.configure(state="disabled")
             if messagebox is not None:
@@ -584,6 +574,4 @@ def launch_client_template_remediation(
 ) -> None:
     """Create and run the guarded remediation window."""
 
-    ClientTemplateRemediationUI(
-        iesve_module, project, model, project_path
-    ).run()
+    ClientTemplateRemediationUI(iesve_module, project, model, project_path).run()

@@ -62,9 +62,7 @@ def _generate(output_path: Path, dynamic_results):
         dynamic_results=dynamic_results,
     )
     with zipfile.ZipFile(output_path) as workbook:
-        shared_strings = workbook.read("xl/sharedStrings.xml").decode(
-            "utf-8", "ignore"
-        )
+        shared_strings = workbook.read("xl/sharedStrings.xml").decode("utf-8", "ignore")
     return shared_strings
 
 
@@ -149,9 +147,7 @@ class ExcelReportDynamicResultsRobustnessTests(unittest.TestCase):
         try:
             shared_strings = _generate(output_path, {"status": "NOT_CHECKABLE"})
             self.assertTrue(output_path.exists())
-            self.assertIn(
-                "No room-level dynamic result was readable", shared_strings
-            )
+            self.assertIn("No room-level dynamic result was readable", shared_strings)
         finally:
             output_path.unlink(missing_ok=True)
 

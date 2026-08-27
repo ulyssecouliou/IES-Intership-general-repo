@@ -7,7 +7,6 @@ from swiss_sia.reference_model.sia4010.official_input_contract import (
     Sia4010OfficialInputContract,
 )
 
-
 ROOT = Path(__file__).resolve().parents[1]
 CONTRACT = ROOT / "config" / "sia4010_official_input_contract.json"
 
@@ -52,4 +51,3 @@ class Sia4010OfficialInputContractTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

@@ -48,9 +48,7 @@ def read_epw_dry_bulb_c(path: Union[str, Path]) -> Tuple[float, ...]:
                 continue
             if len(row) <= 6:
                 raise ValueError(
-                    "EPW data row {} has fewer than seven columns".format(
-                        line_number
-                    )
+                    "EPW data row {} has fewer than seven columns".format(line_number)
                 )
             try:
                 values.append(float(row[6]))
@@ -62,9 +60,7 @@ def read_epw_dry_bulb_c(path: Union[str, Path]) -> Tuple[float, ...]:
                 ) from exc
     if len(values) != 8760:
         raise ValueError(
-            "Expected 8760 EPW records, found {} in {}".format(
-                len(values), weather_path
-            )
+            "Expected 8760 EPW records, found {} in {}".format(len(values), weather_path)
         )
     return tuple(values)
 
@@ -86,9 +82,7 @@ def aggregate_hourly_means(
     expected = 8760 * steps
     if len(values) != expected:
         raise ValueError(
-            "Expected {} APS weather samples, found {}".format(
-                expected, len(values)
-            )
+            "Expected {} APS weather samples, found {}".format(expected, len(values))
         )
     return tuple(
         sum(float(value) for value in values[index : index + steps]) / steps
@@ -121,8 +115,7 @@ def compare_hour_alignments(
                 sample_count=len(differences),
                 mean_absolute_difference_c=sum(differences) / len(differences),
                 root_mean_square_difference_c=math.sqrt(
-                    sum(value * value for value in differences)
-                    / len(differences)
+                    sum(value * value for value in differences) / len(differences)
                 ),
                 maximum_absolute_difference_c=max(differences),
             )
@@ -151,15 +144,11 @@ def build_hour_convention_diagnostic(
     if not alignments:
         raise ValueError("No APS/EPW hourly alignment could be evaluated")
     best = alignments[0]
-    zero = next(
-        item for item in alignments if item.aps_index_offset_hours == 0
-    )
+    zero = next(item for item in alignments if item.aps_index_offset_hours == 0)
     improvement = (
         0.0
         if zero.root_mean_square_difference_c == 0.0
-        else 1.0
-        - best.root_mean_square_difference_c
-        / zero.root_mean_square_difference_c
+        else 1.0 - best.root_mean_square_difference_c / zero.root_mean_square_difference_c
     )
     if best.aps_index_offset_hours == 0:
         status = "APS_INDEX_ALIGNS_WITH_EPW_FILE_ORDER"

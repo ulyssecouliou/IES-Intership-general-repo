@@ -11,7 +11,7 @@ import html
 import json
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, Mapping, Optional, Tuple, Union
+from typing import Any, Dict, Mapping, Optional, Union
 
 from ...config import SIA4010_CLASS_TEST_MATRIX
 from ..exceptions import ConfigurationError
@@ -27,7 +27,6 @@ from .navigator import Sia4010ValidationNavigator
 from .navigator_report import write_navigator_artifacts
 from .preparation_bundle import AllClassesPreparationReceipt
 from .test_loader import Sia4010TestLoader
-
 
 SCHEMA_VERSION = "1.1"
 _LEGACY_SCHEMA_VERSIONS = {"1.0"}
@@ -152,10 +151,7 @@ def load_registry(path: Union[str, Path]) -> Dict[str, Any]:
                 payload.get("schema_version")
             )
         )
-    expected = {
-        _case_key(item.variant, item.case_id)
-        for item in all_case_capabilities()
-    }
+    expected = {_case_key(item.variant, item.case_id) for item in all_case_capabilities()}
     recorded = set(payload.get("cases", {}))
     # An exact-set match used to be required, and registering the Test 1
     # diagnostic cases on 2026-08-12 made every ledger written before them
@@ -170,19 +166,13 @@ def load_registry(path: Union[str, Path]) -> Dict[str, Any]:
         )
     for missing in sorted(expected - recorded):
         variant, case_id = missing.split("/", 1)
-        payload.setdefault("cases", {})[missing] = _empty_case_record(
-            variant, case_id
-        )
+        payload.setdefault("cases", {})[missing] = _empty_case_record(variant, case_id)
     for capability in all_case_capabilities():
-        record = payload["cases"][
-            _case_key(capability.variant, capability.case_id)
-        ]
+        record = payload["cases"][_case_key(capability.variant, capability.case_id)]
         record["base_test_id"] = capability.base_test_id
         record["capability"] = capability.to_dict()
         if source_version in _LEGACY_SCHEMA_VERSIONS:
-            record.setdefault(
-                "simulation_evidence", _empty_simulation_evidence()
-            )
+            record.setdefault("simulation_evidence", _empty_simulation_evidence())
             result = record.setdefault("result_evidence", {})
             result.setdefault("aps_path", "")
             result.setdefault("aps_sha256", "")
@@ -219,11 +209,7 @@ def synchronize_preparation(
                 record["geometry_artifact"] = {
                     "path": str(geometry),
                     "sha256": _sha256(geometry) if geometry.is_file() else "",
-                    "status": (
-                        "VERIFIED"
-                        if geometry.is_file()
-                        else "MISSING"
-                    ),
+                    "status": ("VERIFIED" if geometry.is_file() else "MISSING"),
                 }
     payload["updated_at_utc"] = datetime.now(timezone.utc).isoformat()
     _write_json(path, payload)
@@ -244,22 +230,16 @@ def register_model_outcome(
         raise ConfigurationError("Custom scenarios cannot enter the SIA ledger")
     report = Path(report_path)
     if not report.is_file():
-        raise ConfigurationError(
-            "Model audit report does not exist: {}".format(report)
-        )
+        raise ConfigurationError("Model audit report does not exist: {}".format(report))
     path = Path(registry_path)
     payload = load_registry(path)
-    record = payload["cases"][
-        _case_key(scenario.variant, scenario.case_id)
-    ]
+    record = payload["cases"][_case_key(scenario.variant, scenario.case_id)]
     normalized = str(workflow_status).strip().upper()
     record["model_evidence"] = {
         "status": (
             "VERIFIED"
             if normalized in _MODEL_PASS
-            else "FAILED"
-            if "FAIL" in normalized
-            else "BLOCKED_WARNINGS"
+            else "FAILED" if "FAIL" in normalized else "BLOCKED_WARNINGS"
         ),
         "workflow_status": normalized,
         "artifact_path": str(report),
@@ -281,9 +261,7 @@ def register_case_evaluation(
 
     if receipt.artifact_path is None or not receipt.artifact_path.is_file():
         raise ConfigurationError(
-            "Active-case evaluation artifact is missing: {}".format(
-                receipt.artifact_path
-            )
+            "Active-case evaluation artifact is missing: {}".format(receipt.artifact_path)
         )
     artifact_payload = _load_json_artifact(
         Path(receipt.artifact_path), "active-case evaluation"
@@ -301,9 +279,7 @@ def register_case_evaluation(
             )
     source_evidence = artifact_payload.get("source_evidence")
     if not isinstance(source_evidence, Mapping):
-        raise ConfigurationError(
-            "Active-case evaluation has no source_evidence object"
-        )
+        raise ConfigurationError("Active-case evaluation has no source_evidence object")
     aps_path = Path(str(source_evidence.get("aps_path", "") or ""))
     aps_sha256 = str(source_evidence.get("aps_sha256", "") or "").lower()
     if not aps_path.is_file() or not aps_sha256:
@@ -332,9 +308,7 @@ def register_case_evaluation(
         "project_path": str(project_path),
         "aps_path": str(aps_path),
         "aps_sha256": aps_sha256,
-        "simulation_link_status": (
-            "VERIFIED" if simulation_linked else "NOT_LINKED"
-        ),
+        "simulation_link_status": ("VERIFIED" if simulation_linked else "NOT_LINKED"),
         "observed_metric_count": receipt.observed_metric_count,
         "distribution_criterion_count": receipt.distribution_criterion_count,
         "acceptance_criterion_available": (
@@ -372,9 +346,7 @@ def _same_path(left: Any, right: Any) -> bool:
     right_text = str(right or "")
     if not left_text or not right_text:
         return False
-    return Path(left_text).resolve(strict=False) == Path(right_text).resolve(
-        strict=False
-    )
+    return Path(left_text).resolve(strict=False) == Path(right_text).resolve(strict=False)
 
 
 def _verified_file(path_value: Any, digest_value: Any, context: str) -> Path:
@@ -418,9 +390,7 @@ def register_case_simulation(
         or receipt.aps_evaluation_required is not True
         or receipt.runtime_qualification_required is not True
     ):
-        raise ConfigurationError(
-            "ApacheSim receipt guardrails are incomplete or unsafe"
-        )
+        raise ConfigurationError("ApacheSim receipt guardrails are incomplete or unsafe")
     expected_options = {
         "start_day": 1,
         "start_month": 1,
@@ -451,9 +421,7 @@ def register_case_simulation(
 
     audit_path = Path(receipt.audit_path)
     if not audit_path.is_file():
-        raise ConfigurationError(
-            "ApacheSim audit does not exist: {}".format(audit_path)
-        )
+        raise ConfigurationError("ApacheSim audit does not exist: {}".format(audit_path))
     scenario_path = _verified_file(
         receipt.scenario_path,
         receipt.scenario_sha256,
@@ -471,10 +439,7 @@ def register_case_simulation(
     )
     runtime_input_path: Optional[Path] = None
     runtime_input: Optional[Dict[str, Any]] = None
-    if (
-        receipt.runtime_input_report_path
-        or receipt.runtime_input_report_sha256
-    ):
+    if receipt.runtime_input_report_path or receipt.runtime_input_report_sha256:
         runtime_input_path = _verified_file(
             receipt.runtime_input_report_path,
             receipt.runtime_input_report_sha256,
@@ -484,9 +449,7 @@ def register_case_simulation(
             runtime_input_path, "ApacheSim runtime-input qualification"
         )
         runtime_project = runtime_input.get("project") or {}
-        runtime_selection = (runtime_input.get("scenario") or {}).get(
-            "selection"
-        ) or {}
+        runtime_selection = (runtime_input.get("scenario") or {}).get("selection") or {}
         if runtime_input.get("status") != RUNTIME_INPUT_READY_STATUS:
             raise ConfigurationError(
                 "ApacheSim runtime-input qualification is not ready: {!r}".format(
@@ -504,22 +467,18 @@ def register_case_simulation(
             raise ConfigurationError(
                 "ApacheSim runtime-input qualification case mismatch"
             )
-        if str(runtime_input.get("scenario_sha256", "")).lower() != str(
-            receipt.scenario_sha256
-        ).lower():
+        if (
+            str(runtime_input.get("scenario_sha256", "")).lower()
+            != str(receipt.scenario_sha256).lower()
+        ):
             raise ConfigurationError(
                 "ApacheSim runtime-input qualification scenario mismatch"
             )
-        if (
-            (runtime_input.get("mapping") or {}).get(
-                "compliance_claim_allowed"
-            )
-            is not False
-            or (runtime_input.get("guardrails") or {}).get(
-                "compliance_claim_allowed"
-            )
-            is not False
-        ):
+        if (runtime_input.get("mapping") or {}).get(
+            "compliance_claim_allowed"
+        ) is not False or (runtime_input.get("guardrails") or {}).get(
+            "compliance_claim_allowed"
+        ) is not False:
             raise ConfigurationError(
                 "ApacheSim runtime-input qualification guardrails are unsafe"
             )
@@ -572,18 +531,14 @@ def register_case_simulation(
         or audit.get("aps_evaluation_required") is not True
         or audit.get("runtime_qualification_required") is not True
     ):
-        raise ConfigurationError(
-            "ApacheSim audit guardrails are incomplete or unsafe"
-        )
+        raise ConfigurationError("ApacheSim audit guardrails are incomplete or unsafe")
     if audit.get("source") != TEST1_SIMULATION_SOURCE:
         raise ConfigurationError(
             "ApacheSim audit does not cite the qualified Test 1 source"
         )
     source_file = audit.get("source_file")
     if not isinstance(source_file, Mapping):
-        raise ConfigurationError(
-            "ApacheSim audit has no checksum-traced source file"
-        )
+        raise ConfigurationError("ApacheSim audit has no checksum-traced source file")
     _verified_file(
         source_file.get("path"),
         source_file.get("sha256"),
@@ -607,31 +562,21 @@ def register_case_simulation(
             )
     confirmed = audit.get("confirmed_contract")
     if not isinstance(confirmed, Mapping):
-        raise ConfigurationError(
-            "ApacheSim audit has no confirmed temporal contract"
-        )
-    if confirmed.get("simulation_period") != (
-        "2011-01-01 through 2011-12-31"
-    ):
+        raise ConfigurationError("ApacheSim audit has no confirmed temporal contract")
+    if confirmed.get("simulation_period") != ("2011-01-01 through 2011-12-31"):
         raise ConfigurationError(
             "ApacheSim audit simulation period is not the confirmed annual period"
         )
     if confirmed.get("required_result_frequency") != "hourly":
-        raise ConfigurationError(
-            "ApacheSim audit result frequency is not hourly"
-        )
-    if confirmed.get("requested_apachesim_options") != dict(
-        receipt.requested_options
-    ):
+        raise ConfigurationError("ApacheSim audit result frequency is not hourly")
+    if confirmed.get("requested_apachesim_options") != dict(receipt.requested_options):
         raise ConfigurationError(
             "ApacheSim audit requested options do not match the receipt"
         )
 
     path = Path(registry_path)
     payload = load_registry(path)
-    record = payload["cases"][
-        _case_key(receipt.variant, receipt.case_id)
-    ]
+    record = payload["cases"][_case_key(receipt.variant, receipt.case_id)]
     model = record["model_evidence"]
     if runtime_input_path is not None:
         # The generic reference-model workflow may legitimately retain
@@ -640,17 +585,11 @@ def register_case_simulation(
         # weather, scenario, model report and live runtime-input read-back.
         # Persist that stronger, case-specific proof instead of leaving an
         # obsolete generic WARNING/FAIL record as the model gate.
-        model_report = _load_json_artifact(
-            model_report_path, "ApacheSim model report"
-        )
+        model_report = _load_json_artifact(model_report_path, "ApacheSim model report")
         record["model_evidence"] = {
             "status": "VERIFIED",
-            "workflow_status": str(
-                model_report.get("overall_status", "")
-            ).upper(),
-            "verification_basis": (
-                "TEST1_RUNTIME_QUALIFICATION_AND_APACHESIM_PREFLIGHT"
-            ),
+            "workflow_status": str(model_report.get("overall_status", "")).upper(),
+            "verification_basis": ("TEST1_RUNTIME_QUALIFICATION_AND_APACHESIM_PREFLIGHT"),
             "artifact_path": str(model_report_path),
             "artifact_sha256": receipt.model_report_sha256.lower(),
             "project_path": str(project_path),
@@ -678,9 +617,7 @@ def register_case_simulation(
         "results_path": str(results_path),
         "results_sha256": receipt.results_sha256,
         "results_size_bytes": receipt.results_size_bytes,
-        "model_evidence_link_status": (
-            "VERIFIED" if model_linked else "NOT_LINKED"
-        ),
+        "model_evidence_link_status": ("VERIFIED" if model_linked else "NOT_LINKED"),
         "aps_evaluation_required": True,
         "compliance_claim_allowed": False,
     }
@@ -712,9 +649,7 @@ def register_template_case_simulation(
         )
     if receipt.status != SIMULATION_STATUS:
         raise ConfigurationError(
-            "Template ApacheSim receipt is not successful: {}".format(
-                receipt.status
-            )
+            "Template ApacheSim receipt is not successful: {}".format(receipt.status)
         )
     if (
         receipt.compliance_claim_allowed is not False
@@ -794,13 +729,9 @@ def register_template_case_simulation(
         ("model_report_sha256", receipt.model_report_sha256),
     ):
         if str(audit.get(key, "")) != str(expected):
-            raise ConfigurationError(
-                "Template ApacheSim audit {} mismatch".format(key)
-            )
+            raise ConfigurationError("Template ApacheSim audit {} mismatch".format(key))
     expected_source = (
-        TEST1E_SIMULATION_SOURCE
-        if pair == ("test_1", "1E")
-        else TEST2_SIMULATION_SOURCE
+        TEST1E_SIMULATION_SOURCE if pair == ("test_1", "1E") else TEST2_SIMULATION_SOURCE
     )
     if (
         audit.get("source") != expected_source
@@ -828,11 +759,9 @@ def register_template_case_simulation(
         raise ConfigurationError("Template ApacheSim calendar source mismatch")
     contract = audit.get("confirmed_contract") or {}
     if (
-        contract.get("simulation_period")
-        != "2022-01-01 through 2022-12-31"
+        contract.get("simulation_period") != "2022-01-01 through 2022-12-31"
         or contract.get("required_result_frequency") != "hourly"
-        or contract.get("requested_apachesim_options")
-        != dict(receipt.requested_options)
+        or contract.get("requested_apachesim_options") != dict(receipt.requested_options)
     ):
         raise ConfigurationError("Template ApacheSim temporal contract mismatch")
 
@@ -882,9 +811,7 @@ def _artifact_is_valid(evidence: Mapping[str, Any]) -> bool:
     path = Path(path_text)
     if not path.is_file() or _sha256(path) != expected:
         return False
-    qualification_path = str(
-        evidence.get("qualification_artifact_path", "") or ""
-    )
+    qualification_path = str(evidence.get("qualification_artifact_path", "") or "")
     qualification_digest = str(
         evidence.get("qualification_artifact_sha256", "") or ""
     ).lower()
@@ -911,33 +838,24 @@ def _simulation_evidence_is_valid(evidence: Mapping[str, Any]) -> bool:
         return False
     for prefix in ("scenario", "model_report", "results"):
         path_text = str(evidence.get("{}_path".format(prefix), "") or "")
-        expected = str(
-            evidence.get("{}_sha256".format(prefix), "") or ""
-        ).lower()
+        expected = str(evidence.get("{}_sha256".format(prefix), "") or "").lower()
         path = Path(path_text)
         if not path_text or not expected or not path.is_file():
             return False
         if _sha256(path) != expected:
             return False
     results = Path(str(evidence["results_path"]))
-    return (
-        results.stat().st_size == int(evidence.get("results_size_bytes", -1))
-    )
+    return results.stat().st_size == int(evidence.get("results_size_bytes", -1))
 
 
-def _variant_model_status(
-    cases: Mapping[str, Any], variant: str
-) -> str:
+def _variant_model_status(cases: Mapping[str, Any], variant: str) -> str:
     """Return PASS only when every exact model case is checksum-valid."""
 
     return (
         "PASS"
         if all(
-            cases[_case_key(variant, case_id)]["model_evidence"]["status"]
-            == "VERIFIED"
-            and _artifact_is_valid(
-                cases[_case_key(variant, case_id)]["model_evidence"]
-            )
+            cases[_case_key(variant, case_id)]["model_evidence"]["status"] == "VERIFIED"
+            and _artifact_is_valid(cases[_case_key(variant, case_id)]["model_evidence"])
             for case_id in TEST_CASES[variant]
         )
         else "BLOCKED"
@@ -951,8 +869,7 @@ def _variant_result_record(
 
     result_case_ids = ("1E",) if variant == "test_1" else TEST_CASES[variant]
     case_records = tuple(
-        cases[_case_key(variant, case_id)]
-        for case_id in result_case_ids
+        cases[_case_key(variant, case_id)] for case_id in result_case_ids
     )
     records = tuple(item["result_evidence"] for item in case_records)
     if not records or not all(
@@ -964,9 +881,7 @@ def _variant_result_record(
             case["simulation_evidence"].get("results_path"),
         )
         and str(result.get("aps_sha256", "")).lower()
-        == str(
-            case["simulation_evidence"].get("results_sha256", "")
-        ).lower()
+        == str(case["simulation_evidence"].get("results_sha256", "")).lower()
         for case, result in zip(case_records, records)
     ):
         return None
@@ -974,15 +889,15 @@ def _variant_result_record(
     status = (
         "FAILED"
         if any("FAIL" in item for item in statuses)
-        else "OFFICIAL_RESULTS_RECORDED"
-        if statuses == {"OFFICIAL_RESULTS_RECORDED"}
-        else "NOT_CHECKABLE"
+        else (
+            "OFFICIAL_RESULTS_RECORDED"
+            if statuses == {"OFFICIAL_RESULTS_RECORDED"}
+            else "NOT_CHECKABLE"
+        )
     )
     return {
         "status": status,
-        "artifact_path": ";".join(
-            str(item["artifact_path"]) for item in records
-        ),
+        "artifact_path": ";".join(str(item["artifact_path"]) for item in records),
     }
 
 
@@ -1014,17 +929,12 @@ def _base_test_summaries(cases: Mapping[str, Any]) -> Dict[str, Any]:
         linked_results = tuple(
             record
             for record in records
-            if record["result_evidence"].get("simulation_link_status")
-            == "VERIFIED"
+            if record["result_evidence"].get("simulation_link_status") == "VERIFIED"
             and _artifact_is_valid(record["result_evidence"])
-            and _simulation_evidence_is_valid(
-                record["simulation_evidence"]
-            )
+            and _simulation_evidence_is_valid(record["simulation_evidence"])
         )
         failed_results = sum(
-            "FAIL" in str(
-                record["result_evidence"].get("status", "")
-            ).upper()
+            "FAIL" in str(record["result_evidence"].get("status", "")).upper()
             for record in linked_results
         )
         expected = len(records)
@@ -1053,19 +963,11 @@ def _base_test_summaries(cases: Mapping[str, Any]) -> Dict[str, Any]:
                     for record in records
                 ),
                 "guarded_simulation_cases": sum(
-                    bool(
-                        record["capability"].get(
-                            "apachesim_qualification_supported"
-                        )
-                    )
+                    bool(record["capability"].get("apachesim_qualification_supported"))
                     for record in records
                 ),
                 "qualified_aps_evaluation_cases": sum(
-                    bool(
-                        record["capability"].get(
-                            "aps_evaluation_supported"
-                        )
-                    )
+                    bool(record["capability"].get("aps_evaluation_supported"))
                     for record in records
                 ),
             },
@@ -1088,12 +990,10 @@ def build_all_class_navigators(
     artifacts = {}
     for class_id, variants in SIA4010_CLASS_TEST_MATRIX.items():
         model_statuses = {
-            variant: _variant_model_status(cases, variant)
-            for variant in variants
+            variant: _variant_model_status(cases, variant) for variant in variants
         }
         result_records = {
-            variant: _variant_result_record(cases, variant)
-            for variant in variants
+            variant: _variant_result_record(cases, variant) for variant in variants
         }
         locators = {
             variant: str(record["artifact_path"])
@@ -1113,9 +1013,7 @@ def build_all_class_navigators(
             test_results_map=result_map,
         )
         evaluations[class_id] = evaluation.to_dict()
-        artifacts[class_id] = write_navigator_artifacts(
-            evaluation, output
-        )
+        artifacts[class_id] = write_navigator_artifacts(evaluation, output)
     global_payload = {
         "schema_version": SCHEMA_VERSION,
         "official_bundle": {
@@ -1136,14 +1034,11 @@ def build_all_class_navigators(
                 for record in cases.values()
             ),
             "checksum_valid_apachesim_cases": sum(
-                _simulation_evidence_is_valid(
-                    record["simulation_evidence"]
-                )
+                _simulation_evidence_is_valid(record["simulation_evidence"])
                 for record in cases.values()
             ),
             "simulation_linked_aps_evaluations": sum(
-                record["result_evidence"].get("simulation_link_status")
-                == "VERIFIED"
+                record["result_evidence"].get("simulation_link_status") == "VERIFIED"
                 and _artifact_is_valid(record["result_evidence"])
                 for record in cases.values()
             ),

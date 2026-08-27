@@ -24,7 +24,6 @@ from .config import (
 )
 from .model_analyzer import has_active_solar_protection
 
-
 BLOCKING_SIA3802_RULES_BY_TEST = {
     "test_1": {
         "SIA_VALUE_SURFACE_U_IMPLAUSIBLE",
@@ -50,7 +49,9 @@ def build_sia4010_pdf_prevalidation(
 ) -> Dict[str, Any]:
     """Return SIA 4010 PDF-based prevalidation tests and classes."""
     stats = _build_stats(rooms_data, sia4010_results, dynamic_results)
-    alerts_by_rule = _alerts_by_rule(sia3802_results.get("alerts", []) if isinstance(sia3802_results, dict) else [])
+    alerts_by_rule = _alerts_by_rule(
+        sia3802_results.get("alerts", []) if isinstance(sia3802_results, dict) else []
+    )
 
     tests = {
         test_name: _evaluate_test(test_name, stats, alerts_by_rule)
@@ -136,20 +137,43 @@ def _checks_for_test(test_name: str, stats: Dict[str, Any]) -> List[Any]:
             ("dynamic APS/Vista file readable", stats["dynamic_available"]),
         ]
     if test_name == "test_2":
-        g_total_coverage = stats["g_total_values"] + stats["g_total_not_required_for_g_limit"]
+        g_total_coverage = (
+            stats["g_total_values"] + stats["g_total_not_required_for_g_limit"]
+        )
         return [
             ("external glazing extracted", stats["external_windows"] > 0),
-            ("EN 410/SIA comparable g_perp values extracted", stats["en410_g_values"] > 0),
-            ("visible transmittance extracted", stats["visible_transmittance_values"] > 0),
-            ("solar-protection type/category documented", stats["solar_protection_types"] > 0),
-            ("solar-protection control/profile documented", stats["solar_protection_controls"] > 0),
-            ("active g_total available or EN 410 g already at/below the table 2 reference input", g_total_coverage >= stats["external_windows"] > 0),
-            ("infiltration evidence available for diagnostic transition", stats["rooms_with_infiltration_m3_h_m2"] > 0),
+            (
+                "EN 410/SIA comparable g_perp values extracted",
+                stats["en410_g_values"] > 0,
+            ),
+            (
+                "visible transmittance extracted",
+                stats["visible_transmittance_values"] > 0,
+            ),
+            (
+                "solar-protection type/category documented",
+                stats["solar_protection_types"] > 0,
+            ),
+            (
+                "solar-protection control/profile documented",
+                stats["solar_protection_controls"] > 0,
+            ),
+            (
+                "active g_total available or EN 410 g already at/below the table 2 reference input",
+                g_total_coverage >= stats["external_windows"] > 0,
+            ),
+            (
+                "infiltration evidence available for diagnostic transition",
+                stats["rooms_with_infiltration_m3_h_m2"] > 0,
+            ),
         ]
     if test_name == "test_3":
         return [
             ("lighting power/internal gain extracted", stats["rooms_with_lighting"] > 0),
-            ("daylight control strategy documented", stats["lighting_control_evidence"] > 0),
+            (
+                "daylight control strategy documented",
+                stats["lighting_control_evidence"] > 0,
+            ),
             ("lighting energy results available", stats["lighting_energy_available"]),
             ("SIA 387/4 control variant mapped", stats["lighting_control_evidence"] > 0),
         ]
@@ -157,25 +181,46 @@ def _checks_for_test(test_name: str, stats: Dict[str, Any]) -> List[Any]:
         return [
             ("HVAC system data extracted", stats["rooms_with_hvac"] > 0),
             ("ventilation/airflow data extracted", stats["rooms_with_ventilation"] > 0),
-            ("dynamic heating/cooling demand available", stats["dynamic_demand_rows"] > 0),
-            ("dynamic temperature indicators available", stats["dynamic_temperature_rows"] > 0),
+            (
+                "dynamic heating/cooling demand available",
+                stats["dynamic_demand_rows"] > 0,
+            ),
+            (
+                "dynamic temperature indicators available",
+                stats["dynamic_temperature_rows"] > 0,
+            ),
             ("CO2 output or manual evidence available", stats["co2_available"]),
-            ("coil/supply-air output evidence available", stats["coil_or_supply_air_available"]),
+            (
+                "coil/supply-air output evidence available",
+                stats["coil_or_supply_air_available"],
+            ),
         ]
     if test_name == "test_5":
         return [
             ("HVAC/AHU system data extracted", stats["rooms_with_hvac"] > 0),
-            ("multizone or AHU grouping evidence available", stats["multizone_hvac_evidence"] > 0),
+            (
+                "multizone or AHU grouping evidence available",
+                stats["multizone_hvac_evidence"] > 0,
+            ),
             ("fan control identifier documented", stats["fan_control_evidence"] > 0),
-            ("heat/moisture recovery type documented", stats["heat_recovery_evidence"] > 0),
+            (
+                "heat/moisture recovery type documented",
+                stats["heat_recovery_evidence"] > 0,
+            ),
             ("humidifier type/control documented", stats["humidifier_evidence"] > 0),
         ]
     if test_name == "test_6":
         return [
             ("ventilation system data extracted", stats["rooms_with_ventilation"] > 0),
-            ("constant airflow or staged airflow documented", stats["staged_airflow_evidence"] > 0),
+            (
+                "constant airflow or staged airflow documented",
+                stats["staged_airflow_evidence"] > 0,
+            ),
             ("heat recovery documented", stats["heat_recovery_evidence"] > 0),
-            ("restaurant/kitchen overflow logic documented", stats["overflow_evidence"] > 0),
+            (
+                "restaurant/kitchen overflow logic documented",
+                stats["overflow_evidence"] > 0,
+            ),
         ]
     if test_name == "test_7":
         return [
@@ -184,9 +229,15 @@ def _checks_for_test(test_name: str, stats: Dict[str, Any]) -> List[Any]:
                 stats["dynamic_heating_rows"] > 0 and stats["dynamic_cooling_rows"] > 0,
             ),
             ("final energy by system/carrier available", stats["final_energy_available"]),
-            ("emission/distribution/storage/generation evidence available", stats["system_chain_evidence"] > 0),
+            (
+                "emission/distribution/storage/generation evidence available",
+                stats["system_chain_evidence"] > 0,
+            ),
             ("pump/fan/auxiliary energy available", stats["auxiliary_energy_available"]),
-            ("heating/cooling generation data available", stats["generation_evidence"] > 0),
+            (
+                "heating/cooling generation data available",
+                stats["generation_evidence"] > 0,
+            ),
         ]
     return []
 
@@ -204,7 +255,9 @@ def _evaluate_classes(tests: Dict[str, Dict[str, Any]]) -> Dict[str, Dict[str, A
             for alias in aliases
         }
         scores = [
-            tests.get(SIA4010_TEST_ALIAS_TO_BASE_TEST.get(alias, alias), {}).get("score", 0.0)
+            tests.get(SIA4010_TEST_ALIAS_TO_BASE_TEST.get(alias, alias), {}).get(
+                "score", 0.0
+            )
             for alias in aliases
         ]
         status_values = set(statuses.values())
@@ -226,7 +279,11 @@ def _evaluate_classes(tests: Dict[str, Dict[str, Any]]) -> Dict[str, Dict[str, A
         classes[class_name] = {
             "class": class_name,
             "status": class_status,
-            "score": round(sum(float(score or 0.0) for score in scores) / len(scores), 1) if scores else 0.0,
+            "score": (
+                round(sum(float(score or 0.0) for score in scores) / len(scores), 1)
+                if scores
+                else 0.0
+            ),
             "required_tests_label": tests_label,
             "required_test_aliases": aliases,
             "required_test_statuses": statuses,
@@ -253,8 +310,12 @@ def _build_summary(
         "overall_status": overall_status,
         "test_count": len(tests),
         "class_count": len(classes),
-        "average_test_score": round(sum(test_scores) / len(test_scores), 1) if test_scores else 0.0,
-        "average_class_score": round(sum(class_scores) / len(class_scores), 1) if class_scores else 0.0,
+        "average_test_score": (
+            round(sum(test_scores) / len(test_scores), 1) if test_scores else 0.0
+        ),
+        "average_class_score": (
+            round(sum(class_scores) / len(class_scores), 1) if class_scores else 0.0
+        ),
         "test_status_counts": test_status_counts,
         "class_status_counts": class_status_counts,
         "official_validation_required": True,
@@ -282,56 +343,63 @@ def _build_stats(
     rooms = list(rooms_data or [])
     surfaces = [surface for room in rooms for surface in getattr(room, "surfaces", [])]
     openings = [opening for room in rooms for opening in getattr(room, "openings", [])]
-    external_surfaces = [surface for surface in surfaces if getattr(surface, "is_external", False)]
-    external_openings = [opening for opening in openings if getattr(opening, "is_external", False)]
+    external_surfaces = [
+        surface for surface in surfaces if getattr(surface, "is_external", False)
+    ]
+    external_openings = [
+        opening for opening in openings if getattr(opening, "is_external", False)
+    ]
     external_windows = [
-        opening for opening in external_openings
-        if str(getattr(opening, "opening_type", "") or "").lower() in {"window", "glazing", "ext_glazing", "4"}
+        opening
+        for opening in external_openings
+        if str(getattr(opening, "opening_type", "") or "").lower()
+        in {"window", "glazing", "ext_glazing", "4"}
     ]
     dynamic_payload = dynamic_results or sia4010_results.get("dynamic_results", {}) or {}
     dynamic_room_rows = dynamic_payload.get("rooms", []) or []
     dynamic_demand_rows = [
-        row for row in dynamic_room_rows
+        row
+        for row in dynamic_room_rows
         if row.get("heating_kwh") is not None or row.get("cooling_kwh") is not None
     ]
     dynamic_heating_rows = [
-        row for row in dynamic_room_rows
-        if row.get("heating_kwh") is not None
+        row for row in dynamic_room_rows if row.get("heating_kwh") is not None
     ]
     dynamic_cooling_rows = [
-        row for row in dynamic_room_rows
-        if row.get("cooling_kwh") is not None
+        row for row in dynamic_room_rows if row.get("cooling_kwh") is not None
     ]
     dynamic_temperature_rows = [
-        row for row in dynamic_room_rows
-        if row.get("occupied_hours_above_26") is not None or row.get("occupied_hours_above_27") is not None
+        row
+        for row in dynamic_room_rows
+        if row.get("occupied_hours_above_26") is not None
+        or row.get("occupied_hours_above_27") is not None
     ]
     dynamic_lighting_rows = [
-        row for row in dynamic_room_rows
-        if row.get("lighting_kwh") is not None
+        row for row in dynamic_room_rows if row.get("lighting_kwh") is not None
     ]
     dynamic_fan_rows = [
-        row for row in dynamic_room_rows
-        if row.get("fan_kwh") is not None
+        row for row in dynamic_room_rows if row.get("fan_kwh") is not None
     ]
     dynamic_pump_rows = [
-        row for row in dynamic_room_rows
-        if row.get("pump_kwh") is not None
+        row for row in dynamic_room_rows if row.get("pump_kwh") is not None
     ]
     dynamic_auxiliary_rows = [
-        row for row in dynamic_room_rows
-        if row.get("auxiliary_kwh") is not None
+        row for row in dynamic_room_rows if row.get("auxiliary_kwh") is not None
     ]
     dynamic_coil_rows = [
-        row for row in dynamic_room_rows
-        if row.get("coil_heating_kwh") is not None or row.get("coil_cooling_kwh") is not None
+        row
+        for row in dynamic_room_rows
+        if row.get("coil_heating_kwh") is not None
+        or row.get("coil_cooling_kwh") is not None
     ]
     dynamic_co2_rows = [
-        row for row in dynamic_room_rows
+        row
+        for row in dynamic_room_rows
         if row.get("peak_co2_ppm") is not None or row.get("average_co2_ppm") is not None
     ]
     dynamic_humidity_rows = [
-        row for row in dynamic_room_rows
+        row
+        for row in dynamic_room_rows
         if row.get("peak_relative_humidity_percent") is not None
         or row.get("average_relative_humidity_percent") is not None
     ]
@@ -345,16 +413,15 @@ def _build_stats(
             g_total_not_required_for_g_limit += 1
 
     rooms_with_lighting = [
-        room for room in rooms
+        room
+        for room in rooms
         if (getattr(room, "internal_gains", {}) or {}).get("lighting") is not None
     ]
     rooms_with_ventilation = [
-        room for room in rooms
-        if getattr(room, "ventilation_rate", None) is not None
+        room for room in rooms if getattr(room, "ventilation_rate", None) is not None
     ]
     rooms_with_infiltration_m3_h_m2 = [
-        room for room in rooms
-        if getattr(room, "infiltration_m3_h_m2", None) is not None
+        room for room in rooms if getattr(room, "infiltration_m3_h_m2", None) is not None
     ]
     rooms_with_hvac = [room for room in rooms if getattr(room, "hvac_systems", None)]
     hvac_systems = [
@@ -380,14 +447,38 @@ def _build_stats(
     return {
         "rooms": len(rooms),
         "external_surfaces": len(external_surfaces),
-        "surface_u_values": sum(1 for surface in external_surfaces if getattr(surface, "u_value", None) is not None),
+        "surface_u_values": sum(
+            1
+            for surface in external_surfaces
+            if getattr(surface, "u_value", None) is not None
+        ),
         "external_openings": len(external_openings),
         "external_windows": len(external_windows),
-        "window_u_values": sum(1 for opening in external_windows if getattr(opening, "u_value", None) is not None),
-        "window_g_values": sum(1 for opening in external_windows if getattr(opening, "solar_factor", None) is not None),
-        "en410_g_values": sum(1 for opening in external_windows if getattr(opening, "g_value_bs_en_410", None) is not None),
-        "raw_cdb_g_values": sum(1 for opening in external_windows if getattr(opening, "cdb_g_value", None) is not None),
-        "visible_transmittance_values": sum(1 for opening in external_windows if getattr(opening, "visible_transmittance", None) is not None),
+        "window_u_values": sum(
+            1
+            for opening in external_windows
+            if getattr(opening, "u_value", None) is not None
+        ),
+        "window_g_values": sum(
+            1
+            for opening in external_windows
+            if getattr(opening, "solar_factor", None) is not None
+        ),
+        "en410_g_values": sum(
+            1
+            for opening in external_windows
+            if getattr(opening, "g_value_bs_en_410", None) is not None
+        ),
+        "raw_cdb_g_values": sum(
+            1
+            for opening in external_windows
+            if getattr(opening, "cdb_g_value", None) is not None
+        ),
+        "visible_transmittance_values": sum(
+            1
+            for opening in external_windows
+            if getattr(opening, "visible_transmittance", None) is not None
+        ),
         "solar_protection_types": sum(
             1 for opening in external_windows if has_active_solar_protection(opening)
         ),
@@ -397,13 +488,18 @@ def _build_stats(
             if has_active_solar_protection(opening)
             and getattr(opening, "shading_control", None)
         ),
-        "g_total_values": sum(1 for opening in external_windows if getattr(opening, "g_total", None) is not None),
+        "g_total_values": sum(
+            1
+            for opening in external_windows
+            if getattr(opening, "g_total", None) is not None
+        ),
         "g_total_not_required_for_g_limit": g_total_not_required_for_g_limit,
         "rooms_with_lighting": len(rooms_with_lighting),
         "rooms_with_ventilation": len(rooms_with_ventilation),
         "rooms_with_infiltration_m3_h_m2": len(rooms_with_infiltration_m3_h_m2),
         "rooms_with_hvac": len(rooms_with_hvac),
-        "dynamic_available": str(dynamic_payload.get("status", "")).upper() == "AVAILABLE",
+        "dynamic_available": str(dynamic_payload.get("status", "")).upper()
+        == "AVAILABLE",
         "dynamic_demand_rows": len(dynamic_demand_rows),
         "dynamic_heating_rows": len(dynamic_heating_rows),
         "dynamic_cooling_rows": len(dynamic_cooling_rows),
@@ -412,7 +508,9 @@ def _build_stats(
         "dynamic_fan_rows": len(dynamic_fan_rows),
         "dynamic_pump_rows": len(dynamic_pump_rows),
         "dynamic_auxiliary_rows": len(dynamic_auxiliary_rows),
-        "dynamic_auxiliary_energy_rows": max(len(dynamic_fan_rows), len(dynamic_pump_rows), len(dynamic_auxiliary_rows)),
+        "dynamic_auxiliary_energy_rows": max(
+            len(dynamic_fan_rows), len(dynamic_pump_rows), len(dynamic_auxiliary_rows)
+        ),
         "dynamic_coil_rows": len(dynamic_coil_rows),
         "dynamic_co2_rows": len(dynamic_co2_rows),
         "dynamic_humidity_rows": len(dynamic_humidity_rows),
@@ -422,16 +520,21 @@ def _build_stats(
             for room in rooms
         ),
         "lighting_energy_available": (
-            len(dynamic_lighting_rows) > 0
-            or energy.get("lighting_energy") is not None
+            len(dynamic_lighting_rows) > 0 or energy.get("lighting_energy") is not None
         ),
-        "co2_available": has_system_value("co2_control", "co2_sensor") or len(dynamic_co2_rows) > 0,
+        "co2_available": has_system_value("co2_control", "co2_sensor")
+        or len(dynamic_co2_rows) > 0,
         "coil_or_supply_air_available": (
             len(dynamic_coil_rows) > 0
             or has_system_value("supply_air_temperature", "coil_heating", "coil_cooling")
         ),
         "multizone_hvac_evidence": any(
-            "MULTIZONE" in "".join(character for character in str(system.get("system_type") or "").upper() if character.isalnum())
+            "MULTIZONE"
+            in "".join(
+                character
+                for character in str(system.get("system_type") or "").upper()
+                if character.isalnum()
+            )
             for system in hvac_systems
         ),
         "fan_control_evidence": has_system_value("fan_control"),
@@ -439,17 +542,24 @@ def _build_stats(
             has_system_value("heat_recovery_type", "heat_recovery_characteristic")
             or any(getattr(room, "heat_recovery_type", None) for room in rooms)
         ),
-        "humidifier_evidence": has_system_value("humidifier_type", "humidifier_control") or len(dynamic_humidity_rows) > 0,
+        "humidifier_evidence": has_system_value("humidifier_type", "humidifier_control")
+        or len(dynamic_humidity_rows) > 0,
         "staged_airflow_evidence": (
             has_system_value("ventilation_stages")
-            or any(getattr(room, "ventilation_control_level", None) is not None for room in rooms)
+            or any(
+                getattr(room, "ventilation_control_level", None) is not None
+                for room in rooms
+            )
         ),
         "overflow_evidence": has_system_value("overflow_paths"),
-        "final_energy_available": has_final_energy() or any(
+        "final_energy_available": has_final_energy()
+        or any(
             energy.get(key) is not None
             for key in ("primary_energy", "co2_emissions", "renewable_energy_share")
         ),
-        "system_chain_evidence": has_system_value("storage_generation_data", "distribution_data", "emission_data"),
+        "system_chain_evidence": has_system_value(
+            "storage_generation_data", "distribution_data", "emission_data"
+        ),
         "auxiliary_energy_available": (
             len(dynamic_fan_rows) > 0
             or len(dynamic_pump_rows) > 0
@@ -497,8 +607,13 @@ def _next_action_for_test(
     if status == SIA4010_PREVALIDATION_STATUSES["pass"]:
         return "Keep the extracted data and prepare the official SIA execution-package comparison if formal validation is required."
     if status == SIA4010_PREVALIDATION_STATUSES["fail"]:
-        rules = sorted({str(getattr(alert, "rule", "") or "") for alert in blocking_alerts})
-        return "Resolve the blocking SIA 380/2 issue(s) before claiming this precheck: " + ", ".join(rules)
+        rules = sorted(
+            {str(getattr(alert, "rule", "") or "") for alert in blocking_alerts}
+        )
+        return (
+            "Resolve the blocking SIA 380/2 issue(s) before claiming this precheck: "
+            + ", ".join(rules)
+        )
     if missing:
         return "Add or document missing VE data: " + "; ".join(missing[:5])
     return f"Review {test_name} manually and document the assumptions before official validation."
@@ -507,7 +622,8 @@ def _next_action_for_test(
 def _required_aliases_for_class(class_name: str) -> List[str]:
     """Return SIA 4010 test aliases required by one validation class."""
     return [
-        alias for alias in SIA4010_TEST_ALIAS_ORDER
+        alias
+        for alias in SIA4010_TEST_ALIAS_ORDER
         if class_name in SIA4010_TEST_CLASS_COVERAGE.get(alias, [])
     ]
 

@@ -250,7 +250,11 @@ class OpeningSubstitutionTests(unittest.TestCase):
             [
                 _room(
                     surfaces=[_surface()],
-                    openings=[_opening(solar_factor_source="building_regs", g_value_bs_en_410=None)],
+                    openings=[
+                        _opening(
+                            solar_factor_source="building_regs", g_value_bs_en_410=None
+                        )
+                    ],
                 )
             ],
             _Analyzer(),
@@ -279,7 +283,11 @@ class OpeningSubstitutionTests(unittest.TestCase):
 
     def test_missing_visible_transmittance_blocks(self):
         spec = build_reference_project_specification(
-            [_room(surfaces=[_surface()], openings=[_opening(visible_transmittance=None)])],
+            [
+                _room(
+                    surfaces=[_surface()], openings=[_opening(visible_transmittance=None)]
+                )
+            ],
             _Analyzer(),
         )
         self.assertEqual(
@@ -393,7 +401,12 @@ def _system(**kwargs):
 class GenerationSubstitutionTests(unittest.TestCase):
     def test_cooling_below_threshold_is_paired_with_table_5_eer(self):
         spec = build_reference_project_specification(
-            [_room(surfaces=[_surface()], hvac_systems=[_system(cooling_capacity_kw=100.0, eer=3.5)])],
+            [
+                _room(
+                    surfaces=[_surface()],
+                    hvac_systems=[_system(cooling_capacity_kw=100.0, eer=3.5)],
+                )
+            ],
             _Analyzer(),
         )
         item = _by_parameter(spec, "cooling_generation_eer")[0]
@@ -406,7 +419,12 @@ class GenerationSubstitutionTests(unittest.TestCase):
         cases = {10.0: 2.90, 40.0: 3.00, 120.0: 3.10}
         for capacity, expected in cases.items():
             spec = build_reference_project_specification(
-                [_room(surfaces=[_surface()], hvac_systems=[_system(cooling_capacity_kw=capacity, eer=4.0)])],
+                [
+                    _room(
+                        surfaces=[_surface()],
+                        hvac_systems=[_system(cooling_capacity_kw=capacity, eer=4.0)],
+                    )
+                ],
                 _Analyzer(),
             )
             self.assertEqual(
@@ -417,7 +435,12 @@ class GenerationSubstitutionTests(unittest.TestCase):
 
     def test_cooling_at_or_above_150kw_blocks_on_eer_plus_metric(self):
         spec = build_reference_project_specification(
-            [_room(surfaces=[_surface()], hvac_systems=[_system(cooling_capacity_kw=200.0, eer=4.5)])],
+            [
+                _room(
+                    surfaces=[_surface()],
+                    hvac_systems=[_system(cooling_capacity_kw=200.0, eer=4.5)],
+                )
+            ],
             _Analyzer(),
         )
         item = _by_parameter(spec, "cooling_generation_eer")[0]
@@ -437,7 +460,12 @@ class GenerationSubstitutionTests(unittest.TestCase):
 
     def test_heating_is_paired_with_table_8_scop_and_carries_en14825_caveat(self):
         spec = build_reference_project_specification(
-            [_room(surfaces=[_surface()], hvac_systems=[_system(heating_capacity_kw=100.0, scop=4.0)])],
+            [
+                _room(
+                    surfaces=[_surface()],
+                    hvac_systems=[_system(heating_capacity_kw=100.0, scop=4.0)],
+                )
+            ],
             _Analyzer(),
         )
         item = _by_parameter(spec, "heating_generation_scop")[0]
@@ -451,20 +479,36 @@ class GenerationSubstitutionTests(unittest.TestCase):
         # a SCOP; it must never be shown as a SUBSTITUTABLE comparison against the
         # reference heat-pump SCOP (a false-but-credible verdict).
         spec = build_reference_project_specification(
-            [_room(surfaces=[_surface()], hvac_systems=[
-                _system(heating_capacity_kw=100.0, scop=0.80, heating_generator_class="")
-            ])],
+            [
+                _room(
+                    surfaces=[_surface()],
+                    hvac_systems=[
+                        _system(
+                            heating_capacity_kw=100.0,
+                            scop=0.80,
+                            heating_generator_class="",
+                        )
+                    ],
+                )
+            ],
             _Analyzer(),
         )
         item = _by_parameter(spec, "heating_generation_scop")[0]
         self.assertEqual(item.status, PROJECT_VALUE_MISSING)
         self.assertIsNone(item.project_value)
-        self.assertEqual(item.reference_value, 3.20)  # the reference HP SCOP still applies
+        self.assertEqual(
+            item.reference_value, 3.20
+        )  # the reference HP SCOP still applies
         self.assertTrue(any("not a heat pump" in b for b in spec.blockers))
 
     def test_heating_above_150kw_blocks_because_table_8_stops_there(self):
         spec = build_reference_project_specification(
-            [_room(surfaces=[_surface()], hvac_systems=[_system(heating_capacity_kw=300.0, scop=4.5)])],
+            [
+                _room(
+                    surfaces=[_surface()],
+                    hvac_systems=[_system(heating_capacity_kw=300.0, scop=4.5)],
+                )
+            ],
             _Analyzer(),
         )
         item = _by_parameter(spec, "heating_generation_scop")[0]
@@ -487,13 +531,18 @@ class GenerationSubstitutionTests(unittest.TestCase):
 class VentilationSubstitutionTests(unittest.TestCase):
     def test_heat_recovery_efficiency_is_paired_with_table_2(self):
         spec = build_reference_project_specification(
-            [_room(surfaces=[_surface()], hvac_systems=[_system(heat_recovery_efficiency=0.60)])],
+            [
+                _room(
+                    surfaces=[_surface()],
+                    hvac_systems=[_system(heat_recovery_efficiency=0.60)],
+                )
+            ],
             _Analyzer(),
         )
         item = _by_parameter(spec, "ventilation_heat_recovery_efficiency")[0]
         self.assertEqual(item.status, SUBSTITUTABLE)
         self.assertEqual(item.project_value, 0.60)
-        self.assertEqual(item.reference_value, 0.73)   # Table 2 eta_rec,theta limit
+        self.assertEqual(item.reference_value, 0.73)  # Table 2 eta_rec,theta limit
         self.assertEqual(item.reference_target_value, 0.78)  # target
         self.assertIn("TO VERIFY", item.source)  # NCM<->SIA index caveat
 
@@ -501,11 +550,17 @@ class VentilationSubstitutionTests(unittest.TestCase):
         # A system without heat recovery reports 0.0 -- a real project value to
         # compare against the reference, not a reason to skip.
         spec = build_reference_project_specification(
-            [_room(surfaces=[_surface()], hvac_systems=[_system(heat_recovery_efficiency=0.0)])],
+            [
+                _room(
+                    surfaces=[_surface()],
+                    hvac_systems=[_system(heat_recovery_efficiency=0.0)],
+                )
+            ],
             _Analyzer(),
         )
         self.assertEqual(
-            _by_parameter(spec, "ventilation_heat_recovery_efficiency")[0].project_value, 0.0
+            _by_parameter(spec, "ventilation_heat_recovery_efficiency")[0].project_value,
+            0.0,
         )
 
     def test_missing_heat_recovery_value_emits_no_substitution(self):
@@ -552,33 +607,48 @@ class ReferenceTargetValueTests(unittest.TestCase):
 
     def test_cooling_target_comes_from_the_same_table_5_band(self):
         spec = build_reference_project_specification(
-            [_room(surfaces=[_surface()], hvac_systems=[_system(cooling_capacity_kw=100.0, eer=3.5)])],
+            [
+                _room(
+                    surfaces=[_surface()],
+                    hvac_systems=[_system(cooling_capacity_kw=100.0, eer=3.5)],
+                )
+            ],
             _Analyzer(),
         )
         item = _by_parameter(spec, "cooling_generation_eer")[0]
-        self.assertEqual(item.reference_value, 3.10)   # Table 5 limit
+        self.assertEqual(item.reference_value, 3.10)  # Table 5 limit
         self.assertEqual(item.reference_target_value, 3.20)  # Table 5 target
 
     def test_heating_target_is_the_brine_water_table_9_not_air_water(self):
         # SIA 380/2:2022 7.2.5.8-9: the limit is the air-water HP (Table 8, no
         # target column) and the target is the brine-water HP (Table 9).
         spec = build_reference_project_specification(
-            [_room(surfaces=[_surface()], hvac_systems=[_system(heating_capacity_kw=100.0, scop=4.0)])],
+            [
+                _room(
+                    surfaces=[_surface()],
+                    hvac_systems=[_system(heating_capacity_kw=100.0, scop=4.0)],
+                )
+            ],
             _Analyzer(),
         )
         item = _by_parameter(spec, "heating_generation_scop")[0]
-        self.assertEqual(item.reference_value, 3.20)   # Table 8 air-water limit
+        self.assertEqual(item.reference_value, 3.20)  # Table 8 air-water limit
         self.assertEqual(item.reference_target_value, 4.60)  # Table 9 brine-water target
 
     def test_heating_target_is_undefined_below_the_table_9_range(self):
         # Table 9 (brine-water) starts at 12 kW; a smaller heat pump has an
         # air-water limit but no brine-water target -- reported as None, not guessed.
         spec = build_reference_project_specification(
-            [_room(surfaces=[_surface()], hvac_systems=[_system(heating_capacity_kw=8.0, scop=3.5)])],
+            [
+                _room(
+                    surfaces=[_surface()],
+                    hvac_systems=[_system(heating_capacity_kw=8.0, scop=3.5)],
+                )
+            ],
             _Analyzer(),
         )
         item = _by_parameter(spec, "heating_generation_scop")[0]
-        self.assertEqual(item.reference_value, 3.00)   # Table 8 <=12 limit
+        self.assertEqual(item.reference_value, 3.00)  # Table 8 <=12 limit
         self.assertIsNone(item.reference_target_value)
 
     def test_identity_and_directive_rows_have_no_target(self):
@@ -616,7 +686,9 @@ class CompleteSpecificationTests(unittest.TestCase):
         self.assertEqual(spec.status, "PARTIAL_REFERENCE_INPUT_SPECIFICATION")
         self.assertFalse(spec.is_complete)
         self.assertEqual(spec.blockers, ())
-        self.assertIn("sia380_annual_aggregation_and_weighting", spec.missing_input_families)
+        self.assertIn(
+            "sia380_annual_aggregation_and_weighting", spec.missing_input_families
+        )
         # Every emitted input is resolved: numeric substitutions are SUBSTITUTABLE,
         # reference-run directives are REFERENCE_DIRECTIVE, and SIA 2024 usage
         # inputs are STANDARD_USAGE_INPUT; none is a blocker.
@@ -672,7 +744,9 @@ class UsageStandardInputTests(unittest.TestCase):
         setattr(r, "sia2024_category", code)
         return r
 
-    def test_resolved_usage_emits_six_substitutions_with_standard_usage_input_status(self):
+    def test_resolved_usage_emits_six_substitutions_with_standard_usage_input_status(
+        self,
+    ):
         # Usage "1.01" (Wohnen MFH): 6 SIA 2024 quantities emitted.
         spec = build_reference_project_specification(
             [self._room_with_usage("1.01")], _Analyzer()
@@ -692,11 +766,7 @@ class UsageStandardInputTests(unittest.TestCase):
         spec = build_reference_project_specification(
             [self._room_with_usage("1.01")], _Analyzer()
         )
-        by_param = {
-            s.parameter: s
-            for s in spec.substitutions
-            if s.scope == "1.01"
-        }
+        by_param = {s.parameter: s for s in spec.substitutions if s.scope == "1.01"}
         self.assertEqual(by_param["theta_i_mean"].reference_value, 25.0)
         self.assertEqual(by_param["phi_i"].reference_value, 60.0)
         self.assertEqual(by_param["A_p"].reference_value, 35.0)
@@ -708,11 +778,7 @@ class UsageStandardInputTests(unittest.TestCase):
         spec = build_reference_project_specification(
             [self._room_with_usage("1.01")], _Analyzer()
         )
-        by_param = {
-            s.parameter: s
-            for s in spec.substitutions
-            if s.scope == "1.01"
-        }
+        by_param = {s.parameter: s for s in spec.substitutions if s.scope == "1.01"}
         # 25 = col30 operational; 26 = col28 design (not allowed here)
         self.assertEqual(by_param["theta_i_mean"].reference_value, 25.0)
         self.assertNotEqual(by_param["theta_i_mean"].reference_value, 26.0)

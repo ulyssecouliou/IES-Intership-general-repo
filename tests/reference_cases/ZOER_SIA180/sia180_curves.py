@@ -32,10 +32,12 @@ from typing import List, Tuple
 
 # --- Fig.3 SIA 180 : Anhang C1 (baulische Grundanforderungen) ----------------
 # Étiquettes d'équation imprimées sur Abbildung 3 du rapport-oracle §3.2.
-FIG3_UPPER_SLOPE = 0.33      # SIA 180 Fig.3, courbe sup. — pente (étiquette rapport)
+FIG3_UPPER_SLOPE = 0.33  # SIA 180 Fig.3, courbe sup. — pente (étiquette rapport)
 FIG3_UPPER_INTERCEPT = 21.8  # SIA 180 Fig.3, courbe sup. — ordonnée (étiquette rapport)
-FIG3_UPPER_PLATEAU = 25.0    # SIA 180 Fig.3, plateau bas de la courbe sup. (lecture graphique) [À VÉRIFIER]
-FIG3_LOWER_SLOPE = 0.33      # SIA 180 Fig.3, courbe inf. — pente (étiquette rapport)
+FIG3_UPPER_PLATEAU = (
+    25.0  # SIA 180 Fig.3, plateau bas de la courbe sup. (lecture graphique) [À VÉRIFIER]
+)
+FIG3_LOWER_SLOPE = 0.33  # SIA 180 Fig.3, courbe inf. — pente (étiquette rapport)
 FIG3_LOWER_INTERCEPT = 14.3  # SIA 180 Fig.3, courbe inf. — ordonnée (étiquette rapport)
 
 
@@ -59,10 +61,16 @@ def fig3_lower(theta_rm: float) -> float:
 # Sommets (θrm, θ) figés, source refs/reference-data/sia-380-2-2022.figure1.json
 # (= SIA 180:2014 figure 4 par identité normative §5.2.2.5). Domaine θrm 10..25.
 FIG4_UPPER_VERTICES: List[Tuple[float, float]] = [
-    (10.0, 24.5), (12.0, 24.5), (17.5, 26.5), (25.0, 26.5),
+    (10.0, 24.5),
+    (12.0, 24.5),
+    (17.5, 26.5),
+    (25.0, 26.5),
 ]
 FIG4_LOWER_VERTICES: List[Tuple[float, float]] = [
-    (10.0, 20.5), (19.0, 20.5), (23.5, 22.0), (25.0, 22.0),
+    (10.0, 20.5),
+    (19.0, 20.5),
+    (23.5, 22.0),
+    (25.0, 22.0),
 ]
 FIG4_DOMAIN = (10.0, 25.0)  # SIA 180 Fig.4 / SIA 380/2 fig.1, abscisse tracée
 

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-u"""Tests of the reference frequency distributions — SIA tests 2, 3 and 5.
+"""Tests of the reference frequency distributions — SIA tests 2, 3 and 5.
 
 The second criterion of specifications 2, 3 and 5 — "Die Häufigkeitsverteilung
 muss im Streubereich der Referenzprogramme liegen" — had never been
@@ -18,7 +18,7 @@ import pytest
 
 _ICI = os.path.dirname(os.path.abspath(__file__))
 _RACINE = os.path.abspath(os.path.join(_ICI, os.pardir, os.pardir))
-_DOSSIER = os.path.join(_RACINE, 'refs', 'reference-data')
+_DOSSIER = os.path.join(_RACINE, "refs", "reference-data")
 
 #: Tests whose distribution counts are frozen. Tests 4, 6 and 7
 #: joined the list on 2026-08-12, when the layout of their workbook was
@@ -38,15 +38,14 @@ TESTS_SANS_TESTKRITERIEN = (4, 6, 7)
 
 
 def _charger(numero):
-    chemin = os.path.join(_DOSSIER, 'test-%d.distributions.ref.json' % numero)
+    chemin = os.path.join(_DOSSIER, "test-%d.distributions.ref.json" % numero)
     if not os.path.exists(chemin):
-        pytest.skip(u'référentiel absent : '
-                    u'scripts/build_sia_distribution_reference.py')
-    with io.open(chemin, encoding='utf-8') as flux:
+        pytest.skip("référentiel absent : " "scripts/build_sia_distribution_reference.py")
+    with io.open(chemin, encoding="utf-8") as flux:
         return json.load(flux)
 
 
-@pytest.fixture(scope='module', params=TESTS)
+@pytest.fixture(scope="module", params=TESTS)
 def reference(request):
     return _charger(request.param)
 
@@ -55,25 +54,31 @@ def reference(request):
 # The criterion is not invented
 # --------------------------------------------------------------------------
 
+
 def test_le_critere_est_confirme_par_lautorite(reference):
     """The workbook does not compute the band, but the SIA confirmed min/max."""
-    assert reference['statut_critere'] == 'CONFIRME_AUTORITE_2026-08-10'
-    assert 'GRAPHIQUES' in reference['pourquoi_non_calcule']
-    assert 'min/max' in reference['pourquoi_non_calcule']
+    assert reference["statut_critere"] == "CONFIRME_AUTORITE_2026-08-10"
+    assert "GRAPHIQUES" in reference["pourquoi_non_calcule"]
+    assert "min/max" in reference["pourquoi_non_calcule"]
 
 
 def test_le_critere_cite_sa_source(reference):
     """Traceability rule: each check cites its article."""
-    assert 'Streubereich' in reference['critere']
-    assert 'Spezifikation_Test' in reference['critere']
+    assert "Streubereich" in reference["critere"]
+    assert "Spezifikation_Test" in reference["critere"]
 
 
 def test_aucune_bande_nest_publiee(reference):
     """If a band key appeared, someone would have computed it without
     foundation. The reference must carry only counts."""
     texte = json.dumps(reference, ensure_ascii=False).lower()
-    for interdit in ('"borne_inf', '"borne_sup_bande', '"moyenne"',
-                     '"ecart_max"', '"bande"'):
+    for interdit in (
+        '"borne_inf',
+        '"borne_sup_bande',
+        '"moyenne"',
+        '"ecart_max"',
+        '"bande"',
+    ):
         assert interdit not in texte, interdit
 
 
@@ -81,39 +86,42 @@ def test_aucune_bande_nest_publiee(reference):
 # The counts are reconciled with the workbook
 # --------------------------------------------------------------------------
 
+
 def test_chaque_contributeur_totalise_ce_que_le_classeur_annonce(reference):
     """The main safeguard. It validates TWO things at once: reading
     the counts, and detecting the totals row — which is not
     labelled in Test 3."""
-    for bloc in reference['distributions']:
-        for contributeur in bloc['contributeurs']:
-            lettre = contributeur['colonne']
-            somme = sum(e['par_colonne'][lettre] or 0
-                        for e in bloc['effectifs'])
-            assert somme == contributeur['total_heures'], (
-                reference['test'], bloc['colonne_bloc'], lettre)
+    for bloc in reference["distributions"]:
+        for contributeur in bloc["contributeurs"]:
+            lettre = contributeur["colonne"]
+            somme = sum(e["par_colonne"][lettre] or 0 for e in bloc["effectifs"])
+            assert somme == contributeur["total_heures"], (
+                reference["test"],
+                bloc["colonne_bloc"],
+                lettre,
+            )
 
 
 def test_aucune_colonne_de_zeros_nest_retenue(reference):
     """A column full of zeros signals a programme that did NOT submit this
     case, not a programme that counted zero hours. Counting it as a measurement
     would corrupt the entire dispersion."""
-    for bloc in reference['distributions']:
-        for contributeur in bloc['contributeurs']:
-            assert contributeur['total_heures'] > 0
+    for bloc in reference["distributions"]:
+        for contributeur in bloc["contributeurs"]:
+            assert contributeur["total_heures"] > 0
 
 
 def test_les_effectifs_ne_sont_jamais_negatifs(reference):
-    for bloc in reference['distributions']:
-        for effectif in bloc['effectifs']:
-            for valeur in effectif['par_colonne'].values():
+    for bloc in reference["distributions"]:
+        for effectif in bloc["effectifs"]:
+            for valeur in effectif["par_colonne"].values():
                 assert valeur is None or valeur >= 0
 
 
 def test_tous_les_blocs_ont_le_meme_nombre_de_classes(reference):
     """Classes come from a shared sheet: a block with a different count
     would signal a misaligned read."""
-    nombres = set(bloc['nb_classes'] for bloc in reference['distributions'])
+    nombres = set(bloc["nb_classes"] for bloc in reference["distributions"])
     assert len(nombres) == 1, nombres
 
 
@@ -142,66 +150,74 @@ def test_les_bornes_sont_monotones(reference):
     limit" and would break monotonicity without signalling anything. They
     carry real counts — see `BORNE_SANS_LIMITE_HAUTE`.
     """
-    for bloc in reference['distributions']:
-        bornes = [e['borne_superieure'] for e in bloc['effectifs']
-                  if e['borne_superieure'] is not None
-                  and abs(e['borne_superieure']) != BORNE_SANS_LIMITE_HAUTE]
-        assert bornes == sorted(bornes) or bornes == sorted(bornes,
-                                                            reverse=True), (
-            u'bloc %s : bornes ni croissantes ni décroissantes : %s'
-            % (bloc['colonne_bloc'], bornes))
+    for bloc in reference["distributions"]:
+        bornes = [
+            e["borne_superieure"]
+            for e in bloc["effectifs"]
+            if e["borne_superieure"] is not None
+            and abs(e["borne_superieure"]) != BORNE_SANS_LIMITE_HAUTE
+        ]
+        assert bornes == sorted(bornes) or bornes == sorted(
+            bornes, reverse=True
+        ), "bloc %s : bornes ni croissantes ni décroissantes : %s" % (
+            bloc["colonne_bloc"],
+            bornes,
+        )
 
 
 # --------------------------------------------------------------------------
 # What the record says about itself
 # --------------------------------------------------------------------------
 
+
 def test_les_heures_hors_classes_sont_explicites(reference):
     """A short displayed total means out-of-class hours, not an incomplete series."""
-    totaux = set(c['total_heures'] for bloc in reference['distributions']
-                 for c in bloc['contributeurs'])
+    totaux = set(
+        c["total_heures"]
+        for bloc in reference["distributions"]
+        for c in bloc["contributeurs"]
+    )
     if any(t < 8760 for t in totaux):
-        texte = u' '.join(reference['reserves'])
-        assert u'8760' in texte
-        assert u'heures manquantes' in texte
-        for bloc in reference['distributions']:
-            for contributeur in bloc['contributeurs']:
-                assert contributeur['heures_dans_classes'] == contributeur['total_heures']
+        texte = " ".join(reference["reserves"])
+        assert "8760" in texte
+        assert "heures manquantes" in texte
+        for bloc in reference["distributions"]:
+            for contributeur in bloc["contributeurs"]:
+                assert contributeur["heures_dans_classes"] == contributeur["total_heures"]
                 assert (
-                    contributeur['heures_dans_classes']
-                    + contributeur['heures_hors_classes']
-                    == contributeur['heures_source_attendues']
+                    contributeur["heures_dans_classes"]
+                    + contributeur["heures_hors_classes"]
+                    == contributeur["heures_source_attendues"]
                 )
 
 
 def test_un_bloc_sans_cas_est_signale(reference):
     """Test 5 carries a block that the workbook does not attach to any case. The
     field remains null, and the reserve says so."""
-    sans_cas = [b for b in reference['distributions'] if not b['cas']]
+    sans_cas = [b for b in reference["distributions"] if not b["cas"]]
     if sans_cas:
-        assert any('identifiant de cas' in r for r in reference['reserves'])
+        assert any("identifiant de cas" in r for r in reference["reserves"])
 
 
 def test_les_reserves_rappellent_la_bande_confirmee(reference):
-    assert any('min/max' in r for r in reference['reserves'])
+    assert any("min/max" in r for r in reference["reserves"])
 
 
 def test_chaque_bloc_nomme_sa_grandeur(reference):
-    for bloc in reference['distributions']:
-        assert bloc['grandeur'], bloc['colonne_bloc']
+    for bloc in reference["distributions"]:
+        assert bloc["grandeur"], bloc["colonne_bloc"]
 
 
 def test_la_source_est_tracable(reference):
-    source = reference['source']
-    assert source['fichier'].endswith('.xlsx')
-    assert source['feuille']
-    lignes = source['lignes_de_structure']
-    assert {'cas', 'grandeur', 'programmes', 'classes'} <= set(lignes)
+    source = reference["source"]
+    assert source["fichier"].endswith(".xlsx")
+    assert source["feuille"]
+    lignes = source["lignes_de_structure"]
+    assert {"cas", "grandeur", "programmes", "classes"} <= set(lignes)
     # `unite` is only present for layouts where the workbook puts the
     # unit on its own line (tests 4, 6, 7). Its absence means
     # "the unit follows the comma", not "unknown".
-    assert set(lignes) <= {
-        'cas', 'grandeur', 'programmes', 'classes', 'unite'}
+    assert set(lignes) <= {"cas", "grandeur", "programmes", "classes", "unite"}
     assert all(isinstance(v, int) and v > 0 for v in lignes.values())
 
 
@@ -209,7 +225,8 @@ def test_la_source_est_tracable(reference):
 # Scope
 # --------------------------------------------------------------------------
 
-@pytest.mark.parametrize('numero', TESTS_SANS_TESTKRITERIEN)
+
+@pytest.mark.parametrize("numero", TESTS_SANS_TESTKRITERIEN)
 def test_les_tests_sans_testkriterien_ont_bien_des_effectifs(numero):
     """The inverse of what this file asserted before 2026-08-12.
 
@@ -218,19 +235,19 @@ def test_les_tests_sans_testkriterien_ont_bien_des_effectifs(numero):
     counts says nothing about their opposability; not freezing them said,
     wrongly, that they did not exist.
     """
-    chemin = os.path.join(_DOSSIER,
-                          'test-%d.distributions.ref.json' % numero)
+    chemin = os.path.join(_DOSSIER, "test-%d.distributions.ref.json" % numero)
     assert os.path.exists(chemin), (
-        u'produire avec scripts/build_sia_distribution_reference.py %d '
-        u'--ecrire' % numero)
+        "produire avec scripts/build_sia_distribution_reference.py %d "
+        "--ecrire" % numero
+    )
 
 
 def test_lextracteur_refuse_un_test_sans_disposition_relevee():
     """The refusal covers the unread layout, never a supposed
     absence of distribution."""
     from scripts import build_sia_distribution_reference as extracteur
-    with pytest.raises(extracteur.ExtractionRefusee,
-                       match='aucune disposition relev'):
+
+    with pytest.raises(extracteur.ExtractionRefusee, match="aucune disposition relev"):
         extracteur.extraire(1)
 
 
@@ -243,15 +260,16 @@ def test_le_moteur_ne_gate_pas_ce_qui_est_seulement_extractible():
     """
     from engine import sia_distributions_engine as moteur
     from scripts import build_sia_distribution_reference as extracteur
+
     assert set(moteur.TESTS_SUPPORTES) == {2, 3, 5}
     assert set(TESTS_SANS_TESTKRITERIEN).isdisjoint(moteur.TESTS_SUPPORTES)
-    assert set(moteur.TESTS_SUPPORTES).issubset(
-        extracteur.TESTS_AVEC_DISTRIBUTION)
+    assert set(moteur.TESTS_SUPPORTES).issubset(extracteur.TESTS_AVEC_DISTRIBUTION)
 
 
-@pytest.mark.parametrize('numero,attendu',
-                         [(2, 22), (3, 16), (4, 11), (5, 16), (6, 10), (7, 17)])
+@pytest.mark.parametrize(
+    "numero,attendu", [(2, 22), (3, 16), (4, 11), (5, 16), (6, 10), (7, 17)]
+)
 def test_le_nombre_de_distributions_est_fige(numero, attendu):
     """54 distributions in total. If the count changed, it would be either a
     different workbook, or a misaligned read — both warrant a failure."""
-    assert _charger(numero)['nb_distributions'] == attendu
+    assert _charger(numero)["nb_distributions"] == attendu

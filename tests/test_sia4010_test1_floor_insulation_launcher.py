@@ -6,10 +6,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import Mock
 
-
-launcher = importlib.import_module(
-    "Run_VE_SIA4010_Test1_Reconcile_Floor_Insulation"
-)
+launcher = importlib.import_module("Run_VE_SIA4010_Test1_Reconcile_Floor_Insulation")
 
 
 class FloorInsulationLauncherTests(unittest.TestCase):

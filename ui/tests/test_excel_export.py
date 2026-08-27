@@ -47,7 +47,7 @@ import sys
 
 import pytest
 
-win32com_client = pytest.importorskip('win32com.client')
+win32com_client = pytest.importorskip("win32com.client")
 
 _ICI = os.path.dirname(os.path.abspath(__file__))
 _RACINE = os.path.abspath(os.path.join(_ICI, os.pardir, os.pardir))
@@ -72,11 +72,12 @@ def _excel_disponible():
     chemin_sonde = None
     try:
         import tempfile
-        excel = win32com_client.Dispatch(u'Excel.Application')
+
+        excel = win32com_client.Dispatch("Excel.Application")
         excel.Visible = False
         excel.DisplayAlerts = False
         classeur = excel.Workbooks.Add()
-        descripteur, chemin_sonde = tempfile.mkstemp(suffix='.xlsx')
+        descripteur, chemin_sonde = tempfile.mkstemp(suffix=".xlsx")
         os.close(descripteur)
         os.remove(chemin_sonde)  # SaveAs exige que le fichier n'existe pas deja ici
         classeur.SaveAs(chemin_sonde, FileFormat=51)
@@ -99,31 +100,31 @@ def _excel_disponible():
                 pass
 
 
-_EXCEL_COM_OPT_IN = 'SIA_RUN_EXCEL_COM_INTEGRATION'
+_EXCEL_COM_OPT_IN = "SIA_RUN_EXCEL_COM_INTEGRATION"
 
 
 pytestmark = pytest.mark.skipif(
-    os.environ.get(_EXCEL_COM_OPT_IN) != '1',
+    os.environ.get(_EXCEL_COM_OPT_IN) != "1",
     reason=(
-        u'Intégration Excel COM désactivée par défaut. Définir '
-        u'SIA_RUN_EXCEL_COM_INTEGRATION=1 pour l’exécuter sur un poste '
-        u'Excel autorisé.'
+        "Intégration Excel COM désactivée par défaut. Définir "
+        "SIA_RUN_EXCEL_COM_INTEGRATION=1 pour l’exécuter sur un poste "
+        "Excel autorisé."
     ),
 )
 
 
-@pytest.fixture(scope='module', autouse=True)
+@pytest.fixture(scope="module", autouse=True)
 def _require_working_excel_com():
     """Probe Excel only during opted-in setup, never during collection."""
 
     if not _excel_disponible():
         pytest.skip(
-            u'Excel indisponible via COM sur cette machine -- excel_export '
-            u'non testable ici (voir docstring du module).'
+            "Excel indisponible via COM sur cette machine -- excel_export "
+            "non testable ici (voir docstring du module)."
         )
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope="module")
 def vue_test1():
     reference = moteur.charger_reference()
     candidat = adapter.charger_fixture_test1()
@@ -138,8 +139,8 @@ def classeur_jetable(tmp_path):
     vrai classeur SIA. Fermé avant d'être rendu au test (le test rouvrira sa
     propre copie via `fill_sia_workbook`, comme un appelant réel le
     ferait)."""
-    chemin = str(tmp_path / 'classeur_jetable_test.xlsx')
-    excel = win32com_client.Dispatch(u'Excel.Application')
+    chemin = str(tmp_path / "classeur_jetable_test.xlsx")
+    excel = win32com_client.Dispatch("Excel.Application")
     excel.Visible = False
     excel.DisplayAlerts = False
     try:
@@ -149,8 +150,8 @@ def classeur_jetable(tmp_path):
         # Deux cellules de "colonnes calculees" fictives, pour verifier que
         # CalculateFullRebuild() ne casse rien (formule simple = 2x la
         # cellule Handeingabe).
-        feuille.Range('N28').Value = 0
-        feuille.Range('B28').Formula = '=N28*2'
+        feuille.Range("N28").Value = 0
+        feuille.Range("B28").Formula = "=N28*2"
         classeur.SaveAs(chemin, FileFormat=51)  # 51 = xlOpenXMLWorkbook (.xlsx)
         classeur.Close(SaveChanges=False)
     finally:
@@ -159,22 +160,25 @@ def classeur_jetable(tmp_path):
 
 
 def test_fill_sia_workbook_sans_carte_cellules_leve_une_erreur_precise(
-        classeur_jetable, vue_test1):
+    classeur_jetable, vue_test1
+):
     with pytest.raises(excel_export.MissingCellMap):
         excel_export.fill_sia_workbook(classeur_jetable, vue_test1, None)
 
 
 def test_fill_sia_workbook_ecrit_active_handeingabe_et_recalcule(
-        classeur_jetable, vue_test1, tmp_path):
-    cle_periode = ('sensible_heating_demand_kwh', '1E', 'annual')
+    classeur_jetable, vue_test1, tmp_path
+):
+    cle_periode = ("sensible_heating_demand_kwh", "1E", "annual")
     valeur_attendue = excel_export._row_value(vue_test1, cle_periode)
     assert valeur_attendue is not None  # verifie l'hypothese du test
 
-    carte_cellules = {cle_periode: 'N28'}
-    chemin_sortie = str(tmp_path / 'classeur_rempli.xlsx')
+    carte_cellules = {cle_periode: "N28"}
+    chemin_sortie = str(tmp_path / "classeur_rempli.xlsx")
 
     resultat = excel_export.fill_sia_workbook(
-        classeur_jetable, vue_test1, carte_cellules, output_path=chemin_sortie)
+        classeur_jetable, vue_test1, carte_cellules, output_path=chemin_sortie
+    )
 
     assert resultat == chemin_sortie
     assert os.path.isfile(chemin_sortie)
@@ -184,18 +188,20 @@ def test_fill_sia_workbook_ecrit_active_handeingabe_et_recalcule(
 
     # Reouverture independante pour verifier ce qui a reellement ete
     # persiste sur disque (pas seulement en memoire COM).
-    excel = win32com_client.Dispatch(u'Excel.Application')
+    excel = win32com_client.Dispatch("Excel.Application")
     excel.Visible = False
     excel.DisplayAlerts = False
     try:
         classeur = excel.Workbooks.Open(chemin_sortie)
         try:
             feuille = classeur.Worksheets(excel_export.DATA_SHEET)
-            assert feuille.Range(excel_export.ENTRY_MODE_CELL).Value == \
-                excel_export.HANDEINGABE_MODE_VALUE
-            assert abs(feuille.Range('N28').Value - valeur_attendue) < 1e-6
+            assert (
+                feuille.Range(excel_export.ENTRY_MODE_CELL).Value
+                == excel_export.HANDEINGABE_MODE_VALUE
+            )
+            assert abs(feuille.Range("N28").Value - valeur_attendue) < 1e-6
             # La "colonne calculee" doit refleter le recalcul complet.
-            assert abs(feuille.Range('B28').Value - 2 * valeur_attendue) < 1e-6
+            assert abs(feuille.Range("B28").Value - 2 * valeur_attendue) < 1e-6
         finally:
             classeur.Close(SaveChanges=False)
     finally:
@@ -203,7 +209,8 @@ def test_fill_sia_workbook_ecrit_active_handeingabe_et_recalcule(
 
 
 def test_fill_sia_workbook_ignore_les_valeurs_absentes_sans_ecrire_zero(
-        classeur_jetable, vue_test1, tmp_path):
+    classeur_jetable, vue_test1, tmp_path
+):
     """Une cle (grandeur, cas, periode) absente de vue_test1['lignes'] ne
     doit jamais provoquer l'ecriture d'un faux 0 (CLAUDE.md, "jamais de
     fausse valeur par donnee manquante").
@@ -213,29 +220,30 @@ def test_fill_sia_workbook_ignore_les_valeurs_absentes_sans_ecrire_zero(
     sentinelle non nulle (999) dans N28 : si `fill_sia_workbook` ecrivait
     un faux 0 a la place d'une valeur candidate absente, ce test le
     detecterait (999 != 0)."""
-    cle_periode_inexistante = ('grandeur_qui_nexiste_pas', 'cas_x', 'annual')
+    cle_periode_inexistante = ("grandeur_qui_nexiste_pas", "cas_x", "annual")
     valeur_avant = excel_export._row_value(vue_test1, cle_periode_inexistante)
     assert valeur_avant is None
 
-    excel = win32com_client.Dispatch(u'Excel.Application')
+    excel = win32com_client.Dispatch("Excel.Application")
     excel.Visible = False
     excel.DisplayAlerts = False
     try:
         classeur = excel.Workbooks.Open(classeur_jetable)
         try:
-            classeur.Worksheets(excel_export.DATA_SHEET).Range('N28').Value = 999
+            classeur.Worksheets(excel_export.DATA_SHEET).Range("N28").Value = 999
             classeur.Save()
         finally:
             classeur.Close(SaveChanges=False)
     finally:
         excel.Quit()
 
-    carte_cellules = {cle_periode_inexistante: 'N28'}
-    chemin_sortie = str(tmp_path / 'classeur_ignore.xlsx')
+    carte_cellules = {cle_periode_inexistante: "N28"}
+    chemin_sortie = str(tmp_path / "classeur_ignore.xlsx")
     excel_export.fill_sia_workbook(
-        classeur_jetable, vue_test1, carte_cellules, output_path=chemin_sortie)
+        classeur_jetable, vue_test1, carte_cellules, output_path=chemin_sortie
+    )
 
-    excel = win32com_client.Dispatch(u'Excel.Application')
+    excel = win32com_client.Dispatch("Excel.Application")
     excel.Visible = False
     excel.DisplayAlerts = False
     try:
@@ -244,7 +252,7 @@ def test_fill_sia_workbook_ignore_les_valeurs_absentes_sans_ecrire_zero(
             feuille = classeur.Worksheets(excel_export.DATA_SHEET)
             # La sentinelle doit etre restee INTACTE : preuve directe que
             # la valeur candidate absente n'a PAS ete remplacee par 0.
-            assert feuille.Range('N28').Value == 999
+            assert feuille.Range("N28").Value == 999
         finally:
             classeur.Close(SaveChanges=False)
     finally:

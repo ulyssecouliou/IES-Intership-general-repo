@@ -71,7 +71,7 @@ from ui import class_selection as selection
 from ui import verdict_view as vue
 
 #: Entree du selecteur qui n applique aucun filtre.
-TOUTES_LES_CLASSES = u'Toutes les classes'
+TOUTES_LES_CLASSES = "Toutes les classes"
 
 # `tkinter` s'est révélé disponible sur cette machine de développement (cf.
 # note de statut d'exécution ci-dessus) -- ce garde `try/except` reste
@@ -108,10 +108,12 @@ except ImportError:  # pragma: no cover -- attendu hors VE / hors env graphique
 COULEURS_DE_VERDICT = tuple(sorted(design.LEGACY_COLOUR_TO_STATUS))
 
 COULEUR_FOND_PAR_VERDICT = dict(
-    (couleur, design.ground(couleur)) for couleur in COULEURS_DE_VERDICT)
+    (couleur, design.ground(couleur)) for couleur in COULEURS_DE_VERDICT
+)
 
 SYMBOLE_PAR_VERDICT = dict(
-    (couleur, design.symbol(couleur)) for couleur in COULEURS_DE_VERDICT)
+    (couleur, design.symbol(couleur)) for couleur in COULEURS_DE_VERDICT
+)
 
 
 class NavigateurSIA4010(object):
@@ -146,22 +148,25 @@ class NavigateurSIA4010(object):
             raise ImportError(
                 "tkinter indisponible dans cet environnement -- ce dialogue "
                 "doit s'exécuter depuis VEScripts (Python Scripts navigator "
-                "de VE), pas en Python autonome sans affichage.")
+                "de VE), pas en Python autonome sans affichage."
+            )
         if not vues:
             raise ValueError(
-                u'aucune vue fournie : le navigateur refuse de afficher une '
-                u'fenêtre vide qui pourrait passer pour « rien à signaler ».')
+                "aucune vue fournie : le navigateur refuse de afficher une "
+                "fenêtre vide qui pourrait passer pour « rien à signaler »."
+            )
         self._vues = list(vues)
         # Compatibilité ascendante : les appelants historiques (et le PDF /
         # Excel du Test 1) lisent `self._vue`.
         self._vue = self._vues[0]
         self._resultat = None
         self._racine = tk.Tk()
-        self._racine.title(u'Navigateur SIA 4010 -- ' + u', '.join(
-            str(v.get('test_id') or '?') for v in self._vues))
-        self._racine.geometry('%dx%d' % (design.WINDOW_WIDTH, design.WINDOW_HEIGHT))
-        self._racine.minsize(design.WINDOW_MIN_WIDTH,
-                             design.WINDOW_MIN_HEIGHT)
+        self._racine.title(
+            "Navigateur SIA 4010 -- "
+            + ", ".join(str(v.get("test_id") or "?") for v in self._vues)
+        )
+        self._racine.geometry("%dx%d" % (design.WINDOW_WIDTH, design.WINDOW_HEIGHT))
+        self._racine.minsize(design.WINDOW_MIN_WIDTH, design.WINDOW_MIN_HEIGHT)
         self._construire_widgets()
 
     # ----------------------------------------------------------------
@@ -179,9 +184,10 @@ class NavigateurSIA4010(object):
 
         # Corps sur fond gris clair, contenu en cartes blanches : c'est la
         # composition du site, qui divise par l'espace et non par des traits.
-        corps = ttk.Frame(self._racine, style=theme.STYLE_GROUND,
-                          padding=design.SPACE['sm'])
-        corps.pack(side='top', fill='both', expand=True)
+        corps = ttk.Frame(
+            self._racine, style=theme.STYLE_GROUND, padding=design.SPACE["sm"]
+        )
+        corps.pack(side="top", fill="both", expand=True)
 
         # ORDRE D'EMPAQUETAGE : LE WIDGET QUI PEUT CÉDER EN DERNIER.
         #
@@ -203,7 +209,7 @@ class NavigateurSIA4010(object):
         self._construire_panneau_detail(corps)
         self._construire_tableau(corps)
 
-        self._arbre.bind('<<TreeviewSelect>>', self._afficher_detail_selection)
+        self._arbre.bind("<<TreeviewSelect>>", self._afficher_detail_selection)
 
     def _construire_tableau(self, parent):
         """Arborescence Classe -> Test -> Grandeur -> Cas -> Période.
@@ -216,16 +222,19 @@ class NavigateurSIA4010(object):
             parent: Cadre d'accueil. À empaqueter EN DERNIER (cf. note dans
                 `_construire_widgets`) : c'est le seul widget extensible.
         """
-        tableau = layout.results_table(parent, (
-            ('valeur', 'column.simulated', 120, 'e'),
-            ('reference_ou_plage', 'column.band', 190, 'e'),
-            ('verdict', 'column.verdict', 150, 'center'),
-            ('article', 'column.source', 320, 'w'),
-        ), tree_heading_key='column.quantity')
-        tableau['outer'].pack(side='top', fill='both', expand=True)
-        self._arbre = tableau['tree']
-        self._arbre.heading(
-            '#0', text=u'Classe / Test / Grandeur / Cas / Période')
+        tableau = layout.results_table(
+            parent,
+            (
+                ("valeur", "column.simulated", 120, "e"),
+                ("reference_ou_plage", "column.band", 190, "e"),
+                ("verdict", "column.verdict", 150, "center"),
+                ("article", "column.source", 320, "w"),
+            ),
+            tree_heading_key="column.quantity",
+        )
+        tableau["outer"].pack(side="top", fill="both", expand=True)
+        self._arbre = tableau["tree"]
+        self._arbre.heading("#0", text="Classe / Test / Grandeur / Cas / Période")
         self._configurer_tags_couleur()
         self._remplir_arbre()
 
@@ -236,20 +245,29 @@ class NavigateurSIA4010(object):
             parent: Cadre d'accueil.
         """
         exterieur, cadre_detail = layout.card(parent)
-        exterieur.pack(side='bottom', fill='x', pady=(design.SPACE['sm'], 0))
-        layout.section_heading(cadre_detail, 'section.evidence')
-        ttk.Label(cadre_detail, style=theme.STYLE_CAPTION,
-                  text=u'Détail de la période sélectionnée').pack(
-                      anchor='w', pady=(design.SPACE['xs'], 0))
+        exterieur.pack(side="bottom", fill="x", pady=(design.SPACE["sm"], 0))
+        layout.section_heading(cadre_detail, "section.evidence")
+        ttk.Label(
+            cadre_detail,
+            style=theme.STYLE_CAPTION,
+            text="Détail de la période sélectionnée",
+        ).pack(anchor="w", pady=(design.SPACE["xs"], 0))
         # Police monospacée : les valeurs et les bornes se lisent alignées.
         self._texte_detail = tk.Text(
-            cadre_detail, height=6, wrap='word', relief='flat',
-            background=design.WHITE, foreground=design.TEXT,
+            cadre_detail,
+            height=6,
+            wrap="word",
+            relief="flat",
+            background=design.WHITE,
+            foreground=design.TEXT,
             font=(design.UI_FONT_MONO, design.SIZE_BODY),
-            highlightthickness=1, highlightbackground=design.BORDER_GREY,
-            padx=design.SPACE['md'], pady=design.SPACE['sm'])
-        self._texte_detail.pack(fill='x', pady=(design.SPACE['sm'], 0))
-        self._texte_detail.configure(state='disabled')
+            highlightthickness=1,
+            highlightbackground=design.BORDER_GREY,
+            padx=design.SPACE["md"],
+            pady=design.SPACE["sm"],
+        )
+        self._texte_detail.pack(fill="x", pady=(design.SPACE["sm"], 0))
+        self._texte_detail.configure(state="disabled")
 
     def _construire_bandeau(self):
         """Bandeau navy pleine largeur : signature visuelle du site IES.
@@ -263,20 +281,27 @@ class NavigateurSIA4010(object):
 
         # Un verdict par test. Agrégé, il masquerait LEQUEL échoue, et c'est
         # la seule chose que cette rangée sert à dire.
-        layout.status_strip(bandeau['titles'], [
-            {'label': une_vue.get('test_id') or u'Test',
-             'status': une_vue['verdict_global']['couleur'],
-             'text': une_vue['verdict_global']['texte']}
-            for une_vue in self._vues])
+        layout.status_strip(
+            bandeau["titles"],
+            [
+                {
+                    "label": une_vue.get("test_id") or "Test",
+                    "status": une_vue["verdict_global"]["couleur"],
+                    "text": une_vue["verdict_global"]["texte"],
+                }
+                for une_vue in self._vues
+            ],
+        )
 
         # Le repli suit la largeur de la fenetre moins le cluster
         # d'actions : une valeur en dur depassait des que les boutons
         # s'allongeaient, ce qui est arrive au premier passage a l'i18n.
-        ttk.Label(bandeau['titles'], style=theme.STYLE_BAND_TEXT,
-                  wraplength=design.WINDOW_MIN_WIDTH - 340,
-                  text=u'Article : '
-                       + self._vues[0]['verdict_global']['article']
-                  ).pack(anchor='w', pady=(design.SPACE['md'], 0))
+        ttk.Label(
+            bandeau["titles"],
+            style=theme.STYLE_BAND_TEXT,
+            wraplength=design.WINDOW_MIN_WIDTH - 340,
+            text="Article : " + self._vues[0]["verdict_global"]["article"],
+        ).pack(anchor="w", pady=(design.SPACE["md"], 0))
 
         # LES EXPORTS NE SONT PLUS DANS LE BANDEAU. Trois boutons y
         # entraient en concurrence de largeur avec le titre et l'article, et
@@ -297,42 +322,50 @@ class NavigateurSIA4010(object):
         """
         barre = layout.toolbar(parent)
 
-        ttk.Label(barre['left'], style=theme.STYLE_SECTION,
-                  text=u'Classe de validation visée').pack(side='left')
+        ttk.Label(
+            barre["left"], style=theme.STYLE_SECTION, text="Classe de validation visée"
+        ).pack(side="left")
 
         self._classe_choisie = tk.StringVar(value=TOUTES_LES_CLASSES)
         valeurs = [TOUTES_LES_CLASSES] + [
-            u'%s — %s' % (c, selection.description(c))
-            for c in selection.CLASSES]
+            "%s — %s" % (c, selection.description(c)) for c in selection.CLASSES
+        ]
         self._selecteur = ttk.Combobox(
-            barre['left'], textvariable=self._classe_choisie, values=valeurs,
-            state='readonly', width=34, style=theme.STYLE_COMBO)
-        self._selecteur.pack(side='left', padx=(design.SPACE['md'], 0))
-        self._selecteur.bind('<<ComboboxSelected>>', self._changer_de_classe)
+            barre["left"],
+            textvariable=self._classe_choisie,
+            values=valeurs,
+            state="readonly",
+            width=34,
+            style=theme.STYLE_COMBO,
+        )
+        self._selecteur.pack(side="left", padx=(design.SPACE["md"], 0))
+        self._selecteur.bind("<<ComboboxSelected>>", self._changer_de_classe)
 
         # L'état suit le sélecteur : c'est sa conséquence directe, et le
         # séparer à l'autre bout de la barre le déliait de son cause.
         # L etat va sur sa propre ligne, pleine largeur : a la suite du
         # selecteur il etait tronque des que les boutons prenaient leur
         # place, et un etat tronque cache la liste des tests manquants.
-        self._etat_classe = ttk.Label(barre['caption'],
-                                      style=theme.STYLE_MUTED, text=u'')
-        self._etat_classe.pack(side='left')
+        self._etat_classe = ttk.Label(barre["caption"], style=theme.STYLE_MUTED, text="")
+        self._etat_classe.pack(side="left")
         self._rafraichir_etat_classe()
 
         # Les exports suivent la SÉLECTION, pas la liste complète — sans quoi
         # le rapport contredirait l'écran. Une seule action en bleu d'accent :
         # deux boutons accentués côte à côte cessent de vouloir dire « c'est
         # ici qu'on agit ».
-        actions = barre['right']
+        actions = barre["right"]
         layout.language_switch(actions, self._changer_de_langue)
-        layout.action_button(actions, 'action.export_excel',
-                             self._exporter_excel, primary=True)
-        layout.action_button(actions, 'action.export_pdf', self._exporter_pdf)
-        ttk.Button(actions, style=theme.STYLE_BUTTON,
-                   text=u'Diagnostic interne',
-                   command=self._exporter_diagnostic).pack(
-                       side='left', padx=(design.SPACE['sm'], 0))
+        layout.action_button(
+            actions, "action.export_excel", self._exporter_excel, primary=True
+        )
+        layout.action_button(actions, "action.export_pdf", self._exporter_pdf)
+        ttk.Button(
+            actions,
+            style=theme.STYLE_BUTTON,
+            text="Diagnostic interne",
+            command=self._exporter_diagnostic,
+        ).pack(side="left", padx=(design.SPACE["sm"], 0))
 
     def _changer_de_langue(self, _code):
         """Reconstruit la fenêtre dans la langue choisie.
@@ -355,9 +388,9 @@ class NavigateurSIA4010(object):
         self._construire_widgets()
         if classe is None:
             return
-        for valeur in self._selecteur.cget('values'):
-            texte = u'%s' % valeur
-            if texte.split(u'—')[0].strip() == classe:
+        for valeur in self._selecteur.cget("values"):
+            texte = "%s" % valeur
+            if texte.split("—")[0].strip() == classe:
                 self._classe_choisie.set(texte)
                 break
         self._changer_de_classe()
@@ -368,13 +401,13 @@ class NavigateurSIA4010(object):
         Returns:
             str | None: Identifiant de classe.
         """
-        valeur = getattr(self, '_classe_choisie', None)
+        valeur = getattr(self, "_classe_choisie", None)
         if valeur is None:
             return None
         texte = valeur.get()
         if not texte or texte == TOUTES_LES_CLASSES:
             return None
-        return texte.split(u'—')[0].strip()
+        return texte.split("—")[0].strip()
 
     def _vues_affichees(self):
         """Vues retenues par la classe choisie.
@@ -385,30 +418,31 @@ class NavigateurSIA4010(object):
         classe = self._classe_active()
         if classe is None:
             return list(self._vues)
-        return selection.select(classe, self._vues)['vues']
+        return selection.select(classe, self._vues)["vues"]
 
     def _rafraichir_etat_classe(self):
         """Met a jour le libelle d'etat a cote du selecteur."""
         classe = self._classe_active()
         if classe is None:
-            self._etat_classe.configure(
-                text=u'%d test(s) affiché(s)' % len(self._vues))
+            self._etat_classe.configure(text="%d test(s) affiché(s)" % len(self._vues))
             return
         choix = selection.select(classe, self._vues)
         statut = selection.class_status(choix)
-        manquants = choix['numeros_absents']
-        detail = u'%d/%d test(s) présent(s)' % (
-            len(choix['vues']), len(choix['tests_exiges']))
+        manquants = choix["numeros_absents"]
+        detail = "%d/%d test(s) présent(s)" % (
+            len(choix["vues"]),
+            len(choix["tests_exiges"]),
+        )
         if manquants:
-            detail += u' — manquants : %s' % u', '.join(
-                str(n) for n in manquants)
+            detail += " — manquants : %s" % ", ".join(str(n) for n in manquants)
         self._etat_classe.configure(
-            text=u'%s — %s' % (i18n.t(i18n.verdict_key(statut)), detail))
+            text="%s — %s" % (i18n.t(i18n.verdict_key(statut)), detail)
+        )
 
     def _changer_de_classe(self, _evenement=None):
         """Reconstruit l'arbre pour la classe choisie."""
         self._rafraichir_etat_classe()
-        for iid in self._arbre.get_children(''):
+        for iid in self._arbre.get_children(""):
             self._arbre.delete(iid)
         self._remplir_arbre()
 
@@ -441,31 +475,45 @@ class NavigateurSIA4010(object):
         # que le rapport contiendra, sans quoi l'ecran et le PDF diraient deux
         # choses differentes.
         for une_vue in self._vues_affichees():
-            for ligne_classe in une_vue['classes']:
-                tests_par_classe.setdefault(
-                    ligne_classe['classe'], []).append((une_vue, ligne_classe))
+            for ligne_classe in une_vue["classes"]:
+                tests_par_classe.setdefault(ligne_classe["classe"], []).append(
+                    (une_vue, ligne_classe)
+                )
 
         for classe in sorted(tests_par_classe):
             tests = tests_par_classe[classe]
             # Couleur de la classe = pire verdict de SES tests : une classe
             # n'est verte que si tous les tests qu'elle exige le sont.
-            couleur_classe = _pire_couleur(lc['couleur'] for _, lc in tests)
+            couleur_classe = _pire_couleur(lc["couleur"] for _, lc in tests)
             noeud_classe = self._arbre.insert(
-                '', 'end',
-                text=u'Classe ' + classe,
-                values=('', '', SYMBOLE_PAR_VERDICT.get(couleur_classe, u'?'),
-                        tests[0][1]['article']),
-                tags=(couleur_classe,), open=False)
+                "",
+                "end",
+                text="Classe " + classe,
+                values=(
+                    "",
+                    "",
+                    SYMBOLE_PAR_VERDICT.get(couleur_classe, "?"),
+                    tests[0][1]["article"],
+                ),
+                tags=(couleur_classe,),
+                open=False,
+            )
 
             for une_vue, ligne_classe in tests:
-                test_id = str(une_vue.get('test_id') or 'Test')
+                test_id = str(une_vue.get("test_id") or "Test")
                 noeud_test = self._arbre.insert(
-                    noeud_classe, 'end',
+                    noeud_classe,
+                    "end",
                     text=test_id,
-                    values=('', '',
-                            SYMBOLE_PAR_VERDICT.get(ligne_classe['couleur'], u'?'),
-                            une_vue['verdict_global']['article']),
-                    tags=(ligne_classe['couleur'],), open=False)
+                    values=(
+                        "",
+                        "",
+                        SYMBOLE_PAR_VERDICT.get(ligne_classe["couleur"], "?"),
+                        une_vue["verdict_global"]["article"],
+                    ),
+                    tags=(ligne_classe["couleur"],),
+                    open=False,
+                )
                 self._remplir_test(noeud_test, classe, test_id, une_vue)
 
     def _remplir_test(self, noeud_test, classe, test_id, une_vue):
@@ -477,50 +525,62 @@ class NavigateurSIA4010(object):
         """
         lignes_par_grandeur_cas = {}
         ordre_grandeur_cas = []
-        for ligne in une_vue['lignes']:
-            cle = (ligne['grandeur'], ligne['cas'])
+        for ligne in une_vue["lignes"]:
+            cle = (ligne["grandeur"], ligne["cas"])
             if cle not in lignes_par_grandeur_cas:
                 lignes_par_grandeur_cas[cle] = []
                 ordre_grandeur_cas.append(cle)
             lignes_par_grandeur_cas[cle].append(ligne)
 
-        prefixe = 'classe::' + classe + '::test::' + test_id
+        prefixe = "classe::" + classe + "::test::" + test_id
 
         for grandeur, cas in ordre_grandeur_cas:
             lignes_periodes = lignes_par_grandeur_cas[(grandeur, cas)]
             # Couleur du noeud "cas" = pire verdict de ses periodes
             # (rouge > gris > vert), sans jamais inventer une agregation
             # que le moteur n'a pas produite lui-meme au niveau cas.
-            couleur_cas = _pire_couleur(l['couleur'] for l in lignes_periodes)
+            couleur_cas = _pire_couleur(row["couleur"] for row in lignes_periodes)
 
-            noeud_grandeur_id = prefixe + '::grandeur::' + grandeur
+            noeud_grandeur_id = prefixe + "::grandeur::" + grandeur
             if self._arbre.exists(noeud_grandeur_id):
                 noeud_grandeur = noeud_grandeur_id
             else:
                 noeud_grandeur = self._arbre.insert(
-                    noeud_test, 'end', iid=noeud_grandeur_id,
-                    text=lignes_periodes[0]['grandeur_libelle'],
-                    values=('', '', '', ''), open=False)
+                    noeud_test,
+                    "end",
+                    iid=noeud_grandeur_id,
+                    text=lignes_periodes[0]["grandeur_libelle"],
+                    values=("", "", "", ""),
+                    open=False,
+                )
 
             noeud_cas = self._arbre.insert(
-                noeud_grandeur, 'end',
-                text=u'Cas ' + cas if cas else u'(ensemble)',
-                values=('', '', SYMBOLE_PAR_VERDICT.get(couleur_cas, u'?'), ''),
-                tags=(couleur_cas,), open=False)
+                noeud_grandeur,
+                "end",
+                text="Cas " + cas if cas else "(ensemble)",
+                values=("", "", SYMBOLE_PAR_VERDICT.get(couleur_cas, "?"), ""),
+                tags=(couleur_cas,),
+                open=False,
+            )
 
             for ligne in lignes_periodes:
                 reference_affichee = _resumer_reference(ligne)
                 iid_periode = _iid_ligne(classe, ligne, test_id)
                 self._arbre.insert(
-                    noeud_cas, 'end',
-                    text=ligne['periode_libelle'],
-                    values=(ligne['valeur_candidate_affichee'],
-                            reference_affichee,
-                            SYMBOLE_PAR_VERDICT.get(ligne['couleur'], u'?') +
-                            u' ' + ligne['texte_verdict'],
-                            ligne['article']),
-                    tags=(ligne['couleur'],),
-                    iid=iid_periode)
+                    noeud_cas,
+                    "end",
+                    text=ligne["periode_libelle"],
+                    values=(
+                        ligne["valeur_candidate_affichee"],
+                        reference_affichee,
+                        SYMBOLE_PAR_VERDICT.get(ligne["couleur"], "?")
+                        + " "
+                        + ligne["texte_verdict"],
+                        ligne["article"],
+                    ),
+                    tags=(ligne["couleur"],),
+                    iid=iid_periode,
+                )
                 self._lignes_par_iid[iid_periode] = ligne
 
     # ----------------------------------------------------------------
@@ -533,13 +593,15 @@ class NavigateurSIA4010(object):
             return
         iid = selection[0]
         ligne = self._lignes_par_iid.get(iid)
-        self._texte_detail.configure(state='normal')
-        self._texte_detail.delete('1.0', 'end')
+        self._texte_detail.configure(state="normal")
+        self._texte_detail.delete("1.0", "end")
         if ligne is None:
-            self._texte_detail.insert('end', u'(Nœud de regroupement -- sélectionner une période.)')
+            self._texte_detail.insert(
+                "end", "(Nœud de regroupement -- sélectionner une période.)"
+            )
         else:
-            self._texte_detail.insert('end', _texte_detail_ligne(ligne))
-        self._texte_detail.configure(state='disabled')
+            self._texte_detail.insert("end", _texte_detail_ligne(ligne))
+        self._texte_detail.configure(state="disabled")
 
     def _exporter_excel(self):
         # ⚠ À VÉRIFIER -- non exécuté. Délégué à `ui/excel_export.py`,
@@ -549,8 +611,9 @@ class NavigateurSIA4010(object):
         if filedialog is None:
             return
         chemin_source = filedialog.askopenfilename(
-            title=u'Copie du classeur SIA officiel (Handeingabe)',
-            filetypes=[('Classeur Excel', '*.xlsx;*.xlsm')])
+            title="Copie du classeur SIA officiel (Handeingabe)",
+            filetypes=[("Classeur Excel", "*.xlsx;*.xlsm")],
+        )
         if not chemin_source:
             return
         # Chaque test SIA a SON classeur d'évaluation : on ne remplit donc
@@ -560,48 +623,61 @@ class NavigateurSIA4010(object):
         # le script appelant peut piloter sans dialogue.
         try:
             from ui import excel_export
+
             rapport = excel_export.fill_sia_workbook_reporting(
-                chemin_source, self._vues[0])
-            message = u'Classeur rempli : %s\n%d cellule(s) écrite(s).' % (
-                rapport['chemin_sortie'], len(rapport['cellules_ecrites']))
-            ignorees = rapport['cellules_ignorees_valeur_absente']
+                chemin_source, self._vues[0]
+            )
+            message = "Classeur rempli : %s\n%d cellule(s) écrite(s)." % (
+                rapport["chemin_sortie"],
+                len(rapport["cellules_ecrites"]),
+            )
+            ignorees = rapport["cellules_ignorees_valeur_absente"]
             if ignorees:
                 # Ne jamais annoncer un succès sec quand des cases restent
                 # vides : elles seraient decouvertes par le SIA, pas par nous.
-                message += (u'\n\n⚠ %d cellule(s) laissée(s) VIDE(S), faute de '
-                            u'valeur candidate :\n%s' % (
-                                len(ignorees),
-                                u'\n'.join(u'  %s → %s' % (c, a)
-                                           for c, a in ignorees[:10])))
+                message += (
+                    "\n\n⚠ %d cellule(s) laissée(s) VIDE(S), faute de "
+                    "valeur candidate :\n%s"
+                    % (
+                        len(ignorees),
+                        "\n".join("  %s → %s" % (c, a) for c, a in ignorees[:10]),
+                    )
+                )
                 if len(ignorees) > 10:
-                    message += u'\n  … et %d autre(s).' % (len(ignorees) - 10)
-            messagebox.showinfo(u'Export Excel', message)
+                    message += "\n  … et %d autre(s)." % (len(ignorees) - 10)
+            messagebox.showinfo("Export Excel", message)
         except Exception as erreur:  # pragma: no cover -- non exécuté ici
-            messagebox.showerror(u'Export Excel', str(erreur))
+            messagebox.showerror("Export Excel", str(erreur))
 
     def _exporter_pdf(self):
         # ⚠ À VÉRIFIER -- non exécuté.
         if filedialog is None:
             return
         chemin_pdf = filedialog.asksaveasfilename(
-            title=u'Enregistrer le rapport PDF', defaultextension='.pdf',
-            filetypes=[('PDF', '*.pdf')])
+            title="Enregistrer le rapport PDF",
+            defaultextension=".pdf",
+            filetypes=[("PDF", "*.pdf")],
+        )
         if not chemin_pdf:
             return
         # Le PDF couvre TOUS les tests affichés : sa page de tête est la
         # synthèse par classe, qui est ce que le client lit en premier.
         try:
             from ui import export_pdf_reportlab
+
             vues = self._vues_affichees()
-            export_pdf_reportlab.generer_pdf_rapport_multi(
-                vues, chemin_pdf)
+            export_pdf_reportlab.generer_pdf_rapport_multi(vues, chemin_pdf)
             messagebox.showinfo(
-                u'Export PDF',
-                u'Rapport généré : %s\n%d test(s) couvert(s) : %s' % (
-                    chemin_pdf, len(vues),
-                    u', '.join(str(v.get('test_id') or '?') for v in vues)))
+                "Export PDF",
+                "Rapport généré : %s\n%d test(s) couvert(s) : %s"
+                % (
+                    chemin_pdf,
+                    len(vues),
+                    ", ".join(str(v.get("test_id") or "?") for v in vues),
+                ),
+            )
         except Exception as erreur:  # pragma: no cover -- non exécuté ici
-            messagebox.showerror(u'Export PDF', str(erreur))
+            messagebox.showerror("Export PDF", str(erreur))
 
     def _exporter_diagnostic(self):
         """Écrit le rapport INTERNE : ce qui bloque, pourquoi, et quoi faire.
@@ -614,18 +690,19 @@ class NavigateurSIA4010(object):
         if filedialog is None:
             return
         chemin = filedialog.asksaveasfilename(
-            title=u'Enregistrer le diagnostic interne',
-            defaultextension='.md', filetypes=[('Markdown', '*.md')])
+            title="Enregistrer le diagnostic interne",
+            defaultextension=".md",
+            filetypes=[("Markdown", "*.md")],
+        )
         if not chemin:
             return
         try:
             texte = self._texte_diagnostic()
-            with open(chemin, 'w', encoding='utf-8') as flux:
+            with open(chemin, "w", encoding="utf-8") as flux:
                 flux.write(texte)
-            messagebox.showinfo(u'Diagnostic interne',
-                                u'Rapport écrit : %s' % chemin)
+            messagebox.showinfo("Diagnostic interne", "Rapport écrit : %s" % chemin)
         except Exception as erreur:  # pragma: no cover -- non execute ici
-            messagebox.showerror(u'Diagnostic interne', str(erreur))
+            messagebox.showerror("Diagnostic interne", str(erreur))
 
     def _texte_diagnostic(self):
         """Compose le diagnostic des classes visées.
@@ -637,15 +714,16 @@ class NavigateurSIA4010(object):
         classes = [classe] if classe else list(selection.CLASSES)
         liaisons = _etat_des_liaisons()
 
-        morceaux = [u'# Diagnostic interne — navigateur SIA 4010', u'']
+        morceaux = ["# Diagnostic interne — navigateur SIA 4010", ""]
         for identifiant in classes:
             diagnostic = selection.diagnose(
-                identifiant, self._vues, binding_state=liaisons)
-            morceaux.append(u'```')
+                identifiant, self._vues, binding_state=liaisons
+            )
+            morceaux.append("```")
             morceaux.append(selection.summarise_diagnosis(diagnostic))
-            morceaux.append(u'```')
-            morceaux.append(u'')
-        return u'\n'.join(morceaux)
+            morceaux.append("```")
+            morceaux.append("")
+        return "\n".join(morceaux)
 
     def lancer(self):
         """Boucle d'événements Tkinter -- bloque jusqu'à fermeture."""
@@ -657,7 +735,7 @@ class NavigateurSIA4010(object):
 # module ne l'est pas, car elles n'importent aucun objet `tkinter`).
 # --------------------------------------------------------------------------
 
-_ORDRE_COULEUR_GRAVITE = {'vert': 0, 'gris': 1, 'rouge': 2}
+_ORDRE_COULEUR_GRAVITE = {"vert": 0, "gris": 1, "rouge": 2}
 
 
 def _etat_des_liaisons():
@@ -676,9 +754,15 @@ def _etat_des_liaisons():
     except ImportError:  # pragma: no cover -- adaptateur absent
         return {}
     return dict(
-        (numero, (len(bandes_adapter.liaisons_resolues(numero)),
-                  len(bandes_adapter.LIAISONS.get(numero, {}))))
-        for numero in bandes_adapter.TESTS_COUVERTS)
+        (
+            numero,
+            (
+                len(bandes_adapter.liaisons_resolues(numero)),
+                len(bandes_adapter.LIAISONS.get(numero, {})),
+            ),
+        )
+        for numero in bandes_adapter.TESTS_COUVERTS
+    )
 
 
 class NavigateurTest1(NavigateurSIA4010):
@@ -689,8 +773,7 @@ class NavigateurTest1(NavigateurSIA4010):
     """
 
     def __init__(self, resultat_test1_json):
-        NavigateurSIA4010.__init__(
-            self, [vue.construire_vue_test1(resultat_test1_json)])
+        NavigateurSIA4010.__init__(self, [vue.construire_vue_test1(resultat_test1_json)])
         self._resultat = resultat_test1_json
 
 
@@ -700,11 +783,11 @@ def _pire_couleur(couleurs):
     vert si au moins une période enfant n'est pas verte."""
     couleurs = list(couleurs)
     if not couleurs:
-        return 'gris'
+        return "gris"
     return max(couleurs, key=lambda c: _ORDRE_COULEUR_GRAVITE.get(c, 1))
 
 
-def _iid_ligne(classe, ligne, test_id=''):
+def _iid_ligne(classe, ligne, test_id=""):
     """Identifiant Treeview stable pour une ligne de période -- dérivé des
     clés déjà présentes (grandeur/cas/période), jamais d'un compteur global
     qui casserait au moindre réordonnancement.
@@ -724,8 +807,18 @@ def _iid_ligne(classe, ligne, test_id=''):
     (grandeur, cas, période). Défaut vide pour rester compatible avec les
     appelants antérieurs.
     """
-    return ('classe::' + classe + '::test::' + str(test_id) + '::periode::' +
-            ligne['grandeur'] + '::' + ligne['cas'] + '::' + ligne['periode'])
+    return (
+        "classe::"
+        + classe
+        + "::test::"
+        + str(test_id)
+        + "::periode::"
+        + ligne["grandeur"]
+        + "::"
+        + ligne["cas"]
+        + "::"
+        + ligne["periode"]
+    )
 
 
 def _resumer_reference(ligne):
@@ -734,67 +827,81 @@ def _resumer_reference(ligne):
     # Le Test 7 fournit deja son resume de bande (`moyenne (bas … haut) unite`)
     # depuis `verdict_view.construire_lignes_test7` : on le reprend tel quel
     # plutot que de le reconstruire ici a partir des bornes.
-    if ligne.get('reference_affichee') is not None:
-        return ligne['reference_affichee']
+    if ligne.get("reference_affichee") is not None:
+        return ligne["reference_affichee"]
 
-    detail = ligne.get('detail') or {}
-    if ligne['type_controle'] == 'critere_pass_fail':
-        plage_min = detail.get('plage_min')
-        plage_max = detail.get('plage_max')
+    detail = ligne.get("detail") or {}
+    if ligne["type_controle"] == "critere_pass_fail":
+        plage_min = detail.get("plage_min")
+        plage_max = detail.get("plage_max")
         if plage_min is None or plage_max is None:
-            return u'—'
-        return u'[{0} ; {1}]'.format(
-            vue.formater_nombre(plage_min), vue.formater_nombre(plage_max))
+            return "—"
+        return "[{0} ; {1}]".format(
+            vue.formater_nombre(plage_min), vue.formater_nombre(plage_max)
+        )
     # Informatif : plusieurs programmes de reference -- on affiche la
     # moyenne si elle est presente parmi les comparaisons, sinon le nombre
     # de programmes compares (jamais une valeur choisie arbitrairement).
-    comparaisons = detail.get('comparaisons') or {}
+    comparaisons = detail.get("comparaisons") or {}
     if not comparaisons:
-        return u'—'
-    return u'{0} programme(s) de réf. -- voir détail'.format(len(comparaisons))
+        return "—"
+    return "{0} programme(s) de réf. -- voir détail".format(len(comparaisons))
 
 
 def _texte_detail_ligne(ligne):
-    detail = ligne.get('detail') or {}
+    detail = ligne.get("detail") or {}
     morceaux = [
-        u'Grandeur : ' + ligne['grandeur_libelle'],
-        u'Cas : ' + ligne['cas'] + u'   Période : ' + ligne['periode_libelle'],
-        u'Valeur candidate : ' + ligne['valeur_candidate_affichee'],
-        u'Verdict : ' + ligne['texte_verdict'],
-        u'Article : ' + ligne['article'],
-        u'Source de la référence : ' + ligne['source_valeur_reference'],
+        "Grandeur : " + ligne["grandeur_libelle"],
+        "Cas : " + ligne["cas"] + "   Période : " + ligne["periode_libelle"],
+        "Valeur candidate : " + ligne["valeur_candidate_affichee"],
+        "Verdict : " + ligne["texte_verdict"],
+        "Article : " + ligne["article"],
+        "Source de la référence : " + ligne["source_valeur_reference"],
     ]
-    if ligne['type_controle'] == 'critere_pass_fail':
-        morceaux.append(u'Moyenne des programmes de référence : ' +
-                         vue.formater_nombre(detail.get('moyenne_programmes')))
-        morceaux.append(u'Plage de dispersion (Streubereich) : [{0} ; {1}]'.format(
-            vue.formater_nombre(detail.get('plage_min')),
-            vue.formater_nombre(detail.get('plage_max'))))
-        if detail.get('marge_min') is not None:
-            morceaux.append(u'Marge par rapport aux bornes : min {0} / max {1}'.format(
-                vue.formater_nombre(detail.get('marge_min')),
-                vue.formater_nombre(detail.get('marge_max'))))
-        if detail.get('coherence_reference') is False:
+    if ligne["type_controle"] == "critere_pass_fail":
+        morceaux.append(
+            "Moyenne des programmes de référence : "
+            + vue.formater_nombre(detail.get("moyenne_programmes"))
+        )
+        morceaux.append(
+            "Plage de dispersion (Streubereich) : [{0} ; {1}]".format(
+                vue.formater_nombre(detail.get("plage_min")),
+                vue.formater_nombre(detail.get("plage_max")),
+            )
+        )
+        if detail.get("marge_min") is not None:
             morceaux.append(
-                u'⚠ Incohérence détectée entre la plage recalculée par le '
-                u'moteur et celle déjà stockée dans test-1.ref.json -- signaler '
-                u'à qa-auditor avant de considérer ce verdict fiable.')
-        if detail.get('motif'):
-            morceaux.append(u'Motif : ' + detail['motif'])
+                "Marge par rapport aux bornes : min {0} / max {1}".format(
+                    vue.formater_nombre(detail.get("marge_min")),
+                    vue.formater_nombre(detail.get("marge_max")),
+                )
+            )
+        if detail.get("coherence_reference") is False:
+            morceaux.append(
+                "⚠ Incohérence détectée entre la plage recalculée par le "
+                "moteur et celle déjà stockée dans test-1.ref.json -- signaler "
+                "à qa-auditor avant de considérer ce verdict fiable."
+            )
+        if detail.get("motif"):
+            morceaux.append("Motif : " + detail["motif"])
     else:
-        comparaisons = detail.get('comparaisons') or {}
+        comparaisons = detail.get("comparaisons") or {}
         for nom_programme, comparaison in sorted(comparaisons.items()):
-            morceaux.append(u'  -- {0} : référence {1}, delta {2} ({3} %)'.format(
-                nom_programme,
-                vue.formater_nombre(comparaison.get('reference')),
-                vue.formater_nombre(comparaison.get('delta_absolu')),
-                vue.formater_nombre(comparaison.get('delta_relatif_pct'))))
-    return u'\n'.join(morceaux)
+            morceaux.append(
+                "  -- {0} : référence {1}, delta {2} ({3} %)".format(
+                    nom_programme,
+                    vue.formater_nombre(comparaison.get("reference")),
+                    vue.formater_nombre(comparaison.get("delta_absolu")),
+                    vue.formater_nombre(comparaison.get("delta_relatif_pct")),
+                )
+            )
+    return "\n".join(morceaux)
 
 
 # --------------------------------------------------------------------------
 # Point d'entrée attendu depuis le Python Scripts navigator de VE.
 # --------------------------------------------------------------------------
+
 
 def lancer_depuis_ve(chemin_reference=None, chemin_candidat_fixture=None):
     """Fonction d'appel prévue pour un script enregistré dans le *Python
@@ -811,11 +918,13 @@ def lancer_depuis_ve(chemin_reference=None, chemin_candidat_fixture=None):
     une prochaine itération, cf. rapport de fin de tâche).
     """
     from engine import test1_engine as moteur
+
     reference = moteur.charger_reference(chemin_reference)
 
     if chemin_candidat_fixture is not None:
         import json
-        with open(chemin_candidat_fixture, encoding='utf-8') as flux:
+
+        with open(chemin_candidat_fixture, encoding="utf-8") as flux:
             candidat = json.load(flux)
     else:
         candidat = None  # aucune simulation encore lancee -> tout gris.
@@ -825,8 +934,9 @@ def lancer_depuis_ve(chemin_reference=None, chemin_candidat_fixture=None):
     app.lancer()
 
 
-def construire_vues_disponibles(candidat_test1=None, candidat_test7=None,
-                                 candidats_par_test=None):
+def construire_vues_disponibles(
+    candidat_test1=None, candidat_test7=None, candidats_par_test=None
+):
     """Construit les vues de TOUS les tests dont la référence est figée.
 
     Un test dont le référentiel est absent est SAUTÉ, pas remplacé par un
@@ -841,34 +951,40 @@ def construire_vues_disponibles(candidat_test1=None, candidat_test7=None,
 
     try:
         from engine import test1_engine as moteur1
+
         reference1 = moteur1.charger_reference()
-        vues.append(vue.construire_vue_test1(
-            moteur1.evaluer_test1(reference1, candidat_test1)))
+        vues.append(
+            vue.construire_vue_test1(moteur1.evaluer_test1(reference1, candidat_test1))
+        )
     except Exception as erreur:  # référentiel absent ou illisible
-        avertissements.append(u'Test 1 non chargé : %s' % erreur)
+        avertissements.append("Test 1 non chargé : %s" % erreur)
 
     # Tests 2 a 6 : meme moteur, leurs references partagent une forme
     # « grandeur -> cas ». Un test dont la reference manque est SAUTE.
     for numero in (2, 3, 4, 5, 6):
         try:
             from engine import sia_bandes_engine as moteur_bandes
+
             reference = moteur_bandes.charger_reference(numero)
             candidat = (candidats_par_test or {}).get(numero)
-            vues.append(vue.construire_vue_bandes(
-                moteur_bandes.evaluer(reference, candidat)))
+            vues.append(
+                vue.construire_vue_bandes(moteur_bandes.evaluer(reference, candidat))
+            )
         except Exception as erreur:
-            avertissements.append(u'Test %d non chargé : %s' % (numero, erreur))
+            avertissements.append("Test %d non chargé : %s" % (numero, erreur))
 
     try:
         from engine import test7_engine as moteur7
+
         reference7 = moteur7.charger_reference()
-        vues.append(vue.construire_vue_test7(
-            moteur7.evaluer_test7(reference7, candidat_test7)))
+        vues.append(
+            vue.construire_vue_test7(moteur7.evaluer_test7(reference7, candidat_test7))
+        )
     except Exception as erreur:
-        avertissements.append(u'Test 7 non chargé : %s' % erreur)
+        avertissements.append("Test 7 non chargé : %s" % erreur)
 
     # Ordre d'affichage : par numéro de test, pas par ordre de chargement.
-    vues.sort(key=lambda v: _rang_test(v.get('numero_test')))
+    vues.sort(key=lambda v: _rang_test(v.get("numero_test")))
     return vues, avertissements
 
 
@@ -882,11 +998,11 @@ def _rang_test(numero):
         tuple: Clé de tri ; les vues sans numéro passent en fin.
     """
     if numero is None:
-        return (1, u'')
+        return (1, "")
     try:
-        return (0, u'%03d' % int(numero))
+        return (0, "%03d" % int(numero))
     except (TypeError, ValueError):
-        return (0, u'%s' % numero)
+        return (0, "%s" % numero)
 
 
 def lancer_navigateur(candidat_test1=None, candidat_test7=None):
@@ -901,20 +1017,21 @@ def lancer_navigateur(candidat_test1=None, candidat_test7=None):
         from ui.dialog_tkinter import lancer_navigateur
         lancer_navigateur(candidat_test1=c1, candidat_test7=c7)
     """
-    vues, avertissements = construire_vues_disponibles(
-        candidat_test1, candidat_test7)
+    vues, avertissements = construire_vues_disponibles(candidat_test1, candidat_test7)
     for avertissement in avertissements:
-        print(u'⚠ ' + avertissement)
+        print("⚠ " + avertissement)
     if not vues:
-        raise RuntimeError(
-            u'aucun test chargeable : %s' % u' | '.join(avertissements))
+        raise RuntimeError("aucun test chargeable : %s" % " | ".join(avertissements))
     NavigateurSIA4010(vues).lancer()
 
 
-if __name__ == '__main__':  # pragma: no cover -- usage manuel hors VE, non teste
+if __name__ == "__main__":  # pragma: no cover -- usage manuel hors VE, non teste
     # ⚠ À VÉRIFIER -- non exécuté. Permet un essai manuel avec la fixture de
     # développement si jamais un environnement graphique est disponible.
     _ICI = os.path.dirname(os.path.abspath(__file__))
     _RACINE = os.path.dirname(_ICI)
-    lancer_depuis_ve(chemin_candidat_fixture=os.path.join(
-        _RACINE, 've_adapter', 'fixtures', 'test1_candidat.exemple.json'))
+    lancer_depuis_ve(
+        chemin_candidat_fixture=os.path.join(
+            _RACINE, "ve_adapter", "fixtures", "test1_candidat.exemple.json"
+        )
+    )

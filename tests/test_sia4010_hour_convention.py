@@ -41,16 +41,10 @@ class HourConventionTests(unittest.TestCase):
             diagnostic["status"],
             "APS_INDEX_ALIGNS_WITH_EPW_FILE_ORDER",
         )
-        self.assertEqual(
-            diagnostic["best_alignment"]["aps_index_offset_hours"], 0
-        )
+        self.assertEqual(diagnostic["best_alignment"]["aps_index_offset_hours"], 0)
 
     def test_epw_reader_requires_complete_year(self):
-        directory = (
-            Path(__file__).resolve().parents[1]
-            / ".codex_tmp"
-            / "hour_convention"
-        )
+        directory = Path(__file__).resolve().parents[1] / ".codex_tmp" / "hour_convention"
         directory.mkdir(parents=True, exist_ok=True)
         path = directory / "incomplete_weather.epw"
         header = ["header"] * 8

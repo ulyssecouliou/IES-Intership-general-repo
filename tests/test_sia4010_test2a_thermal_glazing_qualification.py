@@ -18,7 +18,6 @@ from swiss_sia.reference_model.sia4010.test2a_thermal_glazing_qualification impo
     qualify_test2a_base_glazing_thermal_storage,
 )
 
-
 ROOT = Path(__file__).resolve().parents[1]
 WORK_ROOT = ROOT / ".codex_tmp" / "t2a_thermal"
 
@@ -80,9 +79,7 @@ class Test2AThermalGlazingQualificationTests(unittest.TestCase):
         (self.project_path / "sia_model_scenario.json").write_text(
             json.dumps(scenario.to_dict()) + "\n", encoding="utf-8"
         )
-        self.report_dir = (
-            self.project_path / "sia4010_artifacts" / "diagnostics"
-        )
+        self.report_dir = self.project_path / "sia4010_artifacts" / "diagnostics"
         self.report_dir.mkdir(parents=True)
         self.optical = self.report_dir / "sia2a_2e1_optical_setter_fixture.json"
         self._write_optical(combined=True)
@@ -127,9 +124,7 @@ class Test2AThermalGlazingQualificationTests(unittest.TestCase):
             0.654,
             delta=0.001,
         )
-        self.assertTrue(
-            report_path.with_suffix(report_path.suffix + ".sha256").is_file()
-        )
+        self.assertTrue(report_path.with_suffix(report_path.suffix + ".sha256").is_file())
 
     def test_rejects_non_combined_optical_prerequisite_before_mutation(self):
         self._write_optical(combined=False)

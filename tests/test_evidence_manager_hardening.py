@@ -62,9 +62,7 @@ class FindAcceptedMappingHardeningTests(unittest.TestCase):
 
     def test_success_returns_matching_record(self) -> None:
         """A well-formed payload still returns the matching accepted record."""
-        results = {
-            "accepted_records": [{"room_id": "R1", "sia2024_category": "office"}]
-        }
+        results = {"accepted_records": [{"room_id": "R1", "sia2024_category": "office"}]}
         record = find_accepted_mapping(results, room_id="R1")
         self.assertEqual(record, {"room_id": "R1", "sia2024_category": "office"})
 
@@ -74,9 +72,22 @@ class FindAcceptedMappingHardeningTests(unittest.TestCase):
 
     def test_fallback_accepted_records_not_a_list(self) -> None:
         """A non-list ``accepted_records`` degrades to None instead of raising."""
-        self.assertIsNone(
-            find_accepted_mapping({"accepted_records": 5}, room_id="R1")
+        self.assertIsNone(find_accepted_mapping({"accepted_records": 5}, room_id="R1"))
+
+    def test_template_decimal_and_p_separator_forms_match(self) -> None:
+        results = {
+            "accepted_records": [
+                {
+                    "thermal_template_id": "SIA2024_4.01_CLASSROOM_REFERENCE",
+                    "sia2024_category": "4.01",
+                }
+            ]
+        }
+        record = find_accepted_mapping(
+            results,
+            thermal_template_id="SIA2024_4P01_CLASSROOM_REFERENCE",
         )
+        self.assertEqual(record["sia2024_category"], "4.01")
 
 
 if __name__ == "__main__":

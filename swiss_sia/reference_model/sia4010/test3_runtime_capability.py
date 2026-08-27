@@ -18,7 +18,6 @@ from .external_input_manifest import external_input_readiness
 from .model_scenario import ModelScenario
 from .official_input_contract import Sia4010OfficialInputContract
 
-
 REPORT_SCHEMA_VERSION = "1.0"
 REPORT_DIRECTORY = Path("sia4010_artifacts") / "diagnostics"
 SCENARIO_FILENAME = "sia_model_scenario.json"
@@ -121,8 +120,7 @@ def _public_members(value: Any, tokens: Iterable[str]) -> List[str]:
     return sorted(
         name
         for name in names
-        if not name.startswith("_")
-        and any(token in name.lower() for token in lowered)
+        if not name.startswith("_") and any(token in name.lower() for token in lowered)
     )
 
 
@@ -158,9 +156,7 @@ def _lighting_record(record: Any, scope: str) -> Dict[str, Any]:
     data, error = _record_data(record)
     row: Dict[str, Any] = {
         "scope": scope,
-        "python_type": "{}.{}".format(
-            type(record).__module__, type(record).__name__
-        ),
+        "python_type": "{}.{}".format(type(record).__module__, type(record).__name__),
         "identifier": str(getattr(record, "id", "")),
         "name": str(data.get("name", getattr(record, "name", ""))),
         "is_lighting_gain": _is_lighting_gain(record, data),
@@ -183,9 +179,7 @@ def _global_gain_inventory(project: Any) -> Dict[str, Any]:
     """Inspect global casual gains without mutating their records."""
 
     result: Dict[str, Any] = {
-        "casual_gains_available": callable(
-            getattr(project, "casual_gains", None)
-        ),
+        "casual_gains_available": callable(getattr(project, "casual_gains", None)),
         "create_casual_gain_available": callable(
             getattr(project, "create_casual_gain", None)
         ),
@@ -197,9 +191,7 @@ def _global_gain_inventory(project: Any) -> Dict[str, Any]:
     try:
         gains = _records(project.casual_gains())
     except Exception as exc:
-        result["errors"].append(
-            "VEProject.casual_gains: {}".format(exc)
-        )
+        result["errors"].append("VEProject.casual_gains: {}".format(exc))
         return result
     for gain in gains:
         row = _lighting_record(gain, "project")
@@ -219,9 +211,7 @@ def _template_inventory(project: Any) -> Dict[str, Any]:
     try:
         templates = thermal_templates(project, assigned=False)
     except Exception as exc:
-        result["errors"].append(
-            "VEProject.thermal_templates: {}".format(exc)
-        )
+        result["errors"].append("VEProject.thermal_templates: {}".format(exc))
         return result
     for handle, template in templates.items():
         template_row = {
@@ -293,9 +283,7 @@ def _room_inventory(project: Any) -> Dict[str, Any]:
             for name in members
             if any(token in name.lower() for token in SENSOR_TOKENS)
         )
-        room_name = str(
-            getattr(body, "name", getattr(body, "id", ""))
-        )
+        room_name = str(getattr(body, "name", getattr(body, "id", "")))
         result["rooms"].append(
             {
                 "name": room_name,
@@ -328,9 +316,7 @@ def _module_inventory(iesve_module: Any) -> Dict[str, Any]:
 
     members = _public_members(iesve_module, LIGHTING_TOKENS)
     sensor_members = [
-        name
-        for name in members
-        if any(token in name.lower() for token in SENSOR_TOKENS)
+        name for name in members if any(token in name.lower() for token in SENSOR_TOKENS)
     ]
     return {
         "relevant_members": members,
@@ -469,8 +455,7 @@ def build_test3_runtime_capability_report(
         or scenario.case_id != scenario.variant[5:]
     ):
         raise ConfigurationError(
-            "Test 3 runtime probe requires one exact official test_3A-"
-            "test_3L scenario"
+            "Test 3 runtime probe requires one exact official test_3A-" "test_3L scenario"
         )
     global_gains = _global_gain_inventory(project)
     templates = _template_inventory(project)
@@ -483,8 +468,7 @@ def build_test3_runtime_capability_report(
     )
     missing_fields = sorted(REQUIRED_LIGHTING_FIELDS - observed_fields)
     sensor_members = sorted(
-        set(module["sensor_related_members"])
-        | set(rooms["sensor_related_members"])
+        set(module["sensor_related_members"]) | set(rooms["sensor_related_members"])
     )
     official = _official_contract(Path(repository_root))
     source_matrix = {
@@ -499,15 +483,12 @@ def build_test3_runtime_capability_report(
     matrix = _variant_capability_matrix(
         official,
         source_ready_by_case={
-            case_id: item["ready_for_binding"]
-            for case_id, item in source_matrix.items()
+            case_id: item["ready_for_binding"] for case_id, item in source_matrix.items()
         },
         missing_lighting_fields=missing_fields,
         sensor_api_observed=bool(sensor_members),
     )
-    selected = next(
-        row for row in matrix if row["variant"] == scenario.variant
-    )
+    selected = next(row for row in matrix if row["variant"] == scenario.variant)
     technical_blockers = list(selected["technical_blockers"])
     if not global_gains["casual_gains_available"]:
         technical_blockers.append("VEPROJECT_CASUAL_GAINS_API_UNAVAILABLE")

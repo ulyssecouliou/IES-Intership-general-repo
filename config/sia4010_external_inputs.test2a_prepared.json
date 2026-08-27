@@ -4,7 +4,7 @@
   "claim_guardrail": "Do not set normative_authorization_status to CONFIRMED without documentary evidence. READY_FOR_BINDING authorizes technical implementation only; it is not an SIA attestation.",
   "inputs": {
     "iso52016_2017_chapter7_test_cell": {
-      "source_path": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\config\\iso52016_chapter7_confirmed_inputs.json",
+      "source_path": "iso52016_chapter7_confirmed_inputs.json",
       "source_sha256": "b177daa2d41840c0665e0040d1d2bb6e46351ce47d4580289df9175afbac5c82",
       "provenance_status": "LICENSED_STANDARD_COPY",
       "normative_authorization_status": "CONFIRMED",
@@ -21,7 +21,7 @@
       ],
       "technical_validation": {
         "status": "PASS",
-        "report_path": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\refs\\reference-data\\iso52016_chapter7_test_cell.validation.json",
+        "report_path": "../refs/reference-data/iso52016_chapter7_test_cell.validation.json",
         "report_sha256": "65be53a1e12479434826a9d578252640ff91b60dc036dcbc3d05c1baa1e0c2b3"
       },
       "normative_authorization_basis": "Autorisé par Ulysse Couliou le 2026-08-13 : la norme est détenue sous copie licenciée du projet, et l'usage est la traçabilité interne du candidat à la validation.",
@@ -29,7 +29,7 @@
       "normative_authorization_recorded_on": "2026-08-13"
     },
     "sia2028_dry_normal_zurich_kloten": {
-      "source_path": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\references\\standards\\sia2028\\KLO_dry.txt",
+      "source_path": "../references/standards/sia2028/KLO_dry.txt",
       "source_sha256": "aa3f3853300ceb55293c418d75ebfa36ef74353693acbaf369703c65bd337ffd",
       "provenance_status": "SIA_SUPPLIED",
       "normative_authorization_status": "CONFIRMED",
@@ -45,7 +45,7 @@
       ],
       "technical_validation": {
         "status": "PASS",
-        "report_path": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\references\\standards\\sia2028\\KLO_dry.validation.json",
+        "report_path": "../references/standards/sia2028/KLO_dry.validation.json",
         "report_sha256": "564715a816bad5763f99acffe6f81b8dcd1b3ec715c918f1b9ec59fa80140c98"
       },
       "normative_authorization_basis": "Autorisé par Ulysse Couliou le 2026-08-13, après examen avec Johan : IES n'obtiendra pas de licence SIA 2028, et n'en a pas besoin ici parce que le fichier a été fourni directement par le Prof. Gerhard Zweifel, responsable de la validation SIA 4010, en réponse à la demande du candidat et pour cette validation. Même base que l'entrée SIA 2024 catégorie 3.1.",
@@ -53,7 +53,7 @@
       "normative_authorization_recorded_on": "2026-08-13"
     },
     "sia2024_office_3_1_standard_profiles": {
-      "source_path": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\sia4010_evidence\\source_audits\\sia2024_3_1_authority_20260810\\SIA2024_2021_3_1_standard_values_authority_extract.png",
+      "source_path": "../sia4010_evidence/source_audits/sia2024_3_1_authority_20260810/SIA2024_2021_3_1_standard_values_authority_extract.png",
       "source_sha256": "c8e801d24b98365226c076e028d6556b01f357baa5233b2ac57a2dd63149177e",
       "provenance_status": "SIA_SUPPLIED",
       "normative_authorization_status": "CONFIRMED",
@@ -70,8 +70,8 @@
       ],
       "technical_validation": {
         "status": "PASS",
-        "report_path": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\sia4010_evidence\\source_audits\\sia2024_3_1_authority_20260810\\sia2024_office_3_1_standard_profiles.validation.json",
-        "report_sha256": "3e634b97dd9036808c0251f8b7f4171c786db9de0d6cf10f0e96e9a915164101"
+        "report_path": "../sia4010_evidence/source_audits/sia2024_3_1_authority_20260810/sia2024_office_3_1_standard_profiles.validation.json",
+        "report_sha256": "8d5e6fa6d65f61a279b4057659a91dbbb822acbf5df004f05bbffaf6a9344bb0"
       }
     },
     "sia3874_2017_table9_controls": {
@@ -107,19 +107,25 @@
       }
     },
     "sia_example_building_fabric_awning_detail": {
-      "source_path": null,
-      "source_sha256": null,
-      "provenance_status": "MISSING",
-      "normative_authorization_status": "UNCONFIRMED",
-      "source_authority": "",
-      "license_reference": "",
-      "dataset_identity": "SIA example-building fabric awning for Test 3",
-      "machine_readable_format": "",
-      "semantic_scope": [],
+      "source_path": "../SIA_4010_geteilter_Link/Beispielgebäude/Dokumentation_Beispielgebäude_V5.pdf",
+      "source_sha256": "38d231786467b1a117c99f2cfe8d09dd03c921bb894378a061c2f6d9bc14c75d",
+      "provenance_status": "SIA_SUPPLIED",
+      "normative_authorization_status": "CONFIRMED",
+      "source_authority": "SIA 4010 example-building documentation supplied to the validation candidate",
+      "license_reference": "SIA 4010 example-building documentation supplied for this validation campaign; internal traceability use only",
+      "dataset_identity": "Soltis 92-2048-Alu external fabric awning definition, mounting and optical states, example-building documentation pages 8-9",
+      "machine_readable_format": "application/pdf plus checksum-bound normalized JSON",
+      "semantic_scope": [
+        "fabric-awning product identity and mounting gaps",
+        "summer and reference-condition g_total and heat-transfer factors",
+        "solar, visible and UV optical properties for shaded and unshaded states",
+        "ISO 15099 summer g_total and winter U-values",
+        "150 W/m2 closure threshold value; dynamic semantics and IESVE threshold mapping resolved by authority decision SIA4010_TEST1E_SOLAR_CONTROL_20260826"
+      ],
       "technical_validation": {
-        "status": "PENDING",
-        "report_path": null,
-        "report_sha256": null
+        "status": "PASS",
+        "report_path": "../sia4010_evidence/source_audits/test3_fabric_awning_20260825/sia_example_building_fabric_awning_detail.validation.json",
+        "report_sha256": "e527136c60783b3883dcfcf5809905cc1ea81447ac150b7e3cba85937be6d887"
       }
     },
     "sia_authority_test3_3k_3l_device_clarification": {
@@ -155,19 +161,24 @@
       }
     },
     "test4_fan_curve_digitization": {
-      "source_path": null,
-      "source_sha256": null,
-      "provenance_status": "MISSING",
+      "source_path": "../SIA_4010_geteilter_Link/Test4/Spezifikation_Test4.pdf",
+      "source_sha256": "6ffd140972388c09cd3a92f0d178c04248140239667931d13bdd5c78aa353775",
+      "provenance_status": "SIA_SUPPLIED",
       "normative_authorization_status": "UNCONFIRMED",
-      "source_authority": "",
-      "license_reference": "",
-      "dataset_identity": "SIA 4010 Test 4 fan curves",
-      "machine_readable_format": "",
-      "semantic_scope": [],
+      "source_authority": "SIA 4010 validation package supplied to the candidate",
+      "license_reference": "SIA 4010 Test 4 specification supplied for this validation campaign; graphical digitization remains subject to written acceptance",
+      "dataset_identity": "SIA 4010 Test 4 page-2 fan map and measured 50 Hz operating-point table",
+      "machine_readable_format": "application/pdf plus checksum-bound provisional JSON digitization",
+      "semantic_scope": [
+        "16 numbered fan-map flow and static-pressure coordinates",
+        "measured speed, electrical power, current and sound level for points 1-16",
+        "separate nominal supply and extract operating points",
+        "declared graphical digitization uncertainty with interpolation disabled"
+      ],
       "technical_validation": {
-        "status": "PENDING",
-        "report_path": null,
-        "report_sha256": null
+        "status": "PASS",
+        "report_path": "../sia4010_evidence/source_audits/test4_fan_curve_20260826/test4_fan_curve_digitization.validation.json",
+        "report_sha256": "a6379f7931a61c2213e973330b352c59272b5751a38f2bbcd388a7d994d3e064"
       }
     },
     "sia2024_example_building_standard_profiles": {
@@ -187,15 +198,19 @@
       }
     },
     "en16798_5_1_annex_d_rotary_recovery_model": {
-      "source_path": null,
-      "source_sha256": null,
-      "provenance_status": "MISSING",
+      "source_path": "../references/standards/en16798/Demo_EN_16798-5-1_2021-06-09.xlsm",
+      "source_sha256": "73e7c74c54b87c0d4f16e6a7e1b4958fc6e57cf277c8c7c4287aabf7d3ea385a",
+      "provenance_status": "PUBLIC_OFFICIAL_TOOL",
       "normative_authorization_status": "UNCONFIRMED",
-      "source_authority": "",
-      "license_reference": "",
-      "dataset_identity": "EN 16798-5-1 Annex D rotary recovery model",
-      "machine_readable_format": "",
-      "semantic_scope": [],
+      "source_authority": "EPB Center; Gerhard Zweifel (EPB Center expert)",
+      "license_reference": "Freely downloadable EPB Center demonstration workbook; no explicit reuse licence identified; internal technical evaluation only pending confirmation",
+      "dataset_identity": "EPB Center Demo EN 16798-5-1, updated 2021-06-09",
+      "machine_readable_format": "application/vnd.ms-excel.sheet.macroEnabled.12",
+      "semantic_scope": [
+        "EN 16798-5-1 ventilation and air-conditioning energy calculation demonstration",
+        "rotary heat-recovery temperature and moisture part-load variables",
+        "Annex D constants and formula references including D.5 and Table D.1"
+      ],
       "technical_validation": {
         "status": "PENDING",
         "report_path": null,
@@ -203,19 +218,24 @@
       }
     },
     "test5_fan_curve_digitization": {
-      "source_path": null,
-      "source_sha256": null,
-      "provenance_status": "MISSING",
+      "source_path": "../SIA_4010_geteilter_Link/Test5/Spezifikation_Test5.pdf",
+      "source_sha256": "804d7c921a889d09624e4a512097bd4749c3f9674c83311ea3e5165b956d123d",
+      "provenance_status": "SIA_SUPPLIED",
       "normative_authorization_status": "UNCONFIRMED",
-      "source_authority": "",
-      "license_reference": "",
-      "dataset_identity": "SIA 4010 Test 5 fan curves",
-      "machine_readable_format": "",
-      "semantic_scope": [],
+      "source_authority": "SIA 4010 validation package supplied to the candidate",
+      "license_reference": "SIA 4010 Test 5 specification supplied for this validation campaign; graphical digitization remains subject to written acceptance",
+      "dataset_identity": "SIA 4010 Test 5 page-2 fan map, page-3 measured table and system nominal points",
+      "machine_readable_format": "application/pdf plus checksum-bound provisional JSON digitization",
+      "semantic_scope": [
+        "16 numbered fan-map flow and static-pressure coordinates",
+        "measured speed, electrical power, current and sound level for points 1-16",
+        "separate nominal supply and extract operating points",
+        "declared graphical digitization uncertainty with interpolation disabled"
+      ],
       "technical_validation": {
-        "status": "PENDING",
-        "report_path": null,
-        "report_sha256": null
+        "status": "PASS",
+        "report_path": "../sia4010_evidence/source_audits/test5_fan_curve_20260826/test5_fan_curve_digitization.validation.json",
+        "report_sha256": "a02c2cf867a65327bd003532c362a1f045e959672a6db0e37093aae51f67f93b"
       }
     },
     "sia2024_restaurant_6_2_standard_profiles": {
@@ -251,35 +271,45 @@
       }
     },
     "test6_stage_control_trace": {
-      "source_path": null,
-      "source_sha256": null,
-      "provenance_status": "MISSING",
-      "normative_authorization_status": "UNCONFIRMED",
-      "source_authority": "",
-      "license_reference": "",
+      "source_path": "../SIA_4010_geteilter_Link/Test6/Spezifikation_Test6.pdf",
+      "source_sha256": "0ed5d0f07cd4d5b1f0bea24985bb17ffbd904adea4f9913b11f600f7ebce19ca",
+      "provenance_status": "SIA_SUPPLIED",
+      "normative_authorization_status": "CONFIRMED",
+      "source_authority": "SIA 4010 validation package supplied to the candidate",
+      "license_reference": "SIA 4010 Test 6 specification supplied for this validation campaign; internal traceability use only",
       "dataset_identity": "SIA 4010 Test 6 three-stage control trace",
-      "machine_readable_format": "",
-      "semantic_scope": [],
+      "machine_readable_format": "application/pdf plus checksum-bound normalized JSON",
+      "semantic_scope": [
+        "Monday-to-Saturday operating-day scope",
+        "complete 24-hour stage-control trace",
+        "stage 1, 2 and 3 nominal airflows of 2050, 4100 and 6150 m3/h"
+      ],
       "technical_validation": {
-        "status": "PENDING",
-        "report_path": null,
-        "report_sha256": null
+        "status": "PASS",
+        "report_path": "../sia4010_evidence/source_audits/test6_stage_control_20260825/test6_stage_control_trace.validation.json",
+        "report_sha256": "7455dc973d9cf4e9cc60f278f44f2604c698b6712205cbcdf9061c31d1e1d3f3"
       }
     },
     "test7_heat_pump_performance_tables": {
-      "source_path": null,
-      "source_sha256": null,
-      "provenance_status": "MISSING",
-      "normative_authorization_status": "UNCONFIRMED",
-      "source_authority": "",
-      "license_reference": "",
-      "dataset_identity": "SIA 4010 Test 7 generator performance tables",
-      "machine_readable_format": "",
-      "semantic_scope": [],
+      "source_path": "../SIA_4010_geteilter_Link/Test7/Spezifikation_Test7.pdf",
+      "source_sha256": "84e986ac686b265ae3b42479888b847b8604b6adbade8bd794f5a84b2c91c421",
+      "provenance_status": "SIA_SUPPLIED",
+      "normative_authorization_status": "CONFIRMED",
+      "source_authority": "SIA 4010 validation package supplied to the candidate",
+      "license_reference": "SIA 4010 Test 7 specification supplied for this validation campaign; internal traceability use only",
+      "dataset_identity": "Climaveneta NX-W-Y /H 0182 cooling and heating performance tables in SIA 4010 Test 7 specification, pages 2-3",
+      "machine_readable_format": "application/pdf plus checksum-bound normalized JSON",
+      "semantic_scope": [
+        "cooling capacity and EER points",
+        "low-temperature heating capacity and COP points",
+        "medium-temperature heating capacity and COP points",
+        "off, thermostat-off, standby and crankcase-heater powers",
+        "degradation, supplementary capacity, sound, annual electricity and source-side flow values"
+      ],
       "technical_validation": {
-        "status": "PENDING",
-        "report_path": null,
-        "report_sha256": null
+        "status": "PASS",
+        "report_path": "../sia4010_evidence/source_audits/test7_heat_pump_20260825/test7_heat_pump_performance_tables.validation.json",
+        "report_sha256": "dd6dba9091d243537454bfe39d0c1965a8c9c64abcd40571345ad71c8f94c1fc"
       }
     },
     "sia_authority_test7_pv_precedence": {

@@ -8,7 +8,6 @@ from swiss_sia.reference_model.sia4010.coverage_audit import (
     build_all_classes_coverage_audit,
 )
 
-
 ROOT = Path(__file__).resolve().parents[1]
 BUNDLE = ROOT / "SIA_4010_geteilter_Link"
 MANIFEST = ROOT / "config" / "sia4010_all_classes.json"
@@ -58,20 +57,14 @@ class Sia4010AllClassesCoverageTests(unittest.TestCase):
         self.assertEqual(summary["qualified_template_simulation_cases"], 5)
         # 11 -> 15: deliverable evaluation, without criterion or reference
         self.assertEqual(summary["qualified_aps_evaluation_cases"], 15)
-        self.assertEqual(
-            summary["qualified_aps_complete_evaluation_cases"], 11
-        )
-        self.assertEqual(
-            summary["qualified_aps_partial_evaluation_cases"], 0
-        )
+        self.assertEqual(summary["qualified_aps_complete_evaluation_cases"], 11)
+        self.assertEqual(summary["qualified_aps_partial_evaluation_cases"], 0)
         self.assertEqual(summary["missing_parser_variants"], [])
         self.assertEqual(summary["missing_scenarios"], [])
 
     def test_generator_coverage_is_reported_honestly(self):
         self.assertEqual(self.audit["summary"]["implemented_ve_cases"], 1)
-        self.assertEqual(
-            self.audit["classes"]["1A"]["ve_generator_status"], "PARTIAL"
-        )
+        self.assertEqual(self.audit["classes"]["1A"]["ve_generator_status"], "PARTIAL")
         self.assertEqual(
             self.audit["classes"]["5"]["ve_generator_status"], "NOT_IMPLEMENTED"
         )

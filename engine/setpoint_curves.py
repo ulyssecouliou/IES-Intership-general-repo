@@ -63,7 +63,6 @@ Pure Python, no dependencies, no `import iesve`: testable in CI without a VE
 licence and runnable as-is inside VEScripts.
 """
 
-
 # --------------------------------------------------------------------------
 # Figure 1 of SIA 380/2:2022, page 27. Vertices as (theta_rm, temperature) in
 # degC, extracted from the vector drawing (residual < 0.001 degC).
@@ -88,7 +87,7 @@ DELTA_THETA_CTR_K = 0.7
 
 # Reference usage group of §5.2.2.5, and its table 11 design values. Unanimity
 # across the seven usages is asserted by the tests, not assumed here.
-REFERENCE_USAGES = ('1.01', '1.02', '2.01', '2.02', '3.01', '3.02', '3.03')
+REFERENCE_USAGES = ("1.01", "1.02", "2.01", "2.02", "3.01", "3.02", "3.03")
 REFERENCE_THETA_H = 21.0
 REFERENCE_THETA_C = 26.0
 
@@ -97,21 +96,51 @@ REFERENCE_THETA_C = 26.0
 # tests assert identity with `refs/reference-data/sia-2024-2021.tables.json`,
 # which is the frozen source. `None` = "-" (nicht relevant) in the table.
 DESIGN_TEMPERATURES = {
-    '1.01': (21.0, 26.0), '1.02': (21.0, 26.0), '2.01': (21.0, 26.0),
-    '2.02': (21.0, 26.0), '3.01': (21.0, 26.0), '3.02': (21.0, 26.0),
-    '3.03': (21.0, 26.0), '3.04': (20.0, 26.0), '4.01': (21.0, 26.0),
-    '4.02': (21.0, 26.0), '4.03': (21.0, 26.0), '4.04': (21.0, 26.0),
-    '4.05': (21.0, 26.0), '5.01': (20.0, 26.0), '5.02': (20.0, 26.0),
-    '5.03': (20.0, 26.0), '6.01': (21.0, 26.0), '6.02': (21.0, 26.0),
-    '6.03': (20.0, 28.0), '6.04': (20.0, 28.0), '7.01': (21.0, 26.0),
-    '7.02': (21.0, 26.0), '7.03': (21.0, 26.0), '8.01': (22.0, 26.0),
-    '8.02': (21.0, 26.0), '8.03': (22.0, 26.0), '9.01': (18.0, 30.0),
-    '9.02': (21.0, 26.0), '9.03': (21.0, 26.0), '10.01': (18.0, None),
-    '11.01': (18.0, None), '11.02': (21.0, 26.0), '11.03': (24.0, None),
-    '12.01': (21.0, None), '12.02': (21.0, 26.0), '12.03': (18.0, None),
-    '12.04': (18.0, None), '12.05': (21.0, None), '12.06': (21.0, None),
-    '12.07': (21.0, None), '12.08': (21.0, None), '12.09': (None, None),
-    '12.10': (None, None), '12.11': (None, None), '12.12': (None, 26.0),
+    "1.01": (21.0, 26.0),
+    "1.02": (21.0, 26.0),
+    "2.01": (21.0, 26.0),
+    "2.02": (21.0, 26.0),
+    "3.01": (21.0, 26.0),
+    "3.02": (21.0, 26.0),
+    "3.03": (21.0, 26.0),
+    "3.04": (20.0, 26.0),
+    "4.01": (21.0, 26.0),
+    "4.02": (21.0, 26.0),
+    "4.03": (21.0, 26.0),
+    "4.04": (21.0, 26.0),
+    "4.05": (21.0, 26.0),
+    "5.01": (20.0, 26.0),
+    "5.02": (20.0, 26.0),
+    "5.03": (20.0, 26.0),
+    "6.01": (21.0, 26.0),
+    "6.02": (21.0, 26.0),
+    "6.03": (20.0, 28.0),
+    "6.04": (20.0, 28.0),
+    "7.01": (21.0, 26.0),
+    "7.02": (21.0, 26.0),
+    "7.03": (21.0, 26.0),
+    "8.01": (22.0, 26.0),
+    "8.02": (21.0, 26.0),
+    "8.03": (22.0, 26.0),
+    "9.01": (18.0, 30.0),
+    "9.02": (21.0, 26.0),
+    "9.03": (21.0, 26.0),
+    "10.01": (18.0, None),
+    "11.01": (18.0, None),
+    "11.02": (21.0, 26.0),
+    "11.03": (24.0, None),
+    "12.01": (21.0, None),
+    "12.02": (21.0, 26.0),
+    "12.03": (18.0, None),
+    "12.04": (18.0, None),
+    "12.05": (21.0, None),
+    "12.06": (21.0, None),
+    "12.07": (21.0, None),
+    "12.08": (21.0, None),
+    "12.09": (None, None),
+    "12.10": (None, None),
+    "12.11": (None, None),
+    "12.12": (None, 26.0),
 }
 
 # Usages for which seasonal clothing does not apply, so the limits are constant
@@ -126,7 +155,7 @@ DESIGN_TEMPERATURES = {
 # them onto SIA 2024 numbers is our reading. "12.06 WC, Bad, Dusche" arguably
 # also falls under "douches" and is deliberately NOT included: including it
 # would silently change results for a usage the standard does not clearly name.
-CONSTANT_LIMIT_USAGES = ('11.01', '11.02', '11.03', '12.08')
+CONSTANT_LIMIT_USAGES = ("11.01", "11.02", "11.03", "12.08")
 
 CONTROL_CLASSES_CONSTANT = (1, 2)
 CONTROL_CLASSES_VARIABLE = (3, 4)
@@ -164,7 +193,7 @@ def evaluate(vertices, theta_rm):
             if x1 == x0:
                 return y1
             return y0 + (y1 - y0) * (theta_rm - x0) / (x1 - x0)
-    raise AssertionError('theta_rm %r fell through the segments' % (theta_rm,))
+    raise AssertionError("theta_rm %r fell through the segments" % (theta_rm,))
 
 
 def usage_shift(usage):
@@ -178,8 +207,7 @@ def usage_shift(usage):
     try:
         theta_h, theta_c = DESIGN_TEMPERATURES[usage]
     except KeyError:
-        raise UnknownUsage(
-            'usage %r absent from SIA 2024:2021 table 11' % (usage,))
+        raise UnknownUsage("usage %r absent from SIA 2024:2021 table 11" % (usage,))
     lower = None if theta_h is None else theta_h - REFERENCE_THETA_H
     upper = None if theta_c is None else theta_c - REFERENCE_THETA_C
     return lower, upper
@@ -240,8 +268,10 @@ def constant_setpoints(usage, shift=True):
     22.7 and 23.8 -- the dash-dot lines drawn in figure 1.
     """
     heating, cooling = setpoint_curves(usage, shift=shift)
-    return (None if heating is None else max(y for _, y in heating),
-            None if cooling is None else min(y for _, y in cooling))
+    return (
+        None if heating is None else max(y for _, y in heating),
+        None if cooling is None else min(y for _, y in cooling),
+    )
 
 
 def setpoints(usage, theta_rm, control_class, shift=True):
@@ -262,11 +292,14 @@ def setpoints(usage, theta_rm, control_class, shift=True):
         return constant_setpoints(usage, shift=shift)
     if control_class in CONTROL_CLASSES_VARIABLE:
         heating, cooling = setpoint_curves(usage, shift=shift)
-        return (None if heating is None else evaluate(heating, theta_rm),
-                None if cooling is None else evaluate(cooling, theta_rm))
+        return (
+            None if heating is None else evaluate(heating, theta_rm),
+            None if cooling is None else evaluate(cooling, theta_rm),
+        )
     raise ValueError(
-        'emission-control class %r outside 1..4 of SN EN ISO 52120-1:2022 '
-        'table 5' % (control_class,))
+        "emission-control class %r outside 1..4 of SN EN ISO 52120-1:2022 "
+        "table 5" % (control_class,)
+    )
 
 
 def within_limits(usage, theta_rm, temperature):
@@ -302,7 +335,7 @@ def running_mean_48h(hourly_outdoor, index):
     # running mean rather than a flat 48-hour window.
     """
     if index < 0 or index >= len(hourly_outdoor):
-        raise IndexError('hour %r outside the series' % (index,))
+        raise IndexError("hour %r outside the series" % (index,))
     start = max(0, index - 47)
-    window = hourly_outdoor[start:index + 1]
+    window = hourly_outdoor[start : index + 1]
     return sum(window) / float(len(window))

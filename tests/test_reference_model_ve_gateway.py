@@ -144,8 +144,7 @@ class _MutableGain:
             {
                 key: value
                 for key, value in payload.items()
-                if not key.startswith("max_")
-                and key != "occupancy_density"
+                if not key.startswith("max_") and key != "occupancy_density"
             }
         )
         units = int(payload.get("units_val", self._data.get("units_val", 0)))
@@ -419,9 +418,7 @@ class VeGatewayConstructionTests(unittest.TestCase):
         self.assertEqual(str(gateway._get_construction("EXTW").id), "EXTW")
 
     def test_get_construction_tolerates_two_arg_signature(self):
-        iesve, _project, _model = _build_iesve(
-            bodies=[_default_room()], signature="two"
-        )
+        iesve, _project, _model = _build_iesve(bodies=[_default_room()], signature="two")
         gateway = IesVeGateway(iesve_module=iesve)
         self.assertEqual(str(gateway._get_construction("EXTW").id), "EXTW")
 
@@ -429,7 +426,9 @@ class VeGatewayConstructionTests(unittest.TestCase):
         room = _default_room()
         iesve, _project, _model = _build_iesve(bodies=[room])
         gateway = IesVeGateway(iesve_module=iesve)
-        gateway.assign_constructions(_expected_geometry(["RM_Z1"]), _configured_parameters())
+        gateway.assign_constructions(
+            _expected_geometry(["RM_Z1"]), _configured_parameters()
+        )
         wall = room.get_surfaces()[0]
         self.assertEqual(wall.get_constructions()[0].id, "EXTW")
         self.assertEqual(wall.get_openings()[0].get_construction().id, "GLAZ")
@@ -499,9 +498,9 @@ class VeGatewayMiscTests(unittest.TestCase):
             )
 
         model.assign_thermal_template_to_rooms = assign_template
-        receipt = IesVeGateway(iesve_module=iesve).apply_existing_thermal_template_to_rooms(
-            "REVIEWED CLIENT TEMPLATE", ["ROOM-1"]
-        )
+        receipt = IesVeGateway(
+            iesve_module=iesve
+        ).apply_existing_thermal_template_to_rooms("REVIEWED CLIENT TEMPLATE", ["ROOM-1"])
 
         self.assertEqual(receipt["room_ids"], ["ROOM-1"])
         self.assertEqual(
@@ -557,9 +556,7 @@ class VeGatewayMiscTests(unittest.TestCase):
                 room._room_data._gains = list(source.gains)
 
         source = _Template("SOURCE TEMPLATE", [energy], propagate_source)
-        target = _Template(
-            "REVIEWED CLIENT TEMPLATE", [people, lighting, energy]
-        )
+        target = _Template("REVIEWED CLIENT TEMPLATE", [people, lighting, energy])
         project.thermal_templates = lambda assigned=False: {1: source, 8: target}
 
         def assign_template(_template, room_ids):
@@ -662,9 +659,7 @@ class VeGatewayMiscTests(unittest.TestCase):
         ]
 
         with self.assertRaisesRegex(VeMutationError, "synthetic VE setter failure"):
-            IesVeGateway(
-                iesve_module=iesve
-            ).apply_existing_thermal_template_to_rooms(
+            IesVeGateway(iesve_module=iesve).apply_existing_thermal_template_to_rooms(
                 "REVIEWED CLIENT TEMPLATE", ["ROOM-1"], structure_bridge=bridge
             )
 
@@ -738,16 +733,10 @@ class VeGatewayMiscTests(unittest.TestCase):
         self.assertNotIn("dhw_unit", submitted[0])
         self.assertEqual(submitted[0]["heating_profile"], "ON")
         self.assertEqual(submitted[0]["heating_setpoint_type"], 1)
-        self.assertEqual(
-            submitted[0]["heating_setpoint_profile"], "WEEK0048"
-        )
+        self.assertEqual(submitted[0]["heating_setpoint_profile"], "WEEK0048")
         self.assertFalse(submitted[0]["heating_setpoint_from_template"])
-        self.assertNotIn(
-            "heating_setpoint_profile_from_template", submitted[0]
-        )
-        self.assertNotIn(
-            "cooling_setpoint_profile_from_template", submitted[0]
-        )
+        self.assertNotIn("heating_setpoint_profile_from_template", submitted[0])
+        self.assertNotIn("cooling_setpoint_profile_from_template", submitted[0])
 
     def test_assign_thermal_template_accepts_native_handle_and_name_readback(self):
         room = _default_room()
@@ -777,9 +766,7 @@ class VeGatewayMiscTests(unittest.TestCase):
         gateway.assign_thermal_template(
             _expected_geometry(["RM_Z1"]), _configured_parameters()
         )
-        self.assertEqual(
-            room.get_room_data().get_general()["thermal_template"], 5
-        )
+        self.assertEqual(room.get_room_data().get_general()["thermal_template"], 5)
 
     def test_assign_thermal_template_applies_deferred_free_floating_to_room(self):
         """Verify effective OFF profiles despite VE's advisory conditioned enum."""
@@ -836,9 +823,7 @@ class VeGatewayMiscTests(unittest.TestCase):
 
         self.assertEqual(room_conditions["heating_profile"], "OFF")
         self.assertEqual(room_conditions["cooling_profile"], "OFF")
-        self.assertEqual(
-            room_data.get_apache_systems()["conditioned"], "conditioned_yes"
-        )
+        self.assertEqual(room_data.get_apache_systems()["conditioned"], "conditioned_yes")
         warnings = gateway.consume_runtime_compatibility_warnings()
         self.assertEqual(
             warnings[0]["control_changes"]["free_floating"]["expected"],
@@ -1033,9 +1018,7 @@ class VeGatewayMiscTests(unittest.TestCase):
         self.assertEqual(system["system_air_variation_profile"], "DAY_0035")
         warnings = gateway.consume_runtime_compatibility_warnings()
         change = warnings[0]["air_exchange_changes"][0]
-        self.assertEqual(
-            change["binding"], "apache_system.system_air_minimum_flowrate"
-        )
+        self.assertEqual(change["binding"], "apache_system.system_air_minimum_flowrate")
 
     def test_mechanical_exchange_uses_plural_unit_setter_with_singular_readback(self):
         room = _default_room()
@@ -1172,9 +1155,7 @@ class VeGatewayMiscTests(unittest.TestCase):
         change = gateway.consume_runtime_compatibility_warnings()[0][
             "air_exchange_changes"
         ][0]
-        self.assertEqual(
-            change["binding_mode"], "converted_existing_native_unit"
-        )
+        self.assertEqual(change["binding_mode"], "converted_existing_native_unit")
 
     def test_zero_mechanical_flow_preserves_matching_read_only_unit(self):
         """VE's all-zero equivalent map must not trigger a 0/0 conversion."""
@@ -1245,9 +1226,7 @@ class VeGatewayMiscTests(unittest.TestCase):
         change = gateway.consume_runtime_compatibility_warnings()[0][
             "air_exchange_changes"
         ][0]
-        self.assertEqual(
-            change["binding_mode"], "preserved_matching_native_unit"
-        )
+        self.assertEqual(change["binding_mode"], "preserved_matching_native_unit")
 
     def test_assign_thermal_template_rejects_missing_native_readback(self):
         room = _default_room()
@@ -1369,9 +1348,7 @@ class VeGatewayMiscTests(unittest.TestCase):
             gateway.assign_weather(str(source))
 
             self.assertEqual(_Locate.store["weather_file"], source.name)
-            self.assertGreaterEqual(
-                _ProjectLocalWeatherReader.basename_attempts, 2
-            )
+            self.assertGreaterEqual(_ProjectLocalWeatherReader.basename_attempts, 2)
 
     def test_assign_weather_accepts_prequalified_source_when_post_save_probe_fails(self):
         with TemporaryDirectory() as temporary:
@@ -1431,7 +1408,9 @@ class VeGatewayMiscTests(unittest.TestCase):
             bodies=[_default_room()], with_version=False
         )
         gateway = IesVeGateway(iesve_module=iesve)
-        snapshot = gateway.snapshot(_expected_geometry(["RM_Z1"]), _configured_parameters())
+        snapshot = gateway.snapshot(
+            _expected_geometry(["RM_Z1"]), _configured_parameters()
+        )
         self.assertEqual(snapshot.ve_version, "unknown")
         self.assertEqual(len(snapshot.rooms), 1)
 

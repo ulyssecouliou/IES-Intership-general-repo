@@ -20,7 +20,6 @@ from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence, Tuple
 from .compliance_hub import is_disposable_project
 from .reference_model.ve_compat import thermal_templates
 
-
 SCHEMA_VERSION = "1.1"
 OPERATION = "ASSIGN_EXISTING_THERMAL_TEMPLATE"
 APPROVAL_STATUS = "APPROVED_FOR_PROJECT_USE"
@@ -114,18 +113,10 @@ def _latest_template_provisioning_receipt(
     never converted into a successful source review.
     """
 
-    folder = (
-        Path(project_path)
-        / "sia_compliance_artifacts"
-        / "template_provisioning"
-    )
+    folder = Path(project_path) / "sia_compliance_artifacts" / "template_provisioning"
     try:
         candidates = sorted(
-            (
-                path
-                for path in folder.glob("*_template_receipt_*.json")
-                if path.is_file()
-            ),
+            (path for path in folder.glob("*_template_receipt_*.json") if path.is_file()),
             key=lambda path: path.stat().st_mtime,
             reverse=True,
         )
@@ -188,13 +179,12 @@ def automatic_template_evidence(
         source_document=source_document,
         source_reference=source_reference,
         intended_use=(
-            "Technical assignment of template '{}' to explicit room IDs: {}"
-            .format(template_name, ", ".join(selected))
+            "Technical assignment of template '{}' to explicit room IDs: {}".format(
+                template_name, ", ".join(selected)
+            )
         ),
         approval_status=(
-            TECHNICAL_APPLICATION_STATUS
-            if application_confirmed
-            else REVIEW_ONLY_STATUS
+            TECHNICAL_APPLICATION_STATUS if application_confirmed else REVIEW_ONLY_STATUS
         ),
         evidence_mode=AUTOMATIC_EVIDENCE_MODE,
         source_trace_status=source_trace_status,
@@ -317,9 +307,7 @@ def _available_profile_ids(project: Any) -> List[str]:
     identifiers = set()
     for collection in collections if isinstance(collections, tuple) else (collections,):
         if isinstance(collection, Mapping):
-            identifiers.update(
-                str(key).strip() for key in collection if str(key).strip()
-            )
+            identifiers.update(str(key).strip() for key in collection if str(key).strip())
             values = collection.values()
         else:
             values = collection
@@ -391,8 +379,7 @@ def _record_label(record: Mapping[str, Any]) -> str:
     """Return normalized descriptive text for a template-record observation."""
 
     return " ".join(
-        str(record.get(key) or "")
-        for key in ("name", "type_str", "type_val")
+        str(record.get(key) or "") for key in ("name", "type_str", "type_val")
     ).casefold()
 
 
@@ -418,9 +405,7 @@ def _gain_structure_assessment(
     """
 
     target_records = [
-        item
-        for item in template.get("casual_gains", [])
-        if isinstance(item, Mapping)
+        item for item in template.get("casual_gains", []) if isinstance(item, Mapping)
     ]
     target_families = [_gain_family(item) for item in target_records]
     unknown_targets = [
@@ -439,9 +424,7 @@ def _gain_structure_assessment(
         state = room.get("current_state")
         state = state if isinstance(state, Mapping) else {}
         actual_records = [
-            item
-            for item in state.get("casual_gains", [])
-            if isinstance(item, Mapping)
+            item for item in state.get("casual_gains", []) if isinstance(item, Mapping)
         ]
         actual_families = [_gain_family(item) for item in actual_records]
         unknown_actual = [
@@ -467,9 +450,7 @@ def _gain_structure_assessment(
                 "status": (
                     "BLOCKED"
                     if room_blocked
-                    else "MISSING_GAIN_FAMILIES"
-                    if missing
-                    else "COMPATIBLE"
+                    else "MISSING_GAIN_FAMILIES" if missing else "COMPATIBLE"
                 ),
             }
         )
@@ -506,11 +487,7 @@ def _gain_structure_assessment(
             source.get("capabilities", {}) if isinstance(source, Mapping) else {}
         )
         source_records = (
-            [
-                item
-                for item in source.get("casual_gains", [])
-                if isinstance(item, Mapping)
-            ]
+            [item for item in source.get("casual_gains", []) if isinstance(item, Mapping)]
             if isinstance(source, Mapping)
             else []
         )
@@ -575,9 +552,7 @@ def _gain_structure_assessment(
             )
             existing_bridge_families.add(family)
 
-    requires_bridge = any(
-        room.get("missing_gain_families") for room in room_results
-    )
+    requires_bridge = any(room.get("missing_gain_families") for room in room_results)
     if blocked:
         status = "BLOCKED_UNSUPPORTED_ROOM_GAIN_STRUCTURE"
     elif requires_bridge:
@@ -618,19 +593,13 @@ def _template_review_observations(template: Mapping[str, Any]) -> Dict[str, Any]
     """Expose likely gap coverage without turning heuristics into a verdict."""
 
     gains = [
-        item
-        for item in template.get("casual_gains", [])
-        if isinstance(item, Mapping)
+        item for item in template.get("casual_gains", []) if isinstance(item, Mapping)
     ]
     exchanges = [
-        item
-        for item in template.get("air_exchanges", [])
-        if isinstance(item, Mapping)
+        item for item in template.get("air_exchanges", []) if isinstance(item, Mapping)
     ]
     lighting = [item for item in gains if "light" in _record_label(item)]
-    infiltration = [
-        item for item in exchanges if "infiltrat" in _record_label(item)
-    ]
+    infiltration = [item for item in exchanges if "infiltrat" in _record_label(item)]
     non_infiltration = [
         item for item in exchanges if "infiltrat" not in _record_label(item)
     ]
@@ -699,9 +668,7 @@ def collect_inventory(project: Any, model: Any) -> Dict[str, Any]:
         except Exception:
             continue
         handle = str(
-            general.get("thermal_template")
-            or general.get("template")
-            or ""
+            general.get("thermal_template") or general.get("template") or ""
         ).strip()
         template_name = str(general.get("thermal_template_name") or "").strip()
         if not template_name:
@@ -750,8 +717,7 @@ def _selected_rooms(
     if len(requested) != len(set(requested)):
         raise ClientTemplateRemediationError("Room identifiers must be unique")
     by_id = {
-        str(item.get("room_id") or ""): dict(item)
-        for item in inventory.get("rooms", [])
+        str(item.get("room_id") or ""): dict(item) for item in inventory.get("rooms", [])
     }
     missing = sorted(set(requested) - set(by_id))
     if missing:
@@ -1057,9 +1023,7 @@ def latest_remediation_evidence(project_path: str) -> Dict[str, Any]:
         "integrity_status": integrity_status,
         "post_remediation_audit": post_audit_status,
         "template_name": str(template.get("name") or ""),
-        "template_fingerprint_sha256": str(
-            template.get("fingerprint_sha256") or ""
-        ),
+        "template_fingerprint_sha256": str(template.get("fingerprint_sha256") or ""),
         "room_count": len(rooms) if isinstance(rooms, list) else 0,
         "reviewer": str(evidence.get("reviewer") or ""),
         "review_date": str(evidence.get("review_date") or ""),

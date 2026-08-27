@@ -52,8 +52,9 @@ def _ttk():
         from tkinter import ttk
     except ImportError as error:
         raise ImportError(
-            'tkinter unavailable: ui/layout.py builds real widgets and only '
-            'means anything inside VEScripts (%s)' % error)
+            "tkinter unavailable: ui/layout.py builds real widgets and only "
+            "means anything inside VEScripts (%s)" % error
+        )
     return ttk
 
 
@@ -71,13 +72,16 @@ def card(parent, padding=None):
     """
     ttk = _ttk()
     outer = ttk.Frame(parent, style=theme.STYLE_CARD_EDGE, padding=EDGE)
-    inner = ttk.Frame(outer, style=theme.STYLE_CARD,
-                      padding=design.PAD_CARD if padding is None else padding)
-    inner.pack(fill='both', expand=True)
+    inner = ttk.Frame(
+        outer,
+        style=theme.STYLE_CARD,
+        padding=design.PAD_CARD if padding is None else padding,
+    )
+    inner.pack(fill="both", expand=True)
     return outer, inner
 
 
-def rule(parent, orientation='horizontal'):
+def rule(parent, orientation="horizontal"):
     """A hairline separator.
 
     Args:
@@ -88,14 +92,13 @@ def rule(parent, orientation='horizontal'):
         ttk.Frame: The rule, not yet packed.
     """
     ttk = _ttk()
-    thickness = {'height': EDGE} if orientation == 'horizontal' \
-        else {'width': EDGE}
+    thickness = {"height": EDGE} if orientation == "horizontal" else {"width": EDGE}
     frame = ttk.Frame(parent, style=theme.STYLE_RULE)
     frame.configure(**thickness)
     return frame
 
 
-def header_band(parent, title_key='app.title', subtitle_key='app.subtitle'):
+def header_band(parent, title_key="app.title", subtitle_key="app.subtitle"):
     """The full-width navy band: the product's visual signature.
 
     Args:
@@ -109,31 +112,32 @@ def header_band(parent, title_key='app.title', subtitle_key='app.subtitle'):
     """
     ttk = _ttk()
     band = ttk.Frame(parent, style=theme.STYLE_BAND, padding=design.PAD_BAND)
-    band.pack(side='top', fill='x')
+    band.pack(side="top", fill="x")
 
     # ACTIONS FIRST. Tk serves children in packing order, and titles packed
     # first claimed the whole width, so the second export button fell outside
     # the window. A button off screen is not a blemish: the action is
     # unreachable and nothing says so.
     actions = ttk.Frame(band, style=theme.STYLE_BAND)
-    actions.pack(side='right', anchor='ne')
+    actions.pack(side="right", anchor="ne")
 
     titles = ttk.Frame(band, style=theme.STYLE_BAND)
-    titles.pack(side='left', anchor='w', fill='x', expand=True)
+    titles.pack(side="left", anchor="w", fill="x", expand=True)
 
     # An eyebrow above the title: it says which product this window belongs
     # to, which matters because VEScripts dialogs open with no chrome of
     # their own.
-    ttk.Label(titles, style=theme.STYLE_SUBTITLE,
-              text=i18n.t('app.product').upper()).pack(anchor='w')
-    ttk.Label(titles, style=theme.STYLE_TITLE,
-              text=i18n.t(title_key)).pack(anchor='w',
-                                           pady=(design.SPACE['xs'], 0))
-    ttk.Label(titles, style=theme.STYLE_BAND_TEXT, wraplength=720,
-              text=i18n.t(subtitle_key)).pack(anchor='w',
-                                              pady=(design.SPACE['xs'], 0))
+    ttk.Label(
+        titles, style=theme.STYLE_SUBTITLE, text=i18n.t("app.product").upper()
+    ).pack(anchor="w")
+    ttk.Label(titles, style=theme.STYLE_TITLE, text=i18n.t(title_key)).pack(
+        anchor="w", pady=(design.SPACE["xs"], 0)
+    )
+    ttk.Label(
+        titles, style=theme.STYLE_BAND_TEXT, wraplength=720, text=i18n.t(subtitle_key)
+    ).pack(anchor="w", pady=(design.SPACE["xs"], 0))
 
-    return {'band': band, 'titles': titles, 'actions': actions}
+    return {"band": band, "titles": titles, "actions": actions}
 
 
 def action_button(parent, label_key, command, primary=False, quiet=False):
@@ -159,15 +163,14 @@ def action_button(parent, label_key, command, primary=False, quiet=False):
     """
     ttk = _ttk()
     if primary and quiet:
-        raise ValueError('a button is primary or quiet, not both')
+        raise ValueError("a button is primary or quiet, not both")
     style = theme.STYLE_BUTTON
     if primary:
         style = theme.STYLE_BUTTON_PRIMARY
     elif quiet:
         style = theme.STYLE_BUTTON_QUIET
-    button = ttk.Button(parent, style=style, text=i18n.t(label_key),
-                        command=command)
-    button.pack(side='left', padx=(design.SPACE['sm'], 0))
+    button = ttk.Button(parent, style=style, text=i18n.t(label_key), command=command)
+    button.pack(side="left", padx=(design.SPACE["sm"], 0))
     return button
 
 
@@ -188,10 +191,8 @@ def status_badge(parent, status, text):
     style = theme.STYLE_BADGE.get(status)
     if style is None:
         resolved = design.LEGACY_COLOUR_TO_STATUS.get(status)
-        style = theme.STYLE_BADGE.get(resolved,
-                                      theme.STYLE_BADGE[design.NOT_EVALUATED])
-    return ttk.Label(parent, style=style,
-                     text=theme.verdict_label(status, text))
+        style = theme.STYLE_BADGE.get(resolved, theme.STYLE_BADGE[design.NOT_EVALUATED])
+    return ttk.Label(parent, style=style, text=theme.verdict_label(status, text))
 
 
 def status_strip(parent, entries):
@@ -209,14 +210,16 @@ def status_strip(parent, entries):
     """
     ttk = _ttk()
     strip = ttk.Frame(parent, style=theme.STYLE_BAND)
-    strip.pack(side='top', fill='x', pady=(design.SPACE['md'], 0))
+    strip.pack(side="top", fill="x", pady=(design.SPACE["md"], 0))
     for entry in entries:
         holder = ttk.Frame(strip, style=theme.STYLE_BAND)
-        holder.pack(side='left', padx=(0, design.SPACE['sm']))
-        ttk.Label(holder, style=theme.STYLE_SUBTITLE,
-                  text=entry['label']).pack(anchor='w')
-        status_badge(holder, entry['status'], entry['text']).pack(
-            anchor='w', pady=(design.SPACE['xs'], 0))
+        holder.pack(side="left", padx=(0, design.SPACE["sm"]))
+        ttk.Label(holder, style=theme.STYLE_SUBTITLE, text=entry["label"]).pack(
+            anchor="w"
+        )
+        status_badge(holder, entry["status"], entry["text"]).pack(
+            anchor="w", pady=(design.SPACE["xs"], 0)
+        )
     return strip
 
 
@@ -231,29 +234,35 @@ def toolbar(parent):
     """
     ttk = _ttk()
     outer, inner = card(parent, padding=design.PAD_CONTROL)
-    outer.pack(side='top', fill='x', pady=(0, design.SPACE['sm']))
+    outer.pack(side="top", fill="x", pady=(0, design.SPACE["sm"]))
 
     row = ttk.Frame(inner, style=theme.STYLE_CARD)
-    row.pack(side='top', fill='x')
+    row.pack(side="top", fill="x")
 
     # RIGHT FIRST, for the same reason as in `header_band`: Tk serves children
     # in packing order, and a left side with `expand=True` claimed the whole
     # width. The export buttons fell outside the window -- unreachable, with
     # nothing to say so.
     right = ttk.Frame(row, style=theme.STYLE_CARD)
-    right.pack(side='right')
+    right.pack(side="right")
     left = ttk.Frame(row, style=theme.STYLE_CARD)
-    left.pack(side='left', fill='x', expand=True)
+    left.pack(side="left", fill="x", expand=True)
 
     # State line, full width, BELOW the controls. Packed after them on the
     # same row it was truncated as soon as the buttons took their width -- and
     # a truncated state ("2/7 test(s) prés...") hides the list of missing
     # tests, which is precisely what has to be read.
     caption = ttk.Frame(inner, style=theme.STYLE_CARD)
-    caption.pack(side='top', fill='x', pady=(design.SPACE['sm'], 0))
+    caption.pack(side="top", fill="x", pady=(design.SPACE["sm"], 0))
 
-    return {'outer': outer, 'inner': inner, 'row': row, 'left': left,
-            'right': right, 'caption': caption}
+    return {
+        "outer": outer,
+        "inner": inner,
+        "row": row,
+        "left": left,
+        "right": right,
+        "caption": caption,
+    }
 
 
 def section_heading(parent, text_key, note_key=None):
@@ -268,13 +277,12 @@ def section_heading(parent, text_key, note_key=None):
         ttk.Label: The heading label, packed.
     """
     ttk = _ttk()
-    heading = ttk.Label(parent, style=theme.STYLE_SECTION,
-                        text=i18n.t(text_key))
-    heading.pack(anchor='w')
+    heading = ttk.Label(parent, style=theme.STYLE_SECTION, text=i18n.t(text_key))
+    heading.pack(anchor="w")
     if note_key is not None:
-        ttk.Label(parent, style=theme.STYLE_CAPTION, wraplength=680,
-                  text=i18n.t(note_key)).pack(anchor='w',
-                                              pady=(design.SPACE['xs'], 0))
+        ttk.Label(
+            parent, style=theme.STYLE_CAPTION, wraplength=680, text=i18n.t(note_key)
+        ).pack(anchor="w", pady=(design.SPACE["xs"], 0))
     return heading
 
 
@@ -293,13 +301,18 @@ def empty_state(parent, message_key):
         ttk.Label: The message, packed.
     """
     ttk = _ttk()
-    label = ttk.Label(parent, style=theme.STYLE_MUTED, wraplength=560,
-                      justify='left', text=i18n.t(message_key))
-    label.pack(anchor='w', padx=design.SPACE['lg'], pady=design.SPACE['xl'])
+    label = ttk.Label(
+        parent,
+        style=theme.STYLE_MUTED,
+        wraplength=560,
+        justify="left",
+        text=i18n.t(message_key),
+    )
+    label.pack(anchor="w", padx=design.SPACE["lg"], pady=design.SPACE["xl"])
     return label
 
 
-def footer(parent, notes=('note.pass_is_not_compliance',)):
+def footer(parent, notes=("note.pass_is_not_compliance",)):
     """A quiet footer carrying the standing reminders.
 
     These live in the window, not only in the report, because the confusion
@@ -315,12 +328,15 @@ def footer(parent, notes=('note.pass_is_not_compliance',)):
     """
     ttk = _ttk()
     outer, inner = card(parent, padding=design.PAD_CONTROL)
-    outer.pack(side='bottom', fill='x', pady=(design.SPACE['sm'], 0))
+    outer.pack(side="bottom", fill="x", pady=(design.SPACE["sm"], 0))
     for key in notes:
-        ttk.Label(inner, style=theme.STYLE_CAPTION, wraplength=900,
-                  justify='left',
-                  text=u'%s  %s' % (design.STATUS_SYMBOL[design.WARNING],
-                                    i18n.t(key))).pack(anchor='w')
+        ttk.Label(
+            inner,
+            style=theme.STYLE_CAPTION,
+            wraplength=900,
+            justify="left",
+            text="%s  %s" % (design.STATUS_SYMBOL[design.WARNING], i18n.t(key)),
+        ).pack(anchor="w")
     return outer
 
 
@@ -338,18 +354,22 @@ def language_switch(parent, on_change):
     ttk = _ttk()
     import tkinter as tk
 
-    labels = {i18n.FRENCH: i18n.t('language.fr'),
-              i18n.ENGLISH: i18n.t('language.en')}
+    labels = {i18n.FRENCH: i18n.t("language.fr"), i18n.ENGLISH: i18n.t("language.en")}
     reverse = dict((text, code) for code, text in labels.items())
 
-    ttk.Label(parent, style=theme.STYLE_MUTED,
-              text=i18n.t('language.label')).pack(
-                  side='left', padx=(0, design.SPACE['sm']))
+    ttk.Label(parent, style=theme.STYLE_MUTED, text=i18n.t("language.label")).pack(
+        side="left", padx=(0, design.SPACE["sm"])
+    )
     chosen = tk.StringVar(value=labels[i18n.language()])
-    box = ttk.Combobox(parent, textvariable=chosen, state='readonly',
-                       style=theme.STYLE_COMBO, width=12,
-                       values=[labels[code] for code in i18n.LANGUAGES])
-    box.pack(side='left')
+    box = ttk.Combobox(
+        parent,
+        textvariable=chosen,
+        state="readonly",
+        style=theme.STYLE_COMBO,
+        width=12,
+        values=[labels[code] for code in i18n.LANGUAGES],
+    )
+    box.pack(side="left")
 
     def _switch(_event=None):
         code = reverse.get(chosen.get())
@@ -358,11 +378,11 @@ def language_switch(parent, on_change):
         i18n.set_language(code)
         on_change(code)
 
-    box.bind('<<ComboboxSelected>>', _switch)
+    box.bind("<<ComboboxSelected>>", _switch)
     return box
 
 
-def results_table(parent, columns, tree_heading_key='column.quantity'):
+def results_table(parent, columns, tree_heading_key="column.quantity"):
     """A results table in a card, with a scrollbar and status row tags.
 
     Args:
@@ -379,20 +399,23 @@ def results_table(parent, columns, tree_heading_key='column.quantity'):
     outer, inner = card(parent, padding=design.PAD_CARD)
 
     ids = tuple(column[0] for column in columns)
-    tree = ttk.Treeview(inner, columns=ids, show='tree headings',
-                        style=theme.STYLE_TREE)
-    tree.heading('#0', text=i18n.t(tree_heading_key))
-    tree.column('#0', width=340, stretch=True)
+    tree = ttk.Treeview(inner, columns=ids, show="tree headings", style=theme.STYLE_TREE)
+    tree.heading("#0", text=i18n.t(tree_heading_key))
+    tree.column("#0", width=340, stretch=True)
     for identifier, key, width, anchor in columns:
         tree.heading(identifier, text=i18n.t(key))
-        tree.column(identifier, width=width, anchor=anchor,
-                    stretch=(anchor == 'w'))
-    tree.pack(side='left', fill='both', expand=True)
+        tree.column(identifier, width=width, anchor=anchor, stretch=(anchor == "w"))
+    tree.pack(side="left", fill="both", expand=True)
 
-    bar = ttk.Scrollbar(inner, orient='vertical', style=theme.STYLE_SCROLLBAR,
-                        command=tree.yview)
-    bar.pack(side='left', fill='y')
+    bar = ttk.Scrollbar(
+        inner, orient="vertical", style=theme.STYLE_SCROLLBAR, command=tree.yview
+    )
+    bar.pack(side="left", fill="y")
     tree.configure(yscrollcommand=bar.set)
 
-    return {'outer': outer, 'inner': inner, 'tree': tree,
-            'tags': theme.configure_row_tags(tree)}
+    return {
+        "outer": outer,
+        "inner": inner,
+        "tree": tree,
+        "tags": theme.configure_row_tags(tree),
+    }

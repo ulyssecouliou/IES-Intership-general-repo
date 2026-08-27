@@ -5,12 +5,25 @@ from pathlib import Path
 
 
 PROJECT_ROOT = Path(__file__).resolve().parent
-if str(PROJECT_ROOT) not in sys.path:
-    sys.path.insert(0, str(PROJECT_ROOT))
+if str(PROJECT_ROOT) in sys.path:
+    sys.path.remove(str(PROJECT_ROOT))
+sys.path.insert(0, str(PROJECT_ROOT))
+
+
+def _purge_cached_reference_model_modules():
+    """Ensure VE uses the current repository code on every Run press."""
+
+    for module_name in tuple(sys.modules):
+        if module_name == "swiss_sia.reference_model" or module_name.startswith(
+            "swiss_sia.reference_model."
+        ):
+            del sys.modules[module_name]
 
 
 def run():
     """Recheck the exact template copy and add its model proof to the ledger."""
+
+    _purge_cached_reference_model_modules()
 
     import iesve
 
@@ -23,7 +36,24 @@ def run():
     )
 
     project = iesve.VEProject.get_current_project()
-    project_path = Path(str(getattr(project, "path", "") or ""))
+    project_path = Path(str(getattr(project, "path", "") or "")).resolve()
+    instantiation = (
+        project_path
+        / "sia4010_artifacts"
+        / "templates"
+        / "template_instantiation.json"
+    )
+    print("Active VE project: {}".format(project_path))
+    if not instantiation.is_file():
+        expected = (
+            project_path.parent
+            / "SIA4010_TEST_1_1E_DISPOSABLE"
+            / "SIA4010_TEST1_1E_TEMPLATE.mdl"
+        )
+        raise RuntimeError(
+            "The active project is not an instantiated disposable template. "
+            "Close the source template, then open '{}' and rerun.".format(expected)
+        )
     receipt = qualify_instantiated_template_model(project_path, PROJECT_ROOT)
     scenario = ModelScenario.load(receipt.scenario_path)
     registry = (

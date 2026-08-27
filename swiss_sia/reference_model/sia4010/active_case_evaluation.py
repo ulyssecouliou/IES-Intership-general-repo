@@ -31,10 +31,7 @@ from .test1_iso_reference import (
 )
 from .test_runner import Sia4010TestEvaluation, Sia4010TestRunner
 
-
-REFERENCE_ONLY_RESULTS_RECORDED = (
-    "REFERENCE_RESULTS_RECORDED_NO_ACCEPTANCE_CRITERION"
-)
+REFERENCE_ONLY_RESULTS_RECORDED = "REFERENCE_RESULTS_RECORDED_NO_ACCEPTANCE_CRITERION"
 
 #: Cases 1A to 1D differ from 600/640/900/940 in a way that matters: those have
 #: reference results to be shown against, these have none at all. The status
@@ -129,9 +126,7 @@ def _selected_expected(
     """Return only the official metrics belonging to the active exact case."""
 
     expected_case_id = "1E" if test_id == "1" else _test2_case_label(case_id)
-    selected = tuple(
-        item for item in expected if item.case_id == expected_case_id
-    )
+    selected = tuple(item for item in expected if item.case_id == expected_case_id)
     if not selected:
         raise ConfigurationError(
             "Official workbook contains no expected metrics for {}/{}".format(
@@ -169,19 +164,11 @@ class ActiveCaseEvaluationReceipt:
             "test_id": self.test_id,
             "observed_metric_count": self.observed_metric_count,
             "distribution_criterion_count": self.distribution_criterion_count,
-            "acceptance_criterion_available": (
-                self.acceptance_criterion_available
-            ),
-            "required_output_scope_complete": (
-                self.required_output_scope_complete
-            ),
-            "artifact_path": (
-                str(self.artifact_path) if self.artifact_path else None
-            ),
+            "acceptance_criterion_available": (self.acceptance_criterion_available),
+            "required_output_scope_complete": (self.required_output_scope_complete),
+            "artifact_path": (str(self.artifact_path) if self.artifact_path else None),
             "evaluation": (
-                self.evaluation.to_dict()
-                if self.evaluation is not None
-                else None
+                self.evaluation.to_dict() if self.evaluation is not None else None
             ),
         }
 
@@ -222,9 +209,7 @@ def _record_test1_diagnostic_deliverable(
 
     deliverable = extractor.test1_diagnostic_hourly_deliverable(case_id)
     complete = deliverable is not None and deliverable.hour_count == 8760
-    status = (
-        DIAGNOSTIC_DELIVERABLE_RECORDED if complete else "NOT_CHECKABLE"
-    )
+    status = DIAGNOSTIC_DELIVERABLE_RECORDED if complete else "NOT_CHECKABLE"
     artifact = Path(output_path) if output_path is not None else None
     if artifact is not None:
         payload = {
@@ -242,9 +227,7 @@ def _record_test1_diagnostic_deliverable(
                 "bindings_path": str(bindings_path),
                 "bindings_sha256": _sha256(bindings_path),
             },
-            "deliverable": (
-                deliverable.to_dict() if deliverable is not None else None
-            ),
+            "deliverable": (deliverable.to_dict() if deliverable is not None else None),
             "incompleteness": (
                 None
                 if complete
@@ -332,22 +315,22 @@ def evaluate_qualified_active_case(
             )
             if pair[1] == "1E"
             else (
-                "room_air_temperature",
-                "operative_temperature",
-            )
-            if pair[1] in {"600FF", "900FF"}
-            else (
-                "sensible_heating_power",
-                "sensible_cooling_power",
-                "room_air_temperature",
-                "operative_temperature",
+                (
+                    "room_air_temperature",
+                    "operative_temperature",
+                )
+                if pair[1] in {"600FF", "900FF"}
+                else (
+                    "sensible_heating_power",
+                    "sensible_cooling_power",
+                    "room_air_temperature",
+                    "operative_temperature",
+                )
             )
         )
     else:
         required_quantity_ids = ("total_room_solar_heat_gain_power",)
-    acceptance_criterion_available = not (
-        test_id == "1" and pair[1] != "1E"
-    )
+    acceptance_criterion_available = not (test_id == "1" and pair[1] != "1E")
     if test_id == "1" and not acceptance_criterion_available:
         observed = extractor.test1_reference_only_observed(pair[1])
         bundle = runner.loader.load_bundle(bundle_root)
@@ -355,23 +338,15 @@ def evaluate_qualified_active_case(
         expected_reference = load_test1_iso_reference_results(
             Path(bundle_root).parent, pair[1]
         )
-        reference_catalog_path = (
-            Path(bundle_root).parent / CATALOG_RELATIVE_PATH
-        )
+        reference_catalog_path = Path(bundle_root).parent / CATALOG_RELATIVE_PATH
         reference_comparisons = Sia4010ComplianceComparator().compare_all(
             expected_reference, observed
         )
-        reference_diagnostics = _reference_deviation_diagnostics(
-            reference_comparisons
-        )
-        reference_counts = {
-            status.value: 0 for status in ComparisonStatus
-        }
+        reference_diagnostics = _reference_deviation_diagnostics(reference_comparisons)
+        reference_counts = {status.value: 0 for status in ComparisonStatus}
         for comparison in reference_comparisons:
             reference_counts[comparison.status.value] += 1
-        required_metric_count = (
-            39 if pair[1] in {"600FF", "900FF"} else 88
-        )
+        required_metric_count = 39 if pair[1] in {"600FF", "900FF"} else 88
         reference_status = (
             REFERENCE_ONLY_RESULTS_RECORDED
             if len(observed) == required_metric_count
@@ -386,9 +361,7 @@ def evaluate_qualified_active_case(
             status=reference_status,
             band_status="NO_ACCEPTANCE_CRITERION",
             variant_statuses={"test_1": reference_status},
-            variant_band_statuses={
-                "test_1": "NO_ACCEPTANCE_CRITERION"
-            },
+            variant_band_statuses={"test_1": "NO_ACCEPTANCE_CRITERION"},
             variant_counts={"test_1": dict(reference_counts)},
         )
     else:
@@ -438,13 +411,9 @@ def evaluate_qualified_active_case(
     if test_id == "1":
         selected_status = evaluation.status
     else:
-        selected_status = evaluation.variant_statuses.get(
-            pair[0], "NOT_CHECKABLE"
-        )
+        selected_status = evaluation.variant_statuses.get(pair[0], "NOT_CHECKABLE")
     series_evidence = extractor.series_evidence(required_quantity_ids)
-    runtime_scope_complete = (
-        len(series_evidence) == len(required_quantity_ids)
-    )
+    runtime_scope_complete = len(series_evidence) == len(required_quantity_ids)
     artifact = Path(output_path) if output_path is not None else None
     receipt = ActiveCaseEvaluationReceipt(
         status=selected_status,
@@ -455,8 +424,7 @@ def evaluate_qualified_active_case(
         distribution_criterion_count=len(distributions),
         acceptance_criterion_available=acceptance_criterion_available,
         required_output_scope_complete=(
-            capability.aps_full_evaluation_supported
-            and runtime_scope_complete
+            capability.aps_full_evaluation_supported and runtime_scope_complete
         ),
         artifact_path=artifact,
         evaluation=evaluation,

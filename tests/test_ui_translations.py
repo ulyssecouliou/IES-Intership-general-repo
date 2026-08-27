@@ -11,7 +11,6 @@ from swiss_sia.reference_model.sia4010.ui_translations import (
     LANGUAGES,
     TRANSLATIONS,
     catalog_for,
-    full_catalog,
     missing_translations,
     normalize_language,
     translate,
@@ -30,6 +29,42 @@ class CatalogueCompletenessTests(unittest.TestCase):
 
     def test_no_language_has_a_missing_or_blank_string(self):
         self.assertEqual(missing_translations(), {})
+
+    def test_default_is_english_and_core_french_copy_has_accents(self):
+        self.assertEqual(DEFAULT_LANGUAGE, "en")
+        expected = {
+            "client_ui_window_title": "Conformité",
+            "client_ui_section_model": "Présentation",
+            "client_ui_weather_detected": "météo",
+            "client_ui_evidence_help": "éclairage",
+            "client_ui_evidence_open": "Compléter",
+        }
+        for key, accented in expected.items():
+            with self.subTest(key=key):
+                self.assertIn(accented, translate(key, "fr"))
+
+    def test_client_interface_has_no_known_ascii_french_regressions(self):
+        forbidden = (
+            "conformite",
+            "evaluation",
+            "modele",
+            "meteo",
+            "donnees",
+            "telephone",
+            "represente",
+            "reponse",
+            " a afficher",
+            " a integrer",
+            "ajoutee",
+            " apres ",
+            "selectionne",
+        )
+        rendered = " ".join(
+            translate(key, "fr") for key in TRANSLATIONS if key.startswith("client_ui_")
+        ).lower()
+        for token in forbidden:
+            with self.subTest(token=token):
+                self.assertNotIn(token, rendered)
 
     def test_every_key_is_present_in_every_language(self):
         for key, entry in TRANSLATIONS.items():

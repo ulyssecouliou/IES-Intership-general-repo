@@ -20,9 +20,9 @@ from __future__ import annotations
 import os
 import unittest
 
-
 try:
     import openpyxl  # noqa: F401 -- import-only availability check
+
     _OPENPYXL_AVAILABLE = True
 except Exception:  # pragma: no cover
     _OPENPYXL_AVAILABLE = False
@@ -86,9 +86,7 @@ class HaeufigkeitskassenExtractorRegressionTests(unittest.TestCase):
         """Return the cached authority table or skip when its source is absent."""
 
         if test_id not in self.tables:
-            self.skipTest(
-                "Workbook missing: {}".format(TEST_WORKBOOK_PATHS[test_id])
-            )
+            self.skipTest("Workbook missing: {}".format(TEST_WORKBOOK_PATHS[test_id]))
         return self.tables[test_id]
 
     def test_tests_4_6_7_carry_haeufigkeitskassen(self) -> None:
@@ -216,7 +214,9 @@ class HaeufigkeitskassenExtractorRegressionTests(unittest.TestCase):
         self.assertIn("Zu-/Abluft", first.quantity_label)
         self.assertEqual(first.unit, "m3/h")
         # The first six upper bounds visible in the workbook, verbatim.
-        self.assertEqual(first.upper_bounds[:6], (10.0, 200.0, 400.0, 600.0, 800.0, 1000.0))
+        self.assertEqual(
+            first.upper_bounds[:6], (10.0, 200.0, 400.0, 600.0, 800.0, 1000.0)
+        )
 
 
 if __name__ == "__main__":

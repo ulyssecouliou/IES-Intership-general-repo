@@ -42,7 +42,9 @@ class Sia4010ClassCrosscheckTests(unittest.TestCase):
         annotated = SIA4010Checker._annotate_classes_with_band_crosscheck(
             self._class_results(), {}
         )
-        self.assertEqual(annotated["5"]["band_crosscheck"]["summary"], "BAND_NOT_CHECKABLE")
+        self.assertEqual(
+            annotated["5"]["band_crosscheck"]["summary"], "BAND_NOT_CHECKABLE"
+        )
         self.assertEqual(
             annotated["5"]["band_crosscheck"]["per_test"]["test_7"], "NOT_EVALUATED"
         )

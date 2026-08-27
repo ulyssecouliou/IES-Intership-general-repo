@@ -76,18 +76,36 @@ class IESVEExtractionContractTests(unittest.TestCase):
         daily_profiles = {
             "daily-long-key": FakeProfile(
                 "daily-long",
-                [(0, 0, ""), (8, 0, ""), (10, 1, ""),
-                 (18, 1, ""), (20, 0, ""), (24, 0, "")],
+                [
+                    (0, 0, ""),
+                    (8, 0, ""),
+                    (10, 1, ""),
+                    (18, 1, ""),
+                    (20, 0, ""),
+                    (24, 0, ""),
+                ],
             ),
             "daily-short": FakeProfile(
                 "daily-short",
-                [(0, 0, ""), (8, 0, ""), (9, 1, ""),
-                 (12, 1, ""), (13, 0, ""), (24, 0, "")],
+                [
+                    (0, 0, ""),
+                    (8, 0, ""),
+                    (9, 1, ""),
+                    (12, 1, ""),
+                    (13, 0, ""),
+                    (24, 0, ""),
+                ],
             ),
             "daily-ve-marker": FakeProfile(
                 "daily-ve-marker",
-                [(0, 0, "-"), (8, 0, "-"), (9, 1, "-"),
-                 (17, 1, "-"), (18, 0, "-"), (24, 0, "-")],
+                [
+                    (0, 0, "-"),
+                    (8, 0, "-"),
+                    (9, 1, "-"),
+                    (17, 1, "-"),
+                    (18, 0, "-"),
+                    (24, 0, "-"),
+                ],
             ),
             "formula": FakeProfile("formula", [(0, 0, "weekday formula")]),
             "absolute": FakeProfile(
@@ -193,11 +211,13 @@ class IESVEExtractionContractTests(unittest.TestCase):
     def test_documented_cdb_glazing_members_are_extracted_with_evidence(self):
         """Use only fields documented on VECdbConstruction.get_properties()."""
         construction = SimpleNamespace(
-            get_properties=Mock(return_value={
-                "visible_light_transmittance": 0.72,
-                "frame_percent": 30.0,
-                "g_total": 0.41,
-            })
+            get_properties=Mock(
+                return_value={
+                    "visible_light_transmittance": 0.72,
+                    "frame_percent": 30.0,
+                    "g_total": 0.41,
+                }
+            )
         )
 
         audits = VEDataExtractor._documented_cdb_glazing_audits(construction)
@@ -224,17 +244,24 @@ class IESVEExtractionContractTests(unittest.TestCase):
 
     def test_daily_internal_gains_use_documented_gain_and_profile_members(self):
         """Integrate a gain only when gain, profile and diversity read-back exist."""
-        gain = SimpleNamespace(get=Mock(return_value={
-            "name": "Lighting",
-            "type_str": "Fluorescent Lighting",
-            "units_val": 0,
-            "max_sensible_gains": {0: 10.0},
-            "variation_profile": "DAY-1",
-            "diversity_factor": 1.0,
-        }))
+        gain = SimpleNamespace(
+            get=Mock(
+                return_value={
+                    "name": "Lighting",
+                    "type_str": "Fluorescent Lighting",
+                    "units_val": 0,
+                    "max_sensible_gains": {0: 10.0},
+                    "variation_profile": "DAY-1",
+                    "diversity_factor": 1.0,
+                }
+            )
+        )
         extractor = SimpleNamespace(
             get_internal_gains_audit=lambda room: {
-                "items": [gain], "status": "OK", "placeholder": "", "note": ""
+                "items": [gain],
+                "status": "OK",
+                "placeholder": "",
+                "note": "",
             },
             get_profile_daily_equivalent_hours_audit=lambda profile_id: {
                 "value": 8.0,
@@ -269,7 +296,9 @@ class IESVEExtractionContractTests(unittest.TestCase):
         )
         room = RoomData(
             id="R1",
-            hvac_systems=[{"system_type": "MULTIZONE", "fan_control": "gas_sensor variable"}],
+            hvac_systems=[
+                {"system_type": "MULTIZONE", "fan_control": "gas_sensor variable"}
+            ],
             fan_control="gas_sensor variable",
         )
 
@@ -287,14 +316,18 @@ class IESVEExtractionContractTests(unittest.TestCase):
         extractor = SimpleNamespace(get_room_zone_membership=lambda: {})
         room = RoomData(
             id="R1",
-            hvac_systems=[{
-                "system_type": "SINGLE_ZONE",
-                "air_flow_control": "MULTI_STAGE",
-            }],
-            air_exchange_evidence=[{
-                "type": "auxiliary_ventilation",
-                "variation_profile": "OCCUPIED",
-            }],
+            hvac_systems=[
+                {
+                    "system_type": "SINGLE_ZONE",
+                    "air_flow_control": "MULTI_STAGE",
+                }
+            ],
+            air_exchange_evidence=[
+                {
+                    "type": "auxiliary_ventilation",
+                    "variation_profile": "OCCUPIED",
+                }
+            ],
         )
 
         ModelAnalyzer(extractor)._annotate_hvac_zoning_and_controls([room])
@@ -330,10 +363,17 @@ class IESVEExtractionContractTests(unittest.TestCase):
         extractor = self.make_extractor()
         construction_data = {
             "DOOR": {"id": "DOOR", "opaque": True, "category": "door", "u_value": 0.63},
-            "EXTW": {"id": "EXTW", "opaque": False, "category": "ext_glazing", "u_value": 1.1},
+            "EXTW": {
+                "id": "EXTW",
+                "opaque": False,
+                "category": "ext_glazing",
+                "u_value": 1.1,
+            },
             "WALL": {"id": "WALL", "opaque": True, "category": "wall", "u_value": 0.20},
         }
-        extractor.get_construction_properties = lambda identifier: construction_data[str(identifier)]
+        extractor.get_construction_properties = lambda identifier: construction_data[
+            str(identifier)
+        ]
 
         selected = extractor._select_surface_construction_properties(
             ["DOOR", "EXTW", "WALL"],
@@ -380,24 +420,34 @@ class IESVEExtractionContractTests(unittest.TestCase):
 
     def test_macroflo_definitions_and_opening_assignments_preserve_ids(self):
         opening_types = [
-            Mock(get=Mock(return_value={
-                "reference_id": " MF-01 ",
-                "description": "Operable window",
-            })),
-            Mock(get=Mock(return_value={
-                "reference_id": "MF-02",
-                "description": "Door",
-            })),
-            Mock(get=Mock(return_value={
-                "reference_id": "",
-                "description": "No ID",
-            })),
+            Mock(
+                get=Mock(
+                    return_value={
+                        "reference_id": " MF-01 ",
+                        "description": "Operable window",
+                    }
+                )
+            ),
+            Mock(
+                get=Mock(
+                    return_value={
+                        "reference_id": "MF-02",
+                        "description": "Door",
+                    }
+                )
+            ),
+            Mock(
+                get=Mock(
+                    return_value={
+                        "reference_id": "",
+                        "description": "No ID",
+                    }
+                )
+            ),
             Mock(get=Mock(return_value=("not", "a mapping"))),
         ]
         get_opening_types = Mock(return_value=opening_types)
-        extractor = self.make_extractor(
-            get_macro_flo_opening_types=get_opening_types
-        )
+        extractor = self.make_extractor(get_macro_flo_opening_types=get_opening_types)
 
         definitions = extractor.get_macroflo_openings()
         self.assertEqual(extractor.get_macroflo_openings(), definitions)
@@ -480,9 +530,11 @@ class IESVEExtractionContractTests(unittest.TestCase):
             "mock extraction failure"
         )
 
-        with patch.object(app, "simulation_results_module", simulation_results), patch.object(
-            app, "_current_project_weather_label", return_value=""
-        ), patch.object(app, "_select_latest_aps_file", return_value="results.aps"):
+        with (
+            patch.object(app, "simulation_results_module", simulation_results),
+            patch.object(app, "_current_project_weather_label", return_value=""),
+            patch.object(app, "_select_latest_aps_file", return_value="results.aps"),
+        ):
             summary = app._collect_dynamic_results(SimpleNamespace())
 
         results_file.close.assert_called_once_with()
@@ -503,14 +555,18 @@ class IESVEExtractionContractTests(unittest.TestCase):
 
         with (
             patch.object(app, "simulation_results_module", simulation_results),
-            patch.object(app, "_current_project_weather_label", return_value="current.fwt"),
+            patch.object(
+                app, "_current_project_weather_label", return_value="current.fwt"
+            ),
             patch.object(app, "_rank_aps_files_by_mtime", return_value=["results.aps"]),
         ):
             summary = app._collect_dynamic_results(SimpleNamespace())
 
         self.assertEqual(summary["selected_aps_file"], "results.aps")
         self.assertEqual(summary["selected_aps_weather_references"], ["current.fwt"])
-        simulation_results.collect_room_dynamic_results.assert_called_once_with(results_file)
+        simulation_results.collect_room_dynamic_results.assert_called_once_with(
+            results_file
+        )
         results_file.close.assert_called_once_with()
 
 

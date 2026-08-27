@@ -21,13 +21,15 @@ class ClaimSafetyExtensionTests(unittest.TestCase):
 
     def test_empty_mapping_keys_do_not_create_classifier_text(self):
         """Ignore API schema keys whose nested values are entirely empty."""
-        text = ModelAnalyzer._mapping_text({
-            "water_cooled": None,
-            "fan_ctrl": "",
-            "co2": {"sensor": None},
-            "gas_sensor": False,
-            "real_value": "available",
-        })
+        text = ModelAnalyzer._mapping_text(
+            {
+                "water_cooled": None,
+                "fan_ctrl": "",
+                "co2": {"sensor": None},
+                "gas_sensor": False,
+                "real_value": "available",
+            }
+        )
 
         self.assertNotIn("water_cooled", text)
         self.assertNotIn("fan_ctrl", text)
@@ -67,11 +69,13 @@ class ClaimSafetyExtensionTests(unittest.TestCase):
         """Accept a numeric zero without accepting unrelated empty HVAC keys."""
         room = RoomData(
             id="room-1",
-            hvac_systems=[{
-                "final_energy": 0.0,
-                "fan_control": None,
-                "heat_recovery_type": None,
-            }],
+            hvac_systems=[
+                {
+                    "final_energy": 0.0,
+                    "fan_control": None,
+                    "heat_recovery_type": None,
+                }
+            ],
         )
         stats = _build_stats(
             [room],
@@ -179,8 +183,9 @@ class ClaimSafetyExtensionTests(unittest.TestCase):
             "seer_numeric": 3.0,
         }
         checker._check_declared_cooling_seer()
-        names = [a.rule for a in engine.get_alerts_by_category(
-            "Reference Project Diagnostics")]
+        names = [
+            a.rule for a in engine.get_alerts_by_category("Reference Project Diagnostics")
+        ]
         self.assertIn("SIA3802_COOLING_SEER_MIN_DECLARED", names)
 
     def test_declared_seer_meeting_band_raises_no_declared_alert(self):
@@ -193,8 +198,9 @@ class ClaimSafetyExtensionTests(unittest.TestCase):
             "seer_numeric": 4.2,
         }
         checker._check_declared_cooling_seer()
-        names = [a.rule for a in engine.get_alerts_by_category(
-            "Reference Project Diagnostics")]
+        names = [
+            a.rule for a in engine.get_alerts_by_category("Reference Project Diagnostics")
+        ]
         self.assertNotIn("SIA3802_COOLING_SEER_MIN_DECLARED", names)
         self.assertNotIn("SIA3802_COOLING_SEER_MIN_DECLARED_VALUE_MISSING", names)
 
@@ -210,8 +216,9 @@ class ClaimSafetyExtensionTests(unittest.TestCase):
             "seer_numeric": 4.0,
         }
         checker._check_declared_cooling_seer()
-        names = [a.rule for a in engine.get_alerts_by_category(
-            "Reference Project Diagnostics")]
+        names = [
+            a.rule for a in engine.get_alerts_by_category("Reference Project Diagnostics")
+        ]
         self.assertIn("SIA3802_COOLING_SEER_MIN_DECLARED", names)
         self.assertNotIn("SIA3802_COOLING_SEER_DECLARED_OUT_OF_TABLE_SCOPE", names)
 
@@ -225,8 +232,9 @@ class ClaimSafetyExtensionTests(unittest.TestCase):
             "seer_numeric": 5.0,
         }
         checker._check_declared_cooling_seer()
-        names = [a.rule for a in engine.get_alerts_by_category(
-            "Reference Project Diagnostics")]
+        names = [
+            a.rule for a in engine.get_alerts_by_category("Reference Project Diagnostics")
+        ]
         self.assertNotIn("SIA3802_COOLING_SEER_MIN_DECLARED", names)
         self.assertNotIn("SIA3802_COOLING_SEER_DECLARED_OUT_OF_TABLE_SCOPE", names)
 
@@ -243,8 +251,9 @@ class ClaimSafetyExtensionTests(unittest.TestCase):
         # but present class to exercise the out-of-scope branch.
         checker._reviewer_cooling_generator["sia_cooling_class"] = "evaporative"
         checker._check_declared_cooling_seer()
-        names = [a.rule for a in engine.get_alerts_by_category(
-            "Reference Project Diagnostics")]
+        names = [
+            a.rule for a in engine.get_alerts_by_category("Reference Project Diagnostics")
+        ]
         self.assertIn("SIA3802_COOLING_SEER_DECLARED_OUT_OF_TABLE_SCOPE", names)
 
     def test_reference_input_deviation_is_not_a_compliance_failure(self):
@@ -304,8 +313,14 @@ class ClaimSafetyExtensionTests(unittest.TestCase):
             "source_reference": "Decision reference",
         }
         files = [
-            {"name": "random_reference.xlsx", "path": "sia4010_evidence/random_reference.xlsx"},
-            {"name": "random_candidate.xlsx", "path": "sia4010_evidence/random_candidate.xlsx"},
+            {
+                "name": "random_reference.xlsx",
+                "path": "sia4010_evidence/random_reference.xlsx",
+            },
+            {
+                "name": "random_candidate.xlsx",
+                "path": "sia4010_evidence/random_candidate.xlsx",
+            },
         ]
 
         SIA4010Checker._annotate_official_test_result_row(row, files)
@@ -366,19 +381,21 @@ class ClaimSafetyExtensionTests(unittest.TestCase):
         """Require ResultsReader consumption data instead of source metadata dictionaries."""
         analyzer = ModelAnalyzer.__new__(ModelAnalyzer)
 
-        result = analyzer.calculate_total_energy_consumption({
-            "electricity": {"id": 1, "name": "Electricity", "cef": 1.0}
-        })
+        result = analyzer.calculate_total_energy_consumption(
+            {"electricity": {"id": 1, "name": "Electricity", "cef": 1.0}}
+        )
 
         self.assertIsNone(result)
 
     def test_low_severity_volume_never_becomes_p1(self):
         """Keep repeated reference diagnostics below the manager-blocking P1 tier."""
-        priority = ExcelReportGenerator._get_priority({
-            "max_severity": "Low",
-            "count": 126,
-            "rule": "SIA3802_FRAME_FRACTION",
-        })
+        priority = ExcelReportGenerator._get_priority(
+            {
+                "max_severity": "Low",
+                "count": 126,
+                "rule": "SIA3802_FRAME_FRACTION",
+            }
+        )
 
         self.assertEqual(priority, "P2")
 
@@ -416,12 +433,8 @@ class ClaimSafetyExtensionTests(unittest.TestCase):
 
     def test_project_helper_files_are_included_only_for_active_project(self):
         """Include generated helper CSVs but prevent cross-project pack contamination."""
-        active = Path(
-            "sia4010_evidence/SIA3802_project_metadata_Demo_Project.csv"
-        )
-        colliding = Path(
-            "sia4010_evidence/SIA3802_project_metadata_Demo_Project_10.csv"
-        )
+        active = Path("sia4010_evidence/SIA3802_project_metadata_Demo_Project.csv")
+        colliding = Path("sia4010_evidence/SIA3802_project_metadata_Demo_Project_10.csv")
         include, reason = _should_include_evidence_file(
             active,
             Path("sia4010_evidence"),

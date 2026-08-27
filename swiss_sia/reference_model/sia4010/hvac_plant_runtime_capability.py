@@ -11,13 +11,12 @@ import hashlib
 import json
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Mapping, Sequence, Set
+from typing import Any, Dict, Iterable, List, Mapping, Sequence
 
 from ..exceptions import ConfigurationError
 from .external_input_manifest import external_input_readiness
 from .model_scenario import ModelScenario
 from .official_input_contract import Sia4010OfficialInputContract
-
 
 REPORT_SCHEMA_VERSION = "1.0"
 REPORT_DIRECTORY = Path("sia4010_artifacts") / "diagnostics"
@@ -123,8 +122,7 @@ def _public_members(value: Any, tokens: Iterable[str]) -> List[str]:
     return sorted(
         name
         for name in names
-        if not name.startswith("_")
-        and any(token in name.lower() for token in lowered)
+        if not name.startswith("_") and any(token in name.lower() for token in lowered)
     )
 
 
@@ -140,9 +138,7 @@ def _read_mapping(owner: Any, getter_name: str) -> Dict[str, Any]:
             return {
                 "available": True,
                 "data": {},
-                "error": "{} returned {}".format(
-                    getter_name, type(value).__name__
-                ),
+                "error": "{} returned {}".format(getter_name, type(value).__name__),
             }
         return {
             "available": True,
@@ -161,9 +157,7 @@ def _apache_system_inventory(project: Any) -> Dict[str, Any]:
     """Inspect Apache Systems through allow-listed read-only API access."""
 
     result: Dict[str, Any] = {
-        "collection_available": callable(
-            getattr(project, "apache_systems", None)
-        ),
+        "collection_available": callable(getattr(project, "apache_systems", None)),
         "creation_member_observed": callable(
             getattr(project, "create_apache_system", None)
         ),
@@ -221,9 +215,7 @@ def _room_system_inventory(project: Any) -> Dict[str, Any]:
         try:
             room_data = get_room_data()
         except Exception as exc:
-            result["errors"].append(
-                "room {} get_room_data: {}".format(room_name, exc)
-            )
+            result["errors"].append("room {} get_room_data: {}".format(room_name, exc))
             continue
         result["rooms"].append(
             {
@@ -235,12 +227,8 @@ def _room_system_inventory(project: Any) -> Dict[str, Any]:
                     set(_public_members(room_data, HVAC_TOKENS))
                     | set(_public_members(room_data, PLANT_TOKENS))
                 ),
-                "apache_systems": _read_mapping(
-                    room_data, "get_apache_systems"
-                ),
-                "room_conditions": _read_mapping(
-                    room_data, "get_room_conditions"
-                ),
+                "apache_systems": _read_mapping(room_data, "get_apache_systems"),
+                "room_conditions": _read_mapping(room_data, "get_room_conditions"),
             }
         )
     return result
@@ -263,11 +251,7 @@ def _module_inventory(iesve_module: Any) -> Dict[str, Any]:
                 ),
                 "relevant_members": sorted(
                     set(_public_members(getattr(iesve_module, name), HVAC_TOKENS))
-                    | set(
-                        _public_members(
-                            getattr(iesve_module, name), PLANT_TOKENS
-                        )
-                    )
+                    | set(_public_members(getattr(iesve_module, name), PLANT_TOKENS))
                 ),
             }
             for name in sorted(set(hvac_members) | set(plant_members))
@@ -275,9 +259,7 @@ def _module_inventory(iesve_module: Any) -> Dict[str, Any]:
     }
 
 
-def _source_readiness(
-    project_path: Path, variant: str, case_id: str
-) -> Dict[str, Any]:
+def _source_readiness(project_path: Path, variant: str, case_id: str) -> Dict[str, Any]:
     """Return delegated-source readiness for one exact official case."""
 
     try:
@@ -328,7 +310,9 @@ def _case_matrix(
         source_ready = source_matrix[case_id]["ready_for_binding"] is True
         blockers = []
         if not source_ready:
-            blockers.append("TEST{}_EXTERNAL_SOURCE_BINDINGS_NOT_READY".format(case_id[0]))
+            blockers.append(
+                "TEST{}_EXTERNAL_SOURCE_BINDINGS_NOT_READY".format(case_id[0])
+            )
         if case_id[0] in {"4", "5", "6"}:
             if not apache_system_api_observed:
                 blockers.append("VEPROJECT_APACHE_SYSTEMS_API_NOT_OBSERVED")
@@ -367,7 +351,10 @@ def build_hvac_plant_runtime_capability_report(
             )
         )
     scenario = ModelScenario.load(scenario_path)
-    if not scenario.is_official or (scenario.variant, scenario.case_id) not in EXACT_CASES:
+    if (
+        not scenario.is_official
+        or (scenario.variant, scenario.case_id) not in EXACT_CASES
+    ):
         raise ConfigurationError(
             "HVAC/plant runtime probe requires one exact official Test 4, "
             "5A-5D, 6 or 7 scenario"
@@ -381,8 +368,7 @@ def build_hvac_plant_runtime_capability_report(
         | set(_public_members(project, PLANT_TOKENS))
     )
     apache_observed = bool(
-        systems["collection_available"]
-        or "apache_systems" in project_members
+        systems["collection_available"] or "apache_systems" in project_members
     )
     room_system_observed = any(
         row["apache_systems"]["available"] for row in rooms["rooms"]

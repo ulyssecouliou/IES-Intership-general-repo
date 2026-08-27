@@ -95,8 +95,7 @@ class Sia4010TestEvaluation:
             "variant_statuses": dict(self.variant_statuses or {}),
             "variant_band_statuses": dict(self.variant_band_statuses or {}),
             "variant_counts": {
-                key: dict(value)
-                for key, value in (self.variant_counts or {}).items()
+                key: dict(value) for key, value in (self.variant_counts or {}).items()
             },
             "criterion_status": self.criterion_status,
         }
@@ -164,7 +163,9 @@ class Sia4010TestRunner:
         parser = _TEST_PARSERS.get(test_id)
         if parser is None:
             raise ConfigurationError(
-                "No official-workbook parser is registered for SIA 4010 test {}".format(test_id)
+                "No official-workbook parser is registered for SIA 4010 test {}".format(
+                    test_id
+                )
             )
         bundle = self.loader.load_bundle(bundle_path)
         workbook_file = self._evaluation_workbook(bundle, test_id)
@@ -196,9 +197,7 @@ class Sia4010TestRunner:
         if normalized_test == "1":
             return "test_1"
         compact = "".join(
-            character
-            for character in str(case_id or "").upper()
-            if character.isalnum()
+            character for character in str(case_id or "").upper() if character.isalnum()
         )
         exact_suffixes = {
             "2": tuple("2{}".format(letter) for letter in "ABCD"),
@@ -273,17 +272,13 @@ class Sia4010TestRunner:
             statuses[variant] = cls._combine_status(band_status, variant_distributions)
             # Tests 2, 3 and 5 have two mandatory acceptance criteria. A passing
             # annual band alone can never make an exact variant positive.
-            if (
-                str(test_id) in _DISTRIBUTION_REQUIRED_TESTS
-                and not variant_distributions
-            ):
+            if str(test_id) in _DISTRIBUTION_REQUIRED_TESTS and not variant_distributions:
                 statuses[variant] = (
                     "FAILED" if band_status == "FAILED" else "NOT_CHECKABLE"
                 )
             counter = Counter(item.status.value for item in variant_comparisons)
             counts[variant] = {
-                status.value: counter.get(status.value, 0)
-                for status in ComparisonStatus
+                status.value: counter.get(status.value, 0) for status in ComparisonStatus
             }
         return statuses, band_statuses, counts
 
@@ -334,7 +329,9 @@ class Sia4010TestRunner:
         parser = _TEST_PARSERS.get(test_id)
         if parser is None:
             raise ConfigurationError(
-                "No official-workbook parser is registered for SIA 4010 test {}".format(test_id)
+                "No official-workbook parser is registered for SIA 4010 test {}".format(
+                    test_id
+                )
             )
         bundle = self.loader.load_bundle(bundle_path)
         workbook_file = self._evaluation_workbook(bundle, test_id)
@@ -345,7 +342,9 @@ class Sia4010TestRunner:
         )
         comparisons = self.comparator.compare_all(expected, observed_results)
         counts = Counter(comparison.status.value for comparison in comparisons)
-        count_map = {status.value: counts.get(status.value, 0) for status in ComparisonStatus}
+        count_map = {
+            status.value: counts.get(status.value, 0) for status in ComparisonStatus
+        }
         band_status = self._strict_band_status(comparisons)
         distribution_outcomes = tuple(distribution_outcomes)
         status = self._combine_status(band_status, distribution_outcomes)
@@ -391,9 +390,7 @@ class Sia4010TestRunner:
         self,
         bundle_path: Union[str, Path],
         observed_by_test: Dict[str, Iterable[ObservedResult]],
-        distribution_outcomes_by_test: Dict[
-            str, Iterable[DistributionOutcome]
-        ] = None,
+        distribution_outcomes_by_test: Dict[str, Iterable[DistributionOutcome]] = None,
     ) -> Dict[str, Sia4010TestEvaluation]:
         """Evaluate every registered test whose workbook is present in the bundle."""
 
@@ -412,9 +409,7 @@ class Sia4010TestRunner:
                     bundle_path,
                     test_id,
                     observed_by_test.get(test_id, []),
-                    distribution_outcomes=distribution_outcomes_by_test.get(
-                        test_id, ()
-                    ),
+                    distribution_outcomes=distribution_outcomes_by_test.get(test_id, ()),
                 )
         return evaluations
 
@@ -437,7 +432,7 @@ class Sia4010TestRunner:
 
 
 def to_test_results_map(
-    evaluations: Dict[str, "Sia4010TestEvaluation"]
+    evaluations: Dict[str, "Sia4010TestEvaluation"],
 ) -> Dict[str, Dict[str, Any]]:
     """Shape runner evaluations as the ``{test_<id>: {status}}`` map consumed by
     :meth:`SIA4010Checker._evaluate_validation_classes`.
@@ -474,9 +469,7 @@ def to_test_results_map(
                 "band_status": (evaluation.variant_band_statuses or {}).get(
                     variant, status
                 ),
-                "counts": dict(
-                    (evaluation.variant_counts or {}).get(variant, {})
-                ),
+                "counts": dict((evaluation.variant_counts or {}).get(variant, {})),
                 "workbook": evaluation.workbook,
                 "distribution": {
                     "criteria": sum(

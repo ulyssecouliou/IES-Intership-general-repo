@@ -6,7 +6,6 @@ from pathlib import Path
 from swiss_sia.reference_model.exceptions import ConfigurationError
 from swiss_sia.reference_model.sia4010.weather_verification import parse_tmy1
 
-
 ROOT = Path(__file__).resolve().parents[1]
 TEMP_ROOT = ROOT / ".codex_tmp"
 

@@ -44,9 +44,7 @@ class Sia4010ExecutionSummary:
             "issued_by": self.issued_by,
             "statuses": self.statuses,
             "test_results_map": self.test_results_map,
-            "tests": {
-                test_id: ev.to_dict() for test_id, ev in self.evaluations.items()
-            },
+            "tests": {test_id: ev.to_dict() for test_id, ev in self.evaluations.items()},
         }
 
 
@@ -93,9 +91,7 @@ def run_all_tests(
                 workbook_file.path,
                 criteria["case_ids"],
                 criteria["quantities"],
-                candidate_distributions=candidate_distributions_by_test.get(
-                    test_id
-                ),
+                candidate_distributions=candidate_distributions_by_test.get(test_id),
                 candidate_sheet=criteria.get("candidate_sheet", "Daten_Testprogramm"),
                 data_prefix=criteria.get("data_prefix", "Daten_"),
                 layout=criteria.get("layout", "inline_header"),

@@ -12,11 +12,12 @@ from typing import Any, Dict, Iterable, List, Optional
 from .config import SIA3802_SOURCE_REFERENCES, SIA4010_SOURCE_REFERENCES
 from .rule_engine import RuleEngine, Severity
 
-
 VALUE_INTEGRITY_CATEGORY = "Value Integrity"
 
 
-def add_value_integrity_alerts(rule_engine: RuleEngine, rooms_data: Iterable[Any]) -> Dict[str, Any]:
+def add_value_integrity_alerts(
+    rule_engine: RuleEngine, rooms_data: Iterable[Any]
+) -> Dict[str, Any]:
     """Add value-integrity alerts and return an audit summary.
 
     The ranges below are plausibility and comparability guardrails. Numeric
@@ -271,8 +272,4 @@ def _as_float(value: Any) -> Optional[float]:
 
 def _label(item: Any) -> str:
     """Return the most readable identifier available for an audited object."""
-    return str(
-        getattr(item, "name", None)
-        or getattr(item, "id", None)
-        or "unknown"
-    )
+    return str(getattr(item, "name", None) or getattr(item, "id", None) or "unknown")

@@ -8,7 +8,8 @@ or claims dynamic equivalence.
 
 This deliberately narrow probe answers one question safely: can the installed
 VE build store the candidate Test 2A threshold fields through VEScripts?  The
-separate equality/timestep/optical blockers remain open after a PASS.
+separate model-binding and optical-result equivalence blockers remain open
+after a PASS.
 """
 
 from __future__ import annotations
@@ -37,7 +38,6 @@ from .test2a_shading_control import (
     SETTER_FIELDS,
     build_test2a_fabric_awning_control,
 )
-
 
 REPORT_SCHEMA_VERSION = "1.0"
 SCENARIO_FILENAME = "sia_model_scenario.json"
@@ -97,13 +97,9 @@ def _resolve_enum(
         for member_name in member_names:
             if hasattr(container, member_name):
                 return getattr(container, member_name)
-        attempted.append(
-            "{}.[{}]".format(container_path, ",".join(member_names))
-        )
+        attempted.append("{}.[{}]".format(container_path, ",".join(member_names)))
     raise VeApiUnavailableError(
-        "Unable to resolve VE enum for {} (attempted {})".format(
-            context, attempted
-        )
+        "Unable to resolve VE enum for {} (attempted {})".format(context, attempted)
     )
 
 
@@ -113,9 +109,7 @@ def _current_cdb_project(iesve_module: Any) -> Any:
     database_type = getattr(iesve_module, "VECdbDatabase", None)
     getter = getattr(database_type, "get_current_database", None)
     if not callable(getter):
-        raise VeApiUnavailableError(
-            "VECdbDatabase.get_current_database is unavailable"
-        )
+        raise VeApiUnavailableError("VECdbDatabase.get_current_database is unavailable")
     database = getter()
     projects_method = getattr(database, "get_projects", None)
     if not callable(projects_method):
@@ -158,9 +152,7 @@ def _glazed_ids(cdb_project: Any, construction_class: Any) -> Tuple[str, ...]:
     try:
         return tuple(
             str(identifier)
-            for identifier in cdb_project.get_construction_ids(
-                construction_class
-            )
+            for identifier in cdb_project.get_construction_ids(construction_class)
         )
     except Exception as exc:
         raise VeApiUnavailableError(
@@ -177,9 +169,7 @@ def _matching_marker_ids(
 
     matches = []
     for identifier in _glazed_ids(cdb_project, construction_class):
-        construction = _get_construction(
-            cdb_project, identifier, construction_class
-        )
+        construction = _get_construction(cdb_project, identifier, construction_class)
         if construction is None:
             continue
         try:
@@ -204,6 +194,43 @@ def _coerce_active_value(current: Any) -> Any:
         "external_shade_active has unsupported runtime type {}".format(
             type(current).__name__
         )
+    )
+
+
+def _coerce_threshold_value(current: Any, threshold: Any, field: str) -> Any:
+    """Encode one irradiance threshold using the primitive exposed by VE.
+
+    VE 2025 exposes these two CDB properties as native condition strings such
+    as ``ii>3000.0`` and ``ii<3000.0``.  Test doubles and other builds may
+    expose numeric values instead, so the probe preserves that observed type
+    rather than guessing one setter signature for every runtime.
+    """
+
+    numeric_threshold = float(threshold)
+    if isinstance(current, str):
+        prefixes = {
+            "external_shade_radiation_to_lower": "ii>",
+            "external_shade_radiation_to_raise": "ii<",
+        }
+        prefix = prefixes.get(field)
+        compact = "".join(current.split()).lower()
+        if prefix is None or not compact.startswith(prefix):
+            raise VeApiUnavailableError(
+                "{} has unsupported native expression {!r}".format(field, current)
+            )
+        try:
+            float(compact[len(prefix) :])
+        except ValueError as exc:
+            raise VeApiUnavailableError(
+                "{} has unsupported native expression {!r}".format(field, current)
+            ) from exc
+        return "{}{:.1f}".format(prefix, numeric_threshold)
+    if isinstance(current, bool):
+        raise VeApiUnavailableError("{} has unsupported runtime type bool".format(field))
+    if isinstance(current, (int, float)):
+        return numeric_threshold
+    raise VeApiUnavailableError(
+        "{} has unsupported runtime type {}".format(field, type(current).__name__)
     )
 
 
@@ -235,9 +262,7 @@ def _assert_subset(
     }
     if mismatches:
         raise VeMutationError(
-            "Test 2A external-shade setter read-back mismatch: {}".format(
-                mismatches
-            )
+            "Test 2A external-shade setter read-back mismatch: {}".format(mismatches)
         )
 
 
@@ -261,9 +286,7 @@ def _create_setter_probe(
         ("ext_glazing",),
         "external glazing category",
     )
-    existing_probe_ids = _matching_marker_ids(
-        cdb_project, construction_class
-    )
+    existing_probe_ids = _matching_marker_ids(cdb_project, construction_class)
     if existing_probe_ids:
         raise VeMutationError(
             "Test 2A shade setter probe already exists: {}".format(
@@ -300,11 +323,15 @@ def _create_setter_probe(
         "external_shade_active": _coerce_active_value(
             before_properties["external_shade_active"]
         ),
-        "external_shade_radiation_to_lower": float(
-            setter_plan["external_shade_radiation_to_lower"]
+        "external_shade_radiation_to_lower": _coerce_threshold_value(
+            before_properties["external_shade_radiation_to_lower"],
+            setter_plan["external_shade_radiation_to_lower"],
+            "external_shade_radiation_to_lower",
         ),
-        "external_shade_radiation_to_raise": float(
-            setter_plan["external_shade_radiation_to_raise"]
+        "external_shade_radiation_to_raise": _coerce_threshold_value(
+            before_properties["external_shade_radiation_to_raise"],
+            setter_plan["external_shade_radiation_to_raise"],
+            "external_shade_radiation_to_raise",
         ),
     }
     if "description" in before_properties:
@@ -355,33 +382,23 @@ def _validated_threshold_setter_report(project_path: Path) -> Path:
     """Return the checksummed PASS prerequisite for the optical probe."""
 
     reports = sorted(
-        (project_path / REPORT_DIRECTORY).glob(
-            "sia2a_external_shade_setter_*.json"
-        )
+        (project_path / REPORT_DIRECTORY).glob("sia2a_external_shade_setter_*.json")
     )
     if len(reports) != 1:
         raise ConfigurationError(
             "The 2E1 optical setter probe requires exactly one prior threshold "
-            "setter report in this disposable project; found {}".format(
-                len(reports)
-            )
+            "setter report in this disposable project; found {}".format(len(reports))
         )
     report_path = reports[0]
     checksum_path = report_path.with_suffix(report_path.suffix + ".sha256")
     if not checksum_path.is_file():
         raise ConfigurationError(
-            "Threshold setter report checksum is missing: {}".format(
-                checksum_path
-            )
+            "Threshold setter report checksum is missing: {}".format(checksum_path)
         )
-    expected_sha = checksum_path.read_text(
-        encoding="ascii"
-    ).split(maxsplit=1)[0].lower()
+    expected_sha = checksum_path.read_text(encoding="ascii").split(maxsplit=1)[0].lower()
     if expected_sha != _sha256(report_path):
         raise ConfigurationError(
-            "Threshold setter report checksum mismatch: {}".format(
-                report_path
-            )
+            "Threshold setter report checksum mismatch: {}".format(report_path)
         )
     try:
         payload = json.loads(report_path.read_text(encoding="utf-8"))
@@ -448,9 +465,7 @@ def _create_fixed_closed_optical_probe(
         before_properties = dict(construction.get_properties())
     except Exception as exc:
         raise VeMutationError(
-            "Unable to create/read the unassigned 2E1 optical probe: {}".format(
-                exc
-            )
+            "Unable to create/read the unassigned 2E1 optical probe: {}".format(exc)
         ) from exc
     required_fields = set(FIXED_CLOSED_SETTER_FIELDS)
     if threshold_setter_plan is not None:
@@ -472,31 +487,23 @@ def _create_fixed_closed_optical_probe(
         "external_shade_active": _coerce_active_value(
             before_properties["external_shade_active"]
         ),
-        "external_shade_profile": str(
-            setter_plan["external_shade_profile"]
-        ),
+        "external_shade_profile": str(setter_plan["external_shade_profile"]),
         "external_shade_transmittance_0": float(
             setter_plan["external_shade_transmittance_0"]
-        ),
-        "external_shade_solar_reflectance": float(
-            setter_plan["external_shade_solar_reflectance"]
-        ),
-        "external_shade_visible_reflectance": float(
-            setter_plan["external_shade_visible_reflectance"]
         ),
     }
     if threshold_setter_plan is not None:
         properties.update(
             {
-                "external_shade_radiation_to_lower": float(
-                    threshold_setter_plan[
-                        "external_shade_radiation_to_lower"
-                    ]
+                "external_shade_radiation_to_lower": _coerce_threshold_value(
+                    before_properties["external_shade_radiation_to_lower"],
+                    threshold_setter_plan["external_shade_radiation_to_lower"],
+                    "external_shade_radiation_to_lower",
                 ),
-                "external_shade_radiation_to_raise": float(
-                    threshold_setter_plan[
-                        "external_shade_radiation_to_raise"
-                    ]
+                "external_shade_radiation_to_raise": _coerce_threshold_value(
+                    before_properties["external_shade_radiation_to_raise"],
+                    threshold_setter_plan["external_shade_radiation_to_raise"],
+                    "external_shade_radiation_to_raise",
                 ),
             }
         )
@@ -511,9 +518,7 @@ def _create_fixed_closed_optical_probe(
         ) from exc
     _assert_subset(properties, after_properties)
     after_ids = _glazed_ids(cdb_project, construction_class)
-    new_ids = [
-        identifier for identifier in after_ids if identifier not in before_ids
-    ]
+    new_ids = [identifier for identifier in after_ids if identifier not in before_ids]
     identifier = str(getattr(construction, "id", ""))
     if not identifier and len(new_ids) == 1:
         identifier = new_ids[0]
@@ -528,13 +533,11 @@ def _create_fixed_closed_optical_probe(
     return {
         "construction_id": identifier,
         "before_properties": {
-            key: before_properties.get(key)
-            for key in sorted(properties)
+            key: before_properties.get(key) for key in sorted(properties)
         },
         "written_properties": properties,
         "after_properties": {
-            key: after_properties.get(key)
-            for key in sorted(properties)
+            key: after_properties.get(key) for key in sorted(properties)
         },
         "before_glazed_ids": list(before_ids),
         "after_glazed_ids": list(after_ids),
@@ -542,9 +545,7 @@ def _create_fixed_closed_optical_probe(
         "default_layer_count_unchanged_by_probe": layer_count,
         "layers_edited": False,
         "opening_assignment_performed": False,
-        "threshold_and_optical_fields_co_stored": (
-            threshold_setter_plan is not None
-        ),
+        "threshold_and_optical_fields_co_stored": (threshold_setter_plan is not None),
     }
 
 
@@ -569,9 +570,7 @@ def qualify_test2a_shading_setters(
     scenario_path = project_path / SCENARIO_FILENAME
     if not scenario_path.is_file():
         raise ConfigurationError(
-            "Prepare test_2A/2A first; missing scenario file: {}".format(
-                scenario_path
-            )
+            "Prepare test_2A/2A first; missing scenario file: {}".format(scenario_path)
         )
     scenario = ModelScenario.load(scenario_path)
     if (
@@ -580,13 +579,10 @@ def qualify_test2a_shading_setters(
         or scenario.case_id != "2A"
     ):
         raise ConfigurationError(
-            "Shade qualification is restricted to the official test_2A/2A "
-            "scenario"
+            "Shade qualification is restricted to the official test_2A/2A " "scenario"
         )
     prior_reports = sorted(
-        (
-            project_path / REPORT_DIRECTORY
-        ).glob("sia2a_external_shade_setter_*.json")
+        (project_path / REPORT_DIRECTORY).glob("sia2a_external_shade_setter_*.json")
     )
     if prior_reports:
         raise ConfigurationError(
@@ -603,12 +599,8 @@ def qualify_test2a_shading_setters(
         if repository_root is not None
         else Path(__file__).resolve().parents[3]
     )
-    official_contract_path = (
-        root / "config" / "sia4010_official_input_contract.json"
-    )
-    official_contract = Sia4010OfficialInputContract.load(
-        official_contract_path
-    )
+    official_contract_path = root / "config" / "sia4010_official_input_contract.json"
+    official_contract = Sia4010OfficialInputContract.load(official_contract_path)
     official_inputs = official_contract.test("2").confirmed_inputs
     control = build_test2a_fabric_awning_control(official_inputs)
 
@@ -655,9 +647,9 @@ def qualify_test2a_shading_setters(
         "remaining_blockers": list(DYNAMIC_EQUIVALENCE_BLOCKERS),
         "claim_guardrail": (
             "A PASS qualifies only storage/read-back of the active flag and "
-            "two threshold fields in this installed VE build. It does not "
-            "qualify equality behaviour, timestep state handling, Soltis "
-            "optics, a Test 2A model, a simulation result or SIA validation."
+            "two authority-confirmed threshold fields in this installed VE "
+            "build. It does not qualify Soltis optical-result equivalence, a "
+            "Test 2A model, a simulation result or SIA validation."
         ),
     }
     _write_json(report_path, report)
@@ -740,9 +732,7 @@ def qualify_test2a_2e1_optical_setters(
     scenario_path = project_path / SCENARIO_FILENAME
     if not scenario_path.is_file():
         raise ConfigurationError(
-            "Prepare test_2A/2A first; missing scenario file: {}".format(
-                scenario_path
-            )
+            "Prepare test_2A/2A first; missing scenario file: {}".format(scenario_path)
         )
     scenario = ModelScenario.load(scenario_path)
     if (
@@ -754,9 +744,7 @@ def qualify_test2a_2e1_optical_setters(
             "2E1 optical setter qualification is restricted to test_2A/2A"
         )
     prior_optical_reports = sorted(
-        (project_path / REPORT_DIRECTORY).glob(
-            "sia2a_2e1_optical_setter_*.json"
-        )
+        (project_path / REPORT_DIRECTORY).glob("sia2a_2e1_optical_setter_*.json")
     )
     if prior_optical_reports:
         raise ConfigurationError(
@@ -773,12 +761,8 @@ def qualify_test2a_2e1_optical_setters(
         if repository_root is not None
         else Path(__file__).resolve().parents[3]
     )
-    official_contract_path = (
-        root / "config" / "sia4010_official_input_contract.json"
-    )
-    official_contract = Sia4010OfficialInputContract.load(
-        official_contract_path
-    )
+    official_contract_path = root / "config" / "sia4010_official_input_contract.json"
+    official_contract = Sia4010OfficialInputContract.load(official_contract_path)
     control = build_test2a_fabric_awning_control(
         official_contract.test("2").confirmed_inputs
     )
@@ -790,9 +774,7 @@ def qualify_test2a_2e1_optical_setters(
     )
     report: Dict[str, Any] = {
         "schema_version": REPORT_SCHEMA_VERSION,
-        "qualification_kind": (
-            "SIA4010_TEST2A_2E1_FIXED_CLOSED_OPTICAL_CDB_SETTER"
-        ),
+        "qualification_kind": ("SIA4010_TEST2A_2E1_FIXED_CLOSED_OPTICAL_CDB_SETTER"),
         "generated_at": datetime.now().isoformat(timespec="seconds"),
         "status": "STARTED",
         "project": {
@@ -817,11 +799,9 @@ def qualify_test2a_2e1_optical_setters(
             },
             "normalized_binding_sha256": dict(bindings.evidence_sha256),
         },
-        "candidate_setter_plan": (
-            control.fixed_closed_candidate_setter_plan
-        ),
+        "candidate_setter_plan": (control.fixed_closed_candidate_setter_plan),
         "setter_plan_scope": (
-            "DIRECT_NAME_MATCH_STORAGE_AND_READBACK_ONLY"
+            "VE2025_DOCUMENTED_WRITABLE_SUBSET_STORAGE_AND_READBACK_ONLY"
         ),
         "setter_result": {},
         "mutation_scope": "ONE_UNASSIGNED_GLAZED_CDB_CONSTRUCTION",
@@ -839,10 +819,11 @@ def qualify_test2a_2e1_optical_setters(
         "remaining_blockers": list(FIXED_CLOSED_OUTPUT_BLOCKERS),
         "claim_guardrail": (
             "A PASS qualifies co-storage/read-back of the two threshold "
-            "fields, direct-name normal-incidence/outside-reflectance fields "
-            "and ON profile on one unassigned CDB construction. "
-            "Angular optics, inside reflectance, visible transmission, "
-            "secondary heat transfer and 2E1 APS equivalence remain open."
+            "fields, normal-incidence transmittance and ON profile on one "
+            "unassigned CDB construction. VE 2025 does not document solar or "
+            "visible external-shade reflectance setters; those properties, "
+            "angular optics, secondary heat transfer and 2E1 APS equivalence "
+            "remain open."
         ),
     }
     _write_json(report_path, report)

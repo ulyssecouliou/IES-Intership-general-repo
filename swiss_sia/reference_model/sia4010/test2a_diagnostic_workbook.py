@@ -15,12 +15,11 @@ import hashlib
 from dataclasses import asdict, dataclass
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, Dict, Mapping, Tuple, Union
+from typing import Any, Dict, Tuple, Union
 
 from openpyxl import load_workbook
 
 from ..exceptions import ConfigurationError
-
 
 EXPECTED_TEST2_WORKBOOK_SHA256 = (
     "0d34793b0a193e0fac52918a359ac50809046fe7bb56dbab4412ed42332d4d1e"
@@ -51,9 +50,7 @@ _DIAGNOSTIC_LABELS = {
     "hourly_room_solar_heat_gain_diffuse": (
         "Direkter solarer Wärmeeintrag Diffusstrahlung, (W)"
     ),
-    "hourly_room_solar_heat_gain_secondary": (
-        "Sekundärer solarer Wärmeeintrag (W)"
-    ),
+    "hourly_room_solar_heat_gain_secondary": ("Sekundärer solarer Wärmeeintrag (W)"),
     "hourly_transmitted_solar_radiation_excluding_secondary": (
         "Total transmittierte Solarstrahlung\n(W)"
     ),
@@ -184,24 +181,21 @@ def _load_cached(
 
     path = Path(workbook_path)
     if not path.is_file():
-        raise ConfigurationError(
-            "Official Test 2 workbook is missing: {}".format(path)
-        )
+        raise ConfigurationError("Official Test 2 workbook is missing: {}".format(path))
     actual_sha = _sha256(path)
     expected = expected_sha256.lower()
     if actual_sha != expected:
         raise ConfigurationError(
-            "Official Test 2 workbook SHA-256 mismatch: expected {}, found {}"
-            .format(expected, actual_sha)
+            "Official Test 2 workbook SHA-256 mismatch: expected {}, found {}".format(
+                expected, actual_sha
+            )
         )
 
     workbook = load_workbook(path, data_only=True, read_only=True)
     try:
         if CANDIDATE_SHEET not in workbook.sheetnames:
             raise ConfigurationError(
-                "Official Test 2 workbook is missing sheet {!r}".format(
-                    CANDIDATE_SHEET
-                )
+                "Official Test 2 workbook is missing sheet {!r}".format(CANDIDATE_SHEET)
             )
         candidate = workbook[CANDIDATE_SHEET]
         _assert_cell(
@@ -310,4 +304,3 @@ def load_test2a_diagnostic_workbook_binding(
 
     path = Path(workbook_path).resolve()
     return _load_cached(str(path), str(expected_sha256).lower())
-

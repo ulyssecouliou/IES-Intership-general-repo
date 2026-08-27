@@ -7,7 +7,6 @@ from typing import Any, Dict, Optional, Union
 from .compliance_config import ParameterRegistry, build_default_registry
 from .exceptions import ConfigurationError
 
-
 SUPPORTED_SCHEMA_VERSIONS = {"1.0"}
 
 

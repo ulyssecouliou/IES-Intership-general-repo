@@ -30,7 +30,6 @@ from swiss_sia.reference_model.sia4010.model_scenario import (
     official_features,
 )
 
-
 EVIDENCE = Path(__file__).resolve()
 ROOT = EVIDENCE.parents[1]
 TEMP_ROOT = ROOT / ".codex_tmp"
@@ -44,9 +43,7 @@ class Sia4010EvidenceRegistryTests(unittest.TestCase):
     def setUp(self):
         self.payload = new_registry_payload()
         self.cases = self.payload["cases"]
-        self.test_root = (
-            TEMP_ROOT / "evidence_registry" / self._testMethodName
-        )
+        self.test_root = TEMP_ROOT / "evidence_registry" / self._testMethodName
         self.test_root.mkdir(parents=True, exist_ok=True)
 
     def test_empty_ledger_contains_every_exact_case_and_no_claim(self):
@@ -80,9 +77,7 @@ class Sia4010EvidenceRegistryTests(unittest.TestCase):
             "artifact_path": str(EVIDENCE),
             "artifact_sha256": digest,
         }
-        self.assertEqual(
-            _variant_model_status(self.cases, "test_1"), "BLOCKED"
-        )
+        self.assertEqual(_variant_model_status(self.cases, "test_1"), "BLOCKED")
         for case_id in TEST_CASES["test_1"]:
             self.cases["test_1/{}".format(case_id)]["model_evidence"] = {
                 "status": "VERIFIED",
@@ -148,9 +143,7 @@ class Sia4010EvidenceRegistryTests(unittest.TestCase):
             record["result_evidence"].pop("aps_path")
             record["result_evidence"].pop("aps_sha256")
             record["result_evidence"].pop("simulation_link_status")
-        payload["cases"]["test_1/600"]["model_evidence"]["status"] = (
-            "VERIFIED"
-        )
+        payload["cases"]["test_1/600"]["model_evidence"]["status"] = "VERIFIED"
         path.write_text(json.dumps(payload), encoding="utf-8")
 
         migrated = load_registry(path)
@@ -222,9 +215,7 @@ class Sia4010EvidenceRegistryTests(unittest.TestCase):
         )
         scenario = ModelScenario.load(scenario_path)
         model_report = project / "reference_model_report.json"
-        model_report.write_text(
-            json.dumps({"overall_status": "PASS"}), encoding="utf-8"
-        )
+        model_report.write_text(json.dumps({"overall_status": "PASS"}), encoding="utf-8")
         aps = project / "SIA4010_test_1_600.aps"
         aps.write_bytes(b"qualified APS evidence")
         audit = project / "simulation.json"
@@ -277,12 +268,8 @@ class Sia4010EvidenceRegistryTests(unittest.TestCase):
             results_sha256=_sha256(aps),
             results_size_bytes=aps.stat().st_size,
             audit_path=str(audit),
-            runtime_input_report_path=(
-                str(runtime_input) if with_runtime else ""
-            ),
-            runtime_input_report_sha256=(
-                _sha256(runtime_input) if with_runtime else ""
-            ),
+            runtime_input_report_path=(str(runtime_input) if with_runtime else ""),
+            runtime_input_report_sha256=(_sha256(runtime_input) if with_runtime else ""),
         )
 
         audit_payload = receipt.to_dict()
@@ -294,9 +281,7 @@ class Sia4010EvidenceRegistryTests(unittest.TestCase):
                     "sha256": _sha256(EVIDENCE),
                 },
                 "confirmed_contract": {
-                    "simulation_period": (
-                        "2011-01-01 through 2011-12-31"
-                    ),
+                    "simulation_period": ("2011-01-01 through 2011-12-31"),
                     "required_result_frequency": "hourly",
                     "requested_apachesim_options": requested_options,
                 },
@@ -306,9 +291,7 @@ class Sia4010EvidenceRegistryTests(unittest.TestCase):
             audit_payload["runtime_input_qualification"] = {
                 "path": str(runtime_input),
                 "sha256": _sha256(runtime_input),
-                "status": (
-                    "PROVISIONAL_ENGINE_MAPPING_APPLIED_READY_FOR_SIMULATION"
-                ),
+                "status": ("PROVISIONAL_ENGINE_MAPPING_APPLIED_READY_FOR_SIMULATION"),
                 "compliance_claim_allowed": False,
             }
         audit.write_text(json.dumps(audit_payload), encoding="utf-8")
@@ -329,9 +312,7 @@ class Sia4010EvidenceRegistryTests(unittest.TestCase):
     def test_base_test_summary_is_fail_closed_for_all_seven_tests(self):
         summaries = _base_test_summaries(self.cases)
         self.assertEqual(set(summaries), set("1234567"))
-        self.assertEqual(
-            sum(item["exact_cases"] for item in summaries.values()), 34
-        )
+        self.assertEqual(sum(item["exact_cases"] for item in summaries.values()), 34)
         self.assertTrue(
             all(item["status"] == "NOT_STARTED" for item in summaries.values())
         )
@@ -340,33 +321,27 @@ class Sia4010EvidenceRegistryTests(unittest.TestCase):
         self.assertEqual(summaries["3"]["exact_cases"], 12)
 
     def test_register_case_simulation_records_complete_verified_chain(self):
-        _project, _registry, _receipt, payload = (
-            self._create_registered_simulation(self.test_root)
+        _project, _registry, _receipt, payload = self._create_registered_simulation(
+            self.test_root
         )
         evidence = payload["cases"]["test_1/600"]["simulation_evidence"]
         self.assertEqual(evidence["model_evidence_link_status"], "VERIFIED")
         self.assertTrue(_simulation_evidence_is_valid(evidence))
 
     def test_runtime_qualification_promotes_exact_model_over_generic_warning(self):
-        _project, _registry, _receipt, payload = (
-            self._create_registered_simulation(
-                self.test_root,
-                workflow_status="WARNING",
-                with_runtime=True,
-            )
+        _project, _registry, _receipt, payload = self._create_registered_simulation(
+            self.test_root,
+            workflow_status="WARNING",
+            with_runtime=True,
         )
         model = payload["cases"]["test_1/600"]["model_evidence"]
-        simulation = payload["cases"]["test_1/600"][
-            "simulation_evidence"
-        ]
+        simulation = payload["cases"]["test_1/600"]["simulation_evidence"]
         self.assertEqual(model["status"], "VERIFIED")
         self.assertEqual(
             model["verification_basis"],
             "TEST1_RUNTIME_QUALIFICATION_AND_APACHESIM_PREFLIGHT",
         )
-        self.assertEqual(
-            simulation["model_evidence_link_status"], "VERIFIED"
-        )
+        self.assertEqual(simulation["model_evidence_link_status"], "VERIFIED")
         self.assertTrue(_artifact_is_valid(model))
         Path(model["qualification_artifact_path"]).write_text(
             "tampered", encoding="utf-8"
@@ -374,13 +349,11 @@ class Sia4010EvidenceRegistryTests(unittest.TestCase):
         self.assertFalse(_artifact_is_valid(model))
 
     def test_register_case_simulation_rejects_tampered_aps(self):
-        project, registry, receipt, _payload = (
-            self._create_registered_simulation(self.test_root)
+        project, registry, receipt, _payload = self._create_registered_simulation(
+            self.test_root
         )
         Path(receipt.results_path).write_bytes(b"tampered")
-        with self.assertRaisesRegex(
-            Exception, "ApacheSim APS checksum mismatch"
-        ):
+        with self.assertRaisesRegex(Exception, "ApacheSim APS checksum mismatch"):
             register_case_simulation(
                 registry,
                 receipt,
@@ -388,15 +361,13 @@ class Sia4010EvidenceRegistryTests(unittest.TestCase):
             )
 
     def test_register_case_simulation_rejects_wrong_temporal_contract(self):
-        project, registry, receipt, _payload = (
-            self._create_registered_simulation(self.test_root)
+        project, registry, receipt, _payload = self._create_registered_simulation(
+            self.test_root
         )
         bad_options = dict(receipt.requested_options)
         bad_options["start_day"] = 2
         altered = replace(receipt, requested_options=bad_options)
-        with self.assertRaisesRegex(
-            Exception, "receipt option start_day mismatch"
-        ):
+        with self.assertRaisesRegex(Exception, "receipt option start_day mismatch"):
             register_case_simulation(
                 registry,
                 altered,
@@ -404,8 +375,8 @@ class Sia4010EvidenceRegistryTests(unittest.TestCase):
             )
 
     def test_register_case_simulation_rejects_untraced_source(self):
-        project, registry, receipt, _payload = (
-            self._create_registered_simulation(self.test_root)
+        project, registry, receipt, _payload = self._create_registered_simulation(
+            self.test_root
         )
         audit_path = Path(receipt.audit_path)
         audit = json.loads(audit_path.read_text(encoding="utf-8"))
@@ -421,8 +392,8 @@ class Sia4010EvidenceRegistryTests(unittest.TestCase):
             )
 
     def test_register_case_evaluation_records_checksummed_artifact(self):
-        project, registry, simulation, _payload = (
-            self._create_registered_simulation(self.test_root)
+        project, registry, simulation, _payload = self._create_registered_simulation(
+            self.test_root
         )
         artifact = self.test_root / "evaluation.json"
         artifact.write_text(
@@ -430,13 +401,11 @@ class Sia4010EvidenceRegistryTests(unittest.TestCase):
                 {
                     "variant": "test_1",
                     "case_id": "600",
-                    "status": (
-                        "REFERENCE_RESULTS_RECORDED_NO_ACCEPTANCE_CRITERION"
-                    ),
+                    "status": ("REFERENCE_RESULTS_RECORDED_NO_ACCEPTANCE_CRITERION"),
                     "source_evidence": {
                         "aps_path": simulation.results_path,
                         "aps_sha256": simulation.results_sha256,
-                    }
+                    },
                 }
             ),
             encoding="utf-8",
@@ -468,8 +437,8 @@ class Sia4010EvidenceRegistryTests(unittest.TestCase):
         writer.assert_called_once()
 
     def test_register_case_evaluation_marks_foreign_aps_unlinked(self):
-        project, registry, _simulation, _payload = (
-            self._create_registered_simulation(self.test_root)
+        project, registry, _simulation, _payload = self._create_registered_simulation(
+            self.test_root
         )
         foreign_aps = self.test_root / "foreign.aps"
         foreign_aps.write_bytes(b"other APS")
@@ -479,13 +448,11 @@ class Sia4010EvidenceRegistryTests(unittest.TestCase):
                 {
                     "variant": "test_1",
                     "case_id": "600",
-                    "status": (
-                        "REFERENCE_RESULTS_RECORDED_NO_ACCEPTANCE_CRITERION"
-                    ),
+                    "status": ("REFERENCE_RESULTS_RECORDED_NO_ACCEPTANCE_CRITERION"),
                     "source_evidence": {
                         "aps_path": str(foreign_aps),
                         "aps_sha256": _sha256(foreign_aps),
-                    }
+                    },
                 }
             ),
             encoding="utf-8",
@@ -505,7 +472,6 @@ class Sia4010EvidenceRegistryTests(unittest.TestCase):
         )
         evidence = payload["cases"]["test_1/600"]["result_evidence"]
         self.assertEqual(evidence["simulation_link_status"], "NOT_LINKED")
-
 
     def test_a_ledger_written_before_a_new_case_is_migrated_not_refused(self):
         """A ledger predating a case is incomplete, not corrupt.

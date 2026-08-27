@@ -26,7 +26,6 @@ from swiss_sia.reference_model.sia4010.test2a_source_bundle import (
     build_test2a_source_bound_bundle,
 )
 
-
 ROOT = Path(__file__).resolve().parents[1]
 WORK_ROOT = ROOT / ".codex_tmp" / "test2a_source_bundle"
 
@@ -50,9 +49,7 @@ def _construction(identifier):
     )
 
 
-def _bindings(
-    project, *, width=8.0, with_profile_graph=False, provisional_fields=()
-):
+def _bindings(project, *, width=8.0, with_profile_graph=False, provisional_fields=()):
     profiles = tuple(
         NormalizedUsageProfile(
             key=key,
@@ -88,9 +85,7 @@ def _bindings(
                     reference="CONTROLLED_WEEKLY",
                     modulating=True,
                     units=-1,
-                    data=tuple(
-                        {"profile_ref": "controlled_daily"} for _ in range(12)
-                    ),
+                    data=tuple({"profile_ref": "controlled_daily"} for _ in range(12)),
                     source_locator="controlled weekly mapping",
                 ),
                 NormalizedVeProfileNode(
@@ -170,9 +165,10 @@ class Test2ASourceBundleTests(unittest.TestCase):
     """The conditional bundle is source-complete but never overclaims VE."""
 
     def setUp(self):
-        self.project = WORK_ROOT / hashlib.sha256(
-            self._testMethodName.encode("utf-8")
-        ).hexdigest()[:12]
+        self.project = (
+            WORK_ROOT
+            / hashlib.sha256(self._testMethodName.encode("utf-8")).hexdigest()[:12]
+        )
         if self.project.exists():
             shutil.rmtree(self.project)
         self.project.mkdir(parents=True)
@@ -191,25 +187,27 @@ class Test2ASourceBundleTests(unittest.TestCase):
             "status": "READY_FOR_BINDING",
             "ready_for_binding": True,
         }
-        with mock.patch(
-            "swiss_sia.reference_model.sia4010.test2a_source_bundle."
-            "Sia4010ExternalInputManifest.load",
-            return_value=mock.Mock(),
-        ), mock.patch(
-            "swiss_sia.reference_model.sia4010.test2a_source_bundle."
-            "external_input_readiness",
-            return_value=readiness,
-        ), mock.patch(
-            "swiss_sia.reference_model.sia4010.test2a_source_bundle."
-            "load_test2a_external_bindings",
-            return_value=bindings,
+        with (
+            mock.patch(
+                "swiss_sia.reference_model.sia4010.test2a_source_bundle."
+                "Sia4010ExternalInputManifest.load",
+                return_value=mock.Mock(),
+            ),
+            mock.patch(
+                "swiss_sia.reference_model.sia4010.test2a_source_bundle."
+                "external_input_readiness",
+                return_value=readiness,
+            ),
+            mock.patch(
+                "swiss_sia.reference_model.sia4010.test2a_source_bundle."
+                "load_test2a_external_bindings",
+                return_value=bindings,
+            ),
         ):
             return build_test2a_source_bound_bundle(self.project, ROOT)
 
     def _write_qualification(self, filename, fields):
-        diagnostics = (
-            self.project / "sia4010_artifacts" / "diagnostics"
-        )
+        diagnostics = self.project / "sia4010_artifacts" / "diagnostics"
         diagnostics.mkdir(parents=True, exist_ok=True)
         payload = {
             "status": "PASS",
@@ -239,15 +237,11 @@ class Test2ASourceBundleTests(unittest.TestCase):
             receipt.runtime_blockers,
             RUNTIME_BLOCKERS + (MISSING_NATIVE_PROFILE_GRAPH_BLOCKER,),
         )
-        payload = json.loads(
-            receipt.generator_input_path.read_text(encoding="utf-8")
-        )
+        payload = json.loads(receipt.generator_input_path.read_text(encoding="utf-8"))
         self.assertEqual(payload["variant"], "test_2A")
         self.assertEqual(payload["case_id"], "2A")
         self.assertFalse(payload["runtime_contract"]["mutation_supported"])
-        self.assertEqual(
-            payload["official_test2_parameters"]["glazing_g_value"], 0.545
-        )
+        self.assertEqual(payload["official_test2_parameters"]["glazing_g_value"], 0.545)
         optical = payload["fabric_awning_optical_diagnostic"]
         self.assertEqual(
             optical["workbook_binding_status"],
@@ -257,9 +251,7 @@ class Test2ASourceBundleTests(unittest.TestCase):
             "OFFICIAL_TEST2_DIAGNOSTIC_2E1_SERIES_NOT_BOUND",
             optical["blockers"],
         )
-        aps_binding = payload[
-            "fabric_awning_aps_diagnostic_binding"
-        ]
+        aps_binding = payload["fabric_awning_aps_diagnostic_binding"]
         self.assertEqual(aps_binding["bound_count"], 1)
         self.assertEqual(aps_binding["required_count"], 8)
         self.assertFalse(aps_binding["complete"])
@@ -277,20 +269,14 @@ class Test2ASourceBundleTests(unittest.TestCase):
         self.assertTrue(receipt.audit_path.is_file())
 
     def test_native_profile_graph_removes_only_the_source_graph_blocker(self):
-        receipt = self._build(
-            _bindings(self.project, with_profile_graph=True)
-        )
+        receipt = self._build(_bindings(self.project, with_profile_graph=True))
         self.assertEqual(
             receipt.status,
             "SOURCE_BINDINGS_READY_VE_BINDING_REQUIRED",
         )
         self.assertEqual(receipt.runtime_blockers, RUNTIME_BLOCKERS)
-        payload = json.loads(
-            receipt.generator_input_path.read_text(encoding="utf-8")
-        )
-        profile_contract = payload["runtime_contract"][
-            "sia2024_native_profile_graph"
-        ]
+        payload = json.loads(receipt.generator_input_path.read_text(encoding="utf-8"))
+        profile_contract = payload["runtime_contract"]["sia2024_native_profile_graph"]
         self.assertTrue(profile_contract["present"])
         self.assertEqual(
             profile_contract["required_profile_types"],
@@ -323,9 +309,7 @@ class Test2ASourceBundleTests(unittest.TestCase):
             receipt.status,
             "SOURCE_BINDINGS_PROVISIONAL_RECALCULATION_REQUIRED",
         )
-        self.assertIn(
-            PROVISIONAL_EXTERNAL_INPUT_BLOCKER, receipt.runtime_blockers
-        )
+        self.assertIn(PROVISIONAL_EXTERNAL_INPUT_BLOCKER, receipt.runtime_blockers)
         audit = json.loads(receipt.audit_path.read_text(encoding="utf-8"))
         self.assertFalse(audit["verdict_derivation_allowed"])
         self.assertEqual(
@@ -338,20 +322,14 @@ class Test2ASourceBundleTests(unittest.TestCase):
         )
         self.assertIn("PROVISIONAL", audit["claim_guardrail"])
         self.assertIn("Recalculate", audit["next_action"])
-        payload = json.loads(
-            receipt.generator_input_path.read_text(encoding="utf-8")
-        )
+        payload = json.loads(receipt.generator_input_path.read_text(encoding="utf-8"))
         self.assertIn("PROVISIONAL", payload["claim_guardrail"])
 
     def test_source_stated_bindings_carry_no_provisional_blocker(self):
         """Témoin négatif : le garde ne doit pas se déclencher tout seul."""
 
-        receipt = self._build(
-            _bindings(self.project, with_profile_graph=True)
-        )
-        self.assertNotIn(
-            PROVISIONAL_EXTERNAL_INPUT_BLOCKER, receipt.runtime_blockers
-        )
+        receipt = self._build(_bindings(self.project, with_profile_graph=True))
+        self.assertNotIn(PROVISIONAL_EXTERNAL_INPUT_BLOCKER, receipt.runtime_blockers)
         audit = json.loads(receipt.audit_path.read_text(encoding="utf-8"))
         self.assertTrue(audit["verdict_derivation_allowed"])
         self.assertEqual(audit["provisional_external_input_fields"], {})
@@ -385,23 +363,15 @@ class Test2ASourceBundleTests(unittest.TestCase):
                 "compliance_claim_allowed": False,
             },
         )
-        receipt = self._build(
-            _bindings(self.project, with_profile_graph=True)
-        )
+        receipt = self._build(_bindings(self.project, with_profile_graph=True))
         self.assertEqual(
             receipt.status,
             "RUNTIME_STORAGE_QUALIFIED_MODEL_BINDING_REQUIRED",
         )
-        payload = json.loads(
-            receipt.generator_input_path.read_text(encoding="utf-8")
-        )
-        evidence = payload["runtime_contract"][
-            "qualification_evidence"
-        ]
+        payload = json.loads(receipt.generator_input_path.read_text(encoding="utf-8"))
+        evidence = payload["runtime_contract"]["qualification_evidence"]
         self.assertTrue(evidence["all_storage_boundaries_qualified"])
-        self.assertFalse(
-            payload["runtime_contract"]["mutation_supported"]
-        )
+        self.assertFalse(payload["runtime_contract"]["mutation_supported"])
         audit = json.loads(receipt.audit_path.read_text(encoding="utf-8"))
         self.assertIn(
             "dynamic shade semantics",
@@ -419,24 +389,18 @@ class Test2ASourceBundleTests(unittest.TestCase):
             },
         )
         report = next(
-            (
-                self.project / "sia4010_artifacts" / "diagnostics"
-            ).glob("sia2a_profiles_*.json")
+            (self.project / "sia4010_artifacts" / "diagnostics").glob(
+                "sia2a_profiles_*.json"
+            )
         )
         report.write_text("{}\n", encoding="utf-8")
-        receipt = self._build(
-            _bindings(self.project, with_profile_graph=True)
-        )
+        receipt = self._build(_bindings(self.project, with_profile_graph=True))
         self.assertEqual(
             receipt.status,
             "SOURCE_BINDINGS_READY_VE_BINDING_REQUIRED",
         )
-        payload = json.loads(
-            receipt.generator_input_path.read_text(encoding="utf-8")
-        )
-        evidence = payload["runtime_contract"][
-            "qualification_evidence"
-        ]
+        payload = json.loads(receipt.generator_input_path.read_text(encoding="utf-8"))
+        evidence = payload["runtime_contract"]["qualification_evidence"]
         self.assertEqual(
             evidence["native_profiles"]["status"],
             "INVALID_REPORT",

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-u"""Probe of result variables from a `.aps` file.
+"""Probe of result variables from a `.aps` file.
 
 WHAT IT UNLOCKS. SIA tests 2 to 6 compare 20 quantities
 ("Wärmezufuhr Lufterwärmer", "Energiebedarf Ventilatoren", "Hilfsenergie
@@ -40,7 +40,12 @@ if _RACINE not in sys.path:
     sys.path.insert(0, _RACINE)
 
 from scripts.run_test1_dans_ve import (  # noqa: E402
-    LIMITE_ELEMENTS, _dans_ve, _membres, _serialisable, dire)
+    LIMITE_ELEMENTS,
+    _dans_ve,
+    _membres,
+    _serialisable,
+    dire,
+)
 
 #: Ceiling that `_serialisable` applies to any sequence recorded in a step.
 #: It truncated the 2026-08-06 reading to 500 variables, none of level "z".
@@ -48,16 +53,16 @@ from scripts.run_test1_dans_ve import (  # noqa: E402
 #: the complete list must work around.
 LIMITE_ELEMENTS_ETAPE = LIMITE_ELEMENTS
 
-CHEMIN_RAPPORT = os.path.join(_RACINE, 'outputs', 'sonde_aps.json')
+CHEMIN_RAPPORT = os.path.join(_RACINE, "outputs", "sonde_aps.json")
 
 #: Result levels queried by `get_variables`. The SIA labels for tests 4 to 6
 #: (Lufterwärmer, Luftkühler, WRG, Ventilatoren) name air-handling components:
 #: they live at the system level, not the room level. All three are queried to
 #: avoid any assumption.
 NIVEAUX = (
-    ('z', u'local / zone'),
-    ('v', u'systeme Apache'),
-    ('w', u'meteo'),
+    ("z", "local / zone"),
+    ("v", "systeme Apache"),
+    ("w", "meteo"),
 )
 
 #: VE project sub-folders in which a `.aps` is searched. The list is indicative
@@ -70,7 +75,7 @@ LIMITE_FICHIERS = 40
 
 
 def trouver_aps(racine_projet):
-    u"""Searches for `.aps` files under a VE project folder.
+    """Searches for `.aps` files under a VE project folder.
 
     Args:
         racine_projet: VE project folder.
@@ -85,12 +90,12 @@ def trouver_aps(racine_projet):
     trouves = []
     base = racine_projet.rstrip(os.sep)
     for dossier, sous_dossiers, fichiers in os.walk(base):
-        profondeur = dossier[len(base):].count(os.sep)
+        profondeur = dossier[len(base) :].count(os.sep)
         if profondeur >= PROFONDEUR_RECHERCHE:
             del sous_dossiers[:]
             continue
         for nom in fichiers:
-            if nom.lower().endswith('.aps'):
+            if nom.lower().endswith(".aps"):
                 trouves.append(os.path.join(dossier, nom))
         if len(trouves) >= LIMITE_FICHIERS:
             break
@@ -99,7 +104,7 @@ def trouver_aps(racine_projet):
 
 
 def _resume_serie(serie):
-    u"""Describes a series without copying it.
+    """Describes a series without copying it.
 
     An hourly series has 8760 points: including it in full would make the
     report unreadable. Its range and first values are enough to recognise a
@@ -114,20 +119,20 @@ def _resume_serie(serie):
     try:
         valeurs = [v for v in serie if isinstance(v, (int, float))]
     except TypeError:
-        return {'non_iterable': repr(serie)[:200]}
+        return {"non_iterable": repr(serie)[:200]}
     if not valeurs:
-        return {'nb_points': 0, 'remarque': u'aucune valeur numerique'}
+        return {"nb_points": 0, "remarque": "aucune valeur numerique"}
     return {
-        'nb_points': len(valeurs),
-        'minimum': min(valeurs),
-        'maximum': max(valeurs),
-        'somme': sum(valeurs),
-        'premieres_valeurs': valeurs[:6],
+        "nb_points": len(valeurs),
+        "minimum": min(valeurs),
+        "maximum": max(valeurs),
+        "somme": sum(valeurs),
+        "premieres_valeurs": valeurs[:6],
     }
 
 
 def sonder(chemin_aps=None):
-    u"""Reads the content of a `.aps`: variables, systems, energy metering.
+    """Reads the content of a `.aps`: variables, systems, energy metering.
 
     Args:
         chemin_aps: File to open. If `None`, searches in the current VE
@@ -137,17 +142,17 @@ def sonder(chemin_aps=None):
         dict: Report, also written to disk.
     """
     rapport = {
-        'dans_ve': _dans_ve(),
-        'etapes': [],
-        'avertissement': (
-            u"Rapport de SONDE. Aucune valeur ici n'est un résultat de "
-            u"validation : ce fichier relève des noms de variables, des "
-            u"unités et des tailles de séries, rien d'autre."
+        "dans_ve": _dans_ve(),
+        "etapes": [],
+        "avertissement": (
+            "Rapport de SONDE. Aucune valeur ici n'est un résultat de "
+            "validation : ce fichier relève des noms de variables, des "
+            "unités et des tailles de séries, rien d'autre."
         ),
     }
 
     def etape(nom, fonction):
-        u"""Executes a step recording its outcome.
+        """Executes a step recording its outcome.
 
         Args:
             nom: Step label.
@@ -159,78 +164,81 @@ def sonder(chemin_aps=None):
         try:
             valeur = fonction()
         except Exception as erreur:  # noqa: BLE001 -- on consigne, on ne masque pas
-            rapport['etapes'].append({
-                'nom': nom, 'statut': 'ECHEC',
-                'type_erreur': type(erreur).__name__,
-                'erreur': u'%s' % erreur,
-            })
-            dire(u'  [ECHEC] %-42s %s' % (nom, type(erreur).__name__))
+            rapport["etapes"].append(
+                {
+                    "nom": nom,
+                    "statut": "ECHEC",
+                    "type_erreur": type(erreur).__name__,
+                    "erreur": "%s" % erreur,
+                }
+            )
+            dire("  [ECHEC] %-42s %s" % (nom, type(erreur).__name__))
             return None
-        rapport['etapes'].append({
-            'nom': nom, 'statut': 'OK',
-            'type': type(valeur).__name__,
-            'valeur': _serialisable(valeur),
-        })
-        dire(u'  [OK]    %-42s %s' % (nom, repr(valeur)[:48]))
+        rapport["etapes"].append(
+            {
+                "nom": nom,
+                "statut": "OK",
+                "type": type(valeur).__name__,
+                "valeur": _serialisable(valeur),
+            }
+        )
+        dire("  [OK]    %-42s %s" % (nom, repr(valeur)[:48]))
         return valeur
 
-    dire(u'=== SONDE APS : variables de resultats ===')
-    if not rapport['dans_ve']:
-        dire(u'  hors VEScripts : la sonde ne peut rien apprendre ici.')
-        dire(u'  a lancer au bouton Run, depuis une VE ouverte sur un projet')
-        dire(u'  dont AU MOINS UNE simulation a deja tourne.')
+    dire("=== SONDE APS : variables de resultats ===")
+    if not rapport["dans_ve"]:
+        dire("  hors VEScripts : la sonde ne peut rien apprendre ici.")
+        dire("  a lancer au bouton Run, depuis une VE ouverte sur un projet")
+        dire("  dont AU MOINS UNE simulation a deja tourne.")
         return rapport
 
     import iesve
 
     # --- Locate the file -------------------------------------------
     if chemin_aps is None:
-        projet = etape(u'projet courant',
-                       lambda: iesve.VEProject.get_current_project())
-        dossier = etape(u'dossier du projet',
-                        lambda: getattr(projet, 'path', None))
-        candidats = etape(u'fichiers .aps trouves',
-                          lambda: trouver_aps(dossier)) or []
+        projet = etape("projet courant", lambda: iesve.VEProject.get_current_project())
+        dossier = etape("dossier du projet", lambda: getattr(projet, "path", None))
+        candidats = etape("fichiers .aps trouves", lambda: trouver_aps(dossier)) or []
         if not candidats:
-            etape(u'ouverture du .aps', lambda: _sans_aps())
+            etape("ouverture du .aps", lambda: _sans_aps())
             _ecrire(rapport)
             return rapport
         chemin_aps = candidats[0]
-        dire(u'  -> retenu (le plus recent) : %s' % os.path.basename(chemin_aps))
+        dire("  -> retenu (le plus recent) : %s" % os.path.basename(chemin_aps))
 
-    lecteur = etape(u'ResultsReader.open',
-                    lambda: iesve.ResultsReader.open(chemin_aps))
+    lecteur = etape("ResultsReader.open", lambda: iesve.ResultsReader.open(chemin_aps))
     if lecteur is None:
         _ecrire(rapport)
         return rapport
-    rapport['aps'] = {
-        'chemin': chemin_aps,
-        'nom': os.path.basename(chemin_aps),
+    rapport["aps"] = {
+        "chemin": chemin_aps,
+        "nom": os.path.basename(chemin_aps),
     }
 
     try:
         _relever(etape, lecteur, rapport)
     finally:
-        etape(u'fermeture', lambda: lecteur.close())
+        etape("fermeture", lambda: lecteur.close())
 
     _ecrire(rapport)
     return rapport
 
 
 def _sans_aps():
-    u"""Signals the absence of a results file.
+    """Signals the absence of a results file.
 
     Raises:
         RuntimeError: Always. An explicit failure step is better than a
             silently empty report.
     """
     raise RuntimeError(
-        u'aucun .aps sous le dossier du projet. Lancer une simulation '
-        u'ApacheSim dans VE, puis relancer cette sonde.')
+        "aucun .aps sous le dossier du projet. Lancer une simulation "
+        "ApacheSim dans VE, puis relancer cette sonde."
+    )
 
 
 def _relever(etape, lecteur, rapport=None):
-    u"""Queries all useful entry points of the `ResultsReader`.
+    """Queries all useful entry points of the `ResultsReader`.
 
     Args:
         etape: Recorded execution function.
@@ -239,9 +247,15 @@ def _relever(etape, lecteur, rapport=None):
             the ceiling applied to steps.
     """
     # --- Time frame: without it, an annual sum has no meaning.
-    for nom in ('results_per_day', 'first_day', 'last_day', 'year',
-                'weather_file', 'hvac_file'):
-        etape(u'%s' % nom, lambda n=nom: getattr(lecteur, n))
+    for nom in (
+        "results_per_day",
+        "first_day",
+        "last_day",
+        "year",
+        "weather_file",
+        "hvac_file",
+    ):
+        etape("%s" % nom, lambda n=nom: getattr(lecteur, n))
 
     # --- Variables: the core of the reading.
     #
@@ -252,66 +266,78 @@ def _relever(etape, lecteur, rapport=None):
     #
     # The argument forms are still read: if a VE version accepted them, the
     # report would say so rather than letting the opposite be assumed.
-    variables = etape(u'get_variables()  [sans argument]',
-                      lambda: lecteur.get_variables())
+    variables = etape("get_variables()  [sans argument]", lambda: lecteur.get_variables())
     for niveau, libelle in NIVEAUX:
-        etape(u'get_variables(%r)  [%s]' % (niveau, libelle),
-              lambda n=niveau: lecteur.get_variables(n))
+        etape(
+            "get_variables(%r)  [%s]" % (niveau, libelle),
+            lambda n=niveau: lecteur.get_variables(n),
+        )
 
     # The complete list is deposited OUTSIDE the steps: the 500-element ceiling
     # had truncated the 2026-08-06 reading to 500 entries, none of level "z".
     # A guard intended for readability had cut exactly what the probe exists to
     # report.
     if rapport is not None and variables:
-        rapport['variables'] = [_variable_lisible(v) for v in variables]
-        rapport['variables_par_niveau'] = _compter_par_niveau(variables)
-        dire(u'  -> %d variables, par niveau : %s'
-             % (len(variables),
-                _en_clair(rapport['variables_par_niveau'])))
+        rapport["variables"] = [_variable_lisible(v) for v in variables]
+        rapport["variables_par_niveau"] = _compter_par_niveau(variables)
+        dire(
+            "  -> %d variables, par niveau : %s"
+            % (len(variables), _en_clair(rapport["variables_par_niveau"]))
+        )
 
     # --- Rooms: level-z quantities are read per room.
-    etape(u'get_room_list', lambda: lecteur.get_room_list())
-    etape(u'get_room_ids', lambda: lecteur.get_room_ids())
+    etape("get_room_list", lambda: lecteur.get_room_list())
+    etape("get_room_ids", lambda: lecteur.get_room_ids())
 
     # --- Apache systems: this is where Luftkühler, Lufterwärmer and
     # --- WRG live, if they exist in the model.
-    systemes = etape(u'get_apache_systems', lambda: lecteur.get_apache_systems())
+    systemes = etape("get_apache_systems", lambda: lecteur.get_apache_systems())
     if systemes:
-        etape(u'get_all_apache_system_results (1er systeme)',
-              lambda: _apercu_resultats(
-                  lecteur.get_all_apache_system_results(systemes[0])))
+        etape(
+            "get_all_apache_system_results (1er systeme)",
+            lambda: _apercu_resultats(lecteur.get_all_apache_system_results(systemes[0])),
+        )
 
     # --- Energy metering: the most likely path for "Energiebedarf
     # --- Ventilatoren" and "Befeuchtungsenergie".
-    etape(u'get_energy_uses', lambda: lecteur.get_energy_uses())
-    etape(u'get_energy_meters', lambda: lecteur.get_energy_meters())
-    etape(u'get_energy_sources', lambda: lecteur.get_energy_sources())
+    etape("get_energy_uses", lambda: lecteur.get_energy_uses())
+    etape("get_energy_meters", lambda: lecteur.get_energy_meters())
+    etape("get_energy_sources", lambda: lecteur.get_energy_sources())
 
     # --- HVAC components, if an ApacheHVAC network exists.
-    etape(u'get_component_objects', lambda: lecteur.get_component_objects())
+    etape("get_component_objects", lambda: lecteur.get_component_objects())
 
     # `get_process_variables()` without argument raises ArgumentError: it
     # expects a process, which `get_process_list()` provides. Observed 2026-08-06.
-    processus = etape(u'get_process_list', lambda: lecteur.get_process_list())
+    processus = etape("get_process_list", lambda: lecteur.get_process_list())
     for nom_processus in list(processus or [])[:6]:
-        etape(u'get_process_variables(%r)' % nom_processus,
-              lambda p=nom_processus: lecteur.get_process_variables(p))
+        etape(
+            "get_process_variables(%r)" % nom_processus,
+            lambda p=nom_processus: lecteur.get_process_variables(p),
+        )
 
     # --- Units: without them, it is unknown whether a series is in W or kW.
-    etape(u'get_units', lambda: lecteur.get_units())
+    etape("get_units", lambda: lecteur.get_units())
 
     # --- Complete surface, for comparison with ve_api_surface.json.
-    etape(u'attributs du ResultsReader', lambda: _membres(lecteur))
+    etape("attributs du ResultsReader", lambda: _membres(lecteur))
 
 
 #: Fields kept from a `get_variables()` entry. Everything needed to recognise
 #: a quantity and convert its unit, nothing more.
-CHAMPS_VARIABLE = ('aps_varname', 'display_name', 'model_level', 'units_type',
-                   'subtype', 'custom_type', 'source')
+CHAMPS_VARIABLE = (
+    "aps_varname",
+    "display_name",
+    "model_level",
+    "units_type",
+    "subtype",
+    "custom_type",
+    "source",
+)
 
 
 def _variable_lisible(variable):
-    u"""Reduces a `get_variables()` entry to what is useful.
+    """Reduces a `get_variables()` entry to what is useful.
 
     Args:
         variable: Entry as returned by the API.
@@ -320,13 +346,14 @@ def _variable_lisible(variable):
         dict: Retained fields, or the `repr` if the form is unexpected.
     """
     if not isinstance(variable, dict):
-        return {'forme_inattendue': repr(variable)[:200]}
-    return dict((champ, variable[champ])
-                for champ in CHAMPS_VARIABLE if champ in variable)
+        return {"forme_inattendue": repr(variable)[:200]}
+    return dict(
+        (champ, variable[champ]) for champ in CHAMPS_VARIABLE if champ in variable
+    )
 
 
 def _compter_par_niveau(variables):
-    u"""Counts variables by `model_level`.
+    """Counts variables by `model_level`.
 
     Args:
         variables: List of `get_variables()` entries.
@@ -336,14 +363,15 @@ def _compter_par_niveau(variables):
     """
     comptes = {}
     for variable in variables:
-        niveau = u'%s' % (variable.get('model_level')
-                          if isinstance(variable, dict) else u'?')
+        niveau = "%s" % (
+            variable.get("model_level") if isinstance(variable, dict) else "?"
+        )
         comptes[niveau] = comptes.get(niveau, 0) + 1
     return dict(sorted(comptes.items()))
 
 
 def _en_clair(comptes):
-    u"""Puts the counts by level on a single console line.
+    """Puts the counts by level on a single console line.
 
     Args:
         comptes: `{level: count}`.
@@ -351,11 +379,11 @@ def _en_clair(comptes):
     Returns:
         str: For example "e=274, c=184, z=61".
     """
-    return u', '.join(u'%s=%d' % couple for couple in comptes.items())
+    return ", ".join("%s=%d" % couple for couple in comptes.items())
 
 
 def _apercu_resultats(resultats):
-    u"""Summarises a result set without copying the series.
+    """Summarises a result set without copying the series.
 
     Args:
         resultats: What a `get_all_*_results` returns.
@@ -366,12 +394,13 @@ def _apercu_resultats(resultats):
     """
     if not isinstance(resultats, dict):
         return resultats
-    return dict((u'%s' % cle, _resume_serie(serie))
-                for cle, serie in list(resultats.items())[:60])
+    return dict(
+        ("%s" % cle, _resume_serie(serie)) for cle, serie in list(resultats.items())[:60]
+    )
 
 
 def _ecrire(rapport):
-    u"""Writes the report to disk and says where to find it.
+    """Writes the report to disk and says where to find it.
 
     Args:
         rapport: Probe report.
@@ -379,16 +408,18 @@ def _ecrire(rapport):
     dossier = os.path.dirname(CHEMIN_RAPPORT)
     if not os.path.isdir(dossier):
         os.makedirs(dossier)
-    with io.open(CHEMIN_RAPPORT, 'w', encoding='utf-8') as flux:
+    with io.open(CHEMIN_RAPPORT, "w", encoding="utf-8") as flux:
         flux.write(json.dumps(rapport, ensure_ascii=False, indent=2))
     dire()
-    dire(u'rapport de sonde : %s' % CHEMIN_RAPPORT)
-    dire(u'-> me renvoyer ce fichier : il contient les 20 noms de variables '
-         u'qui manquent aux tests 2 a 6.')
+    dire("rapport de sonde : %s" % CHEMIN_RAPPORT)
+    dire(
+        "-> me renvoyer ce fichier : il contient les 20 noms de variables "
+        "qui manquent aux tests 2 a 6."
+    )
 
 
 def main(arguments=()):
-    u"""Entry point.
+    """Entry point.
 
     Args:
         arguments: Explicit `.aps` path, optional.
@@ -396,6 +427,6 @@ def main(arguments=()):
     Returns:
         int: 0 if the report could be written, 1 otherwise.
     """
-    chemins = [a for a in arguments if not a.startswith('--')]
+    chemins = [a for a in arguments if not a.startswith("--")]
     rapport = sonder(chemins[0] if chemins else None)
-    return 0 if rapport.get('etapes') else 1
+    return 0 if rapport.get("etapes") else 1

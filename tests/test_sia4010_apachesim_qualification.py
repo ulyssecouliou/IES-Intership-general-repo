@@ -12,7 +12,6 @@ from swiss_sia.reference_model.sia4010.apachesim_qualification import (
 )
 from swiss_sia.reference_model.sia4010.native_ui import ModelBuilderController
 
-
 ROOT = Path(__file__).resolve().parents[1]
 TEMP_ROOT = ROOT / ".codex_tmp"
 
@@ -25,7 +24,9 @@ ISO_INFILTRATION_L_S_M2 = 0.3075
 class _AirExchange:
     """Minimal ``RoomAirExchange`` double (API reference section 11)."""
 
-    def __init__(self, type_val, max_flow, units_val=2, name="SIA600_INFILTRATION_0P41ACH"):
+    def __init__(
+        self, type_val, max_flow, units_val=2, name="SIA600_INFILTRATION_0P41ACH"
+    ):
         self._data = {
             "name": name,
             "type_val": type_val,
@@ -66,9 +67,7 @@ class _RoomData:
     def get_apache_systems(self):
         return {
             "conditioned": (
-                True
-                if self.conditioned
-                else "iesve.conditioned_flag.no_free_floating"
+                True if self.conditioned else "iesve.conditioned_flag.no_free_floating"
             ),
             "heating_capacity_unlimited": True,
             "cooling_capacity_unlimited": True,
@@ -164,9 +163,7 @@ class _FakeApacheSim:
         if self.run_result:
             vista = self.project_path / "Vista"
             vista.mkdir(parents=True, exist_ok=True)
-            (vista / self.options["results_filename"]).write_bytes(
-                b"qualified fake APS"
-            )
+            (vista / self.options["results_filename"]).write_bytes(b"qualified fake APS")
             if self.rfcont is not None:
                 apache = self.project_path / "apache"
                 apache.mkdir(parents=True, exist_ok=True)
@@ -185,9 +182,7 @@ class ApacheSimQualificationTests(unittest.TestCase):
         self.project.mkdir(parents=True, exist_ok=True)
         vista = self.project / "Vista"
         if vista.is_dir():
-            for prior_result in vista.glob(
-                "SIA4010_test_1_*_20260729_020304.aps"
-            ):
+            for prior_result in vista.glob("SIA4010_test_1_*_20260729_020304.aps"):
                 prior_result.unlink()
         self._write_scenario("600")
         self._write_model_report("600")
@@ -310,9 +305,7 @@ class ApacheSimQualificationTests(unittest.TestCase):
                             infiltration_receipt
                             if infiltration_receipt is not None
                             else {
-                                "ve_infiltration_max_flow": (
-                                    ISO_INFILTRATION_L_S_M2
-                                ),
+                                "ve_infiltration_max_flow": (ISO_INFILTRATION_L_S_M2),
                                 "ve_infiltration_units_val": 2,
                                 "verified": True,
                             }
@@ -344,7 +337,6 @@ class ApacheSimQualificationTests(unittest.TestCase):
             encoding="utf-8",
         )
 
-
     def _run(self, factory, *, project=None):
         return run_qualified_apachesim(
             project=project or _Project(self.project),
@@ -370,9 +362,7 @@ class ApacheSimQualificationTests(unittest.TestCase):
                 "end_month": 12,
                 "reporting_interval": 3,
                 "preconditioning_days": 31,
-                "results_filename": (
-                    "SIA4010_test_1_600_20260729_020304.aps"
-                ),
+                "results_filename": ("SIA4010_test_1_600_20260729_020304.aps"),
             },
         )
         self.assertEqual(receipt.options_after["simulation_timestep"], 2)
@@ -386,13 +376,9 @@ class ApacheSimQualificationTests(unittest.TestCase):
         self.assertNotIn(
             "preconditioning_days", audit["deliberately_unset_engine_options"]
         )
-        self.assertEqual(
-            audit["initialization_source_file"]["initialization_hours"], 744
-        )
+        self.assertEqual(audit["initialization_source_file"]["initialization_hours"], 744)
         self.assertTrue(audit["source_file"]["sha256"])
-        self.assertEqual(
-            audit["control_temperature_evidence"]["rfcont"], 0.5
-        )
+        self.assertEqual(audit["control_temperature_evidence"]["rfcont"], 0.5)
 
     def test_rejects_air_temperature_control_after_simulation(self):
         with self.assertRaisesRegex(
@@ -440,6 +426,7 @@ class ApacheSimQualificationTests(unittest.TestCase):
             "VE-WEA-001 must PASS",
         ):
             self._run(lambda: _FakeApacheSim(self.project))
+
     def test_rejects_missing_runtime_input_qualification(self):
         report = next(
             (self.project / "sia4010_artifacts" / "diagnostics").glob(
@@ -595,8 +582,6 @@ class ApacheSimQualificationTests(unittest.TestCase):
                 project=project,
             )
 
-
-
     def test_option_readback_mismatch_fails_and_keeps_audit(self):
         with self.assertRaisesRegex(
             ApacheSimQualificationError,
@@ -618,9 +603,7 @@ class ApacheSimQualificationTests(unittest.TestCase):
             ApacheSimQualificationError,
             "did not return True",
         ):
-            self._run(
-                lambda: _FakeApacheSim(self.project, run_result=False)
-            )
+            self._run(lambda: _FakeApacheSim(self.project, run_result=False))
 
     def test_unsupported_case_1e_is_blocked(self):
         self._write_scenario("1E")

@@ -25,9 +25,7 @@ class ComplianceScoreWeightingTests(unittest.TestCase):
         """A failing internal-gains domain must lower the compliance score."""
 
         def score(gains_value):
-            results = {
-                category: {"score": 100.0} for category in SCORED_CATEGORIES
-            }
+            results = {category: {"score": 100.0} for category in SCORED_CATEGORIES}
             results["gains"] = {"score": gains_value}
             return HealthScoreCalculator()._calculate_sia3802_score(results)
 

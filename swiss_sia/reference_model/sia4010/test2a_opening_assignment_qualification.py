@@ -21,7 +21,6 @@ from ..ve_api import IesVeGateway
 from .model_scenario import ModelScenario
 from .scenario_preflight import is_temporary_ve_project
 
-
 REPORT_DIRECTORY = Path("sia4010_artifacts") / "diagnostics"
 SCENARIO_FILENAME = "sia_model_scenario.json"
 MUTATION_SCOPE = "ONE_OPENING_TRANSIENT_ASSIGNMENT_WITH_VERIFIED_RESTORATION"
@@ -47,9 +46,7 @@ def _write_json(path: Path, payload: Mapping[str, Any]) -> None:
 
 def _validated_optical_report(project_path: Path) -> Tuple[Path, Dict[str, Any]]:
     reports = sorted(
-        (project_path / REPORT_DIRECTORY).glob(
-            "sia2a_2e1_optical_setter_*.json"
-        )
+        (project_path / REPORT_DIRECTORY).glob("sia2a_2e1_optical_setter_*.json")
     )
     if len(reports) != 1:
         raise ConfigurationError(
@@ -60,9 +57,7 @@ def _validated_optical_report(project_path: Path) -> Tuple[Path, Dict[str, Any]]
     checksum_path = report_path.with_suffix(report_path.suffix + ".sha256")
     if not checksum_path.is_file():
         raise ConfigurationError(
-            "Optical setter report checksum is missing: {}".format(
-                checksum_path
-            )
+            "Optical setter report checksum is missing: {}".format(checksum_path)
         )
     expected = checksum_path.read_text(encoding="ascii").split()[0].lower()
     if expected != _sha256(report_path):
@@ -71,8 +66,7 @@ def _validated_optical_report(project_path: Path) -> Tuple[Path, Dict[str, Any]]
     if (
         payload.get("status") != "PASS"
         or payload.get("fixed_closed_storage_qualified") is not True
-        or payload.get("combined_threshold_optical_storage_qualified")
-        is not True
+        or payload.get("combined_threshold_optical_storage_qualified") is not True
         or payload.get("compliance_claim_allowed") is not False
     ):
         raise ConfigurationError(
@@ -98,9 +92,7 @@ def _opening_candidates(gateway: IesVeGateway) -> Tuple[Dict[str, Any], ...]:
                         "opening": opening,
                         "opening_id": identifier,
                         "opening_type": str(properties.get("type", "")),
-                        "opening_area_m2": float(
-                            properties.get("area", 0.0) or 0.0
-                        ),
+                        "opening_area_m2": float(properties.get("area", 0.0) or 0.0),
                         "original_construction": original,
                         "original_construction_id": (
                             gateway._construction_identifier(original)
@@ -139,9 +131,7 @@ def qualify_test2a_opening_assignment(
             "Opening assignment qualification is restricted to test_2A/2A"
         )
     prior = sorted(
-        (project_path / REPORT_DIRECTORY).glob(
-            "sia2a_opening_assignment_*.json"
-        )
+        (project_path / REPORT_DIRECTORY).glob("sia2a_opening_assignment_*.json")
     )
     if prior:
         raise ConfigurationError(
@@ -149,24 +139,17 @@ def qualify_test2a_opening_assignment(
             "disposable project: {}".format(prior[-1])
         )
     optical_path, optical = _validated_optical_report(project_path)
-    candidate_id = str(
-        optical.get("setter_result", {}).get("construction_id", "")
-    )
+    candidate_id = str(optical.get("setter_result", {}).get("construction_id", ""))
     if not candidate_id:
-        raise ConfigurationError(
-            "Optical setter report has no candidate construction ID"
-        )
+        raise ConfigurationError("Optical setter report has no candidate construction ID")
 
     gateway = IesVeGateway(iesve_module)
     if gateway.project_path.resolve() != project_path.resolve():
-        raise ConfigurationError(
-            "Active VE project changed during Test 2A qualification"
-        )
+        raise ConfigurationError("Active VE project changed during Test 2A qualification")
     candidate = gateway._get_construction(candidate_id)
     layers = list(candidate.get_layers())
     if not layers or any(
-        not gateway._construction_layer_is_resolved(candidate, layer)
-        for layer in layers
+        not gateway._construction_layer_is_resolved(candidate, layer) for layer in layers
     ):
         raise ConfigurationError(
             "The combined Test 2A probe construction has unresolved layers; "
@@ -180,13 +163,13 @@ def qualify_test2a_opening_assignment(
         )
     selected = openings[0]
     if selected["original_construction_id"] == candidate_id:
-        raise ConfigurationError(
-            "Selected opening already uses the probe construction"
-        )
+        raise ConfigurationError("Selected opening already uses the probe construction")
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
-    report_path = project_path / REPORT_DIRECTORY / (
-        "sia2a_opening_assignment_{}.json".format(timestamp)
+    report_path = (
+        project_path
+        / REPORT_DIRECTORY
+        / ("sia2a_opening_assignment_{}.json".format(timestamp))
     )
     report: Dict[str, Any] = {
         "schema_version": "1.0",
@@ -215,9 +198,7 @@ def qualify_test2a_opening_assignment(
             "opening_id": selected["opening_id"],
             "opening_type": selected["opening_type"],
             "opening_area_m2": selected["opening_area_m2"],
-            "original_construction_id": selected[
-                "original_construction_id"
-            ],
+            "original_construction_id": selected["original_construction_id"],
         },
         "mutation_boundary_entered": False,
         "candidate_assignment_readback_verified": False,
@@ -251,31 +232,19 @@ def qualify_test2a_opening_assignment(
             }
         )
         _write_json(report_path, report)
-        body.assign_construction_to_opening(
-            candidate, surface, opening.get_id()
-        )
-        assigned_id = gateway._construction_identifier(
-            opening.get_construction()
-        )
+        body.assign_construction_to_opening(candidate, surface, opening.get_id())
+        assigned_id = gateway._construction_identifier(opening.get_construction())
         if assigned_id != candidate_id:
-            raise VeMutationError(
-                "Candidate construction assignment did not persist"
-            )
+            raise VeMutationError("Candidate construction assignment did not persist")
         report["candidate_assignment_readback_verified"] = True
     except Exception as exc:
         assignment_error = exc
     finally:
         if report["mutation_boundary_entered"]:
             try:
-                body.assign_construction_to_opening(
-                    original, surface, opening.get_id()
-                )
-                restored_id = gateway._construction_identifier(
-                    opening.get_construction()
-                )
-                restored = restored_id == selected[
-                    "original_construction_id"
-                ]
+                body.assign_construction_to_opening(original, surface, opening.get_id())
+                restored_id = gateway._construction_identifier(opening.get_construction())
+                restored = restored_id == selected["original_construction_id"]
             except Exception as restore_exc:
                 report["restoration_error"] = "{}: {}".format(
                     type(restore_exc).__name__, restore_exc
@@ -290,9 +259,7 @@ def qualify_test2a_opening_assignment(
             {
                 "status": "FAIL",
                 "error": (
-                    "{}: {}".format(
-                        type(assignment_error).__name__, assignment_error
-                    )
+                    "{}: {}".format(type(assignment_error).__name__, assignment_error)
                     if assignment_error is not None
                     else "Original opening construction was not restored"
                 ),
@@ -305,9 +272,7 @@ def qualify_test2a_opening_assignment(
         _write_json(report_path, report)
         if assignment_error is not None:
             raise VeMutationError(
-                "Transient opening assignment failed: {}".format(
-                    assignment_error
-                )
+                "Transient opening assignment failed: {}".format(assignment_error)
             ) from assignment_error
         raise VeMutationError(
             "Original opening construction was not restored; discard project"

@@ -4,7 +4,6 @@ import logging
 from pathlib import Path
 from typing import Union
 
-
 LOGGER_NAME = "swiss_sia.reference_model"
 
 
@@ -18,9 +17,7 @@ def configure_logging(output_folder: Union[str, Path]) -> logging.Logger:
     if logger.handlers:
         return logger
 
-    formatter = logging.Formatter(
-        "%(asctime)s | %(levelname)s | %(name)s | %(message)s"
-    )
+    formatter = logging.Formatter("%(asctime)s | %(levelname)s | %(name)s | %(message)s")
     stream_handler = logging.StreamHandler()
     stream_handler.setFormatter(formatter)
     file_handler = logging.FileHandler(

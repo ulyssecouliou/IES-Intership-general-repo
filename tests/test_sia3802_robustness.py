@@ -48,9 +48,7 @@ class Sia3802CategoryIsolationTests(unittest.TestCase):
             rooms_data=[room], dynamic_results={}, external_mappings={}
         )
 
-        self.assertEqual(
-            results["envelope"]["status"], "RULE_EXECUTION_ERROR"
-        )
+        self.assertEqual(results["envelope"]["status"], "RULE_EXECUTION_ERROR")
         # Every other category still ran and produced its own result.
         for other in ("openings", "ventilation", "gains", "setpoints", "hvac"):
             self.assertIn(other, results)
@@ -61,9 +59,7 @@ class Sia3802CategoryIsolationTests(unittest.TestCase):
     def test_failed_category_scores_zero_never_a_full_score(self):
         checker, _engine = _checker()
         room = RoomData(id="r1", surfaces=[_UnexpectedSurface()])
-        checker.check_all(
-            rooms_data=[room], dynamic_results={}, external_mappings={}
-        )
+        checker.check_all(rooms_data=[room], dynamic_results={}, external_mappings={})
         # A crashed category must never look like a clean 100.
         self.assertEqual(checker._calculate_category_score("Envelope"), 0.0)
 
@@ -84,7 +80,7 @@ class Sia3802CategoryIsolationTests(unittest.TestCase):
         )
         score = checker._calculate_category_score("Openings")
         self.assertLessEqual(score, 60.0)  # capped: incomplete, not good
-        self.assertGreater(score, 0.0)     # not a false failure either
+        self.assertGreater(score, 0.0)  # not a false failure either
 
     def test_determined_advisory_alone_stays_in_the_pass_band(self):
         """A determined (non-indeterminate) advisory only dents the score; it is
@@ -103,14 +99,11 @@ class Sia3802CategoryIsolationTests(unittest.TestCase):
     def test_failed_category_emits_a_fail_closed_critical_alert(self):
         checker, engine = _checker()
         room = RoomData(id="r1", surfaces=[_UnexpectedSurface()])
-        checker.check_all(
-            rooms_data=[room], dynamic_results={}, external_mappings={}
-        )
+        checker.check_all(rooms_data=[room], dynamic_results={}, external_mappings={})
         errors = [
             alert
             for alert in engine.alerts
-            if "RULE_EXECUTION_ERROR" in str(alert.rule)
-            and alert.category == "Envelope"
+            if "RULE_EXECUTION_ERROR" in str(alert.rule) and alert.category == "Envelope"
         ]
         self.assertTrue(errors)
         self.assertEqual(errors[0].severity, Severity.CRITICAL)
@@ -168,9 +161,7 @@ class Sia3802UndeterminedNotFailedTests(unittest.TestCase):
             rooms_data=[room], dynamic_results={}, external_mappings={}
         )
 
-        verdict = build_compliance_verdict(
-            results, None, rooms_analysed=1
-        ).to_dict()
+        verdict = build_compliance_verdict(results, None, rooms_analysed=1).to_dict()
 
         envelope = next(
             item for item in verdict["domains"] if item["domain"] == "envelope"
@@ -201,9 +192,7 @@ class Sia3802UndeterminedNotFailedTests(unittest.TestCase):
             "alerts": list(engine.alerts),
             "global_reference_comparison": {"status": "NOT_CHECKABLE"},
         }
-        verdict = build_compliance_verdict(
-            results, None, rooms_analysed=1
-        ).to_dict()
+        verdict = build_compliance_verdict(results, None, rooms_analysed=1).to_dict()
         envelope = next(
             item for item in verdict["domains"] if item["domain"] == "envelope"
         )
@@ -231,9 +220,7 @@ class Sia3802UndeterminedNotFailedTests(unittest.TestCase):
             "global_reference_comparison": {"status": "REVIEWED_RESULT_AVAILABLE"},
         }
         verdict = build_compliance_verdict(results, None, rooms_analysed=1).to_dict()
-        dynamic = next(
-            item for item in verdict["domains"] if item["domain"] == "dynamic"
-        )
+        dynamic = next(item for item in verdict["domains"] if item["domain"] == "dynamic")
         self.assertEqual(dynamic["status"], "NOT_COMPLIANT")
         self.assertEqual(verdict["sia3802_status"], "NOT_COMPLIANT")
 
@@ -253,16 +240,18 @@ class Sia3802UndeterminedNotFailedTests(unittest.TestCase):
         results = {
             # All six component domains evaluated and clean, so only the dynamic
             # comfort reserve is incomplete.
-            "envelope": {}, "openings": {}, "ventilation": {}, "gains": {},
-            "setpoints": {}, "hvac": {},
+            "envelope": {},
+            "openings": {},
+            "ventilation": {},
+            "gains": {},
+            "setpoints": {},
+            "hvac": {},
             "dynamic": {"status": "NOT_CHECKABLE"},
             "alerts": list(engine.alerts),
             "global_reference_comparison": {"status": "REVIEWED_RESULT_AVAILABLE"},
         }
         verdict = build_compliance_verdict(results, None, rooms_analysed=1).to_dict()
-        dynamic = next(
-            item for item in verdict["domains"] if item["domain"] == "dynamic"
-        )
+        dynamic = next(item for item in verdict["domains"] if item["domain"] == "dynamic")
         self.assertEqual(dynamic["status"], "NOT_DETERMINED")
         # A reserve does not fail the model; overall stays COMPLIANT-with-reserves.
         self.assertEqual(verdict["sia3802_status"], "COMPLIANT")
@@ -285,12 +274,9 @@ class Sia3802UndeterminedNotFailedTests(unittest.TestCase):
         }
 
         verdict = build_compliance_verdict(results, None, rooms_analysed=1).to_dict()
-        dynamic = next(
-            item for item in verdict["domains"] if item["domain"] == "dynamic"
-        )
+        dynamic = next(item for item in verdict["domains"] if item["domain"] == "dynamic")
         self.assertEqual(dynamic["status"], "NOT_DETERMINED")
         self.assertEqual(dynamic["reason"], "evidence_incomplete")
-
 
     def test_unverified_solar_protection_control_gates_the_verdict(self):
         """Audit A4: solar-protection control is an autonomous SIA 380/2 §7.1.2.2-5
@@ -307,16 +293,19 @@ class Sia3802UndeterminedNotFailedTests(unittest.TestCase):
             data=None,
         )
         results = {
-            "envelope": {}, "openings": {}, "ventilation": {}, "gains": {},
-            "setpoints": {}, "hvac": {}, "dynamic": {},
+            "envelope": {},
+            "openings": {},
+            "ventilation": {},
+            "gains": {},
+            "setpoints": {},
+            "hvac": {},
+            "dynamic": {},
             "alerts": list(engine.alerts),
             "global_reference_comparison": {"status": "REVIEWED_RESULT_AVAILABLE"},
         }
         verdict = build_compliance_verdict(results, None, rooms_analysed=1).to_dict()
         self.assertEqual(verdict["sia3802_status"], "NOT_DETERMINED")
-        self.assertEqual(
-            verdict["sia3802_reason"], "solar_protection_control_incomplete"
-        )
+        self.assertEqual(verdict["sia3802_reason"], "solar_protection_control_incomplete")
         self.assertIn("sia3802_solar_protection_control", verdict["outstanding"])
 
     def test_electrical_power_exceeds_with_desirable_cooling_is_not_compliant(self):
@@ -379,8 +368,14 @@ class Sia3802UndeterminedNotFailedTests(unittest.TestCase):
         """A §7.2.4 NOT_COMPLIANT electrical-power status blocks the overall verdict
         even when the decisive gate is satisfied (autonomous requirement)."""
         results = {
-            "envelope": {}, "openings": {}, "ventilation": {}, "gains": {},
-            "setpoints": {}, "hvac": {}, "dynamic": {}, "alerts": [],
+            "envelope": {},
+            "openings": {},
+            "ventilation": {},
+            "gains": {},
+            "setpoints": {},
+            "hvac": {},
+            "dynamic": {},
+            "alerts": [],
             "global_reference_comparison": {"status": "REVIEWED_RESULT_AVAILABLE"},
             "electrical_power": {"verdict_status": "NOT_COMPLIANT"},
         }
@@ -396,16 +391,19 @@ class Sia3802UndeterminedNotFailedTests(unittest.TestCase):
         model with no solar-protection alert (none modelled / none needed) is not
         over-blocked."""
         results = {
-            "envelope": {}, "openings": {}, "ventilation": {}, "gains": {},
-            "setpoints": {}, "hvac": {}, "dynamic": {},
+            "envelope": {},
+            "openings": {},
+            "ventilation": {},
+            "gains": {},
+            "setpoints": {},
+            "hvac": {},
+            "dynamic": {},
             "alerts": [],
             "global_reference_comparison": {"status": "REVIEWED_RESULT_AVAILABLE"},
         }
         verdict = build_compliance_verdict(results, None, rooms_analysed=1).to_dict()
         self.assertEqual(verdict["sia3802_status"], "COMPLIANT")
-        self.assertNotIn(
-            "sia3802_solar_protection_control", verdict["outstanding"]
-        )
+        self.assertNotIn("sia3802_solar_protection_control", verdict["outstanding"])
 
 
 class Sia3802GlobalReferenceComparisonRobustnessTests(unittest.TestCase):
@@ -465,9 +463,7 @@ class Sia3802GlobalReferenceComparisonRobustnessTests(unittest.TestCase):
             }
         )
         comparison = results["global_reference_comparison"]
-        self.assertEqual(
-            comparison["status"], "REVIEWED_RESULT_CONTRADICTS_ACCEPTANCE"
-        )
+        self.assertEqual(comparison["status"], "REVIEWED_RESULT_CONTRADICTS_ACCEPTANCE")
         self.assertTrue(
             any(
                 "GLOBAL_REFERENCE_DISCREPANCY" in str(alert.rule)

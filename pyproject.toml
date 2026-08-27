@@ -22,9 +22,9 @@ openpyxl = "^3.1.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.0"
-mypy = "^1.5.0"
-black = "^23.10.0"
-flake8 = "^6.1.0"
+mypy = "^2.3.0"
+black = "^26.5.1"
+flake8 = "^7.3.0"
 pre-commit = "^3.5.0"
 
 [build-system]
@@ -61,6 +61,18 @@ module = ["swiss_sia.*"]
 follow_imports = "skip"
 ignore_errors = true
 
+# Premier lot `swiss_sia` rendu strict. Cette liste ne doit grandir qu'apres
+# passage a zero erreur, afin que le typage reste un garde-fou exploitable.
+[[tool.mypy.overrides]]
+module = [
+    "swiss_sia.client_report_context",
+    "swiss_sia.assessment_governance",
+    "swiss_sia.project_evidence_translations",
+    "swiss_sia.value_integrity",
+]
+follow_imports = "normal"
+ignore_errors = false
+
 [tool.pytest.ini_options]
 # Les suites du navigateur SIA 4010 vivent a cote de leur code, pas sous
 # tests/. Sans elles ici, 283 tests ne sont jamais collectes -- et une suite
@@ -68,6 +80,14 @@ ignore_errors = true
 testpaths = ["tests", "engine/tests", "ve_adapter/tests", "ui/tests"]
 pythonpath = ["."]
 addopts = "-q"
+norecursedirs = [
+    ".git",
+    ".codex_test_runs",
+    ".test-tmp*",
+    ".tmp*",
+    "tmp*",
+    "tests/_pytest_full_release_20260824",
+]
 # Nos tests sont des FONCTIONS. Sans cette restriction, pytest tente de
 # collecter les schémas `TestResult` et `TestStatus` — dont le nom commence par
 # « Test » — et émet un PytestCollectionWarning à chaque exécution. Une suite
@@ -78,5 +98,5 @@ python_classes = ["*TestCase"]
 # flake8 ne lit pas pyproject.toml nativement ; ces valeurs sont reprises dans
 # .flake8 pour être effectives. Conservées ici comme référence unique.
 max-line-length = 90
-extend-ignore = ["E203", "W503"]
+extend-ignore = ["E203", "E501", "W503"]
 exclude = [".git", "__pycache__", "tmp", "outputs", "reports"]

@@ -26,9 +26,7 @@ class Test1RuntimeInputMappingTests(unittest.TestCase):
 
     def test_conditioned_enum_is_interpreted_by_name_not_truthiness(self):
         self.assertTrue(is_conditioned_state("iesve.conditioned_flag.yes"))
-        self.assertFalse(
-            is_conditioned_state("iesve.conditioned_flag.no_free_floating")
-        )
+        self.assertFalse(is_conditioned_state("iesve.conditioned_flag.no_free_floating"))
         with self.assertRaises(ConfigurationError):
             is_conditioned_state("iesve.conditioned_flag.unknown")
 
@@ -39,9 +37,8 @@ class Test1RuntimeInputMappingTests(unittest.TestCase):
             reference_air_density_kg_m3=1.2,
         )
         reconstructed = (
-            (1.0 + mapping.furniture_mass_factor)
-            * mapping.ve_air_capacity_j_k
-        )
+            1.0 + mapping.furniture_mass_factor
+        ) * mapping.ve_air_capacity_j_k
         self.assertAlmostEqual(reconstructed, 480000.0, places=8)
         self.assertAlmostEqual(
             mapping.furniture_mass_factor, 2.071064430932006, places=12
@@ -103,9 +100,7 @@ class Test1RuntimeInputMappingTests(unittest.TestCase):
         )
         self.assertEqual(payload["heating_plant_radiant_fraction"], 0.0)
         self.assertEqual(payload["cooling_plant_radiant_fraction"], 0.0)
-        self.assertFalse(
-            payload["heating_plant_radiant_fraction_from_template"]
-        )
+        self.assertFalse(payload["heating_plant_radiant_fraction_from_template"])
         self.assertNotIn("read_only_label", payload)
 
     def test_ideal_load_emission_readback_must_be_fully_convective(self):
@@ -245,9 +240,7 @@ class Test1RuntimeInputMappingTests(unittest.TestCase):
     def test_prescribed_infiltration_rejects_second_exchange_carrying_flow(self):
         """A non-zero second path defeats the whole zero-ventilation correction."""
 
-        with self.assertRaisesRegex(
-            ConfigurationError, "prescribes infiltration only"
-        ):
+        with self.assertRaisesRegex(ConfigurationError, "prescribes infiltration only"):
             validate_prescribed_infiltration_preserved(
                 [
                     {
@@ -268,9 +261,7 @@ class Test1RuntimeInputMappingTests(unittest.TestCase):
     def test_prescribed_infiltration_rejects_natural_ventilation_flow(self):
         """type_val 1 is Natural Ventilation and is equally out of scope."""
 
-        with self.assertRaisesRegex(
-            ConfigurationError, "prescribes infiltration only"
-        ):
+        with self.assertRaisesRegex(ConfigurationError, "prescribes infiltration only"):
             validate_prescribed_infiltration_preserved(
                 [
                     {"type_val": 0, "units_val": 2, "max_flows": {2: 0.3075}},

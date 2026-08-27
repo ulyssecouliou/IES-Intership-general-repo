@@ -49,21 +49,27 @@ licence and runnable as-is inside VEScripts.
 
 import re
 
-
-VERDICT_PASS = 'PASS'
-VERDICT_PASS_WITH_RESERVATION = 'PASS_WITH_RESERVATION'
-VERDICT_FAIL = 'FAIL'
-VERDICT_NOT_CHECKABLE = 'NOT_CHECKABLE'
+VERDICT_PASS = "PASS"
+VERDICT_PASS_WITH_RESERVATION = "PASS_WITH_RESERVATION"
+VERDICT_FAIL = "FAIL"
+VERDICT_NOT_CHECKABLE = "NOT_CHECKABLE"
 
 
 class ScatterBand(object):
     """Scatter band of a set of reference-program values."""
 
-    __slots__ = ('mean', 'max_deviation', 'lower_bound', 'upper_bound',
-                 'contributors', 'floored_at_zero')
+    __slots__ = (
+        "mean",
+        "max_deviation",
+        "lower_bound",
+        "upper_bound",
+        "contributors",
+        "floored_at_zero",
+    )
 
-    def __init__(self, mean, max_deviation, lower_bound, upper_bound,
-                 contributors, floored_at_zero):
+    def __init__(
+        self, mean, max_deviation, lower_bound, upper_bound, contributors, floored_at_zero
+    ):
         self.mean = mean
         self.max_deviation = max_deviation
         self.lower_bound = lower_bound
@@ -76,8 +82,9 @@ class ScatterBand(object):
         return (self.lower_bound - tolerance) <= value <= (self.upper_bound + tolerance)
 
     def __repr__(self):
-        return 'ScatterBand(mean={0!r}, [{1!r}, {2!r}], n={3})'.format(
-            self.mean, self.lower_bound, self.upper_bound, self.contributors)
+        return "ScatterBand(mean={0!r}, [{1!r}, {2!r}], n={3})".format(
+            self.mean, self.lower_bound, self.upper_bound, self.contributors
+        )
 
 
 def build_band(values, floor_at_zero=False):
@@ -99,8 +106,9 @@ def build_band(values, floor_at_zero=False):
     lower_bound = mean - max_deviation
     if floor_at_zero:
         lower_bound = max(0.0, lower_bound)
-    return ScatterBand(mean, max_deviation, lower_bound, upper_bound,
-                       len(kept), floor_at_zero)
+    return ScatterBand(
+        mean, max_deviation, lower_bound, upper_bound, len(kept), floor_at_zero
+    )
 
 
 def build_envelope(values):
@@ -116,8 +124,7 @@ def build_envelope(values):
     return (min(kept), max(kept))
 
 
-def verdict(candidate_value, reference_values, floor_at_zero=False,
-            tolerance=0.0):
+def verdict(candidate_value, reference_values, floor_at_zero=False, tolerance=0.0):
     """Return the three-state verdict of the arbitration.
 
     - PASS                    : inside the band AND the envelope -- both
@@ -156,9 +163,9 @@ def is_passing(status):
 # Reading the contributing set from the workbook formula
 # ---------------------------------------------------------------------------
 
-_AVERAGE_PATTERN = re.compile(r'^=\s*AVERAGE\s*\((.+)\)\s*$', re.IGNORECASE)
-_RANGE_PATTERN = re.compile(r'^\$?([A-Z]{1,3})\$?(\d{1,5}):\$?([A-Z]{1,3})\$?(\d{1,5})$')
-_CELL_PATTERN = re.compile(r'^\$?([A-Z]{1,3})\$?(\d{1,5})$')
+_AVERAGE_PATTERN = re.compile(r"^=\s*AVERAGE\s*\((.+)\)\s*$", re.IGNORECASE)
+_RANGE_PATTERN = re.compile(r"^\$?([A-Z]{1,3})\$?(\d{1,5}):\$?([A-Z]{1,3})\$?(\d{1,5})$")
+_CELL_PATTERN = re.compile(r"^\$?([A-Z]{1,3})\$?(\d{1,5})$")
 
 
 def _column_index(letters):
@@ -169,7 +176,7 @@ def _column_index(letters):
 
 
 def _column_letters(index):
-    letters = ''
+    letters = ""
     while index > 0:
         index, remainder = divmod(index - 1, 26)
         letters = chr(65 + remainder) + letters
@@ -193,10 +200,10 @@ def contributors_from_formula(formula):
     if match is None:
         return []
     body = match.group(1)
-    if '(' in body or '!' in body:
+    if "(" in body or "!" in body:
         return []  # nested or cross-sheet: out of scope, do not guess
     cells = []
-    for term in body.split(','):
+    for term in body.split(","):
         term = term.strip()
         span = _RANGE_PATTERN.match(term)
         if span is not None:

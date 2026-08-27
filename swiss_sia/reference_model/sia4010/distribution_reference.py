@@ -180,11 +180,21 @@ def build_distribution_bands(
             for marker_pos, (marker_col, marker) in enumerate(markers):
                 if marker not in case_ids:
                     continue
-                stop = markers[marker_pos + 1][0] if marker_pos + 1 < len(markers) else len(header)
+                stop = (
+                    markers[marker_pos + 1][0]
+                    if marker_pos + 1 < len(markers)
+                    else len(header)
+                )
                 for quantity in quantities:
-                    col = _quantity_column(header, marker_col, stop, quantity.header_label)
+                    col = _quantity_column(
+                        header, marker_col, stop, quantity.header_label
+                    )
                     if col is not None:
-                        targets[col] = (marker, quantity.header_label, quantity.legend_key)
+                        targets[col] = (
+                            marker,
+                            quantity.header_label,
+                            quantity.legend_key,
+                        )
             if not targets:
                 continue
             # Stream the remaining rows, keeping only the target columns' hourly
@@ -218,23 +228,19 @@ def build_distribution_bands(
             source_locator="{}!Daten_* [{}] refs={}".format(
                 path.name,
                 case_id,
-                ",".join(sorted(
-                    name for name, _counts, _hours, _outside in program_counts
-                )),
+                ",".join(
+                    sorted(name for name, _counts, _hours, _outside in program_counts)
+                ),
             ),
             include_overflow=False,
         )
         if band is not None:
             hour_totals = tuple(
-                sorted(
-                    (name, hours)
-                    for name, _counts, hours, _outside in program_counts
-                )
+                sorted((name, hours) for name, _counts, hours, _outside in program_counts)
             )
             outside_counts = tuple(
                 sorted(
-                    (name, outside)
-                    for name, _counts, _hours, outside in program_counts
+                    (name, outside) for name, _counts, _hours, outside in program_counts
                 )
             )
             bands[(case_id, header_label)] = replace(
@@ -242,8 +248,7 @@ def build_distribution_bands(
                 reference_hour_totals=hour_totals,
                 outside_class_counts=outside_counts,
                 incomplete_reference_programs=tuple(
-                    name for name, hours in hour_totals
-                    if hours != EXPECTED_ANNUAL_HOURS
+                    name for name, hours in hour_totals if hours != EXPECTED_ANNUAL_HOURS
                 ),
             )
     return bands
@@ -323,9 +328,7 @@ def build_split_header_distribution_bands(
         spans = {}
         for position, (marker_col, marker) in enumerate(markers):
             block_end = (
-                markers[position + 1][0]
-                if position + 1 < len(markers)
-                else len(case_row)
+                markers[position + 1][0] if position + 1 < len(markers) else len(case_row)
             )
             scored_start = next(
                 (
@@ -370,7 +373,7 @@ def build_split_header_distribution_bands(
             case_index, spans = case_spans(head)
             if case_index is None:
                 continue
-            quantity_row = _header_row_index(head[case_index + 1:], labels)
+            quantity_row = _header_row_index(head[case_index + 1 :], labels)
             if quantity_row is None:
                 continue
             cells = head[case_index + 1 + quantity_row]
@@ -391,7 +394,7 @@ def build_split_header_distribution_bands(
             case_index, spans = case_spans(head)
             if case_index is None:
                 continue
-            quantity_row = _header_row_index(head[case_index + 1:], labels)
+            quantity_row = _header_row_index(head[case_index + 1 :], labels)
             if quantity_row is None:
                 continue
             quantity_cells = head[case_index + 1 + quantity_row]
@@ -403,7 +406,10 @@ def build_split_header_distribution_bands(
                         continue
                     for col in range(start, min(end, len(quantity_cells))):
                         cell = quantity_cells[col]
-                        if isinstance(cell, str) and cell.strip() == quantity.header_label:
+                        if (
+                            isinstance(cell, str)
+                            and cell.strip() == quantity.header_label
+                        ):
                             targets[col] = (
                                 case_id,
                                 quantity.header_label,
@@ -416,7 +422,7 @@ def build_split_header_distribution_bands(
             # hours, so scan them too before continuing with the stream. Header
             # and unit cells are non-numeric and are ignored by _is_number.
             data_rows = itertools.chain(
-                head[case_index + 1 + quantity_row + 1:], row_iter
+                head[case_index + 1 + quantity_row + 1 :], row_iter
             )
             series = _collect_contiguous_series(data_rows, targets)
             for col, (case_id, header_label, legend_key) in targets.items():
@@ -448,23 +454,19 @@ def build_split_header_distribution_bands(
                 path.name,
                 data_prefix,
                 case_id,
-                ",".join(sorted(
-                    name for name, _counts, _hours, _outside in program_counts
-                )),
+                ",".join(
+                    sorted(name for name, _counts, _hours, _outside in program_counts)
+                ),
             ),
             include_overflow=False,
         )
         if band is not None:
             hour_totals = tuple(
-                sorted(
-                    (name, hours)
-                    for name, _counts, hours, _outside in program_counts
-                )
+                sorted((name, hours) for name, _counts, hours, _outside in program_counts)
             )
             outside_counts = tuple(
                 sorted(
-                    (name, outside)
-                    for name, _counts, _hours, outside in program_counts
+                    (name, outside) for name, _counts, _hours, outside in program_counts
                 )
             )
             bands[(case_id, header_label)] = replace(
@@ -472,8 +474,7 @@ def build_split_header_distribution_bands(
                 reference_hour_totals=hour_totals,
                 outside_class_counts=outside_counts,
                 incomplete_reference_programs=tuple(
-                    name for name, hours in hour_totals
-                    if hours != EXPECTED_ANNUAL_HOURS
+                    name for name, hours in hour_totals if hours != EXPECTED_ANNUAL_HOURS
                 ),
             )
     return bands
@@ -564,9 +565,7 @@ def evaluate_distribution_criteria(
         candidate = None
         if candidate_distributions is not None:
             candidate = candidate_distributions.get(key)
-        outcomes.append(
-            replace(compare_distribution(candidate, band), case_id=key[0])
-        )
+        outcomes.append(replace(compare_distribution(candidate, band), case_id=key[0]))
     return tuple(outcomes)
 
 
@@ -648,8 +647,18 @@ DISTRIBUTION_CRITERIA: Dict[str, Dict[str, object]] = {
     # therefore intentionally excluded even though the legend defines its bins.
     "3": {
         "case_ids": (
-            "3A", "3B", "3C", "3D", "3E", "3F",
-            "3G", "3H", "3I", "3J", "3K", "3L",
+            "3A",
+            "3B",
+            "3C",
+            "3D",
+            "3E",
+            "3F",
+            "3G",
+            "3H",
+            "3I",
+            "3J",
+            "3K",
+            "3L",
         ),
         "quantities": (
             DistributionQuantity(

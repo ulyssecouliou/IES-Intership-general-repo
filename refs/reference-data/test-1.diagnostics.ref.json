@@ -21,7 +21,7 @@
     },
     "extrait_autorite_sia_2024": {
       "fichier": "sia4010_evidence/source_audits/sia2024_3_1_authority_20260810/sia2024_office_3_1_standard_profiles.binding.json",
-      "sha256": "ad3a8c236fb31c41e3003d5a58050fc3e15ad3f07bc66cd133070150e38f79f1",
+      "sha256": "d893996293460c5a7164d9986a31a6364abed81d68a6e89269baeacfaafef261",
       "role": "Extrait d'autorité du 2026-08-10 pour la catégorie d'usage 3.1. Donne le gain sensible des occupants en W/m² et les horaires, que la spécification ne reproduit pas.",
       "categorie": "SIA 2024:2021 3.1 Einzel-/Gruppenbüro"
     }

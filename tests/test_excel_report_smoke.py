@@ -82,12 +82,23 @@ def _build_report_inputs():
         external_mappings=external_mappings,
     )
     sia4010_results = SIA4010Checker(analyzer, RuleEngine()).check_all(rooms_data=rooms)
-    sia4010_results["required_class_scope"] = derive_validation_class_scope(rooms).to_dict()
+    sia4010_results["required_class_scope"] = derive_validation_class_scope(
+        rooms
+    ).to_dict()
     sia3802_results["reference_project"] = build_reference_project_specification(
         rooms, analyzer
     ).to_dict()
-    score_result = HealthScoreCalculator().calculate_scores(sia3802_results, sia4010_results)
-    return analyzer, score_result, sia3802_results, sia4010_results, rooms, dynamic_results
+    score_result = HealthScoreCalculator().calculate_scores(
+        sia3802_results, sia4010_results
+    )
+    return (
+        analyzer,
+        score_result,
+        sia3802_results,
+        sia4010_results,
+        rooms,
+        dynamic_results,
+    )
 
 
 class ExcelReportSmokeTests(unittest.TestCase):
@@ -207,6 +218,12 @@ class ExcelReportSmokeTests(unittest.TestCase):
                 )
 
             report_text = workbook_xml + shared_strings
+            self.assertIn("CAPABILITY GUIDE", report_text)
+            self.assertIn("What the tool reads or checks", report_text)
+            self.assertIn("Technical reason", report_text)
+            self.assertIn("Evidence required", report_text)
+            self.assertIn("Responsible party", report_text)
+            self.assertIn("never treated as a pass", report_text)
             self.assertIn("SIA4010 CLASS MATRIX", report_text)
             self.assertIn("Variant-Level Class Readiness", report_text)
             # The required-class scope reaches the reader, with its justification
@@ -339,7 +356,9 @@ class ClientSia3802OnlyReportTests(unittest.TestCase):
             self.assertIn("Client Alpine SA", report_text)
             self.assertIn("School North", report_text)
             self.assertIn("CHE_GVE_2060_RCP85_DRY.fwt", report_text)
-            self.assertIn(building_strategy_text("field_building_strategy", "en"), report_text)
+            self.assertIn(
+                building_strategy_text("field_building_strategy", "en"), report_text
+            )
             self.assertIn("Windows: NO", report_text)
             self.assertIn("Client building-strategy notes", report_text)
             self.assertIn(translate("excel_client_summary_title", "en"), report_text)
@@ -348,7 +367,9 @@ class ClientSia3802OnlyReportTests(unittest.TestCase):
             self.assertNotIn("SIA 380/2 automated score", report_text)
             self.assertIn(viewer_image.read_bytes(), embedded_images)
             self.assertIn(
-                (Path(__file__).resolve().parents[1] / "assets" / "ies_logo.png").read_bytes(),
+                (
+                    Path(__file__).resolve().parents[1] / "assets" / "ies_logo.png"
+                ).read_bytes(),
                 embedded_images,
             )
         finally:

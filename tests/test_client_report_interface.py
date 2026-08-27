@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import struct
+import re
 import unittest
 import zlib
 from pathlib import Path
@@ -11,20 +12,23 @@ from pypdf import PdfReader
 
 from swiss_sia.client_compliance_ui import (
     ClientComplianceWindow,
+    LANGUAGE_CODES,
+    LANGUAGE_LABELS,
     compliance_palette,
     initial_client_language,
     validate_client_context,
 )
 from swiss_sia.client_report_context import (
+    BUILDING_STRATEGY_TEXT,
     ClientReportContext,
     building_strategy_summary,
     load_client_report_context,
     report_directory,
     save_client_report_context,
 )
+from swiss_sia.reference_model.sia4010.ui_translations import TRANSLATIONS
 from swiss_sia.company_profile import CompanyProfile
 from swiss_sia.compliance_report_pdf import render_compliance_report_pdf
-
 
 ROOT = Path(__file__).resolve().parents[1]
 TMP_ROOT = ROOT / ".codex_tmp" / "client_report_interface_tests"
@@ -58,6 +62,28 @@ def _write_rgb_png(path: Path, width: int = 10, height: int = 6) -> Path:
 
 
 class ClientContextTests(unittest.TestCase):
+    def test_every_static_client_ui_key_has_four_reviewed_translations(self) -> None:
+        source = (ROOT / "swiss_sia" / "client_compliance_ui.py").read_text(
+            encoding="utf-8"
+        )
+        keys = {
+            key
+            for key in re.findall(r'self\.t\("([^"]+)"', source)
+            if not key.endswith("_")
+        }
+        missing = keys - set(TRANSLATIONS) - set(BUILDING_STRATEGY_TEXT)
+        self.assertEqual(missing, set())
+        for key in keys & set(TRANSLATIONS):
+            with self.subTest(key=key):
+                self.assertEqual(set(TRANSLATIONS[key]), {"en", "de", "fr", "it"})
+
+    def test_language_selector_exposes_exactly_four_languages(self) -> None:
+        self.assertEqual(set(LANGUAGE_LABELS), {"en", "de", "fr", "it"})
+        self.assertEqual(
+            {LANGUAGE_CODES[label] for label in LANGUAGE_LABELS.values()},
+            {"en", "de", "fr", "it"},
+        )
+
     def test_english_is_the_default_for_new_and_legacy_contexts(self) -> None:
         self.assertEqual(ClientReportContext().language, "en")
         self.assertEqual(initial_client_language(ClientReportContext()), "en")
@@ -81,7 +107,7 @@ class ClientContextTests(unittest.TestCase):
         window.language = "fr"
         self.assertEqual(
             window.t("client_ui_strategy_windows"),
-            "Fenetres prevues ouvrables",
+            "Fenêtres prévues ouvrables",
         )
         self.assertEqual(
             window.t("client_ui_example_business_label"),
@@ -210,7 +236,7 @@ class ClientContextTests(unittest.TestCase):
         self.assertEqual(context.mechanical_cooling, "TO_CONFIRM")
         self.assertEqual(
             building_strategy_summary(context, "fr"),
-            "Stores: TO_CONFIRM | Fenetres: TO_CONFIRM | Froid: TO_CONFIRM",
+            "Stores: TO_CONFIRM | Fenêtres: TO_CONFIRM | Froid: TO_CONFIRM",
         )
 
     def test_building_strategy_is_isolated_between_ve_projects(self) -> None:
@@ -275,8 +301,14 @@ class ClientContextTests(unittest.TestCase):
                 self.value = value
 
         class Root:
+            def __init__(self) -> None:
+                self.foreground_requested = False
+
             def update_idletasks(self) -> None:
                 pass
+
+            def after_idle(self, _callback) -> None:
+                self.foreground_requested = True
 
         window = ClientComplianceWindow.__new__(ClientComplianceWindow)
         window.project_path = Path("project")
@@ -293,6 +325,7 @@ class ClientContextTests(unittest.TestCase):
             str(Path("project") / "captured.png"),
         )
         self.assertEqual(window.status_text.value, "client_ui_capture_done")
+        self.assertTrue(window.root.foreground_requested)
 
 
 class ClientPdfContextTests(unittest.TestCase):
@@ -328,7 +361,7 @@ class ClientPdfContextTests(unittest.TestCase):
             report_context=context,
         )
         reader = PdfReader(str(output))
-        text = reader.pages[0].extract_text()
+        text = reader.pages[1].extract_text()
         full_text = "\n".join(page.extract_text() for page in reader.pages)
         self.assertIn("Client Alpine SA", text)
         self.assertIn("School North", text)
@@ -337,7 +370,7 @@ class ClientPdfContextTests(unittest.TestCase):
         self.assertIn("Operable windows NO", text)
         self.assertIn("Mechanical cooling YES", text)
         self.assertNotIn("SIA 4010", full_text)
-        images = reader.pages[0]["/Resources"]["/XObject"]
+        images = reader.pages[1]["/Resources"]["/XObject"]
         self.assertGreaterEqual(len(images), 2)
 
 

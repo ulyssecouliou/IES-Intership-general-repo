@@ -45,17 +45,12 @@ from .test2a_diagnostic_workbook import (
     load_test2a_diagnostic_workbook_binding,
 )
 
-
 EVALUATION_SCHEMA_VERSION = "1.0"
-REFERENCE_ONLY_STATUS = (
-    "REFERENCE_DIAGNOSTIC_RECORDED_NO_ACCEPTANCE_CRITERION"
-)
+REFERENCE_ONLY_STATUS = "REFERENCE_DIAGNOSTIC_RECORDED_NO_ACCEPTANCE_CRITERION"
 NOT_CHECKABLE_STATUS = "NOT_CHECKABLE"
 
 TOTAL_GAIN_SERIES_ID = "hourly_room_solar_heat_gain_total"
-TRANSMITTED_SERIES_ID = (
-    "hourly_transmitted_solar_radiation_excluding_secondary"
-)
+TRANSMITTED_SERIES_ID = "hourly_transmitted_solar_radiation_excluding_secondary"
 
 _ANNUAL_REFERENCE_COLUMNS = {
     TOTAL_GAIN_SERIES_ID: ("E", "F", "G", "H", "I", "J", "K", "L"),
@@ -133,8 +128,7 @@ class DiagnosticAnnualReference:
 
         payload = asdict(self)
         payload["program_values"] = [
-            {"program": name, "value": value}
-            for name, value in self.program_values
+            {"program": name, "value": value} for name, value in self.program_values
         ]
         return payload
 
@@ -156,15 +150,9 @@ class Test2A2E1ReferenceDataset:
             "workbook_path": str(self.workbook_path),
             "workbook_sha256": self.workbook_sha256,
             "diagnostic_case_id": "2E1",
-            "annual_references": [
-                item.to_dict() for item in self.annual_references
-            ],
-            "total_gain_distribution": asdict(
-                self.total_gain_distribution
-            ),
-            "acceptance_criterion_available": (
-                self.acceptance_criterion_available
-            ),
+            "annual_references": [item.to_dict() for item in self.annual_references],
+            "total_gain_distribution": asdict(self.total_gain_distribution),
+            "acceptance_criterion_available": (self.acceptance_criterion_available),
             "claim_guardrail": (
                 "The min/max and histogram scatter are technical envelopes "
                 "derived from plotted reference programs. The workbook does "
@@ -215,19 +203,11 @@ class Test2A2E1DiagnosticEvaluation:
             "candidate_hour_count": self.candidate_hour_count,
             "candidate_annual_kwh": dict(self.candidate_annual_kwh),
             "annual_alignment": dict(self.annual_alignment),
-            "total_gain_distribution_status": (
-                self.total_gain_distribution_status
-            ),
-            "total_gain_out_of_band_bins": list(
-                self.total_gain_out_of_band_bins
-            ),
-            "required_eight_series_complete": (
-                self.required_eight_series_complete
-            ),
+            "total_gain_distribution_status": (self.total_gain_distribution_status),
+            "total_gain_out_of_band_bins": list(self.total_gain_out_of_band_bins),
+            "required_eight_series_complete": (self.required_eight_series_complete),
             "engineering_review_ready": self.engineering_review_ready,
-            "acceptance_criterion_available": (
-                self.acceptance_criterion_available
-            ),
+            "acceptance_criterion_available": (self.acceptance_criterion_available),
             "compliance_pass": self.compliance_pass,
             "optical_mapping_qualified": self.optical_mapping_qualified,
             "dynamic_control_qualified": self.dynamic_control_qualified,
@@ -249,11 +229,7 @@ def _annual_reference(
 
     values = []
     for column in _ANNUAL_REFERENCE_COLUMNS[series_id]:
-        value = _number(
-            worksheet[
-                "{}{}".format(column, _ANNUAL_REFERENCE_ROW)
-            ].value
-        )
+        value = _number(worksheet["{}{}".format(column, _ANNUAL_REFERENCE_ROW)].value)
         # In this workbook, a zero in the diagnostic annual-summary chart is a
         # missing result from that reference program, not a physical 2E1 annual
         # value. The positive contributors are the charted reference dataset.
@@ -274,8 +250,7 @@ def _annual_reference(
         maximum=max(numeric),
         mean=sum(numeric) / len(numeric),
         source_locator=(
-            "Resultaterfassung_Test2.xlsx!Zusammenfassung!{}19:{}19"
-            .format(
+            "Resultaterfassung_Test2.xlsx!Zusammenfassung!{}19:{}19".format(
                 _ANNUAL_REFERENCE_COLUMNS[series_id][0],
                 _ANNUAL_REFERENCE_COLUMNS[series_id][-1],
             )
@@ -398,9 +373,7 @@ def evaluate_test2a_2e1_diagnostic(
             candidate_hour_count=HOUR_COUNT if normalized else 0,
             candidate_annual_kwh=(),
             annual_alignment=(),
-            total_gain_distribution_status=(
-                DistributionStatus.NOT_CHECKABLE
-            ),
+            total_gain_distribution_status=(DistributionStatus.NOT_CHECKABLE),
             total_gain_out_of_band_bins=(),
             required_eight_series_complete=False,
             engineering_review_ready=False,
@@ -421,9 +394,7 @@ def evaluate_test2a_2e1_diagnostic(
         annual_alignment.append(
             (
                 series_id,
-                "WITHIN_REFERENCE_ENVELOPE"
-                if within
-                else "OUTSIDE_REFERENCE_ENVELOPE",
+                "WITHIN_REFERENCE_ENVELOPE" if within else "OUTSIDE_REFERENCE_ENVELOPE",
             )
         )
 
@@ -444,8 +415,7 @@ def evaluate_test2a_2e1_diagnostic(
         )
 
     annual_all_within = all(
-        state == "WITHIN_REFERENCE_ENVELOPE"
-        for _series_id, state in annual_alignment
+        state == "WITHIN_REFERENCE_ENVELOPE" for _series_id, state in annual_alignment
     )
     if (
         TOTAL_GAIN_SERIES_ID in normalized
@@ -460,8 +430,7 @@ def evaluate_test2a_2e1_diagnostic(
 
     required_complete = set(required_series_ids).issubset(normalized)
     engineering_review_ready = (
-        required_complete
-        and technical_alignment == "WITHIN_TECHNICAL_REFERENCE_ENVELOPE"
+        required_complete and technical_alignment == "WITHIN_TECHNICAL_REFERENCE_ENVELOPE"
     )
     return Test2A2E1DiagnosticEvaluation(
         status=REFERENCE_ONLY_STATUS,
@@ -499,4 +468,3 @@ def write_test2a_2e1_diagnostic_evaluation(
         encoding="ascii",
     )
     return path
-

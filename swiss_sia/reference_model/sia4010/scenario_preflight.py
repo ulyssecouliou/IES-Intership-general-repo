@@ -5,7 +5,7 @@ import json
 import tempfile
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Union
 
 from ..exceptions import ConfigurationError
 from .case_manifest import Sia4010CaseManifest
@@ -22,9 +22,7 @@ def _sha256(path: Path) -> str:
     return digest.hexdigest().upper()
 
 
-def resolve_scenario_path(
-    value: str, project_root: Path, repository_root: Path
-) -> Path:
+def resolve_scenario_path(value: str, project_root: Path, repository_root: Path) -> Path:
     """Resolve a configured path without silently searching arbitrary folders."""
 
     path = Path(value)
@@ -168,9 +166,7 @@ def evaluate_scenario(
         if not resolved[key].is_file():
             blockers.append("Missing required file: {}".format(resolved[key]))
     if temporary_project:
-        blockers.append(
-            "VE mutation is forbidden in the unsaved temporary VEPROJ folder"
-        )
+        blockers.append("VE mutation is forbidden in the unsaved temporary VEPROJ folder")
 
     asset_path = resolved["ve_asset_manifest_file"]
     if scenario.is_official and asset_path.is_file():

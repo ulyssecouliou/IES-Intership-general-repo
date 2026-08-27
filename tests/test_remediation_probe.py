@@ -137,15 +137,15 @@ class RemediationProbeTests(unittest.TestCase):
             "reviewed_weather_match_status": "MATCH",
         }
 
-        diagnosis = build_remediation_diagnosis(
-            [room], dynamic, r"C:\Models\SLIVER_TEST"
-        )
+        diagnosis = build_remediation_diagnosis([room], dynamic, r"C:\Models\SLIVER_TEST")
 
         controls = {control.control_id: control for control in diagnosis.controls}
         self.assertEqual(controls["MODEL-001"].status, "PASS")
         self.assertIn("1 numerical residue(s) ignored", controls["MODEL-001"].observed)
 
-    def test_runtime_evidence_classifies_missing_inputs_and_inactive_heating(self) -> None:
+    def test_runtime_evidence_classifies_missing_inputs_and_inactive_heating(
+        self,
+    ) -> None:
         """Raw VE/APS evidence must replace generic extraction warnings."""
         room = RoomData(
             id="ROOM-1",
@@ -155,12 +155,16 @@ class RemediationProbeTests(unittest.TestCase):
         )
         dynamic = {"status": "AVAILABLE", "selected_aps_file": "test.aps"}
         runtime = {
-            "rooms": [{
-                "room_id": "ROOM-1",
-                "room_conditions": {"heating_profile": "OFF"},
-                "internal_gains": [{"name": "Miscellaneous", "type_str": "Miscellaneous"}],
-                "air_exchanges": [{"name": "Infiltration"}],
-            }]
+            "rooms": [
+                {
+                    "room_id": "ROOM-1",
+                    "room_conditions": {"heating_profile": "OFF"},
+                    "internal_gains": [
+                        {"name": "Miscellaneous", "type_str": "Miscellaneous"}
+                    ],
+                    "air_exchanges": [{"name": "Infiltration"}],
+                }
+            ]
         }
         aps = {
             "production_bindings": {"heating_load": {"aps_varname": "Heating load"}},

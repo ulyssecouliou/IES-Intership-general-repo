@@ -9,7 +9,7 @@
         "source_traced_case_bundle",
         "ve_mutation_readback",
         "qualified_weather",
-        "qualified_aps"
+        "required_output_scope_review"
       ]
     },
     "2": {
@@ -19,7 +19,7 @@
         "source_traced_case_bundle",
         "solar_control_readback",
         "qualified_weather",
-        "qualified_aps"
+        "required_output_scope_review"
       ]
     },
     "3": {
@@ -29,7 +29,7 @@
         "source_traced_case_bundle",
         "lighting_and_daylight_control_readback",
         "qualified_weather",
-        "qualified_aps"
+        "required_output_scope_review"
       ]
     },
     "4": {
@@ -40,7 +40,7 @@
         "apachehvac_topology_review",
         "control_sequence_review",
         "qualified_weather",
-        "qualified_aps"
+        "required_output_scope_review"
       ]
     },
     "5": {
@@ -51,7 +51,7 @@
         "multizone_apachehvac_topology_review",
         "heat_and_moisture_recovery_review",
         "qualified_weather",
-        "qualified_aps"
+        "required_output_scope_review"
       ]
     },
     "6": {
@@ -62,7 +62,7 @@
         "staged_ventilation_sequence_review",
         "hydraulic_and_overflow_review",
         "qualified_weather",
-        "qualified_aps"
+        "required_output_scope_review"
       ]
     },
     "7": {
@@ -73,7 +73,7 @@
         "plant_storage_generation_review",
         "pv_capacity_authority_resolution",
         "qualified_weather",
-        "qualified_aps"
+        "required_output_scope_review"
       ]
     }
   },

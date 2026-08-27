@@ -78,7 +78,11 @@ class ReferenceModelConfigurationTests(unittest.TestCase):
             registry.with_overrides({"building_width_m": -5})
 
     def test_example_configuration_is_parseable_and_keeps_placeholders(self):
-        example = Path(__file__).resolve().parents[1] / "config" / "reference_model.example.json"
+        example = (
+            Path(__file__).resolve().parents[1]
+            / "config"
+            / "reference_model.example.json"
+        )
         registry = load_configuration(example)
         self.assertIsNone(registry.value("weather_file"))
         self.assertTrue(registry.get_parameter("weather_file").is_placeholder)
@@ -93,12 +97,36 @@ class ReferenceModelConfigurationTests(unittest.TestCase):
         """
         registry = build_default_registry()
         expected = {
-            "sia3802_reference_external_wall_u_w_m2k": (0.20, SIA3802_TABLE3, "SIA 380/2:2022 FR, PDF pp. 36-37"),
-            "sia3802_reference_roof_u_w_m2k": (0.20, SIA3802_TABLE3, "SIA 380/2:2022 FR, PDF pp. 36-37"),
-            "sia3802_reference_ground_floor_u_w_m2k": (0.30, SIA3802_TABLE3, "SIA 380/2:2022 FR, PDF pp. 36-37"),
-            "sia3802_reference_window_u_w_m2k": (1.10, SIA3802_TABLE2, "SIA 380/2:2022 FR, Table 2, PDF p. 32"),
-            "sia3802_reference_glazing_g_value": (0.50, SIA3802_TABLE2, "SIA 380/2:2022 FR, Table 2, PDF p. 32"),
-            "sia3802_reference_light_transmittance": (0.70, SIA3802_TABLE2, "SIA 380/2:2022 FR, Table 2, PDF p. 32"),
+            "sia3802_reference_external_wall_u_w_m2k": (
+                0.20,
+                SIA3802_TABLE3,
+                "SIA 380/2:2022 FR, PDF pp. 36-37",
+            ),
+            "sia3802_reference_roof_u_w_m2k": (
+                0.20,
+                SIA3802_TABLE3,
+                "SIA 380/2:2022 FR, PDF pp. 36-37",
+            ),
+            "sia3802_reference_ground_floor_u_w_m2k": (
+                0.30,
+                SIA3802_TABLE3,
+                "SIA 380/2:2022 FR, PDF pp. 36-37",
+            ),
+            "sia3802_reference_window_u_w_m2k": (
+                1.10,
+                SIA3802_TABLE2,
+                "SIA 380/2:2022 FR, Table 2, PDF p. 32",
+            ),
+            "sia3802_reference_glazing_g_value": (
+                0.50,
+                SIA3802_TABLE2,
+                "SIA 380/2:2022 FR, Table 2, PDF p. 32",
+            ),
+            "sia3802_reference_light_transmittance": (
+                0.70,
+                SIA3802_TABLE2,
+                "SIA 380/2:2022 FR, Table 2, PDF p. 32",
+            ),
         }
         for name, (value, source, locator) in expected.items():
             parameter = registry.get_parameter(name)

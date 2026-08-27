@@ -60,9 +60,7 @@ class ConstructionBinderTests(unittest.TestCase):
         result = binder.resolve("WALL_A")
         self.assertEqual(result.status, BindStatus.RESOLVED)
         self.assertIs(result.construction, obj)
-        self.assertIn(
-            "get_construction(id, construction_class)", result.signatures_tried
-        )
+        self.assertIn("get_construction(id, construction_class)", result.signatures_tried)
 
     def test_missing_construction_is_not_found(self) -> None:
         cdb = _SingleArgCdb({})

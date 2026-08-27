@@ -11,6 +11,7 @@ import math
 import os
 import sys
 from datetime import datetime
+from pathlib import Path
 
 
 PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
@@ -135,6 +136,65 @@ def _close(actual, expected):
     )
 
 
+def _active_case(project_path):
+    scenario_path = Path(project_path) / "sia_model_scenario.json"
+    if not scenario_path.is_file():
+        raise RuntimeError("Missing active-case scenario: {}".format(scenario_path))
+    with scenario_path.open("r", encoding="utf-8") as handle:
+        scenario = json.load(handle)
+    selection = scenario.get("selection") or {}
+    variant = str(selection.get("variant") or scenario.get("variant") or "")
+    case_id = str(
+        selection.get("case_id")
+        or scenario.get("case_id")
+        or scenario.get("case")
+        or ""
+    )
+    if variant != "test_1" or not case_id:
+        raise RuntimeError(
+            "Expected an active Test 1 scenario; received {!r}/{!r}".format(
+                variant, case_id
+            )
+        )
+    return variant, case_id
+
+
+def _latest_aps_audit(project_path, variant, case_id):
+    simulation_dir = Path(project_path) / "sia4010_artifacts" / "simulation"
+    if not simulation_dir.is_dir():
+        return None, None
+    candidates = []
+    case_token = "{}_{}_".format(variant, case_id).lower()
+    for audit_path in simulation_dir.glob("*.json"):
+        try:
+            with audit_path.open("r", encoding="utf-8") as handle:
+                audit = json.load(handle)
+        except (OSError, ValueError):
+            continue
+        results_path = str(
+            audit.get("results_path")
+            or audit.get("aps_path")
+            or audit.get("aps")
+            or ""
+        )
+        if not results_path or not os.path.isfile(results_path):
+            continue
+        candidates.append(
+            (
+                case_token in audit_path.name.lower(),
+                audit_path.stat().st_mtime,
+                audit_path,
+                results_path,
+            )
+        )
+    if not candidates:
+        return None, None
+    _, _, audit_path, results_path = max(
+        candidates, key=lambda item: (item[0], item[1])
+    )
+    return str(audit_path), results_path
+
+
 def run():
     import iesve
 
@@ -148,6 +208,8 @@ def run():
 
     project = iesve.VEProject.get_current_project()
     project_path = str(project.path)
+    variant, case_id = _active_case(project_path)
+    case_label = "{}/{}".format(variant, case_id)
     bodies = []
     for model in list(project.models):
         try:
@@ -189,17 +251,10 @@ def run():
         and live_profile.upper() == "ON"
     )
 
-    audit_path = os.path.join(
-        project_path,
-        "sia4010_artifacts",
-        "simulation",
-        "SIA4010_test_1_640_apachesim_qualification.json",
+    audit_path, results_path = _latest_aps_audit(
+        project_path, variant, case_id
     )
-    audit = {}
-    if os.path.isfile(audit_path):
-        with open(audit_path, "r", encoding="utf-8") as handle:
-            audit = json.load(handle)
-    results_path = str(audit.get("results_path") or "")
+    results_path = str(results_path or "")
     aps_name = os.path.basename(results_path)
     aps_candidates = []
     behavioral_matches = []
@@ -264,12 +319,15 @@ def run():
         status = "FAIL"
     elif aps_pass:
         status = "PASS"
+    elif not results_path:
+        status = "LIVE_INPUT_VERIFIED_AWAITING_APS"
     else:
         status = "WARNING_APS_INTERNAL_GAIN_SERIES_NOT_CONFIRMED"
 
     report = {
-        "schema_version": "1.0",
+        "schema_version": "1.1",
         "status": status,
+        "case": case_label,
         "project": {"name": str(project.name), "path": project_path},
         "room": {
             "id": str(body.id),
@@ -290,7 +348,9 @@ def run():
             "all_internal_gains": gain_rows,
         },
         "aps_check": {
-            "status": "PASS" if aps_pass else "NOT_CONFIRMED",
+            "status": (
+                "PASS" if aps_pass else "NOT_RUN" if not results_path else "NOT_CONFIRMED"
+            ),
             "audit_path": audit_path,
             "aps_path": results_path,
             "behavioral_matches": behavioral_matches,
@@ -300,6 +360,8 @@ def run():
             "The prescribed 200 W continuous internal sensible gain is present "
             "in both the live room and APS behavior."
             if aps_pass and live_pass
+            else "The live room is correct and awaits the active-case APS run."
+            if live_pass and not results_path
             else "The live room is correct, but ResultsReader did not expose a "
             "qualified 1752 kWh internal-gain series; this is not proof that the "
             "solver omitted it."
@@ -319,7 +381,7 @@ def run():
         json.dump(report, handle, indent=2, ensure_ascii=False, default=str)
 
     print("SIA 4010 TEST 1 INTERNAL-GAIN PROBE: {}".format(status))
-    print("Case: test_1/640")
+    print("Case: {}".format(case_label))
     print("Live room equipment gains: {}".format(len(equipment_rows)))
     print("Live resolved sensible power: {} W".format(live_power))
     print("Live profile: {}".format(live_profile or "<missing>"))

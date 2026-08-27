@@ -21,14 +21,8 @@ from swiss_sia.reference_model.sia4010.test2a_diagnostic_workbook import (
     load_test2a_diagnostic_workbook_binding,
 )
 
-
 ROOT = Path(__file__).resolve().parents[1]
-WORKBOOK = (
-    ROOT
-    / "SIA_4010_geteilter_Link"
-    / "Test2"
-    / "Resultaterfassung_Test2.xlsx"
-)
+WORKBOOK = ROOT / "SIA_4010_geteilter_Link" / "Test2" / "Resultaterfassung_Test2.xlsx"
 WORK_ROOT = ROOT / ".codex_tmp" / "test2a_2e1_evaluation"
 
 
@@ -53,10 +47,7 @@ def _reference_program_series():
         ):
             for series_id, column in columns.items():
                 result[series_id].append(row[column - first_column])
-        return {
-            series_id: tuple(values)
-            for series_id, values in result.items()
-        }
+        return {series_id: tuple(values) for series_id, values in result.items()}
     finally:
         workbook.close()
 
@@ -72,9 +63,10 @@ class Test2A2E1DiagnosticEvaluationTests(unittest.TestCase):
         cls.required_ids = tuple(cls.series)
 
     def setUp(self):
-        self.output_dir = WORK_ROOT / hashlib.sha256(
-            self._testMethodName.encode("utf-8")
-        ).hexdigest()[:12]
+        self.output_dir = (
+            WORK_ROOT
+            / hashlib.sha256(self._testMethodName.encode("utf-8")).hexdigest()[:12]
+        )
         if self.output_dir.exists():
             shutil.rmtree(self.output_dir)
         self.output_dir.mkdir(parents=True)
@@ -114,10 +106,7 @@ class Test2A2E1DiagnosticEvaluationTests(unittest.TestCase):
         self.assertFalse(evaluation.dynamic_control_qualified)
 
     def test_zeroed_candidate_is_outside_but_still_not_a_sia_fail(self):
-        zeros = {
-            series_id: (0.0,) * 8760
-            for series_id in self.required_ids
-        }
+        zeros = {series_id: (0.0,) * 8760 for series_id in self.required_ids}
         evaluation = evaluate_test2a_2e1_diagnostic(
             zeros,
             self.reference,
@@ -163,9 +152,7 @@ class Test2A2E1DiagnosticEvaluationTests(unittest.TestCase):
         self.assertFalse(payload["acceptance_criterion_available"])
         checksum_path = path.with_suffix(".json.sha256")
         expected = hashlib.sha256(path.read_bytes()).hexdigest()
-        self.assertTrue(
-            checksum_path.read_text(encoding="ascii").startswith(expected)
-        )
+        self.assertTrue(checksum_path.read_text(encoding="ascii").startswith(expected))
 
 
 if __name__ == "__main__":

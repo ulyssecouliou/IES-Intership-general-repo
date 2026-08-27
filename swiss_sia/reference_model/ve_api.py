@@ -93,9 +93,7 @@ def _gain_family(data: Dict[str, Any]) -> str:
     return "energy"
 
 
-def _selected_readback(
-    data: Dict[str, Any], plural_key: str, scalar_key: str
-) -> Any:
+def _selected_readback(data: Dict[str, Any], plural_key: str, scalar_key: str) -> Any:
     """Resolve a scalar template value or the room value in selected units."""
 
     if scalar_key in data:
@@ -365,9 +363,7 @@ class IesVeGateway(VeGateway):
                     or hasattr(self.iesve, "VolumeCapMode")
                 ),
                 "VEModel.get_bodies": hasattr(self.model, "get_bodies"),
-                "VEModel.rebuild_adjacencies": hasattr(
-                    self.model, "rebuild_adjacencies"
-                ),
+                "VEModel.rebuild_adjacencies": hasattr(self.model, "rebuild_adjacencies"),
                 "VEModel.assign_thermal_template_to_rooms": hasattr(
                     self.model, "assign_thermal_template_to_rooms"
                 ),
@@ -389,9 +385,8 @@ class IesVeGateway(VeGateway):
                 ),
                 "VECdbProject.construction_class": hasattr(
                     cdb_project_cls, "construction_class"
-                ) or hasattr(
-                    self.iesve, "construction_class"
-                ),
+                )
+                or hasattr(self.iesve, "construction_class"),
                 "VECdbProject.uvalue_types": enum_container_available("uvalue_types"),
                 "VECdbProject.material_categories": enum_container_available(
                     "material_categories"
@@ -415,21 +410,15 @@ class IesVeGateway(VeGateway):
             "conditioned"
         )
         self._provisioned_conditioned_state = (
-            requested_conditioned
-            if type(requested_conditioned) is bool
-            else None
+            requested_conditioned if type(requested_conditioned) is bool else None
         )
-        provisioner = IesVeAssetProvisioner(
-            self.iesve, self.project, self._cdb_project()
-        )
+        provisioner = IesVeAssetProvisioner(self.iesve, self.project, self._cdb_project())
         return provisioner.provision(manifest)
 
     def provision_operational_template(self, plan: Any) -> Dict[str, Any]:
         """Create or verify a source-traced operational template only."""
 
-        provisioner = IesVeAssetProvisioner(
-            self.iesve, self.project, self._cdb_project()
-        )
+        provisioner = IesVeAssetProvisioner(self.iesve, self.project, self._cdb_project())
         return provisioner.provision_operational_template(plan)
 
     @staticmethod
@@ -461,9 +450,7 @@ class IesVeGateway(VeGateway):
             raise VeMutationError(
                 "Free-floating room controls did not persist for '{}': "
                 "heating_profile and cooling_profile must both be OFF; "
-                "read-back={}".format(
-                    room_name, unresolved
-                )
+                "read-back={}".format(room_name, unresolved)
             )
         system = dict(room_data.get_apache_systems())
         return {
@@ -472,16 +459,10 @@ class IesVeGateway(VeGateway):
                 "cooling_profile": "OFF",
             },
             "verified_after": {
-                "heating_profile": _enum_or_value(
-                    conditions.get("heating_profile")
-                ),
-                "cooling_profile": _enum_or_value(
-                    conditions.get("cooling_profile")
-                ),
+                "heating_profile": _enum_or_value(conditions.get("heating_profile")),
+                "cooling_profile": _enum_or_value(conditions.get("cooling_profile")),
             },
-            "conditioned_readback_advisory": _enum_or_value(
-                system.get("conditioned")
-            ),
+            "conditioned_readback_advisory": _enum_or_value(system.get("conditioned")),
             "binding": "room heating/cooling availability profiles",
         }
 
@@ -490,9 +471,7 @@ class IesVeGateway(VeGateway):
     ) -> Dict[str, Any]:
         """Run one explicitly requested, read-back-verified gain repair."""
 
-        provisioner = IesVeAssetProvisioner(
-            self.iesve, self.project, self._cdb_project()
-        )
+        provisioner = IesVeAssetProvisioner(self.iesve, self.project, self._cdb_project())
         return provisioner.reconcile_existing_gain(manifest, gain_key)
 
     def reconcile_existing_material(
@@ -500,9 +479,7 @@ class IesVeGateway(VeGateway):
     ) -> Dict[str, Any]:
         """Run one explicitly requested, read-back-verified material repair."""
 
-        provisioner = IesVeAssetProvisioner(
-            self.iesve, self.project, self._cdb_project()
-        )
+        provisioner = IesVeAssetProvisioner(self.iesve, self.project, self._cdb_project())
         return provisioner.reconcile_existing_material(manifest, material_key)
 
     def reconcile_existing_construction(
@@ -510,24 +487,16 @@ class IesVeGateway(VeGateway):
     ) -> Dict[str, Any]:
         """Run one explicitly requested, verified construction repair."""
 
-        provisioner = IesVeAssetProvisioner(
-            self.iesve, self.project, self._cdb_project()
-        )
-        return provisioner.reconcile_existing_construction(
-            manifest, construction_key
-        )
+        provisioner = IesVeAssetProvisioner(self.iesve, self.project, self._cdb_project())
+        return provisioner.reconcile_existing_construction(manifest, construction_key)
 
     def reconcile_existing_air_exchange(
         self, manifest: AssetManifest, exchange_key: str
     ) -> Dict[str, Any]:
         """Run one explicitly requested, read-back-verified exchange repair."""
 
-        provisioner = IesVeAssetProvisioner(
-            self.iesve, self.project, self._cdb_project()
-        )
-        return provisioner.reconcile_existing_air_exchange(
-            manifest, exchange_key
-        )
+        provisioner = IesVeAssetProvisioner(self.iesve, self.project, self._cdb_project())
+        return provisioner.reconcile_existing_air_exchange(manifest, exchange_key)
 
     def _is_room(self, body: Any) -> bool:
         """Return whether a VE body represents a thermal room."""
@@ -546,7 +515,9 @@ class IesVeGateway(VeGateway):
         """Resolve every expected generated space to an imported room."""
 
         expected_names = {space.name for space in expected_geometry.spaces}
-        bodies = [body for body in self._room_bodies() if str(body.name) in expected_names]
+        bodies = [
+            body for body in self._room_bodies() if str(body.name) in expected_names
+        ]
         actual_names = {str(body.name) for body in bodies}
         missing = sorted(expected_names - actual_names)
         if missing:
@@ -564,7 +535,9 @@ class IesVeGateway(VeGateway):
         )
         if existing:
             raise VeMutationError(
-                "Generation is idempotent/fail-closed: rooms already exist: {}".format(existing)
+                "Generation is idempotent/fail-closed: rooms already exist: {}".format(
+                    existing
+                )
             )
 
     def import_geometry(self, gbxml_path: Path) -> None:
@@ -583,9 +556,7 @@ class IesVeGateway(VeGateway):
                     "VE exposes no usable VolumeCapMode.none enum"
                 )
             cap_mode = cap_mode_container.none
-            self.iesve.ImportGBXML.import_file(
-                str(gbxml_path), True, cap_mode, 0.0
-            )
+            self.iesve.ImportGBXML.import_file(str(gbxml_path), True, cap_mode, 0.0)
         except Exception as exc:
             raise VeMutationError(
                 "Documented ImportGBXML.import_file call failed: {}".format(exc)
@@ -609,9 +580,17 @@ class IesVeGateway(VeGateway):
             return "ground_floor_construction_id"
         if "roof" in surface_type or "externalceiling" in surface_type:
             return "roof_construction_id"
-        if "internalwall" in surface_type or "intwall" in surface_type or "partition" in surface_type:
+        if (
+            "internalwall" in surface_type
+            or "intwall" in surface_type
+            or "partition" in surface_type
+        ):
             return "internal_wall_construction_id"
-        if "externalwall" in surface_type or "extwall" in surface_type or surface_type == "wall":
+        if (
+            "externalwall" in surface_type
+            or "extwall" in surface_type
+            or surface_type == "wall"
+        ):
             return "external_wall_construction_id"
         # gbXML import may expose the slab as a generic floor before boundary
         # reconciliation.  The generated model has no intermediate floors.
@@ -633,7 +612,9 @@ class IesVeGateway(VeGateway):
         except VeMutationError:
             raise
         except Exception as exc:
-            raise VeMutationError("Unable to access current CDB project: {}".format(exc)) from exc
+            raise VeMutationError(
+                "Unable to access current CDB project: {}".format(exc)
+            ) from exc
 
     def _construction_class_none(self) -> Any:
         """Resolve the documented ``construction_class.none`` enum if present."""
@@ -789,9 +770,10 @@ class IesVeGateway(VeGateway):
                     body.assign_construction_to_opening(
                         opening_construction, surface, opening.get_id()
                     )
-                    if self._construction_identifier(
-                        opening.get_construction()
-                    ) != opening_construction_id:
+                    if (
+                        self._construction_identifier(opening.get_construction())
+                        != opening_construction_id
+                    ):
                         raise VeMutationError(
                             "Opening construction assignment did not persist for {}".format(
                                 opening.get_id()
@@ -864,9 +846,7 @@ class IesVeGateway(VeGateway):
         try:
             return dict(record.get())
         except Exception as exc:
-            raise VeMutationError(
-                "Unable to read {}: {}".format(context, exc)
-            ) from exc
+            raise VeMutationError("Unable to read {}: {}".format(context, exc)) from exc
 
     def _synchronise_room_gains(
         self, room_data: Any, template: Any, room_name: str
@@ -969,9 +949,7 @@ class IesVeGateway(VeGateway):
                 # reset when it is submitted in the same payload as occupancy
                 # and units, so retry it alone after those fields have settled.
                 try:
-                    actual_record.set(
-                        {"max_latent_gain": expected["max_latent_gain"]}
-                    )
+                    actual_record.set({"max_latent_gain": expected["max_latent_gain"]})
                 except Exception:
                     pass
                 after = self._record_data(
@@ -1005,8 +983,7 @@ class IesVeGateway(VeGateway):
                     "template_record": str(expected.get("name", "")),
                     "before": mismatches,
                     "verified_after": {
-                        key: _enum_or_value(expected.get(key))
-                        for key in mismatches
+                        key: _enum_or_value(expected.get(key)) for key in mismatches
                     },
                     "people_latent_fallback": people_latent_fallback,
                 }
@@ -1032,7 +1009,9 @@ class IesVeGateway(VeGateway):
 
             return _normalise_type(data.get("type_val", data.get("type_str", "")))
 
-        actual_by_type = {exchange_key(data): (record, data) for record, data in actual_records}
+        actual_by_type = {
+            exchange_key(data): (record, data) for record, data in actual_records
+        }
         changes: List[Dict[str, Any]] = []
         for _expected_record, expected in expected_records:
             key = exchange_key(expected)
@@ -1075,12 +1054,8 @@ class IesVeGateway(VeGateway):
                     # read-back to calculate the requested physical flow.
                     payload = {
                         "system_air_minimum_flowrate": expected_flow,
-                        "system_air_minimum_flowrate_units": expected.get(
-                            "units_val"
-                        ),
-                        "system_air_variation_profile": expected.get(
-                            "variation_profile"
-                        ),
+                        "system_air_minimum_flowrate_units": expected.get("units_val"),
+                        "system_air_variation_profile": expected.get("variation_profile"),
                         "system_air_minimum_flowrate_from_template": False,
                         "system_air_variation_profile_from_template": False,
                     }
@@ -1088,9 +1063,10 @@ class IesVeGateway(VeGateway):
                     try:
                         room_data.set_apache_systems(payload)
                     except Exception as exc:
-                        if "unrecognised option: system_air_minimum_flowrate_units" not in str(
-                            exc
-                        ).lower():
+                        if (
+                            "unrecognised option: system_air_minimum_flowrate_units"
+                            not in str(exc).lower()
+                        ):
                             raise VeMutationError(
                                 "Apache system-air synchronization failed for '{}': "
                                 "{}".format(room_name, exc)
@@ -1154,7 +1130,11 @@ class IesVeGateway(VeGateway):
                                         * float(expected_flow)
                                         / float(requested_equivalent)
                                     )
-                                except (TypeError, ValueError, ZeroDivisionError) as conversion_exc:
+                                except (
+                                    TypeError,
+                                    ValueError,
+                                    ZeroDivisionError,
+                                ) as conversion_exc:
                                     raise VeMutationError(
                                         "VE exposes a read-only system-air unit for '{}', "
                                         "but its equivalent-flow conversion could not be "
@@ -1237,9 +1217,7 @@ class IesVeGateway(VeGateway):
                                     before_system.get("system_air_minimum_flowrate")
                                 ),
                                 "unit": _enum_or_value(
-                                    before_system.get(
-                                        "system_air_minimum_flowrate_unit"
-                                    )
+                                    before_system.get("system_air_minimum_flowrate_unit")
                                 ),
                                 "profile": _enum_or_value(
                                     before_system.get("system_air_variation_profile")
@@ -1252,9 +1230,7 @@ class IesVeGateway(VeGateway):
                                     verified_flow_in_requested_units
                                 ),
                                 "profile": _enum_or_value(
-                                    verified_system.get(
-                                        "system_air_variation_profile"
-                                    )
+                                    verified_system.get("system_air_variation_profile")
                                 ),
                             },
                         }
@@ -1303,9 +1279,7 @@ class IesVeGateway(VeGateway):
                     "Direct room-level air-exchange synchronization failed for "
                     "'{}': {}".format(room_name, exc)
                 ) from exc
-            after = self._record_data(
-                actual_record, "synchronized room air exchange"
-            )
+            after = self._record_data(actual_record, "synchronized room air exchange")
             remaining = _air_exchange_semantic_mismatches(expected, after)
             if remaining:
                 raise VeMutationError(
@@ -1357,9 +1331,7 @@ class IesVeGateway(VeGateway):
                 expected_conditions.get("{}_setpoint_type".format(prefix))
             )
             if isinstance(value, (int, float)) and not isinstance(value, bool):
-                return {0: "constant", 1: "variable", 2: "two_value"}.get(
-                    int(value), ""
-                )
+                return {0: "constant", 1: "variable", 2: "two_value"}.get(int(value), "")
             normalized = _normalise_type(value)
             if "twovalue" in normalized:
                 return "two_value"
@@ -1389,8 +1361,9 @@ class IesVeGateway(VeGateway):
                 )
             else:
                 raise VeMutationError(
-                    "Unsupported {} setpoint mode read back from template: {!r}"
-                    .format(prefix, expected_conditions.get(type_key))
+                    "Unsupported {} setpoint mode read back from template: {!r}".format(
+                        prefix, expected_conditions.get(type_key)
+                    )
                 )
         condition_drift = {
             key: {
@@ -1507,9 +1480,7 @@ class IesVeGateway(VeGateway):
                 for record in list(room_data.get_internal_gains())
             ],
             "air_exchanges": [
-                _enum_or_value(
-                    self._record_data(record, "client room air exchange")
-                )
+                _enum_or_value(self._record_data(record, "client room air exchange"))
                 for record in list(room_data.get_air_exchanges())
             ],
         }
@@ -1547,8 +1518,7 @@ class IesVeGateway(VeGateway):
         target_records = list(target_template.get_casual_gains())
         target_by_name = {
             str(
-                self._record_data(record, "target template gain").get("name")
-                or ""
+                self._record_data(record, "target template gain").get("name") or ""
             ): record
             for record in target_records
         }
@@ -1667,9 +1637,7 @@ class IesVeGateway(VeGateway):
                 ]
                 missing = sorted(expected_families - set(families))
                 duplicates = sorted(
-                    family
-                    for family in expected_families
-                    if families.count(family) != 1
+                    family for family in expected_families if families.count(family) != 1
                 )
                 if missing or duplicates:
                     raise VeMutationError(
@@ -1699,9 +1667,7 @@ class IesVeGateway(VeGateway):
                 actual_names = _record_names(source.get_casual_gains())
                 expected_names = list(context.get("original_names", []))
                 if actual_names != expected_names:
-                    raise VeMutationError(
-                        "source template gain list was not restored"
-                    )
+                    raise VeMutationError("source template gain list was not restored")
                 receipts.append(
                     {
                         "source_template_handle": context.get("source_handle"),
@@ -1758,9 +1724,7 @@ class IesVeGateway(VeGateway):
             bodies = list(self.model.get_bodies(False))
         except Exception as exc:
             raise VeApiUnavailableError(
-                "VE rooms cannot be enumerated before template mutation: {}".format(
-                    exc
-                )
+                "VE rooms cannot be enumerated before template mutation: {}".format(exc)
             ) from exc
         by_id = {
             str(getattr(body, "id", "") or ""): body
@@ -1770,9 +1734,7 @@ class IesVeGateway(VeGateway):
         missing = sorted(set(requested_ids) - set(by_id))
         if missing:
             raise VeMutationError(
-                "Selected room IDs are absent from the active model: {}".format(
-                    missing
-                )
+                "Selected room IDs are absent from the active model: {}".format(missing)
             )
         selected = [by_id[room_id] for room_id in requested_ids]
         before = [self._client_room_template_snapshot(body) for body in selected]
@@ -1815,9 +1777,7 @@ class IesVeGateway(VeGateway):
                 body = fresh_by_id.get(room_id)
                 if body is None:
                     raise VeMutationError(
-                        "Room '{}' disappeared after template assignment".format(
-                            room_id
-                        )
+                        "Room '{}' disappeared after template assignment".format(room_id)
                     )
                 room_data = body.get_room_data()
                 general = dict(room_data.get_general())
@@ -1870,9 +1830,7 @@ class IesVeGateway(VeGateway):
                 "Client thermal-template assignment failed: {}".format(exc)
             ) from exc
 
-        bridge_restoration = self._restore_client_gain_structure_bridge(
-            bridge_contexts
-        )
+        bridge_restoration = self._restore_client_gain_structure_bridge(bridge_contexts)
         return {
             "template_name": str(template_name),
             "template_handle": str(template_handle),
@@ -1883,11 +1841,7 @@ class IesVeGateway(VeGateway):
             "transient_gain_structure_bridge": {
                 "materialization": bridge_materialization,
                 "restoration": bridge_restoration,
-                "status": (
-                    "APPLIED_AND_RESTORED"
-                    if bridge_contexts
-                    else "NOT_REQUIRED"
-                ),
+                "status": ("APPLIED_AND_RESTORED" if bridge_contexts else "NOT_REQUIRED"),
             },
         }
 
@@ -2035,12 +1989,9 @@ class IesVeGateway(VeGateway):
             raise VeMutationError("Weather assignment failed: {}".format(exc)) from exc
 
         assigned, readable = self._weather_state()
-        assignment_matches = (
-            assigned == assignment_reference
-            or assigned.replace("\\", "/").endswith(
-                assignment_reference.replace("\\", "/").split("/")[-1]
-            )
-        )
+        assignment_matches = assigned == assignment_reference or assigned.replace(
+            "\\", "/"
+        ).endswith(assignment_reference.replace("\\", "/").split("/")[-1])
         if not assignment_matches:
             raise VeMutationError(
                 "Weather verification failed (assigned='{}', readable={})".format(
@@ -2049,8 +2000,7 @@ class IesVeGateway(VeGateway):
             )
         if not readable:
             source_matches_assignment = source_prequalified and (
-                assigned == str(source)
-                or Path(assigned).name == source.name
+                assigned == str(source) or Path(assigned).name == source.name
             )
             if not source_matches_assignment:
                 raise VeMutationError(
@@ -2128,10 +2078,7 @@ class IesVeGateway(VeGateway):
         for folder in weather_paths:
             candidate = Path(str(folder)) / source.name
             try:
-                if (
-                    candidate.is_file()
-                    and self._file_sha256(candidate) == source_digest
-                ):
+                if candidate.is_file() and self._file_sha256(candidate) == source_digest:
                     reader = self.iesve.WeatherFileReader()
                     try:
                         if reader.open_weather_file(source.name) > 0:
@@ -2151,9 +2098,7 @@ class IesVeGateway(VeGateway):
         before, readable = self._weather_state()
         if not before or not readable:
             raise VeMutationError(
-                "Active weather is missing or unreadable (assigned='{}')".format(
-                    before
-                )
+                "Active weather is missing or unreadable (assigned='{}')".format(before)
             )
         self.assign_weather(before)
         after, readable_after = self._weather_state()
@@ -2182,9 +2127,7 @@ class IesVeGateway(VeGateway):
             references = [assigned]
             assigned_path = Path(assigned)
             if not assigned_path.is_absolute():
-                project_path = Path(
-                    str(getattr(self.project, "path", "") or "")
-                )
+                project_path = Path(str(getattr(self.project, "path", "") or ""))
                 if str(project_path):
                     project_reference = str(project_path / assigned_path)
                     if project_reference not in references:
@@ -2303,18 +2246,12 @@ class IesVeGateway(VeGateway):
         snapshots = []
         try:
             cdb_project_cls = getattr(self.iesve, "VECdbProject", None)
-            material_categories = getattr(
-                cdb_project_cls, "material_categories", None
-            )
+            material_categories = getattr(cdb_project_cls, "material_categories", None)
             if material_categories is None:
-                material_categories = getattr(
-                    self.iesve, "material_categories", None
-                )
+                material_categories = getattr(self.iesve, "material_categories", None)
             all_materials = getattr(material_categories, "all", None)
             if all_materials is None:
-                raise VeMutationError(
-                    "VE material_categories.all enum is unavailable"
-                )
+                raise VeMutationError("VE material_categories.all enum is unavailable")
             identifiers = project.get_material_ids(all_materials)
         except Exception:
             identifiers = []
@@ -2345,9 +2282,7 @@ class IesVeGateway(VeGateway):
         """Read normalized snapshots for every available thermal template."""
 
         snapshots = []
-        for handle, template in thermal_templates(
-            self.project, assigned=False
-        ).items():
+        for handle, template in thermal_templates(self.project, assigned=False).items():
             gains = []
             for gain in template.get_casual_gains():
                 try:
@@ -2390,9 +2325,7 @@ class IesVeGateway(VeGateway):
             room_data = body.get_room_data()
             general = room_data.get_general()
             system_data = room_data.get_apache_systems()
-            thermal_template_name = str(
-                general.get("thermal_template_name", "")
-            )
+            thermal_template_name = str(general.get("thermal_template_name", ""))
             if not thermal_template_name:
                 raw_template = str(general.get("thermal_template", ""))
                 thermal_template_name = template_name_by_handle.get(
@@ -2407,9 +2340,7 @@ class IesVeGateway(VeGateway):
                     opening_snapshots.append(
                         OpeningSnapshot(
                             identifier=str(opening.get_id()),
-                            opening_type=str(
-                                opening.get_properties().get("type", "")
-                            ),
+                            opening_type=str(opening.get_properties().get("type", "")),
                             area_m2=float(
                                 opening.get_properties().get("area", 0.0) or 0.0
                             ),
@@ -2424,13 +2355,17 @@ class IesVeGateway(VeGateway):
                 adjacent = []
                 for adjacency in surface.get_adjacencies():
                     try:
-                        adjacent.append(str(adjacency.get_properties().get("body_id", "")))
+                        adjacent.append(
+                            str(adjacency.get_properties().get("body_id", ""))
+                        )
                     except Exception:
                         continue
                 surfaces.append(
                     SurfaceSnapshot(
                         identifier=str(
-                            properties.get("id", properties.get("aps_handle", surface.index))
+                            properties.get(
+                                "id", properties.get("aps_handle", surface.index)
+                            )
                         ),
                         surface_type=str(properties.get("type", surface.type)),
                         area_m2=float(properties.get("area", 0.0) or 0.0),
@@ -2438,7 +2373,9 @@ class IesVeGateway(VeGateway):
                             self._construction_identifier(construction)
                             for construction in surface.get_constructions()
                         ),
-                        adjacent_room_ids=tuple(identifier for identifier in adjacent if identifier),
+                        adjacent_room_ids=tuple(
+                            identifier for identifier in adjacent if identifier
+                        ),
                         openings=openings,
                     )
                 )

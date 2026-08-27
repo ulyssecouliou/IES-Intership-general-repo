@@ -25,7 +25,6 @@ from swiss_sia.reference_model.sia4010.ui_translations import (
     translate,
 )
 
-
 ROOT = Path(__file__).resolve().parents[1]
 
 #: The vocabulary of ``ComplianceVerdict.outstanding``, read from its producer

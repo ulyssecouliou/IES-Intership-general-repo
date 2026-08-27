@@ -19,10 +19,9 @@ import zipfile
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Mapping, Sequence, Tuple, Union
+from typing import Any, Dict, List, Mapping, Sequence, Tuple, Union
 
 from .exceptions import ConfigurationError
-
 
 PathLike = Union[str, Path]
 EXPECTED_HOURS = 8760
@@ -234,12 +233,12 @@ def _parse_client_csv(csv_text: str) -> List[Dict[str, str]]:
         raise ConfigurationError(
             "Client CSV is missing required columns: {}".format(missing)
         )
-    rows = [dict(row) for row in reader if any(str(value).strip() for value in row.values())]
+    rows = [
+        dict(row) for row in reader if any(str(value).strip() for value in row.values())
+    ]
     if len(rows) != EXPECTED_HOURS:
         raise ConfigurationError(
-            "Client CSV contains {} hours; expected {}".format(
-                len(rows), EXPECTED_HOURS
-            )
+            "Client CSV contains {} hours; expected {}".format(len(rows), EXPECTED_HOURS)
         )
     return rows
 
@@ -295,9 +294,7 @@ def _combine_records(
         inherited_timestamp, pressure, source_flags = inherited
         if inherited_timestamp != timestamp:
             raise ConfigurationError(
-                "Client CSV/EPW timestamp mismatch at {}".format(
-                    timestamp.isoformat()
-                )
+                "Client CSV/EPW timestamp mismatch at {}".format(timestamp.isoformat())
             )
         dry_bulb = _float(row, "tre200h0", line_number)
         relative_humidity = _float(row, "ure200h0", line_number)
@@ -348,9 +345,7 @@ def _dew_point_c(dry_bulb_c: float, relative_humidity_percent: float) -> float:
 
     if relative_humidity_percent <= 0.0:
         raise ConfigurationError("Dew point cannot be derived from zero RH")
-    saturation = 6.1365 * math.exp(
-        17.502 * dry_bulb_c / (240.97 + dry_bulb_c)
-    )
+    saturation = 6.1365 * math.exp(17.502 * dry_bulb_c / (240.97 + dry_bulb_c))
     vapour_pressure = relative_humidity_percent / 100.0 * saturation
     ratio = math.log(vapour_pressure / 6.1365)
     dew_point = 240.97 * ratio / (17.502 - ratio)
@@ -366,18 +361,13 @@ def _sky_cover_tenths(percent: float) -> int:
 def _horizontal_infrared_w_m2(record: ClientWeatherRecord) -> float:
     """Derive horizontal infrared using the EnergyPlus EPW equation."""
 
-    dew_point_k = _dew_point_c(
-        record.dry_bulb_c, record.relative_humidity_percent
-    ) + 273.15
+    dew_point_k = (
+        _dew_point_c(record.dry_bulb_c, record.relative_humidity_percent) + 273.15
+    )
     dry_bulb_k = record.dry_bulb_c + 273.15
     opaque_proxy = float(_sky_cover_tenths(record.total_sky_cover_percent))
-    emissivity = (
-        0.787 + 0.764 * math.log(dew_point_k / 273.0)
-    ) * (
-        1.0
-        + 0.0224 * opaque_proxy
-        - 0.0035 * opaque_proxy**2
-        + 0.00028 * opaque_proxy**3
+    emissivity = (0.787 + 0.764 * math.log(dew_point_k / 273.0)) * (
+        1.0 + 0.0224 * opaque_proxy - 0.0035 * opaque_proxy**2 + 0.00028 * opaque_proxy**3
     )
     return emissivity * 5.6697e-8 * dry_bulb_k**4
 
@@ -464,7 +454,9 @@ def convert_client_weather_archive(
     archive_source = Path(archive_path).resolve()
     output_root = Path(output_directory).resolve()
     if not archive_source.is_file():
-        raise ConfigurationError("Client archive does not exist: {}".format(archive_source))
+        raise ConfigurationError(
+            "Client archive does not exist: {}".format(archive_source)
+        )
     archive_bytes = archive_source.read_bytes()
     try:
         with zipfile.ZipFile(io.BytesIO(archive_bytes), "r") as archive:
@@ -507,8 +499,7 @@ def convert_client_weather_archive(
         "DATA PERIODS,1,1,Data,{},1/1,12/31".format(first_weekday),
     ]
     epw_rows = [
-        ",".join(str(value) for value in _epw_record(record))
-        for record in records
+        ",".join(str(value) for value in _epw_record(record)) for record in records
     ]
     _write_atomic(epw_path, "\n".join(header + epw_rows) + "\n", "ascii")
 
@@ -546,9 +537,7 @@ def convert_client_weather_archive(
         "dry_bulb_preserved": _control(
             dry_bulb_difference == 0.0, 0.0, dry_bulb_difference
         ),
-        "wind_speed_preserved": _control(
-            wind_difference == 0.0, 0.0, wind_difference
-        ),
+        "wind_speed_preserved": _control(wind_difference == 0.0, 0.0, wind_difference),
         "ghi_preserved_with_integer_rounding": _control(
             ghi_difference <= 0.5, "<=0.5 W/m2", ghi_difference
         ),
@@ -559,8 +548,7 @@ def convert_client_weather_archive(
         ),
         "dew_point_not_above_dry_bulb": _control(
             all(
-                float(fields[7]) <= float(fields[6]) + 0.1
-                for fields in generated_fields
+                float(fields[7]) <= float(fields[6]) + 0.1 for fields in generated_fields
             ),
             True,
             True,

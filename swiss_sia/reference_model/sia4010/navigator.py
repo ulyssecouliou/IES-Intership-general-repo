@@ -11,7 +11,6 @@ from typing import Any, Dict, Mapping, Tuple
 from ...config import SIA4010_CLASS_TEST_MATRIX
 from ..exceptions import ConfigurationError
 
-
 PASS_STATUS = "PASS"
 BLOCKED_STATUS = "BLOCKED"
 FAIL_STATUS = "FAIL"
@@ -97,8 +96,9 @@ class Sia4010ValidationNavigator:
         class_id = str(target_class or "").strip().upper()
         if class_id not in cls.SUPPORTED_CLASSES:
             raise ConfigurationError(
-                "Unsupported SIA 4010 validation class {!r}; expected one of {}."
-                .format(target_class, ", ".join(cls.SUPPORTED_CLASSES))
+                "Unsupported SIA 4010 validation class {!r}; expected one of {}.".format(
+                    target_class, ", ".join(cls.SUPPORTED_CLASSES)
+                )
             )
         required = tuple(SIA4010_CLASS_TEST_MATRIX[class_id])
         gates = []
@@ -187,9 +187,7 @@ class Sia4010ValidationNavigator:
         band_status = (
             FAIL_STATUS
             if failed_bands
-            else BLOCKED_STATUS
-            if incomplete_bands
-            else PASS_STATUS
+            else BLOCKED_STATUS if incomplete_bands else PASS_STATUS
         )
         gates.append(
             NavigatorGate(
@@ -199,18 +197,22 @@ class Sia4010ValidationNavigator:
                 (
                     "At least one exact variant is outside an official acceptance band."
                     if failed_bands
-                    else "At least one mandatory comparison is missing or not checkable."
-                    if incomplete_bands
-                    else "Every exact variant meets all implemented official criteria."
+                    else (
+                        "At least one mandatory comparison is missing or not checkable."
+                        if incomplete_bands
+                        else "Every exact variant meets all implemented official criteria."
+                    )
                 ),
                 (
                     "Correct the model or result mapping, rerun APS, and compare again."
                     if failed_bands
-                    else "Complete annual and hourly-distribution comparisons for: {}.".format(
-                        ", ".join(incomplete_bands)
+                    else (
+                        "Complete annual and hourly-distribution comparisons for: {}.".format(
+                            ", ".join(incomplete_bands)
+                        )
+                        if incomplete_bands
+                        else "Prepare the evidence package for official review."
                     )
-                    if incomplete_bands
-                    else "Prepare the evidence package for official review."
                 ),
                 missing_variants=incomplete_bands,
                 failed_variants=failed_bands,

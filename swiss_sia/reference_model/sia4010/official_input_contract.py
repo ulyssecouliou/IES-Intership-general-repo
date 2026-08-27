@@ -62,9 +62,7 @@ class Sia4010OfficialInputContract:
         }
 
     @classmethod
-    def load(
-        cls, path: Union[str, Path]
-    ) -> "Sia4010OfficialInputContract":
+    def load(cls, path: Union[str, Path]) -> "Sia4010OfficialInputContract":
         """Load the contract and reject incomplete or overclaimed records."""
 
         contract_path = Path(path)
@@ -111,9 +109,7 @@ class Sia4010OfficialInputContract:
             absent = sorted(fields - set(item))
             if absent:
                 raise ConfigurationError(
-                    "Official Test {} input record is missing {}".format(
-                        test_id, absent
-                    )
+                    "Official Test {} input record is missing {}".format(test_id, absent)
                 )
             expected_variants = sorted(
                 variant
@@ -121,27 +117,26 @@ class Sia4010OfficialInputContract:
                 if variant.startswith("test_{}".format(test_id))
             )
             actual_variants = sorted(
-                "test_{}".format(str(value))
-                for value in item["variants"]
+                "test_{}".format(str(value)) for value in item["variants"]
             )
             if actual_variants != expected_variants:
                 raise ConfigurationError(
-                    "Official Test {} variants mismatch: expected {}, found {}"
-                    .format(test_id, expected_variants, actual_variants)
+                    "Official Test {} variants mismatch: expected {}, found {}".format(
+                        test_id, expected_variants, actual_variants
+                    )
                 )
             if not str(item["source"] or "").strip():
-                raise ConfigurationError(
-                    "Official Test {} has no source".format(test_id)
-                )
+                raise ConfigurationError("Official Test {} has no source".format(test_id))
             if not item["source_pages"] or not all(
                 isinstance(page, int) and page > 0 for page in item["source_pages"]
             ):
                 raise ConfigurationError(
                     "Official Test {} has invalid source pages".format(test_id)
                 )
-            if not isinstance(item["confirmed_inputs"], dict) or not item[
-                "confirmed_inputs"
-            ]:
+            if (
+                not isinstance(item["confirmed_inputs"], dict)
+                or not item["confirmed_inputs"]
+            ):
                 raise ConfigurationError(
                     "Official Test {} has no confirmed inputs".format(test_id)
                 )
@@ -156,9 +151,7 @@ class Sia4010OfficialInputContract:
                 )
             if item["ve_generation_status"] != "NOT_IMPLEMENTED":
                 raise ConfigurationError(
-                    "Official Test {} generation status is overclaimed".format(
-                        test_id
-                    )
+                    "Official Test {} generation status is overclaimed".format(test_id)
                 )
         return cls(contract_path, payload)
 
@@ -171,4 +164,3 @@ class Sia4010OfficialInputContract:
                 "No extracted official-input record for Test {}".format(test_id)
             )
         return self.tests[normalized]
-

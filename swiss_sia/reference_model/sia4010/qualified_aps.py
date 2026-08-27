@@ -90,9 +90,7 @@ class QualifiedApsBindings:
             )
         if str(payload["schema_version"]) not in cls.SUPPORTED_SCHEMA_VERSIONS:
             raise ConfigurationError(
-                "Unsupported APS binding schema: {}".format(
-                    payload["schema_version"]
-                )
+                "Unsupported APS binding schema: {}".format(payload["schema_version"])
             )
         required_binding_fields = {
             "aps_varname",
@@ -109,9 +107,7 @@ class QualifiedApsBindings:
             absent = sorted(required_binding_fields - set(item))
             if absent:
                 raise ConfigurationError(
-                    "APS binding {} is missing fields: {}".format(
-                        quantity_id, absent
-                    )
+                    "APS binding {} is missing fields: {}".format(quantity_id, absent)
                 )
             if item["status"] != "RUNTIME_METADATA_CONFIRMED":
                 raise ConfigurationError(
@@ -147,13 +143,10 @@ class QualifiedApsBindings:
         absent_quantities = sorted(expected_quantities - set(payload["bindings"]))
         if absent_quantities:
             raise ConfigurationError(
-                "APS binding configuration lacks quantities: {}".format(
-                    absent_quantities
-                )
+                "APS binding configuration lacks quantities: {}".format(absent_quantities)
             )
         evidence_locator = str(
-            payload["source_probe"].get("portable_evidence_extract", "")
-            or ""
+            payload["source_probe"].get("portable_evidence_extract", "") or ""
         )
         if not evidence_locator:
             raise ConfigurationError(
@@ -167,9 +160,10 @@ class QualifiedApsBindings:
                 "Invalid portable APS probe evidence: {}".format(exc)
             ) from exc
         source = evidence.get("source_diagnostic", {})
-        if str(source.get("sha256", "")).upper() != str(
-            payload["source_probe"].get("sha256", "")
-        ).upper():
+        if (
+            str(source.get("sha256", "")).upper()
+            != str(payload["source_probe"].get("sha256", "")).upper()
+        ):
             raise ConfigurationError(
                 "Portable APS probe evidence checksum does not match the "
                 "binding source probe"
@@ -212,8 +206,7 @@ class QualifiedApsBindings:
             if (
                 str(variable.get("aps_varname") or variable.get("name") or "")
                 == qualified.aps_varname
-                and str(variable.get("display_name") or "")
-                == qualified.display_name
+                and str(variable.get("display_name") or "") == qualified.display_name
                 and str(variable.get("model_level") or variable.get("level") or "")
                 == qualified.model_level
                 and str(variable.get("resolved_metric_unit") or "")
@@ -236,10 +229,7 @@ class QualifiedApsBindings:
 def _complete_year(values: Sequence[float], results_per_hour: float) -> bool:
     """Return whether a series is exactly one non-leap 365-day year."""
 
-    return (
-        results_per_hour > 0
-        and len(values) == int(round(365 * 24 * results_per_hour))
-    )
+    return results_per_hour > 0 and len(values) == int(round(365 * 24 * results_per_hour))
 
 
 def _hourly_energy_kwh(
@@ -253,8 +243,7 @@ def _hourly_energy_kwh(
     if len(power_kw) % steps:
         return ()
     return tuple(
-        sum(float(value) for value in power_kw[index : index + steps])
-        / results_per_hour
+        sum(float(value) for value in power_kw[index : index + steps]) / results_per_hour
         for index in range(0, len(power_kw), steps)
     )
 
@@ -268,9 +257,7 @@ def _hourly_average_watts(
     return tuple(value * 1000.0 for value in hourly_kwh)
 
 
-def _hourly_means(
-    values: Sequence[float], results_per_hour: float
-) -> Tuple[float, ...]:
+def _hourly_means(values: Sequence[float], results_per_hour: float) -> Tuple[float, ...]:
     """Aggregate one sub-hourly scalar series to hourly arithmetic means."""
 
     steps = int(round(results_per_hour))
@@ -320,14 +307,11 @@ def _day_slice(
 
     if len(hourly) != 365 * 24 or calendar.isleap(year):
         return ()
-    if not 1 <= month <= 12 or not 1 <= day <= calendar.monthrange(
-        year, month
-    )[1]:
+    if not 1 <= month <= 12 or not 1 <= day <= calendar.monthrange(year, month)[1]:
         return ()
-    preceding_days = sum(
-        calendar.monthrange(year, prior)[1]
-        for prior in range(1, month)
-    ) + day - 1
+    preceding_days = (
+        sum(calendar.monthrange(year, prior)[1] for prior in range(1, month)) + day - 1
+    )
     start = preceding_days * 24
     return tuple(float(value) for value in hourly[start : start + 24])
 
@@ -432,9 +416,7 @@ class Sia4010QualifiedApsExtractor:
             evidence_locator=self.evidence_locator,
         )
 
-    def series_evidence(
-        self, quantity_ids: Iterable[str]
-    ) -> Dict[str, Dict[str, Any]]:
+    def series_evidence(self, quantity_ids: Iterable[str]) -> Dict[str, Dict[str, Any]]:
         """Return compact evidence for each complete qualified annual series."""
 
         evidence: Dict[str, Dict[str, Any]] = {}
@@ -490,11 +472,15 @@ class Sia4010QualifiedApsExtractor:
                 else:
                     continue
             else:
-                series = heating if "heating" in metric_lower else (
-                    cooling if "cooling" in metric_lower else ()
+                series = (
+                    heating
+                    if "heating" in metric_lower
+                    else (cooling if "cooling" in metric_lower else ())
                 )
-                months = heating_months if "heating" in metric_lower else (
-                    cooling_months if "cooling" in metric_lower else ()
+                months = (
+                    heating_months
+                    if "heating" in metric_lower
+                    else (cooling_months if "cooling" in metric_lower else ())
                 )
                 if not series:
                     continue
@@ -541,9 +527,7 @@ class Sia4010QualifiedApsExtractor:
         if normalized_case not in supported_cases:
             raise ConfigurationError(
                 "Reference-only Test 1 extraction is unavailable for case "
-                "{!r}; supported cases are {}".format(
-                    case_id, sorted(supported_cases)
-                )
+                "{!r}; supported cases are {}".format(case_id, sorted(supported_cases))
             )
         air_temperature = _hourly_means(
             self.metric_series("room_air_temperature"),
@@ -658,9 +642,7 @@ class Sia4010QualifiedApsExtractor:
                         )
                     )
 
-        temperature_table = (
-            "Table 30 \u2014 Test results average operative temperature"
-        )
+        temperature_table = "Table 30 \u2014 Test results average operative temperature"
         for month, value in enumerate(operative_months, start=1):
             observed.append(
                 ObservedResult(
@@ -700,8 +682,7 @@ class Sia4010QualifiedApsExtractor:
             if len(january_4) != 24:
                 return ()
             table = (
-                "Table 34 \u2014 Test results hourly operative temperature, "
-                "January 4"
+                "Table 34 \u2014 Test results hourly operative temperature, " "January 4"
             )
             for hour, value in enumerate(january_4, start=1):
                 observed.append(

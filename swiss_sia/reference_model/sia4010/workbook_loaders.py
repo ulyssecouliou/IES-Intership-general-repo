@@ -21,7 +21,7 @@ from .expected_results import ExpectedResult
 
 
 def deduplicate_expected_keys(
-    results: Tuple[ExpectedResult, ...]
+    results: Tuple[ExpectedResult, ...],
 ) -> Tuple[ExpectedResult, ...]:
     """Guarantee unique (test, case, metric) keys by suffixing repeats.
 
@@ -41,6 +41,7 @@ def deduplicate_expected_keys(
             result = replace(result, metric="{} ({})".format(result.metric, seen[key]))
         unique.append(result)
     return tuple(unique)
+
 
 _UPPER = "obere grenze"
 _LOWER = "untere grenze"
@@ -95,10 +96,14 @@ def _read_sheet(worksheet: Any) -> Tuple[Dict[Tuple[int, int], Any], int, int]:
     return grid, max_row, max_col
 
 
-def _row_cells(grid: Dict[Tuple[int, int], Any], row: int, max_col: int) -> List[Tuple[int, Any]]:
+def _row_cells(
+    grid: Dict[Tuple[int, int], Any], row: int, max_col: int
+) -> List[Tuple[int, Any]]:
     """Return the populated (column, value) pairs of one row, left to right."""
 
-    return [(col, grid[(row, col)]) for col in range(1, max_col + 1) if (row, col) in grid]
+    return [
+        (col, grid[(row, col)]) for col in range(1, max_col + 1) if (row, col) in grid
+    ]
 
 
 def _find_band_headers(
@@ -147,10 +152,16 @@ def _block_case_and_unit(
     workbook; no unit is invented and a parenthetical qualifier is preserved.
     """
 
-    label_col, upper_col, header_row = header["label_col"], header["upper_col"], header["row"]
+    label_col, upper_col, header_row = (
+        header["label_col"],
+        header["upper_col"],
+        header["row"],
+    )
     span = range(label_col, upper_col + 2)
     for row in range(header_row - 1, max(header_row - 10, 0), -1):
-        label_cols = [col for col in span if _norm(grid.get((row, col))) == _CASE_ID_LABEL]
+        label_cols = [
+            col for col in span if _norm(grid.get((row, col))) == _CASE_ID_LABEL
+        ]
         if not label_cols:
             continue
         case_label_col = min(label_cols)
@@ -190,7 +201,11 @@ def _block_title(
     distant block's title cannot leak in.
     """
 
-    label_col, upper_col, header_row = header["label_col"], header["upper_col"], header["row"]
+    label_col, upper_col, header_row = (
+        header["label_col"],
+        header["upper_col"],
+        header["row"],
+    )
     span = range(label_col, upper_col + 2)
     for row in range(header_row - 1, max(header_row - 12, 0), -1):
         for col in span:
@@ -204,6 +219,7 @@ def _block_title(
             if isinstance(value, str) and value.strip().lower().startswith("table"):
                 candidates.append((row, col, value.strip()))
     if candidates:
+
         def _column_distance(item: Tuple[int, int, str]) -> int:
             """Return how far a candidate column sits from this block's own columns."""
 
@@ -329,9 +345,15 @@ def parse_case_per_row_bands(
     header_rows = sorted({r for (r, _c), value in grid.items() if _norm(value) == _MEAN})
     results: List[ExpectedResult] = []
     for header_row in header_rows:
-        for mean_col, upper_col, lower_col in _mean_band_blocks(grid, header_row, max_col):
+        for mean_col, upper_col, lower_col in _mean_band_blocks(
+            grid, header_row, max_col
+        ):
             title_col = _nearest_left_header(grid, header_row, mean_col, "testprogramm")
-            title = str(grid.get((label_row, title_col), "quantity")).strip() if title_col else "quantity"
+            title = (
+                str(grid.get((label_row, title_col), "quantity")).strip()
+                if title_col
+                else "quantity"
+            )
             unit = str(grid.get((label_row + 1, upper_col), "")).strip()
             started = False
             for row in range(label_row + 1, max_row + 1):
@@ -348,7 +370,9 @@ def parse_case_per_row_bands(
                             test_id=test_id,
                             case_id=str(case).strip(),
                             metric=title,
-                            expected_value=float(mean) if _is_number(mean) else float(upper),
+                            expected_value=(
+                                float(mean) if _is_number(mean) else float(upper)
+                            ),
                             unit=unit,
                             absolute_tolerance=None,
                             relative_tolerance=None,
@@ -394,11 +418,7 @@ def parse_inline_header_bands(
 
     grid, max_row, max_col = _read_sheet(worksheet)
     label_cell = next(
-        (
-            (r, c)
-            for (r, c), value in grid.items()
-            if _norm(value) in row_label_headers
-        ),
+        ((r, c) for (r, c), value in grid.items() if _norm(value) in row_label_headers),
         None,
     )
     if label_cell is None:
@@ -541,13 +561,13 @@ def parse_grouped_case_column_bands(
         for i in range(width):
             m = grid.get((row, mean_start + i))
             u = grid.get((row, upper_start + i))
-            l = grid.get((row, lower_start + i))
-            if _is_number(u) and _is_number(l) and float(l) <= float(u):
-                row_bands.append((i, m, u, l))
+            lower = grid.get((row, lower_start + i))
+            if _is_number(u) and _is_number(lower) and float(lower) <= float(u):
+                row_bands.append((i, m, u, lower))
         if isinstance(metric, str) and row_bands:
             started = True
             unit = _first_unit_in_row(grid, row, max_col)
-            for i, m, u, l in row_bands:
+            for i, m, u, lower in row_bands:
                 results.append(
                     ExpectedResult(
                         test_id=test_id,
@@ -563,7 +583,7 @@ def parse_grouped_case_column_bands(
                             row,
                         ),
                         source_checksum=source_checksum,
-                        lower_bound=float(l),
+                        lower_bound=float(lower),
                         upper_bound=float(u),
                     )
                 )
@@ -644,9 +664,7 @@ def parse_metric_per_row_bands(
     for row in range(header_row + 1, max_row + 1):
         upper = grid.get((row, upper_col))
         lower = grid.get((row, lower_col))
-        has_text = any(
-            isinstance(grid.get((row, c)), str) for c in range(1, upper_col)
-        )
+        has_text = any(isinstance(grid.get((row, c)), str) for c in range(1, upper_col))
         is_band = (
             _is_number(upper)
             and _is_number(lower)
@@ -681,7 +699,9 @@ def parse_metric_per_row_bands(
                 test_id=test_id,
                 case_id=case_id,
                 metric=metric.strip(),
-                expected_value=float(mean) if _is_number(mean) else float(grid.get((row, upper_col))),
+                expected_value=(
+                    float(mean) if _is_number(mean) else float(grid.get((row, upper_col)))
+                ),
                 unit=_first_unit_in_row(grid, row, max_col),
                 absolute_tolerance=None,
                 relative_tolerance=None,

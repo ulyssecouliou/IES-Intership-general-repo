@@ -1,5 +1,10 @@
 # Swiss SIA Compliance Checker
 
+> **Project handover:** start with
+> [`docs/project/HANDOVER_2026-08-28.md`](docs/project/HANDOVER_2026-08-28.md)
+> for the verified delivery state, reproducible checks, known SIA 4010
+> blockers and next actions.
+
 ## Unified VEScripts hub
 
 Open and save the target VE project, then run
@@ -73,8 +78,8 @@ responsible discipline, are in `docs/user/WORKFLOW_CLIENT_SIA3802_FR.md`.
 - Runs automated and partial SIA 380/2 checks where the VE data is available.
 - Builds a conservative SIA 4010 readiness matrix.
 - Scans `sia4010_evidence/` for official evidence files.
-- Generates a timestamped Excel workbook in `reports/`.
-- Generates a timestamped evidence-pack ZIP in `reports/`.
+- Generates timestamped reports in `<active VE project>/SIA Compliance Reports/`.
+- Generates the evidence-pack ZIP beside those project-local reports.
 - Generates one Excel workbook per run by default. The optional latest-report alias is disabled in `swiss_sia/config.py`.
 
 ## What The Tool Does Not Claim
@@ -83,6 +88,12 @@ responsible discipline, are in `docs/user/WORKFLOW_CLIENT_SIA3802_FR.md`.
 - It does not validate IESVE or the model under SIA 4010 without official SIA evidence files.
 - It does not replace the responsible engineer or compliance reviewer.
 - It does not invent pass/fail decisions where the PDF requires external standards, official test files or reviewer judgement.
+
+These boundaries are intentional, not silent software failures. The workbook
+sheet `CAPABILITY GUIDE` explains, for every major boundary, what the tool can
+read, what it cannot establish, the technical reason, the exact evidence
+required, who must supply it and the effect on the verdict. `INPUT REQUEST`
+then lists only the evidence still missing for the active model.
 
 ## Main Workbook Sheets
 
@@ -95,9 +106,8 @@ responsible discipline, are in `docs/user/WORKFLOW_CLIENT_SIA3802_FR.md`.
 - `ENVELOPE U REVIEW`: construction-level envelope U-value review and remediation status.
 - `VE G-VALUES AUDIT`: CDB `g_value`, `bs_en_410`, `building_regulations`, `bfrc` and `g_total` traceability.
 - `ASSUMPTIONS LIMITS`: certification guardrails and known limitations.
+- `CAPABILITY GUIDE`: plain-language and technical explanation of automation boundaries, evidence ownership and verdict impact.
 - `AUDIT LOG`: run metadata, evidence state and audit guardrails.
-- `SUMMARY`: score summary.
-- `ACTION PLAN`: grouped remediation actions.
 - `COMPLIANCE RESULTS`: category results.
 - `SIA REQUIREMENTS`: source-traced requirement matrix.
 - `SIA DATA COVERAGE`: data, APS/Vista and evidence coverage for SIA 380/2 and all SIA 4010 classes.
@@ -155,16 +165,24 @@ responsible discipline, are in `docs/user/WORKFLOW_CLIENT_SIA3802_FR.md`.
 |-- scripts/                        # probes, quality checks and legacy utilities
 |-- docs/                           # Sphinx docs + project notes
 |-- references/                     # standards and IESVE reference material
-|-- reports/                        # generated workbooks/logs
-`-- sia4010_evidence/               # official SIA 4010 evidence drop zone
+`-- templates/                      # templates copied into each active project
+```
+
+Client data is never expected at a repository-specific absolute path:
+
+```text
+<active VE project>/Vista/                    # APS results
+<active VE project>/sia4010_evidence/         # reviewer evidence
+<active VE project>/SIA Compliance Reports/   # PDF, XLSX and evidence pack
+<active VE project>/sia_compliance_artifacts/ # receipts and audits
 ```
 
 ## SIA 4010 Evidence
 
-Place official evidence in:
+Place official evidence in the active project:
 
 ```text
-sia4010_evidence/
+<active VE project>/sia4010_evidence/
 ```
 
 Recommended filename prefixes:

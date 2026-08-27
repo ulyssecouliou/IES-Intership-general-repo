@@ -29,13 +29,10 @@ responsible for its own geometry.  It only fixes the lifecycle.
 
 from __future__ import annotations
 
-import contextlib
 import logging
-import sys
 import traceback
 from dataclasses import dataclass, field
 from typing import Any, Callable, Dict, List, Optional
-
 
 LOGGER = logging.getLogger("ui.tk_safe")
 
@@ -51,20 +48,41 @@ class DialogHandle:
     events: List[Dict[str, Any]] = field(default_factory=list)
 
 
-def _bring_to_front_windows(root: Any) -> None:
+def bring_window_to_front(root: Any, release_after_ms: int = 350) -> None:
     """Ensure the dialog is not hidden behind VE on Windows.
 
-    ``-topmost`` is toggled off immediately so the operator can raise other
-    windows normally afterwards.
+    Tk's ``lift`` is normally sufficient. Embedded IESVE sessions can however
+    leave Model Viewer as the Windows foreground window, so the native window
+    handle is also activated when available. ``-topmost`` is temporary.
     """
 
     try:
+        root.deiconify()
+        root.update_idletasks()
         root.lift()
         root.focus_force()
         root.attributes("-topmost", True)
-        root.after(200, lambda: _safe_call(root.attributes, "-topmost", False))
+        try:
+            import ctypes
+            import os
+
+            if os.name == "nt":
+                hwnd = int(root.winfo_id())
+                ctypes.windll.user32.ShowWindow(hwnd, 9)  # SW_RESTORE
+                ctypes.windll.user32.SetForegroundWindow(hwnd)
+        except Exception:
+            # Tk's portable focus path above remains the supported fallback.
+            pass
+        root.after(
+            max(50, int(release_after_ms)),
+            lambda: _safe_call(root.attributes, "-topmost", False),
+        )
     except Exception as exc:  # pragma: no cover - purely cosmetic
         LOGGER.debug("tk_safe | bring_to_front failed: %s", exc)
+
+
+# Backwards-compatible private name retained for existing callers/tests.
+_bring_to_front_windows = bring_window_to_front
 
 
 def _safe_call(callable_: Callable[..., Any], *args: Any, **kwargs: Any) -> None:

@@ -21,7 +21,6 @@ import ast
 import unittest
 from pathlib import Path
 
-
 ROOT = Path(__file__).resolve().parents[1]
 
 #: Launchers an operator can press directly in the VE Python navigator.
@@ -30,6 +29,12 @@ OPERATOR_FACING_LAUNCHERS = (
     "Run_VE_SIA4010_Test1_Active_Case_One_Click.py",
     "Run_VE_SIA4010_Test1_Qualify_Runtime_Inputs.py",
     "Run_VE_SIA4010_Simulate_Active_Case.py",
+    "Run_VE_SIA4010_Capture_Active_Template.py",
+    "Run_VE_SIA4010_Verify_Template_Model.py",
+    "Run_VE_SIA4010_Test1E_Optical_Readback.py",
+    "Run_VE_SIA4010_Test1E_Apply_Provisional_Angular_Diagnostic.py",
+    "Run_VE_SIA4010_Test1E_Apply_Bracketed_Sensitivity.py",
+    "Run_VE_SIA4010_Test1E_Envelope_Readback.py",
     # Not a Test 1 launcher, but it rebuilds project-local inputs from this
     # package for Tests 2A/3/4-7, so it carries the identical hazard.
     "Run_VE_SIA4010_Prepare_Case_Scenario.py",
@@ -92,8 +97,7 @@ def _purges_reference_model_package(source: str) -> bool:
         if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef))
     ]
     if any(
-        _deletes_sys_modules(node) and _names_the_package(node)
-        for node in module_level
+        _deletes_sys_modules(node) and _names_the_package(node) for node in module_level
     ):
         return True
 
@@ -132,9 +136,7 @@ class LauncherModulePurgeTests(unittest.TestCase):
             path = ROOT / name
             if not path.is_file():
                 self.skipTest("Launcher missing: {}".format(name))
-            if not _purges_reference_model_package(
-                path.read_text(encoding="utf-8")
-            ):
+            if not _purges_reference_model_package(path.read_text(encoding="utf-8")):
                 missing.append(name)
         self.assertEqual(
             missing,
@@ -151,8 +153,7 @@ class LauncherModulePurgeTests(unittest.TestCase):
 
         self.assertFalse(
             _purges_reference_model_package(
-                "# del sys.modules['swiss_sia.reference_model']\n"
-                "import sys\n"
+                "# del sys.modules['swiss_sia.reference_model']\n" "import sys\n"
             )
         )
 

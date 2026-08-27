@@ -49,8 +49,8 @@ class HourStep:
     ``people_gain`` : People gain (kW), présent seulement pour le cas C2.
     """
 
-    day_label: str          # p.ex. "Wed, 16/Apr" (sans année — étiquette DRY)
-    hour: int               # heure de la journée 0..23 (issue du HH:30 opératif)
+    day_label: str  # p.ex. "Wed, 16/Apr" (sans année — étiquette DRY)
+    hour: int  # heure de la journée 0..23 (issue du HH:30 opératif)
     operative: float
     exterior: Optional[float]
     people_gain: Optional[float] = None
@@ -65,7 +65,7 @@ class HourStep:
 @dataclass(frozen=True)
 class ZoneCase:
     zone: int
-    case: str                       # "C1" ou "C2"
+    case: str  # "C1" ou "C2"
     steps: list = field(default_factory=list)  # list[HourStep]
 
     @property
@@ -137,8 +137,12 @@ def load_c1(zone: int, input_dir: str = DEFAULT_INPUT_DIR) -> ZoneCase:
 
     # Validation d'en-tête (§Schéma) — surface immédiate si le format change.
     h1 = rows[0]
-    assert h1[3] and "Dry resultant temperature" in str(h1[3]), "C1: col D attendue = Dry resultant temperature"
-    assert h1[14] and "Dry-bulb temperature" in str(h1[14]), "C1: col O attendue = Dry-bulb temperature"
+    assert h1[3] and "Dry resultant temperature" in str(
+        h1[3]
+    ), "C1: col D attendue = Dry resultant temperature"
+    assert h1[14] and "Dry-bulb temperature" in str(
+        h1[14]
+    ), "C1: col O attendue = Dry-bulb temperature"
 
     # Série extérieure indexée par (jour, heure) — appariement par horodatage.
     ext_by_key: dict = {}
@@ -159,7 +163,9 @@ def load_c1(zone: int, input_dir: str = DEFAULT_INPUT_DIR) -> ZoneCase:
         if hour is None or not isinstance(op, (int, float)):
             continue
         exterior = ext_by_key.get((_date_key(op_day), hour))
-        steps.append(HourStep(day_label=op_day, hour=hour, operative=float(op), exterior=exterior))
+        steps.append(
+            HourStep(day_label=op_day, hour=hour, operative=float(op), exterior=exterior)
+        )
 
     return ZoneCase(zone=zone, case="C1", steps=steps)
 
@@ -177,7 +183,9 @@ def load_c2(zone: int, input_dir: str = DEFAULT_INPUT_DIR) -> ZoneCase:
     rows = _load_ergebnisse(path)
 
     hdr = rows[3]  # ligne Excel 4 : "Date/Time/source"
-    assert any(cell and "SMA" in str(cell) for cell in hdr), "C2: source .epw attendue en ligne d'en-tête"
+    assert any(
+        cell and "SMA" in str(cell) for cell in hdr
+    ), "C2: source .epw attendue en ligne d'en-tête"
 
     # Extérieur par (jour, heure).
     ext_by_key: dict = {}
@@ -200,7 +208,14 @@ def load_c2(zone: int, input_dir: str = DEFAULT_INPUT_DIR) -> ZoneCase:
             continue
         exterior = ext_by_key.get((_date_key(op_day), hour))
         people = float(pg) if isinstance(pg, (int, float)) else None
-        steps.append(HourStep(day_label=op_day, hour=hour, operative=float(op),
-                              exterior=exterior, people_gain=people))
+        steps.append(
+            HourStep(
+                day_label=op_day,
+                hour=hour,
+                operative=float(op),
+                exterior=exterior,
+                people_gain=people,
+            )
+        )
 
     return ZoneCase(zone=zone, case="C2", steps=steps)

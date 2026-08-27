@@ -5,13 +5,13 @@
   "source_identity_supported": true,
   "compliance_claim_allowed": false,
   "weather": {
-    "path": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\references\\standards\\bestest\\DRYCOLD_IESVE.epw",
+    "path": "references/standards/bestest/DRYCOLD_IESVE.epw",
     "sha256": "B14F5698EFE1E25B527F0C900635BAC7D3082DA0E20704FBC688A85B1BBBE696",
     "format": "EPW",
     "record_count": 8760
   },
   "source_tmy1": {
-    "path": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\references\\standards\\bestest\\DRYCOLD.TMY",
+    "path": "references/standards/bestest/DRYCOLD.TMY",
     "sha256": "E1F4EFC2476706D03EB2E4FD249B1A5FFE84CA961A9977E2E0DB9AC5F67B6DBD",
     "format": "NOAA_TMY1_FIXED_WIDTH"
   },

@@ -21,7 +21,6 @@ from ..exceptions import ConfigurationError
 from .case_registry import base_test_id, get_case_capability
 from .model_scenario import TEST_CASES
 
-
 SCHEMA_VERSION = "1.0"
 EXTERNAL_INPUT_FILENAME = "sia4010_external_inputs.json"
 
@@ -31,6 +30,7 @@ PROVENANCE_STATUSES = {
     "LICENSED_STANDARD_COPY",
     "CLIENT_SUPPLIED",
     "CANDIDATE_DERIVED",
+    "PUBLIC_OFFICIAL_TOOL",
 }
 AUTHORIZATION_STATUSES = {"UNCONFIRMED", "CONFIRMED"}
 VALIDATION_STATUSES = {"PENDING", "PASS", "FAIL"}
@@ -163,51 +163,23 @@ EXTERNAL_INPUT_CATALOG: Dict[str, Dict[str, str]] = {
 }
 
 EXTERNAL_INPUT_BINDING_SCHEMAS: Dict[str, str] = {
-    "iso52016_2017_chapter7_test_cell": (
-        "sia4010.iso52016_chapter7_test_cell.v1"
-    ),
-    "sia2028_dry_normal_zurich_kloten": (
-        "sia4010.sia2028_hourly_weather.v1"
-    ),
-    "sia2024_office_3_1_standard_profiles": (
-        "sia4010.sia2024_usage_profiles.v1"
-    ),
-    "sia3874_2017_table9_controls": (
-        "sia4010.sia3874_shading_controls.v1"
-    ),
-    "sia3874_2017_tables9_10_controls": (
-        "sia4010.sia3874_shading_lighting_controls.v1"
-    ),
-    "sia_example_building_fabric_awning_detail": (
-        "sia4010.shading_device_definition.v1"
-    ),
-    "sia_authority_test3_3k_3l_device_clarification": (
-        "sia4010.authority_decision.v1"
-    ),
-    "sia2024_auditorium_target_profiles": (
-        "sia4010.sia2024_usage_profiles.v1"
-    ),
+    "iso52016_2017_chapter7_test_cell": ("sia4010.iso52016_chapter7_test_cell.v1"),
+    "sia2028_dry_normal_zurich_kloten": ("sia4010.sia2028_hourly_weather.v1"),
+    "sia2024_office_3_1_standard_profiles": ("sia4010.sia2024_usage_profiles.v1"),
+    "sia3874_2017_table9_controls": ("sia4010.sia3874_shading_controls.v1"),
+    "sia3874_2017_tables9_10_controls": ("sia4010.sia3874_shading_lighting_controls.v1"),
+    "sia_example_building_fabric_awning_detail": ("sia4010.shading_device_definition.v1"),
+    "sia_authority_test3_3k_3l_device_clarification": ("sia4010.authority_decision.v1"),
+    "sia2024_auditorium_target_profiles": ("sia4010.sia2024_usage_profiles.v1"),
     "test4_fan_curve_digitization": "sia4010.fan_curves.v1",
-    "sia2024_example_building_standard_profiles": (
-        "sia4010.sia2024_usage_profiles.v1"
-    ),
-    "en16798_5_1_annex_d_rotary_recovery_model": (
-        "sia4010.rotary_recovery_model.v1"
-    ),
+    "sia2024_example_building_standard_profiles": ("sia4010.sia2024_usage_profiles.v1"),
+    "en16798_5_1_annex_d_rotary_recovery_model": ("sia4010.rotary_recovery_model.v1"),
     "test5_fan_curve_digitization": "sia4010.fan_curves.v1",
-    "sia2024_restaurant_6_2_standard_profiles": (
-        "sia4010.sia2024_usage_profiles.v1"
-    ),
-    "sia2024_kitchen_6_4_standard_profiles": (
-        "sia4010.sia2024_usage_profiles.v1"
-    ),
+    "sia2024_restaurant_6_2_standard_profiles": ("sia4010.sia2024_usage_profiles.v1"),
+    "sia2024_kitchen_6_4_standard_profiles": ("sia4010.sia2024_usage_profiles.v1"),
     "test6_stage_control_trace": "sia4010.control_trace.v1",
-    "test7_heat_pump_performance_tables": (
-        "sia4010.generator_performance_tables.v1"
-    ),
-    "sia_authority_test7_pv_precedence": (
-        "sia4010.authority_decision.v1"
-    ),
+    "test7_heat_pump_performance_tables": ("sia4010.generator_performance_tables.v1"),
+    "sia_authority_test7_pv_precedence": ("sia4010.authority_decision.v1"),
 }
 
 
@@ -218,9 +190,7 @@ _COMMON_CELL_INPUTS = (
 )
 
 
-def required_external_input_ids(
-    variant: str, case_id: str
-) -> Tuple[str, ...]:
+def required_external_input_ids(variant: str, case_id: str) -> Tuple[str, ...]:
     """Return the exact delegated inputs required before generator binding."""
 
     # Validate the exact registry pair before deriving its base-test contract.
@@ -253,11 +223,7 @@ def required_external_input_ids(
             return _COMMON_CELL_INPUTS
         return ()
     if test_id == "2":
-        extra = (
-            ("sia3874_2017_table9_controls",)
-            if case_id in {"2B", "2C", "2D"}
-            else ()
-        )
+        extra = ("sia3874_2017_table9_controls",) if case_id in {"2B", "2C", "2D"} else ()
         return _COMMON_CELL_INPUTS + extra
     if test_id == "3":
         extra = (
@@ -265,10 +231,14 @@ def required_external_input_ids(
             if case_id in {"3K", "3L"}
             else ()
         )
-        return _COMMON_CELL_INPUTS + (
-            "sia3874_2017_tables9_10_controls",
-            "sia_example_building_fabric_awning_detail",
-        ) + extra
+        return (
+            _COMMON_CELL_INPUTS
+            + (
+                "sia3874_2017_tables9_10_controls",
+                "sia_example_building_fabric_awning_detail",
+            )
+            + extra
+        )
     if test_id == "4":
         return (
             "sia2028_dry_normal_zurich_kloten",
@@ -318,9 +288,7 @@ def _resolved_path(manifest_path: Path, value: Any) -> Optional[Path]:
         return None
     path = Path(text)
     return (
-        path.resolve()
-        if path.is_absolute()
-        else (manifest_path.parent / path).resolve()
+        path.resolve() if path.is_absolute() else (manifest_path.parent / path).resolve()
     )
 
 
@@ -346,9 +314,7 @@ def _validate_technical_report(
             "External input '{}' technical validation report must be a JSON "
             "object".format(input_id)
         )
-    if str(payload.get("schema_version", "")) != (
-        VALIDATION_REPORT_SCHEMA_VERSION
-    ):
+    if str(payload.get("schema_version", "")) != (VALIDATION_REPORT_SCHEMA_VERSION):
         raise ConfigurationError(
             "External input '{}' validation-report schema is unsupported: "
             "{!r}".format(input_id, payload.get("schema_version"))
@@ -368,9 +334,7 @@ def _validate_technical_report(
     if report_status != expected_status:
         raise ConfigurationError(
             "External input '{}' validation-report status {!r} does not match "
-            "the manifest status {!r}".format(
-                input_id, report_status, expected_status
-            )
+            "the manifest status {!r}".format(input_id, report_status, expected_status)
         )
     for field in ("validated_by", "validation_method"):
         if not str(payload.get(field, "") or "").strip():
@@ -415,9 +379,7 @@ def _validate_technical_report(
     binding_schema = str(binding.get("schema_id", "") or "").strip()
     if not binding_path_text:
         raise ConfigurationError(
-            "External input '{}' binding artifact path is missing".format(
-                input_id
-            )
+            "External input '{}' binding artifact path is missing".format(input_id)
         )
     binding_path = Path(binding_path_text)
     if not binding_path.is_absolute():
@@ -523,9 +485,7 @@ class ExternalInputReadiness:
             "variant": self.variant,
             "case_id": self.case_id,
             "manifest_path": (
-                str(self.manifest_path)
-                if self.manifest_path is not None
-                else None
+                str(self.manifest_path) if self.manifest_path is not None else None
             ),
             "status": self.status,
             "required_input_ids": list(self.required_input_ids),
@@ -555,9 +515,7 @@ class Sia4010ExternalInputManifest:
         self.entries = dict(entries)
 
     @classmethod
-    def load(
-        cls, path: Union[str, Path]
-    ) -> "Sia4010ExternalInputManifest":
+    def load(cls, path: Union[str, Path]) -> "Sia4010ExternalInputManifest":
         """Load one external-input manifest and reject typos or bad schemas."""
 
         manifest_path = Path(path).resolve()
@@ -628,12 +586,12 @@ class Sia4010ExternalInputManifest:
             )
             return evidence
 
-        provenance = str(
-            record.get("provenance_status", "MISSING")
-        ).strip().upper()
-        authorization = str(
-            record.get("normative_authorization_status", "UNCONFIRMED")
-        ).strip().upper()
+        provenance = str(record.get("provenance_status", "MISSING")).strip().upper()
+        authorization = (
+            str(record.get("normative_authorization_status", "UNCONFIRMED"))
+            .strip()
+            .upper()
+        )
         validation = record.get("technical_validation") or {}
         if not isinstance(validation, Mapping):
             raise ConfigurationError(
@@ -641,9 +599,7 @@ class Sia4010ExternalInputManifest:
                     input_id
                 )
             )
-        validation_status = str(
-            validation.get("status", "PENDING")
-        ).strip().upper()
+        validation_status = str(validation.get("status", "PENDING")).strip().upper()
         if provenance not in PROVENANCE_STATUSES:
             raise ConfigurationError(
                 "External input '{}' has unsupported provenance_status {!r}".format(
@@ -664,15 +620,11 @@ class Sia4010ExternalInputManifest:
             )
 
         source_path = _resolved_path(self.path, record.get("source_path"))
-        expected_source_sha = str(
-            record.get("source_sha256", "") or ""
-        ).strip().lower()
-        validation_report_path = _resolved_path(
-            self.path, validation.get("report_path")
+        expected_source_sha = str(record.get("source_sha256", "") or "").strip().lower()
+        validation_report_path = _resolved_path(self.path, validation.get("report_path"))
+        expected_report_sha = (
+            str(validation.get("report_sha256", "") or "").strip().lower()
         )
-        expected_report_sha = str(
-            validation.get("report_sha256", "") or ""
-        ).strip().lower()
         binding_artifact_path = None
         binding_artifact_sha256 = ""
         binding_schema_id = EXTERNAL_INPUT_BINDING_SCHEMAS[input_id]
@@ -694,19 +646,12 @@ class Sia4010ExternalInputManifest:
         if authorization != "CONFIRMED":
             issues.append("normative authorization is unconfirmed")
         source_authority = str(record.get("source_authority", "") or "").strip()
-        license_reference = str(
-            record.get("license_reference", "") or ""
-        ).strip()
-        dataset_identity = str(
-            record.get("dataset_identity", "") or ""
-        ).strip()
-        machine_format = str(
-            record.get("machine_readable_format", "") or ""
-        ).strip()
+        license_reference = str(record.get("license_reference", "") or "").strip()
+        dataset_identity = str(record.get("dataset_identity", "") or "").strip()
+        machine_format = str(record.get("machine_readable_format", "") or "").strip()
         semantic_scope_value = record.get("semantic_scope") or []
         if not isinstance(semantic_scope_value, list) or not all(
-            isinstance(item, str) and item.strip()
-            for item in semantic_scope_value
+            isinstance(item, str) and item.strip() for item in semantic_scope_value
         ):
             raise ConfigurationError(
                 "External input '{}' semantic_scope must be a list of strings".format(
@@ -724,9 +669,7 @@ class Sia4010ExternalInputManifest:
             if not value:
                 issues.append("{} is missing".format(label))
         if validation_status != "PASS":
-            issues.append(
-                "technical validation status is {}".format(validation_status)
-            )
+            issues.append("technical validation status is {}".format(validation_status))
         if validation_report_path is None:
             issues.append("technical validation report_path is missing")
         elif not validation_report_path.is_file():
@@ -749,9 +692,7 @@ class Sia4010ExternalInputManifest:
                 input_id=input_id,
                 source_sha256=expected_source_sha,
                 expected_status=validation_status,
-                expected_binding_schema=EXTERNAL_INPUT_BINDING_SCHEMAS[
-                    input_id
-                ],
+                expected_binding_schema=EXTERNAL_INPUT_BINDING_SCHEMAS[input_id],
             )
 
         evidence = ExternalInputEvidence(
@@ -783,12 +724,8 @@ class Sia4010ExternalInputManifest:
 
         required = required_external_input_ids(variant, case_id)
         evidence = tuple(self.evidence(input_id) for input_id in required)
-        ready = tuple(
-            item.input_id for item in evidence if item.ready_for_binding
-        )
-        blocked = tuple(
-            item.input_id for item in evidence if not item.ready_for_binding
-        )
+        ready = tuple(item.input_id for item in evidence if item.ready_for_binding)
+        blocked = tuple(item.input_id for item in evidence if not item.ready_for_binding)
         return ExternalInputReadiness(
             variant=variant,
             case_id=case_id,
@@ -796,9 +733,7 @@ class Sia4010ExternalInputManifest:
             status=(
                 "NOT_REQUIRED"
                 if not required
-                else "READY_FOR_BINDING"
-                if not blocked
-                else "BLOCKED"
+                else "READY_FOR_BINDING" if not blocked else "BLOCKED"
             ),
             required_input_ids=required,
             ready_input_ids=ready,
@@ -837,9 +772,7 @@ def external_input_readiness(
             ExternalInputEvidence(
                 input_id=input_id,
                 description=EXTERNAL_INPUT_CATALOG[input_id]["description"],
-                source_required=EXTERNAL_INPUT_CATALOG[input_id][
-                    "source_required"
-                ],
+                source_required=EXTERNAL_INPUT_CATALOG[input_id]["source_required"],
                 status="MISSING",
                 source_path=None,
                 source_sha256="",
@@ -901,9 +834,7 @@ def build_external_input_matrix(
         )
 
     cases = []
-    input_usage: Dict[str, list] = {
-        input_id: [] for input_id in EXTERNAL_INPUT_CATALOG
-    }
+    input_usage: Dict[str, list] = {input_id: [] for input_id in EXTERNAL_INPUT_CATALOG}
     status_counts: Dict[str, int] = {}
     evidence_by_id: Dict[str, ExternalInputEvidence] = {}
     for variant, case_ids in TEST_CASES.items():
@@ -914,9 +845,7 @@ def build_external_input_matrix(
                 case_id,
                 manifest=selected,
             )
-            status_counts[readiness.status] = (
-                status_counts.get(readiness.status, 0) + 1
-            )
+            status_counts[readiness.status] = status_counts.get(readiness.status, 0) + 1
             case_ref = "{}/{}".format(variant, case_id)
             for input_id in readiness.required_input_ids:
                 input_usage[input_id].append(case_ref)
@@ -944,9 +873,7 @@ def build_external_input_matrix(
                 "description": catalog["description"],
                 "source_required": catalog["source_required"],
                 "binding_schema_id": EXTERNAL_INPUT_BINDING_SCHEMAS[input_id],
-                "status": (
-                    evidence.status if evidence is not None else "MISSING"
-                ),
+                "status": (evidence.status if evidence is not None else "MISSING"),
                 "affected_cases": input_usage[input_id],
                 "issues": (
                     list(evidence.issues)

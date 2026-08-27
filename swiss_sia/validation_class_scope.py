@@ -25,7 +25,7 @@ Traceability and conservatism:
   official results and SIA sub-commission attestation.
 """
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 from .config import (
@@ -138,10 +138,15 @@ def _detect_daylight_lighting_control(rooms: Sequence[RoomData]) -> Tuple[str, s
         room for room in rooms if _has_meaningful_text(room.daylight_dimming_profile)
     ]
     if controlled:
-        return PRESENT, "{} rooms expose a daylight-dimming profile".format(len(controlled))
+        return PRESENT, "{} rooms expose a daylight-dimming profile".format(
+            len(controlled)
+        )
     lit = [room for room in rooms if room.internal_gains.get("lighting") is not None]
     if not lit:
-        return UNDETERMINED, "No lighting gain was extracted, so control cannot be ruled out"
+        return (
+            UNDETERMINED,
+            "No lighting gain was extracted, so control cannot be ruled out",
+        )
     return ABSENT, "No room exposes a daylight-dimming profile"
 
 
@@ -201,11 +206,31 @@ def _detect_generation_plant(rooms: Sequence[RoomData]) -> Tuple[str, str]:
 # Feature -> official test family. The scope text comes from the encoded
 # official test descriptions, so the justification stays source-traced.
 _FEATURE_TESTS: Tuple[Tuple[str, str, str, Any], ...] = (
-    ("solar_protection", "Solar protection / shading control", "test_2", _detect_solar_protection),
-    ("lighting_control", "Daylight-linked lighting control", "test_3", _detect_daylight_lighting_control),
-    ("mechanical_ventilation", "Mechanical ventilation / AHU", "test_6", _detect_mechanical_ventilation),
+    (
+        "solar_protection",
+        "Solar protection / shading control",
+        "test_2",
+        _detect_solar_protection,
+    ),
+    (
+        "lighting_control",
+        "Daylight-linked lighting control",
+        "test_3",
+        _detect_daylight_lighting_control,
+    ),
+    (
+        "mechanical_ventilation",
+        "Mechanical ventilation / AHU",
+        "test_6",
+        _detect_mechanical_ventilation,
+    ),
     ("heat_recovery", "Ventilation heat recovery", "test_6", _detect_heat_recovery),
-    ("generation_plant", "Heating/cooling generation", "test_7", _detect_generation_plant),
+    (
+        "generation_plant",
+        "Heating/cooling generation",
+        "test_7",
+        _detect_generation_plant,
+    ),
 )
 
 

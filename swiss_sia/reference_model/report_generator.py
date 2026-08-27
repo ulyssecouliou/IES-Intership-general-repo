@@ -29,10 +29,7 @@ class ReportArtifacts:
     def to_dict(self) -> Dict[str, str]:
         """Return artifact paths as a serializable mapping."""
 
-        return {
-            name: str(value)
-            for name, value in self.__dict__.items()
-        }
+        return {name: str(value) for name, value in self.__dict__.items()}
 
 
 def _json_cell(value: Any) -> str:
@@ -68,7 +65,9 @@ class ReportGenerator:
         temporary.replace(path)
 
     @staticmethod
-    def _write_csv(path: Path, fieldnames: Sequence[str], rows: Iterable[Dict[str, Any]]) -> None:
+    def _write_csv(
+        path: Path, fieldnames: Sequence[str], rows: Iterable[Dict[str, Any]]
+    ) -> None:
         """Write one Excel-ready UTF-8 CSV through atomic replacement."""
 
         temporary = path.with_suffix(path.suffix + ".tmp")
@@ -129,8 +128,7 @@ class ReportGenerator:
         with temporary_audit.open("w", encoding="utf-8") as handle:
             for event in audit_events:
                 handle.write(
-                    json.dumps(event.to_dict(), ensure_ascii=False, sort_keys=True)
-                    + "\n"
+                    json.dumps(event.to_dict(), ensure_ascii=False, sort_keys=True) + "\n"
                 )
         temporary_audit.replace(artifacts.audit_jsonl)
 

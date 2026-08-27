@@ -2,7 +2,7 @@
 
 from dataclasses import asdict, dataclass
 from enum import Enum
-from typing import Any, Dict, Iterable, List, Optional, Tuple
+from typing import Any, Dict, Iterable, Optional, Tuple
 
 from .expected_results import ExpectedResult, ObservedResult
 
@@ -50,7 +50,9 @@ class Sia4010ComplianceComparator:
         if expected.absolute_tolerance is not None:
             candidates.append(abs(expected.absolute_tolerance))
         if expected.relative_tolerance is not None:
-            candidates.append(abs(expected.expected_value) * abs(expected.relative_tolerance))
+            candidates.append(
+                abs(expected.expected_value) * abs(expected.relative_tolerance)
+            )
         return max(candidates) if candidates else None
 
     def compare_one(
@@ -89,9 +91,11 @@ class Sia4010ComplianceComparator:
             return ComparisonOutcome(
                 key=expected.key,
                 status=ComparisonStatus.PASS if within else ComparisonStatus.FAIL,
-                message="Observed result is within the official reference band"
-                if within
-                else "Observed result is outside the official reference band",
+                message=(
+                    "Observed result is within the official reference band"
+                    if within
+                    else "Observed result is outside the official reference band"
+                ),
                 expected_value=expected.expected_value,
                 observed_value=observed.value,
                 unit=expected.unit,
@@ -119,9 +123,11 @@ class Sia4010ComplianceComparator:
         return ComparisonOutcome(
             key=expected.key,
             status=ComparisonStatus.PASS if passed else ComparisonStatus.FAIL,
-            message="Observed result is within the source-provided tolerance"
-            if passed
-            else "Observed result exceeds the source-provided tolerance",
+            message=(
+                "Observed result is within the source-provided tolerance"
+                if passed
+                else "Observed result exceeds the source-provided tolerance"
+            ),
             expected_value=expected.expected_value,
             observed_value=observed.value,
             unit=expected.unit,

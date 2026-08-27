@@ -22,6 +22,11 @@ from typing import Any, Dict, List, Optional
 
 from swiss_sia.compliance_criteria import build_manifest
 from swiss_sia.compliance_verdict import build_compliance_verdict
+from swiss_sia.assessment_governance import (
+    evaluate_assessment_governance,
+    governance_summary,
+    legal_wording,
+)
 from swiss_sia.excel_report import ExcelReportGenerator
 
 # Coverage status (data availability) -> runtime status, by VE capability class.
@@ -70,7 +75,10 @@ def _runtime_status_for(criterion: Dict[str, Any], coverage: Any) -> Any:
             or "VE cannot produce this quantity; not auto-decidable.",
         )
 
-    coverage_status, evidence = coverage or ("MISSING", "No coverage evidence for this criterion.")
+    coverage_status, evidence = coverage or (
+        "MISSING",
+        "No coverage evidence for this criterion.",
+    )
 
     if capability == "EXTERNAL_EVIDENCE":
         if coverage_status == "AVAILABLE":
@@ -89,7 +97,10 @@ def _decisive_gate_status(sia3802_results: Dict[str, Any]) -> Any:
     comparison = (sia3802_results or {}).get("global_reference_comparison", {}) or {}
     status = str(comparison.get("status") or "").upper()
     if status == "REVIEWED_RESULT_AVAILABLE":
-        return "OK", "Reviewed project/reference comparison available; project <= reference."
+        return (
+            "OK",
+            "Reviewed project/reference comparison available; project <= reference.",
+        )
     if status == "REVIEWED_RESULT_CONTRADICTS_ACCEPTANCE":
         return (
             "NOT_OK",
@@ -133,7 +144,8 @@ def evaluate_client_compliance(
     manifest = build_manifest()
     if str(scope or "").strip().lower() == "sia3802":
         manifest["criteria"] = [
-            criterion for criterion in manifest["criteria"]
+            criterion
+            for criterion in manifest["criteria"]
             if not str(criterion.get("standard") or "").startswith("SIA 4010")
         ]
         manifest["meta"]["scope"] = "sia3802"
@@ -178,4 +190,13 @@ def evaluate_client_compliance(
             "decisive gate plus no NOT_CHECKABLE/NOT_OK domain. See verdict_logic."
         ),
     }
+    dynamic = dict(dynamic_results or {})
+    metadata = dynamic.get("reviewed_project_metadata", {})
+    if not isinstance(metadata, dict):
+        metadata = {}
+    governance = governance_summary(
+        evaluate_assessment_governance(metadata, dynamic, "en")
+    )
+    governance["legal_wording"] = legal_wording("en")
+    manifest["review_governance"] = governance
     return manifest

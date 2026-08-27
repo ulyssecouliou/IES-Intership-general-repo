@@ -25,11 +25,11 @@ from ui import theme
 @pytest.fixture
 def root():
     """A real Tk window, skipped where there is no display."""
-    tkinter = pytest.importorskip('tkinter')
+    tkinter = pytest.importorskip("tkinter")
     try:
         window = tkinter.Tk()
     except Exception:  # noqa: BLE001 -- no display is a skip, not a failure
-        pytest.skip('no display available')
+        pytest.skip("no display available")
     window.withdraw()
     yield window
     window.destroy()
@@ -39,10 +39,12 @@ def root():
 # The theme switch -- the whole reason this module exists
 # --------------------------------------------------------------------------
 
+
 def test_apply_actually_switches_theme(root):
     """THE DEFECT. Without this switch every colour below is ignored and the
     dialog comes up system grey, with nothing raising."""
     from tkinter import ttk
+
     style = theme.apply(root)
     assert isinstance(style, ttk.Style)
     if theme.REQUIRED_THEME in style.theme_names():
@@ -51,17 +53,18 @@ def test_apply_actually_switches_theme(root):
 
 def test_apply_paints_the_window_ground(root):
     theme.apply(root)
-    assert root.cget('background') == design.LIGHT_GREY
+    assert root.cget("background") == design.LIGHT_GREY
 
 
 def test_a_missing_clam_does_not_fail(root):
     """Not observed, but possible on a minimal install. An interface in system
     colours is still usable; an exception is not."""
     from tkinter import ttk
+
     style = ttk.Style(root)
     original = style.theme_names
 
-    style.theme_names = lambda: ('alt',)
+    style.theme_names = lambda: ("alt",)
     try:
         assert theme._force_theme(style) in style.theme_names() or True
     finally:
@@ -70,22 +73,23 @@ def test_a_missing_clam_does_not_fail(root):
 
 def test_the_module_explains_why_it_switches():
     """A theme switch with no stated reason gets 'simplified away'."""
-    chemin = os.path.abspath(theme.__file__).replace('.pyc', '.py')
-    with io.open(chemin, encoding='utf-8') as flux:
+    chemin = os.path.abspath(theme.__file__).replace(".pyc", ".py")
+    with io.open(chemin, encoding="utf-8") as flux:
         entete = flux.read(2500)
-    assert 'vista' in entete
-    assert 'not an aesthetic preference' in entete
+    assert "vista" in entete
+    assert "not an aesthetic preference" in entete
 
 
 # --------------------------------------------------------------------------
 # Style names
 # --------------------------------------------------------------------------
 
+
 def _advertised_styles():
     """Every style name the module exposes as a constant."""
     noms = []
     for nom in dir(theme):
-        if not nom.startswith('STYLE_'):
+        if not nom.startswith("STYLE_"):
             continue
         valeur = getattr(theme, nom)
         if isinstance(valeur, str):
@@ -129,28 +133,28 @@ def test_badge_styles_are_distinct():
 # Verdicts: colour is never the only carrier
 # --------------------------------------------------------------------------
 
-@pytest.mark.parametrize('status', design.STATUSES)
+
+@pytest.mark.parametrize("status", design.STATUSES)
 def test_a_verdict_always_carries_its_symbol(status):
-    libelle = theme.verdict_label(status, 'TEXT')
+    libelle = theme.verdict_label(status, "TEXT")
     assert design.STATUS_SYMBOL[status] in libelle
-    assert 'TEXT' in libelle
+    assert "TEXT" in libelle
 
 
 def test_the_symbol_comes_before_the_word():
     """It leads because it is what stays readable when the colour does not
     render at all."""
-    libelle = theme.verdict_label(design.PASS, 'CONFORME')
-    assert libelle.index(design.STATUS_SYMBOL[design.PASS]) < \
-        libelle.index('CONFORME')
+    libelle = theme.verdict_label(design.PASS, "CONFORME")
+    assert libelle.index(design.STATUS_SYMBOL[design.PASS]) < libelle.index("CONFORME")
 
 
 def test_an_unknown_status_does_not_read_as_a_success():
-    ground, _ = theme.row_colours('no such status')
+    ground, _ = theme.row_colours("no such status")
     assert ground == design.LIGHT_GREY
     assert ground != design.STATUS_GROUND[design.PASS]
 
 
-@pytest.mark.parametrize('status', design.STATUSES)
+@pytest.mark.parametrize("status", design.STATUSES)
 def test_row_text_stays_the_brand_text_colour(status):
     """Tinting the text as well as the ground costs contrast, and the ground
     already carries the state."""
@@ -162,8 +166,10 @@ def test_row_text_stays_the_brand_text_colour(status):
 # Table
 # --------------------------------------------------------------------------
 
+
 def test_configure_row_tags_returns_every_tag(root):
     from tkinter import ttk
+
     theme.apply(root)
     arbre = ttk.Treeview(root)
     tags = theme.configure_row_tags(arbre)
@@ -174,20 +180,21 @@ def test_table_rows_breathe(root):
     """The house style divides by space. A cramped row height is the single
     change that makes the table stop looking like the site."""
     style = theme.apply(root)
-    assert int(style.configure(theme.STYLE_TREE, 'rowheight')) >= 26
+    assert int(style.configure(theme.STYLE_TREE, "rowheight")) >= 26
 
 
 def test_the_table_header_is_not_the_row_ground(root):
     """Without a distinct header the first data row reads as a heading."""
     style = theme.apply(root)
-    entete = style.configure(theme.STYLE_TREE + '.Heading', 'background')
-    corps = style.configure(theme.STYLE_TREE, 'background')
+    entete = style.configure(theme.STYLE_TREE + ".Heading", "background")
+    corps = style.configure(theme.STYLE_TREE, "background")
     assert entete != corps
 
 
 # --------------------------------------------------------------------------
 # Space discipline
 # --------------------------------------------------------------------------
+
 
 def test_padding_comes_from_the_scale():
     """Ad-hoc padding is what makes an interface look assembled rather than

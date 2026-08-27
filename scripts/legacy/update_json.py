@@ -1,15 +1,31 @@
 # -*- coding: utf-8 -*-
 import openpyxl
 import json
+import os
+import sys
 from datetime import datetime
+from pathlib import Path
+
+REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
+REFERENCE_PATH = REPOSITORY_ROOT / "refs" / "reference-data" / "test-1.ref.json"
+SIA_SOURCE_ROOT = Path(
+    os.environ.get("SIA_4010_DOSSIER", REPOSITORY_ROOT / "SIA_4010_geteilter_Link")
+)
+
+if "--write" not in sys.argv:
+    raise SystemExit(
+        "Historical migration tool: pass --write explicitly after reviewing "
+        "scripts/legacy/README.md and run the reference-integrity tests afterwards."
+    )
 
 # Load current JSON
-with open(r'C:\Users\ulysse.couliou\Documents\SIA_Compliance_Scripts\refs\reference-data\test-1.ref.json', 'r', encoding='utf-8') as f:
+with REFERENCE_PATH.open("r", encoding="utf-8") as f:
     current_data = json.load(f)
 
-wb_path = r"C:\Users\ulysse.couliou\Documents\SIA_Compliance_Scripts\SIA_4010_geteilter_Link\Test1\Resultaterfassung_Test1.xlsx"
+wb_path = SIA_SOURCE_ROOT / "Test1" / "Resultaterfassung_Test1.xlsx"
 wb = openpyxl.load_workbook(wb_path, data_only=True)
 ws = wb["Zusammenfassung Testfälle"]
+
 
 # ===== TABLE 30 EXTRACTION (Monthly Data) =====
 def extract_table_30():
@@ -21,7 +37,16 @@ def extract_table_30():
         ("900FF", "AO", "AP", "AQ", "AR", "AS", "AT", "AU"),
     ]
 
-    for case_id, col_month, col_testprog, col_iso, col_ida, col_excel, col_energyplus, col_tas in cases_30:
+    for (
+        case_id,
+        col_month,
+        col_testprog,
+        col_iso,
+        col_ida,
+        col_excel,
+        col_energyplus,
+        col_tas,
+    ) in cases_30:
         case_data = {
             "_metadata": {
                 "case_id": case_id,
@@ -36,20 +61,20 @@ def extract_table_30():
                     "excel_sia_380_2": col_excel,
                     "energyplus_openstudio": col_energyplus,
                     "tas_edsl": col_tas,
-                }
+                },
             },
-            "monthly": {}
+            "monthly": {},
         }
 
         # Rows 58-69 (months 1-12)
         for row in range(58, 70):
-            month_num = ws[f'{col_month}{row}'].value
-            testprog = ws[f'{col_testprog}{row}'].value
-            iso = ws[f'{col_iso}{row}'].value
-            ida = ws[f'{col_ida}{row}'].value
-            excel = ws[f'{col_excel}{row}'].value
-            energyplus = ws[f'{col_energyplus}{row}'].value
-            tas = ws[f'{col_tas}{row}'].value
+            month_num = ws[f"{col_month}{row}"].value
+            testprog = ws[f"{col_testprog}{row}"].value
+            iso = ws[f"{col_iso}{row}"].value
+            ida = ws[f"{col_ida}{row}"].value
+            excel = ws[f"{col_excel}{row}"].value
+            energyplus = ws[f"{col_energyplus}{row}"].value
+            tas = ws[f"{col_tas}{row}"].value
 
             if month_num and isinstance(month_num, int) and 1 <= month_num <= 12:
                 month_key = f"month_{month_num:02d}"
@@ -58,7 +83,7 @@ def extract_table_30():
                         "value": testprog if not isinstance(testprog, str) else None,
                         "unit": "C",
                         "cell": f"{col_testprog}{row}",
-                        "note": "Excel error: #DIV/0!" if testprog == "#DIV/0!" else None
+                        "note": "Excel error: #DIV/0!" if testprog == "#DIV/0!" else None,
                     },
                     "iso_52016_1_2017_reference": {
                         "value": iso,
@@ -84,18 +109,18 @@ def extract_table_30():
                         "value": tas,
                         "unit": "C",
                         "cell": f"{col_tas}{row}",
-                    }
+                    },
                 }
 
         # Row 70 (annual)
         row = 70
-        month_num = ws[f'{col_month}{row}'].value
-        testprog = ws[f'{col_testprog}{row}'].value
-        iso = ws[f'{col_iso}{row}'].value
-        ida = ws[f'{col_ida}{row}'].value
-        excel = ws[f'{col_excel}{row}'].value
-        energyplus = ws[f'{col_energyplus}{row}'].value
-        tas = ws[f'{col_tas}{row}'].value
+        month_num = ws[f"{col_month}{row}"].value
+        testprog = ws[f"{col_testprog}{row}"].value
+        iso = ws[f"{col_iso}{row}"].value
+        ida = ws[f"{col_ida}{row}"].value
+        excel = ws[f"{col_excel}{row}"].value
+        energyplus = ws[f"{col_energyplus}{row}"].value
+        tas = ws[f"{col_tas}{row}"].value
 
         if month_num == "Annual":
             case_data["monthly"]["annual"] = {
@@ -103,7 +128,7 @@ def extract_table_30():
                     "value": testprog if not isinstance(testprog, str) else None,
                     "unit": "C",
                     "cell": f"{col_testprog}{row}",
-                    "note": "Excel error: #DIV/0!" if testprog == "#DIV/0!" else None
+                    "note": "Excel error: #DIV/0!" if testprog == "#DIV/0!" else None,
                 },
                 "iso_52016_1_2017_reference": {
                     "value": iso,
@@ -129,12 +154,13 @@ def extract_table_30():
                     "value": tas,
                     "unit": "C",
                     "cell": f"{col_tas}{row}",
-                }
+                },
             }
 
         table_30_data[case_id] = case_data
 
     return table_30_data
+
 
 # ===== TABLE 32 EXTRACTION (Annual Extremes) =====
 def extract_table_32():
@@ -147,7 +173,9 @@ def extract_table_32():
     ]
 
     for case_id, cols in cases_32:
-        col_label, col_testprog, col_iso, col_ida, col_excel, col_energyplus, col_tas = cols
+        col_label, col_testprog, col_iso, col_ida, col_excel, col_energyplus, col_tas = (
+            cols
+        )
 
         case_data = {
             "_metadata": {
@@ -163,20 +191,20 @@ def extract_table_32():
                     "excel_sia_380_2": col_excel,
                     "energyplus_openstudio": col_energyplus,
                     "tas_edsl": col_tas,
-                }
+                },
             },
-            "annual": {}
+            "annual": {},
         }
 
         # Rows 105 (Max), 106 (Min), 107 (Average)
         for row, label_key in [(105, "max"), (106, "min"), (107, "average")]:
-            label = ws[f'{col_label}{row}'].value
-            testprog = ws[f'{col_testprog}{row}'].value
-            iso = ws[f'{col_iso}{row}'].value
-            ida = ws[f'{col_ida}{row}'].value
-            excel = ws[f'{col_excel}{row}'].value
-            energyplus = ws[f'{col_energyplus}{row}'].value
-            tas = ws[f'{col_tas}{row}'].value
+            label = ws[f"{col_label}{row}"].value
+            testprog = ws[f"{col_testprog}{row}"].value
+            iso = ws[f"{col_iso}{row}"].value
+            ida = ws[f"{col_ida}{row}"].value
+            excel = ws[f"{col_excel}{row}"].value
+            energyplus = ws[f"{col_energyplus}{row}"].value
+            tas = ws[f"{col_tas}{row}"].value
 
             case_data["annual"][label_key] = {
                 "label": label,
@@ -184,7 +212,7 @@ def extract_table_32():
                     "value": testprog if not isinstance(testprog, str) else None,
                     "unit": "C",
                     "cell": f"{col_testprog}{row}",
-                    "note": "Excel error: #DIV/0!" if testprog == "#DIV/0!" else None
+                    "note": "Excel error: #DIV/0!" if testprog == "#DIV/0!" else None,
                 },
                 "iso_52016_1_2017_reference": {
                     "value": iso,
@@ -210,12 +238,13 @@ def extract_table_32():
                     "value": tas,
                     "unit": "C",
                     "cell": f"{col_tas}{row}",
-                }
+                },
             }
 
         table_32_data[case_id] = case_data
 
     return table_32_data
+
 
 # Extract corrected data
 table_30_data = extract_table_30()
@@ -225,10 +254,18 @@ print("Table 30 (monthly) extracted:", list(table_30_data.keys()))
 print("Table 32 (annual extremes) extracted:", list(table_32_data.keys()))
 
 # Update JSON
-current_data["reference_values"]["operative_temperature_monthly_celsius"]["600FF"] = table_30_data["600FF"]
-current_data["reference_values"]["operative_temperature_monthly_celsius"]["900FF"] = table_30_data["900FF"]
-current_data["reference_values"]["operative_temperature_annual_extremes_celsius"]["600FF"] = table_32_data["600FF"]
-current_data["reference_values"]["operative_temperature_annual_extremes_celsius"]["900FF"] = table_32_data["900FF"]
+current_data["reference_values"]["operative_temperature_monthly_celsius"]["600FF"] = (
+    table_30_data["600FF"]
+)
+current_data["reference_values"]["operative_temperature_monthly_celsius"]["900FF"] = (
+    table_30_data["900FF"]
+)
+current_data["reference_values"]["operative_temperature_annual_extremes_celsius"][
+    "600FF"
+] = table_32_data["600FF"]
+current_data["reference_values"]["operative_temperature_annual_extremes_celsius"][
+    "900FF"
+] = table_32_data["900FF"]
 
 # Update status and extraction date
 current_data["status"] = "CORRECTED"
@@ -238,12 +275,12 @@ current_data["corrections"] = {
     "reason": "Fixed column mapping error in Table 30 (600FF/900FF) and Table 32 (600FF/900FF extremes)",
     "details": {
         "table_30": "Corrected column mapping for 600FF (AG-AM) and 900FF (AP-AU); documented #DIV/0! errors in Testprogramm",
-        "table_32": "Fixed zone identification for extremes; now using Zone 2 (A-G and I-O) instead of Zone 3 (BH-BM)"
-    }
+        "table_32": "Fixed zone identification for extremes; now using Zone 2 (A-G and I-O) instead of Zone 3 (BH-BM)",
+    },
 }
 
 # Save corrected JSON
-with open(r'C:\Users\ulysse.couliou\Documents\SIA_Compliance_Scripts\refs\reference-data\test-1.ref.json', 'w', encoding='utf-8') as f:
+with REFERENCE_PATH.open("w", encoding="utf-8") as f:
     json.dump(current_data, f, indent=2, ensure_ascii=False)
 
 print("\nJSON updated and saved.")

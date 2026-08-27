@@ -11,13 +11,12 @@ import hashlib
 import json
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, Iterable, Mapping, Optional, Tuple, Union
+from typing import Any, Dict, Iterable, Mapping, Optional, Union
 
 from ..asset_manifest import load_asset_manifest
 from ..config_loader import load_configuration
 from ..exceptions import ConfigurationError
 from .case_manifest import Sia4010CaseManifest
-
 
 SUPPORTED_WEATHER_SUFFIXES = {".epw", ".fwt", ".tmy"}
 PUBLIC_BESTEST_SOURCE = (
@@ -26,9 +25,7 @@ PUBLIC_BESTEST_SOURCE = (
 )
 PUBLIC_BESTEST_URL = "https://doi.org/10.2172/90674"
 ISO_52016_SOURCE = "BS EN ISO 52016-1:2017 licensed project evidence"
-ISO_52016_OPAQUE_LOCATOR = (
-    "Figure 2 and Tables 22-25, licensed evidence pages 123-127"
-)
+ISO_52016_OPAQUE_LOCATOR = "Figure 2 and Tables 22-25, licensed evidence pages 123-127"
 ISO_52016_GLAZING_LOCATOR = "Clause 7.2.2.6, licensed evidence page 126"
 WEATHER_VERIFICATION_FILENAME = "DRYCOLD_TMY_ISO_SOURCE_VERIFICATION.json"
 EPW_WEATHER_VERIFICATION_FILENAME = "DRYCOLD_IESVE_EPW_DERIVATION.json"
@@ -84,9 +81,7 @@ def _load_weather_verification(
     if not report_path.is_file():
         return None
     report = _load_json(report_path)
-    expected_checksum = str(
-        report.get("weather", {}).get("sha256", "")
-    ).upper()
+    expected_checksum = str(report.get("weather", {}).get("sha256", "")).upper()
     actual_checksum = _checksum(weather_file)
     if (
         report.get("status") != "PASS"
@@ -287,9 +282,7 @@ def _preserve_runtime_glazing_calibration(
     try:
         recorded_target = float(calibration["target_u_w_m2k"])
         verified_u = float(calibration["verified_u_w_m2k"])
-        calibrated_resistance = float(
-            calibration["cavity_resistance_m2k_w"]
-        )
+        calibrated_resistance = float(calibration["cavity_resistance_m2k_w"])
     except (KeyError, TypeError, ValueError):
         return False
     if (
@@ -299,9 +292,7 @@ def _preserve_runtime_glazing_calibration(
     ):
         return False
     try:
-        previous_glazing = _by_key(previous["constructions"])[
-            "external_glazing"
-        ]
+        previous_glazing = _by_key(previous["constructions"])["external_glazing"]
         previous_cavity = next(
             layer
             for layer in previous_glazing["layers"]
@@ -309,9 +300,7 @@ def _preserve_runtime_glazing_calibration(
         )
         resistance_field = previous_cavity["properties"]["resistance"]
         traced_resistance = float(resistance_field["value"])
-        generated_glazing = _by_key(generated["constructions"])[
-            "external_glazing"
-        ]
+        generated_glazing = _by_key(generated["constructions"])["external_glazing"]
         generated_cavity = next(
             layer
             for layer in generated_glazing["layers"]
@@ -321,11 +310,9 @@ def _preserve_runtime_glazing_calibration(
         return False
     if abs(traced_resistance - calibrated_resistance) > 1.0e-9:
         return False
-    generated_cavity["properties"]["resistance"] = copy.deepcopy(
-        resistance_field
-    )
-    generated["metadata"]["external_glazing_runtime_calibration"] = (
-        copy.deepcopy(dict(calibration))
+    generated_cavity["properties"]["resistance"] = copy.deepcopy(resistance_field)
+    generated["metadata"]["external_glazing_runtime_calibration"] = copy.deepcopy(
+        dict(calibration)
     )
     generated["metadata"]["external_glazing_runtime_calibration"][
         "preserved_by_bundle_rebuild"
@@ -427,7 +414,9 @@ def _build_assets(
     # lower bounds. VE must still set and read back the values or report the
     # minimum non-negative substitute it requires.
     for field_name in ("density", "specific_heat_capacity"):
-        materials["xps_ground"]["properties"][field_name]["validation_range"]["minimum"] = 0.0
+        materials["xps_ground"]["properties"][field_name]["validation_range"][
+            "minimum"
+        ] = 0.0
 
     glass = materials["equivalent_glazing_layer"]
     _set_material(
@@ -486,10 +475,8 @@ def _build_assets(
     }
     for key, layers in construction_layers.items():
         construction = constructions[key]
-        construction["description"] = (
-            "ISO 52016-1 Case 600 {} construction.".format(
-                key.replace("_", " ")
-            )
+        construction["description"] = "ISO 52016-1 Case 600 {} construction.".format(
+            key.replace("_", " ")
         )
         construction["source"] = ISO_52016_SOURCE
         construction["source_locator"] = ISO_52016_OPAQUE_LOCATOR
@@ -530,12 +517,22 @@ def _build_assets(
                 10.0,
             ),
             "inside_surface_solar_absorptivity": _field(
-                solar_absorptance, "ISO opaque solar absorptance.", "fraction",
-                ISO_52016_OPAQUE_LOCATOR, "number", 0.0, 1.0,
+                solar_absorptance,
+                "ISO opaque solar absorptance.",
+                "fraction",
+                ISO_52016_OPAQUE_LOCATOR,
+                "number",
+                0.0,
+                1.0,
             ),
             "outside_surface_solar_absorptivity": _field(
-                solar_absorptance, "ISO opaque solar absorptance.", "fraction",
-                ISO_52016_OPAQUE_LOCATOR, "number", 0.0, 1.0,
+                solar_absorptance,
+                "ISO opaque solar absorptance.",
+                "fraction",
+                ISO_52016_OPAQUE_LOCATOR,
+                "number",
+                0.0,
+                1.0,
             ),
         }
         for property_field in construction["properties"].values():
@@ -674,11 +671,15 @@ def _build_assets(
         1.0,
     )
     for property_name in (
-        "max_power_consumption", "max_sensible_gain",
-        "max_latent_gain", "radiant_fraction",
+        "max_power_consumption",
+        "max_sensible_gain",
+        "max_latent_gain",
+        "radiant_fraction",
     ):
         equipment_properties[property_name]["source"] = ISO_52016_SOURCE
-        equipment_properties[property_name]["source_locator"] = "Clause 7.2.2.13, page 129"
+        equipment_properties[property_name][
+            "source_locator"
+        ] = "Clause 7.2.2.13, page 129"
 
     exchanges = _by_key(assets["air_exchanges"])
     infiltration = exchanges["infiltration"]
@@ -692,9 +693,9 @@ def _build_assets(
         "to the published 1.107 m3/(h m2)."
     )
     infiltration["properties"]["max_flow"]["source"] = ISO_52016_SOURCE
-    infiltration["properties"]["max_flow"]["source_locator"] = (
-        "Clause 7.2.2.14, page 129 and exact unit conversion"
-    )
+    infiltration["properties"]["max_flow"][
+        "source_locator"
+    ] = "Clause 7.2.2.14, page 129 and exact unit conversion"
     outdoor_air = exchanges["outdoor_air"]
     outdoor_air["description"] = "No mechanical ventilation in ISO Test 1."
     outdoor_air["source"] = ISO_52016_SOURCE
@@ -749,9 +750,9 @@ def _build_assets(
     )
     for setpoint_name in ("heating_setpoint", "cooling_setpoint"):
         template["room_conditions"][setpoint_name]["source"] = ISO_52016_SOURCE
-        template["room_conditions"][setpoint_name]["source_locator"] = (
-            "Clause 7.2.2.15, pages 129-130"
-        )
+        template["room_conditions"][setpoint_name][
+            "source_locator"
+        ] = "Clause 7.2.2.15, pages 129-130"
     template["room_conditions"]["solar_reflected_fraction"] = _field(
         0.0,
         "ISO assumes no solar radiation is lost by re-reflection through the window.",
@@ -761,13 +762,11 @@ def _build_assets(
         0.0,
         1.0,
     )
-    template["room_conditions"]["solar_reflected_fraction"]["source"] = (
-        ISO_52016_SOURCE
-    )
+    template["room_conditions"]["solar_reflected_fraction"]["source"] = ISO_52016_SOURCE
     template["system_data"]["conditioned"]["source"] = ISO_52016_SOURCE
-    template["system_data"]["conditioned"]["source_locator"] = (
-        "Clauses 7.2.2.15 and 7.2.2.16, pages 129-130"
-    )
+    template["system_data"]["conditioned"][
+        "source_locator"
+    ] = "Clauses 7.2.2.15 and 7.2.2.16, pages 129-130"
     template["system_data"]["system_air_minimum_flowrate"] = _field(
         0.0,
         (
@@ -781,9 +780,7 @@ def _build_assets(
         0.0,
         0.0,
     )
-    template["system_data"]["system_air_minimum_flowrate"]["source"] = (
-        ISO_52016_SOURCE
-    )
+    template["system_data"]["system_air_minimum_flowrate"]["source"] = ISO_52016_SOURCE
     template["system_data"]["system_air_minimum_flowrate_units"] = _field(
         3,
         (
@@ -796,9 +793,9 @@ def _build_assets(
         0,
         4,
     )
-    template["system_data"]["system_air_minimum_flowrate_units"]["source"] = (
-        ISO_52016_SOURCE
-    )
+    template["system_data"]["system_air_minimum_flowrate_units"][
+        "source"
+    ] = ISO_52016_SOURCE
     template["system_data"]["system_air_variation_profile"] = _field(
         "ON",
         (
@@ -810,9 +807,7 @@ def _build_assets(
         "Case 600 constant schedules; portable VE ON representation",
         "string",
     )
-    template["system_data"]["system_air_variation_profile"]["source"] = (
-        ISO_52016_SOURCE
-    )
+    template["system_data"]["system_air_variation_profile"]["source"] = ISO_52016_SOURCE
     template["system_data"]["system_air_variation_profile"][
         "source_locator"
     ] = "Clause 7.2.2.14, page 129"
@@ -839,9 +834,9 @@ def _build_assets(
         "cooling_plant_radiant_fraction",
     ):
         template["system_data"][fraction_name]["source"] = ISO_52016_SOURCE
-        template["system_data"][fraction_name]["source_locator"] = (
-            "Clause 7.2.2.9, page 127"
-        )
+        template["system_data"][fraction_name][
+            "source_locator"
+        ] = "Clause 7.2.2.9, page 127"
     if assets.get("apache_system"):
         assets["apache_system"].update(
             {
@@ -978,9 +973,7 @@ def build_case600_mvp_bundle(
             )
         if selected_weather.suffix.casefold() not in SUPPORTED_WEATHER_SUFFIXES:
             raise ConfigurationError(
-                "Weather file must be .epw, .fwt or .tmy: {}".format(
-                    selected_weather
-                )
+                "Weather file must be .epw, .fwt or .tmy: {}".format(selected_weather)
             )
     weather_verification = _load_weather_verification(selected_weather)
 
@@ -1016,9 +1009,7 @@ def build_case600_mvp_bundle(
                         selected_weather.name,
                         _checksum(selected_weather),
                         (
-                            "; verification={}".format(
-                                weather_verification["path"]
-                            )
+                            "; verification={}".format(weather_verification["path"])
                             if weather_verification
                             else ""
                         ),

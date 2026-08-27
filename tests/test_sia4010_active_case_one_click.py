@@ -12,10 +12,17 @@ from Run_VE_SIA4010_Test1_Active_Case_One_Click import (
     _exact_stale_construction_key,
     _failed_control_ids,
     _outcome_failed,
+    _requires_operator_checkpoint,
 )
 
 
 class ActiveCaseRecoveryTests(unittest.TestCase):
+    def test_fresh_generation_requires_rfcont_operator_checkpoint(self):
+        self.assertTrue(_requires_operator_checkpoint(0, "900"))
+        self.assertFalse(_requires_operator_checkpoint(1, "900"))
+        self.assertFalse(_requires_operator_checkpoint(0, "600FF"))
+        self.assertFalse(_requires_operator_checkpoint(0, "900FF"))
+
     def test_only_explicit_failed_controls_are_returned(self):
         outcome = SimpleNamespace(
             status=SimpleNamespace(value="FAIL"),
@@ -76,9 +83,7 @@ class ActiveCaseRecoveryTests(unittest.TestCase):
             ]
         }
         with patch("pathlib.Path.read_text", return_value=json.dumps(payload)):
-            self.assertEqual(
-                _exact_stale_construction_key("C:/project"), "external_wall"
-            )
+            self.assertEqual(_exact_stale_construction_key("C:/project"), "external_wall")
         payload["validation_results"].append(
             {"status": "FAIL", "message": "unrelated failure"}
         )

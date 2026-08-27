@@ -13,7 +13,6 @@ from swiss_sia.config import (
 from swiss_sia.model_analyzer import RoomData
 from swiss_sia.sia4010_checker import SIA4010Checker
 
-
 EXPECTED_CLASS_TEST_MATRIX = {
     "1A": ["test_1", "test_2A"],
     "1B": ["test_1", "test_2B", "test_2C", "test_2D"],
@@ -84,10 +83,12 @@ class SIA4010VariantReadinessTests(unittest.TestCase):
         """Build a checker without ModelAnalyzer, RuleEngine, or IESVE."""
         checker = SIA4010Checker.__new__(SIA4010Checker)
         checker._scan_sia4010_evidence = Mock(return_value={"files": []})
-        checker._summarize_evidence = Mock(return_value={
-            "status": "READY_FOR_OFFICIAL_REVIEW",
-            "missing_items": [],
-        })
+        checker._summarize_evidence = Mock(
+            return_value={
+                "status": "READY_FOR_OFFICIAL_REVIEW",
+                "missing_items": [],
+            }
+        )
         return checker
 
     @staticmethod
@@ -96,24 +97,28 @@ class SIA4010VariantReadinessTests(unittest.TestCase):
         room = RoomData(
             id="room-1",
             surfaces=[SimpleNamespace(is_external=True, u_value=0.25)],
-            openings=[SimpleNamespace(
-                is_external=True,
-                opening_type="window",
-                g_value_bs_en_410=0.5,
-                shading_type="fabric",
-                shading_control="solar",
-            )],
+            openings=[
+                SimpleNamespace(
+                    is_external=True,
+                    opening_type="window",
+                    g_value_bs_en_410=0.5,
+                    shading_type="fabric",
+                    shading_control="solar",
+                )
+            ],
             internal_gains={"lighting": 7.5},
             daylight_dimming_profile="daylight-profile",
             window_operable=True,
             ventilation_m3_h_m2=3.6,
-            hvac_systems=[{
-                "fan_control": "DIRECT",
-                "humidifier_control": "STEAM",
-                "overflow_paths": ["kitchen"],
-                "final_energy": 0.0,
-                "storage_generation_data": {"boiler": "present"},
-            }],
+            hvac_systems=[
+                {
+                    "fan_control": "DIRECT",
+                    "humidifier_control": "STEAM",
+                    "overflow_paths": ["kitchen"],
+                    "final_energy": 0.0,
+                    "storage_generation_data": {"boiler": "present"},
+                }
+            ],
             heat_recovery_type="PLATE",
             ventilation_control_level=1,
             dynamic_results={
@@ -165,8 +170,7 @@ class SIA4010VariantReadinessTests(unittest.TestCase):
                     expected_variants,
                 )
                 identifier_variants = [
-                    row for row in payload["variant_rows"]
-                    if row["system_identifiers"]
+                    row for row in payload["variant_rows"] if row["system_identifiers"]
                 ]
                 self.assertTrue(identifier_variants)
                 self.assertTrue(payload["blocking_variants"])
@@ -221,7 +225,9 @@ class SIA4010VariantReadinessTests(unittest.TestCase):
         """Require exact 2B, 3A-3L and 5A-5D result identifiers for class 4B."""
         checker = SIA4010Checker.__new__(SIA4010Checker)
         generic_rows = {
-            f"test_{number}": [{"test_id": f"test_{number}", "row_status": "OFFICIAL_PASS"}]
+            f"test_{number}": [
+                {"test_id": f"test_{number}", "row_status": "OFFICIAL_PASS"}
+            ]
             for number in range(1, 8)
         }
         generic_summary = {
@@ -282,13 +288,15 @@ class SIA4010VariantReadinessTests(unittest.TestCase):
         room = RoomData(
             id="room-1",
             surfaces=[SimpleNamespace(is_external=True, u_value=0.25)],
-            openings=[SimpleNamespace(
-                is_external=True,
-                opening_type="window",
-                g_value_bs_en_410=0.5,
-                shading_type="lamellae",
-                shading_control="1",
-            )],
+            openings=[
+                SimpleNamespace(
+                    is_external=True,
+                    opening_type="window",
+                    g_value_bs_en_410=0.5,
+                    shading_type="lamellae",
+                    shading_control="1",
+                )
+            ],
             window_operable=True,
         )
 
@@ -297,8 +305,12 @@ class SIA4010VariantReadinessTests(unittest.TestCase):
 
         self.assertEqual(rows["test_2B"]["mismatching_identifiers"], [])
         self.assertEqual(rows["test_2B"]["ve_status"], "READY")
-        self.assertIn("SHADING_CONTROL_VARIANT", rows["test_2C"]["mismatching_identifiers"])
-        self.assertIn("SHADING_CONTROL_VARIANT", rows["test_2D"]["mismatching_identifiers"])
+        self.assertIn(
+            "SHADING_CONTROL_VARIANT", rows["test_2C"]["mismatching_identifiers"]
+        )
+        self.assertIn(
+            "SHADING_CONTROL_VARIANT", rows["test_2D"]["mismatching_identifiers"]
+        )
 
     def test_test_id_normalization_preserves_exact_variants(self):
         """Normalize spelling while keeping reduced and full variants distinct."""

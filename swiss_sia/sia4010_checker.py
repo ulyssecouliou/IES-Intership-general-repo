@@ -75,50 +75,60 @@ class SIA4010Checker:
         """Register SIA 4010 project indicators in the rule engine."""
         # SIA 4010 does not define standalone building kWh/m2 or CO2 limits.
         # These rules only document available project indicators.
-        self.rule_engine.add_rule(Rule(
-            name="SIA4010_HEATING_DEMAND",
-            description="Heating demand is available; SIA 4010 requires official tests/files, not an autonomous kWh/m2.year threshold.",
-            check=lambda data: True,
-            severity=Severity.LOW,
-            category="Energy",
-            recommendation="Compare only through the official SIA 4010 evaluation workbook or through project-specific SIA 380 requirements.",
-        ))
+        self.rule_engine.add_rule(
+            Rule(
+                name="SIA4010_HEATING_DEMAND",
+                description="Heating demand is available; SIA 4010 requires official tests/files, not an autonomous kWh/m2.year threshold.",
+                check=lambda data: True,
+                severity=Severity.LOW,
+                category="Energy",
+                recommendation="Compare only through the official SIA 4010 evaluation workbook or through project-specific SIA 380 requirements.",
+            )
+        )
 
-        self.rule_engine.add_rule(Rule(
-            name="SIA4010_COOLING_DEMAND",
-            description="Cooling demand is available; SIA 4010 requires official tests/files, not an autonomous kWh/m2.year threshold.",
-            check=lambda data: True,
-            severity=Severity.LOW,
-            category="Energy",
-            recommendation="Compare only through the official SIA 4010 evaluation workbook or through project-specific SIA 380 requirements.",
-        ))
+        self.rule_engine.add_rule(
+            Rule(
+                name="SIA4010_COOLING_DEMAND",
+                description="Cooling demand is available; SIA 4010 requires official tests/files, not an autonomous kWh/m2.year threshold.",
+                check=lambda data: True,
+                severity=Severity.LOW,
+                category="Energy",
+                recommendation="Compare only through the official SIA 4010 evaluation workbook or through project-specific SIA 380 requirements.",
+            )
+        )
 
-        self.rule_engine.add_rule(Rule(
-            name="SIA4010_PRIMARY_ENERGY",
-            description="Primary energy is available; SIA 4010 does not provide a standalone threshold in the PDF.",
-            check=lambda data: True,
-            severity=Severity.LOW,
-            category="Energy",
-            recommendation="Assess primary energy under SIA 380 or project requirements, then attach SIA 4010 validation evidence if the calculation method is claimed.",
-        ))
+        self.rule_engine.add_rule(
+            Rule(
+                name="SIA4010_PRIMARY_ENERGY",
+                description="Primary energy is available; SIA 4010 does not provide a standalone threshold in the PDF.",
+                check=lambda data: True,
+                severity=Severity.LOW,
+                category="Energy",
+                recommendation="Assess primary energy under SIA 380 or project requirements, then attach SIA 4010 validation evidence if the calculation method is claimed.",
+            )
+        )
 
-        self.rule_engine.add_rule(Rule(
-            name="SIA4010_CO2_EMISSIONS",
-            description="CO2 emissions are available; SIA 4010 does not provide a standalone threshold in the PDF.",
-            check=lambda data: True,
-            severity=Severity.LOW,
-            category="Energy",
-            recommendation="Treat CO2 as a separate client/cantonal indicator, not as a SIA 4010 validation verdict.",
-        ))
+        self.rule_engine.add_rule(
+            Rule(
+                name="SIA4010_CO2_EMISSIONS",
+                description="CO2 emissions are available; SIA 4010 does not provide a standalone threshold in the PDF.",
+                check=lambda data: True,
+                severity=Severity.LOW,
+                category="Energy",
+                recommendation="Treat CO2 as a separate client/cantonal indicator, not as a SIA 4010 validation verdict.",
+            )
+        )
 
-        self.rule_engine.add_rule(Rule(
-            name="SIA4010_RENEWABLE_ENERGY",
-            description="Renewable energy share is available; SIA 4010 does not provide a standalone threshold in the PDF.",
-            check=lambda data: True,
-            severity=Severity.LOW,
-            category="Energy",
-            recommendation="Treat renewable share under project/cantonal requirements; do not use it as SIA 4010 validation.",
-        ))
+        self.rule_engine.add_rule(
+            Rule(
+                name="SIA4010_RENEWABLE_ENERGY",
+                description="Renewable energy share is available; SIA 4010 does not provide a standalone threshold in the PDF.",
+                check=lambda data: True,
+                severity=Severity.LOW,
+                category="Energy",
+                recommendation="Treat renewable share under project/cantonal requirements; do not use it as SIA 4010 validation.",
+            )
+        )
 
     def check_all(
         self,
@@ -132,7 +142,11 @@ class SIA4010Checker:
         class validation, which still requires recorded results and SIA
         sub-commission attestation; merging it into the gate would overclaim.
         """
-        rooms_data = rooms_data if rooms_data is not None else self.model_analyzer.analyze_all_rooms()
+        rooms_data = (
+            rooms_data
+            if rooms_data is not None
+            else self.model_analyzer.analyze_all_rooms()
+        )
 
         # SIA 4010 validates a method/software workflow via seven official tests.
         # Without official SIA files and comparisons, validation remains blocked.
@@ -294,24 +308,32 @@ class SIA4010Checker:
                 ve_status = "MISSING"
             if ve_status != "READY":
                 blocking_variants.append(variant)
-            variant_rows.append({
-                "variant": variant,
-                "domain": requirement.get("domain", ""),
-                "object": requirement.get("object", ""),
-                "system_identifiers": dict(requirement.get("system_identifiers", {}) or {}),
-                "identifier_results": identifier_results,
-                "matching_identifiers": matching_identifiers,
-                "mismatching_identifiers": mismatching_identifiers,
-                "model_requirements": model_requirements,
-                "present_requirements": present,
-                "missing_requirements": missing,
-                "present_labels": [SIA4010_MODEL_REQUIREMENT_LABELS.get(key, key) for key in present],
-                "missing_labels": [SIA4010_MODEL_REQUIREMENT_LABELS.get(key, key) for key in missing],
-                "readiness_ratio": ratio,
-                "ve_status": ve_status,
-                "official_status": evidence_status,
-                "source": requirement.get("source", ""),
-            })
+            variant_rows.append(
+                {
+                    "variant": variant,
+                    "domain": requirement.get("domain", ""),
+                    "object": requirement.get("object", ""),
+                    "system_identifiers": dict(
+                        requirement.get("system_identifiers", {}) or {}
+                    ),
+                    "identifier_results": identifier_results,
+                    "matching_identifiers": matching_identifiers,
+                    "mismatching_identifiers": mismatching_identifiers,
+                    "model_requirements": model_requirements,
+                    "present_requirements": present,
+                    "missing_requirements": missing,
+                    "present_labels": [
+                        SIA4010_MODEL_REQUIREMENT_LABELS.get(key, key) for key in present
+                    ],
+                    "missing_labels": [
+                        SIA4010_MODEL_REQUIREMENT_LABELS.get(key, key) for key in missing
+                    ],
+                    "readiness_ratio": ratio,
+                    "ve_status": ve_status,
+                    "official_status": evidence_status,
+                    "source": requirement.get("source", ""),
+                }
+            )
 
         overall_ratio = (
             sum(float(row["readiness_ratio"]) for row in variant_rows) / len(variant_rows)
@@ -334,7 +356,9 @@ class SIA4010Checker:
             "blocking_variants": blocking_variants,
             "evidence_status": evidence_status,
             "official_status": overall_status,
-            "missing_official_evidence": list(evidence_summary.get("missing_items", []) or []),
+            "missing_official_evidence": list(
+                evidence_summary.get("missing_items", []) or []
+            ),
             "claim_guardrail": (
                 "Readiness only. Official SIA 4010 workbooks, reference comparisons and "
                 "sub-commission review remain required."
@@ -373,7 +397,9 @@ class SIA4010Checker:
                 for opening in openings
                 if has_active_solar_protection(opening)
             ],
-            "LIGHTING_CONTROL_VARIANT": [getattr(room, "lighting_control_type", None) for room in rooms],
+            "LIGHTING_CONTROL_VARIANT": [
+                getattr(room, "lighting_control_type", None) for room in rooms
+            ],
             "SYS_TYPE": [system.get("system_type") for system in systems],
             "FAN_CTRL": [system.get("fan_control") for system in systems],
             "HEAT_REC_TYPE": (
@@ -392,8 +418,12 @@ class SIA4010Checker:
                 [system.get("ventilation_control") for system in systems]
                 + [getattr(room, "ventilation_control", None) for room in rooms]
             ),
-            "CLG_STORAGE_TYPE": [system.get("cooling_storage_type") for system in systems],
-            "HEAT_REJECTION_TYPE": [system.get("heat_rejection_type") for system in systems],
+            "CLG_STORAGE_TYPE": [
+                system.get("cooling_storage_type") for system in systems
+            ],
+            "HEAT_REJECTION_TYPE": [
+                system.get("heat_rejection_type") for system in systems
+            ],
         }
         ventilation_levels = [
             getattr(room, "ventilation_control_level", None) for room in rooms
@@ -409,7 +439,10 @@ class SIA4010Checker:
                 cls._identifier_value_matches(expected, actual)
                 for actual in actual_values
             )
-            if str(identifier).upper() == "SHADING_CONTROL_VARIANT" and str(expected).upper() == "NONE":
+            if (
+                str(identifier).upper() == "SHADING_CONTROL_VARIANT"
+                and str(expected).upper() == "NONE"
+            ):
                 matches = bool(openings) and (
                     not actual_values
                     or any(
@@ -417,27 +450,32 @@ class SIA4010Checker:
                         for actual in actual_values
                     )
                 )
-            if str(identifier).upper() == "AIR_FLOW_CTRL" and str(expected).upper() == "MULTI_STAGE":
+            if (
+                str(identifier).upper() == "AIR_FLOW_CTRL"
+                and str(expected).upper() == "MULTI_STAGE"
+            ):
                 matches = matches or any(
                     isinstance(level, (int, float)) and level >= 1
                     for level in ventilation_levels
                 )
-            rows.append({
-                "identifier": str(identifier),
-                "expected": str(expected),
-                "actual_values": [str(value) for value in actual_values],
-                "matches": bool(matches),
-            })
+            rows.append(
+                {
+                    "identifier": str(identifier),
+                    "expected": str(expected),
+                    "actual_values": [str(value) for value in actual_values],
+                    "matches": bool(matches),
+                }
+            )
         return rows
 
     @staticmethod
     def _identifier_value_matches(expected: Any, actual: Any) -> bool:
         """Match one explicit VE identifier using conservative aliases."""
+
         def normalize(value: Any) -> str:
             """Return an uppercase alphanumeric identifier."""
             return "".join(
-                character for character in str(value or "").upper()
-                if character.isalnum()
+                character for character in str(value or "").upper() if character.isalnum()
             )
 
         expected_token = normalize(expected)
@@ -470,14 +508,23 @@ class SIA4010Checker:
     def _build_variant_readiness_facts(rooms_data: List[RoomData]) -> Dict[str, Any]:
         """Summarize VE fields used by variant-level readiness requirements."""
         rooms = list(rooms_data or [])
-        surfaces = [surface for room in rooms for surface in getattr(room, "surfaces", [])]
-        openings = [opening for room in rooms for opening in getattr(room, "openings", [])]
-        external_surfaces = [surface for surface in surfaces if getattr(surface, "is_external", False)]
-        external_openings = [opening for opening in openings if getattr(opening, "is_external", False)]
+        surfaces = [
+            surface for room in rooms for surface in getattr(room, "surfaces", [])
+        ]
+        openings = [
+            opening for room in rooms for opening in getattr(room, "openings", [])
+        ]
+        external_surfaces = [
+            surface for surface in surfaces if getattr(surface, "is_external", False)
+        ]
+        external_openings = [
+            opening for opening in openings if getattr(opening, "is_external", False)
+        ]
         external_windows = [
             opening
             for opening in external_openings
-            if str(getattr(opening, "opening_type", "") or "").lower() in {
+            if str(getattr(opening, "opening_type", "") or "").lower()
+            in {
                 "window",
                 "glazing",
                 "ext_glazing",
@@ -489,14 +536,24 @@ class SIA4010Checker:
             dynamic_row = getattr(room, "dynamic_results", None)
             if isinstance(dynamic_row, dict):
                 dynamic_rows.append(dynamic_row)
-        hvac_systems = [system for room in rooms for system in getattr(room, "hvac_systems", [])]
+        hvac_systems = [
+            system for room in rooms for system in getattr(room, "hvac_systems", [])
+        ]
         return {
             "rooms": len(rooms),
             "external_surfaces": len(external_surfaces),
-            "surface_u_values": sum(1 for surface in external_surfaces if getattr(surface, "u_value", None) is not None),
+            "surface_u_values": sum(
+                1
+                for surface in external_surfaces
+                if getattr(surface, "u_value", None) is not None
+            ),
             "external_openings": len(external_openings),
             "external_windows": len(external_windows),
-            "en410_g_values": sum(1 for opening in external_windows if getattr(opening, "g_value_bs_en_410", None) is not None),
+            "en410_g_values": sum(
+                1
+                for opening in external_windows
+                if getattr(opening, "g_value_bs_en_410", None) is not None
+            ),
             "solar_protection_types": sum(
                 1 for opening in external_windows if has_active_solar_protection(opening)
             ),
@@ -506,25 +563,82 @@ class SIA4010Checker:
                 if has_active_solar_protection(opening)
                 and getattr(opening, "shading_control", None)
             ),
-            "window_operability": sum(1 for room in rooms if getattr(room, "window_operable", None) is not None),
-            "rooms_with_lighting": sum(1 for room in rooms if (getattr(room, "internal_gains", {}) or {}).get("lighting") is not None),
-            "daylight_dimming_profiles": sum(1 for room in rooms if getattr(room, "daylight_dimming_profile", "")),
-            "lighting_control_mappings": sum(1 for room in rooms if getattr(room, "lighting_control_type", "")),
-            "dynamic_lighting_rows": sum(1 for row in dynamic_rows if row.get("lighting_kwh") is not None),
-            "rooms_with_hvac": sum(1 for room in rooms if getattr(room, "hvac_systems", [])),
-            "rooms_with_ventilation": sum(1 for room in rooms if getattr(room, "ventilation_m3_h_m2", None) is not None),
-            "fan_controls": sum(1 for system in hvac_systems if system.get("fan_control")),
-            "heat_recovery_types": sum(1 for room in rooms if getattr(room, "heat_recovery_type", None)),
-            "humidifier_controls": sum(1 for system in hvac_systems if system.get("humidifier_control")),
-            "dynamic_coil_rows": sum(1 for row in dynamic_rows if row.get("coil_heating_kwh") is not None or row.get("coil_cooling_kwh") is not None),
-            "dynamic_temperature_rows": sum(1 for row in dynamic_rows if row.get("occupied_hours_above_26") is not None),
-            "dynamic_co2_rows": sum(1 for row in dynamic_rows if row.get("peak_co2_ppm") is not None),
-            "ventilation_stages": sum(1 for room in rooms if getattr(room, "ventilation_control_level", None) is not None),
-            "overflow_paths": sum(1 for system in hvac_systems if system.get("overflow_paths")),
-            "dynamic_demand_rows": sum(1 for row in dynamic_rows if row.get("heating_kwh") is not None or row.get("cooling_kwh") is not None),
-            "final_energy_available": any(system.get("final_energy") is not None for system in hvac_systems),
-            "dynamic_auxiliary_rows": sum(1 for row in dynamic_rows if any(row.get(key) is not None for key in ("fan_kwh", "pump_kwh", "auxiliary_kwh"))),
-            "storage_generation_data": sum(1 for system in hvac_systems if system.get("storage_generation_data")),
+            "window_operability": sum(
+                1 for room in rooms if getattr(room, "window_operable", None) is not None
+            ),
+            "rooms_with_lighting": sum(
+                1
+                for room in rooms
+                if (getattr(room, "internal_gains", {}) or {}).get("lighting") is not None
+            ),
+            "daylight_dimming_profiles": sum(
+                1 for room in rooms if getattr(room, "daylight_dimming_profile", "")
+            ),
+            "lighting_control_mappings": sum(
+                1 for room in rooms if getattr(room, "lighting_control_type", "")
+            ),
+            "dynamic_lighting_rows": sum(
+                1 for row in dynamic_rows if row.get("lighting_kwh") is not None
+            ),
+            "rooms_with_hvac": sum(
+                1 for room in rooms if getattr(room, "hvac_systems", [])
+            ),
+            "rooms_with_ventilation": sum(
+                1
+                for room in rooms
+                if getattr(room, "ventilation_m3_h_m2", None) is not None
+            ),
+            "fan_controls": sum(
+                1 for system in hvac_systems if system.get("fan_control")
+            ),
+            "heat_recovery_types": sum(
+                1 for room in rooms if getattr(room, "heat_recovery_type", None)
+            ),
+            "humidifier_controls": sum(
+                1 for system in hvac_systems if system.get("humidifier_control")
+            ),
+            "dynamic_coil_rows": sum(
+                1
+                for row in dynamic_rows
+                if row.get("coil_heating_kwh") is not None
+                or row.get("coil_cooling_kwh") is not None
+            ),
+            "dynamic_temperature_rows": sum(
+                1
+                for row in dynamic_rows
+                if row.get("occupied_hours_above_26") is not None
+            ),
+            "dynamic_co2_rows": sum(
+                1 for row in dynamic_rows if row.get("peak_co2_ppm") is not None
+            ),
+            "ventilation_stages": sum(
+                1
+                for room in rooms
+                if getattr(room, "ventilation_control_level", None) is not None
+            ),
+            "overflow_paths": sum(
+                1 for system in hvac_systems if system.get("overflow_paths")
+            ),
+            "dynamic_demand_rows": sum(
+                1
+                for row in dynamic_rows
+                if row.get("heating_kwh") is not None
+                or row.get("cooling_kwh") is not None
+            ),
+            "final_energy_available": any(
+                system.get("final_energy") is not None for system in hvac_systems
+            ),
+            "dynamic_auxiliary_rows": sum(
+                1
+                for row in dynamic_rows
+                if any(
+                    row.get(key) is not None
+                    for key in ("fan_kwh", "pump_kwh", "auxiliary_kwh")
+                )
+            ),
+            "storage_generation_data": sum(
+                1 for system in hvac_systems if system.get("storage_generation_data")
+            ),
         }
 
     def _scan_sia4010_evidence(self) -> Dict[str, Any]:
@@ -550,17 +664,21 @@ class SIA4010Checker:
                     if matches_active_project_scope(path, self.project_label):
                         files.append(file_data)
                     else:
-                        excluded_project_files.append(dict(
-                            file_data,
-                            reason=(
-                                "Project-scoped evidence helper belongs to another VE project; "
-                                f"active project is {self.project_label}."
-                            ),
-                        ))
+                        excluded_project_files.append(
+                            dict(
+                                file_data,
+                                reason=(
+                                    "Project-scoped evidence helper belongs to another VE project; "
+                                    f"active project is {self.project_label}."
+                                ),
+                            )
+                        )
 
         manifest_scan = self._scan_evidence_manifests(evidence_dir, repo_dir, files)
         class_manifest_scan = self._scan_class_manifests(evidence_dir, repo_dir, files)
-        official_test_result_scan = self._scan_official_test_results(evidence_dir, repo_dir, files)
+        official_test_result_scan = self._scan_official_test_results(
+            evidence_dir, repo_dir, files
+        )
         evidence: Dict[str, Any] = {
             "evidence_dir": evidence_dir,
             "project_label": self.project_label or "",
@@ -586,22 +704,34 @@ class SIA4010Checker:
             "software_register_status": dict(SIA4010_IESVE_REGISTER_STATUS),
         }
         evidence["ignored_files"] = [
-            dict(file_data, reason="Folder note/documentation file ignored by the SIA 4010 evidence scanner.")
+            dict(
+                file_data,
+                reason="Folder note/documentation file ignored by the SIA 4010 evidence scanner.",
+            )
             for file_data in files
             if self._is_evidence_folder_note(file_data.get("name", ""))
         ]
         evidence["ignored_files"].extend(
-            dict(file_data, reason="Evidence manifest parsed for metadata; it is not counted as an official evidence file by itself.")
+            dict(
+                file_data,
+                reason="Evidence manifest parsed for metadata; it is not counted as an official evidence file by itself.",
+            )
             for file_data in files
             if self._is_evidence_manifest_file(file_data.get("name", ""))
         )
         evidence["ignored_files"].extend(
-            dict(file_data, reason="Class validation manifest parsed for class selection; it is not counted as an official evidence file by itself.")
+            dict(
+                file_data,
+                reason="Class validation manifest parsed for class selection; it is not counted as an official evidence file by itself.",
+            )
             for file_data in files
             if self._is_class_manifest_file(file_data.get("name", ""))
         )
         evidence["ignored_files"].extend(
-            dict(file_data, reason="Official test-result manifest parsed for test statuses; it is not counted as an evidence-family file by itself.")
+            dict(
+                file_data,
+                reason="Official test-result manifest parsed for test statuses; it is not counted as an evidence-family file by itself.",
+            )
             for file_data in files
             if self._is_official_test_results_file(file_data.get("name", ""))
         )
@@ -614,10 +744,17 @@ class SIA4010Checker:
             and not self._is_official_test_results_file(file_data.get("name", ""))
         ]
         manifest_blob = " ".join(
-            " ".join(str(row.get(key, "") or "") for key in ("provided_file_name", "notes", "required_for_classes"))
+            " ".join(
+                str(row.get(key, "") or "")
+                for key in ("provided_file_name", "notes", "required_for_classes")
+            )
             for row in manifest_scan["manifest_rows"]
         )
-        filenames_blob = " ".join(file_data["name"].lower() for file_data in candidate_files) + " " + manifest_blob.lower()
+        filenames_blob = (
+            " ".join(file_data["name"].lower() for file_data in candidate_files)
+            + " "
+            + manifest_blob.lower()
+        )
         for key, requirement in SIA4010_EVIDENCE_REQUIREMENTS.items():
             matched = [
                 file_data
@@ -625,14 +762,17 @@ class SIA4010Checker:
                 if self._matches_evidence_requirement(file_data, requirement)
             ]
             manifest_rows = [
-                row for row in manifest_scan["manifest_rows"]
+                row
+                for row in manifest_scan["manifest_rows"]
                 if row.get("evidence_key") == key
             ]
             documented_rows = [
-                row for row in manifest_rows
+                row
+                for row in manifest_rows
                 if row.get("row_status") == "DOCUMENTED"
                 and any(
-                    str(file_data.get("name", "")).lower() == str(row.get("provided_file_name", "")).lower()
+                    str(file_data.get("name", "")).lower()
+                    == str(row.get("provided_file_name", "")).lower()
                     for file_data in matched
                 )
             ]
@@ -671,11 +811,17 @@ class SIA4010Checker:
         if selected_class:
             evidence["validation_class"] = selected_class
             evidence["validation_class_source"] = "class_manifest"
-            evidence["validation_class_selection_status"] = class_manifest_scan["summary"].get("selection_status", "SELECTED")
+            evidence["validation_class_selection_status"] = class_manifest_scan[
+                "summary"
+            ].get("selection_status", "SELECTED")
         else:
             class_markers = ["4b", "4a", "3", "2b", "2a", "1b", "1a", "5"]
             for marker in class_markers:
-                if f"class_{marker}" in filenames_blob or f"classe_{marker}" in filenames_blob or f"class{marker}" in filenames_blob:
+                if (
+                    f"class_{marker}" in filenames_blob
+                    or f"classe_{marker}" in filenames_blob
+                    or f"class{marker}" in filenames_blob
+                ):
                     evidence["detected_validation_class"] = marker.upper()
                     evidence["detected_validation_class_source"] = "filename_marker"
                     break
@@ -695,12 +841,10 @@ class SIA4010Checker:
     def _summarize_evidence(evidence: Dict[str, Any]) -> Dict[str, Any]:
         """Return a normalized evidence completeness summary."""
         present_items = [
-            item for item in SIA4010_REQUIRED_EVIDENCE
-            if bool(evidence.get(item))
+            item for item in SIA4010_REQUIRED_EVIDENCE if bool(evidence.get(item))
         ]
         missing_items = [
-            item for item in SIA4010_REQUIRED_EVIDENCE
-            if not bool(evidence.get(item))
+            item for item in SIA4010_REQUIRED_EVIDENCE if not bool(evidence.get(item))
         ]
         manifest_documented_items = []
         manifest_missing_documentation_items = []
@@ -734,12 +878,20 @@ class SIA4010Checker:
             "manifest_missing_documentation_items": manifest_missing_documentation_items,
             "manifest_summary": evidence.get("manifest_summary", {}),
             "validation_class": validation_class,
-            "validation_class_source": evidence.get("validation_class_source", "not_selected"),
-            "validation_class_selection_status": evidence.get("validation_class_selection_status", "NOT_SELECTED"),
+            "validation_class_source": evidence.get(
+                "validation_class_source", "not_selected"
+            ),
+            "validation_class_selection_status": evidence.get(
+                "validation_class_selection_status", "NOT_SELECTED"
+            ),
             "detected_validation_class": evidence.get("detected_validation_class"),
-            "detected_validation_class_source": evidence.get("detected_validation_class_source"),
+            "detected_validation_class_source": evidence.get(
+                "detected_validation_class_source"
+            ),
             "class_manifest_summary": evidence.get("class_manifest_summary", {}),
-            "official_test_result_summary": evidence.get("official_test_result_summary", {}),
+            "official_test_result_summary": evidence.get(
+                "official_test_result_summary", {}
+            ),
             "official_test_result_rows": evidence.get("official_test_result_rows", []),
             "validation_class_known": class_is_known,
             "classified_file_count": classified_count,
@@ -751,7 +903,9 @@ class SIA4010Checker:
         """Add one precise alert describing current official evidence status."""
         status = evidence_summary["status"]
         missing_items = evidence_summary["missing_items"]
-        manifest_missing_items = evidence_summary.get("manifest_missing_documentation_items", [])
+        manifest_missing_items = evidence_summary.get(
+            "manifest_missing_documentation_items", []
+        )
         present_count = evidence_summary["present_count"]
         required_count = evidence_summary["required_count"]
 
@@ -803,7 +957,9 @@ class SIA4010Checker:
         )
         self._add_missing_evidence_family_alerts(missing_items, Severity.LOW)
 
-    def _add_software_register_guardrail_alert(self, evidence_summary: Dict[str, Any]) -> None:
+    def _add_software_register_guardrail_alert(
+        self, evidence_summary: Dict[str, Any]
+    ) -> None:
         """Add a non-scoring guardrail from the manager-provided software register."""
         status = evidence_summary.get("software_register_status", {}) or {}
         if status.get("listed_in_manager_register"):
@@ -863,7 +1019,11 @@ class SIA4010Checker:
     def _is_evidence_folder_note(filename: str) -> bool:
         """Exclude local README/docs from SIA 4010 evidence classification."""
         normalized = str(filename or "").strip().lower()
-        return normalized in {"readme.md", "readme.txt", ".gitkeep"} or normalized.startswith("readme.")
+        return normalized in {
+            "readme.md",
+            "readme.txt",
+            ".gitkeep",
+        } or normalized.startswith("readme.")
 
     @staticmethod
     def _is_evidence_manifest_file(filename: str) -> bool:
@@ -871,7 +1031,10 @@ class SIA4010Checker:
         normalized = str(filename or "").strip().lower()
         if not normalized.endswith(".csv"):
             return False
-        return any(normalized.startswith(prefix.lower()) for prefix in SIA4010_EVIDENCE_MANIFEST_PREFIXES)
+        return any(
+            normalized.startswith(prefix.lower())
+            for prefix in SIA4010_EVIDENCE_MANIFEST_PREFIXES
+        )
 
     @staticmethod
     def _is_class_manifest_file(filename: str) -> bool:
@@ -879,7 +1042,10 @@ class SIA4010Checker:
         normalized = str(filename or "").strip().lower()
         if not normalized.endswith(".csv"):
             return False
-        return any(normalized.startswith(prefix.lower()) for prefix in SIA4010_CLASS_MANIFEST_PREFIXES)
+        return any(
+            normalized.startswith(prefix.lower())
+            for prefix in SIA4010_CLASS_MANIFEST_PREFIXES
+        )
 
     @staticmethod
     def _is_official_test_results_file(filename: str) -> bool:
@@ -887,7 +1053,10 @@ class SIA4010Checker:
         normalized = str(filename or "").strip().lower()
         if not normalized.endswith(".csv"):
             return False
-        return any(normalized.startswith(prefix.lower()) for prefix in SIA4010_OFFICIAL_TEST_RESULTS_PREFIXES)
+        return any(
+            normalized.startswith(prefix.lower())
+            for prefix in SIA4010_OFFICIAL_TEST_RESULTS_PREFIXES
+        )
 
     @classmethod
     def _scan_evidence_manifests(
@@ -898,7 +1067,8 @@ class SIA4010Checker:
     ) -> Dict[str, Any]:
         """Read SIA 4010 evidence manifest CSV files without counting them as evidence."""
         manifest_files = [
-            file_data for file_data in files
+            file_data
+            for file_data in files
             if cls._is_evidence_manifest_file(file_data.get("name", ""))
         ]
         manifest_rows: List[Dict[str, Any]] = []
@@ -911,11 +1081,14 @@ class SIA4010Checker:
                     reader = csv.DictReader(handle)
                     fieldnames = list(reader.fieldnames or [])
                     missing = [
-                        column for column in SIA4010_EVIDENCE_MANIFEST_REQUIRED_COLUMNS
+                        column
+                        for column in SIA4010_EVIDENCE_MANIFEST_REQUIRED_COLUMNS
                         if column not in fieldnames
                     ]
                     if missing:
-                        missing_columns[file_data.get("path", file_data.get("name", ""))] = missing
+                        missing_columns[
+                            file_data.get("path", file_data.get("name", ""))
+                        ] = missing
                     for row_index, raw_row in enumerate(reader, start=2):
                         normalized_row = {
                             str(key or "").strip(): str(value or "").strip()
@@ -927,16 +1100,20 @@ class SIA4010Checker:
                         cls._annotate_manifest_row(normalized_row, files)
                         manifest_rows.append(normalized_row)
             except Exception as exc:
-                manifest_rows.append({
-                    "manifest_file": file_data.get("name", ""),
-                    "manifest_path": file_data.get("path", ""),
-                    "row_index": None,
-                    "evidence_key": "",
-                    "row_status": "READ_ERROR",
-                    "row_status_reason": str(exc),
-                })
+                manifest_rows.append(
+                    {
+                        "manifest_file": file_data.get("name", ""),
+                        "manifest_path": file_data.get("path", ""),
+                        "row_index": None,
+                        "evidence_key": "",
+                        "row_status": "READ_ERROR",
+                        "row_status_reason": str(exc),
+                    }
+                )
 
-        documented_count = sum(1 for row in manifest_rows if row.get("row_status") == "DOCUMENTED")
+        documented_count = sum(
+            1 for row in manifest_rows if row.get("row_status") == "DOCUMENTED"
+        )
         return {
             "manifest_files": manifest_files,
             "manifest_rows": manifest_rows,
@@ -957,7 +1134,8 @@ class SIA4010Checker:
     ) -> Dict[str, Any]:
         """Read official SIA 4010 test-result rows without granting implicit validation."""
         result_files = [
-            file_data for file_data in files
+            file_data
+            for file_data in files
             if cls._is_official_test_results_file(file_data.get("name", ""))
         ]
         result_rows: List[Dict[str, Any]] = []
@@ -970,11 +1148,14 @@ class SIA4010Checker:
                     reader = csv.DictReader(handle)
                     fieldnames = list(reader.fieldnames or [])
                     missing = [
-                        column for column in SIA4010_OFFICIAL_TEST_RESULTS_REQUIRED_COLUMNS
+                        column
+                        for column in SIA4010_OFFICIAL_TEST_RESULTS_REQUIRED_COLUMNS
                         if column not in fieldnames
                     ]
                     if missing:
-                        missing_columns[file_data.get("path", file_data.get("name", ""))] = missing
+                        missing_columns[
+                            file_data.get("path", file_data.get("name", ""))
+                        ] = missing
                     for row_index, raw_row in enumerate(reader, start=2):
                         normalized_row = {
                             str(key or "").strip(): str(value or "").strip()
@@ -986,14 +1167,16 @@ class SIA4010Checker:
                         cls._annotate_official_test_result_row(normalized_row, files)
                         result_rows.append(normalized_row)
             except Exception as exc:
-                result_rows.append({
-                    "result_file": file_data.get("name", ""),
-                    "result_path": file_data.get("path", ""),
-                    "row_index": None,
-                    "test_key": "",
-                    "row_status": "READ_ERROR",
-                    "row_status_reason": str(exc),
-                })
+                result_rows.append(
+                    {
+                        "result_file": file_data.get("name", ""),
+                        "result_path": file_data.get("path", ""),
+                        "row_index": None,
+                        "test_key": "",
+                        "row_status": "READ_ERROR",
+                        "row_status_reason": str(exc),
+                    }
+                )
 
         recorded_pass_by_test: Dict[str, List[Dict[str, Any]]] = {}
         failed_by_test: Dict[str, List[Dict[str, Any]]] = {}
@@ -1012,7 +1195,9 @@ class SIA4010Checker:
             "summary": {
                 "result_file_count": len(result_files),
                 "result_row_count": len(result_rows),
-                "official_pass_count": sum(len(rows) for rows in recorded_pass_by_test.values()),
+                "official_pass_count": sum(
+                    len(rows) for rows in recorded_pass_by_test.values()
+                ),
                 "official_fail_count": sum(len(rows) for rows in failed_by_test.values()),
                 "recorded_pass_tests": sorted(recorded_pass_by_test),
                 "failed_tests": sorted(failed_by_test),
@@ -1031,7 +1216,8 @@ class SIA4010Checker:
     ) -> Dict[str, Any]:
         """Read SIA 4010 class-selection manifests without counting them as evidence."""
         manifest_files = [
-            file_data for file_data in files
+            file_data
+            for file_data in files
             if cls._is_class_manifest_file(file_data.get("name", ""))
         ]
         manifest_rows: List[Dict[str, Any]] = []
@@ -1044,11 +1230,14 @@ class SIA4010Checker:
                     reader = csv.DictReader(handle)
                     fieldnames = list(reader.fieldnames or [])
                     missing = [
-                        column for column in SIA4010_CLASS_MANIFEST_REQUIRED_COLUMNS
+                        column
+                        for column in SIA4010_CLASS_MANIFEST_REQUIRED_COLUMNS
                         if column not in fieldnames
                     ]
                     if missing:
-                        missing_columns[file_data.get("path", file_data.get("name", ""))] = missing
+                        missing_columns[
+                            file_data.get("path", file_data.get("name", ""))
+                        ] = missing
                     for row_index, raw_row in enumerate(reader, start=2):
                         normalized_row = {
                             str(key or "").strip(): str(value or "").strip()
@@ -1060,33 +1249,40 @@ class SIA4010Checker:
                         cls._annotate_class_manifest_row(normalized_row)
                         manifest_rows.append(normalized_row)
             except Exception as exc:
-                manifest_rows.append({
-                    "manifest_file": file_data.get("name", ""),
-                    "manifest_path": file_data.get("path", ""),
-                    "row_index": None,
-                    "validation_class": "",
-                    "class_key": "",
-                    "row_status": "READ_ERROR",
-                    "row_status_reason": str(exc),
-                })
+                manifest_rows.append(
+                    {
+                        "manifest_file": file_data.get("name", ""),
+                        "manifest_path": file_data.get("path", ""),
+                        "row_index": None,
+                        "validation_class": "",
+                        "class_key": "",
+                        "row_status": "READ_ERROR",
+                        "row_status_reason": str(exc),
+                    }
+                )
 
         selected_rows = [
-            row for row in manifest_rows
-            if row.get("selected_bool") and row.get("class_key") in SIA4010_VALIDATION_CLASSES
+            row
+            for row in manifest_rows
+            if row.get("selected_bool")
+            and row.get("class_key") in SIA4010_VALIDATION_CLASSES
         ]
         documented_selected_rows = [
-            row for row in selected_rows
-            if row.get("row_status") == "SELECTED_DOCUMENTED"
+            row for row in selected_rows if row.get("row_status") == "SELECTED_DOCUMENTED"
         ]
         if len(documented_selected_rows) == 1:
             selected_class = documented_selected_rows[0].get("class_key")
-            selection_status = documented_selected_rows[0].get("row_status", "SELECTED_DOCUMENTED")
+            selection_status = documented_selected_rows[0].get(
+                "row_status", "SELECTED_DOCUMENTED"
+            )
         elif len(selected_rows) > 1:
             selected_class = None
             selection_status = "MULTIPLE_CLASSES_SELECTED"
         elif len(selected_rows) == 1:
             selected_class = None
-            selection_status = selected_rows[0].get("row_status", "SELECTED_NOT_DOCUMENTED")
+            selection_status = selected_rows[0].get(
+                "row_status", "SELECTED_NOT_DOCUMENTED"
+            )
         else:
             selected_class = None
             selection_status = "NOT_SELECTED"
@@ -1106,9 +1302,13 @@ class SIA4010Checker:
         }
 
     @classmethod
-    def _annotate_manifest_row(cls, row: Dict[str, Any], files: List[Dict[str, Any]]) -> None:
+    def _annotate_manifest_row(
+        cls, row: Dict[str, Any], files: List[Dict[str, Any]]
+    ) -> None:
         """Add normalized keys and validation state to one manifest row."""
-        evidence_key = cls._evidence_key_from_manifest_family(row.get("evidence_family", ""))
+        evidence_key = cls._evidence_key_from_manifest_family(
+            row.get("evidence_family", "")
+        )
         provided_file_name = str(row.get("provided_file_name", "") or "").strip()
         review_status = cls._normalize_review_status(row.get("review_status", ""))
         source_authority = str(row.get("source_authority", "") or "").strip()
@@ -1118,45 +1318,69 @@ class SIA4010Checker:
 
         referenced_file = next(
             (
-                file_data for file_data in files
-                if str(file_data.get("name", "") or "").lower() == provided_file_name.lower()
+                file_data
+                for file_data in files
+                if str(file_data.get("name", "") or "").lower()
+                == provided_file_name.lower()
             ),
             None,
         )
         requirement = SIA4010_EVIDENCE_REQUIREMENTS.get(evidence_key, {})
         file_matches_requirement = bool(
-            referenced_file and cls._matches_evidence_requirement(referenced_file, requirement)
+            referenced_file
+            and cls._matches_evidence_requirement(referenced_file, requirement)
         )
-        review_status_accepted = review_status in SIA4010_EVIDENCE_MANIFEST_ACCEPTED_REVIEW_STATUSES
+        review_status_accepted = (
+            review_status in SIA4010_EVIDENCE_MANIFEST_ACCEPTED_REVIEW_STATUSES
+        )
 
         row["evidence_key"] = evidence_key
         row["review_status_normalized"] = review_status
         row["provided_file_exists"] = bool(referenced_file)
-        row["provided_file_path"] = referenced_file.get("path", "") if referenced_file else ""
+        row["provided_file_path"] = (
+            referenced_file.get("path", "") if referenced_file else ""
+        )
         row["file_matches_requirement"] = file_matches_requirement
         row["review_status_accepted"] = review_status_accepted
 
         if not evidence_key:
             row["row_status"] = "UNKNOWN_FAMILY"
-            row["row_status_reason"] = "The evidence_family value does not map to a configured SIA 4010 evidence family."
+            row["row_status_reason"] = (
+                "The evidence_family value does not map to a configured SIA 4010 evidence family."
+            )
         elif not provided_file_name:
             row["row_status"] = "MISSING_FILE_REFERENCE"
             row["row_status_reason"] = "The manifest row does not provide a file name."
         elif not referenced_file:
             row["row_status"] = "REFERENCED_FILE_NOT_FOUND"
-            row["row_status_reason"] = "The file named in provided_file_name was not found in sia4010_evidence/."
+            row["row_status_reason"] = (
+                "The file named in provided_file_name was not found in sia4010_evidence/."
+            )
         elif not file_matches_requirement:
             row["row_status"] = "FILE_NAMING_MISMATCH"
-            row["row_status_reason"] = "The referenced file does not match the configured prefix or accepted extension."
+            row["row_status_reason"] = (
+                "The referenced file does not match the configured prefix or accepted extension."
+            )
         elif not review_status_accepted:
             row["row_status"] = "NOT_REVIEWED"
-            row["row_status_reason"] = "The manifest review_status is not one of the accepted documented statuses."
-        elif not source_authority or not version_or_date or not reviewer or not tests_covered:
+            row["row_status_reason"] = (
+                "The manifest review_status is not one of the accepted documented statuses."
+            )
+        elif (
+            not source_authority
+            or not version_or_date
+            or not reviewer
+            or not tests_covered
+        ):
             row["row_status"] = "METADATA_INCOMPLETE"
-            row["row_status_reason"] = "source_authority, version_or_date, reviewer and tests_covered are required for documented evidence."
+            row["row_status_reason"] = (
+                "source_authority, version_or_date, reviewer and tests_covered are required for documented evidence."
+            )
         else:
             row["row_status"] = "DOCUMENTED"
-            row["row_status_reason"] = "Referenced evidence file exists and the manifest row is documented."
+            row["row_status_reason"] = (
+                "Referenced evidence file exists and the manifest row is documented."
+            )
 
     @classmethod
     def _annotate_class_manifest_row(cls, row: Dict[str, Any]) -> None:
@@ -1173,26 +1397,44 @@ class SIA4010Checker:
         row["class_key"] = class_key
         row["selected_bool"] = selected_bool
         row["review_status_normalized"] = review_status
-        row["review_status_accepted"] = review_status in SIA4010_CLASS_MANIFEST_ACCEPTED_REVIEW_STATUSES
+        row["review_status_accepted"] = (
+            review_status in SIA4010_CLASS_MANIFEST_ACCEPTED_REVIEW_STATUSES
+        )
 
         if not class_key:
             row["row_status"] = "UNKNOWN_CLASS"
-            row["row_status_reason"] = "validation_class does not match one of the supported SIA 4010 classes."
+            row["row_status_reason"] = (
+                "validation_class does not match one of the supported SIA 4010 classes."
+            )
         elif not selected_bool:
             row["row_status"] = "NOT_SELECTED"
             row["row_status_reason"] = "Class is listed for coverage but not selected."
         elif not row["review_status_accepted"]:
             row["row_status"] = "SELECTED_NOT_REVIEWED"
-            row["row_status_reason"] = "Class is selected, but review_status is not an accepted documented status."
-        elif not source_authority or not source_reference or not reviewer or not required_tests or not review_date:
+            row["row_status_reason"] = (
+                "Class is selected, but review_status is not an accepted documented status."
+            )
+        elif (
+            not source_authority
+            or not source_reference
+            or not reviewer
+            or not required_tests
+            or not review_date
+        ):
             row["row_status"] = "SELECTED_METADATA_INCOMPLETE"
-            row["row_status_reason"] = "Selected class requires required_tests, reviewer, review_date, source_authority and source_reference metadata."
+            row["row_status_reason"] = (
+                "Selected class requires required_tests, reviewer, review_date, source_authority and source_reference metadata."
+            )
         else:
             row["row_status"] = "SELECTED_DOCUMENTED"
-            row["row_status_reason"] = "Selected class is documented by the class manifest."
+            row["row_status_reason"] = (
+                "Selected class is documented by the class manifest."
+            )
 
     @classmethod
-    def _annotate_official_test_result_row(cls, row: Dict[str, Any], files: Optional[List[Dict[str, Any]]] = None) -> None:
+    def _annotate_official_test_result_row(
+        cls, row: Dict[str, Any], files: Optional[List[Dict[str, Any]]] = None
+    ) -> None:
         """Add normalized state to one official SIA 4010 test-result row."""
         test_key = cls._normalize_test_id(row.get("test_id", ""))
         status = cls._normalize_review_status(row.get("status", ""))
@@ -1204,8 +1446,12 @@ class SIA4010Checker:
         candidate_file = str(row.get("candidate_file", "") or "").strip()
         deviation = str(row.get("deviation", "") or "").strip()
         tolerance = str(row.get("tolerance", "") or "").strip()
-        reference_file_match = cls._find_evidence_file_reference(files or [], reference_file)
-        candidate_file_match = cls._find_evidence_file_reference(files or [], candidate_file)
+        reference_file_match = cls._find_evidence_file_reference(
+            files or [], reference_file
+        )
+        candidate_file_match = cls._find_evidence_file_reference(
+            files or [], candidate_file
+        )
         reference_family_match = bool(
             reference_file_match
             and cls._matches_evidence_requirement(
@@ -1226,12 +1472,27 @@ class SIA4010Checker:
         row["status_is_pass"] = status in SIA4010_OFFICIAL_TEST_RESULT_PASS_STATUSES
         row["status_is_fail"] = status in SIA4010_OFFICIAL_TEST_RESULT_FAIL_STATUSES
         row["reference_file_exists"] = bool(reference_file_match)
-        row["reference_file_path"] = reference_file_match.get("path", "") if reference_file_match else ""
+        row["reference_file_path"] = (
+            reference_file_match.get("path", "") if reference_file_match else ""
+        )
         row["candidate_file_exists"] = bool(candidate_file_match)
-        row["candidate_file_path"] = candidate_file_match.get("path", "") if candidate_file_match else ""
+        row["candidate_file_path"] = (
+            candidate_file_match.get("path", "") if candidate_file_match else ""
+        )
         row["reference_file_family_matches"] = reference_family_match
         row["candidate_file_family_matches"] = candidate_family_match
-        metadata_complete = all([reviewer, review_date, source_authority, source_reference, reference_file, candidate_file, deviation, tolerance])
+        metadata_complete = all(
+            [
+                reviewer,
+                review_date,
+                source_authority,
+                source_reference,
+                reference_file,
+                candidate_file,
+                deviation,
+                tolerance,
+            ]
+        )
         row["metadata_complete"] = metadata_complete
 
         if not test_key:
@@ -1239,25 +1500,39 @@ class SIA4010Checker:
             row["row_status_reason"] = "test_id does not map to one of test_1 ... test_7."
         elif row["status_is_pass"] and not metadata_complete:
             row["row_status"] = "PASS_METADATA_INCOMPLETE"
-            row["row_status_reason"] = "PASS/VALIDATED status requires reference_file, candidate_file, deviation, tolerance, reviewer, review_date, source_authority and source_reference."
-        elif row["status_is_pass"] and (not reference_file_match or not candidate_file_match):
+            row["row_status_reason"] = (
+                "PASS/VALIDATED status requires reference_file, candidate_file, deviation, tolerance, reviewer, review_date, source_authority and source_reference."
+            )
+        elif row["status_is_pass"] and (
+            not reference_file_match or not candidate_file_match
+        ):
             row["row_status"] = "REFERENCED_RESULT_FILES_NOT_FOUND"
-            row["row_status_reason"] = "PASS/VALIDATED status requires reference_file and candidate_file to match files present in sia4010_evidence/."
+            row["row_status_reason"] = (
+                "PASS/VALIDATED status requires reference_file and candidate_file to match files present in sia4010_evidence/."
+            )
         elif row["status_is_pass"] and not reference_family_match:
             row["row_status"] = "REFERENCE_FILE_FAMILY_MISMATCH"
-            row["row_status_reason"] = "reference_file must match the configured SIA4010_reference_comparison_ evidence family."
+            row["row_status_reason"] = (
+                "reference_file must match the configured SIA4010_reference_comparison_ evidence family."
+            )
         elif row["status_is_pass"] and not candidate_family_match:
             row["row_status"] = "CANDIDATE_FILE_FAMILY_MISMATCH"
-            row["row_status_reason"] = "candidate_file must match the configured SIA4010_candidate_results_ evidence family."
+            row["row_status_reason"] = (
+                "candidate_file must match the configured SIA4010_candidate_results_ evidence family."
+            )
         elif row["status_is_pass"] and metadata_complete:
             row["row_status"] = "OFFICIAL_PASS"
-            row["row_status_reason"] = "Official test result is PASS/VALIDATED with required metadata and referenced files present."
+            row["row_status_reason"] = (
+                "Official test result is PASS/VALIDATED with required metadata and referenced files present."
+            )
         elif row["status_is_fail"]:
             row["row_status"] = "OFFICIAL_FAIL"
             row["row_status_reason"] = "Official test result is FAIL/REJECTED."
         else:
             row["row_status"] = "NOT_REVIEWED"
-            row["row_status_reason"] = "status is not an accepted official PASS/VALIDATED or FAIL value."
+            row["row_status_reason"] = (
+                "status is not an accepted official PASS/VALIDATED or FAIL value."
+            )
 
     @staticmethod
     def _normalize_review_status(value: Any) -> str:
@@ -1285,10 +1560,9 @@ class SIA4010Checker:
         compact_no_underscore = compact.replace("_", "")
         supported = set(SIA4010_VALIDATION_TESTS) | set(SIA4010_TEST_VARIANT_REQUIREMENTS)
         normalized_map = {test_id.lower(): test_id for test_id in supported}
-        normalized_map.update({
-            test_id.lower().replace("_", ""): test_id
-            for test_id in supported
-        })
+        normalized_map.update(
+            {test_id.lower().replace("_", ""): test_id for test_id in supported}
+        )
         if compact in normalized_map:
             return normalized_map[compact]
         if compact_no_underscore in normalized_map:
@@ -1311,7 +1585,9 @@ class SIA4010Checker:
         return f"test_{suffix[0]}" if suffix and suffix[0] in "1234567" else ""
 
     @staticmethod
-    def _find_evidence_file_reference(files: List[Dict[str, Any]], reference: str) -> Optional[Dict[str, Any]]:
+    def _find_evidence_file_reference(
+        files: List[Dict[str, Any]], reference: str
+    ) -> Optional[Dict[str, Any]]:
         """Return the scanned evidence file matching a manifest file reference."""
         normalized_reference = str(reference or "").strip().replace("\\", "/").lower()
         if not normalized_reference:
@@ -1332,13 +1608,20 @@ class SIA4010Checker:
             return normalized
         compact = "".join(ch for ch in normalized if ch.isalnum())
         for key, requirement in SIA4010_EVIDENCE_REQUIREMENTS.items():
-            label = "".join(ch for ch in str(requirement.get("label", "")).lower() if ch.isalnum())
-            if compact and (compact == label or compact == "".join(ch for ch in key.lower() if ch.isalnum())):
+            label = "".join(
+                ch for ch in str(requirement.get("label", "")).lower() if ch.isalnum()
+            )
+            if compact and (
+                compact == label
+                or compact == "".join(ch for ch in key.lower() if ch.isalnum())
+            ):
                 return key
         return ""
 
     @staticmethod
-    def _matches_evidence_requirement(file_data: Dict[str, Any], requirement: Dict[str, Any]) -> bool:
+    def _matches_evidence_requirement(
+        file_data: Dict[str, Any], requirement: Dict[str, Any]
+    ) -> bool:
         """Return true when a file follows one documented evidence naming rule."""
         filename = str(file_data.get("name", "") or "").strip()
         if not filename:
@@ -1349,7 +1632,9 @@ class SIA4010Checker:
             str(extension).lower()
             for extension in requirement.get("accepted_extensions", []) or []
         ]
-        if accepted_extensions and not any(normalized.endswith(extension) for extension in accepted_extensions):
+        if accepted_extensions and not any(
+            normalized.endswith(extension) for extension in accepted_extensions
+        ):
             return False
 
         required_prefixes = [
@@ -1391,12 +1676,14 @@ class SIA4010Checker:
                 path = os.path.join(repo_dir, filename)
                 if not os.path.isfile(path):
                     continue
-                matches.append({
-                    "name": filename,
-                    "path": os.path.relpath(path, repo_dir),
-                    "size_bytes": os.path.getsize(path),
-                    "role": "manager_reference_not_official_evidence",
-                })
+                matches.append(
+                    {
+                        "name": filename,
+                        "path": os.path.relpath(path, repo_dir),
+                        "size_bytes": os.path.getsize(path),
+                        "role": "manager_reference_not_official_evidence",
+                    }
+                )
         except Exception:
             return []
         return matches
@@ -1460,9 +1747,7 @@ class SIA4010Checker:
                 if recorded_pass_by_test.get(variant)
             ]
             failed_variants = [
-                variant
-                for variant in required_variants
-                if failed_by_test.get(variant)
+                variant for variant in required_variants if failed_by_test.get(variant)
             ]
             all_variants_passed = len(recorded_pass_variants) == len(required_variants)
             if fail_rows:
@@ -1493,7 +1778,9 @@ class SIA4010Checker:
                 "official_validation_note": note,
                 "official_result_count": len(official_rows),
                 "official_result_rows": official_rows,
-                "official_result_summary": self._summarize_official_result_rows(official_rows),
+                "official_result_summary": self._summarize_official_result_rows(
+                    official_rows
+                ),
                 "required_variants": required_variants,
                 "recorded_pass_variants": recorded_pass_variants,
                 "failed_variants": failed_variants,
@@ -1517,7 +1804,9 @@ class SIA4010Checker:
 
         for class_name, tests_label in SIA4010_VALIDATION_CLASSES.items():
             required_variants = list(SIA4010_CLASS_TEST_MATRIX.get(class_name, []))
-            base_tests = [self._base_test_for_variant(variant) for variant in required_variants]
+            base_tests = [
+                self._base_test_for_variant(variant) for variant in required_variants
+            ]
             unique_base_tests = []
             for base_test in base_tests:
                 if base_test and base_test not in unique_base_tests:
@@ -1527,16 +1816,20 @@ class SIA4010Checker:
                 variant: (
                     "FAIL"
                     if failed_by_test.get(variant)
-                    else "OFFICIAL_RESULT_RECORDED"
-                    if recorded_pass_by_test.get(variant)
-                    else test_results.get(
-                        self._base_test_for_variant(variant), {}
-                    ).get("status", "NOT_CHECKABLE")
+                    else (
+                        "OFFICIAL_RESULT_RECORDED"
+                        if recorded_pass_by_test.get(variant)
+                        else test_results.get(
+                            self._base_test_for_variant(variant), {}
+                        ).get("status", "NOT_CHECKABLE")
+                    )
                 )
                 for variant in required_variants
             }
             recorded_pass_variants = [
-                variant for variant in required_variants if recorded_pass_by_test.get(variant)
+                variant
+                for variant in required_variants
+                if recorded_pass_by_test.get(variant)
             ]
             failed_variants = [
                 variant for variant in required_variants if failed_by_test.get(variant)
@@ -1552,7 +1845,10 @@ class SIA4010Checker:
             elif failed_variants:
                 class_status = "OFFICIAL_TEST_FAILED"
                 reason = "At least one exact test variant required by the selected class has an official FAIL/REJECTED result."
-            elif len(recorded_pass_variants) == len(required_variants) and evidence_status == "READY_FOR_OFFICIAL_REVIEW":
+            elif (
+                len(recorded_pass_variants) == len(required_variants)
+                and evidence_status == "READY_FOR_OFFICIAL_REVIEW"
+            ):
                 class_status = "OFFICIAL_RESULTS_RECORDED"
                 reason = "All exact result rows are recorded, but SIA sub-commission attestation is not independently demonstrated."
             elif evidence_status == "READY_FOR_OFFICIAL_REVIEW":
@@ -1574,7 +1870,10 @@ class SIA4010Checker:
                 "required_test_aliases": required_variants,
                 "required_tests": unique_base_tests,
                 "required_tests_label": tests_label,
-                "required_test_labels": [SIA4010_TEST_ALIAS_LABELS.get(variant, variant) for variant in required_variants],
+                "required_test_labels": [
+                    SIA4010_TEST_ALIAS_LABELS.get(variant, variant)
+                    for variant in required_variants
+                ],
                 "required_test_statuses": required_statuses,
                 "ready_required_tests": len(recorded_pass_variants),
                 "recorded_pass_required_tests": len(recorded_pass_variants),

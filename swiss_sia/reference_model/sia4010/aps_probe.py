@@ -13,7 +13,6 @@ from ...simulation_results import (
     series_to_list,
 )
 
-
 _RELEVANT_TOKENS = (
     "heat",
     "cool",
@@ -35,8 +34,7 @@ def is_sia4010_candidate_variable(variable: Mapping[str, Any]) -> bool:
     """Return whether variable metadata may contain a Test 1/2 quantity."""
 
     haystack = " ".join(
-        str(variable.get(key) or "")
-        for key in ("aps_varname", "name", "display_name")
+        str(variable.get(key) or "") for key in ("aps_varname", "name", "display_name")
     ).lower()
     return any(token in haystack for token in _RELEVANT_TOKENS)
 
@@ -147,9 +145,7 @@ def build_surface_inventory(project: Any) -> List[Dict[str, Any]]:
             continue
         for body in bodies:
             room_id = getattr(body, "id", None)
-            room_name = str(
-                getattr(body, "name", room_id if room_id is not None else "")
-            )
+            room_name = str(getattr(body, "name", room_id if room_id is not None else ""))
             get_surfaces = getattr(body, "get_surfaces", None)
             if not callable(get_surfaces):
                 continue
@@ -165,9 +161,7 @@ def build_surface_inventory(project: Any) -> List[Dict[str, Any]]:
                 get_openings = getattr(surface, "get_openings", None)
                 try:
                     opening_count = (
-                        len(_sequence(get_openings()))
-                        if callable(get_openings)
-                        else 0
+                        len(_sequence(get_openings())) if callable(get_openings) else 0
                     )
                 except Exception:
                     opening_count = 0
@@ -184,9 +178,7 @@ def build_surface_inventory(project: Any) -> List[Dict[str, Any]]:
                                 _attribute(surface, "id", surface_index),
                             )
                         ),
-                        "surface_type": str(
-                            properties.get("type", "")
-                        ),
+                        "surface_type": str(properties.get("type", "")),
                         "orientation": properties.get("orientation"),
                         "tilt": properties.get("tilt"),
                         "aps_handle": aps_handle,
@@ -293,9 +285,7 @@ def inspect_results_reader(
                 "surface_series": surface_summaries,
             }
         )
-    surface_series_count = sum(
-        len(row["surface_series"]) for row in result_rows
-    )
+    surface_series_count = sum(len(row["surface_series"]) for row in result_rows)
     return {
         "schema_version": "1.0",
         "generated_at_utc": datetime.now(timezone.utc).isoformat(),

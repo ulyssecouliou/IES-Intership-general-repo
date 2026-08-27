@@ -27,7 +27,6 @@ from swiss_sia.reference_model.sia4010.test1_diagnostic_bundle import (
     resolve_kloten_weather,
 )
 
-
 ROOT = Path(__file__).resolve().parents[1]
 TEMP_ROOT = ROOT / ".codex_tmp"
 
@@ -77,13 +76,9 @@ class Test1DiagnosticBundleTests(unittest.TestCase):
     def test_1a_alone_touches_only_the_climate(self):
         receipt = self._build("1A")
         assets = self._read(receipt.asset_manifest_path)
-        self.assertEqual(
-            assets["metadata"]["diagnostic_chain_applied"], ["1A"]
-        )
+        self.assertEqual(assets["metadata"]["diagnostic_chain_applied"], ["1A"])
         self.assertEqual(assets["metadata"]["diagnostic_chain_blocked"], [])
-        self.assertEqual(
-            receipt.status, "READY_FOR_PROVISIONAL_RUNTIME_QUALIFICATION"
-        )
+        self.assertEqual(receipt.status, "READY_FOR_PROVISIONAL_RUNTIME_QUALIFICATION")
 
     # -- link 1A ------------------------------------------------------------
 
@@ -140,9 +135,7 @@ class Test1DiagnosticBundleTests(unittest.TestCase):
         receipt = self._build("1B")
         assets = self._read(receipt.asset_manifest_path)
         glazing = next(
-            item
-            for item in assets["constructions"]
-            if item["key"] == "external_glazing"
+            item for item in assets["constructions"] if item["key"] == "external_glazing"
         )
         self.assertEqual(
             glazing["properties"]["g_value"]["value"],
@@ -161,9 +154,7 @@ class Test1DiagnosticBundleTests(unittest.TestCase):
         receipt = self._build("1B")
         parameters = self._read(receipt.config_path)["parameters"]
         concordance = self.reference["concordance_du_u_vitrage"]
-        self.assertEqual(
-            concordance["norme_concordante"], "iso_15099_conditions_hiver"
-        )
+        self.assertEqual(concordance["norme_concordante"], "iso_15099_conditions_hiver")
         self.assertEqual(
             parameters["project_window_u_w_m2k"]["value"],
             concordance["valeur"],
@@ -182,20 +173,20 @@ class Test1DiagnosticBundleTests(unittest.TestCase):
         """
 
         baseline = build_test1_diagnostic_bundle(
-            self.project, ROOT, "1A",
-            weather_file=self.weather, kloten_weather_file=self.kloten,
+            self.project,
+            ROOT,
+            "1A",
+            weather_file=self.weather,
+            kloten_weather_file=self.kloten,
         )
         parameters = self._read(baseline.config_path)["parameters"]
         assets = self._read(baseline.asset_manifest_path)
         exchange = next(
-            item for item in assets["air_exchanges"]
-            if item["key"] == "infiltration"
+            item for item in assets["air_exchanges"] if item["key"] == "infiltration"
         )
         m3_h_m2 = parameters["infiltration_m3_h_m2"]["value"]
         l_s_m2 = exchange["properties"]["max_flow"]["value"]
-        self.assertAlmostEqual(
-            m3_h_m2 / INFILTRATION_M3_H_M2_TO_L_S_M2, l_s_m2, places=6
-        )
+        self.assertAlmostEqual(m3_h_m2 / INFILTRATION_M3_H_M2_TO_L_S_M2, l_s_m2, places=6)
 
     def test_the_adjusted_infiltration_is_converted_not_copied(self):
         receipt = self._build("1C")
@@ -204,8 +195,7 @@ class Test1DiagnosticBundleTests(unittest.TestCase):
         expected = self._value("infiltration", "debit_m3_h_m2")
         self.assertEqual(parameters["infiltration_m3_h_m2"]["value"], expected)
         exchange = next(
-            item for item in assets["air_exchanges"]
-            if item["key"] == "infiltration"
+            item for item in assets["air_exchanges"] if item["key"] == "infiltration"
         )
         self.assertAlmostEqual(
             exchange["properties"]["max_flow"]["value"],
@@ -219,8 +209,7 @@ class Test1DiagnosticBundleTests(unittest.TestCase):
         receipt = self._build("1C")
         assets = self._read(receipt.asset_manifest_path)
         exchange = next(
-            item for item in assets["air_exchanges"]
-            if item["key"] == "infiltration"
+            item for item in assets["air_exchanges"] if item["key"] == "infiltration"
         )
         name = exchange["properties"]["name"]["value"]
         self.assertNotIn("0P41ACH", name)
@@ -275,9 +264,7 @@ class Test1DiagnosticBundleTests(unittest.TestCase):
             ["1A", "1B", "1C", "1D"],
         )
         self.assertEqual(assets["metadata"]["diagnostic_chain_blocked"], [])
-        self.assertEqual(
-            receipt.status, "READY_FOR_PROVISIONAL_RUNTIME_QUALIFICATION"
-        )
+        self.assertEqual(receipt.status, "READY_FOR_PROVISIONAL_RUNTIME_QUALIFICATION")
 
     # -- link 1E ------------------------------------------------------------
 
@@ -322,19 +309,22 @@ class Test1DiagnosticBundleTests(unittest.TestCase):
             places=9,
         )
 
-    def test_1e_is_blocked_on_the_dynamics_not_on_the_device(self):
-        """The blocker must name what is actually unresolved."""
+    def test_1e_keeps_only_the_remaining_technical_optical_reserve(self):
+        """Authority-resolved semantics must not remain as blockers."""
 
         receipt = self._build("1E")
         audit = self._read(receipt.audit_path)
         blocked = {item["id"]: item for item in audit["chain_blocked"]}
         self.assertIn(BLOCKER_AWNING, blocked)
         reserves = blocked[BLOCKER_AWNING]["unresolved_reserves"]
-        self.assertIn(
-            "SIA4010_TEST2A_THRESHOLD_COMPARISON_OPERATOR_NOT_CONFIRMED",
-            reserves,
+        self.assertNotIn(
+            "SIA4010_TEST2A_THRESHOLD_COMPARISON_OPERATOR_NOT_CONFIRMED", reserves
         )
-        self.assertIn("SIA4010_TEST2A_RELEASE_RULE_NOT_CONFIRMED", reserves)
+        self.assertNotIn("SIA4010_TEST2A_RELEASE_RULE_NOT_CONFIRMED", reserves)
+        self.assertEqual(
+            reserves,
+            ["VE_TEST2A_COMBINED_G_TOTAL_OPTICAL_MAPPING_NOT_QUALIFIED"],
+        )
 
     def test_the_reuse_of_the_test2a_contract_is_guarded(self):
         """The specification prescribes it; the code checks it still does."""
@@ -360,9 +350,7 @@ class Test1DiagnosticBundleTests(unittest.TestCase):
                 self.assertFalse(audit["compliance_claim_allowed"])
                 self.assertTrue(audit["runtime_qualification_required"])
                 assets = self._read(receipt.asset_manifest_path)
-                self.assertFalse(
-                    assets["metadata"]["compliance_claim_allowed"]
-                )
+                self.assertFalse(assets["metadata"]["compliance_claim_allowed"])
 
     def test_the_absence_of_a_criterion_is_recorded_for_1a_to_1d(self):
         for case_id in ("1A", "1B", "1C", "1D"):
@@ -375,9 +363,7 @@ class Test1DiagnosticBundleTests(unittest.TestCase):
 
     def test_case_1e_declares_its_criterion(self):
         audit = self._read(self._build("1E").audit_path)
-        self.assertEqual(
-            audit["acceptance_criterion"], "PASS_FAIL_STREUBEREICH"
-        )
+        self.assertEqual(audit["acceptance_criterion"], "PASS_FAIL_STREUBEREICH")
 
     def test_the_audit_pins_the_reference_it_used(self):
         """A bundle must say which frozen reference produced its values."""
@@ -389,7 +375,9 @@ class Test1DiagnosticBundleTests(unittest.TestCase):
     def test_a_missing_frozen_reference_fails_closed(self):
         with self.assertRaises(ConfigurationError):
             build_test1_diagnostic_bundle(
-                self.project, self.project, "1A",
+                self.project,
+                self.project,
+                "1A",
                 weather_file=self.weather,
             )
 

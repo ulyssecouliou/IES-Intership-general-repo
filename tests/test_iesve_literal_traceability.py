@@ -40,20 +40,26 @@ class IESVELiteralTraceabilityTests(unittest.TestCase):
         units_contract = SIA_COMPLIANCE_VALUE_PROVENANCE["room_air_exchange_units_val"]
         ach = units_contract["values"]["ach"]
         exchanges = [
-            SimpleNamespace(get=lambda: {
-                "type_val": contract["values"]["auxiliary_ventilation"],
-                "units_val": ach,
-                "max_flows": {ach: 1.2},
-                "units_strs": {ach: "ach"},
-            }),
-            SimpleNamespace(get=lambda: {
-                "type_val": contract["values"]["infiltration"],
-                "units_val": ach,
-                "max_flows": {ach: 0.15},
-                "units_strs": {ach: "ach"},
-            }),
+            SimpleNamespace(
+                get=lambda: {
+                    "type_val": contract["values"]["auxiliary_ventilation"],
+                    "units_val": ach,
+                    "max_flows": {ach: 1.2},
+                    "units_strs": {ach: "ach"},
+                }
+            ),
+            SimpleNamespace(
+                get=lambda: {
+                    "type_val": contract["values"]["infiltration"],
+                    "units_val": ach,
+                    "max_flows": {ach: 0.15},
+                    "units_strs": {ach: "ach"},
+                }
+            ),
         ]
-        analyzer = ModelAnalyzer(SimpleNamespace(get_air_exchanges=lambda _room: exchanges))
+        analyzer = ModelAnalyzer(
+            SimpleNamespace(get_air_exchanges=lambda _room: exchanges)
+        )
 
         summary = analyzer._analyze_air_exchanges(object())
 
@@ -125,18 +131,22 @@ class IESVELiteralTraceabilityTests(unittest.TestCase):
         checker = SIA3802Checker(analyzer, engine)
         room = RoomData(
             id="R-1",
-            openings=[OpeningData(
-                id="D-1",
-                opening_type="door",
-                opening_type_status="OK",
-                is_external=True,
-                u_value=1.0,
-            )],
+            openings=[
+                OpeningData(
+                    id="D-1",
+                    opening_type="door",
+                    opening_type_status="OK",
+                    is_external=True,
+                    u_value=1.0,
+                )
+            ],
         )
 
         checker._check_openings([room])
 
-        alerts = [alert for alert in engine.alerts if alert.rule == "SIA3802_U_VALUE_DOOR"]
+        alerts = [
+            alert for alert in engine.alerts if alert.rule == "SIA3802_U_VALUE_DOOR"
+        ]
         self.assertEqual(len(alerts), 1)
         self.assertIn("TO VERIFY", alerts[0].description)
 

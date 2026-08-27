@@ -23,12 +23,11 @@ from __future__ import annotations
 import datetime as _dt
 import json
 import os
-from dataclasses import asdict, dataclass, field
+from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
 from .ve_construction_binder import BindStatus, ConstructionBinder
-from .ve_field_policy import ReadbackStatus
 
 
 class ProbeStatus(Enum):
@@ -137,17 +136,13 @@ def _probe_model_bodies(project: Any) -> CapabilityFinding:
         return CapabilityFinding(
             capability_id=capability_id,
             status=ProbeStatus.FAIL,
-            detail="get_bodies(False) raised {}: {}".format(
-                type(exc).__name__, exc
-            ),
+            detail="get_bodies(False) raised {}: {}".format(type(exc).__name__, exc),
             evidence={"attribute": "get_bodies"},
         )
     return CapabilityFinding(
         capability_id=capability_id,
         status=ProbeStatus.PASS,
-        detail="get_bodies(False) returned {} body handle(s)".format(
-            len(list(bodies))
-        ),
+        detail="get_bodies(False) returned {} body handle(s)".format(len(list(bodies))),
         evidence={"attribute": "get_bodies", "kind": "callable"},
     )
 
@@ -281,7 +276,9 @@ def run_probe(
         _probe_attribute(project, "PROJECT_CREATE_APACHE_SYSTEM", "create_apache_system")
     )
     findings.append(
-        _probe_attribute(project, "PROJECT_CREATE_THERMAL_TEMPLATE", "create_thermal_template")
+        _probe_attribute(
+            project, "PROJECT_CREATE_THERMAL_TEMPLATE", "create_thermal_template"
+        )
     )
 
     # ``uvalue_types`` is an enum container on the ``VECdbProject`` CLASS, not a
@@ -297,7 +294,9 @@ def run_probe(
             kind="attribute",
         )
     )
-    findings.append(_probe_attribute(cdb_project, "CDB_CREATE_MATERIAL", "create_material"))
+    findings.append(
+        _probe_attribute(cdb_project, "CDB_CREATE_MATERIAL", "create_material")
+    )
     findings.append(
         _probe_attribute(cdb_project, "CDB_CREATE_CONSTRUCTION", "create_construction")
     )

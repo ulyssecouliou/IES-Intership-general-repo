@@ -19,8 +19,11 @@ logger = logging.getLogger(__name__)
 
 NOT_CHECKABLE = "NOT_CHECKABLE"
 # [TO VERIFY] membre VE absent: neither checked API artefact exposes these SIA classifications.
-VENTILATION_INSTALLATION_TYPE_PLACEHOLDER = "VENTILATION_INSTALLATION_TYPE_VE_MEMBER_TO_VERIFY"
+VENTILATION_INSTALLATION_TYPE_PLACEHOLDER = (
+    "VENTILATION_INSTALLATION_TYPE_VE_MEMBER_TO_VERIFY"
+)
 VENTILATION_CONTROL_LEVEL_PLACEHOLDER = "VENTILATION_CONTROL_LEVEL_VE_MEMBER_TO_VERIFY"
+
 
 @dataclass
 class SurfaceData:
@@ -39,9 +42,11 @@ class SurfaceData:
     construction_ids: List[str] = field(default_factory=list)
     adjacency_room_ids: List[str] = field(default_factory=list)
 
+
 @dataclass
 class OpeningData:
     """Normalized opening data extracted from VE."""
+
     id: str
     name: str = ""  # Opening name when exposed by VE.
     area: float = 0.0
@@ -124,6 +129,7 @@ def _is_enabled_marker(value: Any) -> bool:
         "enabled",
     }
 
+
 @dataclass
 class RoomData:
     """Normalized data for one thermal room or zone."""
@@ -134,7 +140,9 @@ class RoomData:
     area: float = 0.0
     surfaces: List[SurfaceData] = field(default_factory=list)
     openings: List[OpeningData] = field(default_factory=list)
-    internal_gains: Dict[str, Optional[float]] = field(default_factory=dict)  # Lighting, people and equipment values.
+    internal_gains: Dict[str, Optional[float]] = field(
+        default_factory=dict
+    )  # Lighting, people and equipment values.
     internal_gain_details: List[Dict[str, Any]] = field(default_factory=list)
     internal_gains_wh_m2_day: Optional[float] = None
     internal_gains_daily_status: str = NOT_CHECKABLE
@@ -168,7 +176,9 @@ class RoomData:
     hvac_zone: Dict[str, Any] = field(default_factory=dict)
     ventilation_installation_type: Optional[str] = None
     ventilation_installation_type_status: str = NOT_CHECKABLE
-    ventilation_installation_type_placeholder: str = VENTILATION_INSTALLATION_TYPE_PLACEHOLDER
+    ventilation_installation_type_placeholder: str = (
+        VENTILATION_INSTALLATION_TYPE_PLACEHOLDER
+    )
     ventilation_control: Optional[str] = None
     ventilation_control_level: Optional[int] = None
     ventilation_control_level_status: str = NOT_CHECKABLE
@@ -177,6 +187,7 @@ class RoomData:
     fan_control: Optional[str] = None
     heat_recovery_type: Optional[str] = None
     dynamic_results: Dict[str, Any] = field(default_factory=dict)
+
 
 class ModelAnalyzer:
     """Analyze the VE model and expose normalized indicators for SIA checks."""
@@ -206,12 +217,21 @@ class ModelAnalyzer:
             surfaces = self._analyze_surfaces(raw_surfaces)
             openings = self._analyze_openings(raw_surfaces)
             body_areas = self._get_body_areas(body)
-            room_area = float(body_areas.get("int_floor_area", 0.0) or 0.0) + float(body_areas.get("ext_floor_area", 0.0) or 0.0)
-            room_general = self.data_extractor.get_room_general(room_data_obj) if room_data_obj else {}
-            gain_summary = self._analyze_internal_gains(room_data_obj, room_area) if room_data_obj else {}
+            room_area = float(body_areas.get("int_floor_area", 0.0) or 0.0) + float(
+                body_areas.get("ext_floor_area", 0.0) or 0.0
+            )
+            room_general = (
+                self.data_extractor.get_room_general(room_data_obj)
+                if room_data_obj
+                else {}
+            )
+            gain_summary = (
+                self._analyze_internal_gains(room_data_obj, room_area)
+                if room_data_obj
+                else {}
+            )
             internal_gains = {
-                key: gain_summary.get(key)
-                for key in ("lighting", "people", "equipment")
+                key: gain_summary.get(key) for key in ("lighting", "people", "equipment")
             }
             occupancy_density = self._to_float_or_none(
                 gain_summary.get("occupancy_density_m2_per_person")
@@ -227,8 +247,14 @@ class ModelAnalyzer:
                 if room_data_obj
                 else {}
             )
-            room_conditions = self._analyze_room_conditions(room_data_obj) if room_data_obj else {}
-            hvac_systems = self._analyze_hvac_systems(room_data_obj, room_conditions) if room_data_obj else []
+            room_conditions = (
+                self._analyze_room_conditions(room_data_obj) if room_data_obj else {}
+            )
+            hvac_systems = (
+                self._analyze_hvac_systems(room_data_obj, room_conditions)
+                if room_data_obj
+                else []
+            )
             self._supplement_air_exchange_from_hvac(
                 air_exchange_summary,
                 hvac_systems,
@@ -252,9 +278,15 @@ class ModelAnalyzer:
                 openings=openings,
                 internal_gains=internal_gains,
                 internal_gain_details=list(gain_summary.get("details", []) or []),
-                internal_gains_wh_m2_day=self._to_float_or_none(gain_summary.get("daily_wh_m2")),
-                internal_gains_daily_status=str(gain_summary.get("daily_status") or NOT_CHECKABLE),
-                internal_gains_daily_placeholder=str(gain_summary.get("daily_placeholder") or ""),
+                internal_gains_wh_m2_day=self._to_float_or_none(
+                    gain_summary.get("daily_wh_m2")
+                ),
+                internal_gains_daily_status=str(
+                    gain_summary.get("daily_status") or NOT_CHECKABLE
+                ),
+                internal_gains_daily_placeholder=str(
+                    gain_summary.get("daily_placeholder") or ""
+                ),
                 internal_gains_daily_method=str(gain_summary.get("daily_method") or ""),
                 occupancy_density_m2_per_person=occupancy_density,
                 thermal_template_id=str(
@@ -262,11 +294,16 @@ class ModelAnalyzer:
                     or room_general.get("template")
                     or ""
                 ),
-                daylight_dimming_profile=str(gain_summary.get("daylight_dimming_profile") or ""),
+                daylight_dimming_profile=str(
+                    gain_summary.get("daylight_dimming_profile") or ""
+                ),
                 window_operable=window_summary.get("window_operable"),
-                window_ventilation_support=window_summary.get("window_ventilation_support"),
+                window_ventilation_support=window_summary.get(
+                    "window_ventilation_support"
+                ),
                 window_ventilation_support_status=str(
-                    window_summary.get("window_ventilation_support_status") or NOT_CHECKABLE
+                    window_summary.get("window_ventilation_support_status")
+                    or NOT_CHECKABLE
                 ),
                 window_ventilation_support_placeholder=str(
                     window_summary.get("window_ventilation_support_placeholder") or ""
@@ -277,11 +314,15 @@ class ModelAnalyzer:
                 ventilation_rate=ventilation_rate,
                 ventilation_unit=air_exchange_summary.get("ventilation_unit"),
                 ventilation_m3_h_m2=ventilation_m3_h_m2,
-                ventilation_facade_m3_h_m2=air_exchange_summary.get("ventilation_facade_m3_h_m2"),
+                ventilation_facade_m3_h_m2=air_exchange_summary.get(
+                    "ventilation_facade_m3_h_m2"
+                ),
                 ventilation_normalization_method=str(
                     air_exchange_summary.get("ventilation_normalization_method") or ""
                 ),
-                ventilation_source=str(air_exchange_summary.get("ventilation_source") or ""),
+                ventilation_source=str(
+                    air_exchange_summary.get("ventilation_source") or ""
+                ),
                 infiltration_rate=infiltration_rate,
                 infiltration_unit=infiltration_unit,
                 infiltration_m3_h_m2=infiltration_m3_h_m2,
@@ -299,7 +340,8 @@ class ModelAnalyzer:
                     or NOT_CHECKABLE
                 ),
                 air_exchange_classification_placeholder=str(
-                    air_exchange_summary.get("air_exchange_classification_placeholder") or ""
+                    air_exchange_summary.get("air_exchange_classification_placeholder")
+                    or ""
                 ),
                 air_exchange_classification_note=str(
                     air_exchange_summary.get("air_exchange_classification_note") or ""
@@ -328,7 +370,9 @@ class ModelAnalyzer:
                 total_gross = self._to_float(areas.get("total_gross"))
                 gross_area = external_gross if external_gross > 0 else total_gross
                 if gross_area <= 0:
-                    gross_area = self._to_float(areas.get("area")) or self._to_float(props.get("area"))
+                    gross_area = self._to_float(areas.get("area")) or self._to_float(
+                        props.get("area")
+                    )
 
                 # Select net area by whether external_net itself is present (mirrors
                 # data_extractor); keying on external_gross could zero a real
@@ -336,16 +380,25 @@ class ModelAnalyzer:
                 external_net = self._to_float_or_none(areas.get("external_net"))
                 total_net = self._to_float(areas.get("total_net"))
                 net_area = external_net if external_net is not None else total_net
-                if net_area <= 0 and gross_area > 0 and self._to_float(areas.get("total_gross_openings")) <= 1e-6:
+                if (
+                    net_area <= 0
+                    and gross_area > 0
+                    and self._to_float(areas.get("total_gross_openings")) <= 1e-6
+                ):
                     net_area = gross_area
                 u_value = props.get("U-value")
                 orientation = props.get("orientation")
                 tilt = self._to_float_or_none(props.get("tilt"))
                 materials = list(props.get("materials", []) or [])
                 surface_type = str(props.get("type", "") or "").lower()
-                construction_ids = [str(item) for item in props.get("construction_ids", []) or []]
+                construction_ids = [
+                    str(item) for item in props.get("construction_ids", []) or []
+                ]
 
-                is_external = self._is_external_surface(surface_type) or float(areas.get("external_gross", 0.0) or 0.0) > 0
+                is_external = (
+                    self._is_external_surface(surface_type)
+                    or float(areas.get("external_gross", 0.0) or 0.0) > 0
+                )
                 adjacency_room_ids: List[str] = []
                 try:
                     adjacencies = self.data_extractor.get_adjacencies(surface) or []
@@ -361,20 +414,22 @@ class ModelAnalyzer:
                     if not is_external:
                         is_external = False
 
-                surfaces_data.append(SurfaceData(
-                    id=surface_id,
-                    name=self._get_surface_name(surface),
-                    area=gross_area,
-                    net_area=net_area,
-                    u_value=u_value,
-                    orientation=orientation,
-                    tilt=tilt,
-                    materials=materials,
-                    is_external=is_external,
-                    surface_type=surface_type,
-                    construction_ids=construction_ids,
-                    adjacency_room_ids=adjacency_room_ids,
-                ))
+                surfaces_data.append(
+                    SurfaceData(
+                        id=surface_id,
+                        name=self._get_surface_name(surface),
+                        area=gross_area,
+                        net_area=net_area,
+                        u_value=u_value,
+                        orientation=orientation,
+                        tilt=tilt,
+                        materials=materials,
+                        is_external=is_external,
+                        surface_type=surface_type,
+                        construction_ids=construction_ids,
+                        adjacency_room_ids=adjacency_room_ids,
+                    )
+                )
             except Exception:
                 continue
         return surfaces_data
@@ -386,7 +441,10 @@ class ModelAnalyzer:
             try:
                 surface_props = self.data_extractor.get_surface_properties(surface) or {}
                 surface_areas = self.data_extractor.get_surface_areas(surface) or {}
-                is_external = self._is_external_surface(surface_props.get("type")) or float(surface_areas.get("external_gross", 0.0) or 0.0) > 0
+                is_external = (
+                    self._is_external_surface(surface_props.get("type"))
+                    or float(surface_areas.get("external_gross", 0.0) or 0.0) > 0
+                )
                 surface_orientation = surface_props.get("orientation")
                 openings = self.data_extractor.get_openings(surface) or []
             except Exception:
@@ -401,54 +459,105 @@ class ModelAnalyzer:
                     area = float(props.get("area", 0.0) or 0.0)
                     u_value = props.get("U-value")
                     solar_factor = props.get("solar_factor")
-                    g_values = props.get("g_values") if isinstance(props.get("g_values"), dict) else {}
-                    shading_properties = props.get("shading_properties") if isinstance(props.get("shading_properties"), dict) else {}
-                    visible_transmittance = self._to_float_or_none(props.get("visible_transmittance"))
+                    g_values = (
+                        props.get("g_values")
+                        if isinstance(props.get("g_values"), dict)
+                        else {}
+                    )
+                    shading_properties = (
+                        props.get("shading_properties")
+                        if isinstance(props.get("shading_properties"), dict)
+                        else {}
+                    )
+                    visible_transmittance = self._to_float_or_none(
+                        props.get("visible_transmittance")
+                    )
                     frame_fraction = self._to_float_or_none(props.get("frame_fraction"))
                     orientation = props.get("orientation") or surface_orientation
                     opening_type = self._normalize_opening_type(props.get("type"))
                     construction_id = str(props.get("construction_id", "") or "")
 
-                    openings_data.append(OpeningData(
-                        id=opening_id,
-                        name=self._get_opening_name(opening),
-                        area=area,
-                        u_value=u_value,
-                        solar_factor=solar_factor,
-                        solar_factor_source=str(props.get("solar_factor_source") or "") or None,
-                        cdb_g_value=self._to_float_or_none(props.get("cdb_g_value")),
-                        g_value_bs_en_410=self._to_float_or_none(props.get("g_value_bs_en_410")),
-                        g_value_building_regulations=self._to_float_or_none(props.get("g_value_building_regulations")),
-                        g_value_bfrc=self._to_float_or_none(props.get("g_value_bfrc")),
-                        g_values=dict(g_values),
-                        visible_transmittance=visible_transmittance,
-                        visible_transmittance_status=str(props.get("visible_transmittance_status") or NOT_CHECKABLE),
-                        visible_transmittance_source=str(props.get("visible_transmittance_source") or "") or None,
-                        visible_transmittance_placeholder=str(props.get("visible_transmittance_placeholder") or ""),
-                        visible_transmittance_note=str(props.get("visible_transmittance_note") or ""),
-                        frame_fraction=frame_fraction,
-                        frame_fraction_status=str(props.get("frame_fraction_status") or NOT_CHECKABLE),
-                        frame_fraction_source=str(props.get("frame_fraction_source") or "") or None,
-                        frame_fraction_placeholder=str(props.get("frame_fraction_placeholder") or ""),
-                        frame_fraction_note=str(props.get("frame_fraction_note") or ""),
-                        shading_type=str(props.get("shading_type") or "") or None,
-                        shading_control=str(props.get("shading_control") or "") or None,
-                        shading_properties=dict(shading_properties),
-                        g_total=self._to_float_or_none(props.get("g_total")),
-                        g_total_source=str(props.get("g_total_source") or "") or None,
-                        g_total_status=str(props.get("g_total_status") or NOT_CHECKABLE),
-                        g_total_placeholder=str(props.get("g_total_placeholder") or ""),
-                        g_total_note=str(props.get("g_total_note") or ""),
-                        orientation=orientation,
-                        opening_type=opening_type,
-                        opening_type_status=str(props.get("opening_type_status") or NOT_CHECKABLE),
-                        opening_type_source=str(props.get("opening_type_source") or "") or None,
-                        opening_type_placeholder=str(props.get("opening_type_placeholder") or ""),
-                        opening_type_note=str(props.get("opening_type_note") or ""),
-                        is_external=is_external,
-                        construction_id=construction_id,
-                        macroflo_id=str(props.get("macroflo_id") or ""),
-                    ))
+                    openings_data.append(
+                        OpeningData(
+                            id=opening_id,
+                            name=self._get_opening_name(opening),
+                            area=area,
+                            u_value=u_value,
+                            solar_factor=solar_factor,
+                            solar_factor_source=str(
+                                props.get("solar_factor_source") or ""
+                            )
+                            or None,
+                            cdb_g_value=self._to_float_or_none(props.get("cdb_g_value")),
+                            g_value_bs_en_410=self._to_float_or_none(
+                                props.get("g_value_bs_en_410")
+                            ),
+                            g_value_building_regulations=self._to_float_or_none(
+                                props.get("g_value_building_regulations")
+                            ),
+                            g_value_bfrc=self._to_float_or_none(
+                                props.get("g_value_bfrc")
+                            ),
+                            g_values=dict(g_values),
+                            visible_transmittance=visible_transmittance,
+                            visible_transmittance_status=str(
+                                props.get("visible_transmittance_status") or NOT_CHECKABLE
+                            ),
+                            visible_transmittance_source=str(
+                                props.get("visible_transmittance_source") or ""
+                            )
+                            or None,
+                            visible_transmittance_placeholder=str(
+                                props.get("visible_transmittance_placeholder") or ""
+                            ),
+                            visible_transmittance_note=str(
+                                props.get("visible_transmittance_note") or ""
+                            ),
+                            frame_fraction=frame_fraction,
+                            frame_fraction_status=str(
+                                props.get("frame_fraction_status") or NOT_CHECKABLE
+                            ),
+                            frame_fraction_source=str(
+                                props.get("frame_fraction_source") or ""
+                            )
+                            or None,
+                            frame_fraction_placeholder=str(
+                                props.get("frame_fraction_placeholder") or ""
+                            ),
+                            frame_fraction_note=str(
+                                props.get("frame_fraction_note") or ""
+                            ),
+                            shading_type=str(props.get("shading_type") or "") or None,
+                            shading_control=str(props.get("shading_control") or "")
+                            or None,
+                            shading_properties=dict(shading_properties),
+                            g_total=self._to_float_or_none(props.get("g_total")),
+                            g_total_source=str(props.get("g_total_source") or "") or None,
+                            g_total_status=str(
+                                props.get("g_total_status") or NOT_CHECKABLE
+                            ),
+                            g_total_placeholder=str(
+                                props.get("g_total_placeholder") or ""
+                            ),
+                            g_total_note=str(props.get("g_total_note") or ""),
+                            orientation=orientation,
+                            opening_type=opening_type,
+                            opening_type_status=str(
+                                props.get("opening_type_status") or NOT_CHECKABLE
+                            ),
+                            opening_type_source=str(
+                                props.get("opening_type_source") or ""
+                            )
+                            or None,
+                            opening_type_placeholder=str(
+                                props.get("opening_type_placeholder") or ""
+                            ),
+                            opening_type_note=str(props.get("opening_type_note") or ""),
+                            is_external=is_external,
+                            construction_id=construction_id,
+                            macroflo_id=str(props.get("macroflo_id") or ""),
+                        )
+                    )
                 except Exception:
                     continue
         return openings_data
@@ -474,7 +583,9 @@ class ModelAnalyzer:
             gains_audit = self.data_extractor.get_internal_gains_audit(room_data)
             internal_gains = list(gains_audit.get("items", []) or [])
             if gains_audit.get("status") != "OK":
-                gains["daily_method"] = str(gains_audit.get("note") or gains["daily_method"])
+                gains["daily_method"] = str(
+                    gains_audit.get("note") or gains["daily_method"]
+                )
                 gains["daily_placeholder"] = str(
                     gains_audit.get("placeholder") or gains["daily_placeholder"]
                 )
@@ -495,9 +606,13 @@ class ModelAnalyzer:
                 density = self._gain_density_w_m2(gain_data, room_area)
                 variation_profile = str(gain_data.get("variation_profile") or "")
                 profile_audit = (
-                    self.data_extractor.get_profile_daily_equivalent_hours_audit(variation_profile)
+                    self.data_extractor.get_profile_daily_equivalent_hours_audit(
+                        variation_profile
+                    )
                     if variation_profile
-                    and hasattr(self.data_extractor, "get_profile_daily_equivalent_hours_audit")
+                    and hasattr(
+                        self.data_extractor, "get_profile_daily_equivalent_hours_audit"
+                    )
                     else {
                         "value": None,
                         "status": NOT_CHECKABLE,
@@ -508,7 +623,11 @@ class ModelAnalyzer:
                 profile_hours = self._to_float_or_none(profile_audit.get("value"))
                 diversity = self._to_float_or_none(gain_data.get("diversity_factor"))
                 category = ""
-                if "lighting" in gain_type or "fluorescent" in gain_type or "tungsten" in gain_type:
+                if (
+                    "lighting" in gain_type
+                    or "fluorescent" in gain_type
+                    or "tungsten" in gain_type
+                ):
                     category = "lighting"
                     gains["daylight_dimming_profile"] = str(
                         gain_data.get("dimming_profile")
@@ -529,7 +648,10 @@ class ModelAnalyzer:
                         )
                     if density_m2_per_person is not None and density_m2_per_person > 0:
                         gains["occupancy_density_m2_per_person"] = density_m2_per_person
-                elif any(token in gain_type for token in ("machinery", "misc", "cooking", "computer", "equipment")):
+                elif any(
+                    token in gain_type
+                    for token in ("machinery", "misc", "cooking", "computer", "equipment")
+                ):
                     category = "equipment"
                 if not category:
                     continue
@@ -540,23 +662,33 @@ class ModelAnalyzer:
                     daily_complete = False
                 else:
                     daily_components.append(density * diversity * profile_hours)
-                gains["details"].append({
-                    "name": str(gain_data.get("name") or ""),
-                    "category": category,
-                    "type": str(gain_data.get("type_str") or ""),
-                    "units_val": units_val,
-                    "density_w_m2": density,
-                    "variation_profile": variation_profile,
-                    "profile_full_load_hours": profile_hours,
-                    "profile_status": str(profile_audit.get("status") or NOT_CHECKABLE),
-                    "profile_placeholder": str(profile_audit.get("placeholder") or ""),
-                    "diversity_factor": diversity,
-                    "dimming_profile": str(gain_data.get("dimming_profile") or ""),
-                })
+                gains["details"].append(
+                    {
+                        "name": str(gain_data.get("name") or ""),
+                        "category": category,
+                        "type": str(gain_data.get("type_str") or ""),
+                        "units_val": units_val,
+                        "density_w_m2": density,
+                        "variation_profile": variation_profile,
+                        "profile_full_load_hours": profile_hours,
+                        "profile_status": str(
+                            profile_audit.get("status") or NOT_CHECKABLE
+                        ),
+                        "profile_placeholder": str(
+                            profile_audit.get("placeholder") or ""
+                        ),
+                        "diversity_factor": diversity,
+                        "dimming_profile": str(gain_data.get("dimming_profile") or ""),
+                    }
+                )
             except Exception as e:
                 logger.error("Error while analyzing internal gains: %s", e)
                 daily_complete = False
-        if gains["details"] and daily_complete and len(daily_components) == len(gains["details"]):
+        if (
+            gains["details"]
+            and daily_complete
+            and len(daily_components) == len(gains["details"])
+        ):
             gains["daily_wh_m2"] = sum(daily_components)
             gains["daily_status"] = "OK"
             gains["daily_placeholder"] = ""
@@ -565,19 +697,23 @@ class ModelAnalyzer:
                 "daily full-load hours resolved from documented modulating VE profile data"
             )
         elif gains["details"]:
-            gains["daily_method"] = "NOT_CHECKABLE: at least one gain density or VE daily profile could not be resolved"
+            gains["daily_method"] = (
+                "NOT_CHECKABLE: at least one gain density or VE daily profile could not be resolved"
+            )
         return gains
 
     @classmethod
-    def _gain_density_w_m2(cls, gain_data: Dict[str, Any], room_area: float) -> Optional[float]:
+    def _gain_density_w_m2(
+        cls, gain_data: Dict[str, Any], room_area: float
+    ) -> Optional[float]:
         """Return a gain density only when the VE unit conversion is defensible."""
         units_val = gain_data.get("units_val")
         value_table = gain_data.get("max_power_consumptions")
         if value_table in (None, {}):
             value_table = gain_data.get("max_sensible_gains")
-        gain_units = SIA_COMPLIANCE_VALUE_PROVENANCE[
-            "internal_gain_power_units_val"
-        ]["values"]
+        gain_units = SIA_COMPLIANCE_VALUE_PROVENANCE["internal_gain_power_units_val"][
+            "values"
+        ]
         if isinstance(value_table, dict):
             watts_per_area = gain_units["watts_per_square_metre"]
             if watts_per_area in value_table or str(watts_per_area) in value_table:
@@ -716,7 +852,9 @@ class ModelAnalyzer:
                         summary["ventilation_rate"] = active_rate
                         summary["ventilation_unit"] = active_unit
                     floor_flow = normalized_flow
-                    facade_flow = self._derive_facade_m3_h_m2_from_flow_table(max_flows, units)
+                    facade_flow = self._derive_facade_m3_h_m2_from_flow_table(
+                        max_flows, units
+                    )
                     if floor_flow is not None:
                         summary["ventilation_m3_h_m2"] = (
                             float(summary["ventilation_m3_h_m2"] or 0.0) + floor_flow
@@ -724,7 +862,9 @@ class ModelAnalyzer:
                         methods = set(
                             filter(
                                 None,
-                                str(summary["ventilation_normalization_method"]).split(" + "),
+                                str(summary["ventilation_normalization_method"]).split(
+                                    " + "
+                                ),
                             )
                         )
                         methods.add(normalization_method)
@@ -736,7 +876,8 @@ class ModelAnalyzer:
                         )
                     if facade_flow is not None:
                         summary["ventilation_facade_m3_h_m2"] = (
-                            float(summary["ventilation_facade_m3_h_m2"] or 0.0) + facade_flow
+                            float(summary["ventilation_facade_m3_h_m2"] or 0.0)
+                            + facade_flow
                         )
 
                 if exchange_type == infiltration_type:
@@ -751,7 +892,9 @@ class ModelAnalyzer:
                         methods = set(
                             filter(
                                 None,
-                                str(summary["infiltration_normalization_method"]).split(" + "),
+                                str(summary["infiltration_normalization_method"]).split(
+                                    " + "
+                                ),
                             )
                         )
                         methods.add(normalization_method)
@@ -830,9 +973,9 @@ class ModelAnalyzer:
             for character in str(active_unit or "").lower().replace("Â³", "3")
             if not character.isspace()
         )
-        unit_values = SIA_COMPLIANCE_VALUE_PROVENANCE[
-            "room_air_exchange_units_val"
-        ]["values"]
+        unit_values = SIA_COMPLIANCE_VALUE_PROVENANCE["room_air_exchange_units_val"][
+            "values"
+        ]
         area = cls._to_float_or_none(room_area)
         volume = cls._to_float_or_none(room_volume)
         if active_rate is None or area is None or area <= 0.0:
@@ -847,14 +990,14 @@ class ModelAnalyzer:
         if is_ach and volume is not None and volume > 0.0:
             return active_rate * volume / area, "ACH x room volume / floor area"
 
-        is_total_l_s = (
-            units_val == unit_values["litres_per_second"]
-            or compact_unit in {"l/s", "lps", "litres/second", "liters/second"}
-        )
+        is_total_l_s = units_val == unit_values["litres_per_second"] or compact_unit in {
+            "l/s",
+            "lps",
+            "litres/second",
+            "liters/second",
+        }
         if is_total_l_s:
-            factor = SIA_COMPLIANCE_VALUE_PROVENANCE["airflow_l_s_to_m3_h"][
-                "value"
-            ]
+            factor = SIA_COMPLIANCE_VALUE_PROVENANCE["airflow_l_s_to_m3_h"]["value"]
             return active_rate * factor / area, "total l/s x 3.6 / floor area"
         return None, ""
 
@@ -866,20 +1009,24 @@ class ModelAnalyzer:
         for key, unit_label in units.items():
             label = str(unit_label or "").lower().replace("²", "2")
             compact = "".join(character for character in label if not character.isspace())
-            is_floor_area_rate = (
-                "fac" not in compact
-                and any(token in compact for token in ("l/(s.m2)", "l/(s*m2)", "l/s/m2", "l/sm2"))
+            is_floor_area_rate = "fac" not in compact and any(
+                token in compact for token in ("l/(s.m2)", "l/(s*m2)", "l/s/m2", "l/sm2")
             )
             if is_floor_area_rate:
-                value = ModelAnalyzer._to_float_or_none(max_flows.get(key, max_flows.get(str(key))))
+                value = ModelAnalyzer._to_float_or_none(
+                    max_flows.get(key, max_flows.get(str(key)))
+                )
                 if value is not None:
-                    return value * SIA_COMPLIANCE_VALUE_PROVENANCE[
-                        "airflow_l_s_to_m3_h"
-                    ]["value"]
+                    return (
+                        value
+                        * SIA_COMPLIANCE_VALUE_PROVENANCE["airflow_l_s_to_m3_h"]["value"]
+                    )
         return None
 
     @staticmethod
-    def _derive_facade_m3_h_m2_from_flow_table(max_flows: Any, units: Any) -> Optional[float]:
+    def _derive_facade_m3_h_m2_from_flow_table(
+        max_flows: Any, units: Any
+    ) -> Optional[float]:
         """Convert facade-area airflow separately from floor-area ventilation."""
         if not isinstance(max_flows, dict) or not isinstance(units, dict):
             return None
@@ -889,11 +1036,14 @@ class ModelAnalyzer:
             if "fac" in compact and any(
                 token in compact for token in ("l/(s.m2)", "l/(s*m2)", "l/s/m2", "l/sm2")
             ):
-                value = ModelAnalyzer._to_float_or_none(max_flows.get(key, max_flows.get(str(key))))
+                value = ModelAnalyzer._to_float_or_none(
+                    max_flows.get(key, max_flows.get(str(key)))
+                )
                 if value is not None:
-                    return value * SIA_COMPLIANCE_VALUE_PROVENANCE[
-                        "airflow_l_s_to_m3_h"
-                    ]["value"]
+                    return (
+                        value
+                        * SIA_COMPLIANCE_VALUE_PROVENANCE["airflow_l_s_to_m3_h"]["value"]
+                    )
         return None
 
     @staticmethod
@@ -953,9 +1103,7 @@ class ModelAnalyzer:
         to a room without an explicit distribution basis.
         """
         for system in hvac_systems:
-            flow = self._to_float_or_none(
-                system.get("system_air_minimum_flowrate")
-            )
+            flow = self._to_float_or_none(system.get("system_air_minimum_flowrate"))
             units_val = system.get("system_air_minimum_flowrate_units")
             flow_table = system.get("system_air_minimum_flowrates") or {}
             if not isinstance(flow_table, dict):
@@ -1077,59 +1225,65 @@ class ModelAnalyzer:
             seer = self._to_float_or_none(cooling.get("SEER"))
             sseer = self._to_float_or_none(cooling.get("SSEER"))
             scop = self._to_float_or_none(heating.get("SCoP"))
-            hvac_systems.append({
-                "id": hvac_id,
-                "name": apache_data.get("name", ""),
-                "type": system_data.get("HVAC_methodology"),
-                "conditioned": system_data.get("conditioned"),
-                "cooling_generator_class": cooling_class,
-                "heating_generator_class": heating_class,
-                "cooling_capacity_kw": self._to_float_or_none(
-                    cooling.get("gen_size") or system_data.get("cooling_unit_size")
-                ),
-                "heating_capacity_kw": self._to_float_or_none(
-                    heating.get("gen_size") or system_data.get("heating_unit_size")
-                ),
-                "eer": eer,
-                "seer": seer,
-                "sseer": sseer,
-                "scop": scop,
-                "efficiency": seer if seer is not None else (eer if eer is not None else scop),
-                "fan_control": self._normalize_identifier(fan_control),
-                "system_type": self._normalize_identifier(system_type),
-                "ventilation_control": self._normalize_identifier(ventilation_control),
-                "air_flow_control": self._normalize_identifier(air_flow_control),
-                "demand_controlled_ventilation": self._normalize_identifier(
-                    demand_control
-                ),
-                "heat_recovery_type": self._normalize_identifier(heat_recovery),
-                # NCM seasonal heat-recovery efficiency (VEApacheSystem.ventilation_ncm),
-                # confirmed extractable on real projects. Compared to the SIA 380/2
-                # reference eta_rec in the reference-project family.
-                "heat_recovery_efficiency": self._to_float_or_none(
-                    ventilation_ncm.get("heat_recovery_efficiency")
-                ),
-                "system_air_minimum_flowrate": self._to_float_or_none(
-                    system_data.get("system_air_minimum_flowrate")
-                ),
-                "system_air_minimum_flowrate_units": system_data.get(
-                    "system_air_minimum_flowrate_units",
-                    system_data.get("system_air_minimum_flowrate_unit"),
-                ),
-                "system_air_minimum_flowrates": dict(
-                    system_data.get("system_air_minimum_flowrates") or {}
-                ),
-                "system_air_minimum_flowrate_from_template": bool(
-                    system_data.get("system_air_minimum_flowrate_from_template")
-                ),
-                "air_supply_raw": dict(apache_data.get("air_supply", {}) or {}),
-                "control_raw": dict(apache_data.get("control", {}) or {}),
-                "system_controls_ncm_raw": dict(system_controls),
-                "cooling_raw": dict(cooling),
-                "heating_raw": dict(heating),
-                "ventilation_ncm_raw": dict(ventilation_ncm),
-                "energy_consumption": None,
-            })
+            hvac_systems.append(
+                {
+                    "id": hvac_id,
+                    "name": apache_data.get("name", ""),
+                    "type": system_data.get("HVAC_methodology"),
+                    "conditioned": system_data.get("conditioned"),
+                    "cooling_generator_class": cooling_class,
+                    "heating_generator_class": heating_class,
+                    "cooling_capacity_kw": self._to_float_or_none(
+                        cooling.get("gen_size") or system_data.get("cooling_unit_size")
+                    ),
+                    "heating_capacity_kw": self._to_float_or_none(
+                        heating.get("gen_size") or system_data.get("heating_unit_size")
+                    ),
+                    "eer": eer,
+                    "seer": seer,
+                    "sseer": sseer,
+                    "scop": scop,
+                    "efficiency": (
+                        seer if seer is not None else (eer if eer is not None else scop)
+                    ),
+                    "fan_control": self._normalize_identifier(fan_control),
+                    "system_type": self._normalize_identifier(system_type),
+                    "ventilation_control": self._normalize_identifier(
+                        ventilation_control
+                    ),
+                    "air_flow_control": self._normalize_identifier(air_flow_control),
+                    "demand_controlled_ventilation": self._normalize_identifier(
+                        demand_control
+                    ),
+                    "heat_recovery_type": self._normalize_identifier(heat_recovery),
+                    # NCM seasonal heat-recovery efficiency (VEApacheSystem.ventilation_ncm),
+                    # confirmed extractable on real projects. Compared to the SIA 380/2
+                    # reference eta_rec in the reference-project family.
+                    "heat_recovery_efficiency": self._to_float_or_none(
+                        ventilation_ncm.get("heat_recovery_efficiency")
+                    ),
+                    "system_air_minimum_flowrate": self._to_float_or_none(
+                        system_data.get("system_air_minimum_flowrate")
+                    ),
+                    "system_air_minimum_flowrate_units": system_data.get(
+                        "system_air_minimum_flowrate_units",
+                        system_data.get("system_air_minimum_flowrate_unit"),
+                    ),
+                    "system_air_minimum_flowrates": dict(
+                        system_data.get("system_air_minimum_flowrates") or {}
+                    ),
+                    "system_air_minimum_flowrate_from_template": bool(
+                        system_data.get("system_air_minimum_flowrate_from_template")
+                    ),
+                    "air_supply_raw": dict(apache_data.get("air_supply", {}) or {}),
+                    "control_raw": dict(apache_data.get("control", {}) or {}),
+                    "system_controls_ncm_raw": dict(system_controls),
+                    "cooling_raw": dict(cooling),
+                    "heating_raw": dict(heating),
+                    "ventilation_ncm_raw": dict(ventilation_ncm),
+                    "energy_consumption": None,
+                }
+            )
         return hvac_systems
 
     def _analyze_window_ventilation(self, openings: List[OpeningData]) -> Dict[str, Any]:
@@ -1181,7 +1335,9 @@ class ModelAnalyzer:
             for row in matched_rows
             if (self._to_float_or_none((row or {}).get("openable_area")) or 0.0) > 0.0
         ]
-        if not explicitly_operable and not any(opening.macroflo_id for opening in external_windows):
+        if not explicitly_operable and not any(
+            opening.macroflo_id for opening in external_windows
+        ):
             return {
                 "window_operable": False,
                 "window_ventilation_support": "no_window_support",
@@ -1201,7 +1357,9 @@ class ModelAnalyzer:
         profile_hours = []
         for row in explicitly_operable:
             profile_id = str((row or {}).get("profile") or "")
-            if profile_id and hasattr(self.data_extractor, "get_profile_daily_equivalent_hours"):
+            if profile_id and hasattr(
+                self.data_extractor, "get_profile_daily_equivalent_hours"
+            ):
                 hours = self.data_extractor.get_profile_daily_equivalent_hours(profile_id)
                 if hours is not None:
                     profile_hours.append(hours)
@@ -1265,8 +1423,7 @@ class ModelAnalyzer:
             has_schedule = any(
                 str(item.get("variation_profile") or "").strip()
                 for item in (room.air_exchange_evidence or [])
-                if isinstance(item, dict)
-                and item.get("type") == "auxiliary_ventilation"
+                if isinstance(item, dict) and item.get("type") == "auxiliary_ventilation"
             )
             derived_level = None
             if installation_type == "monozone" and has_schedule:
@@ -1346,7 +1503,10 @@ class ModelAnalyzer:
             """Search nested mappings for the first requested control key."""
             if isinstance(value, dict):
                 for key, child in value.items():
-                    if cls._normalize_identifier(key) in wanted and child not in (None, ""):
+                    if cls._normalize_identifier(key) in wanted and child not in (
+                        None,
+                        "",
+                    ):
                         return str(child)
                     nested = visit(child)
                     if nested:
@@ -1393,7 +1553,9 @@ class ModelAnalyzer:
         )
         if not bool(is_heat_pump):
             return None
-        member = cls._api_enum_member_name(heating_ncm.get(contract["heating_source_field"]))
+        member = cls._api_enum_member_name(
+            heating_ncm.get(contract["heating_source_field"])
+        )
         mapped = contract["heating_values"].get(member)
         if mapped:
             return str(mapped)
@@ -1586,7 +1748,11 @@ class ModelAnalyzer:
             raw = raw[4:]
         if raw.startswith("ground_"):
             raw = raw[7:]
-        return raw if raw in {"wall", "roof", "floor", "ceiling", "glazing", "door", "hole"} else raw
+        return (
+            raw
+            if raw in {"wall", "roof", "floor", "ceiling", "glazing", "door", "hole"}
+            else raw
+        )
 
     def _normalize_opening_type(self, opening_type: Any) -> str:
         """Normalize only source-traced symbolic IESVE opening types."""
@@ -1622,25 +1788,39 @@ class ModelAnalyzer:
 
     def calculate_wwr(self, room_data: RoomData) -> float:
         """Calculate the window-to-wall ratio for one room."""
-        external_walls = [s for s in room_data.surfaces if s.is_external and self._normalize_surface_type(s.surface_type) in {"wall", "ext_wall"}]
+        external_walls = [
+            s
+            for s in room_data.surfaces
+            if s.is_external
+            and self._normalize_surface_type(s.surface_type) in {"wall", "ext_wall"}
+        ]
         wall_area = sum(s.area for s in external_walls)
-        window_area = sum(o.area for o in room_data.openings if o.is_external and o.opening_type == "window")
+        window_area = sum(
+            o.area
+            for o in room_data.openings
+            if o.is_external and o.opening_type == "window"
+        )
         return window_area / wall_area if wall_area > 0 else 0.0
 
     def calculate_average_u_value(self, room_data: RoomData, surface_type: str) -> float:
         """Calculate the area-weighted average U-value for one surface type."""
         normalized_target = self._normalize_surface_type(surface_type)
         surfaces = [
-            s for s in room_data.surfaces
+            s
+            for s in room_data.surfaces
             if self._normalize_surface_type(s.surface_type) == normalized_target
             and s.u_value is not None
             and getattr(s, "net_area", s.area) > 1e-6
         ]
-        weighted_sum = sum(float(s.u_value) * float(getattr(s, "net_area", s.area)) for s in surfaces)
+        weighted_sum = sum(
+            float(s.u_value) * float(getattr(s, "net_area", s.area)) for s in surfaces
+        )
         total_area = sum(float(getattr(s, "net_area", s.area)) for s in surfaces)
         return weighted_sum / total_area if total_area > 0 else 0.0
 
-    def calculate_total_energy_consumption(self, energy_sources: Dict[str, Any]) -> Optional[float]:
+    def calculate_total_energy_consumption(
+        self, energy_sources: Dict[str, Any]
+    ) -> Optional[float]:
         """Return annual consumption only for explicit consumption objects."""
         total_energy = 0.0
         supported_count = 0
@@ -1649,7 +1829,9 @@ class ModelAnalyzer:
                 total_energy += source.get_annual_consumption()
                 supported_count += 1
             except Exception as e:
-                logger.debug("Energy-source metadata has no annual consumption result: %s", e)
+                logger.debug(
+                    "Energy-source metadata has no annual consumption result: %s", e
+                )
         return total_energy if supported_count else None
 
     def calculate_total_area(self, rooms_data: List[RoomData]) -> float:
@@ -1672,8 +1854,16 @@ class ModelAnalyzer:
 
     def get_windows(self, room_data: RoomData) -> List[OpeningData]:
         """Return window openings for one room."""
-        return [o for o in room_data.openings if self._normalize_opening_type(o.opening_type) == "window"]
+        return [
+            o
+            for o in room_data.openings
+            if self._normalize_opening_type(o.opening_type) == "window"
+        ]
 
     def get_external_walls(self, room_data: RoomData) -> List[SurfaceData]:
         """Return external wall surfaces for one room."""
-        return [s for s in room_data.surfaces if s.is_external and self._normalize_surface_type(s.surface_type) == "wall"]
+        return [
+            s
+            for s in room_data.surfaces
+            if s.is_external and self._normalize_surface_type(s.surface_type) == "wall"
+        ]

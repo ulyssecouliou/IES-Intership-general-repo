@@ -15,9 +15,14 @@ import importlib.util
 import unittest
 from pathlib import Path
 
-
 ROOT = Path(__file__).resolve().parents[1]
 LAUNCHER = ROOT / "Run_VE_SIA4010_Prepare_Case_Scenario.py"
+TEST4_LAUNCHER = ROOT / "Run_VE_SIA4010_Test4_Prepare.py"
+TEST7_LAUNCHER = ROOT / "Run_VE_SIA4010_Test7_Prepare.py"
+TEST7_ONE_CLICK = ROOT / "Run_VE_SIA4010_Test7_Prepare_And_Probe.py"
+TEST3A_ONE_CLICK = ROOT / "Run_VE_SIA4010_Test3A_Prepare_And_Probe.py"
+TEST5A_ONE_CLICK = ROOT / "Run_VE_SIA4010_Test5A_Prepare_And_Probe.py"
+TEST6_ONE_CLICK = ROOT / "Run_VE_SIA4010_Test6_Prepare_And_Probe.py"
 
 
 def _load_launcher():
@@ -40,6 +45,82 @@ class PrepareCaseScenarioLauncherTests(unittest.TestCase):
     def test_the_launcher_exists(self) -> None:
         self.assertTrue(LAUNCHER.is_file())
 
+    def test_dedicated_test4_launcher_fixes_case_and_class(self) -> None:
+        """The operator must not inherit the generic launcher's old case."""
+
+        source = TEST4_LAUNCHER.read_text(encoding="utf-8")
+        self.assertIn('preparation.CASE = "4"', source)
+        self.assertIn('preparation.TARGET_CLASS = "3"', source)
+        self.assertIn("preparation.ALLOW_SCENARIO_REPLACEMENT = True", source)
+        self.assertIn("preparation.INSTALL_PREPARED_EXTERNAL_INPUTS = True", source)
+        self.assertIn(
+            'preparation.EXPECTED_PROJECT_FOLDER = "SIA4010_TEST4_DISPOSABLE"',
+            source,
+        )
+        self.assertNotIn("sys.exit", source)
+
+    def test_dedicated_test7_launcher_fixes_case_and_class(self) -> None:
+        source = TEST7_LAUNCHER.read_text(encoding="utf-8")
+        self.assertIn('preparation.CASE = "7"', source)
+        self.assertIn('preparation.TARGET_CLASS = "5"', source)
+        self.assertIn("preparation.ALLOW_SCENARIO_REPLACEMENT = True", source)
+        self.assertIn("preparation.INSTALL_PREPARED_EXTERNAL_INPUTS = True", source)
+        self.assertIn(
+            'preparation.EXPECTED_PROJECT_FOLDER = "SIA4010_TEST7_DISPOSABLE"',
+            source,
+        )
+        self.assertNotIn("sys.exit", source)
+
+    def test_test7_one_click_prepares_before_probe(self) -> None:
+        source = TEST7_ONE_CLICK.read_text(encoding="utf-8")
+        prepare_at = source.index("import Run_VE_SIA4010_Test7_Prepare")
+        run_at = source.index("result = preparation.run()")
+        probe_at = source.index("import Run_VE_SIA4010_Tests4_7_Runtime_Capability_Probe")
+        self.assertLess(prepare_at, run_at)
+        self.assertLess(run_at, probe_at)
+        self.assertNotIn("sys.exit", source)
+
+    def test_test3a_one_click_fixes_scope_and_prepares_before_probe(self) -> None:
+        source = TEST3A_ONE_CLICK.read_text(encoding="utf-8")
+        self.assertIn('preparation.CASE = "3A"', source)
+        self.assertIn('preparation.TARGET_CLASS = "2A"', source)
+        self.assertIn("preparation.INSTALL_PREPARED_EXTERNAL_INPUTS = True", source)
+        self.assertIn(
+            'preparation.EXPECTED_PROJECT_FOLDER = "SIA4010_TEST3A_DISPOSABLE"',
+            source,
+        )
+        prepare_at = source.index("result = preparation.run()")
+        probe_at = source.index("import Run_VE_SIA4010_Test3_Runtime_Capability_Probe")
+        self.assertLess(prepare_at, probe_at)
+        self.assertNotIn("sys.exit", source)
+
+    def test_test6_one_click_fixes_scope_and_prepares_before_probe(self) -> None:
+        source = TEST6_ONE_CLICK.read_text(encoding="utf-8")
+        self.assertIn('preparation.CASE = "6"', source)
+        self.assertIn('preparation.TARGET_CLASS = "3"', source)
+        self.assertIn(
+            'preparation.EXPECTED_PROJECT_FOLDER = "SIA4010_TEST6_DISPOSABLE"',
+            source,
+        )
+        prepare_at = source.index("result = preparation.run()")
+        probe_at = source.index("import Run_VE_SIA4010_Tests4_7_Runtime_Capability_Probe")
+        self.assertLess(prepare_at, probe_at)
+        self.assertNotIn("sys.exit", source)
+
+    def test_test5a_one_click_fixes_scope_and_prepares_before_probe(self) -> None:
+        source = TEST5A_ONE_CLICK.read_text(encoding="utf-8")
+        self.assertIn('preparation.CASE = "5A"', source)
+        self.assertIn('preparation.TARGET_CLASS = "3"', source)
+        self.assertIn("preparation.INSTALL_PREPARED_EXTERNAL_INPUTS = True", source)
+        self.assertIn(
+            'preparation.EXPECTED_PROJECT_FOLDER = "SIA4010_TEST5A_DISPOSABLE"',
+            source,
+        )
+        prepare_at = source.index("result = preparation.run()")
+        probe_at = source.index("import Run_VE_SIA4010_Tests4_7_Runtime_Capability_Probe")
+        self.assertLess(prepare_at, probe_at)
+        self.assertNotIn("sys.exit", source)
+
     def test_every_test3_variant_is_reachable(self) -> None:
         """Test 3 asserts case_id == variant[5:]; the launcher must match."""
 
@@ -51,9 +132,7 @@ class PrepareCaseScenarioLauncherTests(unittest.TestCase):
             case_id = variant[5:]
             with self.subTest(case=case_id):
                 self.assertEqual("test_{}".format(case_id), variant)
-                self.assertIn(
-                    case_id[0], self.launcher._PROBE_BY_BASE_TEST
-                )
+                self.assertIn(case_id[0], self.launcher._PROBE_BY_BASE_TEST)
 
     def test_every_hvac_exact_case_is_reachable(self) -> None:
         """Tests 4-7 accept exactly ("test_<case>", "<case>") pairs."""
@@ -65,9 +144,7 @@ class PrepareCaseScenarioLauncherTests(unittest.TestCase):
         for variant, case_id in hvac_plant_runtime_capability.EXACT_CASES:
             with self.subTest(case=case_id):
                 self.assertEqual("test_{}".format(case_id), variant)
-                self.assertIn(
-                    case_id[0], self.launcher._PROBE_BY_BASE_TEST
-                )
+                self.assertIn(case_id[0], self.launcher._PROBE_BY_BASE_TEST)
 
     def test_each_reachable_case_has_a_requiring_class(self) -> None:
         """Preparation rejects a variant its class does not require."""
@@ -80,8 +157,7 @@ class PrepareCaseScenarioLauncherTests(unittest.TestCase):
         )
 
         variants = list(TEST3_VARIANTS) + [
-            variant
-            for variant, _ in hvac_plant_runtime_capability.EXACT_CASES
+            variant for variant, _ in hvac_plant_runtime_capability.EXACT_CASES
         ]
         for variant in variants:
             with self.subTest(variant=variant):
@@ -134,9 +210,7 @@ class PrepareCaseScenarioLauncherTests(unittest.TestCase):
         refuses instead of overwriting.
         """
 
-        self.assertIsInstance(
-            self.launcher.ALLOW_SCENARIO_REPLACEMENT, bool
-        )
+        self.assertIsInstance(self.launcher.ALLOW_SCENARIO_REPLACEMENT, bool)
         source = LAUNCHER.read_text(encoding="utf-8")
         self.assertIn("not ALLOW_SCENARIO_REPLACEMENT", source)
         self.assertIn("BLOCKED", source)
@@ -172,9 +246,7 @@ class PrepareCaseScenarioLauncherTests(unittest.TestCase):
 
         for attribute, _filename in self.launcher._REPOSITORY_SCENARIO_FILES:
             with self.subTest(attribute=attribute):
-                self.assertNotIn(
-                    attribute, Test3SourceBundleReceipt.__dataclass_fields__
-                )
+                self.assertNotIn(attribute, Test3SourceBundleReceipt.__dataclass_fields__)
 
         class Bare:
             pass

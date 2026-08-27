@@ -94,7 +94,7 @@ def rolling_mean(
     out: List[Optional[float]] = []
     for index in range(len(exterior)):
         low = max(0, index - window + 1)
-        values = [value for value in exterior[low:index + 1] if value is not None]
+        values = [value for value in exterior[low : index + 1] if value is not None]
         out.append(sum(values) / len(values) if values else None)
     return out
 

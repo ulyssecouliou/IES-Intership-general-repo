@@ -7,7 +7,7 @@ inventing an issuer identity or displaying a placeholder logo.
 """
 
 import json
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, Optional, Tuple, Union
 

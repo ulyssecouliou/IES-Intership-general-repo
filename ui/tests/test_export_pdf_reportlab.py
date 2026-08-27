@@ -22,7 +22,7 @@ import sys
 
 import pytest
 
-reportlab = pytest.importorskip('reportlab')
+reportlab = pytest.importorskip("reportlab")
 
 _ICI = os.path.dirname(os.path.abspath(__file__))
 _RACINE = os.path.abspath(os.path.join(_ICI, os.pardir, os.pardir))
@@ -35,7 +35,7 @@ from ui import verdict_view as vue  # noqa: E402
 from ui import export_pdf_reportlab  # noqa: E402
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope="module")
 def vue_test1():
     reference = moteur.charger_reference()
     candidat = adapter.charger_fixture_test1()
@@ -44,16 +44,16 @@ def vue_test1():
 
 
 def test_generer_pdf_rapport_produit_un_fichier_pdf_valide(tmp_path, vue_test1):
-    chemin_pdf = str(tmp_path / 'rapport_test1.pdf')
+    chemin_pdf = str(tmp_path / "rapport_test1.pdf")
     resultat = export_pdf_reportlab.generer_pdf_rapport(vue_test1, chemin_pdf)
 
     assert resultat == chemin_pdf
     assert os.path.isfile(chemin_pdf)
     assert os.path.getsize(chemin_pdf) > 1000  # rapport non trivial
 
-    with open(chemin_pdf, 'rb') as flux:
+    with open(chemin_pdf, "rb") as flux:
         entete = flux.read(5)
-    assert entete == b'%PDF-'
+    assert entete == b"%PDF-"
 
 
 def test_generer_pdf_rapport_fonctionne_sans_aucun_candidat(tmp_path):
@@ -63,9 +63,9 @@ def test_generer_pdf_rapport_fonctionne_sans_aucun_candidat(tmp_path):
     resultat = moteur.evaluer_test1(reference, None)
     vue_sans_candidat = vue.construire_vue_test1(resultat)
 
-    chemin_pdf = str(tmp_path / 'rapport_sans_candidat.pdf')
+    chemin_pdf = str(tmp_path / "rapport_sans_candidat.pdf")
     export_pdf_reportlab.generer_pdf_rapport(vue_sans_candidat, chemin_pdf)
 
     assert os.path.isfile(chemin_pdf)
-    with open(chemin_pdf, 'rb') as flux:
-        assert flux.read(5) == b'%PDF-'
+    with open(chemin_pdf, "rb") as flux:
+        assert flux.read(5) == b"%PDF-"

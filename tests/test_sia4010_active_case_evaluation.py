@@ -9,7 +9,6 @@ from swiss_sia.reference_model.sia4010.active_case_evaluation import (
     evaluate_qualified_active_case,
 )
 
-
 ROOT = Path(__file__).resolve().parents[1]
 BUNDLE = ROOT / "SIA_4010_geteilter_Link"
 BINDINGS = ROOT / "config" / "sia4010_aps_bindings_ve_runtime.json"
@@ -131,8 +130,10 @@ class ActiveCaseEvaluationTests(unittest.TestCase):
         self.assertTrue(receipt.required_output_scope_complete)
         self.assertEqual(len(receipt.evaluation.comparisons), 64)
         self.assertTrue(
-            all(item.status.value == "NOT_CHECKABLE"
-                for item in receipt.evaluation.comparisons)
+            all(
+                item.status.value == "NOT_CHECKABLE"
+                for item in receipt.evaluation.comparisons
+            )
         )
         self.assertEqual(
             receipt.evaluation.band_status,

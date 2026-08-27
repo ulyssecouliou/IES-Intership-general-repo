@@ -44,9 +44,8 @@ if RACINE not in sys.path:
 
 def _charger_adaptateur():
     """Charge le module par chemin : `ve_adapter/` n'est pas un paquet."""
-    chemin = os.path.join(RACINE, 've_adapter', 'test1_adapter.py')
-    spec = importlib.util.spec_from_file_location('test1_adapter_sous_test',
-                                                  chemin)
+    chemin = os.path.join(RACINE, "ve_adapter", "test1_adapter.py")
+    spec = importlib.util.spec_from_file_location("test1_adapter_sous_test", chemin)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
@@ -63,37 +62,41 @@ HEURES_PAR_AN = 365 * 24
 #             = BS EN ISO 52016-1:2017 §7.2, p. 122-134
 # ==========================================================================
 
+
 def test_geometrie_concorde_avec_iso_tableau_22():
     """8,0 x 6,0 x 2,7 m, volume 129,6 m3, deux fenetres de 3,0 x 2,0 m.
 
     ISO 52016-1:2017 §7.2.2.2, figure 2 et tableau 22.
     """
     g = adaptateur.GEOMETRIE_CELLULE
-    assert g['largeur_facade_sud_m'] == 8.0
-    assert g['profondeur_m'] == 6.0
-    assert g['hauteur_m'] == 2.7
-    assert g['nombre_fenetres_sud'] == 2
-    assert g['largeur_fenetre_m'] == 3.0
-    assert g['hauteur_fenetre_m'] == 2.0
+    assert g["largeur_facade_sud_m"] == 8.0
+    assert g["profondeur_m"] == 6.0
+    assert g["hauteur_m"] == 2.7
+    assert g["nombre_fenetres_sud"] == 2
+    assert g["largeur_fenetre_m"] == 3.0
+    assert g["hauteur_fenetre_m"] == 2.0
 
-    volume = g['largeur_facade_sud_m'] * g['profondeur_m'] * g['hauteur_m']
-    assert abs(volume - 129.6) < 1e-9, (
-        'Volume {0} m3, ISO tableau 22 donne 129,6'.format(volume))
+    volume = g["largeur_facade_sud_m"] * g["profondeur_m"] * g["hauteur_m"]
+    assert abs(volume - 129.6) < 1e-9, "Volume {0} m3, ISO tableau 22 donne 129,6".format(
+        volume
+    )
 
-    aire_fenetres = (g['nombre_fenetres_sud'] * g['largeur_fenetre_m']
-                     * g['hauteur_fenetre_m'])
-    assert abs(aire_fenetres - 12.0) < 1e-9, (
-        'Aire vitree {0} m2, ISO tableau 22 donne 12,0'.format(aire_fenetres))
+    aire_fenetres = (
+        g["nombre_fenetres_sud"] * g["largeur_fenetre_m"] * g["hauteur_fenetre_m"]
+    )
+    assert (
+        abs(aire_fenetres - 12.0) < 1e-9
+    ), "Aire vitree {0} m2, ISO tableau 22 donne 12,0".format(aire_fenetres)
 
-    sol = g['largeur_facade_sud_m'] * g['profondeur_m']
-    assert abs(sol - 48.0) < 1e-9, 'Plancher/plafond : ISO donne 48,0 m2'
+    sol = g["largeur_facade_sud_m"] * g["profondeur_m"]
+    assert abs(sol - 48.0) < 1e-9, "Plancher/plafond : ISO donne 48,0 m2"
 
 
 def test_la_facade_ferme_dimensionnellement():
     """2 x 0,5 + 2 x 3,0 + 1,0 = 8,0 m. Le garde-fou du module doit le voir."""
     assert adaptateur._verifier_fermeture_geometrie() is not False
     incoherente = dict(adaptateur.GEOMETRIE_CELLULE)
-    incoherente['trumeau_central_m'] = 1.5   # la facade ne ferme plus
+    incoherente["trumeau_central_m"] = 1.5  # la facade ne ferme plus
     with pytest.raises(ValueError):
         adaptateur._verifier_fermeture_geometrie(incoherente)
 
@@ -109,8 +112,9 @@ def test_consignes_concordent_avec_iso_7_2_2_15():
     assert adaptateur.CONSIGNE_CHAUFFAGE_REDUITE_C == 10.0
     assert adaptateur.HEURE_DEBUT_CONFORT == 7
     assert adaptateur.HEURE_FIN_CONFORT == 23
-    assert not hasattr(adaptateur, 'CONSIGNE_REFROIDISSEMENT_REDUITE_C'), (
-        "ISO §7.2.2.15 exclut tout relachement nocturne en refroidissement")
+    assert not hasattr(
+        adaptateur, "CONSIGNE_REFROIDISSEMENT_REDUITE_C"
+    ), "ISO §7.2.2.15 exclut tout relachement nocturne en refroidissement"
 
 
 def test_apport_interne_concorde_avec_iso_7_2_2_13():
@@ -135,38 +139,52 @@ def test_apport_interne_concorde_avec_iso_7_2_2_13():
     """
     assert adaptateur.GAIN_EQUIPEMENT_W == 200.0
 
-    surface_plancher = (adaptateur.GEOMETRIE_CELLULE['largeur_facade_sud_m']
-                        * adaptateur.GEOMETRIE_CELLULE['profondeur_m'])
+    surface_plancher = (
+        adaptateur.GEOMETRIE_CELLULE["largeur_facade_sud_m"]
+        * adaptateur.GEOMETRIE_CELLULE["profondeur_m"]
+    )
     flux_specifique = adaptateur.GAIN_EQUIPEMENT_W / surface_plancher
     assert abs(flux_specifique - 4.1666666667) < 1e-6, (
-        'Sur les 48 m2 de plancher, 200 W donnent 4,1667 W/m2. Si ce calcul '
-        'change, c est que la geometrie ou le gain a bouge.')
+        "Sur les 48 m2 de plancher, 200 W donnent 4,1667 W/m2. Si ce calcul "
+        "change, c est que la geometrie ou le gain a bouge."
+    )
 
 
 def test_repartition_masse_par_cas_conforme_au_tableau_27():
     """ISO tableau 27 : 600/640/600FF legers, 900/940/900FF lourds."""
-    attendu = {'600': 'legere', '640': 'legere', '600FF': 'legere',
-               '900': 'lourde', '940': 'lourde', '900FF': 'lourde'}
+    attendu = {
+        "600": "legere",
+        "640": "legere",
+        "600FF": "legere",
+        "900": "lourde",
+        "940": "lourde",
+        "900FF": "lourde",
+    }
     for cas, masse in attendu.items():
-        assert adaptateur.MASSE_PAR_CAS[cas] == masse, (
-            'Cas {0} : ISO tableau 27 le classe {1}'.format(cas, masse))
+        assert (
+            adaptateur.MASSE_PAR_CAS[cas] == masse
+        ), "Cas {0} : ISO tableau 27 le classe {1}".format(cas, masse)
 
 
 def test_familles_de_cas_coherentes_avec_le_tableau_27():
     """Les trois familles doivent partitionner les six cas ISO, plus 1E."""
-    assert set(adaptateur.CAS_AVEC_CONSIGNE_REDUITE) == {'640', '940'}
-    assert set(adaptateur.CAS_FLOTTEMENT_LIBRE) == {'600FF', '900FF'}
+    assert set(adaptateur.CAS_AVEC_CONSIGNE_REDUITE) == {"640", "940"}
+    assert set(adaptateur.CAS_FLOTTEMENT_LIBRE) == {"600FF", "900FF"}
     conditionnes = set(adaptateur.CAS_AVEC_CONDITIONNEMENT)
-    assert conditionnes.isdisjoint(adaptateur.CAS_FLOTTEMENT_LIBRE), (
-        'Un cas en flottement libre ne peut pas etre conditionne')
+    assert conditionnes.isdisjoint(
+        adaptateur.CAS_FLOTTEMENT_LIBRE
+    ), "Un cas en flottement libre ne peut pas etre conditionne"
     assert set(adaptateur.CAS_AVEC_CONSIGNE_REDUITE) <= conditionnes
 
 
 def test_annee_de_simulation_non_bissextile():
     """L'agregation mensuelle suppose 8760 h : une bissextile la fausserait."""
     assert not calendar.isleap(adaptateur.ANNEE_SIMULATION)
-    assert sum(calendar.monthrange(adaptateur.ANNEE_SIMULATION, m)[1]
-               for m in range(1, 13)) * 24 == HEURES_PAR_AN
+    assert (
+        sum(calendar.monthrange(adaptateur.ANNEE_SIMULATION, m)[1] for m in range(1, 13))
+        * 24
+        == HEURES_PAR_AN
+    )
 
 
 def test_les_coefficients_ashrae_ne_sont_plus_la_source_retenue():
@@ -184,16 +202,18 @@ def test_les_coefficients_ashrae_ne_sont_plus_la_source_retenue():
     comme s'ils faisaient autorite, ce test doit etre revu consciemment.
     """
     coeffs = adaptateur.COEFFICIENTS_SURFACE_TABLE_7_7
-    assert coeffs['mur']['combine'] == 21.6
-    assert coeffs['fenetre']['combine'] == 17.8
-    assert coeffs['mur']['combine'] != 20.0, (
+    assert coeffs["mur"]["combine"] == 21.6
+    assert coeffs["fenetre"]["combine"] == 17.8
+    assert coeffs["mur"]["combine"] != 20.0, (
         "20 W/(m2K) est le h_ce d'ISO tableau 25 : si cette valeur apparait "
-        "ici, la source a change et la docstring du module doit suivre")
+        "ici, la source a change et la docstring du module doit suivre"
+    )
 
 
 # ==========================================================================
 # 2. Agregation : resistance a la mutation
 # ==========================================================================
+
 
 def _serie_par_mois(valeur_du_mois):
     """Serie horaire ou chaque heure porte la valeur de SON mois."""
@@ -216,8 +236,9 @@ def test_decoupage_mensuel_respecte_la_longueur_reelle_des_mois():
     mensuel, _moy_mens, _moy_hor = adaptateur._agreger_mensuel_moyennes(serie)
     for indice, cle in enumerate(adaptateur.MOIS, start=1):
         assert abs(mensuel[cle] - indice) < 1e-12, (
-            '{0} vaut {1!r} au lieu de {2} : le decoupage empiete sur un '
-            'mois voisin'.format(cle, mensuel[cle], indice))
+            "{0} vaut {1!r} au lieu de {2} : le decoupage empiete sur un "
+            "mois voisin".format(cle, mensuel[cle], indice)
+        )
 
 
 def test_les_sommes_mensuelles_partitionnent_exactement_la_serie():
@@ -235,8 +256,9 @@ def test_somme_mensuelle_ponderee_par_la_longueur_du_mois():
     mensuel, total = adaptateur._agreger_mensuel_sommes(serie)
     for indice, cle in enumerate(adaptateur.MOIS, start=1):
         attendu = calendar.monthrange(adaptateur.ANNEE_SIMULATION, indice)[1] * 24
-        assert abs(mensuel[cle] - attendu) < 1e-9, (
-            '{0} : {1} h au lieu de {2}'.format(cle, mensuel[cle], attendu))
+        assert abs(mensuel[cle] - attendu) < 1e-9, "{0} : {1} h au lieu de {2}".format(
+            cle, mensuel[cle], attendu
+        )
     assert abs(total - HEURES_PAR_AN) < 1e-9
 
 
@@ -249,14 +271,15 @@ def test_les_deux_moyennes_annuelles_sont_distinctes_et_correctes():
     la Table 32).
     """
     serie = _serie_par_mois(lambda m: m)
-    _mensuel, moy_mensuelles, moy_horaire = \
-        adaptateur._agreger_mensuel_moyennes(serie)
-    assert abs(moy_mensuelles - 6.5) < 1e-12, (
-        'La moyenne non ponderee des 12 mois vaut exactement 6,5')
+    _mensuel, moy_mensuelles, moy_horaire = adaptateur._agreger_mensuel_moyennes(serie)
+    assert (
+        abs(moy_mensuelles - 6.5) < 1e-12
+    ), "La moyenne non ponderee des 12 mois vaut exactement 6,5"
     assert abs(moy_horaire - sum(serie) / len(serie)) < 1e-12
     assert abs(moy_horaire - moy_mensuelles) > 1e-3, (
-        'Les deux agregations doivent differer sur une serie non constante ; '
-        'si elles coincident, l une des deux est calculee comme l autre')
+        "Les deux agregations doivent differer sur une serie non constante ; "
+        "si elles coincident, l une des deux est calculee comme l autre"
+    )
 
 
 def test_agregation_refuse_une_serie_incomplete():
@@ -272,6 +295,7 @@ def test_agregation_refuse_une_serie_incomplete():
 # 3. Lecture des series .aps -- avec un double du ResultsReader
 # ==========================================================================
 
+
 class FauxResultsReader(object):
     """Double minimal de `iesve.ResultsReader` (§6.1.14)."""
 
@@ -283,8 +307,9 @@ class FauxResultsReader(object):
     def get_variables(self):
         return self._variables
 
-    def get_room_results(self, room_id, aps_varname, display_name, model_level,
-                         *args, **kwargs):
+    def get_room_results(
+        self, room_id, aps_varname, display_name, model_level, *args, **kwargs
+    ):
         self.appels.append((room_id, aps_varname, display_name, model_level))
         return list(self._serie)
 
@@ -297,12 +322,12 @@ def _liaison_connue():
 def test_liaison_refusee_si_la_variable_est_absente_du_aps():
     """Ne jamais deviner une variable de remplacement."""
     cle, _liaison = _liaison_connue()
-    lecteur = FauxResultsReader(variables=[
-        {'aps_varname': 'Une autre variable', 'model_level': 'z'}])
+    lecteur = FauxResultsReader(
+        variables=[{"aps_varname": "Une autre variable", "model_level": "z"}]
+    )
     with pytest.raises(RuntimeError) as erreur:
-        adaptateur._resoudre_liaison(lecteur, cle,
-                                     adaptateur.LIAISONS_APS_CANDIDATES)
-    assert 'introuvable' in str(erreur.value).lower()
+        adaptateur._resoudre_liaison(lecteur, cle, adaptateur.LIAISONS_APS_CANDIDATES)
+    assert "introuvable" in str(erreur.value).lower()
 
 
 def test_liaison_exige_le_bon_niveau_de_modele():
@@ -312,35 +337,40 @@ def test_liaison_exige_le_bon_niveau_de_modele():
     systeme. L'ignorer lierait une grandeur homonyme du mauvais objet.
     """
     cle, liaison = _liaison_connue()
-    mauvais = 'X' if liaison['model_level'] != 'X' else 'Y'
-    lecteur = FauxResultsReader(variables=[
-        {'aps_varname': liaison['aps_varname'], 'model_level': mauvais}])
+    mauvais = "X" if liaison["model_level"] != "X" else "Y"
+    lecteur = FauxResultsReader(
+        variables=[{"aps_varname": liaison["aps_varname"], "model_level": mauvais}]
+    )
     with pytest.raises(RuntimeError):
-        adaptateur._resoudre_liaison(lecteur, cle,
-                                     adaptateur.LIAISONS_APS_CANDIDATES)
+        adaptateur._resoudre_liaison(lecteur, cle, adaptateur.LIAISONS_APS_CANDIDATES)
 
 
 def test_liaison_resolue_quand_la_variable_existe():
     cle, liaison = _liaison_connue()
-    lecteur = FauxResultsReader(variables=[
-        {'aps_varname': liaison['aps_varname'],
-         'model_level': liaison['model_level']}])
-    assert adaptateur._resoudre_liaison(
-        lecteur, cle, adaptateur.LIAISONS_APS_CANDIDATES) is liaison
+    lecteur = FauxResultsReader(
+        variables=[
+            {"aps_varname": liaison["aps_varname"], "model_level": liaison["model_level"]}
+        ]
+    )
+    assert (
+        adaptateur._resoudre_liaison(lecteur, cle, adaptateur.LIAISONS_APS_CANDIDATES)
+        is liaison
+    )
 
 
 def test_grandeur_sans_liaison_declaree_leve():
     lecteur = FauxResultsReader(variables=[])
     with pytest.raises(KeyError):
-        adaptateur._resoudre_liaison(lecteur, 'grandeur_inexistante',
-                                     adaptateur.LIAISONS_APS_CANDIDATES)
+        adaptateur._resoudre_liaison(
+            lecteur, "grandeur_inexistante", adaptateur.LIAISONS_APS_CANDIDATES
+        )
 
 
 def test_serie_horaire_passe_telle_quelle_a_pas_horaire():
     _cle, liaison = _liaison_connue()
     serie = [float(i % 7) for i in range(HEURES_PAR_AN)]
     lecteur = FauxResultsReader(serie=serie)
-    horaire = adaptateur._lire_serie_horaire(lecteur, 'R1', liaison, 24)
+    horaire = adaptateur._lire_serie_horaire(lecteur, "R1", liaison, 24)
     assert len(horaire) == HEURES_PAR_AN
     assert horaire == serie
 
@@ -355,12 +385,12 @@ def test_serie_semi_horaire_est_moyennee_et_non_decimee():
     _cle, liaison = _liaison_connue()
     serie = []
     for heure in range(HEURES_PAR_AN):
-        serie.extend([float(heure), float(heure) + 2.0])   # moyenne = heure + 1
+        serie.extend([float(heure), float(heure) + 2.0])  # moyenne = heure + 1
     lecteur = FauxResultsReader(serie=serie)
-    horaire = adaptateur._lire_serie_horaire(lecteur, 'R1', liaison, 48)
+    horaire = adaptateur._lire_serie_horaire(lecteur, "R1", liaison, 48)
     assert len(horaire) == HEURES_PAR_AN
-    assert abs(horaire[0] - 1.0) < 1e-12, 'moyenne de 0 et 2'
-    assert abs(horaire[10] - 11.0) < 1e-12, 'moyenne de 10 et 12'
+    assert abs(horaire[0] - 1.0) < 1e-12, "moyenne de 0 et 2"
+    assert abs(horaire[10] - 11.0) < 1e-12, "moyenne de 10 et 12"
     assert abs(horaire[-1] - (HEURES_PAR_AN - 1 + 1.0)) < 1e-12
 
 
@@ -370,7 +400,7 @@ def test_pas_de_simulation_non_entier_est_refuse():
     lecteur = FauxResultsReader(serie=[1.0] * (HEURES_PAR_AN * 3))
     for par_jour in (36, 10, 0):
         with pytest.raises(RuntimeError):
-            adaptateur._lire_serie_horaire(lecteur, 'R1', liaison, par_jour)
+            adaptateur._lire_serie_horaire(lecteur, "R1", liaison, par_jour)
 
 
 def test_serie_de_longueur_invalide_est_refusee():
@@ -378,15 +408,15 @@ def test_serie_de_longueur_invalide_est_refusee():
     _cle, liaison = _liaison_connue()
     lecteur = FauxResultsReader(serie=[1.0] * (HEURES_PAR_AN - 24))
     with pytest.raises(RuntimeError):
-        adaptateur._lire_serie_horaire(lecteur, 'R1', liaison, 24)
+        adaptateur._lire_serie_horaire(lecteur, "R1", liaison, 24)
 
 
 def test_la_lecture_interroge_bien_le_local_demande():
     """Garde-fou contre une inversion d'arguments silencieuse."""
     _cle, liaison = _liaison_connue()
     lecteur = FauxResultsReader(serie=[0.0] * HEURES_PAR_AN)
-    adaptateur._lire_serie_horaire(lecteur, 'LOCAL-42', liaison, 24)
+    adaptateur._lire_serie_horaire(lecteur, "LOCAL-42", liaison, 24)
     room_id, aps_varname, _display, niveau = lecteur.appels[0]
-    assert room_id == 'LOCAL-42'
-    assert aps_varname == liaison['aps_varname']
-    assert niveau == liaison['model_level']
+    assert room_id == "LOCAL-42"
+    assert aps_varname == liaison["aps_varname"]
+    assert niveau == liaison["model_level"]

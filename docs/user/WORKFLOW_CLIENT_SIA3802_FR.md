@@ -84,3 +84,31 @@ Relancer la simulation si le modèle, les profils, la ventilation, les systèmes
 - procédure de soumission et attestation finale de la sous-commission.
 
 Le logiciel peut préparer, contrôler et emballer ces informations. Il ne peut pas les approuver ni émettre l'attestation à la place de ces responsables.
+
+## Comprendre une donnée manquante
+
+Une donnée manquante n'indique pas nécessairement que le modèle VE est faux.
+Elle peut appartenir à l'une de ces quatre familles :
+
+1. **Non modélisée** : l'objet ou la propriété devrait exister dans VE mais n'est pas renseigné.
+2. **Non exposée par l'API** : la donnée existe éventuellement dans l'interface ou ApacheHVAC, mais VEScripts ne permet pas de la lire de façon fiable.
+3. **Externe au modèle** : la valeur appartient à une note de calcul, une fiche fabricant, un plan ou une décision de projet.
+4. **Méthode non automatisée** : le logiciel ne met pas encore en œuvre le protocole prescrit, par exemple les jours de dimensionnement ou la simulation complète du bâtiment de référence.
+
+Le classeur contient deux aides complémentaires :
+
+- `CAPABILITY GUIDE` explique ce qui est automatisé, ce qui ne l'est pas, pourquoi, la preuve exacte attendue, son responsable et l'effet sur le verdict ;
+- `INPUT REQUEST` filtre cette liste pour ne montrer que les éléments encore nécessaires au projet actif.
+
+Le principe est volontairement conservateur : une information inconnue reste
+`NOT_CHECKABLE` ou `NOT DETERMINED`. Elle ne devient jamais zéro, conforme ou
+non conforme par supposition.
+
+## Langue de l’interface et des rapports
+
+L’anglais est sélectionné par défaut pour un nouveau projet. Le sélecteur de
+langue propose `English`, `Deutsch`, `Français` et `Italiano`. Le changement est
+appliqué immédiatement à toute la fenêtre et la sélection est enregistrée dans
+le contexte du projet. Elle est ensuite réutilisée pour l’éditeur de preuves,
+le classeur Excel et le rapport PDF. Les valeurs techniques et les identifiants
+normatifs (`SIA 380/2`, codes VE, états `PENDING`, etc.) ne sont pas traduits.

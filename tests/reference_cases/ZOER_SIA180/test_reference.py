@@ -52,8 +52,8 @@ requires_inputs = pytest.mark.skipif(
 def test_fig3_upper_plateau_and_slope():
     # Plateau bas à 25 °C ; puis 0,33·θrm + 21,8 (Abbildung 3 du rapport).
     assert C.fig3_upper(0.0) == pytest.approx(25.0)
-    assert C.fig3_upper(9.0) == pytest.approx(25.0)          # 0,33·9+21,8=24,77 < 25 → plateau
-    assert C.fig3_upper(10.0) == pytest.approx(25.1)         # 0,33·10+21,8
+    assert C.fig3_upper(9.0) == pytest.approx(25.0)  # 0,33·9+21,8=24,77 < 25 → plateau
+    assert C.fig3_upper(10.0) == pytest.approx(25.1)  # 0,33·10+21,8
     assert C.fig3_upper(20.0) == pytest.approx(28.4)
 
 
@@ -82,7 +82,9 @@ def test_fig4_vertices_and_interpolation():
 
 def test_fig4_vertices_match_frozen_reference_json():
     """Les sommets de Fig.4 ne doivent pas dériver du JSON figé de référence."""
-    path = os.path.join(_REPO_ROOT, "refs", "reference-data", "sia-380-2-2022.figure1.json")
+    path = os.path.join(
+        _REPO_ROOT, "refs", "reference-data", "sia-380-2-2022.figure1.json"
+    )
     with open(path, encoding="utf-8") as f:
         ref = json.load(f)
     up = [tuple(p) for p in ref["courbes"]["limite_superieure"]["sommets"]]
@@ -103,7 +105,7 @@ def test_theta_rm_known_sequence():
 def test_theta_rm_skips_none_and_handles_empty_window():
     ext = [None, 10.0, 20.0]
     got = T.rolling_mean_48h(ext, window=2)
-    assert got[0] is None          # fenêtre sans aucune valeur
+    assert got[0] is None  # fenêtre sans aucune valeur
     assert got[1] == pytest.approx(10.0)
     assert got[2] == pytest.approx(15.0)
 
@@ -167,6 +169,11 @@ def test_c2_verdicts_all_zones(zone, n_occ):
 def test_people_gain_occupancy_gap():
     """Le seuil d'occupation « People gain > 0 » est net : rien dans (0 ; 0,05] kW."""
     case = L.load_c2(1)
-    small = [s.people_gain for s in case.steps
-             if s.people_gain is not None and 0.0 < s.people_gain <= 0.05]
-    assert small == [], "des valeurs de People gain proches de 0 rendraient le seuil ambigu"
+    small = [
+        s.people_gain
+        for s in case.steps
+        if s.people_gain is not None and 0.0 < s.people_gain <= 0.05
+    ]
+    assert (
+        small == []
+    ), "des valeurs de People gain proches de 0 rendraient le seuil ambigu"

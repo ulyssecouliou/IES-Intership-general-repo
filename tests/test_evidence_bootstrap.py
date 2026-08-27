@@ -10,10 +10,12 @@ from pathlib import Path
 from swiss_sia.evidence_bootstrap import (
     TEMPLATE_TARGETS,
     prepare_evidence_folder,
+    prefill_cooling_generator_evidence,
+    prefill_lighting_control_evidence,
+    prefill_sia2024_usage_evidence,
     prefill_ventilation_control_evidence,
 )
 from swiss_sia.model_analyzer import RoomData
-
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
@@ -40,7 +42,9 @@ class EvidenceBootstrapTests(unittest.TestCase):
             self.assertEqual(result["created_count"], 16)
             evidence_dir = Path(result["evidence_dir"])
             g_values_path = evidence_dir / "g_values_audit_SIA_compatible_model.csv"
-            metadata_path = evidence_dir / "SIA3802_project_metadata_SIA_compatible_model.csv"
+            metadata_path = (
+                evidence_dir / "SIA3802_project_metadata_SIA_compatible_model.csv"
+            )
 
             with g_values_path.open(encoding="utf-8", newline="") as handle:
                 g_values_row = next(csv.DictReader(handle))
@@ -64,11 +68,16 @@ class EvidenceBootstrapTests(unittest.TestCase):
                 ventilation_installation_type="monozone",
                 ventilation_control_level=1,
                 ventilation_control_evidence_note="explicit VE identifiers",
-                hvac_systems=[{
-                    "id": "SYS-1",
-                    "air_flow_control": "MULTI_STAGE",
-                    "fan_control": "DIRECT",
-                }],
+                hvac_systems=[
+                    {
+                        "id": "SYS-1",
+                        "air_flow_control": "MULTI_STAGE",
+                        "fan_control": "DIRECT",
+                        "cooling_capacity_kw": 18.5,
+                        "eer": 3.2,
+                        "seer": 4.1,
+                    }
+                ],
             )
             prefill = prefill_ventilation_control_evidence(
                 [room], temporary_root, "SIA compatible model"
@@ -78,16 +87,46 @@ class EvidenceBootstrapTests(unittest.TestCase):
                 ventilation_row = next(csv.DictReader(handle))
             self.assertEqual(ventilation_row["system_id"], "SYS-1")
             self.assertEqual(ventilation_row["control_class"], "two_speeds_time_schedule")
+            self.assertEqual(ventilation_row["airflow_band"], "3_TO_6")
             self.assertEqual(ventilation_row["review_status"], "pending")
+
+            room.thermal_template_id = "SIA2024_4.01_CLASSROOM_REFERENCE"
+            room.daylight_dimming_profile = "ON"
+            cooling = prefill_cooling_generator_evidence(
+                [room], temporary_root, "SIA compatible model"
+            )
+            usage = prefill_sia2024_usage_evidence(
+                [room], temporary_root, "SIA compatible model"
+            )
+            lighting = prefill_lighting_control_evidence(
+                [room], temporary_root, "SIA compatible model"
+            )
+            self.assertEqual(cooling["status"], "PREFILLED")
+            self.assertEqual(usage["status"], "PREFILLED")
+            self.assertEqual(lighting["status"], "PREFILLED")
+            with Path(usage["file"]).open(encoding="utf-8", newline="") as handle:
+                usage_row = next(csv.DictReader(handle))
+            with Path(lighting["file"]).open(encoding="utf-8", newline="") as handle:
+                lighting_row = next(csv.DictReader(handle))
+            with Path(cooling["file"]).open(encoding="utf-8", newline="") as handle:
+                cooling_row = next(csv.DictReader(handle))
+            self.assertEqual(cooling_row["generator_class"], "")
+            self.assertEqual(cooling_row["capacity_kw"], "18.5")
+            self.assertEqual(cooling_row["nominal_eer"], "3.2")
+            self.assertEqual(cooling_row["seer"], "4.1")
+            self.assertEqual(cooling_row["review_status"], "pending")
+            self.assertEqual(usage_row["sia2024_category"], "4.01")
+            self.assertEqual(usage_row["review_status"], "pending")
+            self.assertEqual(lighting_row["daylight_control"], "ON")
+            self.assertEqual(lighting_row["sia3874_control_type"], "")
+            self.assertEqual(lighting_row["review_status"], "pending")
         finally:
             shutil.rmtree(temporary_root, ignore_errors=True)
 
     def test_every_csv_template_is_registered_and_auditable(self) -> None:
         """Keep the evidence directory, bootstrap and reviewer fields in sync."""
         template_dir = PROJECT_ROOT / "templates" / "evidence"
-        disk_templates = {
-            path.name for path in template_dir.glob("*_template.csv")
-        }
+        disk_templates = {path.name for path in template_dir.glob("*_template.csv")}
         registered_templates = {source for source, _target in TEMPLATE_TARGETS}
         self.assertEqual(disk_templates, registered_templates)
 
@@ -124,7 +163,11 @@ class EvidenceBootstrapTests(unittest.TestCase):
             self.assertEqual(result["status"], "READY")
             self.assertEqual(result["created_count"], len(TEMPLATE_TARGETS))
             self.assertTrue(
-                (temporary_root / "sia4010_evidence" / "SIA3802_project_metadata_Client_model.csv").is_file()
+                (
+                    temporary_root
+                    / "sia4010_evidence"
+                    / "SIA3802_project_metadata_Client_model.csv"
+                ).is_file()
             )
             self.assertFalse((temporary_root / "templates").exists())
         finally:

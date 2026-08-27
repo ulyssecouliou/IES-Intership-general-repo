@@ -16,7 +16,6 @@ from .model_scenario import TEST_CASES
 from .navigator import Sia4010ValidationNavigator
 from .test_runner import Sia4010TestRunner
 
-
 IMPLEMENTED_VE_CASES = frozenset(
     (item.variant, item.case_id)
     for item in all_case_capabilities()
@@ -57,9 +56,7 @@ def build_all_classes_coverage_audit(
                 "reference_band_count": len(bands),
                 "exact_variants": variants,
                 "distribution_required": test_id in DISTRIBUTION_CRITERIA,
-                "distribution_criterion_registered": (
-                    test_id in DISTRIBUTION_CRITERIA
-                ),
+                "distribution_criterion_registered": (test_id in DISTRIBUTION_CRITERIA),
                 "status": "PASS" if bands and variants else "FAIL",
             }
         )
@@ -68,9 +65,7 @@ def build_all_classes_coverage_audit(
     for variant in required_variants:
         cases = tuple(TEST_CASES.get(variant, ()))
         implemented = [
-            case_id
-            for case_id in cases
-            if (variant, case_id) in IMPLEMENTED_VE_CASES
+            case_id for case_id in cases if (variant, case_id) in IMPLEMENTED_VE_CASES
         ]
         if implemented and len(implemented) == len(cases):
             generator_status = "IMPLEMENTED"
@@ -89,8 +84,7 @@ def build_all_classes_coverage_audit(
                 "ve_generator_status": generator_status,
                 "implemented_ve_cases": implemented,
                 "case_capabilities": [
-                    get_case_capability(variant, case_id).to_dict()
-                    for case_id in cases
+                    get_case_capability(variant, case_id).to_dict() for case_id in cases
                 ],
             }
         )
@@ -118,13 +112,15 @@ def build_all_classes_coverage_audit(
                     for variant in variants
                     for case_id in TEST_CASES.get(variant, ())
                 )
-                else "PARTIAL"
-                if any(
-                    (variant, case_id) in IMPLEMENTED_VE_CASES
-                    for variant in variants
-                    for case_id in TEST_CASES.get(variant, ())
+                else (
+                    "PARTIAL"
+                    if any(
+                        (variant, case_id) in IMPLEMENTED_VE_CASES
+                        for variant in variants
+                        for case_id in TEST_CASES.get(variant, ())
+                    )
+                    else "NOT_IMPLEMENTED"
                 )
-                else "NOT_IMPLEMENTED"
             ),
         }
         for class_id, variants in SIA4010_CLASS_TEST_MATRIX.items()
@@ -136,7 +132,9 @@ def build_all_classes_coverage_audit(
     )
     return {
         "schema_version": "1.0",
-        "status": "FRAMEWORK_COVERAGE_PASS" if framework_pass else "FRAMEWORK_COVERAGE_FAIL",
+        "status": (
+            "FRAMEWORK_COVERAGE_PASS" if framework_pass else "FRAMEWORK_COVERAGE_FAIL"
+        ),
         "official_bundle": {
             "root": str(bundle.root),
             "manifest": str(bundle.manifest_path),
@@ -150,8 +148,7 @@ def build_all_classes_coverage_audit(
             "registered_scenarios": len(TEST_CASES),
             "registered_exact_cases": len(capabilities),
             "preparation_ready_cases": sum(
-                item.preparation_status == "PREPARATION_READY"
-                for item in capabilities
+                item.preparation_status == "PREPARATION_READY" for item in capabilities
             ),
             "deterministic_geometry_artifact_cases": sum(
                 item.geometry_artifact_supported for item in capabilities
@@ -166,12 +163,10 @@ def build_all_classes_coverage_audit(
                 item.source_bound_bundle_supported for item in capabilities
             ),
             "apachesim_qualification_cases": sum(
-                item.apachesim_qualification_supported
-                for item in capabilities
+                item.apachesim_qualification_supported for item in capabilities
             ),
             "qualified_template_simulation_cases": sum(
-                item.qualified_template_simulation_supported
-                for item in capabilities
+                item.qualified_template_simulation_supported for item in capabilities
             ),
             "qualified_aps_evaluation_cases": sum(
                 item.aps_evaluation_supported for item in capabilities

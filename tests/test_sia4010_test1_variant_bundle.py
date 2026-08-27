@@ -16,7 +16,6 @@ from swiss_sia.reference_model.sia4010.test1_variant_bundle import (
     build_test1_runtime_probe_bundle,
 )
 
-
 ROOT = Path(__file__).resolve().parents[1]
 TEMP_ROOT = ROOT / ".codex_tmp"
 
@@ -86,9 +85,7 @@ class Test1VariantBundleTests(unittest.TestCase):
             profiles["heating_setpoint_daily_profile"]["data"]["source"],
             "SIA 4010 Test 1 specification",
         )
-        self.assertFalse(
-            profiles["heating_setpoint_daily_profile"]["modulating"]
-        )
+        self.assertFalse(profiles["heating_setpoint_daily_profile"]["modulating"])
         self.assertEqual(profiles["heating_setpoint_daily_profile"]["units"], 0)
         self.assertEqual(
             profiles["heating_setpoint_weekly_profile"]["data"]["value"],
@@ -116,9 +113,7 @@ class Test1VariantBundleTests(unittest.TestCase):
             conditions["heating_setpoint_profile"]["source"],
             "SIA 4010 Test 1 specification",
         )
-        self.assertTrue(
-            assets["thermal_template"]["system_data"]["conditioned"]["value"]
-        )
+        self.assertTrue(assets["thermal_template"]["system_data"]["conditioned"]["value"])
 
     def test_case600ff_disables_conditioning_without_fabricating_controls(self):
         receipt = self._build("600FF")
@@ -153,15 +148,16 @@ class Test1VariantBundleTests(unittest.TestCase):
         self.assertEqual(assets["metadata"]["envelope_mass"], "HIGH_MASS")
         self.assertFalse(assets["metadata"]["compliance_claim_allowed"])
         materials = {item["key"]: item for item in assets["materials"]}
-        constructions = {
-            item["key"]: item for item in assets["constructions"]
-        }
+        constructions = {item["key"]: item for item in assets["constructions"]}
         self.assertEqual(
             [layer["material_key"] for layer in constructions["external_wall"]["layers"]],
             ["external_plaster", "eps_wall", "modular_brick"],
         )
         self.assertEqual(
-            [layer["properties"]["thickness"]["value"] for layer in constructions["external_wall"]["layers"]],
+            [
+                layer["properties"]["thickness"]["value"]
+                for layer in constructions["external_wall"]["layers"]
+            ],
             [0.009, 0.0615, 0.1],
         )
         self.assertEqual(
@@ -176,15 +172,11 @@ class Test1VariantBundleTests(unittest.TestCase):
         self.assertEqual(ideal["conductivity"]["value"], 0.04)
         self.assertEqual(ideal["density"]["value"], 0.0)
         self.assertEqual(ideal["specific_heat_capacity"]["value"], 0.0)
-        self.assertEqual(
-            ideal["density"]["validation_range"]["minimum"], 0.0
-        )
+        self.assertEqual(ideal["density"]["validation_range"]["minimum"], 0.0)
         concrete_block = materials["modular_brick"]["properties"]
         self.assertEqual(concrete_block["conductivity"]["value"], 0.51)
         self.assertEqual(concrete_block["density"]["value"], 1400.0)
-        self.assertEqual(
-            concrete_block["specific_heat_capacity"]["value"], 1000.0
-        )
+        self.assertEqual(concrete_block["specific_heat_capacity"]["value"], 1000.0)
         audit = self._read(receipt.audit_path)
         self.assertTrue(audit["runtime_qualification_required"])
         self.assertTrue(
@@ -213,9 +205,7 @@ class Test1VariantBundleTests(unittest.TestCase):
                 [24.0, 10.0, ""],
             ],
         )
-        self.assertTrue(
-            assets["thermal_template"]["system_data"]["conditioned"]["value"]
-        )
+        self.assertTrue(assets["thermal_template"]["system_data"]["conditioned"]["value"])
 
     def test_case900ff_is_high_mass_and_free_floating(self):
         receipt = build_test1_runtime_probe_bundle(
@@ -287,12 +277,8 @@ class Test1VariantBundleTests(unittest.TestCase):
                     receipt.asset_manifest_path.read_text(encoding="utf-8")
                 )
                 system = assets["thermal_template"]["system_data"]
-                self.assertEqual(
-                    system["system_air_minimum_flowrate"]["value"], 0.0
-                )
-                self.assertEqual(
-                    system["system_air_minimum_flowrate_units"]["value"], 3
-                )
+                self.assertEqual(system["system_air_minimum_flowrate"]["value"], 0.0)
+                self.assertEqual(system["system_air_minimum_flowrate_units"]["value"], 3)
 
 
 if __name__ == "__main__":

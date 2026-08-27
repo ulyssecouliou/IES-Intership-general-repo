@@ -42,7 +42,26 @@ jobs:
           if [ -f ui/requirements.txt ]; then
             pip install -r ui/requirements.txt
           fi
-          pip install pytest
+          pip install pytest black==26.5.1 flake8==7.3.0 mypy==2.3.0
+
+      - name: Verifier le formatage Python
+        run: >-
+          black --check --line-length 90
+          core engine schemas swiss_sia ui scripts tests ve_adapter
+
+      - name: Verifier les erreurs statiques Python
+        run: >-
+          flake8 swiss_sia ui scripts core schemas engine ve_adapter tests
+          --jobs 1 --config .flake8
+
+      - name: Verifier le typage strict et progressif
+        run: |
+          mypy --strict --show-error-codes core schemas
+          mypy --strict --show-error-codes --exclude '^$' \
+            swiss_sia/assessment_governance.py \
+            swiss_sia/client_report_context.py \
+            swiss_sia/project_evidence_translations.py \
+            swiss_sia/value_integrity.py
 
       - name: Lancer toute la suite
         # Portée élargie le 2026-08-01. L'étape ne lançait que `engine/tests/`

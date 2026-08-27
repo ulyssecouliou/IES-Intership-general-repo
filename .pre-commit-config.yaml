@@ -1,9 +1,8 @@
 # Hooks de pré-commit du navigateur SIA.
 #
-# Portée volontairement limitée à `core/`, `schemas/` et `tests/` : `swiss_sia`
-# est un existant de plusieurs milliers de lignes jamais formaté ni typé, et
-# l'y soumettre d'un coup produirait un diff illisible qui noierait les vraies
-# modifications. Les nouveaux paquets, eux, sont tenus dès le premier jour.
+# Le code produit, les interfaces et les scripts suivis sont désormais soumis
+# aux mêmes garde-fous. Le typage reste progressif : seuls les modules inscrits
+# dans le hook mypy sont bloquants jusqu'à réduction de la dette historique.
 #
 # Installation :
 #     pip install pre-commit && pre-commit install
@@ -12,35 +11,40 @@
 
 repos:
   - repo: https://github.com/psf/black
-    rev: 23.10.1
+    rev: 26.5.1
     hooks:
       - id: black
         args: ["--line-length=90"]
-        files: ^(core|schemas|tests|examples)/
+        files: ^(core|engine|schemas|swiss_sia|ui|scripts|tests|ve_adapter|examples)/.*\.py$
 
   - repo: https://github.com/PyCQA/flake8
-    rev: 6.1.0
+    rev: 7.3.0
     hooks:
       - id: flake8
-        args: ["--max-line-length=90", "--extend-ignore=E203,W503"]
-        files: ^(core|schemas|tests|examples)/
+        args: ["--config=.flake8"]
+        files: ^(core|engine|schemas|swiss_sia|ui|scripts|tests|ve_adapter|examples)/.*\.py$
 
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.5.1
+    rev: v2.3.0
     hooks:
       - id: mypy
         args: ["--strict", "--show-error-codes"]
-        files: ^(core|schemas)/
+        files: ^(core|schemas)/.*\.py$
         additional_dependencies:
           - pydantic>=2.5.0
+
+      - id: mypy
+        name: mypy (progressive swiss_sia boundary)
+        args: ["--strict", "--show-error-codes", "--exclude=^$"]
+        files: ^swiss_sia/(assessment_governance|client_report_context|project_evidence_translations|value_integrity)\.py$
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.5.0
     hooks:
       - id: trailing-whitespace
-        files: ^(core|schemas|tests|examples)/
+        files: ^(core|engine|schemas|swiss_sia|ui|scripts|tests|ve_adapter|examples)/
       - id: end-of-file-fixer
-        files: ^(core|schemas|tests|examples)/
+        files: ^(core|engine|schemas|swiss_sia|ui|scripts|tests|ve_adapter|examples)/
       - id: check-yaml
       - id: check-toml
       # Les classeurs SIA officiels pèsent jusqu'à 30 Mo et n'ont rien à faire

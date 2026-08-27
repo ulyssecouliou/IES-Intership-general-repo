@@ -1,8 +1,8 @@
-"""Deterministic campaign status for runnable SIA 4010 Test 1 cases.
+"""Deterministic campaign status for every SIA 4010 Test 1 case.
 
-The campaign contains the six ISO 52016 reference cases followed by diagnostic
-links 1A to 1D. Case 1E is deliberately excluded until its prescribed awning
-control dynamics are source-confirmed and implemented.
+The six ISO 52016 cases and diagnostic links 1A to 1D are reference/output
+deliverables without a formal acceptance criterion.  Case 1E is separate: it
+is the sole judged case and must pass through the qualified-template route.
 """
 
 import hashlib
@@ -10,18 +10,26 @@ import json
 from pathlib import Path
 from typing import Any, Dict, Mapping, Tuple
 
-
-TEST1_CAMPAIGN_CASES: Tuple[str, ...] = (
+TEST1_ISO_CASES: Tuple[str, ...] = (
     "600",
     "640",
     "600FF",
     "900",
     "940",
     "900FF",
+)
+
+TEST1_DIAGNOSTIC_CASES: Tuple[str, ...] = (
     "1A",
     "1B",
     "1C",
     "1D",
+)
+
+TEST1_JUDGED_CASES: Tuple[str, ...] = ("1E",)
+
+TEST1_CAMPAIGN_CASES: Tuple[str, ...] = (
+    TEST1_ISO_CASES + TEST1_DIAGNOSTIC_CASES + TEST1_JUDGED_CASES
 )
 
 
@@ -47,8 +55,7 @@ def _simulation_is_current(simulation: Mapping[str, Any]) -> bool:
     """Require every simulation input/output checksum to remain current."""
 
     return (
-        simulation.get("status")
-        == "SIMULATION_EXECUTED_AWAITING_APS_QUALIFICATION"
+        simulation.get("status") == "SIMULATION_EXECUTED_AWAITING_APS_QUALIFICATION"
         and simulation.get("model_evidence_link_status") == "VERIFIED"
         and _artifact_matches(simulation, "artifact")
         and _artifact_matches(simulation, "results")
@@ -57,9 +64,7 @@ def _simulation_is_current(simulation: Mapping[str, Any]) -> bool:
     )
 
 
-def _requires_floor_insulation_reconciliation(
-    simulation: Mapping[str, Any]
-) -> bool:
+def _requires_floor_insulation_reconciliation(simulation: Mapping[str, Any]) -> bool:
     """Detect the exact superseded zero-mass floor-material failure."""
 
     path = Path(str(simulation.get("model_report_path", "") or ""))
@@ -94,7 +99,11 @@ def _case_stage(record: Mapping[str, Any]) -> str:
         and int(result.get("observed_metric_count") or 0) > 0
         and simulation_current
     ):
-        return "REFERENCE_RESULTS_COMPLETE"
+        return (
+            "JUDGED_RESULTS_COMPLETE"
+            if str(record.get("case_id", "")).upper() == "1E"
+            else "REFERENCE_RESULTS_COMPLETE"
+        )
     if simulation_current:
         return "EVALUATE_APS"
     if simulation.get("status") == "SIMULATION_EXECUTED_AWAITING_APS_QUALIFICATION":
@@ -102,7 +111,11 @@ def _case_stage(record: Mapping[str, Any]) -> str:
             return "RECONCILE_FLOOR_INSULATION"
         return "REQUALIFY_SIMULATION_EVIDENCE"
     if model.get("status") == "VERIFIED":
+        if str(record.get("case_id", "")).upper() == "1E":
+            return "QUALIFY_TEMPLATE_AND_SIMULATE"
         return "QUALIFY_RUNTIME_AND_SIMULATE"
+    if str(record.get("case_id", "")).upper() == "1E":
+        return "QUALIFY_EXACT_1E_TEMPLATE"
     if record.get("case_id") == "600":
         return "CREATE_GUARDED_MODEL"
     return "QUALIFY_GENERATOR_IN_FRESH_PROJECT"
@@ -139,6 +152,30 @@ def _next_action(stage: str, record: Mapping[str, Any]) -> Dict[str, Any]:
             "instruction": (
                 "Open the existing verified case project and run the guarded "
                 "runtime qualification, simulation and APS evaluation."
+            ),
+        }
+    if stage == "QUALIFY_TEMPLATE_AND_SIMULATE":
+        return {
+            "script": "Run_VE_SIA4010_Verify_Template_Model.py",
+            "requires_fresh_project": False,
+            "project_path": existing_project,
+            "follow_up_script": "Run_VE_SIA4010_Simulate_Qualified_Template.py",
+            "instruction": (
+                "Open the disposable exact-case 1E template copy, verify its "
+                "checksum-bound model evidence, then run the qualified-template "
+                "ApacheSim and APS comparison."
+            ),
+        }
+    if stage == "QUALIFY_EXACT_1E_TEMPLATE":
+        return {
+            "script": "Run_VE_SIA4010_Test1E_Prepare_Template.py",
+            "requires_fresh_project": True,
+            "project_path": "",
+            "instruction": (
+                "Open the completed exact case 1D project and use Save As to "
+                "create a separate copy named SIA4010_TEST1_1E_TEMPLATE. Run "
+                "the preparer in that copy. Then add and independently review "
+                "only the prescribed 1E fabric awning before capture/binding."
             ),
         }
     if stage == "REQUALIFY_SIMULATION_EVIDENCE":
@@ -188,7 +225,7 @@ def _next_action(stage: str, record: Mapping[str, Any]) -> Dict[str, Any]:
 def build_test1_campaign_status(
     registry: Mapping[str, Any],
 ) -> Dict[str, Any]:
-    """Summarize Test 1 evidence without promoting reference-only results."""
+    """Summarize reference deliverables and the separately judged 1E case."""
 
     cases = registry.get("cases") or {}
     rows = []
@@ -196,21 +233,47 @@ def build_test1_campaign_status(
         key = "test_1/{}".format(case_id)
         record = cases.get(key) or {"case_id": case_id}
         stage = _case_stage(record)
+        judged = case_id in TEST1_JUDGED_CASES
         row = {
             "variant": "test_1",
             "case_id": case_id,
-            "recommended_project_name": "SIA4010_TEST1_{}".format(case_id),
+            "recommended_project_name": (
+                "SIA4010_TEST1_1E_TEMPLATE"
+                if judged
+                else "SIA4010_TEST1_{}".format(case_id)
+            ),
             "stage": stage,
             "reference_results_complete": (
-                stage == "REFERENCE_RESULTS_COMPLETE"
+                not judged and stage == "REFERENCE_RESULTS_COMPLETE"
             ),
-            "formal_compliance_verdict": "NOT_AVAILABLE_WITHOUT_ACCEPTANCE_CRITERION",
+            "judged_results_complete": (judged and stage == "JUDGED_RESULTS_COMPLETE"),
+            "formal_compliance_verdict": (
+                str((record.get("result_evidence") or {}).get("status") or "")
+                if stage == "JUDGED_RESULTS_COMPLETE"
+                else (
+                    "PENDING_QUALIFIED_1E_RESULT"
+                    if judged
+                    else "NOT_AVAILABLE_WITHOUT_ACCEPTANCE_CRITERION"
+                )
+            ),
         }
         row["next_action"] = _next_action(stage, record)
         rows.append(row)
-    pending = [
-        row for row in rows if not row["reference_results_complete"]
+    reference_rows = [row for row in rows if row["case_id"] not in TEST1_JUDGED_CASES]
+    pending = [row for row in reference_rows if not row["reference_results_complete"]]
+    iso_rows = [row for row in rows if row["case_id"] in TEST1_ISO_CASES]
+    diagnostic_rows = [row for row in rows if row["case_id"] in TEST1_DIAGNOSTIC_CASES]
+    pending_iso = [row for row in iso_rows if not row["reference_results_complete"]]
+    pending_diagnostics = [
+        row for row in diagnostic_rows if not row["reference_results_complete"]
     ]
+    judged_row = next(row for row in rows if row["case_id"] == "1E")
+    judged_complete = judged_row["judged_results_complete"]
+    formal_status = (
+        "TEST1_JUDGED_RESULT_RECORDED"
+        if judged_complete
+        else "BLOCKED_DIAGNOSTIC_1E_VE_QUALIFICATION_REQUIRED"
+    )
     return {
         "schema_version": "1.0",
         "status": (
@@ -219,8 +282,46 @@ def build_test1_campaign_status(
             else "TEST1_REFERENCE_CAMPAIGN_IN_PROGRESS"
         ),
         "case_count": len(rows),
-        "reference_results_complete_count": len(rows) - len(pending),
-        "next_case": pending[0] if pending else None,
+        "reference_case_count": len(reference_rows),
+        "reference_results_complete_count": len(reference_rows) - len(pending),
+        "next_case": pending[0] if pending else (None if judged_complete else judged_row),
+        "iso_status": (
+            "TEST1_ISO_REFERENCE_CAMPAIGN_COMPLETE"
+            if not pending_iso
+            else "TEST1_ISO_REFERENCE_CAMPAIGN_IN_PROGRESS"
+        ),
+        "iso_case_count": len(iso_rows),
+        "iso_reference_results_complete_count": len(iso_rows) - len(pending_iso),
+        "next_iso_case": pending_iso[0] if pending_iso else None,
+        "diagnostic_status": (
+            "TEST1_DIAGNOSTIC_DELIVERABLES_COMPLETE"
+            if not pending_diagnostics
+            else "TEST1_DIAGNOSTIC_DELIVERABLES_IN_PROGRESS"
+        ),
+        "diagnostic_case_count": len(diagnostic_rows),
+        "diagnostic_deliverables_complete_count": (
+            len(diagnostic_rows) - len(pending_diagnostics)
+        ),
+        "next_diagnostic_case": (pending_diagnostics[0] if pending_diagnostics else None),
+        "judged_case_count": 1,
+        "judged_results_complete_count": int(judged_complete),
+        "judged_case": judged_row,
+        "formal_test1_status": formal_status,
+        "formal_test1_blocker": (
+            ""
+            if judged_complete
+            else (
+                "Diagnostic case 1E is the only Test 1 case with a pass/fail "
+                "criterion. Its fabric-awning control semantics and IESVE "
+                "threshold mapping were confirmed by Prof. Gerhard Zweifel "
+                "on 2026-08-26. The optical mapping, VE assignment/read-back, "
+                "APS binding and scored simulation still require qualification. "
+                "VE 2025 runtime testing also proved that CDB set_properties "
+                "changes are not serialized by project save; the external "
+                "shade must therefore be persisted through the APcdb interface "
+                "or an IES-supported persistence route."
+            )
+        ),
         "cases": rows,
         "claim_guardrail": (
             "Complete reference-result evidence is not an SIA compliance "

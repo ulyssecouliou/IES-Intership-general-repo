@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from enum import Enum
 import logging
 import math
-from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence, Tuple
+from typing import Any, Dict, Iterable, List, Mapping, Sequence, Tuple
 
 from .asset_manifest import (
     AirExchangeDefinition,
@@ -21,7 +21,6 @@ from .asset_manifest import (
 )
 from .exceptions import VeApiUnavailableError, VeMutationError
 from .ve_compat import thermal_templates
-
 
 # Read-back comparison only: these tolerances cover one IEEE-754 float32
 # storage round trip in the VE CDB.  They are not SIA compliance tolerances.
@@ -60,8 +59,7 @@ def _values_match(expected: Any, actual: Any) -> bool:
         )
     if isinstance(expected, list) and isinstance(actual, list):
         return len(expected) == len(actual) and all(
-            _values_match(left, right)
-            for left, right in zip(expected, actual)
+            _values_match(left, right) for left, right in zip(expected, actual)
         )
     if isinstance(expected, Mapping) and isinstance(actual, Mapping):
         return all(
@@ -71,7 +69,9 @@ def _values_match(expected: Any, actual: Any) -> bool:
     return expected == actual
 
 
-def _assert_subset(expected: Mapping[str, Any], actual: Mapping[str, Any], context: str) -> None:
+def _assert_subset(
+    expected: Mapping[str, Any], actual: Mapping[str, Any], context: str
+) -> None:
     """Fail when any written field is absent or changed during read-back."""
 
     mismatches = {
@@ -80,9 +80,7 @@ def _assert_subset(expected: Mapping[str, Any], actual: Mapping[str, Any], conte
         if key not in actual or not _values_match(value, actual.get(key))
     }
     if mismatches:
-        raise VeMutationError(
-            "{} read-back mismatch: {}".format(context, mismatches)
-        )
+        raise VeMutationError("{} read-back mismatch: {}".format(context, mismatches))
 
 
 def _normalise_record_type(value: Any) -> str:
@@ -183,6 +181,14 @@ def _exchange_record_mismatches(
     return mismatches
 
 
+def _exchange_record_family(data: Mapping[str, Any]) -> str:
+    """Return the normalized physical family of an air-exchange record."""
+
+    return _normalise_record_type(
+        data.get("type_val", data.get("type_str", data.get("name", "")))
+    )
+
+
 def _template_links_semantically_match(
     expected_records: Iterable[Any], actual_records: Iterable[Any], kind: str
 ) -> Tuple[bool, Dict[str, Any]]:
@@ -194,9 +200,7 @@ def _template_links_semantically_match(
         key_function = _gain_record_family
         compare = _gain_record_mismatches
     else:
-        key_function = lambda data: _normalise_record_type(
-            data.get("type_val", data.get("type_str", data.get("name", "")))
-        )
+        key_function = _exchange_record_family
         compare = _exchange_record_mismatches
 
     def index(records: List[Dict[str, Any]]) -> Dict[str, List[Dict[str, Any]]]:
@@ -298,9 +302,7 @@ def _profile_dependency_layers(
         }
     )
     if unknown:
-        raise VeMutationError(
-            "Unknown runtime profile references: {}".format(unknown)
-        )
+        raise VeMutationError("Unknown runtime profile references: {}".format(unknown))
     ordered_keys = [definition.key for definition in definitions]
     remaining = set(ordered_keys)
     resolved = set()
@@ -313,9 +315,7 @@ def _profile_dependency_layers(
         ]
         if not ready_keys:
             raise VeMutationError(
-                "Cyclic runtime profile references: {}".format(
-                    sorted(remaining)
-                )
+                "Cyclic runtime profile references: {}".format(sorted(remaining))
             )
         layers.append(tuple(by_key[key] for key in ready_keys))
         resolved.update(ready_keys)
@@ -484,12 +484,9 @@ class IesVeAssetProvisioner:
             and isinstance(actual_resistance, (int, float))
         ):
             canonical_resistance = round(float(expected_resistance), 5)
-            native_glazed_resistance = (
-                not _values_match(
-                    float(expected_resistance), float(actual_resistance)
-                )
-                and _values_match(canonical_resistance, float(actual_resistance))
-            )
+            native_glazed_resistance = not _values_match(
+                float(expected_resistance), float(actual_resistance)
+            ) and _values_match(canonical_resistance, float(actual_resistance))
         if native_glazed_resistance:
             remaining.pop("resistance")
             warning = {
@@ -581,10 +578,9 @@ class IesVeAssetProvisioner:
                 ):
                     continue
                 canonical = round(float(requested), 3)
-                if (
-                    not _values_match(float(requested), float(persisted))
-                    and _values_match(canonical, float(persisted))
-                ):
+                if not _values_match(
+                    float(requested), float(persisted)
+                ) and _values_match(canonical, float(persisted)):
                     remaining.pop(key)
                     rounded_fields[key] = {
                         "requested": float(requested),
@@ -640,14 +636,9 @@ class IesVeAssetProvisioner:
             ):
                 continue
             canonical_resistance = round(float(requested_resistance), 4)
-            if (
-                not _values_match(
-                    float(requested_resistance), float(persisted_resistance)
-                )
-                and _values_match(
-                    canonical_resistance, float(persisted_resistance)
-                )
-            ):
+            if not _values_match(
+                float(requested_resistance), float(persisted_resistance)
+            ) and _values_match(canonical_resistance, float(persisted_resistance)):
                 remaining.pop(key)
                 rounded_surface_resistances[key] = {
                     "requested": float(requested_resistance),
@@ -685,10 +676,9 @@ class IesVeAssetProvisioner:
             and isinstance(persisted, (int, float))
         ):
             canonical = round(float(requested), 4)
-            rounded = (
-                not _values_match(float(requested), float(persisted))
-                and _values_match(canonical, float(persisted))
-            )
+            rounded = not _values_match(
+                float(requested), float(persisted)
+            ) and _values_match(canonical, float(persisted))
         if rounded:
             remaining.pop("visible_light_transmittance")
             warning = {
@@ -745,9 +735,7 @@ class IesVeAssetProvisioner:
             "VECdbProject.get_construction_ids": hasattr(
                 self.cdb_project, "get_construction_ids"
             ),
-            "VECdbConstruction.delete_layer": hasattr(
-                construction_class, "delete_layer"
-            ),
+            "VECdbConstruction.delete_layer": hasattr(construction_class, "delete_layer"),
             "VECdbLayer.get_id": hasattr(layer_class, "get_id"),
         }
         missing = sorted(name for name, present in capabilities.items() if not present)
@@ -784,9 +772,7 @@ class IesVeAssetProvisioner:
             for member_name in member_names:
                 if hasattr(container, member_name):
                     return getattr(container, member_name)
-            attempted.append(
-                "{}.[{}]".format(container_path, ",".join(member_names))
-            )
+            attempted.append("{}.[{}]".format(container_path, ",".join(member_names)))
         raise VeApiUnavailableError(
             "Unable to resolve VE enum for {} (attempted {})".format(context, attempted)
         )
@@ -800,7 +786,9 @@ class IesVeAssetProvisioner:
             if set(value) == {"profile_ref"}:
                 key = str(value["profile_ref"])
                 if key not in profile_ids:
-                    raise VeMutationError("Unknown runtime profile reference: {}".format(key))
+                    raise VeMutationError(
+                        "Unknown runtime profile reference: {}".format(key)
+                    )
                 return profile_ids[key]
             if set(value) == {"apache_system_ref"}:
                 if value["apache_system_ref"] is not True or not apache_system_id:
@@ -1028,9 +1016,7 @@ class IesVeAssetProvisioner:
                         "existing profile {}".format(definition.key),
                     )
                     identifiers[definition.key] = identifier
-                    if self._is_constant_one_daily_profile(
-                        definition, resolved_data
-                    ):
+                    if self._is_constant_one_daily_profile(definition, resolved_data):
                         self._constant_on_profile_ids.add(identifier)
                     continue
                 try:
@@ -1042,18 +1028,14 @@ class IesVeAssetProvisioner:
                     )
                     if not profile.set_data(resolved_data):
                         raise VeMutationError(
-                            "VE rejected profile data for {}".format(
-                                definition.key
-                            )
+                            "VE rejected profile data for {}".format(definition.key)
                         )
                     created.append((definition, resolved_data, profile))
                 except VeMutationError:
                     raise
                 except Exception as exc:
                     raise VeMutationError(
-                        "Profile creation failed for {}: {}".format(
-                            definition.key, exc
-                        )
+                        "Profile creation failed for {}: {}".format(definition.key, exc)
                     ) from exc
             if created and not self.project.save_profiles():
                 raise VeMutationError("VEProject.save_profiles returned failure")
@@ -1063,9 +1045,7 @@ class IesVeAssetProvisioner:
             # for strict read-back. Always prefer that persisted object.
             persisted_by_reference = self._existing_profiles() if created else {}
             for definition, resolved_data, profile in created:
-                persisted_matches = persisted_by_reference.get(
-                    definition.reference, []
-                )
+                persisted_matches = persisted_by_reference.get(definition.reference, [])
                 if len(persisted_matches) > 1:
                     raise VeMutationError(
                         "Saved profile reference is ambiguous: {}".format(
@@ -1089,12 +1069,8 @@ class IesVeAssetProvisioner:
                     "profile {}".format(definition.key),
                 )
                 identifiers[definition.key] = persistent_id
-                if self._is_constant_one_daily_profile(
-                    definition, resolved_data
-                ):
-                    self._constant_on_profile_ids.add(
-                        identifiers[definition.key]
-                    )
+                if self._is_constant_one_daily_profile(definition, resolved_data):
+                    self._constant_on_profile_ids.add(identifiers[definition.key])
         return identifiers
 
     def provision_profiles(
@@ -1114,8 +1090,7 @@ class IesVeAssetProvisioner:
 
         if on_existing not in {"fail", "reuse_verified"}:
             raise VeMutationError(
-                "Profile provisioning on_existing must be 'fail' or "
-                "'reuse_verified'"
+                "Profile provisioning on_existing must be 'fail' or " "'reuse_verified'"
             )
         planned = tuple(definitions)
         if not planned:
@@ -1123,9 +1098,7 @@ class IesVeAssetProvisioner:
         for definition in planned:
             if definition.evidence.validation_error():
                 raise VeMutationError(
-                    "Profile {} has invalid source evidence".format(
-                        definition.key
-                    )
+                    "Profile {} has invalid source evidence".format(definition.key)
                 )
             data_error = definition.data.validation_error()
             if data_error:
@@ -1362,9 +1335,7 @@ class IesVeAssetProvisioner:
         for layer_definition in definition.layers:
             if layer_definition.is_cavity:
                 continue
-            material_definition = material_definitions.get(
-                layer_definition.material_key
-            )
+            material_definition = material_definitions.get(layer_definition.material_key)
             if material_definition is None:
                 raise VeMutationError(
                     "Construction {} references missing material {}".format(
@@ -1394,9 +1365,7 @@ class IesVeAssetProvisioner:
                 material_definition,
                 expected_material,
                 actual,
-                "construction reconciliation material {}".format(
-                    material_definition.key
-                ),
+                "construction reconciliation material {}".format(material_definition.key),
             )
             material_ids[layer_definition.material_key] = identifier
 
@@ -1578,9 +1547,7 @@ class IesVeAssetProvisioner:
         ]
         reusable = []
         try:
-            existing_ids = list(
-                self.cdb_project.get_construction_ids(construction_class)
-            )
+            existing_ids = list(self.cdb_project.get_construction_ids(construction_class))
         except Exception as exc:
             raise VeMutationError(
                 "Unable to inspect existing {} constructions: {}".format(
@@ -1796,7 +1763,9 @@ class IesVeAssetProvisioner:
                 definition.from_id, definition.name
             )
         except Exception as exc:
-            raise VeMutationError("Apache system creation failed: {}".format(exc)) from exc
+            raise VeMutationError(
+                "Apache system creation failed: {}".format(exc)
+            ) from exc
         identifier = str(getattr(system, "id", ""))
         name = str(getattr(system, "name", definition.name))
         if not identifier or name != definition.name:
@@ -1945,9 +1914,7 @@ class IesVeAssetProvisioner:
             )
         definition = matches[0]
         profile_ids = self._create_profiles(manifest)
-        data = self._resolve_runtime_value(
-            definition.raw_properties(), profile_ids, ""
-        )
+        data = self._resolve_runtime_value(definition.raw_properties(), profile_ids, "")
         units = self.GAIN_UNITS.get(definition.category, {}).get(definition.units)
         if units is None:
             raise VeMutationError(
@@ -1975,9 +1942,7 @@ class IesVeAssetProvisioner:
             )
         gain, before = existing[0]
         subtype = self._gain_enum(definition)
-        if "type_val" not in before or not _values_match(
-            subtype, before["type_val"]
-        ):
+        if "type_val" not in before or not _values_match(subtype, before["type_val"]):
             raise VeMutationError(
                 "Existing gain {} subtype differs from the controlled manifest".format(
                     gain_key
@@ -2020,24 +1985,18 @@ class IesVeAssetProvisioner:
                 after,
                 "reconciled gain {}".format(gain_key),
             )
-            if "type_val" not in after or not _values_match(
-                subtype, after["type_val"]
-            ):
+            if "type_val" not in after or not _values_match(subtype, after["type_val"]):
                 raise VeMutationError(
                     "Reconciled gain {} subtype read-back mismatch".format(gain_key)
                 )
-            for template in thermal_templates(
-                self.project, assigned=False
-            ).values():
+            for template in thermal_templates(self.project, assigned=False).values():
                 if hasattr(template, "apply_changes"):
                     template.apply_changes()
         except Exception as exc:
             if isinstance(exc, (VeMutationError, VeApiUnavailableError)):
                 raise
             raise VeMutationError(
-                "Controlled gain reconciliation failed for {}: {}".format(
-                    gain_key, exc
-                )
+                "Controlled gain reconciliation failed for {}: {}".format(gain_key, exc)
             ) from exc
         return {
             "status": "RECONCILED_AND_VERIFIED",
@@ -2045,9 +2004,7 @@ class IesVeAssetProvisioner:
             "name": name,
             "changed": True,
             "mismatches_before": mismatches,
-            "verified_after": {
-                key: _serializable(after.get(key)) for key in mismatches
-            },
+            "verified_after": {key: _serializable(after.get(key)) for key in mismatches},
             "compatibility_warnings": list(self._compatibility_warnings),
         }
 
@@ -2224,9 +2181,7 @@ class IesVeAssetProvisioner:
                 "Controlled air-exchange reconciliation requires "
                 "on_existing='reuse_verified'"
             )
-        matches = [
-            item for item in manifest.air_exchanges if item.key == exchange_key
-        ]
+        matches = [item for item in manifest.air_exchanges if item.key == exchange_key]
         if len(matches) != 1:
             raise VeMutationError(
                 "Expected exactly one air-exchange definition keyed '{}'; "
@@ -2235,9 +2190,7 @@ class IesVeAssetProvisioner:
         definition = matches[0]
         profile_ids = self._create_profiles(manifest)
         exchange_type, units, adjacent = self._air_enums(definition)
-        data = self._resolve_runtime_value(
-            definition.raw_properties(), profile_ids, ""
-        )
+        data = self._resolve_runtime_value(definition.raw_properties(), profile_ids, "")
         data.update(
             {
                 "type_val": exchange_type,
@@ -2294,9 +2247,7 @@ class IesVeAssetProvisioner:
                 after,
                 "reconciled air exchange {}".format(exchange_key),
             )
-            for template in thermal_templates(
-                self.project, assigned=False
-            ).values():
+            for template in thermal_templates(self.project, assigned=False).values():
                 if hasattr(template, "apply_changes"):
                     template.apply_changes()
         except Exception as exc:
@@ -2312,9 +2263,7 @@ class IesVeAssetProvisioner:
             "name": name,
             "changed": True,
             "mismatches_before": mismatches,
-            "verified_after": {
-                key: _serializable(after.get(key)) for key in mismatches
-            },
+            "verified_after": {key: _serializable(after.get(key)) for key in mismatches},
         }
 
     def _verify_air_exchange_readback(
@@ -2414,9 +2363,7 @@ class IesVeAssetProvisioner:
             matches = existing_by_name.get(name, [])
             if len(matches) > 1:
                 raise VeMutationError(
-                    "Air-exchange name is ambiguous and cannot be reused: {}".format(
-                        name
-                    )
+                    "Air-exchange name is ambiguous and cannot be reused: {}".format(name)
                 )
             if matches:
                 if manifest.on_existing == "fail":
@@ -2428,7 +2375,9 @@ class IesVeAssetProvisioner:
                 exchange, actual = matches[0]
                 self._verify_air_exchange_readback(
                     definition,
-                    data, actual, "existing air exchange {}".format(definition.key)
+                    data,
+                    actual,
+                    "existing air exchange {}".format(definition.key),
                 )
                 objects[definition.key] = exchange
                 names[definition.key] = str(
@@ -2453,18 +2402,14 @@ class IesVeAssetProvisioner:
                 if isinstance(exc, (VeMutationError, VeApiUnavailableError)):
                     raise
                 raise VeMutationError(
-                    "Air-exchange creation failed for {}: {}".format(
-                        definition.key, exc
-                    )
+                    "Air-exchange creation failed for {}: {}".format(definition.key, exc)
                 ) from exc
         return objects, names
 
     def _template_handle(self, template: Any) -> str:
         """Resolve the persistent handle of one newly created template."""
 
-        for handle, candidate in thermal_templates(
-            self.project, assigned=False
-        ).items():
+        for handle, candidate in thermal_templates(self.project, assigned=False).items():
             if candidate is template or str(candidate.name) == str(template.name):
                 return str(handle)
         raise VeMutationError("New thermal template has no resolvable handle")
@@ -2548,9 +2493,7 @@ class IesVeAssetProvisioner:
             "thermal-template conditioned state",
         )
 
-    def _writable_system_data(
-        self, system_data: Mapping[str, Any]
-    ) -> Dict[str, Any]:
+    def _writable_system_data(self, system_data: Mapping[str, Any]) -> Dict[str, Any]:
         """Translate source-level system values to VE setter types."""
 
         writable = dict(system_data)
@@ -2619,9 +2562,7 @@ class IesVeAssetProvisioner:
                 "variation_profile",
             )
         else:
-            key_function = lambda data: _normalise_record_type(
-                data.get("type_val", data.get("type_str", data.get("name", "")))
-            )
+            key_function = _exchange_record_family
             writable = (
                 "adjacent_condition_val",
                 "max_flow",
@@ -2658,9 +2599,7 @@ class IesVeAssetProvisioner:
             _expected_record, expected = expected_by_key[key]
             actual_record, before = actual_by_key[key]
             compare = (
-                _gain_record_mismatches
-                if kind == "gain"
-                else _exchange_record_mismatches
+                _gain_record_mismatches if kind == "gain" else _exchange_record_mismatches
             )
             mismatches = compare(expected, before)
             if not mismatches:
@@ -2761,10 +2700,8 @@ class IesVeAssetProvisioner:
                 air_exchanges[key] for key in definition.air_exchange_keys
             ]
             actual_exchange_records = list(template.get_air_exchanges())
-            gain_links_match, gain_link_details = (
-                _template_links_semantically_match(
-                    expected_gain_records, actual_gain_records, "gain"
-                )
+            gain_links_match, gain_link_details = _template_links_semantically_match(
+                expected_gain_records, actual_gain_records, "gain"
             )
             exchange_links_match, exchange_link_details = (
                 _template_links_semantically_match(
@@ -2940,12 +2877,16 @@ class IesVeAssetProvisioner:
             if len(template.get_casual_gains()) != len(definition.gain_keys):
                 raise VeMutationError("Thermal template gain count did not persist")
             if len(template.get_air_exchanges()) != len(definition.air_exchange_keys):
-                raise VeMutationError("Thermal template air-exchange count did not persist")
+                raise VeMutationError(
+                    "Thermal template air-exchange count did not persist"
+                )
             return definition.name, self._template_handle(template)
         except Exception as exc:
             if isinstance(exc, (VeMutationError, VeApiUnavailableError)):
                 raise
-            raise VeMutationError("Thermal template creation failed: {}".format(exc)) from exc
+            raise VeMutationError(
+                "Thermal template creation failed: {}".format(exc)
+            ) from exc
 
     def provision(self, manifest: AssetManifest) -> ProvisioningReceipt:
         """Provision every manifest asset in dependency order and return a receipt."""
@@ -2975,9 +2916,7 @@ class IesVeAssetProvisioner:
         apache_system_id, _ = self._create_apache_system(manifest)
         LOGGER.info("asset_provisioning | apache_system | PASS")
         LOGGER.info("asset_provisioning | gains | STARTED")
-        gains, gain_ids = self._create_gains(
-            manifest, profile_ids, apache_system_id
-        )
+        gains, gain_ids = self._create_gains(manifest, profile_ids, apache_system_id)
         LOGGER.info("asset_provisioning | gains | PASS")
         LOGGER.info("asset_provisioning | air_exchanges | STARTED")
         exchanges, exchange_names = self._create_air_exchanges(
@@ -3065,8 +3004,7 @@ class IesVeAssetProvisioner:
 
         if getattr(plan, "on_existing", None) not in {"fail", "reuse_verified"}:
             raise VeMutationError(
-                "Operational-template on_existing must be 'fail' or "
-                "'reuse_verified'"
+                "Operational-template on_existing must be 'fail' or " "'reuse_verified'"
             )
         profiles = tuple(getattr(plan, "profiles", ()))
         gains = tuple(getattr(plan, "gains", ()))
@@ -3077,7 +3015,10 @@ class IesVeAssetProvisioner:
                 "Operational-template plan requires a template, gains and air exchanges"
             )
         for definition in profiles:
-            if definition.evidence.validation_error() or definition.data.validation_error():
+            if (
+                definition.evidence.validation_error()
+                or definition.data.validation_error()
+            ):
                 raise VeMutationError(
                     "Operational profile {} has invalid evidence or data".format(
                         definition.key
@@ -3119,13 +3060,9 @@ class IesVeAssetProvisioner:
         required_capabilities = {
             "VEProject.create_profile": hasattr(self.project, "create_profile"),
             "VEProject.save_profiles": hasattr(self.project, "save_profiles"),
-            "VEProject.create_casual_gain": hasattr(
-                self.project, "create_casual_gain"
-            ),
+            "VEProject.create_casual_gain": hasattr(self.project, "create_casual_gain"),
             "VEProject.casual_gains": hasattr(self.project, "casual_gains"),
-            "VEProject.create_air_exchange": hasattr(
-                self.project, "create_air_exchange"
-            ),
+            "VEProject.create_air_exchange": hasattr(self.project, "create_air_exchange"),
             "VEProject.air_exchanges": hasattr(self.project, "air_exchanges"),
             "VEProject.create_thermal_template": hasattr(
                 self.project, "create_thermal_template"
@@ -3152,9 +3089,7 @@ class IesVeAssetProvisioner:
         if plan.on_existing == "reuse_verified":
             for definition in gains:
                 self.reconcile_existing_gain(plan, definition.key)
-        gain_objects, gain_ids = self._create_gains(
-            plan, profile_ids, apache_system_id
-        )
+        gain_objects, gain_ids = self._create_gains(plan, profile_ids, apache_system_id)
         if plan.on_existing == "reuse_verified":
             for definition in exchanges:
                 self.reconcile_existing_air_exchange(plan, definition.key)

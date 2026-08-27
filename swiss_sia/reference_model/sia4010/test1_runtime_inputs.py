@@ -13,7 +13,6 @@ from typing import Any, Dict, Mapping
 
 from ..exceptions import ConfigurationError
 
-
 ISO_AREAL_CAPACITY_J_M2K = 10000.0
 ISO_HEATING_CAPACITY_W = 1000000.0
 ISO_COOLING_CAPACITY_W = 1000000.0
@@ -80,12 +79,8 @@ def calculate_furniture_mass_factor(
 
     area = _positive_finite(floor_area_m2, "floor_area_m2")
     volume = _positive_finite(room_volume_m3, "room_volume_m3")
-    density = _positive_finite(
-        reference_air_density_kg_m3, "reference_air_density_kg_m3"
-    )
-    cp_air = _positive_finite(
-        air_specific_heat_j_kgk, "air_specific_heat_j_kgk"
-    )
+    density = _positive_finite(reference_air_density_kg_m3, "reference_air_density_kg_m3")
+    cp_air = _positive_finite(air_specific_heat_j_kgk, "air_specific_heat_j_kgk")
     target_areal = _positive_finite(
         target_areal_capacity_j_m2k,
         "target_areal_capacity_j_m2k",
@@ -147,12 +142,9 @@ def validate_capacity_semantics(
             "represents the ISO statement that 1000 kW is effectively infinite"
         ),
     }
-    result["verified"] = (
-        not conditioned
-        or (
-            result["ve_heating_capacity_unlimited"]
-            and result["ve_cooling_capacity_unlimited"]
-        )
+    result["verified"] = not conditioned or (
+        result["ve_heating_capacity_unlimited"]
+        and result["ve_cooling_capacity_unlimited"]
     )
     if not result["verified"]:
         raise ConfigurationError(
@@ -186,9 +178,7 @@ def is_conditioned_state(value: Any) -> bool:
         "conditioned_not_applicable",
     }:
         return False
-    raise ConfigurationError(
-        "Unrecognised VE conditioned state: {!r}".format(value)
-    )
+    raise ConfigurationError("Unrecognised VE conditioned state: {!r}".format(value))
 
 
 def is_off_profile(value: Any) -> bool:
@@ -209,10 +199,8 @@ def build_ideal_load_system_payload(
     """
 
     payload: Dict[str, Any] = {
-        "heating_plant_radiant_fraction": 1.0
-        - ISO_HEATING_CONVECTIVE_FRACTION,
-        "cooling_plant_radiant_fraction": 1.0
-        - ISO_COOLING_CONVECTIVE_FRACTION,
+        "heating_plant_radiant_fraction": 1.0 - ISO_HEATING_CONVECTIVE_FRACTION,
+        "cooling_plant_radiant_fraction": 1.0 - ISO_COOLING_CONVECTIVE_FRACTION,
     }
     for key in tuple(payload):
         flag = "{}_from_template".format(key)
@@ -264,8 +252,9 @@ def validate_zero_mechanical_ventilation_semantics(
     }
     if not verified:
         raise ConfigurationError(
-            "Test 1 room still has non-zero Apache system outdoor-air flow: {}"
-            .format(flow)
+            "Test 1 room still has non-zero Apache system outdoor-air flow: {}".format(
+                flow
+            )
         )
     return receipt
 
@@ -336,9 +325,7 @@ def validate_prescribed_infiltration_preserved(
             )
         records.append(dict(data))
 
-    infiltration = [
-        record for record in records if _is_infiltration_record(record)
-    ]
+    infiltration = [record for record in records if _is_infiltration_record(record)]
     if len(infiltration) != 1:
         raise ConfigurationError(
             "Test 1 room must expose exactly one prescribed infiltration air "
@@ -399,9 +386,7 @@ def validate_prescribed_infiltration_preserved(
         "ve_infiltration_name": str(record.get("name", "")),
         "ve_infiltration_max_flow": flow_value,
         "ve_infiltration_units_val": record.get("units_val"),
-        "ve_infiltration_max_flow_from_template": record.get(
-            "max_flow_from_template"
-        ),
+        "ve_infiltration_max_flow_from_template": record.get("max_flow_from_template"),
         "ve_air_exchange_count": len(records),
         "ve_other_air_exchanges_all_zero": True,
         "ve_other_air_exchanges": others,

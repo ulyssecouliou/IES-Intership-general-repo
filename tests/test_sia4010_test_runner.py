@@ -26,9 +26,16 @@ def _dist(status: str, case_id: str = "") -> DistributionOutcome:
     """Build a distribution outcome fixture with a chosen status."""
 
     return DistributionOutcome(
-        quantity="Q", unit="W", status=status, message="", case_id=case_id,
-        out_of_band_bins=(), program_count=2, source_locator="loc",
+        quantity="Q",
+        unit="W",
+        status=status,
+        message="",
+        case_id=case_id,
+        out_of_band_bins=(),
+        program_count=2,
+        source_locator="loc",
     )
+
 
 TEST_ROOT = Path(__file__).resolve().parents[1]
 TEST_OUTPUT_ROOT = TEST_ROOT / ".codex_tmp" / "sia4010_runner_tests"
@@ -45,8 +52,12 @@ def _build_bundle(name: str) -> Path:
     ws["A1"] = "Table 28 — Test results sensible energy"
     ws["A3"], ws["B3"], ws["D3"] = "Case id.", "1E", "kWh"
     for col, label in {
-        "A": "Month", "B": "Testprogramm", "C": "IDA ICE", "G": "Mittelwert",
-        "H": "obere Grenze", "I": "untere Grenze",
+        "A": "Month",
+        "B": "Testprogramm",
+        "C": "IDA ICE",
+        "G": "Mittelwert",
+        "H": "obere Grenze",
+        "I": "untere Grenze",
     }.items():
         ws["{}5".format(col)] = label
     ws["A6"], ws["G6"], ws["H6"], ws["I6"] = 1, 530.6, 588.9, 472.3
@@ -88,8 +99,11 @@ def _build_multi_bundle(name: str) -> Path:
     ws1["A1"] = "Table 28 — Test results sensible energy"
     ws1["A3"], ws1["B3"], ws1["D3"] = "Case id.", "1E", "kWh"
     for col, label in {
-        "A": "Month", "B": "Testprogramm", "G": "Mittelwert",
-        "H": "obere Grenze", "I": "untere Grenze",
+        "A": "Month",
+        "B": "Testprogramm",
+        "G": "Mittelwert",
+        "H": "obere Grenze",
+        "I": "untere Grenze",
     }.items():
         ws1["{}5".format(col)] = label
     ws1["A6"], ws1["G6"], ws1["H6"], ws1["I6"] = 1, 530.6, 588.9, 472.3
@@ -99,7 +113,10 @@ def _build_multi_bundle(name: str) -> Path:
     ws2 = wb2.active
     ws2.title = "Zusammenfassung"
     for col, label in {
-        "D": "Testprogramm", "M": "Mittelwert", "N": "obere Grenze", "O": "untere Grenze",
+        "D": "Testprogramm",
+        "M": "Mittelwert",
+        "N": "obere Grenze",
+        "O": "untere Grenze",
     }.items():
         ws2["{}9".format(col)] = label
     ws2["A12"], ws2["D12"] = "Fall", "Jahresenergie solar"
@@ -240,10 +257,13 @@ class Sia4010DistributionCombinationTests(unittest.TestCase):
         )
         self.assertEqual(combine("OFFICIAL_RESULTS_RECORDED", (_dist("FAIL"),)), "FAILED")
         self.assertEqual(
-            combine("OFFICIAL_RESULTS_RECORDED", (_dist("NOT_CHECKABLE"),)), "NOT_CHECKABLE"
+            combine("OFFICIAL_RESULTS_RECORDED", (_dist("NOT_CHECKABLE"),)),
+            "NOT_CHECKABLE",
         )
         self.assertEqual(combine("FAILED", (_dist("PASS"),)), "FAILED")
-        self.assertEqual(combine("OFFICIAL_RESULTS_RECORDED", ()), "OFFICIAL_RESULTS_RECORDED")
+        self.assertEqual(
+            combine("OFFICIAL_RESULTS_RECORDED", ()), "OFFICIAL_RESULTS_RECORDED"
+        )
         self.assertEqual(combine("NO_REFERENCE_BANDS", ()), "NO_REFERENCE_BANDS")
 
     def test_evaluate_test_folds_distribution_into_status(self):
@@ -291,9 +311,7 @@ class Sia4010DistributionCombinationTests(unittest.TestCase):
         statuses, band_statuses, _ = Sia4010TestRunner._variant_outcomes(
             "2", pass_one, (_dist("PASS", case_id="2A"),)
         )
-        self.assertEqual(
-            band_statuses["test_2A"], "OFFICIAL_RESULTS_RECORDED"
-        )
+        self.assertEqual(band_statuses["test_2A"], "OFFICIAL_RESULTS_RECORDED")
         self.assertEqual(statuses["test_2A"], "OFFICIAL_RESULTS_RECORDED")
 
         with_failure = pass_one + (

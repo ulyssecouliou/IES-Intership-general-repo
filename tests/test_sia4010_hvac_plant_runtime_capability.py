@@ -18,7 +18,6 @@ from swiss_sia.reference_model.sia4010.model_scenario import (
     official_features,
 )
 
-
 ROOT = Path(__file__).resolve().parents[1]
 WORK_ROOT = ROOT / ".codex_tmp" / "hvac_plant_runtime_capability"
 
@@ -131,9 +130,7 @@ class HvacPlantRuntimeCapabilityTests(unittest.TestCase):
         return_value=_Readiness(True),
     )
     def test_complete_inventory_audits_all_seven_cases(self, _readiness):
-        payload = build_hvac_plant_runtime_capability_report(
-            _Iesve, self.project, ROOT
-        )
+        payload = build_hvac_plant_runtime_capability_report(_Iesve, self.project, ROOT)
         self.assertEqual(
             payload["status"],
             "READY_FOR_DISPOSABLE_MUTATION_QUALIFICATION",
@@ -143,14 +140,8 @@ class HvacPlantRuntimeCapabilityTests(unittest.TestCase):
             {row["case_id"] for row in payload["case_capability_matrix"]},
             {"4", "5A", "5B", "5C", "5D", "6", "7"},
         )
-        self.assertTrue(
-            payload["observed_capabilities"]["apache_system_collection"]
-        )
-        self.assertTrue(
-            payload["observed_capabilities"][
-                "room_apache_system_readback"
-            ]
-        )
+        self.assertTrue(payload["observed_capabilities"]["apache_system_collection"])
+        self.assertTrue(payload["observed_capabilities"]["room_apache_system_readback"])
         self.assertFalse(payload["mutation_performed"])
         self.assertFalse(payload["mutation_authorized"])
         self.assertIn(
@@ -164,9 +155,7 @@ class HvacPlantRuntimeCapabilityTests(unittest.TestCase):
         return_value=_Readiness(False),
     )
     def test_missing_source_bindings_fail_closed(self, _readiness):
-        payload = build_hvac_plant_runtime_capability_report(
-            _Iesve, self.project, ROOT
-        )
+        payload = build_hvac_plant_runtime_capability_report(_Iesve, self.project, ROOT)
         self.assertEqual(payload["status"], "SOURCE_BINDINGS_REQUIRED")
         self.assertIn(
             "TEST4_EXTERNAL_SOURCE_BINDINGS_NOT_READY",
@@ -176,9 +165,7 @@ class HvacPlantRuntimeCapabilityTests(unittest.TestCase):
     def test_wrong_scenario_is_rejected(self):
         self._write_scenario("test_3A", "3A")
         with self.assertRaisesRegex(ConfigurationError, "Test 4"):
-            build_hvac_plant_runtime_capability_report(
-                _Iesve, self.project, ROOT
-            )
+            build_hvac_plant_runtime_capability_report(_Iesve, self.project, ROOT)
 
     @mock.patch(
         "swiss_sia.reference_model.sia4010.hvac_plant_runtime_capability."
@@ -187,14 +174,10 @@ class HvacPlantRuntimeCapabilityTests(unittest.TestCase):
     )
     def test_test7_records_plant_evidence_and_checksum(self, _readiness):
         self._write_scenario("test_7", "7")
-        report = write_hvac_plant_runtime_capability_report(
-            _Iesve, self.project, ROOT
-        )
+        report = write_hvac_plant_runtime_capability_report(_Iesve, self.project, ROOT)
         payload = json.loads(report.read_text(encoding="utf-8"))
         self.assertEqual(payload["scenario"]["selection"]["case_id"], "7")
-        self.assertTrue(
-            payload["observed_capabilities"]["plant_specific_members"]
-        )
+        self.assertTrue(payload["observed_capabilities"]["plant_specific_members"])
         checksum = report.with_suffix(report.suffix + ".sha256")
         expected = checksum.read_text(encoding="ascii").split()[0]
         self.assertEqual(expected, hashlib.sha256(report.read_bytes()).hexdigest())

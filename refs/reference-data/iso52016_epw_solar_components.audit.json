@@ -4,16 +4,16 @@
   "purpose": "Source-derived EPW transport components; not a thermal-result calibration.",
   "sources": {
     "iso_workbook": {
-      "path": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\refs\\ISO_52016_1_BESTEST_ClimData_2016.08.24.xls",
+      "path": "refs/ISO_52016_1_BESTEST_ClimData_2016.08.24.xls",
       "sha256": "7FFA317609C35CF5B36492AEDEA9B70E8D9C76A75D7DBB8792446F987360F37E"
     },
     "tmy_time_and_solar_geometry": {
-      "path": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\references\\standards\\bestest\\DRYCOLD.TMY",
+      "path": "references/standards/bestest/DRYCOLD.TMY",
       "sha256": "E1F4EFC2476706D03EB2E4FD249B1A5FFE84CA961A9977E2E0DB9AC5F67B6DBD"
     }
   },
   "output": {
-    "path": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\refs\\reference-data\\iso52016_epw_solar_components.csv",
+    "path": "refs/reference-data/iso52016_epw_solar_components.csv",
     "sha256": "1DA5112D0885F3BA0E9421F7BB560C7DD16024713A97D9AF2524D19DDC5A7A8D",
     "rows": 8760
   },

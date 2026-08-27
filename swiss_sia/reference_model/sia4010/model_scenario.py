@@ -15,7 +15,6 @@ from ...config import SIA4010_CLASS_TEST_MATRIX
 from ..exceptions import ConfigurationError
 from .case_manifest import Sia4010CaseManifest
 
-
 SCENARIO_PROFILES = ("SIA4010_OFFICIAL", "CUSTOM_REFERENCE")
 EXECUTION_MODES = (
     "PREPARE_ONLY",
@@ -50,22 +49,25 @@ TEST_CASES: Dict[str, Tuple[str, ...]] = {
     # chain is read in that order. Chain and parameters frozen in
     # refs/reference-data/test-1.diagnostics.ref.json.
     "test_1": (
-        "600", "640", "600FF", "900", "940", "900FF",
-        "1A", "1B", "1C", "1D", "1E",
+        "600",
+        "640",
+        "600FF",
+        "900",
+        "940",
+        "900FF",
+        "1A",
+        "1B",
+        "1C",
+        "1D",
+        "1E",
     ),
     "test_2A": ("2A",),
     "test_2B": ("2B",),
     "test_2C": ("2C",),
     "test_2D": ("2D",),
-    **{
-        "test_3{}".format(letter): ("3{}".format(letter),)
-        for letter in "ABCDEFGHIJKL"
-    },
+    **{"test_3{}".format(letter): ("3{}".format(letter),) for letter in "ABCDEFGHIJKL"},
     "test_4": ("4",),
-    **{
-        "test_5{}".format(letter): ("5{}".format(letter),)
-        for letter in "ABCD"
-    },
+    **{"test_5{}".format(letter): ("5{}".format(letter),) for letter in "ABCD"},
     "test_6": ("6",),
     "test_7": ("7",),
 }
@@ -76,9 +78,7 @@ def official_features(variant: str, case_id: str) -> Dict[str, bool]:
 
     if variant not in TEST_CASES or case_id not in TEST_CASES[variant]:
         raise ConfigurationError(
-            "Unknown SIA 4010 variant/case combination: {}/{}".format(
-                variant, case_id
-            )
+            "Unknown SIA 4010 variant/case combination: {}/{}".format(variant, case_id)
         )
     family = variant[5] if variant.startswith("test_") and len(variant) > 5 else ""
     free_float = case_id in {"600FF", "900FF"}
@@ -171,9 +171,7 @@ class ModelScenario:
             )
         if str(payload["schema_version"]) not in cls.SUPPORTED_SCHEMA_VERSIONS:
             raise ConfigurationError(
-                "Unsupported model-scenario schema: {}".format(
-                    payload["schema_version"]
-                )
+                "Unsupported model-scenario schema: {}".format(payload["schema_version"])
             )
 
         profile = str(payload["profile"]).upper()
@@ -195,14 +193,10 @@ class ModelScenario:
             )
         if variant not in SIA4010_CLASS_TEST_MATRIX[target_class]:
             raise ConfigurationError(
-                "{} is not part of SIA 4010 class {}".format(
-                    variant, target_class
-                )
+                "{} is not part of SIA 4010 class {}".format(variant, target_class)
             )
         if case_id not in TEST_CASES.get(variant, ()):
-            raise ConfigurationError(
-                "{} is not a case of {}".format(case_id, variant)
-            )
+            raise ConfigurationError("{} is not a case of {}".format(case_id, variant))
 
         features = payload["features"]
         if not isinstance(features, dict):
@@ -256,9 +250,7 @@ class ModelScenario:
         missing_file_fields = sorted(required_file_fields - set(files))
         if missing_file_fields:
             raise ConfigurationError(
-                "Scenario file mapping is incomplete: {}".format(
-                    missing_file_fields
-                )
+                "Scenario file mapping is incomplete: {}".format(missing_file_fields)
             )
         return cls(
             scenario_id=scenario_id,
@@ -352,9 +344,7 @@ def build_feature_catalog() -> Dict[str, Any]:
             class_id: list(variants)
             for class_id, variants in SIA4010_CLASS_TEST_MATRIX.items()
         },
-        "cases": {
-            variant: list(case_ids) for variant, case_ids in TEST_CASES.items()
-        },
+        "cases": {variant: list(case_ids) for variant, case_ids in TEST_CASES.items()},
         "features": [
             {
                 "id": "geometry",
@@ -441,8 +431,7 @@ def build_feature_catalog() -> Dict[str, Any]:
         ],
         "official_feature_matrix": {
             variant: {
-                case_id: official_features(variant, case_id)
-                for case_id in case_ids
+                case_id: official_features(variant, case_id) for case_id in case_ids
             }
             for variant, case_ids in TEST_CASES.items()
         },

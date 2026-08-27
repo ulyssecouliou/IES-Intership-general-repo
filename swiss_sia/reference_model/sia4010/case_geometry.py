@@ -23,9 +23,7 @@ def _polygon(*coordinates: Tuple[float, float, float]) -> Polygon3D:
     return Polygon3D(tuple(Point3D(*coordinate) for coordinate in coordinates))
 
 
-def _box_faces(
-    width: float, depth: float, height: float
-) -> Tuple[Polygon3D, ...]:
+def _box_faces(width: float, depth: float, height: float) -> Tuple[Polygon3D, ...]:
     """Return the six outward-oriented faces of the single-zone test cell."""
 
     return (
@@ -211,9 +209,7 @@ def validate_cell_geometry(
     window_height = float(manifest.value("south_window_height_m"))
     expected_window_area = window_width * window_height
     south = [
-        surface
-        for surface in model.surfaces
-        if surface.identifier.endswith("WALL_SOUTH")
+        surface for surface in model.surfaces if surface.identifier.endswith("WALL_SOUTH")
     ]
     windows = tuple(south[0].openings) if len(south) == 1 else ()
     checks = {
@@ -242,8 +238,7 @@ def validate_cell_geometry(
         )
         and all(opening.construction_parameter for opening in model.openings),
         "floor_is_ground_decoupled": any(
-            surface.surface_type == SurfaceType.RAISED_FLOOR
-            for surface in model.surfaces
+            surface.surface_type == SurfaceType.RAISED_FLOOR for surface in model.surfaces
         ),
     }
     return CellGeometryValidation(

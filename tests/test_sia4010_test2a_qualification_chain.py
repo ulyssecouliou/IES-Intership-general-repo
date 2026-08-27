@@ -22,7 +22,6 @@ from swiss_sia.reference_model.sia4010.test2a_qualification_chain import (
     run_test2a_qualification_chain,
 )
 
-
 ROOT = Path(__file__).resolve().parents[1]
 WORK_ROOT = ROOT / ".codex_tmp" / "t2a_chain"
 SCENARIO_FILENAME = "sia_model_scenario.json"
@@ -32,9 +31,7 @@ class Test2AQualificationChainTests(unittest.TestCase):
     """Only verified narrow probe reports may advance the chain."""
 
     def setUp(self):
-        short_name = hashlib.sha256(
-            self._testMethodName.encode("utf-8")
-        ).hexdigest()[:10]
+        short_name = hashlib.sha256(self._testMethodName.encode("utf-8")).hexdigest()[:10]
         self.project_path = WORK_ROOT / short_name
         if self.project_path.exists():
             shutil.rmtree(self.project_path)
@@ -49,7 +46,7 @@ class Test2AQualificationChainTests(unittest.TestCase):
         if self.project_path.exists():
             shutil.rmtree(self.project_path)
 
-    def _write_report(self, name, status, scope="", claim=False):
+    def _write_report(self, name, status, scope="", claim=False, **extra):
         path = self.project_path / "reports" / name
         path.parent.mkdir(parents=True, exist_ok=True)
         payload = {
@@ -58,6 +55,7 @@ class Test2AQualificationChainTests(unittest.TestCase):
         }
         if scope:
             payload["mutation_scope"] = scope
+        payload.update(extra)
         path.write_text(json.dumps(payload) + "\n", encoding="utf-8")
         digest = hashlib.sha256(path.read_bytes()).hexdigest()
         path.with_suffix(path.suffix + ".sha256").write_text(
@@ -90,9 +88,7 @@ class Test2AQualificationChainTests(unittest.TestCase):
 
     def _profiles(self):
         self.calls.append("profiles")
-        return self._write_report(
-            "profiles.json", "PASS", "PROJECT_PROFILES_ONLY"
-        )
+        return self._write_report("profiles.json", "PASS", "PROJECT_PROFILES_ONLY")
 
     def _shading(self):
         self.calls.append("shading")
@@ -141,8 +137,7 @@ class Test2AQualificationChainTests(unittest.TestCase):
                     "status": "PASS",
                     "compliance_claim_allowed": False,
                     "mutation_scope": (
-                        "ONE_OPENING_TRANSIENT_ASSIGNMENT_WITH_VERIFIED_"
-                        "RESTORATION"
+                        "ONE_OPENING_TRANSIENT_ASSIGNMENT_WITH_VERIFIED_" "RESTORATION"
                     ),
                     "candidate_assignment_readback_verified": True,
                     "original_assignment_restored": True,
@@ -166,9 +161,7 @@ class Test2AQualificationChainTests(unittest.TestCase):
                 {
                     "status": "PASS",
                     "compliance_claim_allowed": False,
-                    "mutation_scope": (
-                        "ONE_UNASSIGNED_GLAZED_CDB_LAYER_RESISTANCE"
-                    ),
+                    "mutation_scope": ("ONE_UNASSIGNED_GLAZED_CDB_LAYER_RESISTANCE"),
                     "base_glazing_thermal_storage_qualified": True,
                     "manufacturer_layer_build_up_qualified": False,
                     "combined_glazing_awning_u_qualified": False,
@@ -260,6 +253,27 @@ class Test2AQualificationChainTests(unittest.TestCase):
                 label="unsafe stage",
                 expected_status="PASS",
             )
+
+    def test_status_failure_exposes_all_runtime_blockers_and_next_action(self):
+        report = self._write_report(
+            "blocked.json",
+            "NATIVE_PROFILE_GRAPH_REQUIRED",
+            technical_blockers=[
+                "NO_OPENING_PROXY_AVAILABLE_FOR_READBACK",
+                "SIA2024_NATIVE_VE_PROFILE_GRAPH_NOT_SUPPLIED",
+            ],
+            next_action="Import the prepared geometry and bind the calendar.",
+        )
+        with self.assertRaises(Test2AQualificationBlocked) as captured:
+            _report_evidence(
+                report,
+                label="read_only_runtime_capability",
+                expected_status=READY_STATUS,
+            )
+        message = str(captured.exception)
+        self.assertIn("NO_OPENING_PROXY_AVAILABLE_FOR_READBACK", message)
+        self.assertIn("SIA2024_NATIVE_VE_PROFILE_GRAPH_NOT_SUPPLIED", message)
+        self.assertIn("Import the prepared geometry", message)
 
     def test_second_chain_in_same_project_is_rejected(self):
         run_test2a_qualification_chain(

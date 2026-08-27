@@ -3,7 +3,6 @@
 import unittest
 from pathlib import Path
 
-from swiss_sia.reference_model.exceptions import ConfigurationError
 from swiss_sia.reference_model.sia4010.expected_results import ExpectedResult
 from swiss_sia.reference_model.sia4010.qualified_aps import (
     QualifiedApsBindings,
@@ -11,7 +10,6 @@ from swiss_sia.reference_model.sia4010.qualified_aps import (
     _hourly_average_watts,
     _hourly_energy_kwh,
 )
-
 
 ROOT = Path(__file__).resolve().parents[1]
 BINDINGS = ROOT / "config" / "sia4010_aps_bindings_ve_runtime.json"
@@ -110,9 +108,7 @@ class QualifiedApsTests(unittest.TestCase):
     def test_half_hour_power_aggregates_to_hourly_energy_and_mean_power(self):
         self.assertEqual(_hourly_energy_kwh([1.0, 3.0], 2.0), (2.0,))
         self.assertEqual(_hourly_average_watts([1.0, 3.0], 2.0), (2000.0,))
-        hourly = self.extractor.hourly_power_watts(
-            "total_room_solar_heat_gain_power"
-        )
+        hourly = self.extractor.hourly_power_watts("total_room_solar_heat_gain_power")
         self.assertEqual(len(hourly), 8760)
         self.assertEqual(hourly[0], 200.0)
 
@@ -178,10 +174,13 @@ class QualifiedApsTests(unittest.TestCase):
         evidence = self.extractor.series_evidence(
             ("room_air_temperature", "operative_temperature")
         )
-        self.assertEqual(set(evidence), {
-            "room_air_temperature",
-            "operative_temperature",
-        })
+        self.assertEqual(
+            set(evidence),
+            {
+                "room_air_temperature",
+                "operative_temperature",
+            },
+        )
         self.assertEqual(evidence["room_air_temperature"]["count"], 17520)
         self.assertEqual(evidence["room_air_temperature"]["unit"], "°C")
         self.assertEqual(evidence["operative_temperature"]["mean"], 22.0)
@@ -196,9 +195,7 @@ class QualifiedApsTests(unittest.TestCase):
             return payload
 
         results.get_units = wrong_units
-        extractor = Sia4010QualifiedApsExtractor(
-            results, "R1", self.bindings, "case.aps"
-        )
+        extractor = Sia4010QualifiedApsExtractor(results, "R1", self.bindings, "case.aps")
         self.assertEqual(extractor.power_series("sensible_heating_power"), ())
 
 

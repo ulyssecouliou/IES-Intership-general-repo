@@ -119,7 +119,9 @@ _SIA2024_JSON_PATH: str = os.path.normpath(
     os.path.join(
         os.path.dirname(os.path.abspath(__file__)),
         "..",
-        "refs", "reference-data", "sia-2024-2021.usage-data.json",
+        "refs",
+        "reference-data",
+        "sia-2024-2021.usage-data.json",
     )
 )
 
@@ -135,12 +137,12 @@ _SIA2024_SOURCE: str = (
 # IMPORTANT: col30 (theta_i_mean, operational setpoint) is used, never
 # col28 (theta_i_design) — see norm-analyst note.
 _SIA2024_USAGE_SYMBOLS: Tuple[Tuple[str, str, str], ...] = (
-    ("theta_i_mean", "30", "°C"),   # Operational setpoint (col30 — NOT col28)
-    ("phi_i",        "34", "%"),    # Relative humidity
-    ("A_p",          "42", "m²"),   # Floor area per person
-    ("M",            "43", "met"),  # Metabolic activity
-    ("p_Be",         "51", "W/m2"), # Electrical equipment power
-    ("E_vm",         "64", "lx"),   # Mean illuminance
+    ("theta_i_mean", "30", "°C"),  # Operational setpoint (col30 — NOT col28)
+    ("phi_i", "34", "%"),  # Relative humidity
+    ("A_p", "42", "m²"),  # Floor area per person
+    ("M", "43", "met"),  # Metabolic activity
+    ("p_Be", "51", "W/m2"),  # Electrical equipment power
+    ("E_vm", "64", "lx"),  # Mean illuminance
 )
 
 # Module-level cache: loaded on the first call to _load_sia2024_usage_data.
@@ -240,7 +242,9 @@ def _construction_scope(construction_ids: Any, fallback: str) -> str:
     """Return a stable construction label used to group substitutions."""
 
     if isinstance(construction_ids, (list, tuple, set)):
-        labels = sorted(str(item).strip() for item in construction_ids if str(item).strip())
+        labels = sorted(
+            str(item).strip() for item in construction_ids if str(item).strip()
+        )
         if labels:
             return ", ".join(labels)
     text = str(construction_ids or "").strip()
@@ -280,9 +284,11 @@ def _comparable_g_perp(opening: Any) -> Optional[float]:
         return None
     # Prefer the value the component check compares (solar_factor); fall back to
     # the explicit EN 410 field when the solar factor is not populated.
-    return _float_or_none(getattr(opening, "solar_factor", None)) if getattr(
-        opening, "solar_factor", None
-    ) is not None else en410_value
+    return (
+        _float_or_none(getattr(opening, "solar_factor", None))
+        if getattr(opening, "solar_factor", None) is not None
+        else en410_value
+    )
 
 
 def _collect_surface_substitutions(
@@ -344,7 +350,9 @@ def _collect_surface_substitutions(
                 source=_source(_SURFACE_SOURCE_KEY),
                 status=status,
                 affected_elements=entry["count"],
-                reference_target_value=_float_or_none(SIA3802_TARGET_VALUES.get(parameter)),
+                reference_target_value=_float_or_none(
+                    SIA3802_TARGET_VALUES.get(parameter)
+                ),
             )
         )
     for scope, count in sorted(unclassified.items()):
@@ -440,7 +448,9 @@ def _collect_opening_substitutions(
                 source=_source(_OPENING_SOURCE_KEY),
                 status=status,
                 affected_elements=entry["count"],
-                reference_target_value=_float_or_none(SIA3802_TARGET_VALUES.get(parameter)),
+                reference_target_value=_float_or_none(
+                    SIA3802_TARGET_VALUES.get(parameter)
+                ),
             )
         )
     return substitutions, blockers
@@ -494,7 +504,9 @@ def _collect_infiltration_substitution(
         source=_source(_INFILTRATION_SOURCE_KEY),
         status=status,
         affected_elements=len(values) + unit_incomparable,
-        reference_target_value=_float_or_none(SIA3802_TARGET_VALUES.get(_INFILTRATION_PARAMETER)),
+        reference_target_value=_float_or_none(
+            SIA3802_TARGET_VALUES.get(_INFILTRATION_PARAMETER)
+        ),
     )
     return [substitution], blockers
 
@@ -576,40 +588,74 @@ def _collect_generation_substitutions(
         for system in getattr(room, "hvac_systems", None) or []:
             if not isinstance(system, dict):
                 continue
-            scope = str(system.get("id") or system.get("name") or "system").strip() or "system"
+            scope = (
+                str(system.get("id") or system.get("name") or "system").strip()
+                or "system"
+            )
 
             # Cooling generation (Table 5 air chiller below the water threshold).
             cooling_capacity = _float_or_none(system.get("cooling_capacity_kw"))
             cooling_eer = _float_or_none(system.get("eer"))
-            if (cooling_capacity is not None or cooling_eer is not None) and ("cooling", scope) not in seen:
+            if (cooling_capacity is not None or cooling_eer is not None) and (
+                "cooling",
+                scope,
+            ) not in seen:
                 seen.add(("cooling", scope))
                 if cooling_capacity is None:
-                    substitutions.append(_generation_substitution(
-                        "cooling_generation_eer", scope, "cooling_generator", "EER",
-                        "cooling_air_chiller", None, cooling_eer))
+                    substitutions.append(
+                        _generation_substitution(
+                            "cooling_generation_eer",
+                            scope,
+                            "cooling_generator",
+                            "EER",
+                            "cooling_air_chiller",
+                            None,
+                            cooling_eer,
+                        )
+                    )
                     blockers.append(
                         "No cooling capacity to select the SIA 380/2 reference "
-                        "chiller band for {}".format(scope))
+                        "chiller band for {}".format(scope)
+                    )
                 elif cooling_capacity >= SIA3802_COOLING_AIR_CHILLER_MAX_KW:
-                    substitutions.append(_generation_substitution(
-                        "cooling_generation_eer", scope, "cooling_generator", "EER",
-                        "cooling_air_chiller", None, cooling_eer))
+                    substitutions.append(
+                        _generation_substitution(
+                            "cooling_generation_eer",
+                            scope,
+                            "cooling_generator",
+                            "EER",
+                            "cooling_air_chiller",
+                            None,
+                            cooling_eer,
+                        )
+                    )
                     blockers.append(
                         "Cooling >= {:.0f} kW for {} references the Table 7 EER+ "
                         "metric (net of post-cooling), which the VE EER does not "
                         "expose; not auto-comparable".format(
-                            SIA3802_COOLING_AIR_CHILLER_MAX_KW, scope))
+                            SIA3802_COOLING_AIR_CHILLER_MAX_KW, scope
+                        )
+                    )
                 else:
                     band = _reference_band("cooling_air_chiller", cooling_capacity)
                     reference = band["limit"] if band else None
-                    substitutions.append(_generation_substitution(
-                        "cooling_generation_eer", scope, "cooling_generator", "EER",
-                        "cooling_air_chiller", reference, cooling_eer,
-                        reference_target_value=band["target"] if band else None))
+                    substitutions.append(
+                        _generation_substitution(
+                            "cooling_generation_eer",
+                            scope,
+                            "cooling_generator",
+                            "EER",
+                            "cooling_air_chiller",
+                            reference,
+                            cooling_eer,
+                            reference_target_value=band["target"] if band else None,
+                        )
+                    )
                     if cooling_eer is None:
                         blockers.append(
                             "No project EER could be extracted for cooling "
-                            "generator {}".format(scope))
+                            "generator {}".format(scope)
+                        )
 
             # Heating generation (Table 8 air-water heat pump, the limit case).
             heating_capacity = _float_or_none(system.get("heating_capacity_kw"))
@@ -618,9 +664,14 @@ def _collect_generation_substitutions(
             # comparable figure when the project generator is itself a heat pump.
             # A boiler / district-heat efficiency (e.g. 0.80) is NOT a SCOP, so it
             # must never be compared to the reference heat-pump SCOP.
-            is_project_heat_pump = bool(str(system.get("heating_generator_class") or "").strip())
+            is_project_heat_pump = bool(
+                str(system.get("heating_generator_class") or "").strip()
+            )
             comparable_scop = heating_scop if is_project_heat_pump else None
-            if (heating_capacity is not None or heating_scop is not None) and ("heating", scope) not in seen:
+            if (heating_capacity is not None or heating_scop is not None) and (
+                "heating",
+                scope,
+            ) not in seen:
                 seen.add(("heating", scope))
                 band = (
                     _reference_band("heating_air_water_hp", heating_capacity)
@@ -637,29 +688,44 @@ def _collect_generation_substitutions(
                     if heating_capacity is not None
                     else None
                 )
-                substitutions.append(_generation_substitution(
-                    "heating_generation_scop", scope, "heating_generator", "SCOP",
-                    "heating_air_water_hp", reference, comparable_scop,
-                    reference_target_value=target_band["target"] if target_band else None))
+                substitutions.append(
+                    _generation_substitution(
+                        "heating_generation_scop",
+                        scope,
+                        "heating_generator",
+                        "SCOP",
+                        "heating_air_water_hp",
+                        reference,
+                        comparable_scop,
+                        reference_target_value=(
+                            target_band["target"] if target_band else None
+                        ),
+                    )
+                )
                 if heating_capacity is None:
                     blockers.append(
                         "No heating capacity to select the SIA 380/2 reference "
-                        "heat-pump band for {}".format(scope))
+                        "heat-pump band for {}".format(scope)
+                    )
                 elif reference is None:
                     blockers.append(
                         "Heating > {:.0f} kW for {}: the SIA 380/2 air-water heat "
                         "pump limit table (Table 8) is not tabulated above that "
-                        "power".format(150.0, scope))
+                        "power".format(150.0, scope)
+                    )
                 elif heating_scop is not None and not is_project_heat_pump:
                     blockers.append(
                         "Heating generator {} is not a heat pump (value {:.2f} is a "
                         "boiler/district efficiency, not a SCOP); the reference heat-"
-                        "pump SCOP applies but the project value is not comparable"
-                        .format(scope, heating_scop))
+                        "pump SCOP applies but the project value is not comparable".format(
+                            scope, heating_scop
+                        )
+                    )
                 elif comparable_scop is None:
                     blockers.append(
                         "No project SCOP could be extracted for heating generator "
-                        "{}".format(scope))
+                        "{}".format(scope)
+                    )
 
     return substitutions, blockers
 
@@ -679,8 +745,12 @@ def _collect_ventilation_substitutions(
     not U_ahu.
     """
 
-    reference = _float_or_none(SIA3802_LIMIT_VALUES.get("heat_recovery_temperature_efficiency"))
-    target = _float_or_none(SIA3802_TARGET_VALUES.get("heat_recovery_temperature_efficiency"))
+    reference = _float_or_none(
+        SIA3802_LIMIT_VALUES.get("heat_recovery_temperature_efficiency")
+    )
+    target = _float_or_none(
+        SIA3802_TARGET_VALUES.get("heat_recovery_temperature_efficiency")
+    )
     source = _source(_OPENING_SOURCE_KEY) + (
         " [NCM seasonal HR efficiency vs SIA eta_rec,theta - index equivalence TO VERIFY]"
     )
@@ -690,7 +760,10 @@ def _collect_ventilation_substitutions(
         for system in getattr(room, "hvac_systems", None) or []:
             if not isinstance(system, dict):
                 continue
-            scope = str(system.get("id") or system.get("name") or "system").strip() or "system"
+            scope = (
+                str(system.get("id") or system.get("name") or "system").strip()
+                or "system"
+            )
             if scope in seen:
                 continue
             eta = _float_or_none(system.get("heat_recovery_efficiency"))
@@ -699,18 +772,22 @@ def _collect_ventilation_substitutions(
                 # substitute; skipped rather than substituted with a guess.
                 continue
             seen.add(scope)
-            substitutions.append(ReferenceSubstitution(
-                parameter="ventilation_heat_recovery_efficiency",
-                scope=scope,
-                element_type="ventilation",
-                project_value=eta,
-                reference_value=reference,
-                unit="-",
-                source=source,
-                status=SUBSTITUTABLE if reference is not None else PROJECT_VALUE_MISSING,
-                affected_elements=1,
-                reference_target_value=target,
-            ))
+            substitutions.append(
+                ReferenceSubstitution(
+                    parameter="ventilation_heat_recovery_efficiency",
+                    scope=scope,
+                    element_type="ventilation",
+                    project_value=eta,
+                    reference_value=reference,
+                    unit="-",
+                    source=source,
+                    status=(
+                        SUBSTITUTABLE if reference is not None else PROJECT_VALUE_MISSING
+                    ),
+                    affected_elements=1,
+                    reference_target_value=target,
+                )
+            )
     return substitutions, []
 
 
@@ -846,7 +923,7 @@ def _collect_usage_standard_inputs(
     if unresolved_count:
         blockers.append(
             "SIA 2024 usage not resolved for {} room(s): set sia2024_category "
-            "to a valid SIA 2024 code (e.g. \"1.01\") before building the "
+            'to a valid SIA 2024 code (e.g. "1.01") before building the '
             "reference project.".format(unresolved_count)
         )
 
@@ -880,7 +957,9 @@ def build_reference_project_specification(
             missing_input_families=MISSING_REFERENCE_INPUT_FAMILIES,
         )
 
-    surface_items, surface_blockers = _collect_surface_substitutions(rooms, model_analyzer)
+    surface_items, surface_blockers = _collect_surface_substitutions(
+        rooms, model_analyzer
+    )
     opening_items, opening_blockers = _collect_opening_substitutions(rooms)
     infiltration_items, infiltration_blockers = _collect_infiltration_substitution(rooms)
     generation_items, generation_blockers = _collect_generation_substitutions(rooms)
@@ -889,12 +968,21 @@ def build_reference_project_specification(
     # SIA 380/2:2022 §7.2.5.3: SIA 2024 setpoints and gains identical project/reference.
     usage_items, usage_blockers = _collect_usage_standard_inputs(rooms)
     substitutions = tuple(
-        surface_items + opening_items + infiltration_items + generation_items
-        + ventilation_items + directive_items + usage_items
+        surface_items
+        + opening_items
+        + infiltration_items
+        + generation_items
+        + ventilation_items
+        + directive_items
+        + usage_items
     )
     blockers = tuple(
-        surface_blockers + opening_blockers + infiltration_blockers
-        + generation_blockers + ventilation_blockers + usage_blockers
+        surface_blockers
+        + opening_blockers
+        + infiltration_blockers
+        + generation_blockers
+        + ventilation_blockers
+        + usage_blockers
     )
 
     missing_reference = [

@@ -14,14 +14,21 @@ from datetime import datetime
 from pathlib import Path
 from typing import Iterable, List
 
-
 ROOT = Path(__file__).resolve().parents[2]
 OUTPUT_DIR = ROOT / "outputs" / "release"
 PACKAGE_PREFIX = "Swiss_SIA_Compliance_MVP"
 
 INCLUDED_DIRECTORIES = (
-    "swiss_sia", "ui", "core", "engine", "ve_adapter", "assets", "data",
-    "schemas", "templates", "config",
+    "swiss_sia",
+    "ui",
+    "core",
+    "engine",
+    "ve_adapter",
+    "assets",
+    "data",
+    "schemas",
+    "templates",
+    "config",
 )
 INCLUDED_DOCS = (
     "docs/user/WORKFLOW_CLIENT_SIA3802_FR.md",
@@ -64,25 +71,33 @@ def build() -> Path:
     files = list(_files())
     for path in files:
         payload = path.read_bytes()
-        entries.append({
-            "path": path.relative_to(ROOT).as_posix(),
-            "size_bytes": len(payload),
-            "sha256": hashlib.sha256(payload).hexdigest(),
-        })
+        entries.append(
+            {
+                "path": path.relative_to(ROOT).as_posix(),
+                "size_bytes": len(payload),
+                "sha256": hashlib.sha256(payload).hexdigest(),
+            }
+        )
     manifest = {
         "product": "Swiss SIA Compliance Checker",
         "scope": "MVP readiness/audit tooling; not an SIA certificate",
         "generated_at": datetime.now().isoformat(timespec="seconds"),
         "file_count": len(entries),
         "excluded": [
-            "client evidence and reports", "licensed standards", "local company_profile.json",
-            "test outputs and caches", ".git metadata",
+            "client evidence and reports",
+            "licensed standards",
+            "local company_profile.json",
+            "test outputs and caches",
+            ".git metadata",
         ],
         "files": entries,
     }
     temporary = target.with_suffix(".zip.tmp")
     with zipfile.ZipFile(temporary, "w", compression=zipfile.ZIP_DEFLATED) as archive:
-        archive.writestr("DELIVERY_MANIFEST.json", json.dumps(manifest, indent=2, ensure_ascii=False) + "\n")
+        archive.writestr(
+            "DELIVERY_MANIFEST.json",
+            json.dumps(manifest, indent=2, ensure_ascii=False) + "\n",
+        )
         for path in files:
             archive.write(path, path.relative_to(ROOT).as_posix())
     temporary.replace(target)

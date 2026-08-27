@@ -147,9 +147,9 @@
       "source_locator": "Table 2, thermal bridges, licensed PDF page 32"
     },
     "weather_file": {
-      "value": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SMA_2035_RCP85_DRY.epw",
-      "source": "Client-provided Swiss future-weather dataset",
-      "source_locator": "EPW LOCATION header and local file SHA-256 to be captured in the run report"
+      "value": null,
+      "source": "Reviewer-selected weather copied into the active VE project",
+      "source_locator": "Project-local EPW selected by the setup workflow; LOCATION header and SHA-256 recorded in the run receipt"
     },
     "weather_station": {
       "value": "Zurich Fluntern",

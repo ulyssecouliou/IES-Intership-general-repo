@@ -46,7 +46,6 @@ import os
 
 from engine import scatter_band
 
-
 _ICI = os.path.dirname(os.path.abspath(__file__))
 _RACINE = os.path.abspath(os.path.join(_ICI, os.pardir))
 
@@ -60,13 +59,14 @@ TOLERANCE_DEFAUT = 1e-6
 
 #: Default status: the criterion is not written in the specification; it is
 #: recovered from the workbook formulas. Applies to tests 4 and 6.
-STATUT_CRITERE = 'INFERE'
+STATUT_CRITERE = "INFERE"
 JUSTIFICATION_CRITERE = (
     "La specification de ce test n'enonce aucun critere ; SIA 4010:2023 "
     "clause 4.4 delegue la comparaison au classeur d'evaluation, qui porte "
-    "les bandes. A confirmer par la sous-commission (clause 4.6.2).")
+    "les bandes. A confirmer par la sous-commission (clause 4.6.2)."
+)
 
-STATUT_CRITERE_ENONCE = 'ENONCE_DANS_LA_SPEC'
+STATUT_CRITERE_ENONCE = "ENONCE_DANS_LA_SPEC"
 
 #: CORRECTED on 2026-08-07, after re-reading the official specifications.
 #:
@@ -80,18 +80,24 @@ STATUT_CRITERE_ENONCE = 'ENONCE_DANS_LA_SPEC'
 #: Tests 4 and 6 have no "Testkriterien" section: for them the
 #: INFERE status remains correct.
 CRITERE_PAR_TEST = {
-    2: (STATUT_CRITERE_ENONCE,
-        u'Spezifikation_Test2.pdf, Testkriterien : « Jahressumme der solaren '
-        u'Waermeeintraege oder der total transmittierten Strahlung : '
-        u'Mittelwert der Referenzprogramme +/- maximale Abweichung ». La '
-        u'formule appliquee ici est celle-la.'),
-    3: (STATUT_CRITERE_ENONCE,
-        u'Spezifikation_Test3.pdf, Testkriterien : « Jahressumme : Mittelwert '
-        u'+/- max. Abweichung der Referenzprogramme ».'),
-    5: (STATUT_CRITERE_ENONCE,
-        u'Spezifikation_Test5.pdf, Testkriterien : « Zulaessiger Bereich fuer '
-        u'Jahressummen : Mittelwerte der Referenzprogramme +/- maximale '
-        u'Abweichung ».'),
+    2: (
+        STATUT_CRITERE_ENONCE,
+        "Spezifikation_Test2.pdf, Testkriterien : « Jahressumme der solaren "
+        "Waermeeintraege oder der total transmittierten Strahlung : "
+        "Mittelwert der Referenzprogramme +/- maximale Abweichung ». La "
+        "formule appliquee ici est celle-la.",
+    ),
+    3: (
+        STATUT_CRITERE_ENONCE,
+        "Spezifikation_Test3.pdf, Testkriterien : « Jahressumme : Mittelwert "
+        "+/- max. Abweichung der Referenzprogramme ».",
+    ),
+    5: (
+        STATUT_CRITERE_ENONCE,
+        "Spezifikation_Test5.pdf, Testkriterien : « Zulaessiger Bereich fuer "
+        "Jahressummen : Mittelwerte der Referenzprogramme +/- maximale "
+        "Abweichung ».",
+    ),
 }
 
 
@@ -104,8 +110,7 @@ def critere_du_test(numero_test):
     Returns:
         tuple[str, str]: Status and justification.
     """
-    return CRITERE_PAR_TEST.get(
-        numero_test, (STATUT_CRITERE, JUSTIFICATION_CRITERE))
+    return CRITERE_PAR_TEST.get(numero_test, (STATUT_CRITERE, JUSTIFICATION_CRITERE))
 
 
 def chemin_reference(numero_test):
@@ -117,8 +122,9 @@ def chemin_reference(numero_test):
     Returns:
         str: Absolute path of the JSON file.
     """
-    return os.path.join(_RACINE, 'refs', 'reference-data',
-                        'test-%d.ref.json' % numero_test)
+    return os.path.join(
+        _RACINE, "refs", "reference-data", "test-%d.ref.json" % numero_test
+    )
 
 
 def charger_reference(numero_test, chemin=None):
@@ -136,10 +142,11 @@ def charger_reference(numero_test, chemin=None):
     """
     if numero_test not in TESTS_SUPPORTES:
         raise ValueError(
-            'test %r hors de portee de ce moteur ; supportes : %s. Le Test 7 '
-            'a sa propre forme de reference et son propre moteur.'
-            % (numero_test, list(TESTS_SUPPORTES)))
-    with io.open(chemin or chemin_reference(numero_test), encoding='utf-8') as f:
+            "test %r hors de portee de ce moteur ; supportes : %s. Le Test 7 "
+            "a sa propre forme de reference et son propre moteur."
+            % (numero_test, list(TESTS_SUPPORTES))
+        )
+    with io.open(chemin or chemin_reference(numero_test), encoding="utf-8") as f:
         return json.load(f)
 
 
@@ -155,21 +162,22 @@ def valeurs_contributrices(cas):
     Returns:
         list[float]: Values, in workbook order.
     """
-    par_colonne = cas['par_colonne']
+    par_colonne = cas["par_colonne"]
     valeurs = []
-    for lettre in cas['contributeurs']:
+    for lettre in cas["contributeurs"]:
         entree = par_colonne.get(lettre)
-        if entree is not None and entree.get('valeur') is not None:
-            valeurs.append(float(entree['valeur']))
+        if entree is not None and entree.get("valeur") is not None:
+            valeurs.append(float(entree["valeur"]))
     return valeurs
 
 
 def _cle(texte):
-    return ('%s' % texte).strip().lower()
+    return ("%s" % texte).strip().lower()
 
 
-def evaluer_cas(cas, valeur_candidate, tolerance=TOLERANCE_DEFAUT,
-                critere_statut=STATUT_CRITERE):
+def evaluer_cas(
+    cas, valeur_candidate, tolerance=TOLERANCE_DEFAUT, critere_statut=STATUT_CRITERE
+):
     """Verdict for a case: does the candidate fall inside the dispersion band?
 
     Args:
@@ -182,32 +190,43 @@ def evaluer_cas(cas, valeur_candidate, tolerance=TOLERANCE_DEFAUT,
     """
     contributions = valeurs_contributrices(cas)
     statut = scatter_band.verdict(
-        valeur_candidate, contributions,
-        floor_at_zero=cas['plancher_a_zero'], tolerance=tolerance)
+        valeur_candidate,
+        contributions,
+        floor_at_zero=cas["plancher_a_zero"],
+        tolerance=tolerance,
+    )
 
     ecart = None
-    if valeur_candidate is not None and cas.get('moyenne') is not None:
-        ecart = float(valeur_candidate) - cas['moyenne']
+    if valeur_candidate is not None and cas.get("moyenne") is not None:
+        ecart = float(valeur_candidate) - cas["moyenne"]
 
     return {
-        'cas': cas['cas'],
-        'ligne_classeur': cas['ligne_classeur'],
-        'candidat': valeur_candidate,
-        'moyenne': cas['moyenne'],
-        'borne_basse': cas['borne_basse'],
-        'borne_haute': cas['borne_haute'],
-        'plancher_a_zero': cas['plancher_a_zero'],
-        'contributeurs': cas['contributeurs'],
-        'programmes': [cas['par_colonne'][l].get('programme')
-                       for l in cas['contributeurs'] if l in cas['par_colonne']],
-        'variantes': [cas['par_colonne'][l].get('variante')
-                      for l in cas['contributeurs'] if l in cas['par_colonne']],
-        'ecart_a_la_moyenne': ecart,
-        'statut': statut,
-        'conforme': (True if scatter_band.is_passing(statut)
-                     else (False if statut == scatter_band.VERDICT_FAIL
-                           else None)),
-        'critere_statut': critere_statut,
+        "cas": cas["cas"],
+        "ligne_classeur": cas["ligne_classeur"],
+        "candidat": valeur_candidate,
+        "moyenne": cas["moyenne"],
+        "borne_basse": cas["borne_basse"],
+        "borne_haute": cas["borne_haute"],
+        "plancher_a_zero": cas["plancher_a_zero"],
+        "contributeurs": cas["contributeurs"],
+        "programmes": [
+            cas["par_colonne"][contributor].get("programme")
+            for contributor in cas["contributeurs"]
+            if contributor in cas["par_colonne"]
+        ],
+        "variantes": [
+            cas["par_colonne"][contributor].get("variante")
+            for contributor in cas["contributeurs"]
+            if contributor in cas["par_colonne"]
+        ],
+        "ecart_a_la_moyenne": ecart,
+        "statut": statut,
+        "conforme": (
+            True
+            if scatter_band.is_passing(statut)
+            else (False if statut == scatter_band.VERDICT_FAIL else None)
+        ),
+        "critere_statut": critere_statut,
     }
 
 
@@ -246,35 +265,40 @@ def evaluer(reference, candidat=None, tolerance=TOLERANCE_DEFAUT):
     """
     index = _index_candidat(candidat)
     attendues = set()
-    statut_critere, justification_critere = critere_du_test(reference['test'])
+    statut_critere, justification_critere = critere_du_test(reference["test"])
 
     grandeurs = []
-    for grandeur in reference['grandeurs']:
-        libelle = grandeur['libelle_de']
+    for grandeur in reference["grandeurs"]:
+        libelle = grandeur["libelle_de"]
         lignes = []
-        for cas in grandeur['cas']:
-            cle = (_cle(libelle), _cle(cas['cas']))
+        for cas in grandeur["cas"]:
+            cle = (_cle(libelle), _cle(cas["cas"]))
             attendues.add(cle)
-            lignes.append(evaluer_cas(cas, index.get(cle), tolerance,
-                                      statut_critere))
-        grandeurs.append({
-            'libelle': libelle,
-            'unite': grandeur.get('unite'),
-            'cas': lignes,
-        })
+            lignes.append(evaluer_cas(cas, index.get(cle), tolerance, statut_critere))
+        grandeurs.append(
+            {
+                "libelle": libelle,
+                "unite": grandeur.get("unite"),
+                "cas": lignes,
+            }
+        )
 
     # Keys supplied but matched to nothing: almost always a typo on the
     # adapter side. Does not affect the verdict, but must be displayed.
     ignorees = sorted(
-        '%s / %s' % (g, c)
+        "%s / %s" % (g, c)
         for (g, c) in _index_candidat(candidat)
-        if (g, c) not in attendues)
+        if (g, c) not in attendues
+    )
 
-    toutes = [ligne for g in grandeurs for ligne in g['cas']]
-    echecs = [l for l in toutes if l['conforme'] is False]
-    inconnues = [l for l in toutes if l['conforme'] is None]
-    reserves = [l for l in toutes
-                if l['statut'] == scatter_band.VERDICT_PASS_WITH_RESERVATION]
+    toutes = [ligne for g in grandeurs for ligne in g["cas"]]
+    echecs = [row for row in toutes if row["conforme"] is False]
+    inconnues = [row for row in toutes if row["conforme"] is None]
+    reserves = [
+        row
+        for row in toutes
+        if row["statut"] == scatter_band.VERDICT_PASS_WITH_RESERVATION
+    ]
 
     if echecs:
         verdict = scatter_band.VERDICT_FAIL
@@ -286,20 +310,20 @@ def evaluer(reference, candidat=None, tolerance=TOLERANCE_DEFAUT):
         verdict = scatter_band.VERDICT_PASS
 
     return {
-        'test': reference['test'],
-        'classes_concernees': list(reference.get('classes_concernees', [])),
-        'critere': {
-            'statut': statut_critere,
-            'justification': justification_critere,
-            'formule': reference['critere']['formule'],
+        "test": reference["test"],
+        "classes_concernees": list(reference.get("classes_concernees", [])),
+        "critere": {
+            "statut": statut_critere,
+            "justification": justification_critere,
+            "formule": reference["critere"]["formule"],
         },
-        'grandeurs': grandeurs,
-        'nb_bandes': len(toutes),
-        'nb_echecs': len(echecs),
-        'nb_non_evaluables': len(inconnues),
-        'nb_reserves': len(reserves),
-        'cles_candidat_ignorees': ignorees,
-        'verdict': verdict,
+        "grandeurs": grandeurs,
+        "nb_bandes": len(toutes),
+        "nb_echecs": len(echecs),
+        "nb_non_evaluables": len(inconnues),
+        "nb_reserves": len(reserves),
+        "cles_candidat_ignorees": ignorees,
+        "verdict": verdict,
     }
 
 
@@ -312,22 +336,32 @@ def resumer(resultat):
     Returns:
         str: Multi-line summary.
     """
-    lignes = ['Test %s -- classes %s' % (resultat['test'],
-                                         ', '.join(resultat['classes_concernees'])),
-              'critere : %s (%s)' % (resultat['critere']['formule'],
-                                     resultat['critere']['statut']),
-              '']
-    for grandeur in resultat['grandeurs']:
-        lignes.append('%s [%s]' % (grandeur['libelle'], grandeur['unite']))
-        for cas in grandeur['cas']:
-            candidat = '--' if cas['candidat'] is None else '%.1f' % cas['candidat']
-            lignes.append('  %-12s %10s  (%9.1f ... %9.1f)  %s'
-                          % (cas['cas'], candidat, cas['borne_basse'],
-                             cas['borne_haute'], cas['statut']))
-        lignes.append('')
-    lignes.append('verdict : %s  (%d echec(s), %d non evaluable(s))'
-                  % (resultat['verdict'], resultat['nb_echecs'],
-                     resultat['nb_non_evaluables']))
-    for ignoree in resultat['cles_candidat_ignorees']:
-        lignes.append('IGNOREE %s : ne correspond a aucune bande' % ignoree)
-    return '\n'.join(lignes)
+    lignes = [
+        "Test %s -- classes %s"
+        % (resultat["test"], ", ".join(resultat["classes_concernees"])),
+        "critere : %s (%s)"
+        % (resultat["critere"]["formule"], resultat["critere"]["statut"]),
+        "",
+    ]
+    for grandeur in resultat["grandeurs"]:
+        lignes.append("%s [%s]" % (grandeur["libelle"], grandeur["unite"]))
+        for cas in grandeur["cas"]:
+            candidat = "--" if cas["candidat"] is None else "%.1f" % cas["candidat"]
+            lignes.append(
+                "  %-12s %10s  (%9.1f ... %9.1f)  %s"
+                % (
+                    cas["cas"],
+                    candidat,
+                    cas["borne_basse"],
+                    cas["borne_haute"],
+                    cas["statut"],
+                )
+            )
+        lignes.append("")
+    lignes.append(
+        "verdict : %s  (%d echec(s), %d non evaluable(s))"
+        % (resultat["verdict"], resultat["nb_echecs"], resultat["nb_non_evaluables"])
+    )
+    for ignoree in resultat["cles_candidat_ignorees"]:
+        lignes.append("IGNOREE %s : ne correspond a aucune bande" % ignoree)
+    return "\n".join(lignes)

@@ -44,10 +44,9 @@ import json
 import math
 import os
 import tempfile
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple
-
+from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 EXPECTED_HOURS = 8760
 EXPECTED_COLUMNS = 29
@@ -172,9 +171,7 @@ def _number(value: str, column: str, line_number: int) -> float:
         result = float(text)
     except ValueError as exc:
         raise SiaDryImportError(
-            "Column {} is not numeric at line {}: {!r}".format(
-                column, line_number, text
-            )
+            "Column {} is not numeric at line {}: {!r}".format(column, line_number, text)
         ) from exc
     if not math.isfinite(result):
         raise SiaDryImportError(
@@ -275,9 +272,7 @@ def parse_sia_dry_file(path: str) -> Tuple[List[SiaDryRow], Dict[str, Any]]:
                 provisional_available[name] += 1
 
         pressure_hpa = (
-            _optional_number(parts[index["prestahs"]])
-            if "prestahs" in index
-            else None
+            _optional_number(parts[index["prestahs"]]) if "prestahs" in index else None
         )
         infrared = (
             _optional_number(parts[index["ir.horizontal"]])
@@ -285,9 +280,7 @@ def parse_sia_dry_file(path: str) -> Tuple[List[SiaDryRow], Dict[str, Any]]:
             else None
         )
         sky_percent = (
-            _optional_number(parts[index["nto000sw"]])
-            if "nto000sw" in index
-            else None
+            _optional_number(parts[index["nto000sw"]]) if "nto000sw" in index else None
         )
         vertical_south = (
             _optional_number(parts[index["str.vert.S"]])
@@ -304,9 +297,7 @@ def parse_sia_dry_file(path: str) -> Tuple[List[SiaDryRow], Dict[str, Any]]:
                     parts[index["ure200h0"]], "ure200h0", line_number
                 ),
                 station_pressure_pa=(
-                    int(round(pressure_hpa * 100.0))
-                    if pressure_hpa is not None
-                    else None
+                    int(round(pressure_hpa * 100.0)) if pressure_hpa is not None else None
                 ),
                 # The dataset states hourly means in W/m2; over one hour the
                 # numeric value in Wh/m2 is identical. EPW expects Wh/m2.
@@ -314,21 +305,15 @@ def parse_sia_dry_file(path: str) -> Tuple[List[SiaDryRow], Dict[str, Any]]:
                     round(_number(parts[index["gls"]], "gls", line_number))
                 ),
                 diffuse_horizontal_wh_m2=int(
-                    round(
-                        _number(parts[index["str.diffus"]], "str.diffus", line_number)
-                    )
+                    round(_number(parts[index["str.diffus"]], "str.diffus", line_number))
                 ),
                 direct_normal_wh_m2=int(
-                    round(
-                        _number(parts[index["str.direkt"]], "str.direkt", line_number)
-                    )
+                    round(_number(parts[index["str.direkt"]], "str.direkt", line_number))
                 ),
                 horizontal_infrared_wh_m2=(
                     int(round(infrared)) if infrared is not None else None
                 ),
-                wind_speed_m_s=_number(
-                    parts[index["fkl010h0"]], "fkl010h0", line_number
-                ),
+                wind_speed_m_s=_number(parts[index["fkl010h0"]], "fkl010h0", line_number),
                 wind_direction_degrees=int(
                     round(_number(parts[index["dkl010h0"]], "dkl010h0", line_number))
                 ),
@@ -397,14 +382,18 @@ def _epw_record(row: SiaDryRow) -> List[Any]:
         round(row.dry_bulb_c, 1),
         round(row.dew_point_c, 1),
         round(row.relative_humidity_percent, 0),
-        row.station_pressure_pa
-        if row.station_pressure_pa is not None
-        else EPW_MISSING_INTEGER_LARGE,
+        (
+            row.station_pressure_pa
+            if row.station_pressure_pa is not None
+            else EPW_MISSING_INTEGER_LARGE
+        ),
         EPW_MISSING_INTEGER_LARGE,  # extraterrestrial horizontal
         EPW_MISSING_INTEGER_LARGE,  # extraterrestrial direct normal
-        row.horizontal_infrared_wh_m2
-        if row.horizontal_infrared_wh_m2 is not None
-        else EPW_MISSING_INTEGER_LARGE,
+        (
+            row.horizontal_infrared_wh_m2
+            if row.horizontal_infrared_wh_m2 is not None
+            else EPW_MISSING_INTEGER_LARGE
+        ),
         row.global_horizontal_wh_m2,
         row.direct_normal_wh_m2,
         row.diffuse_horizontal_wh_m2,
@@ -414,12 +403,16 @@ def _epw_record(row: SiaDryRow) -> List[Any]:
         EPW_MISSING_ILLUMINANCE,  # zenith luminance
         row.wind_direction_degrees,
         round(row.wind_speed_m_s, 1),
-        row.total_sky_cover_tenths
-        if row.total_sky_cover_tenths is not None
-        else EPW_MISSING_SKY_COVER,
-        row.total_sky_cover_tenths
-        if row.total_sky_cover_tenths is not None
-        else EPW_MISSING_SKY_COVER,
+        (
+            row.total_sky_cover_tenths
+            if row.total_sky_cover_tenths is not None
+            else EPW_MISSING_SKY_COVER
+        ),
+        (
+            row.total_sky_cover_tenths
+            if row.total_sky_cover_tenths is not None
+            else EPW_MISSING_SKY_COVER
+        ),
         EPW_MISSING_VISIBILITY,
         EPW_MISSING_INTEGER_LARGE,  # ceiling height
         9,  # present weather observation: not supplied
@@ -437,8 +430,13 @@ def _epw_record(row: SiaDryRow) -> List[Any]:
 def _write_atomic(path: str, content: str, encoding: str) -> None:
     directory = os.path.dirname(path) or "."
     with tempfile.NamedTemporaryFile(
-        "w", encoding=encoding, dir=directory, prefix=".sia-dry-", suffix=".tmp",
-        delete=False, newline="\n",
+        "w",
+        encoding=encoding,
+        dir=directory,
+        prefix=".sia-dry-",
+        suffix=".tmp",
+        delete=False,
+        newline="\n",
     ) as handle:
         handle.write(content)
         temporary = handle.name
@@ -516,9 +514,7 @@ def convert_sia_dry_to_epw(
         )
 
     vertical_south = [
-        row.vertical_south_w_m2
-        for row in rows
-        if row.vertical_south_w_m2 is not None
+        row.vertical_south_w_m2 for row in rows if row.vertical_south_w_m2 is not None
     ]
     audit: Dict[str, Any] = {
         "schema_version": "1.0",
@@ -538,9 +534,7 @@ def convert_sia_dry_to_epw(
         "source": {
             "path": os.path.abspath(source_path),
             "sha256": _sha256(source_path),
-            "provenance_record": (
-                "references/standards/sia2028/KLO_dry.provenance.json"
-            ),
+            "provenance_record": ("references/standards/sia2028/KLO_dry.provenance.json"),
         },
         "weather": {
             "path": os.path.abspath(epw_path),

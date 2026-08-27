@@ -17,7 +17,6 @@ from swiss_sia.reference_model.ve_asset_provisioner import (
 )
 from swiss_sia.reference_model.workflow import ReferenceModelWorkflow
 
-
 TEST_ROOT = Path(__file__).resolve().parents[1]
 TEST_OUTPUT_ROOT = TEST_ROOT / ".codex_tmp" / "reference_model_asset_tests"
 
@@ -102,9 +101,7 @@ def _valid_manifest_payload():
             "units": units,
             "properties": {
                 "name": _field("TEST_{}".format(key.upper()), "string"),
-                "variation_profile": _field(
-                    {"profile_ref": "test_profile"}, "object"
-                ),
+                "variation_profile": _field({"profile_ref": "test_profile"}, "object"),
             },
         }
         gain.update(_evidence("Approved {} test gain.".format(key)))
@@ -136,9 +133,7 @@ def _valid_manifest_payload():
         "properties": {
             "name": _field("TEST INFILTRATION", "string"),
             "max_flow": _field(0.1, "number", 0.0, 10.0),
-            "variation_profile": _field(
-                {"profile_ref": "test_profile"}, "object"
-            ),
+            "variation_profile": _field({"profile_ref": "test_profile"}, "object"),
         },
     }
     exchange.update(_evidence("Approved unit-test air exchange."))
@@ -191,8 +186,7 @@ class _Profile:
 
         if self.profile_type == "daily":
             self._data = [
-                [row[0], row[1], "-" if row[2] == "" else row[2]]
-                for row in data
+                [row[0], row[1], "-" if row[2] == "" else row[2]] for row in data
             ]
         else:
             self._data = json.loads(json.dumps(data))
@@ -338,9 +332,7 @@ class _Construction:
 
         if self.construction_class == "glazed" and len(self._layers) <= 1:
             raise RuntimeError("VE invariant: glazed construction needs one layer")
-        self._layers = [
-            layer for layer in self._layers if layer.get_id() != layer_id
-        ]
+        self._layers = [layer for layer in self._layers if layer.get_id() != layer_id]
 
     def get_layers(self):
         """Return all persisted construction layers."""
@@ -599,8 +591,12 @@ def _iesve_namespace():
             construction_class=SimpleNamespace(opaque="opaque", glazed="glazed"),
         ),
         PeopleGain=SimpleNamespace(PeopleGain_type=SimpleNamespace(people="people")),
-        LightingGain=SimpleNamespace(LightingGain_type=SimpleNamespace(general="general")),
-        EnergyGain=SimpleNamespace(EnergyGain_type=SimpleNamespace(computers="computers")),
+        LightingGain=SimpleNamespace(
+            LightingGain_type=SimpleNamespace(general="general")
+        ),
+        EnergyGain=SimpleNamespace(
+            EnergyGain_type=SimpleNamespace(computers="computers")
+        ),
         AirExchange=SimpleNamespace(
             AirExchange_type=SimpleNamespace(infiltration="infiltration"),
             AirChange_unit=SimpleNamespace(ach="ach"),
@@ -688,9 +684,7 @@ class ReferenceModelAssetProvisioningTests(unittest.TestCase):
     def test_room_setpoint_mode_resolves_to_runtime_enum(self):
         """Translate the auditable string into the typed VE setter value."""
 
-        provisioner = IesVeAssetProvisioner(
-            _iesve_namespace(), _Project(), _CdbProject()
-        )
+        provisioner = IesVeAssetProvisioner(_iesve_namespace(), _Project(), _CdbProject())
         writable = provisioner._writable_room_conditions(
             {
                 "heating_profile": "ON",
@@ -700,20 +694,14 @@ class ReferenceModelAssetProvisioningTests(unittest.TestCase):
         )
         self.assertEqual(writable["heating_profile"], "ON")
         self.assertEqual(writable["heating_setpoint_type"], "variable")
-        self.assertEqual(
-            writable["heating_setpoint_profile"], "WEEK0048"
-        )
+        self.assertEqual(writable["heating_setpoint_profile"], "WEEK0048")
 
     def test_conditioned_boolean_resolves_to_typed_runtime_enum(self):
         """Map True to VE enum and False to verified OFF room profiles."""
 
-        provisioner = IesVeAssetProvisioner(
-            _iesve_namespace(), _Project(), _CdbProject()
-        )
+        provisioner = IesVeAssetProvisioner(_iesve_namespace(), _Project(), _CdbProject())
         self.assertEqual(
-            provisioner._writable_system_data({"conditioned": True})[
-                "conditioned"
-            ],
+            provisioner._writable_system_data({"conditioned": True})["conditioned"],
             "conditioned_yes",
         )
         self.assertNotIn(
@@ -758,14 +746,10 @@ class ReferenceModelAssetProvisioningTests(unittest.TestCase):
         material["properties"].update(
             {
                 "transmittance": _field(0.86156, "number", 0.0, 1.0),
-                "visible_transmittance": _field(
-                    0.86156, "number", 0.0, 1.0
-                ),
+                "visible_transmittance": _field(0.86156, "number", 0.0, 1.0),
             }
         )
-        manifest = load_asset_manifest(
-            _write_manifest("glass_optical_rounding", payload)
-        )
+        manifest = load_asset_manifest(_write_manifest("glass_optical_rounding", payload))
         project = _Project()
         cdb = _CdbProject()
         provisioner = IesVeAssetProvisioner(_iesve_namespace(), project, cdb)
@@ -781,12 +765,8 @@ class ReferenceModelAssetProvisioningTests(unittest.TestCase):
             if warning["code"] == "VE-GLASS-OPTICAL-PROPERTY-ROUNDED-3DP"
         ]
         self.assertEqual(len(warnings), 1)
-        self.assertEqual(
-            warnings[0]["fields"]["transmittance"]["requested"], 0.86156
-        )
-        self.assertEqual(
-            warnings[0]["fields"]["transmittance"]["canonical_3dp"], 0.862
-        )
+        self.assertEqual(warnings[0]["fields"]["transmittance"]["requested"], 0.86156)
+        self.assertEqual(warnings[0]["fields"]["transmittance"]["canonical_3dp"], 0.862)
         cdb.materials[0]._properties["transmittance"] = 0.86
         with self.assertRaises(VeMutationError):
             provisioner.provision(manifest)
@@ -807,9 +787,7 @@ class ReferenceModelAssetProvisioningTests(unittest.TestCase):
         payload["profiles"] = []
         for record in payload["gains"] + payload["air_exchanges"]:
             record["properties"]["variation_profile"] = _field("ON", "string")
-        manifest = load_asset_manifest(
-            _write_manifest("builtin_on_only", payload)
-        )
+        manifest = load_asset_manifest(_write_manifest("builtin_on_only", payload))
         project = _Project()
         receipt = IesVeAssetProvisioner(
             _iesve_namespace(), project, _CdbProject()
@@ -818,10 +796,7 @@ class ReferenceModelAssetProvisioningTests(unittest.TestCase):
         self.assertEqual(receipt.profile_ids, {})
         self.assertEqual(project._profiles, {})
         self.assertTrue(
-            all(
-                record.get()["variation_profile"] == "ON"
-                for record in project._gains
-            )
+            all(record.get()["variation_profile"] == "ON" for record in project._gains)
         )
 
     def test_manifest_without_profiles_rejects_non_builtin_references(self):
@@ -839,23 +814,15 @@ class ReferenceModelAssetProvisioningTests(unittest.TestCase):
 
         unsupported = _valid_manifest_payload()
         unsupported["profiles"][0]["profile_type"] = "hourly_guess"
-        with self.assertRaisesRegex(
-            ConfigurationError, "unsupported profile_type"
-        ):
-            load_asset_manifest(
-                _write_manifest("unsupported_profile_type", unsupported)
-            )
+        with self.assertRaisesRegex(ConfigurationError, "unsupported profile_type"):
+            load_asset_manifest(_write_manifest("unsupported_profile_type", unsupported))
 
         duplicate = _valid_manifest_payload()
         second = json.loads(json.dumps(duplicate["profiles"][0]))
         second["key"] = "second_profile"
         duplicate["profiles"].append(second)
-        with self.assertRaisesRegex(
-            ConfigurationError, "duplicate profile references"
-        ):
-            load_asset_manifest(
-                _write_manifest("duplicate_profile_reference", duplicate)
-            )
+        with self.assertRaisesRegex(ConfigurationError, "duplicate profile references"):
+            load_asset_manifest(_write_manifest("duplicate_profile_reference", duplicate))
 
     def test_manifest_rejects_cyclic_profile_groups_before_mutation(self):
         """Keep weekly/yearly dependency cycles outside the VE process."""
@@ -888,9 +855,7 @@ class ReferenceModelAssetProvisioningTests(unittest.TestCase):
         with self.assertRaisesRegex(
             ConfigurationError, "cyclic logical profile references"
         ):
-            load_asset_manifest(
-                _write_manifest("cyclic_profile_references", payload)
-            )
+            load_asset_manifest(_write_manifest("cyclic_profile_references", payload))
 
     def test_manifest_rejects_seven_slot_week_before_mutation(self):
         """Require VE's Monday-Sunday plus Holiday weekly profile shape."""
@@ -918,12 +883,8 @@ class ReferenceModelAssetProvisioningTests(unittest.TestCase):
         )
         payload["profiles"] = [daily, weekly]
 
-        with self.assertRaisesRegex(
-            ConfigurationError, "exactly 12 daily-profile slots"
-        ):
-            load_asset_manifest(
-                _write_manifest("seven_slot_week_rejected", payload)
-            )
+        with self.assertRaisesRegex(ConfigurationError, "exactly 12 daily-profile slots"):
+            load_asset_manifest(_write_manifest("seven_slot_week_rejected", payload))
 
     def test_profile_groups_are_topologically_created_and_read_back(self):
         """Resolve logical daily -> weekly -> yearly IDs in stable layers."""
@@ -982,14 +943,10 @@ class ReferenceModelAssetProvisioningTests(unittest.TestCase):
         )
         self.assertEqual(project.save_profiles_count, 3)
         weekly_profile = next(
-            item
-            for item in project._profiles.values()
-            if item.reference == "OFFICE_WEEK"
+            item for item in project._profiles.values() if item.reference == "OFFICE_WEEK"
         )
         yearly_profile = next(
-            item
-            for item in project._profiles.values()
-            if item.reference == "OFFICE_YEAR"
+            item for item in project._profiles.values() if item.reference == "OFFICE_YEAR"
         )
         self.assertEqual(
             weekly_profile.get_data(),
@@ -1026,9 +983,7 @@ class ReferenceModelAssetProvisioningTests(unittest.TestCase):
             }
         )
         payload["profiles"] = [base, daily, weekly]
-        manifest = load_asset_manifest(
-            _write_manifest("generic_group_proxy", payload)
-        )
+        manifest = load_asset_manifest(_write_manifest("generic_group_proxy", payload))
         project = _Project()
         original_create = project.create_profile
         original_save = project.save_profiles
@@ -1090,9 +1045,7 @@ class ReferenceModelAssetProvisioningTests(unittest.TestCase):
     def test_profile_only_public_boundary_rejects_empty_plan(self):
         """Never enter the VE profile API with an empty qualification plan."""
 
-        with self.assertRaisesRegex(
-            VeMutationError, "At least one profile definition"
-        ):
+        with self.assertRaisesRegex(VeMutationError, "At least one profile definition"):
             IesVeAssetProvisioner(
                 _iesve_namespace(), _Project(), None
             ).provision_profiles(())
@@ -1110,9 +1063,9 @@ class ReferenceModelAssetProvisioningTests(unittest.TestCase):
         manifest = load_asset_manifest(_write_manifest("provision_all"))
         project = _Project()
         cdb = _CdbProject()
-        receipt = IesVeAssetProvisioner(
-            _iesve_namespace(), project, cdb
-        ).provision(manifest)
+        receipt = IesVeAssetProvisioner(_iesve_namespace(), project, cdb).provision(
+            manifest
+        )
         self.assertIsNotNone(project.last_profile_units)
         self.assertNotEqual(project.last_profile_units, -1)
         self.assertEqual(len(receipt.profile_ids), 1)
@@ -1181,14 +1134,10 @@ class ReferenceModelAssetProvisioningTests(unittest.TestCase):
         cavity = {
             "material_key": "test_material",
             "is_cavity": True,
-            "properties": {
-                "resistance": _field(0.75, "number", 0.000001, 100.0)
-            },
+            "properties": {"resistance": _field(0.75, "number", 0.000001, 100.0)},
         }
         glazing["layers"] = [glass, cavity, glass]
-        manifest = load_asset_manifest(
-            _write_manifest("reuse_glazing_cavity", payload)
-        )
+        manifest = load_asset_manifest(_write_manifest("reuse_glazing_cavity", payload))
         project = _Project()
         cdb = _CdbProject()
         provisioner = IesVeAssetProvisioner(_iesve_namespace(), project, cdb)
@@ -1230,9 +1179,7 @@ class ReferenceModelAssetProvisioningTests(unittest.TestCase):
         second = provisioner.provision(manifest)
         self.assertEqual(len(second.compatibility_warnings), 1)
         warning = second.compatibility_warnings[0]
-        self.assertEqual(
-            warning["code"], "VE-GLAZED-LAYER-THICKNESS-NOT-PERSISTED"
-        )
+        self.assertEqual(warning["code"], "VE-GLAZED-LAYER-THICKNESS-NOT-PERSISTED")
         self.assertEqual(warning["requested_thickness_m"], 0.1)
         self.assertEqual(warning["ve_readback_thickness_m"], 0.0)
         self.assertEqual(
@@ -1251,17 +1198,13 @@ class ReferenceModelAssetProvisioningTests(unittest.TestCase):
         glazing["properties"]["visible_light_transmittance"] = _field(
             0.86156, "number", 0.0, 1.0
         )
-        manifest = load_asset_manifest(
-            _write_manifest("glazed_vlt_rounding", payload)
-        )
+        manifest = load_asset_manifest(_write_manifest("glazed_vlt_rounding", payload))
         project = _Project()
         cdb = _CdbProject()
         provisioner = IesVeAssetProvisioner(_iesve_namespace(), project, cdb)
         provisioner.provision(manifest)
         construction = next(
-            item
-            for item in cdb.constructions
-            if item.construction_class == "glazed"
+            item for item in cdb.constructions if item.construction_class == "glazed"
         )
         construction._properties["visible_light_transmittance"] = 0.8616
 
@@ -1299,9 +1242,7 @@ class ReferenceModelAssetProvisioningTests(unittest.TestCase):
         provisioner = IesVeAssetProvisioner(_iesve_namespace(), project, cdb)
         provisioner.provision(manifest)
         construction = next(
-            item
-            for item in cdb.constructions
-            if item.construction_class == "glazed"
+            item for item in cdb.constructions if item.construction_class == "glazed"
         )
         layer = construction.get_layers()[0]
         layer._properties["resistance"] = 0.15881
@@ -1346,16 +1287,14 @@ class ReferenceModelAssetProvisioningTests(unittest.TestCase):
 
         payload = _valid_manifest_payload()
         payload["on_existing"] = "reuse_verified"
-        manifest = load_asset_manifest(
-            _write_manifest("reuse_bad_profile", payload)
-        )
+        manifest = load_asset_manifest(_write_manifest("reuse_bad_profile", payload))
         project = _Project()
         profile = project.create_profile("daily", "TEST_PROFILE", True, -1)
         profile.set_data([[0.0, 0.0, ""], [24.0, 0.0, ""]])
         with self.assertRaises(VeMutationError):
-            IesVeAssetProvisioner(
-                _iesve_namespace(), project, _CdbProject()
-            ).provision(manifest)
+            IesVeAssetProvisioner(_iesve_namespace(), project, _CdbProject()).provision(
+                manifest
+            )
 
     def test_controlled_gain_reconciliation_repairs_interrupted_old_manifest(self):
         """Repair only an explicitly selected exact-name reusable gain."""
@@ -1377,12 +1316,8 @@ class ReferenceModelAssetProvisioningTests(unittest.TestCase):
         )
         equipment["properties"].update(
             {
-                "max_power_consumption": _field(
-                    200.0 / 48.0, "number", 0.0, 1000.0
-                ),
-                "max_sensible_gain": _field(
-                    200.0 / 48.0, "number", 0.0, 1000.0
-                ),
+                "max_power_consumption": _field(200.0 / 48.0, "number", 0.0, 1000.0),
+                "max_sensible_gain": _field(200.0 / 48.0, "number", 0.0, 1000.0),
                 "max_latent_gain": _field(0.0, "number", 0.0, 1000.0),
                 "radiant_fraction": _field(0.6, "number", 0.0, 1.0),
             }
@@ -1391,9 +1326,7 @@ class ReferenceModelAssetProvisioningTests(unittest.TestCase):
             _write_manifest("gain_reconcile_corrected", corrected)
         )
 
-        receipt = provisioner.reconcile_existing_gain(
-            corrected_manifest, "equipment"
-        )
+        receipt = provisioner.reconcile_existing_gain(corrected_manifest, "equipment")
 
         self.assertEqual(receipt["status"], "RECONCILED_AND_VERIFIED")
         self.assertTrue(receipt["changed"])
@@ -1404,21 +1337,15 @@ class ReferenceModelAssetProvisioningTests(unittest.TestCase):
             if item.get()["name"] == "TEST_EQUIPMENT"
         )
         self.assertEqual(gain.get()["radiant_fraction"], 0.6)
-        self.assertAlmostEqual(
-            gain.get()["max_sensible_gain"] * 48.0, 200.0
-        )
+        self.assertAlmostEqual(gain.get()["max_sensible_gain"] * 48.0, 200.0)
 
     def test_zero_latent_energy_gain_field_omission_is_narrowly_audited(self):
         """Accept only VE's observed missing zero field and emit a warning."""
 
         payload = _valid_manifest_payload()
         payload["on_existing"] = "reuse_verified"
-        equipment = next(
-            item for item in payload["gains"] if item["key"] == "equipment"
-        )
-        equipment["properties"]["max_latent_gain"] = _field(
-            0.0, "number", 0.0, 1000.0
-        )
+        equipment = next(item for item in payload["gains"] if item["key"] == "equipment")
+        equipment["properties"]["max_latent_gain"] = _field(0.0, "number", 0.0, 1000.0)
         manifest = load_asset_manifest(
             _write_manifest("energy_zero_latent_omitted", payload)
         )
@@ -1433,9 +1360,7 @@ class ReferenceModelAssetProvisioningTests(unittest.TestCase):
         )
         native_get = gain.get
         gain.get = lambda: {
-            key: value
-            for key, value in native_get().items()
-            if key != "max_latent_gain"
+            key: value for key, value in native_get().items() if key != "max_latent_gain"
         }
 
         receipt = provisioner.provision(manifest)
@@ -1453,26 +1378,16 @@ class ReferenceModelAssetProvisioningTests(unittest.TestCase):
 
         payload = _valid_manifest_payload()
         payload["on_existing"] = "reuse_verified"
-        people = next(
-            item for item in payload["gains"] if item["key"] == "people"
-        )
-        people["properties"]["max_sensible_gain"] = _field(
-            0.0, "number", 0.0, 1000.0
-        )
-        people["properties"]["max_latent_gain"] = _field(
-            0.0, "number", 0.0, 1000.0
-        )
-        manifest = load_asset_manifest(
-            _write_manifest("zero_gain_profile_on", payload)
-        )
+        people = next(item for item in payload["gains"] if item["key"] == "people")
+        people["properties"]["max_sensible_gain"] = _field(0.0, "number", 0.0, 1000.0)
+        people["properties"]["max_latent_gain"] = _field(0.0, "number", 0.0, 1000.0)
+        manifest = load_asset_manifest(_write_manifest("zero_gain_profile_on", payload))
         project = _Project()
         cdb = _CdbProject()
         provisioner = IesVeAssetProvisioner(_iesve_namespace(), project, cdb)
         provisioner.provision(manifest)
         gain = next(
-            item
-            for item in project.casual_gains()
-            if item.get()["name"] == "TEST_PEOPLE"
+            item for item in project.casual_gains() if item.get()["name"] == "TEST_PEOPLE"
         )
         gain._data["variation_profile"] = "ON"
 
@@ -1495,18 +1410,12 @@ class ReferenceModelAssetProvisioningTests(unittest.TestCase):
             [[0.0, 0.0, ""], [12.0, 1.0, ""], [24.0, 0.0, ""]],
             "array",
         )
-        equipment = next(
-            item for item in payload["gains"] if item["key"] == "equipment"
-        )
+        equipment = next(item for item in payload["gains"] if item["key"] == "equipment")
         equipment["properties"]["max_power_consumption"] = _field(
             4.0, "number", 0.0, 1000.0
         )
-        equipment["properties"]["max_sensible_gain"] = _field(
-            4.0, "number", 0.0, 1000.0
-        )
-        equipment["properties"]["max_latent_gain"] = _field(
-            0.0, "number", 0.0, 1000.0
-        )
+        equipment["properties"]["max_sensible_gain"] = _field(4.0, "number", 0.0, 1000.0)
+        equipment["properties"]["max_latent_gain"] = _field(0.0, "number", 0.0, 1000.0)
         manifest = load_asset_manifest(
             _write_manifest("nonzero_gain_profile_on", payload)
         )
@@ -1529,15 +1438,11 @@ class ReferenceModelAssetProvisioningTests(unittest.TestCase):
 
         payload = _valid_manifest_payload()
         payload["on_existing"] = "reuse_verified"
-        equipment = next(
-            item for item in payload["gains"] if item["key"] == "equipment"
-        )
+        equipment = next(item for item in payload["gains"] if item["key"] == "equipment")
         equipment["properties"]["max_power_consumption"] = _field(
             4.0, "number", 0.0, 1000.0
         )
-        equipment["properties"]["max_sensible_gain"] = _field(
-            4.0, "number", 0.0, 1000.0
-        )
+        equipment["properties"]["max_sensible_gain"] = _field(4.0, "number", 0.0, 1000.0)
         manifest = load_asset_manifest(
             _write_manifest("constant_one_gain_profile_on", payload)
         )
@@ -1573,9 +1478,7 @@ class ReferenceModelAssetProvisioningTests(unittest.TestCase):
             [[0.0, 0.0, ""], [12.0, 1.0, ""], [24.0, 0.0, ""]],
             "array",
         )
-        manifest = load_asset_manifest(
-            _write_manifest("air_exchange_reconcile", payload)
-        )
+        manifest = load_asset_manifest(_write_manifest("air_exchange_reconcile", payload))
         project = _Project()
         cdb = _CdbProject()
         provisioner = IesVeAssetProvisioner(_iesve_namespace(), project, cdb)
@@ -1583,9 +1486,7 @@ class ReferenceModelAssetProvisioningTests(unittest.TestCase):
         exchange = project.air_exchanges()[0]
         exchange._data["variation_profile"] = "ON"
 
-        receipt = provisioner.reconcile_existing_air_exchange(
-            manifest, "infiltration"
-        )
+        receipt = provisioner.reconcile_existing_air_exchange(manifest, "infiltration")
 
         self.assertEqual(receipt["status"], "RECONCILED_AND_VERIFIED")
         self.assertTrue(receipt["changed"])
@@ -1601,9 +1502,7 @@ class ReferenceModelAssetProvisioningTests(unittest.TestCase):
         payload = _valid_manifest_payload()
         payload["on_existing"] = "reuse_verified"
         exchange_definition = payload["air_exchanges"][0]
-        exchange_definition["properties"]["max_flow"] = _field(
-            0.0, "number", 0.0, 10.0
-        )
+        exchange_definition["properties"]["max_flow"] = _field(0.0, "number", 0.0, 10.0)
         manifest = load_asset_manifest(
             _write_manifest("zero_flow_exchange_profile_on", payload)
         )
@@ -1721,14 +1620,13 @@ class ReferenceModelAssetProvisioningTests(unittest.TestCase):
         self.assertEqual(len(asset_results), 1)
         self.assertEqual(asset_results[0].status, ValidationStatus.PASS)
 
-
     def test_audit_only_room_condition_is_traced_but_not_sent_to_ve(self):
         """Keep the ISO assumption in evidence without calling an invalid setter."""
 
         payload = _valid_manifest_payload()
-        payload["thermal_template"]["room_conditions"][
-            "solar_reflected_fraction"
-        ] = _field(0.0, "number", 0.0, 1.0)
+        payload["thermal_template"]["room_conditions"]["solar_reflected_fraction"] = (
+            _field(0.0, "number", 0.0, 1.0)
+        )
         manifest = load_asset_manifest(
             _write_manifest("audit_only_room_condition", payload)
         )
@@ -1739,13 +1637,9 @@ class ReferenceModelAssetProvisioningTests(unittest.TestCase):
         receipt = provisioner.provision(manifest)
 
         template = next(iter(project._templates.values()))
-        self.assertNotIn(
-            "solar_reflected_fraction", template.get_room_conditions()
-        )
+        self.assertNotIn("solar_reflected_fraction", template.get_room_conditions())
         self.assertEqual(
-            manifest.thermal_template.raw_room_conditions()[
-                "solar_reflected_fraction"
-            ],
+            manifest.thermal_template.raw_room_conditions()["solar_reflected_fraction"],
             0.0,
         )
         warnings = [
@@ -1764,9 +1658,7 @@ class ReferenceModelAssetProvisioningTests(unittest.TestCase):
         payload["on_existing"] = "reuse_verified"
         properties = payload["materials"][0]["properties"]
         properties["density"] = _field(0.0, "number", 0.0, 30000.0)
-        properties["specific_heat_capacity"] = _field(
-            0.0, "number", 0.0, 10000.0
-        )
+        properties["specific_heat_capacity"] = _field(0.0, "number", 0.0, 10000.0)
         manifest = load_asset_manifest(
             _write_manifest("zero_mass_material_minimum", payload)
         )
@@ -1801,9 +1693,7 @@ class ReferenceModelAssetProvisioningTests(unittest.TestCase):
         payload["on_existing"] = "reuse_verified"
         properties = payload["materials"][0]["properties"]
         properties["density"] = _field(0.0, "number", 0.0, 30000.0)
-        properties["specific_heat_capacity"] = _field(
-            0.0, "number", 0.0, 10000.0
-        )
+        properties["specific_heat_capacity"] = _field(0.0, "number", 0.0, 10000.0)
         manifest = load_asset_manifest(
             _write_manifest("reconcile_zero_mass_material", payload)
         )
@@ -1843,9 +1733,7 @@ class ReferenceModelAssetProvisioningTests(unittest.TestCase):
         expected = definition.layers[0].raw_properties()["thickness"]
         construction.get_layers()[0]._properties["thickness"] = expected * 2.0
 
-        receipt = provisioner.reconcile_existing_construction(
-            manifest, definition.key
-        )
+        receipt = provisioner.reconcile_existing_construction(manifest, definition.key)
 
         self.assertEqual(receipt["status"], "RECONCILED_AND_VERIFIED")
         self.assertTrue(receipt["changed"])
@@ -1859,9 +1747,7 @@ class ReferenceModelAssetProvisioningTests(unittest.TestCase):
 
         payload = _valid_manifest_payload()
         payload["on_existing"] = "reuse_verified"
-        wall = next(
-            item for item in payload["constructions"] if item["key"] == "wall"
-        )
+        wall = next(item for item in payload["constructions"] if item["key"] == "wall")
         wall["properties"].update(
             {
                 "inside_surface_resistance": _field(
@@ -1892,8 +1778,7 @@ class ReferenceModelAssetProvisioningTests(unittest.TestCase):
         warnings = [
             warning
             for warning in receipt.compatibility_warnings
-            if warning["code"]
-            == "VE-CONSTRUCTION-SURFACE-RESISTANCE-ROUNDED-4DP"
+            if warning["code"] == "VE-CONSTRUCTION-SURFACE-RESISTANCE-ROUNDED-4DP"
         ]
         self.assertEqual(len(warnings), 1)
         self.assertEqual(
@@ -1920,9 +1805,7 @@ class ReferenceModelAssetProvisioningTests(unittest.TestCase):
         receipt = provisioner.provision(manifest)
 
         template = next(iter(project._templates.values()))
-        self.assertEqual(
-            template.get_room_conditions()["heating_setpoint"], 20.0
-        )
+        self.assertEqual(template.get_room_conditions()["heating_setpoint"], 20.0)
         self.assertEqual(len(template.get_casual_gains()), 3)
         self.assertEqual(len(template.get_air_exchanges()), 1)
         warnings = [
@@ -1994,9 +1877,7 @@ class ReferenceModelAssetProvisioningTests(unittest.TestCase):
                 "adjacent_condition_val": "external_air",
             }
         )
-        provisioner = IesVeAssetProvisioner(
-            _iesve_namespace(), _Project(), _CdbProject()
-        )
+        provisioner = IesVeAssetProvisioner(_iesve_namespace(), _Project(), _CdbProject())
 
         changes = provisioner._repair_template_link_physics(
             [expected], [actual], "air_exchange"

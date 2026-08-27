@@ -23,7 +23,7 @@ import json
 from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, Iterable, Mapping, Optional, Sequence, Tuple, Union
+from typing import Any, Dict, Iterable, Mapping, Optional, Tuple, Union
 
 from ...config import SIA4010_CLASS_TEST_MATRIX
 from ..exceptions import ConfigurationError
@@ -31,11 +31,8 @@ from .case_registry import get_case_capability
 from .evidence_registry import load_registry
 from .model_scenario import TEST_CASES
 
-
 SCHEMA_VERSION = "1.0"
-REGISTRY_RELATIVE_PATH = Path(
-    "sia4010_evidence/autonomy/sia4010_case_evidence.json"
-)
+REGISTRY_RELATIVE_PATH = Path("sia4010_evidence/autonomy/sia4010_case_evidence.json")
 OUTPUT_RELATIVE_DIRECTORY = Path("sia4010_evidence/autonomy/campaign")
 
 
@@ -138,12 +135,8 @@ def _artifact_valid(record: Mapping[str, Any]) -> bool:
     path = Path(path_text)
     if not path.is_file() or _sha256(path) != expected:
         return False
-    qualification_text = str(
-        record.get("qualification_artifact_path", "") or ""
-    )
-    qualification_sha = str(
-        record.get("qualification_artifact_sha256", "") or ""
-    ).lower()
+    qualification_text = str(record.get("qualification_artifact_path", "") or "")
+    qualification_sha = str(record.get("qualification_artifact_sha256", "") or "").lower()
     if qualification_text or qualification_sha:
         qualification = Path(qualification_text)
         return (
@@ -164,8 +157,7 @@ def _file_pair_valid(record: Mapping[str, Any], prefix: str) -> bool:
 
 def _simulation_valid(record: Mapping[str, Any]) -> bool:
     if (
-        str(record.get("status", ""))
-        != "SIMULATION_EXECUTED_AWAITING_APS_QUALIFICATION"
+        str(record.get("status", "")) != "SIMULATION_EXECUTED_AWAITING_APS_QUALIFICATION"
         or record.get("model_evidence_link_status") != "VERIFIED"
         or record.get("aps_evaluation_required") is not True
         or record.get("compliance_claim_allowed") is not False
@@ -187,14 +179,10 @@ def _simulation_valid(record: Mapping[str, Any]) -> bool:
 def _same_path(left: Any, right: Any) -> bool:
     if not left or not right:
         return False
-    return Path(str(left)).resolve(strict=False) == Path(str(right)).resolve(
-        strict=False
-    )
+    return Path(str(left)).resolve(strict=False) == Path(str(right)).resolve(strict=False)
 
 
-def _result_valid(
-    result: Mapping[str, Any], simulation: Mapping[str, Any]
-) -> bool:
+def _result_valid(result: Mapping[str, Any], simulation: Mapping[str, Any]) -> bool:
     status = str(result.get("status", "")).upper()
     return (
         result.get("simulation_link_status") == "VERIFIED"
@@ -220,7 +208,11 @@ def _next_action(
 ) -> Tuple[str, str, str]:
     capability = get_case_capability(variant, case_id)
     if model_valid and simulation_valid and result_valid:
-        return "PRESERVE_EVIDENCE", "", "Case complete; preserve its checksummed evidence."
+        return (
+            "PRESERVE_EVIDENCE",
+            "",
+            "Case complete; preserve its checksummed evidence.",
+        )
     if not model_valid:
         if variant == "test_1" and case_id == "600":
             return (
@@ -273,7 +265,11 @@ def _next_action(
             launcher = "Run_VE_SIA4010_Tests4_7_Runtime_Capability_Probe.py"
             instruction = "Qualify the missing APS output bindings before attempting an official comparison."
         return "EVALUATE_APS", launcher, instruction
-    return "REVIEW_EVIDENCE", "Run_VE_SIA4010_Navigator.py", "Rebuild the evidence navigator and review the inconsistent case state."
+    return (
+        "REVIEW_EVIDENCE",
+        "Run_VE_SIA4010_Navigator.py",
+        "Rebuild the evidence navigator and review the inconsistent case state.",
+    )
 
 
 def _case_progress(
@@ -343,7 +339,11 @@ def build_validation_campaign(
             "exact_case_count": len(keys),
             "complete_case_count": len(keys) - len(pending),
             "pending_cases": pending,
-            "status": "COMPLETE" if not pending else "IN_PROGRESS" if len(pending) < len(keys) else "NOT_STARTED",
+            "status": (
+                "COMPLETE"
+                if not pending
+                else "IN_PROGRESS" if len(pending) < len(keys) else "NOT_STARTED"
+            ),
         }
         phases.append(phase_payload)
         if first_action is None and pending:
@@ -361,7 +361,11 @@ def build_validation_campaign(
         keys = _required_exact_cases(variants)
         pending = [key for key in keys if not progress[key].complete]
         classes[class_id] = {
-            "status": "TECHNICALLY_COMPLETE_AWAITING_SIA_ATTESTATION" if not pending else "INCOMPLETE",
+            "status": (
+                "TECHNICALLY_COMPLETE_AWAITING_SIA_ATTESTATION"
+                if not pending
+                else "INCOMPLETE"
+            ),
             "required_variants": list(variants),
             "exact_case_count": len(keys),
             "complete_case_count": len(keys) - len(pending),
@@ -393,8 +397,14 @@ def build_validation_campaign(
 
 
 def _status_badge(status: str) -> str:
-    css = "ok" if status == "COMPLETE" or status.startswith("TECHNICALLY_COMPLETE") else "work" if status == "IN_PROGRESS" else "blocked"
-    return "<span class='badge {}'>{}</span>".format(css, html.escape(status.replace("_", " ")))
+    css = (
+        "ok"
+        if status == "COMPLETE" or status.startswith("TECHNICALLY_COMPLETE")
+        else "work" if status == "IN_PROGRESS" else "blocked"
+    )
+    return "<span class='badge {}'>{}</span>".format(
+        css, html.escape(status.replace("_", " "))
+    )
 
 
 def _render_html(payload: Mapping[str, Any]) -> str:
@@ -412,11 +422,19 @@ def _render_html(payload: Mapping[str, Any]) -> str:
                 _status_badge(phase["status"]),
                 html.escape(phase["label"]),
                 html.escape(phase["rationale"]),
-                int(100 * phase["complete_case_count"] / max(1, phase["exact_case_count"])),
+                int(
+                    100 * phase["complete_case_count"] / max(1, phase["exact_case_count"])
+                ),
                 phase["complete_case_count"],
                 phase["exact_case_count"],
                 html.escape(", ".join(phase["unlocks"]) or "shared foundation"),
-                "<p class='pending'>Next pending: {}</p>".format(html.escape(pending[0])) if pending else "",
+                (
+                    "<p class='pending'>Next pending: {}</p>".format(
+                        html.escape(pending[0])
+                    )
+                    if pending
+                    else ""
+                ),
             )
         )
     class_rows = "".join(
@@ -425,17 +443,25 @@ def _render_html(payload: Mapping[str, Any]) -> str:
             _status_badge(row["status"]),
             row["complete_case_count"],
             row["exact_case_count"],
-            html.escape(", ".join(row["pending_cases"][:4]) + (" …" if len(row["pending_cases"]) > 4 else "")),
+            html.escape(
+                ", ".join(row["pending_cases"][:4])
+                + (" …" if len(row["pending_cases"]) > 4 else "")
+            ),
         )
         for class_id, row in payload["classes"].items()
     )
-    next_block = (
-        "<div class='next'><span>NEXT ACTION · {}</span><h2>{}</h2><p>{}</p><code>{}</code></div>".format(
-            html.escape(str(next_action.get("phase_id", ""))),
-            html.escape(str(next_action.get("case_key", "Campaign complete"))),
-            html.escape(str(next_action.get("instruction", "Preserve the evidence and submit it for official review."))),
-            html.escape(str(next_action.get("launcher", ""))),
-        )
+    next_block = "<div class='next'><span>NEXT ACTION · {}</span><h2>{}</h2><p>{}</p><code>{}</code></div>".format(
+        html.escape(str(next_action.get("phase_id", ""))),
+        html.escape(str(next_action.get("case_key", "Campaign complete"))),
+        html.escape(
+            str(
+                next_action.get(
+                    "instruction",
+                    "Preserve the evidence and submit it for official review.",
+                )
+            )
+        ),
+        html.escape(str(next_action.get("launcher", ""))),
     )
     template = """<!doctype html><html lang='en'><meta charset='utf-8'>
 <meta name='viewport' content='width=device-width,initial-scale=1'>
@@ -481,8 +507,14 @@ def write_validation_campaign(
     """Build and persist JSON/HTML campaign artifacts."""
 
     repository = Path(repository_root).resolve()
-    registry_file = Path(registry_path) if registry_path else repository / REGISTRY_RELATIVE_PATH
-    output = Path(output_directory) if output_directory else repository / OUTPUT_RELATIVE_DIRECTORY
+    registry_file = (
+        Path(registry_path) if registry_path else repository / REGISTRY_RELATIVE_PATH
+    )
+    output = (
+        Path(output_directory)
+        if output_directory
+        else repository / OUTPUT_RELATIVE_DIRECTORY
+    )
     payload = build_validation_campaign(load_registry(registry_file))
     output.mkdir(parents=True, exist_ok=True)
     json_path = output / "sia4010_validation_campaign.json"

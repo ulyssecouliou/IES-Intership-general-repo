@@ -11,7 +11,6 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any, Callable, Dict, List, Optional
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -184,9 +183,7 @@ class RuleEngine:
             return None
         try:
             passed = bool(rule.check(data))
-            self.evaluated_counts[rule.name] = (
-                self.evaluated_counts.get(rule.name, 0) + 1
-            )
+            self.evaluated_counts[rule.name] = self.evaluated_counts.get(rule.name, 0) + 1
             if not passed:
                 alert = self._make_alert(rule, data)
                 self.alerts.append(alert)

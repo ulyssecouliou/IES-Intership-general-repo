@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-u"""IESVE adapter for SIA 4010 band tests -- tests 2 to 6.
+"""IESVE adapter for SIA 4010 band tests -- tests 2 to 6.
 
 A single module for five tests: their references share the form
 "quantity -> case" (cf. `engine/sia_bandes_engine.py`), and their extraction
@@ -42,27 +42,27 @@ _RACINE = os.path.abspath(os.path.join(_ICI, os.pardir))
 
 #: Introspection of a real VE 2025 installation. Acts as a guard: we write
 #: against what exists, not against the documentation.
-CHEMIN_SURFACE_API = os.path.join(_ICI, 've_api_surface.json')
+CHEMIN_SURFACE_API = os.path.join(_ICI, "ve_api_surface.json")
 
 #: `ResultsReader` methods used by this adapter. All present
 #: in the recorded surface; `verifier_api()` confirms this at runtime.
 METHODES_REQUISES = (
-    'close',
-    'get_all_room_results',
-    'get_all_weather_results',
-    'get_room_results',
-    'get_results',
-    'get_variables',
+    "close",
+    "get_all_room_results",
+    "get_all_weather_results",
+    "get_room_results",
+    "get_results",
+    "get_variables",
 )
 
 TESTS_COUVERTS = (2, 3, 4, 5, 6)
 
 #: Result levels from the API, as named by `get_variables`.
-NIVEAU_LOCAL = 'z'      # room / zone
-NIVEAU_SYSTEME = 'v'    # apache system
-NIVEAU_METEO = 'w'      # weather
-NIVEAU_ENERGIE = 'e'    # consumption items, all energy vectors
-NIVEAU_SURFACE = 's'    # envelope surface
+NIVEAU_LOCAL = "z"  # room / zone
+NIVEAU_SYSTEME = "v"  # apache system
+NIVEAU_METEO = "w"  # weather
+NIVEAU_ENERGIE = "e"  # consumption items, all energy vectors
+NIVEAU_SURFACE = "s"  # envelope surface
 
 #: Levels recorded on 2026-08-06 from `ZOER_C1.aps`, with their RAW count --
 #: as `get_variables()` returned them, duplicates included. The frozen catalogue
@@ -75,13 +75,23 @@ NIVEAU_SURFACE = 's'    # envelope surface
 #: exhaust the list -- it was by believing it limited to z/v/w that lighting
 #: (level `e`) and incident solar (level `s`) were missed.
 NIVEAUX_RELEVES = {
-    'c': 184, 'e': 274, 'j': 15, 'l': 88, 'n': 9, 'o': 6,
-    'r': 15, 's': 22, 't': 6, 'v': 35, 'w': 14, 'z': 151,
+    "c": 184,
+    "e": 274,
+    "j": 15,
+    "l": 88,
+    "n": 9,
+    "o": 6,
+    "r": 15,
+    "s": 22,
+    "t": 6,
+    "v": 35,
+    "w": 14,
+    "z": 151,
 }
 
 
 class LiaisonNonResolue(RuntimeError):
-    u"""Raised when a quantity has no established variable name.
+    """Raised when a quantity has no established variable name.
 
     Intentionally an error: returning `None` silently would suggest
     the quantity was looked up and not found, whereas it was never
@@ -90,7 +100,7 @@ class LiaisonNonResolue(RuntimeError):
 
 
 class ApiIncompatible(RuntimeError):
-    u"""Raised when the `iesve` API does not present the expected symbols."""
+    """Raised when the `iesve` API does not present the expected symbols."""
 
 
 # ---------------------------------------------------------------------------
@@ -108,113 +118,133 @@ class ApiIncompatible(RuntimeError):
 # is enough to make a binding unfindable once resolved.
 LIAISONS = {
     2: {
-        u'Jahresenergie solarer Wärmeeintrag': {
-            'aps_varname': None, 'niveau': NIVEAU_LOCAL,
-            'agregation': 'somme_annuelle',
-            'piste': u'apport solaire et rayonnement transmis, au niveau du local',
+        "Jahresenergie solarer Wärmeeintrag": {
+            "aps_varname": None,
+            "niveau": NIVEAU_LOCAL,
+            "agregation": "somme_annuelle",
+            "piste": "apport solaire et rayonnement transmis, au niveau du local",
         },
-        u'Jahresenergie total transmittierte Solarstrahlung': {
-            'aps_varname': None, 'niveau': NIVEAU_LOCAL,
-            'agregation': 'somme_annuelle',
-            'piste': u'apport solaire et rayonnement transmis, au niveau du local',
+        "Jahresenergie total transmittierte Solarstrahlung": {
+            "aps_varname": None,
+            "niveau": NIVEAU_LOCAL,
+            "agregation": "somme_annuelle",
+            "piste": "apport solaire et rayonnement transmis, au niveau du local",
         },
     },
     3: {
-        u'Beleuchtungsenergie': {
-            'aps_varname': None, 'niveau': NIVEAU_LOCAL,
-            'agregation': 'somme_annuelle',
-            'piste': u"puissance d'eclairage du local",
+        "Beleuchtungsenergie": {
+            "aps_varname": None,
+            "niveau": NIVEAU_LOCAL,
+            "agregation": "somme_annuelle",
+            "piste": "puissance d'eclairage du local",
         },
     },
     4: {
-        u'Energiebedarf Ventilatoren': {
-            'aps_varname': None, 'niveau': NIVEAU_SYSTEME,
-            'agregation': 'somme_annuelle',
-            'piste': u'centrale de traitement d air du Hoersaal',
+        "Energiebedarf Ventilatoren": {
+            "aps_varname": None,
+            "niveau": NIVEAU_SYSTEME,
+            "agregation": "somme_annuelle",
+            "piste": "centrale de traitement d air du Hoersaal",
         },
-        u'Wärmeabfuhr Luftkühler total': {
-            'aps_varname': None, 'niveau': NIVEAU_SYSTEME,
-            'agregation': 'somme_annuelle',
-            'piste': u'centrale de traitement d air du Hoersaal',
+        "Wärmeabfuhr Luftkühler total": {
+            "aps_varname": None,
+            "niveau": NIVEAU_SYSTEME,
+            "agregation": "somme_annuelle",
+            "piste": "centrale de traitement d air du Hoersaal",
         },
-        u'Wärmezufuhr Lufterwärmer': {
-            'aps_varname': None, 'niveau': NIVEAU_SYSTEME,
-            'agregation': 'somme_annuelle',
-            'piste': u'centrale de traitement d air du Hoersaal',
+        "Wärmezufuhr Lufterwärmer": {
+            "aps_varname": None,
+            "niveau": NIVEAU_SYSTEME,
+            "agregation": "somme_annuelle",
+            "piste": "centrale de traitement d air du Hoersaal",
         },
     },
     5: {
-        u'Befeuchtungsenergie': {
-            'aps_varname': None, 'niveau': NIVEAU_SYSTEME,
-            'agregation': 'somme_annuelle',
-            'piste': u'systeme de ventilation du batiment exemple',
+        "Befeuchtungsenergie": {
+            "aps_varname": None,
+            "niveau": NIVEAU_SYSTEME,
+            "agregation": "somme_annuelle",
+            "piste": "systeme de ventilation du batiment exemple",
         },
-        u'Energiebedarf Ventilatoren': {
-            'aps_varname': None, 'niveau': NIVEAU_SYSTEME,
-            'agregation': 'somme_annuelle',
-            'piste': u'systeme de ventilation du batiment exemple',
+        "Energiebedarf Ventilatoren": {
+            "aps_varname": None,
+            "niveau": NIVEAU_SYSTEME,
+            "agregation": "somme_annuelle",
+            "piste": "systeme de ventilation du batiment exemple",
         },
-        u'Hilfsenergie WRG': {
-            'aps_varname': None, 'niveau': NIVEAU_SYSTEME,
-            'agregation': 'somme_annuelle',
-            'piste': u'systeme de ventilation du batiment exemple',
+        "Hilfsenergie WRG": {
+            "aps_varname": None,
+            "niveau": NIVEAU_SYSTEME,
+            "agregation": "somme_annuelle",
+            "piste": "systeme de ventilation du batiment exemple",
         },
-        u'Wärmeabfuhr Luftkühler latent': {
-            'aps_varname': None, 'niveau': NIVEAU_SYSTEME,
-            'agregation': 'somme_annuelle',
-            'piste': u'systeme de ventilation du batiment exemple',
+        "Wärmeabfuhr Luftkühler latent": {
+            "aps_varname": None,
+            "niveau": NIVEAU_SYSTEME,
+            "agregation": "somme_annuelle",
+            "piste": "systeme de ventilation du batiment exemple",
         },
-        u'Wärmeabfuhr Luftkühler total': {
-            'aps_varname': None, 'niveau': NIVEAU_SYSTEME,
-            'agregation': 'somme_annuelle',
-            'piste': u'systeme de ventilation du batiment exemple',
+        "Wärmeabfuhr Luftkühler total": {
+            "aps_varname": None,
+            "niveau": NIVEAU_SYSTEME,
+            "agregation": "somme_annuelle",
+            "piste": "systeme de ventilation du batiment exemple",
         },
-        u'Wärmezufuhr Lufterwärmer': {
-            'aps_varname': None, 'niveau': NIVEAU_SYSTEME,
-            'agregation': 'somme_annuelle',
-            'piste': u'systeme de ventilation du batiment exemple',
+        "Wärmezufuhr Lufterwärmer": {
+            "aps_varname": None,
+            "niveau": NIVEAU_SYSTEME,
+            "agregation": "somme_annuelle",
+            "piste": "systeme de ventilation du batiment exemple",
         },
-        u'Wärmezufuhr WRG': {
-            'aps_varname': None, 'niveau': NIVEAU_SYSTEME,
-            'agregation': 'somme_annuelle',
-            'piste': u'systeme de ventilation du batiment exemple',
+        "Wärmezufuhr WRG": {
+            "aps_varname": None,
+            "niveau": NIVEAU_SYSTEME,
+            "agregation": "somme_annuelle",
+            "piste": "systeme de ventilation du batiment exemple",
         },
-        u'Wärmezufuhr WRG latent': {
-            'aps_varname': None, 'niveau': NIVEAU_SYSTEME,
-            'agregation': 'somme_annuelle',
-            'piste': u'systeme de ventilation du batiment exemple',
+        "Wärmezufuhr WRG latent": {
+            "aps_varname": None,
+            "niveau": NIVEAU_SYSTEME,
+            "agregation": "somme_annuelle",
+            "piste": "systeme de ventilation du batiment exemple",
         },
     },
     6: {
-        u'Energiebedarf Ventilatoren': {
-            'aps_varname': None, 'niveau': NIVEAU_SYSTEME,
-            'agregation': 'somme_annuelle',
-            'piste': u'systeme de ventilation, restaurant et cuisine',
+        "Energiebedarf Ventilatoren": {
+            "aps_varname": None,
+            "niveau": NIVEAU_SYSTEME,
+            "agregation": "somme_annuelle",
+            "piste": "systeme de ventilation, restaurant et cuisine",
         },
-        u'Hilfsenergie WRG': {
-            'aps_varname': None, 'niveau': NIVEAU_SYSTEME,
-            'agregation': 'somme_annuelle',
-            'piste': u'systeme de ventilation, restaurant et cuisine',
+        "Hilfsenergie WRG": {
+            "aps_varname": None,
+            "niveau": NIVEAU_SYSTEME,
+            "agregation": "somme_annuelle",
+            "piste": "systeme de ventilation, restaurant et cuisine",
         },
-        u'Wärmeabfuhr Luftkühler total': {
-            'aps_varname': None, 'niveau': NIVEAU_SYSTEME,
-            'agregation': 'somme_annuelle',
-            'piste': u'systeme de ventilation, restaurant et cuisine',
+        "Wärmeabfuhr Luftkühler total": {
+            "aps_varname": None,
+            "niveau": NIVEAU_SYSTEME,
+            "agregation": "somme_annuelle",
+            "piste": "systeme de ventilation, restaurant et cuisine",
         },
-        u'Wärmeabfuhr WRG': {
-            'aps_varname': None, 'niveau': NIVEAU_SYSTEME,
-            'agregation': 'somme_annuelle',
-            'piste': u'systeme de ventilation, restaurant et cuisine',
+        "Wärmeabfuhr WRG": {
+            "aps_varname": None,
+            "niveau": NIVEAU_SYSTEME,
+            "agregation": "somme_annuelle",
+            "piste": "systeme de ventilation, restaurant et cuisine",
         },
-        u'Wärmezufuhr Lufterwärmer': {
-            'aps_varname': None, 'niveau': NIVEAU_SYSTEME,
-            'agregation': 'somme_annuelle',
-            'piste': u'systeme de ventilation, restaurant et cuisine',
+        "Wärmezufuhr Lufterwärmer": {
+            "aps_varname": None,
+            "niveau": NIVEAU_SYSTEME,
+            "agregation": "somme_annuelle",
+            "piste": "systeme de ventilation, restaurant et cuisine",
         },
-        u'Wärmezufuhr WRG': {
-            'aps_varname': None, 'niveau': NIVEAU_SYSTEME,
-            'agregation': 'somme_annuelle',
-            'piste': u'systeme de ventilation, restaurant et cuisine',
+        "Wärmezufuhr WRG": {
+            "aps_varname": None,
+            "niveau": NIVEAU_SYSTEME,
+            "agregation": "somme_annuelle",
+            "piste": "systeme de ventilation, restaurant et cuisine",
         },
     },
 }
@@ -261,81 +291,81 @@ LIAISONS = {
 # appears in tests 4, 5 and 6 and designates the same thing there. Indexing by
 # test would force repeating the hint three times, hence letting them diverge.
 CANDIDATS_PAR_GRANDEUR = {
-    u'Jahresenergie solarer Wärmeeintrag': {
-        'aps_varname_candidat': u'Window solar gains',
-        'display_name': u'Solar gain',
-        'niveau': NIVEAU_LOCAL,
-        'units_type': u'Gain',
-        'preuve': u'outputs/sonde_aps.json, variables[model_level=z] ; '
-                  u'corrobore config/sia4010_aps_bindings_ve_runtime.json '
-                  u'-> bindings.total_room_solar_heat_gain_power',
-        'niveau_de_preuve': u'RELEVE',
-        'a_confirmer': u'Que « solarer Wärmeeintrag » au sens du classeur SIA '
-                       u'désigne le gain solaire transmis par les vitrages au '
-                       u'local, et non le rayonnement incident. Le Test 2 '
-                       u'distingue les deux : sa seconde grandeur est '
-                       u'« total transmittierte Solarstrahlung ».',
+    "Jahresenergie solarer Wärmeeintrag": {
+        "aps_varname_candidat": "Window solar gains",
+        "display_name": "Solar gain",
+        "niveau": NIVEAU_LOCAL,
+        "units_type": "Gain",
+        "preuve": "outputs/sonde_aps.json, variables[model_level=z] ; "
+        "corrobore config/sia4010_aps_bindings_ve_runtime.json "
+        "-> bindings.total_room_solar_heat_gain_power",
+        "niveau_de_preuve": "RELEVE",
+        "a_confirmer": "Que « solarer Wärmeeintrag » au sens du classeur SIA "
+        "désigne le gain solaire transmis par les vitrages au "
+        "local, et non le rayonnement incident. Le Test 2 "
+        "distingue les deux : sa seconde grandeur est "
+        "« total transmittierte Solarstrahlung ».",
     },
-    u'Beleuchtungsenergie': {
-        'aps_varname_candidat': u'Total lights energy',
-        'display_name': u'Total lights energy',
-        'niveau': NIVEAU_ENERGIE,
-        'units_type': u'Power',
-        'preuve': u'outputs/sonde_aps.json, variables[model_level=e]',
-        'niveau_de_preuve': u'RELEVE',
-        'a_confirmer': u'Que le classeur compte l\'énergie FINALE de '
-                       u'l\'éclairage, tous vecteurs confondus. VE expose '
-                       u'aussi « Lights electricity » (électricité seule) et, '
-                       u'au niveau du local, « Lighting gain » — qui est un '
-                       u'APPORT thermique, pas une consommation.',
+    "Beleuchtungsenergie": {
+        "aps_varname_candidat": "Total lights energy",
+        "display_name": "Total lights energy",
+        "niveau": NIVEAU_ENERGIE,
+        "units_type": "Power",
+        "preuve": "outputs/sonde_aps.json, variables[model_level=e]",
+        "niveau_de_preuve": "RELEVE",
+        "a_confirmer": "Que le classeur compte l'énergie FINALE de "
+        "l'éclairage, tous vecteurs confondus. VE expose "
+        "aussi « Lights electricity » (électricité seule) et, "
+        "au niveau du local, « Lighting gain » — qui est un "
+        "APPORT thermique, pas une consommation.",
     },
-    u'Wärmezufuhr Lufterwärmer': {
-        'aps_varname_candidat': u'Sys Mech vent heating load',
-        'display_name': u'System air heating load',
-        'niveau': NIVEAU_SYSTEME,
-        'units_type': u'Sys Load',
-        'preuve': u'outputs/sonde_aps.json, variables[model_level=v]',
-        'niveau_de_preuve': u'RELEVE',
-        'a_confirmer': u'Que la batterie chaude du classeur corresponde au '
-                       u'poste ApacheSystems « System air », et non à un '
-                       u'composant d\'un réseau ApacheHVAC.',
+    "Wärmezufuhr Lufterwärmer": {
+        "aps_varname_candidat": "Sys Mech vent heating load",
+        "display_name": "System air heating load",
+        "niveau": NIVEAU_SYSTEME,
+        "units_type": "Sys Load",
+        "preuve": "outputs/sonde_aps.json, variables[model_level=v]",
+        "niveau_de_preuve": "RELEVE",
+        "a_confirmer": "Que la batterie chaude du classeur corresponde au "
+        "poste ApacheSystems « System air », et non à un "
+        "composant d'un réseau ApacheHVAC.",
     },
-    u'Wärmeabfuhr Luftkühler latent': {
-        'aps_varname_candidat': u'Sys Mech vent dehum load',
-        'display_name': u'System air lat. clg. load',
-        'niveau': NIVEAU_SYSTEME,
-        'units_type': u'Sys Load',
-        'preuve': u'outputs/sonde_aps.json, variables[model_level=v]',
-        'niveau_de_preuve': u'RELEVE',
-        'a_confirmer': u'Que la charge de déshumidification de VE et la part '
-                       u'latente du classeur recouvrent la même grandeur.',
+    "Wärmeabfuhr Luftkühler latent": {
+        "aps_varname_candidat": "Sys Mech vent dehum load",
+        "display_name": "System air lat. clg. load",
+        "niveau": NIVEAU_SYSTEME,
+        "units_type": "Sys Load",
+        "preuve": "outputs/sonde_aps.json, variables[model_level=v]",
+        "niveau_de_preuve": "RELEVE",
+        "a_confirmer": "Que la charge de déshumidification de VE et la part "
+        "latente du classeur recouvrent la même grandeur.",
     },
-    u'Wärmeabfuhr Luftkühler total': {
-        'aps_varname_candidat': None,
-        'display_name': None,
-        'niveau': NIVEAU_SYSTEME,
-        'units_type': u'Sys Load',
-        'preuve': u'outputs/sonde_aps.json, variables[model_level=v]',
-        'niveau_de_preuve': u'RELEVE — mais AUCUNE variable unique',
-        'a_confirmer': u'« total » suppose sensible + latent. VE les sépare en '
-                       u'« Sys Mech vent cooling load » (sensible) et '
-                       u'« Sys Mech vent dehum load » (latent). Une liaison ne '
-                       u'peut donc pas être un simple nom de variable : il '
-                       u'faut une SOMME, que LIAISONS ne sait pas exprimer '
-                       u'aujourd\'hui.',
+    "Wärmeabfuhr Luftkühler total": {
+        "aps_varname_candidat": None,
+        "display_name": None,
+        "niveau": NIVEAU_SYSTEME,
+        "units_type": "Sys Load",
+        "preuve": "outputs/sonde_aps.json, variables[model_level=v]",
+        "niveau_de_preuve": "RELEVE — mais AUCUNE variable unique",
+        "a_confirmer": "« total » suppose sensible + latent. VE les sépare en "
+        "« Sys Mech vent cooling load » (sensible) et "
+        "« Sys Mech vent dehum load » (latent). Une liaison ne "
+        "peut donc pas être un simple nom de variable : il "
+        "faut une SOMME, que LIAISONS ne sait pas exprimer "
+        "aujourd'hui.",
     },
-    u'Befeuchtungsenergie': {
-        'aps_varname_candidat': u'Sys Room humidification load',
-        'display_name': u'Room hum. plant load',
-        'niveau': NIVEAU_SYSTEME,
-        'units_type': u'Sys Load',
-        'preuve': u'outputs/sonde_aps.json, variables[model_level=v]',
-        'niveau_de_preuve': u'RELEVE',
-        'a_confirmer': u'VE porte cette charge au LOCAL (« Room hum. plant '
-                       u'load »), pas à la centrale. Si le classeur vise '
-                       u'l\'humidification de l\'air neuf, ce n\'est pas la '
-                       u'même grandeur. « Ideal humidification » existe au '
-                       u'niveau énergie, mais VE le marque [obs].',
+    "Befeuchtungsenergie": {
+        "aps_varname_candidat": "Sys Room humidification load",
+        "display_name": "Room hum. plant load",
+        "niveau": NIVEAU_SYSTEME,
+        "units_type": "Sys Load",
+        "preuve": "outputs/sonde_aps.json, variables[model_level=v]",
+        "niveau_de_preuve": "RELEVE",
+        "a_confirmer": "VE porte cette charge au LOCAL (« Room hum. plant "
+        "load »), pas à la centrale. Si le classeur vise "
+        "l'humidification de l'air neuf, ce n'est pas la "
+        "même grandeur. « Ideal humidification » existe au "
+        "niveau énergie, mais VE le marque [obs].",
     },
 }
 
@@ -343,37 +373,33 @@ CANDIDATS_PAR_GRANDEUR = {
 #: Recording them is better than letting it seem they were never looked for:
 #: silence reads as "not yet checked", which would be false.
 SANS_CANDIDAT = {
-    u'Jahresenergie total transmittierte Solarstrahlung':
-        u'Au niveau surface, VE expose « Total short wave transmittance » (un '
-        u'COEFFICIENT, sans unité) et « Ext/Int surface incident solar flux » '
-        u'(un rayonnement INCIDENT, pas transmis). Aucune série d\'énergie '
-        u'transmise. Constat identique à celui de '
-        u'config/sia4010_aps_bindings_ve_runtime.json -> explicitly_unbound, '
-        u'atteint ici indépendamment.',
-    u'Energiebedarf Ventilatoren':
-        u'Aucune variable de ventilateurs SEULS. « ApSys aux energy » agrège '
-        u'fans + pumps + ctrls (libellé VE : « Ap Sys fans/pumps/ctrls '
-        u'energy ») ; « Fans energy » relève d\'ApacheHVAC et VE le marque '
-        u'[obs]. Les postes get_energy_uses() prm_fans_interior_central et '
-        u'prm_fans_interior_local sont une piste, mais ce sont des POSTES, pas '
-        u'des variables de série.',
-    u'Wärmezufuhr WRG':
-        u'ApacheSystems n\'expose de la récupération sur l\'air neuf qu\'une '
-        u'TEMPÉRATURE (« Sys Mech vent heat recovery temp »). Les deux '
-        u'variables de récupération en Power du même niveau — « Sys Process '
-        u'heat recovered » et « Sys Process heat recovery heat pump » — '
-        u'portent sur les PROCESS, pas sur la ventilation.',
-    u'Wärmeabfuhr WRG': u'Même motif que « Wärmezufuhr WRG ».',
-    u'Wärmezufuhr WRG latent': u'Même motif que « Wärmezufuhr WRG ».',
-    u'Hilfsenergie WRG':
-        u'« HR & spray pumps energy » (niveau énergie) est la seule piste, '
-        u'mais elle agrège la récupération et les humidificateurs à '
-        u'pulvérisation.',
+    "Jahresenergie total transmittierte Solarstrahlung": "Au niveau surface, VE expose « Total short wave transmittance » (un "
+    "COEFFICIENT, sans unité) et « Ext/Int surface incident solar flux » "
+    "(un rayonnement INCIDENT, pas transmis). Aucune série d'énergie "
+    "transmise. Constat identique à celui de "
+    "config/sia4010_aps_bindings_ve_runtime.json -> explicitly_unbound, "
+    "atteint ici indépendamment.",
+    "Energiebedarf Ventilatoren": "Aucune variable de ventilateurs SEULS. « ApSys aux energy » agrège "
+    "fans + pumps + ctrls (libellé VE : « Ap Sys fans/pumps/ctrls "
+    "energy ») ; « Fans energy » relève d'ApacheHVAC et VE le marque "
+    "[obs]. Les postes get_energy_uses() prm_fans_interior_central et "
+    "prm_fans_interior_local sont une piste, mais ce sont des POSTES, pas "
+    "des variables de série.",
+    "Wärmezufuhr WRG": "ApacheSystems n'expose de la récupération sur l'air neuf qu'une "
+    "TEMPÉRATURE (« Sys Mech vent heat recovery temp »). Les deux "
+    "variables de récupération en Power du même niveau — « Sys Process "
+    "heat recovered » et « Sys Process heat recovery heat pump » — "
+    "portent sur les PROCESS, pas sur la ventilation.",
+    "Wärmeabfuhr WRG": "Même motif que « Wärmezufuhr WRG ».",
+    "Wärmezufuhr WRG latent": "Même motif que « Wärmezufuhr WRG ».",
+    "Hilfsenergie WRG": "« HR & spray pumps energy » (niveau énergie) est la seule piste, "
+    "mais elle agrège la récupération et les humidificateurs à "
+    "pulvérisation.",
 }
 
 
 def candidats_a_confirmer(numero_test):
-    u"""Hints recorded from a real `.aps`, to confirm against the standard.
+    """Hints recorded from a real `.aps`, to confirm against the standard.
 
     These are NOT bindings. `extraire_candidat` ignores them entirely.
     They exist only so that an operator in front of an open VE knows what to
@@ -390,7 +416,7 @@ def candidats_a_confirmer(numero_test):
 
 
 def sans_candidat(numero_test):
-    u"""Quantities of this test for which the recording showed no hint.
+    """Quantities of this test for which the recording showed no hint.
 
     Args:
         numero_test: SIA test number.
@@ -402,7 +428,7 @@ def sans_candidat(numero_test):
 
 
 def _projeter(table_par_grandeur, numero_test):
-    u"""Restrict a table indexed by quantity to the quantities of a test.
+    """Restrict a table indexed by quantity to the quantities of a test.
 
     Args:
         table_par_grandeur: `{label: value}`.
@@ -412,13 +438,15 @@ def _projeter(table_par_grandeur, numero_test):
         dict: Subset corresponding to the declared quantities of the test.
     """
     grandeurs = LIAISONS.get(numero_test, {})
-    return dict((libelle, valeur)
-                for libelle, valeur in table_par_grandeur.items()
-                if libelle in grandeurs)
+    return dict(
+        (libelle, valeur)
+        for libelle, valeur in table_par_grandeur.items()
+        if libelle in grandeurs
+    )
 
 
 def verifier_api(symboles=None):
-    u"""Check that the `iesve` API presents the symbols used here.
+    """Check that the `iesve` API presents the symbols used here.
 
     Args:
         symboles: API surface already loaded; otherwise read from disk.
@@ -433,30 +461,31 @@ def verifier_api(symboles=None):
     if symboles is None:
         if not os.path.isfile(CHEMIN_SURFACE_API):
             raise ApiIncompatible(
-                u'surface d\'API introuvable : %s. La régénérer avec '
-                u've_adapter/Run_VE_Probe_API_Surface.py depuis VE.'
-                % CHEMIN_SURFACE_API)
-        with io.open(CHEMIN_SURFACE_API, encoding='utf-8') as flux:
-            symboles = json.load(flux).get('symbols', {})
+                "surface d'API introuvable : %s. La régénérer avec "
+                "ve_adapter/Run_VE_Probe_API_Surface.py depuis VE." % CHEMIN_SURFACE_API
+            )
+        with io.open(CHEMIN_SURFACE_API, encoding="utf-8") as flux:
+            symboles = json.load(flux).get("symbols", {})
 
-    lecteur = symboles.get('ResultsReader') or {}
-    membres = set(lecteur.get('members') or ())
+    lecteur = symboles.get("ResultsReader") or {}
+    membres = set(lecteur.get("members") or ())
     manquantes = [m for m in METHODES_REQUISES if m not in membres]
     if manquantes:
         raise ApiIncompatible(
-            u'ResultsReader ne présente pas : %s. L\'API a changé depuis la '
-            u'surface relevée ; relancer la sonde avant d\'aller plus loin.'
-            % u', '.join(manquantes))
+            "ResultsReader ne présente pas : %s. L'API a changé depuis la "
+            "surface relevée ; relancer la sonde avant d'aller plus loin."
+            % ", ".join(manquantes)
+        )
     return dict((m, True) for m in METHODES_REQUISES)
 
 
 #: Fields of a `get_variables()` entry where to search for a pattern. `name`
 #: does not exist: that was an assumption, corrected on 2026-08-06.
-CHAMPS_NOMMANTS = ('aps_varname', 'display_name')
+CHAMPS_NOMMANTS = ("aps_varname", "display_name")
 
 
 def decouvrir_variables(results_file, niveau=None, motif=None):
-    u"""List the variables available in a `.aps`, to establish bindings.
+    """List the variables available in a `.aps`, to establish bindings.
 
     This is the tool that replaces guesswork: read what the file actually
     contains, then populate `LIAISONS`.
@@ -486,7 +515,7 @@ def decouvrir_variables(results_file, niveau=None, motif=None):
 
 
 def _niveau_de(variable):
-    u"""Model level carried by a `get_variables()` entry.
+    """Model level carried by a `get_variables()` entry.
 
     Args:
         variable: API entry.
@@ -496,11 +525,11 @@ def _niveau_de(variable):
     """
     if not isinstance(variable, dict):
         return None
-    return variable.get('model_level')
+    return variable.get("model_level")
 
 
 def _nom_de(variable):
-    u"""Text to search for a pattern, for a `get_variables()` entry.
+    """Text to search for a pattern, for a `get_variables()` entry.
 
     Args:
         variable: API entry.
@@ -509,13 +538,12 @@ def _nom_de(variable):
         str: APS name and display label concatenated.
     """
     if not isinstance(variable, dict):
-        return u'%s' % (variable,)
-    return u' '.join(u'%s' % variable.get(champ, u'')
-                     for champ in CHAMPS_NOMMANTS)
+        return "%s" % (variable,)
+    return " ".join("%s" % variable.get(champ, "") for champ in CHAMPS_NOMMANTS)
 
 
 def agreger(serie, methode):
-    u"""Aggregate an hourly series according to the requested method.
+    """Aggregate an hourly series according to the requested method.
 
     Args:
         serie: Hourly values.
@@ -531,21 +559,21 @@ def agreger(serie, methode):
     valeurs = [float(v) for v in (serie or []) if v is not None]
     if not valeurs:
         return None
-    if methode == 'somme_annuelle':
+    if methode == "somme_annuelle":
         # VE powers are in W at the hourly step: the sum of W over
         # 8760 h equals Wh, which SIA expects in kWh.
         return sum(valeurs) / 1000.0
-    if methode == 'moyenne':
+    if methode == "moyenne":
         return sum(valeurs) / len(valeurs)
-    if methode == 'maximum':
+    if methode == "maximum":
         return max(valeurs)
-    if methode == 'minimum':
+    if methode == "minimum":
         return min(valeurs)
-    raise ValueError(u'méthode d\'agrégation inconnue : %r' % (methode,))
+    raise ValueError("méthode d'agrégation inconnue : %r" % (methode,))
 
 
 def liaisons_resolues(numero_test):
-    u"""Quantities whose variable name is established.
+    """Quantities whose variable name is established.
 
     Args:
         numero_test: SIA test number.
@@ -553,13 +581,15 @@ def liaisons_resolues(numero_test):
     Returns:
         dict: Subset of `LIAISONS[numero_test]`.
     """
-    return dict((libelle, liaison)
-                for libelle, liaison in LIAISONS.get(numero_test, {}).items()
-                if liaison.get('aps_varname'))
+    return dict(
+        (libelle, liaison)
+        for libelle, liaison in LIAISONS.get(numero_test, {}).items()
+        if liaison.get("aps_varname")
+    )
 
 
 def liaisons_manquantes(numero_test, reference=None):
-    u"""Quantities of the test whose binding remains to be established.
+    """Quantities of the test whose binding remains to be established.
 
     Args:
         numero_test: SIA test number.
@@ -573,14 +603,16 @@ def liaisons_manquantes(numero_test, reference=None):
     declarees = LIAISONS.get(numero_test, {})
     attendues = set(declarees)
     if reference is not None:
-        attendues |= set(g['libelle_de'] for g in reference['grandeurs'])
-    return sorted(libelle for libelle in attendues
-                  if not declarees.get(libelle, {}).get('aps_varname'))
+        attendues |= set(g["libelle_de"] for g in reference["grandeurs"])
+    return sorted(
+        libelle
+        for libelle in attendues
+        if not declarees.get(libelle, {}).get("aps_varname")
+    )
 
 
-def extraire_candidat(numero_test, results_file, reference,
-                      resolveur_local=None):
-    u"""Assemble the candidate of a test, in the format expected by the engine.
+def extraire_candidat(numero_test, results_file, reference, resolveur_local=None):
+    """Assemble the candidate of a test, in the format expected by the engine.
 
     Args:
         numero_test: SIA test number, between 2 and 6.
@@ -601,36 +633,37 @@ def extraire_candidat(numero_test, results_file, reference,
     """
     if numero_test not in TESTS_COUVERTS:
         raise ValueError(
-            u'test %r hors de portée ; couverts : %s'
-            % (numero_test, list(TESTS_COUVERTS)))
+            "test %r hors de portée ; couverts : %s" % (numero_test, list(TESTS_COUVERTS))
+        )
 
     resolues = liaisons_resolues(numero_test)
     if not resolues:
         raise LiaisonNonResolue(
-            u'aucune liaison résolue pour le test %d. Les noms de variables '
-            u'ne sont pas des symboles de l\'API : ils se relèvent sur un '
-            u'.aps réel avec `decouvrir_variables()`, puis se déclarent dans '
-            u'`LIAISONS`. Grandeurs concernées : %s'
-            % (numero_test, u', '.join(liaisons_manquantes(numero_test, reference))))
+            "aucune liaison résolue pour le test %d. Les noms de variables "
+            "ne sont pas des symboles de l'API : ils se relèvent sur un "
+            ".aps réel avec `decouvrir_variables()`, puis se déclarent dans "
+            "`LIAISONS`. Grandeurs concernées : %s"
+            % (numero_test, ", ".join(liaisons_manquantes(numero_test, reference)))
+        )
 
     candidat = {}
-    for grandeur in reference['grandeurs']:
-        libelle = grandeur['libelle_de']
+    for grandeur in reference["grandeurs"]:
+        libelle = grandeur["libelle_de"]
         liaison = resolues.get(libelle)
         if liaison is None:
             continue
         par_cas = {}
-        for cas in grandeur['cas']:
+        for cas in grandeur["cas"]:
             valeur = _lire_un_cas(results_file, liaison, cas, resolveur_local)
             if valeur is not None:
-                par_cas[cas['cas']] = valeur
+                par_cas[cas["cas"]] = valeur
         if par_cas:
             candidat[libelle] = par_cas
     return candidat
 
 
 def _lire_un_cas(results_file, liaison, cas, resolveur_local):
-    u"""Read and aggregate the series of a case.
+    """Read and aggregate the series of a case.
 
     Args:
         results_file: Open `ResultsReader`.
@@ -645,43 +678,51 @@ def _lire_un_cas(results_file, liaison, cas, resolveur_local):
     try:
         if room_id is None:
             serie = results_file.get_results(
-                liaison['aps_varname'], liaison.get('niveau', NIVEAU_LOCAL))
+                liaison["aps_varname"], liaison.get("niveau", NIVEAU_LOCAL)
+            )
         else:
             serie = results_file.get_room_results(
-                room_id, liaison['aps_varname'],
-                liaison.get('niveau', NIVEAU_LOCAL))
+                room_id, liaison["aps_varname"], liaison.get("niveau", NIVEAU_LOCAL)
+            )
     except Exception:  # noqa: BLE001 -- an absent series is not a crash
         return None
-    return agreger(serie, liaison.get('agregation', 'somme_annuelle'))
+    return agreger(serie, liaison.get("agregation", "somme_annuelle"))
 
 
 def etat_des_liaisons():
-    u"""Summary of what is ready and what is not.
+    """Summary of what is ready and what is not.
 
     Returns:
         str: Text table, readable in the VEScripts console.
     """
-    lignes = [u'Liaisons grandeur -> variable de resultat', u'']
+    lignes = ["Liaisons grandeur -> variable de resultat", ""]
     for numero in TESTS_COUVERTS:
         declarees = LIAISONS.get(numero, {})
         resolues = liaisons_resolues(numero)
-        lignes.append(u'  Test %d : %d/%d resolue(s)'
-                      % (numero, len(resolues), len(declarees)))
+        lignes.append(
+            "  Test %d : %d/%d resolue(s)" % (numero, len(resolues), len(declarees))
+        )
         candidats = candidats_a_confirmer(numero)
         muettes = sans_candidat(numero)
         for libelle in sorted(set(declarees) - set(resolues)):
-            lignes.append(u'      non resolue : %s%s'
-                          % (libelle, _mention(libelle, candidats, muettes)))
-    lignes.append(u'')
-    lignes.append(u'Les noms de variables se relevent sur un .aps reel avec '
-                  u'decouvrir_variables(), jamais par supposition.')
-    lignes.append(u'Un candidat n est PAS une liaison : il indique quoi '
-                  u'controler en premier, rien de plus.')
-    return u'\n'.join(lignes)
+            lignes.append(
+                "      non resolue : %s%s"
+                % (libelle, _mention(libelle, candidats, muettes))
+            )
+    lignes.append("")
+    lignes.append(
+        "Les noms de variables se relevent sur un .aps reel avec "
+        "decouvrir_variables(), jamais par supposition."
+    )
+    lignes.append(
+        "Un candidat n est PAS une liaison : il indique quoi "
+        "controler en premier, rien de plus."
+    )
+    return "\n".join(lignes)
 
 
 def _mention(libelle, candidats, muettes):
-    u"""Suffix line describing the state of an unresolved quantity.
+    """Suffix line describing the state of an unresolved quantity.
 
     Three states, distinct and not to be confused: a hint exists; we looked
     and nothing matches; we have not looked yet. The third must never read
@@ -697,13 +738,13 @@ def _mention(libelle, candidats, muettes):
     """
     piste = candidats.get(libelle)
     if piste:
-        nom = piste['aps_varname_candidat']
+        nom = piste["aps_varname_candidat"]
         if nom is None:
-            return u'  [pas de variable unique -- cf. a_confirmer]'
-        return u'  [candidat a confirmer : %s]' % nom
+            return "  [pas de variable unique -- cf. a_confirmer]"
+        return "  [candidat a confirmer : %s]" % nom
     if libelle in muettes:
-        return u'  [cherche, aucune variable ne correspond]'
-    return u'  [pas encore cherche]'
+        return "  [cherche, aucune variable ne correspond]"
+    return "  [pas encore cherche]"
 
 
 # ---------------------------------------------------------------------------
@@ -727,26 +768,24 @@ def _mention(libelle, candidats, muettes):
 # under "Diagnoseresultate" / "Diagnosegrössen". It is not a criterion.
 CORRESPONDANCE_DISTRIBUTIONS = {
     2: {
-        u'Solarer Wärmeeintrag gesamt':
-            u'Jahresenergie solarer Wärmeeintrag',
-        u'Total transmittierte Solarstrahlung':
-            u'Jahresenergie total transmittierte Solarstrahlung',
-        u'Einstrahlung auf Fensterebene gesamt': None,
-        u'Lamellenwinkel der Storen': None,
+        "Solarer Wärmeeintrag gesamt": "Jahresenergie solarer Wärmeeintrag",
+        "Total transmittierte Solarstrahlung": "Jahresenergie total transmittierte Solarstrahlung",
+        "Einstrahlung auf Fensterebene gesamt": None,
+        "Lamellenwinkel der Storen": None,
     },
     3: {
-        u'Beleuchtungsleistung': u'Beleuchtungsenergie',
-        u'Beleuchtungsstärke': None,
+        "Beleuchtungsleistung": "Beleuchtungsenergie",
+        "Beleuchtungsstärke": None,
     },
     5: {
-        u'Leistung Lufterwärmer': u'Wärmezufuhr Lufterwärmer',
-        u'Leistung Luftkühler total': u'Wärmeabfuhr Luftkühler total',
-        u'Leistung Luftkühler latent': u'Wärmeabfuhr Luftkühler latent',
-        u'Leistung WRG': u'Wärmezufuhr WRG',
-        u'Leistung WRG latent': u'Wärmezufuhr WRG latent',
-        u'Leistung Zu- und Abluftventilator': u'Energiebedarf Ventilatoren',
-        u'Zu-/Abluft-Volumenstrom': None,
-        u'Zulufttemperatur im Betrieb': None,
+        "Leistung Lufterwärmer": "Wärmezufuhr Lufterwärmer",
+        "Leistung Luftkühler total": "Wärmeabfuhr Luftkühler total",
+        "Leistung Luftkühler latent": "Wärmeabfuhr Luftkühler latent",
+        "Leistung WRG": "Wärmezufuhr WRG",
+        "Leistung WRG latent": "Wärmezufuhr WRG latent",
+        "Leistung Zu- und Abluftventilator": "Energiebedarf Ventilatoren",
+        "Zu-/Abluft-Volumenstrom": None,
+        "Zulufttemperatur im Betrieb": None,
     },
 }
 
@@ -754,12 +793,12 @@ CORRESPONDANCE_DISTRIBUTIONS = {
 #: is the annual sum -- not because the workbook forgot, but because it carries
 #: no distribution sheet for them.
 SANS_DISTRIBUTION = {
-    5: (u'Befeuchtungsenergie', u'Hilfsenergie WRG'),
+    5: ("Befeuchtungsenergie", "Hilfsenergie WRG"),
 }
 
 
 def libelle_annuel(numero_test, grandeur_distribution):
-    u"""Annual quantity corresponding to a distribution quantity.
+    """Annual quantity corresponding to a distribution quantity.
 
     Args:
         numero_test: SIA test number.
@@ -777,15 +816,15 @@ def libelle_annuel(numero_test, grandeur_distribution):
     correspondance = CORRESPONDANCE_DISTRIBUTIONS.get(numero_test, {})
     if grandeur_distribution not in correspondance:
         raise KeyError(
-            u'grandeur de distribution non déclarée pour le test %r : %r. '
-            u'La déclarer dans CORRESPONDANCE_DISTRIBUTIONS, en diagnostic '
-            u'(None) ou en grandeur de LIAISONS.'
-            % (numero_test, grandeur_distribution))
+            "grandeur de distribution non déclarée pour le test %r : %r. "
+            "La déclarer dans CORRESPONDANCE_DISTRIBUTIONS, en diagnostic "
+            "(None) ou en grandeur de LIAISONS." % (numero_test, grandeur_distribution)
+        )
     return correspondance[grandeur_distribution]
 
 
 def extraire_serie(numero_test, results_file, libelle, room_id=None):
-    u"""Read the RAW hourly series of a quantity, without aggregating it.
+    """Read the RAW hourly series of a quantity, without aggregating it.
 
     This is what the specifications require: the workbook wants the 8760
     values and calculates the annual sum and distribution itself.
@@ -806,16 +845,18 @@ def extraire_serie(numero_test, results_file, libelle, room_id=None):
     liaison = LIAISONS.get(numero_test, {}).get(libelle)
     if liaison is None:
         raise LiaisonNonResolue(
-            u'grandeur inconnue du test %d : %r' % (numero_test, libelle))
-    if not liaison.get('aps_varname'):
+            "grandeur inconnue du test %d : %r" % (numero_test, libelle)
+        )
+    if not liaison.get("aps_varname"):
         raise LiaisonNonResolue(
-            u'liaison non résolue pour %r. Les noms de variables se relèvent '
-            u'sur un .aps réel avec `decouvrir_variables()`.' % libelle)
+            "liaison non résolue pour %r. Les noms de variables se relèvent "
+            "sur un .aps réel avec `decouvrir_variables()`." % libelle
+        )
     return _lire_serie(results_file, liaison, room_id)
 
 
 def _lire_serie(results_file, liaison, room_id):
-    u"""Read a series, at room or global level according to the binding.
+    """Read a series, at room or global level according to the binding.
 
     Args:
         results_file: Open `ResultsReader`.
@@ -825,7 +866,7 @@ def _lire_serie(results_file, liaison, room_id):
     Returns:
         list | None: Series, or `None` if the API refuses.
     """
-    varname, niveau = liaison['aps_varname'], liaison['niveau']
+    varname, niveau = liaison["aps_varname"], liaison["niveau"]
     try:
         if room_id is not None and niveau == NIVEAU_LOCAL:
             return results_file.get_room_results(room_id, varname, niveau)

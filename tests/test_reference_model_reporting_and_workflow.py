@@ -24,6 +24,11 @@ from swiss_sia.reference_model.validator import ReferenceModelValidator
 from swiss_sia.reference_model.ve_api import VeGateway
 from swiss_sia.reference_model.workflow import ReferenceModelWorkflow
 
+
+def _fixed_time():
+    return datetime(2026, 1, 1, tzinfo=timezone.utc)
+
+
 TEST_ROOT = Path(__file__).resolve().parents[1]
 TEST_OUTPUT_ROOT = TEST_ROOT / ".codex_tmp" / "reference_model_tests"
 
@@ -102,9 +107,7 @@ def _valid_snapshot(parameters, geometry, project_path):
                     identifier=opening.identifier,
                     opening_type=opening.opening_type.value,
                     area_m2=opening.polygon.area,
-                    construction_id=str(
-                        parameters.value(opening.construction_parameter)
-                    ),
+                    construction_id=str(parameters.value(opening.construction_parameter)),
                 )
                 for opening in surface.openings
             )
@@ -251,8 +254,12 @@ class ReferenceModelReportingAndWorkflowTests(unittest.TestCase):
         results = ReferenceModelValidator().validate_model_snapshot(
             snapshot, parameters, geometry
         )
-        failures = [result for result in results if result.status == ValidationStatus.FAIL]
-        self.assertEqual(failures, [], [(item.control_id, item.message) for item in failures])
+        failures = [
+            result for result in results if result.status == ValidationStatus.FAIL
+        ]
+        self.assertEqual(
+            failures, [], [(item.control_id, item.message) for item in failures]
+        )
 
     def test_converted_weather_candidate_reports_claim_guardrail(self):
         temporary = _test_dir("converted_weather_claim_guardrail")
@@ -284,9 +291,7 @@ class ReferenceModelReportingAndWorkflowTests(unittest.TestCase):
         results = ReferenceModelValidator().validate_model_snapshot(
             snapshot, parameters, geometry
         )
-        provenance = next(
-            item for item in results if item.control_id == "VE-WEA-002"
-        )
+        provenance = next(item for item in results if item.control_id == "VE-WEA-002")
         self.assertEqual(provenance.status, ValidationStatus.WARNING)
         self.assertFalse(provenance.evidence["compliance_claim_allowed"])
         self.assertTrue(provenance.evidence["checksum_matches"])
@@ -295,9 +300,7 @@ class ReferenceModelReportingAndWorkflowTests(unittest.TestCase):
         temporary = _test_dir("report_exports")
         parameters = build_default_registry()
         geometry = ReferenceGeometryGenerator(parameters).generate()
-        validations = ReferenceModelValidator().validate_geometry(
-            geometry, parameters
-        )
+        validations = ReferenceModelValidator().validate_geometry(geometry, parameters)
         artifacts = ReportGenerator(temporary).generate(
             run_metadata={"mode": "TEST"},
             parameters=parameters,
@@ -312,16 +315,15 @@ class ReferenceModelReportingAndWorkflowTests(unittest.TestCase):
         payload = json.loads(artifacts.report_json.read_text(encoding="utf-8"))
         self.assertEqual(payload["overall_status"], "PASS")
         self.assertTrue(payload["placeholders"])
-        self.assertEqual(len(artifacts.audit_jsonl.read_text(encoding="utf-8").splitlines()), 1)
+        self.assertEqual(
+            len(artifacts.audit_jsonl.read_text(encoding="utf-8").splitlines()), 1
+        )
 
     def test_full_existing_mode_workflow_runs_and_verifies_constructions(self):
         temporary = _test_dir("happy_path_workflow")
         parameters = _fully_configured_registry()
         gateway = _HappyPathGateway(temporary)
-        fixed_time = lambda: datetime(2026, 1, 1, tzinfo=timezone.utc)
-        outcome = ReferenceModelWorkflow(
-            parameters, gateway, now=fixed_time
-        ).run()
+        outcome = ReferenceModelWorkflow(parameters, gateway, now=_fixed_time).run()
         self.assertNotEqual(outcome.status, ValidationStatus.FAIL)
         # The full mutation sequence ran, including the post-adjacency guard.
         self.assertIn("verify_constructions", gateway.calls)
@@ -343,11 +345,9 @@ class ReferenceModelReportingAndWorkflowTests(unittest.TestCase):
         temporary = _test_dir("resume_after_import_workflow")
         parameters = _fully_configured_registry()
         gateway = _HappyPathGateway(temporary)
-        fixed_time = lambda: datetime(2026, 1, 1, tzinfo=timezone.utc)
-
-        outcome = ReferenceModelWorkflow(
-            parameters, gateway, now=fixed_time
-        ).run(resume_after_import=True)
+        outcome = ReferenceModelWorkflow(parameters, gateway, now=_fixed_time).run(
+            resume_after_import=True
+        )
 
         self.assertNotEqual(outcome.status, ValidationStatus.FAIL)
         self.assertNotIn("no_existing", gateway.calls)
@@ -369,9 +369,8 @@ class ReferenceModelReportingAndWorkflowTests(unittest.TestCase):
     def test_unresolved_required_inputs_block_all_ve_calls(self):
         temporary = _test_dir("blocked_workflow")
         gateway = _PreflightOnlyGateway(temporary)
-        fixed_time = lambda: datetime(2026, 1, 1, tzinfo=timezone.utc)
         outcome = ReferenceModelWorkflow(
-            build_default_registry(), gateway, now=fixed_time
+            build_default_registry(), gateway, now=_fixed_time
         ).run()
         self.assertEqual(outcome.status, ValidationStatus.FAIL)
         self.assertEqual(gateway.mutation_calls, 0)

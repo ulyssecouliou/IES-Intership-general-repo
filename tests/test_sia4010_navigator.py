@@ -10,7 +10,6 @@ from swiss_sia.reference_model.sia4010.navigator_report import (
     write_navigator_artifacts,
 )
 
-
 TEST_ROOT = Path(__file__).resolve().parents[1]
 OUTPUT = TEST_ROOT / ".codex_tmp" / "sia4010_navigator"
 
@@ -20,10 +19,7 @@ def _ready_models(*variants):
 
 
 def _results(*variants):
-    return {
-        variant: {"status": "OFFICIAL_RESULTS_RECORDED"}
-        for variant in variants
-    }
+    return {variant: {"status": "OFFICIAL_RESULTS_RECORDED"} for variant in variants}
 
 
 def _locators(*variants):

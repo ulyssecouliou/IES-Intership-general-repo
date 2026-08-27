@@ -27,7 +27,6 @@ from swiss_sia.reference_model.sia4010.template_strategy import (
     qualify_instantiated_template_model,
 )
 
-
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -35,9 +34,7 @@ def _sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def _scenario_payload(
-    variant="test_2A", case_id="2A", target_class="1A"
-):
+def _scenario_payload(variant="test_2A", case_id="2A", target_class="1A"):
     return {
         "schema_version": "1.0",
         "scenario_id": "SIA4010_TEST2A_TEMPLATE",
@@ -172,7 +169,10 @@ def test_exact_disposable_template_becomes_registered_model_evidence(tmp_path):
 def test_changed_disposable_template_is_rejected(tmp_path):
     project = _qualified_disposable(tmp_path)
     (project / "case.mdl").write_text("changed", encoding="utf-8")
-    with pytest.raises(Exception, match="changed after the qualified copy"):
+    with pytest.raises(
+        Exception,
+        match=("changed after the qualified copy|" "TEMPLATE_SIGNATURE_MISMATCH"),
+    ):
         qualify_instantiated_template_model(project, ROOT)
 
 
@@ -205,9 +205,7 @@ def test_test2_template_simulation_is_annual_hourly_and_registers(tmp_path):
         "results_filename": "SIA4010_test_2A_2A_20260821_131415.aps",
     }
     assert receipt.options_after["preconditioning_days"] == 14
-    payload = register_template_case_simulation(
-        registry, receipt, project_path=project
-    )
+    payload = register_template_case_simulation(registry, receipt, project_path=project)
     evidence = payload["cases"]["test_2A/2A"]["simulation_evidence"]
     assert evidence["model_evidence_link_status"] == "VERIFIED"
     assert evidence["verification_basis"] == "QUALIFIED_EXACT_TEMPLATE"

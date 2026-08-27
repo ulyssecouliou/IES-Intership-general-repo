@@ -27,21 +27,25 @@ import sys
 
 RACINE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 IFC_DEFAUT = os.path.join(
-    RACINE, 'SIA_4010_geteilter_Link', 'Beispielgebäude',
-    'IFC_Beispielebäude_201106_abstractBIM.ifc')
+    RACINE,
+    "SIA_4010_geteilter_Link",
+    "Beispielgebäude",
+    "IFC_Beispielebäude_201106_abstractBIM.ifc",
+)
 
 # Encoding of non-ASCII characters in STEP: \X2\<hex UTF-16>\X0\
-_MOTIF_X2 = re.compile('\\\\X2\\\\((?:[0-9A-Fa-f]{4})+)\\\\X0\\\\')
-_MOTIF_X = re.compile('\\\\X\\\\([0-9A-Fa-f]{2})')
-_MOTIF_ENTITE = re.compile(r'#(\d+)\s*=\s*([A-Z0-9_]+)\s*\((.*?)\);', re.S)
+_MOTIF_X2 = re.compile("\\\\X2\\\\((?:[0-9A-Fa-f]{4})+)\\\\X0\\\\")
+_MOTIF_X = re.compile("\\\\X\\\\([0-9A-Fa-f]{2})")
+_MOTIF_ENTITE = re.compile(r"#(\d+)\s*=\s*([A-Z0-9_]+)\s*\((.*?)\);", re.S)
 
 
 def decoder(texte):
     """Returns a readable STEP label."""
+
     def _x2(m):
         brut = m.group(1)
-        return ''.join(chr(int(brut[i:i + 4], 16))
-                       for i in range(0, len(brut), 4))
+        return "".join(chr(int(brut[i : i + 4], 16)) for i in range(0, len(brut), 4))
+
     texte = _MOTIF_X2.sub(_x2, texte)
     texte = _MOTIF_X.sub(lambda m: chr(int(m.group(1), 16)), texte)
     return texte
@@ -49,18 +53,18 @@ def decoder(texte):
 
 def champs(corps):
     """Splits the fields of a STEP entity respecting parentheses and strings."""
-    resultat, profondeur, courant, dans_chaine = [], 0, '', False
+    resultat, profondeur, courant, dans_chaine = [], 0, "", False
     for caractere in corps:
         if caractere == "'":
             dans_chaine = not dans_chaine
         if not dans_chaine:
-            if caractere == '(':
+            if caractere == "(":
                 profondeur += 1
-            elif caractere == ')':
+            elif caractere == ")":
                 profondeur -= 1
-            elif caractere == ',' and profondeur == 0:
+            elif caractere == "," and profondeur == 0:
                 resultat.append(courant.strip())
-                courant = ''
+                courant = ""
                 continue
         courant += caractere
     resultat.append(courant.strip())
@@ -69,31 +73,30 @@ def champs(corps):
 
 def charger(chemin):
     """Returns {identifier: (type, fields)} for the whole file."""
-    with open(chemin, encoding='utf-8', errors='replace') as flux:
+    with open(chemin, encoding="utf-8", errors="replace") as flux:
         brut = flux.read()
     entites = {}
     for trouve in _MOTIF_ENTITE.finditer(brut):
-        entites[int(trouve.group(1))] = (trouve.group(2),
-                                         champs(trouve.group(3)))
+        entites[int(trouve.group(1))] = (trouve.group(2), champs(trouve.group(3)))
     return entites
 
 
 def _texte(valeur):
-    valeur = (valeur or '').strip()
-    if valeur in ('$', '*', ''):
-        return ''
+    valeur = (valeur or "").strip()
+    if valeur in ("$", "*", ""):
+        return ""
     return decoder(valeur.strip("'"))
 
 
 def _nombre(valeur):
     try:
-        return float((valeur or '').strip())
+        return float((valeur or "").strip())
     except ValueError:
         return None
 
 
 def _references(valeur):
-    return [int(x) for x in re.findall(r'#(\d+)', valeur or '')]
+    return [int(x) for x in re.findall(r"#(\d+)", valeur or "")]
 
 
 def quantites_par_objet(entites):
@@ -105,7 +108,7 @@ def quantites_par_objet(entites):
     """
     par_objet = {}
     for _identifiant, (type_entite, valeurs) in entites.items():
-        if type_entite != 'IFCRELDEFINESBYPROPERTIES':
+        if type_entite != "IFCRELDEFINESBYPROPERTIES":
             continue
         # IfcRelDefinesByProperties(GlobalId, OwnerHistory, Name, Description,
         #                           RelatedObjects, RelatingPropertyDefinition)
@@ -116,7 +119,7 @@ def quantites_par_objet(entites):
         if not definition:
             continue
         cible = entites.get(definition[0])
-        if cible is None or cible[0] != 'IFCELEMENTQUANTITY':
+        if cible is None or cible[0] != "IFCELEMENTQUANTITY":
             continue
         # IfcElementQuantity(..., Quantities): last field
         mesures = {}
@@ -125,9 +128,9 @@ def quantites_par_objet(entites):
             if mesure is None:
                 continue
             type_mesure, champs_mesure = mesure
-            if not type_mesure.startswith('IFCQUANTITY'):
+            if not type_mesure.startswith("IFCQUANTITY"):
                 continue
-            nom = _texte(champs_mesure[0]) if champs_mesure else ''
+            nom = _texte(champs_mesure[0]) if champs_mesure else ""
             valeur = None
             for brut in reversed(champs_mesure):
                 valeur = _nombre(brut)
@@ -142,7 +145,7 @@ def quantites_par_objet(entites):
                 # surface must be surfaced, never silently absorbed.
                 mesures[nom] = abs(valeur)
                 if valeur < 0:
-                    mesures.setdefault('_signes_negatifs', set()).add(nom)
+                    mesures.setdefault("_signes_negatifs", set()).add(nom)
         for objet in objets:
             par_objet.setdefault(objet, {}).update(mesures)
     return par_objet
@@ -160,16 +163,18 @@ def etage_par_objet(entites):
     """
     etages = {}
     for identifiant, (type_entite, valeurs) in entites.items():
-        if type_entite == 'IFCBUILDINGSTOREY':
-            etages[identifiant] = _texte(valeurs[2]) if len(valeurs) > 2 else ''
+        if type_entite == "IFCBUILDINGSTOREY":
+            etages[identifiant] = _texte(valeurs[2]) if len(valeurs) > 2 else ""
 
     rattachement = {}
     for relation, index_parent, index_enfants in (
-            ('IFCRELAGGREGATES', 4, 5),
-            ('IFCRELCONTAINEDINSPATIALSTRUCTURE', 5, 4)):
+        ("IFCRELAGGREGATES", 4, 5),
+        ("IFCRELCONTAINEDINSPATIALSTRUCTURE", 5, 4),
+    ):
         for _identifiant, (type_entite, valeurs) in entites.items():
-            if type_entite != relation or len(valeurs) <= max(index_parent,
-                                                              index_enfants):
+            if type_entite != relation or len(valeurs) <= max(
+                index_parent, index_enfants
+            ):
                 continue
             parents = _references(valeurs[index_parent])
             if not parents or parents[0] not in etages:
@@ -186,104 +191,150 @@ def inventaire(chemin):
 
     locaux = []
     for identifiant, (type_entite, valeurs) in sorted(entites.items()):
-        if type_entite != 'IFCSPACE':
+        if type_entite != "IFCSPACE":
             continue
-        locaux.append({
-            'id': identifiant,
-            'nom': _texte(valeurs[2]) if len(valeurs) > 2 else '',
-            'designation': _texte(valeurs[7]) if len(valeurs) > 7 else '',
-            'etage': rattachement.get(identifiant, ''),
-            'quantites': quantites.get(identifiant, {}),
-        })
+        locaux.append(
+            {
+                "id": identifiant,
+                "nom": _texte(valeurs[2]) if len(valeurs) > 2 else "",
+                "designation": _texte(valeurs[7]) if len(valeurs) > 7 else "",
+                "etage": rattachement.get(identifiant, ""),
+                "quantites": quantites.get(identifiant, {}),
+            }
+        )
     return entites, etages, locaux
 
 
 def main():
     chemin = sys.argv[1] if len(sys.argv) > 1 else IFC_DEFAUT
     if not os.path.isfile(chemin):
-        sys.stderr.write('IFC introuvable : ' + chemin + '\n')
+        sys.stderr.write("IFC introuvable : " + chemin + "\n")
         return 1
     entites, etages, locaux = inventaire(chemin)
 
-    print('=== BATIMENT EXEMPLE SIA 4010 -- inventaire IFC (lecture seule) ===')
-    print('fichier  : ' + os.path.basename(chemin))
-    print('entites  : %d' % len(entites))
-    print('etages   : %d -> %s' % (len(etages),
-                                   ', '.join(sorted(v for v in etages.values() if v))))
-    print('locaux   : %d' % len(locaux))
-    print('')
+    print("=== BATIMENT EXEMPLE SIA 4010 -- inventaire IFC (lecture seule) ===")
+    print("fichier  : " + os.path.basename(chemin))
+    print("entites  : %d" % len(entites))
+    print(
+        "etages   : %d -> %s"
+        % (len(etages), ", ".join(sorted(v for v in etages.values() if v)))
+    )
+    print("locaux   : %d" % len(locaux))
+    print("")
 
     # Surface quantities actually present, without assumption: this file
     # carries NO `NetFloorArea`. The 165.8 m2 value cited by the Test 4
     # specification corresponds to `GrossFloorArea` (verified: 165.81).
     noms_quantites = set()
     for local in locaux:
-        noms_quantites.update(k for k in local['quantites'] if not k.startswith('_'))
-    print('quantites de surface presentes sur les locaux : %s' % (
-        ', '.join(sorted(noms_quantites)) or '(aucune)'))
-    print('')
+        noms_quantites.update(k for k in local["quantites"] if not k.startswith("_"))
+    print(
+        "quantites de surface presentes sur les locaux : %s"
+        % (", ".join(sorted(noms_quantites)) or "(aucune)")
+    )
+    print("")
 
-    print('%-6s %-6s %-24s %-13s %10s %10s' % (
-        '#id', 'Nom', 'Designation', 'Etage', 'Brut m2', 'Volume m3'))
+    print(
+        "%-6s %-6s %-24s %-13s %10s %10s"
+        % ("#id", "Nom", "Designation", "Etage", "Brut m2", "Volume m3")
+    )
     total = 0.0
     for local in locaux:
-        mesures = local['quantites']
-        brut = mesures.get('GrossFloorArea')
-        volume = mesures.get('GrossVolume')
+        mesures = local["quantites"]
+        brut = mesures.get("GrossFloorArea")
+        volume = mesures.get("GrossVolume")
         if brut:
             total += brut
-        print('%-6s %-6s %-24s %-13s %10s %10s' % (
-            '#' + str(local['id']), local['nom'][:6], local['designation'][:24],
-            local['etage'][:13],
-            '%.2f' % brut if brut is not None else '-',
-            '%.2f' % volume if volume is not None else '-'))
-    print('')
-    print('somme des surfaces brutes : %.2f m2' % total)
+        print(
+            "%-6s %-6s %-24s %-13s %10s %10s"
+            % (
+                "#" + str(local["id"]),
+                local["nom"][:6],
+                local["designation"][:24],
+                local["etage"][:13],
+                "%.2f" % brut if brut is not None else "-",
+                "%.2f" % volume if volume is not None else "-",
+            )
+        )
+    print("")
+    print("somme des surfaces brutes : %.2f m2" % total)
 
-    negatifs = sorted(set(
-        nom for local in locaux
-        for nom in local['quantites'].get('_signes_negatifs', ())))
+    negatifs = sorted(
+        set(
+            nom
+            for local in locaux
+            for nom in local["quantites"].get("_signes_negatifs", ())
+        )
+    )
     if negatifs:
-        print('⚠ quantites stockees en NEGATIF dans l IFC (valeur absolue prise) : %s'
-              % ', '.join(negatifs))
+        print(
+            "⚠ quantites stockees en NEGATIF dans l IFC (valeur absolue prise) : %s"
+            % ", ".join(negatifs)
+        )
 
-    print('')
-    print('=== controle croise avec la specification du Test 4 ===')
+    print("")
+    print("=== controle croise avec la specification du Test 4 ===")
     print("La spec designe le local « Hoersaal », sans fenetre, sur deux niveaux")
-    print('(1er et 2e etage), toiture sur extérieur, de 165.8 m2.')
-    candidats = [l for l in locaux
-                 if 'rsaal' in (l['nom'] + l['designation']).lower()]
+    print("(1er et 2e etage), toiture sur extérieur, de 165.8 m2.")
+    candidats = [
+        room for room in locaux if "rsaal" in (room["nom"] + room["designation"]).lower()
+    ]
     if not candidats:
-        print('  AUCUN local dont le nom contienne « rsaal ».')
-        print('  ⚠ Le rattachement spec <-> IFC doit etre etabli autrement.')
+        print("  AUCUN local dont le nom contienne « rsaal ».")
+        print("  ⚠ Le rattachement spec <-> IFC doit etre etabli autrement.")
     for local in candidats:
-        mesures = local['quantites']
-        print('  #%-6s %-6s %-12s etage=%-13s brut=%s m2  hauteur=%s m  vol=%s m3' % (
-            local['id'], local['nom'], local['designation'], local['etage'],
-            '%.2f' % mesures['GrossFloorArea'] if 'GrossFloorArea' in mesures else '-',
-            '%.2f' % mesures['AverageHeight'] if 'AverageHeight' in mesures else '-',
-            '%.2f' % mesures['GrossVolume'] if 'GrossVolume' in mesures else '-'))
+        mesures = local["quantites"]
+        print(
+            "  #%-6s %-6s %-12s etage=%-13s brut=%s m2  hauteur=%s m  vol=%s m3"
+            % (
+                local["id"],
+                local["nom"],
+                local["designation"],
+                local["etage"],
+                (
+                    "%.2f" % mesures["GrossFloorArea"]
+                    if "GrossFloorArea" in mesures
+                    else "-"
+                ),
+                "%.2f" % mesures["AverageHeight"] if "AverageHeight" in mesures else "-",
+                "%.2f" % mesures["GrossVolume"] if "GrossVolume" in mesures else "-",
+            )
+        )
     if candidats:
-        cumul = sum(l['quantites'].get('GrossFloorArea') or 0.0 for l in candidats)
+        cumul = sum(room["quantites"].get("GrossFloorArea") or 0.0 for room in candidats)
         ecart = cumul - 165.8
-        print('  surface cumulee : %.2f m2 -- ecart a la spec (165.8) : %+.2f m2' % (
-            cumul, ecart))
-        print('  %s' % ('CONCORDE (l IFC est bien le batiment de la spec).'
-                        if abs(ecart) < 0.05
-                        else 'ECART SIGNIFICATIF -- a elucider avant tout import.'))
+        print(
+            "  surface cumulee : %.2f m2 -- ecart a la spec (165.8) : %+.2f m2"
+            % (cumul, ecart)
+        )
+        print(
+            "  %s"
+            % (
+                "CONCORDE (l IFC est bien le batiment de la spec)."
+                if abs(ecart) < 0.05
+                else "ECART SIGNIFICATIF -- a elucider avant tout import."
+            )
+        )
         # The spec says "zweigeschossig, im 1. und 2. OG": the room must span
         # two levels. Storeys are at 3.4, 6.8 and 9.8 m, so a height of ~6.4 m
         # would confirm the double height, 3.4 m would refute it.
         for local in candidats:
-            hauteur = local['quantites'].get('AverageHeight')
+            hauteur = local["quantites"].get("AverageHeight")
             if hauteur is None:
                 continue
-            print('  hauteur moyenne %.2f m -> %s' % (
-                hauteur,
-                'coherent avec un local sur DEUX niveaux' if hauteur > 5.0
-                else 'un seul niveau : CONTREDIT « zweigeschossig », a elucider'))
+            print(
+                "  hauteur moyenne %.2f m -> %s"
+                % (
+                    hauteur,
+                    (
+                        "coherent avec un local sur DEUX niveaux"
+                        if hauteur > 5.0
+                        else "un seul niveau : CONTREDIT « zweigeschossig », a elucider"
+                    ),
+                )
+            )
     return 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

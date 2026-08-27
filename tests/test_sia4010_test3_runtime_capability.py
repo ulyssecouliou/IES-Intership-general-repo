@@ -18,7 +18,6 @@ from swiss_sia.reference_model.sia4010.test3_runtime_capability import (
     write_test3_runtime_capability_report,
 )
 
-
 ROOT = Path(__file__).resolve().parents[1]
 WORK_ROOT = ROOT / ".codex_tmp" / "test3_runtime_capability"
 
@@ -213,10 +212,7 @@ class Test3RuntimeCapabilityTests(unittest.TestCase):
             payload["status"],
             "READY_FOR_DISPOSABLE_MUTATION_QUALIFICATION",
         )
-        by_case = {
-            row["case_id"]: row
-            for row in payload["variant_capability_matrix"]
-        }
+        by_case = {row["case_id"]: row for row in payload["variant_capability_matrix"]}
         self.assertNotIn(
             "TEST3_3K_3L_DEVICE_IDENTITY_CLARIFICATION_REQUIRED",
             by_case["3A"]["technical_blockers"],

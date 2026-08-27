@@ -21,7 +21,6 @@ from .external_input_manifest import (
 )
 from .weather_verification import parse_tmy1
 
-
 NORMALIZED_SCHEMA_VERSION = "1.0"
 TEST2A_EXTERNAL_INPUT_IDS = (
     "iso52016_2017_chapter7_test_cell",
@@ -93,13 +92,9 @@ def _number(
     if result != result or result in (float("inf"), float("-inf")):
         raise ConfigurationError("{} must be finite".format(context))
     if minimum is not None and result < minimum:
-        raise ConfigurationError(
-            "{} must be >= {}".format(context, minimum)
-        )
+        raise ConfigurationError("{} must be >= {}".format(context, minimum))
     if maximum is not None and result > maximum:
-        raise ConfigurationError(
-            "{} must be <= {}".format(context, maximum)
-        )
+        raise ConfigurationError("{} must be <= {}".format(context, maximum))
     return result
 
 
@@ -108,9 +103,7 @@ def _load_bound_json(evidence: ExternalInputEvidence) -> Dict[str, Any]:
 
     if not evidence.ready_for_binding:
         raise ConfigurationError(
-            "External input '{}' is not READY_FOR_BINDING".format(
-                evidence.input_id
-            )
+            "External input '{}' is not READY_FOR_BINDING".format(evidence.input_id)
         )
     path = evidence.binding_artifact_path
     if path is None or not path.is_file():
@@ -153,9 +146,7 @@ def _load_bound_json(evidence: ExternalInputEvidence) -> Dict[str, Any]:
             "External input '{}' normalized artifact is not bound to its "
             "primary source SHA-256".format(evidence.input_id)
         )
-    _text(payload.get("source_locator"), "{} source_locator".format(
-        evidence.input_id
-    ))
+    _text(payload.get("source_locator"), "{} source_locator".format(evidence.input_id))
     _validate_provisional_declarations(payload, evidence.input_id)
     return payload
 
@@ -221,9 +212,7 @@ def _validate_provisional_declarations(
                 continue
             _text(
                 entry.get(key),
-                "{} declared_provisional_values[{}].{}".format(
-                    input_id, index, key
-                ),
+                "{} declared_provisional_values[{}].{}".format(input_id, index, key),
             )
         fields.append(str(entry["field"]))
     if not fields:
@@ -418,9 +407,7 @@ class NormalizedOfficeProfiles:
         """Return a JSON-safe immutable binding record."""
 
         payload = asdict(self)
-        payload["native_ve_materialization_ready"] = (
-            self.native_ve_materialization_ready
-        )
+        payload["native_ve_materialization_ready"] = self.native_ve_materialization_ready
         if self.ve_profile_graph is not None:
             payload["ve_profile_graph"] = self.ve_profile_graph.to_dict()
         return payload
@@ -455,8 +442,7 @@ class CommonCellExternalBindings:
             "office_profiles": self.office_profiles.to_dict(),
             "evidence_sha256": dict(self.evidence_sha256),
             "provisional_fields": {
-                input_id: list(fields)
-                for input_id, fields in self.provisional_fields
+                input_id: list(fields) for input_id, fields in self.provisional_fields
             },
             "carries_provisional_values": self.carries_provisional_values,
         }
@@ -491,8 +477,7 @@ class Test2AExternalBindings:
             "office_profiles": self.office_profiles.to_dict(),
             "evidence_sha256": dict(self.evidence_sha256),
             "provisional_fields": {
-                input_id: list(fields)
-                for input_id, fields in self.provisional_fields
+                input_id: list(fields) for input_id, fields in self.provisional_fields
             },
             "carries_provisional_values": self.carries_provisional_values,
         }
@@ -544,20 +529,18 @@ def _load_layer(value: Any, context: str) -> NormalizedLayer:
     )
 
 
-def _load_construction(
-    value: Any, context: str
-) -> NormalizedOpaqueConstruction:
+def _load_construction(value: Any, context: str) -> NormalizedOpaqueConstruction:
     """Validate one outside-to-inside opaque construction."""
 
     payload = _object(value, context)
     raw_layers = payload.get("layers_outside_to_inside")
-    if not isinstance(raw_layers, Sequence) or isinstance(
-        raw_layers, (str, bytes)
-    ) or not raw_layers:
+    if (
+        not isinstance(raw_layers, Sequence)
+        or isinstance(raw_layers, (str, bytes))
+        or not raw_layers
+    ):
         raise ConfigurationError(
-            "{}.layers_outside_to_inside must be a non-empty array".format(
-                context
-            )
+            "{}.layers_outside_to_inside must be a non-empty array".format(context)
         )
     layers = tuple(
         _load_layer(item, "{}.layers[{}]".format(context, index))
@@ -567,9 +550,7 @@ def _load_construction(
         raise ConfigurationError(
             "{} contains duplicate material_id values".format(context)
         )
-    surface = _object(
-        payload.get("surface_properties"), context + ".surface_properties"
-    )
+    surface = _object(payload.get("surface_properties"), context + ".surface_properties")
     return NormalizedOpaqueConstruction(
         construction_id=_text(
             payload.get("construction_id"), context + ".construction_id"
@@ -630,34 +611,26 @@ def load_iso_test_cell(
     window_height = _number(
         openings.get("height_m"), "ISO south_windows.height_m", minimum=0.01
     )
-    sill = _number(
-        openings.get("sill_m"), "ISO south_windows.sill_m", minimum=0.0
-    )
+    sill = _number(openings.get("sill_m"), "ISO south_windows.sill_m", minimum=0.0)
     margin = _number(
         openings.get("side_margin_m"),
         "ISO south_windows.side_margin_m",
         minimum=0.0,
     )
-    gap = _number(
-        openings.get("gap_m"), "ISO south_windows.gap_m", minimum=0.0
-    )
+    gap = _number(openings.get("gap_m"), "ISO south_windows.gap_m", minimum=0.0)
     if abs((2.0 * margin + window_count * window_width + gap) - width) > 1e-9:
         raise ConfigurationError(
             "ISO south-window dimensions do not close against cell width"
         )
     if sill + window_height >= height:
-        raise ConfigurationError(
-            "ISO south windows do not fit within the cell height"
-        )
+        raise ConfigurationError("ISO south windows do not fit within the cell height")
     surface_coefficients = _object(
         payload.get("surface_coefficients_w_m2k"),
         "ISO surface_coefficients_w_m2k",
     )
     return NormalizedIsoTestCell(
         width_m=width,
-        depth_m=_number(
-            cell.get("depth_m"), "ISO cell.depth_m", minimum=0.1
-        ),
+        depth_m=_number(cell.get("depth_m"), "ISO cell.depth_m", minimum=0.1),
         height_m=height,
         window_count=window_count,
         window_width_m=window_width,
@@ -690,9 +663,7 @@ def load_iso_test_cell(
         ),
         roof=_load_construction(constructions.get("roof"), "ISO roof"),
         floor=_load_construction(constructions.get("floor"), "ISO floor"),
-        source_locator=_text(
-            payload.get("source_locator"), "ISO source_locator"
-        ),
+        source_locator=_text(payload.get("source_locator"), "ISO source_locator"),
     )
 
 
@@ -710,18 +681,12 @@ def load_weather_binding(
     if not path.is_absolute():
         path = evidence.binding_artifact_path.parent / path
     path = path.resolve()
-    expected_sha = _text(
-        weather.get("sha256"), "SIA 2028 weather_file.sha256"
-    ).lower()
+    expected_sha = _text(weather.get("sha256"), "SIA 2028 weather_file.sha256").lower()
     if not path.is_file() or _sha256(path) != expected_sha:
         raise ConfigurationError(
-            "SIA 2028 assignable weather file is missing or changed: {}".format(
-                path
-            )
+            "SIA 2028 assignable weather file is missing or changed: {}".format(path)
         )
-    weather_format = _text(
-        weather.get("format"), "SIA 2028 weather_file.format"
-    ).upper()
+    weather_format = _text(weather.get("format"), "SIA 2028 weather_file.format").upper()
     if weather_format not in SUPPORTED_WEATHER_FORMATS:
         raise ConfigurationError(
             "Unsupported SIA 2028 weather format: {}".format(weather_format)
@@ -736,16 +701,12 @@ def load_weather_binding(
     )
     if weather_format == "EPW":
         try:
-            epw_lines = path.read_text(
-                encoding="utf-8-sig"
-            ).splitlines()
+            epw_lines = path.read_text(encoding="utf-8-sig").splitlines()
         except (OSError, UnicodeError) as exc:
             raise ConfigurationError(
                 "Unable to read SIA 2028 EPW file: {}".format(exc)
             ) from exc
-        actual_hours = len(
-            [line for line in epw_lines[8:] if line.strip()]
-        )
+        actual_hours = len([line for line in epw_lines[8:] if line.strip()])
         if actual_hours != hour_count:
             raise ConfigurationError(
                 "SIA 2028 EPW contains {} hourly records; expected {}".format(
@@ -766,12 +727,8 @@ def load_weather_binding(
         weather_format=weather_format,
         hour_count=hour_count,
         station_name=_text(payload.get("station_name"), "station_name"),
-        dataset_identity=_text(
-            payload.get("dataset_identity"), "dataset_identity"
-        ),
-        source_locator=_text(
-            payload.get("source_locator"), "weather source_locator"
-        ),
+        dataset_identity=_text(payload.get("dataset_identity"), "dataset_identity"),
+        source_locator=_text(payload.get("source_locator"), "weather source_locator"),
     )
 
 
@@ -815,9 +772,7 @@ def _profile_data(value: Any, profile_type: str, context: str) -> Tuple[Any, ...
     if profile_type == "yearly":
         if len(value) != 8760:
             raise ConfigurationError(
-                "{} yearly profile must contain exactly 8760 values".format(
-                    context
-                )
+                "{} yearly profile must contain exactly 8760 values".format(context)
             )
         return tuple(
             _number(
@@ -839,9 +794,7 @@ def _profile_reference(value: Any, context: str) -> str:
 
     payload = _object(value, context)
     if set(payload) != {"profile_ref"}:
-        raise ConfigurationError(
-            "{} must contain only profile_ref".format(context)
-        )
+        raise ConfigurationError("{} must contain only profile_ref".format(context))
     return _text(payload.get("profile_ref"), context + ".profile_ref")
 
 
@@ -901,9 +854,7 @@ def _native_ve_profile_data(
                 )
             )
         return tuple(
-            {"profile_ref": _profile_reference(
-                item, "{}[{}]".format(context, index)
-            )}
+            {"profile_ref": _profile_reference(item, "{}[{}]".format(context, index))}
             for index, item in enumerate(value)
         )
     if profile_type == "yearly":
@@ -917,15 +868,9 @@ def _native_ve_profile_data(
                         period_context
                     )
                 )
-            reference = _profile_reference(
-                raw_period[0], period_context + "[0]"
-            )
-            start_day = _integer_day(
-                raw_period[1], period_context + ".start_day"
-            )
-            end_day = _integer_day(
-                raw_period[2], period_context + ".end_day"
-            )
+            reference = _profile_reference(raw_period[0], period_context + "[0]")
+            start_day = _integer_day(raw_period[1], period_context + ".start_day")
+            end_day = _integer_day(raw_period[2], period_context + ".end_day")
             if start_day != expected_start:
                 raise ConfigurationError(
                     "{} yearly periods must be contiguous from day 1; "
@@ -937,21 +882,15 @@ def _native_ve_profile_data(
                 raise ConfigurationError(
                     "{} end_day must be >= start_day".format(period_context)
                 )
-            normalized.append(
-                ({"profile_ref": reference}, start_day, end_day)
-            )
+            normalized.append(({"profile_ref": reference}, start_day, end_day))
             expected_start = end_day + 1
         if expected_start != 366:
             raise ConfigurationError(
-                "{} yearly periods must cover days 1 through 365".format(
-                    context
-                )
+                "{} yearly periods must cover days 1 through 365".format(context)
             )
         return tuple(normalized)
     raise ConfigurationError(
-        "Unsupported native VE profile_type for {}: {}".format(
-            context, profile_type
-        )
+        "Unsupported native VE profile_type for {}: {}".format(context, profile_type)
     )
 
 
@@ -965,9 +904,7 @@ def _load_ve_profile_graph(
     payload = _object(value, "ve_profile_graph")
     raw_nodes = payload.get("nodes")
     if not isinstance(raw_nodes, list) or not raw_nodes:
-        raise ConfigurationError(
-            "ve_profile_graph.nodes must be a non-empty array"
-        )
+        raise ConfigurationError("ve_profile_graph.nodes must be a non-empty array")
     nodes: List[NormalizedVeProfileNode] = []
     node_keys: Set[str] = set()
     references: Set[str] = set()
@@ -986,14 +923,10 @@ def _load_ve_profile_graph(
                 "Duplicate ve_profile_graph VE reference: {}".format(reference)
             )
         references.add(reference)
-        profile_type = _text(
-            node.get("profile_type"), context + ".profile_type"
-        ).lower()
+        profile_type = _text(node.get("profile_type"), context + ".profile_type").lower()
         if profile_type not in SUPPORTED_VE_PROFILE_GRAPH_TYPES:
             raise ConfigurationError(
-                "Unsupported native VE profile_type for {}: {}".format(
-                    key, profile_type
-                )
+                "Unsupported native VE profile_type for {}: {}".format(key, profile_type)
             )
         units_raw = node.get("units")
         if (
@@ -1027,10 +960,7 @@ def _load_ve_profile_graph(
         )
 
     indexed = {node.key: node for node in nodes}
-    dependencies = {
-        node.key: _profile_references(node.data)
-        for node in nodes
-    }
+    dependencies = {node.key: _profile_references(node.data) for node in nodes}
     unknown_dependencies = sorted(
         {
             dependency
@@ -1050,17 +980,12 @@ def _load_ve_profile_graph(
             "weekly": "daily",
             "yearly": "weekly",
         }.get(node.profile_type)
-        child_types = {
-            indexed[child].profile_type
-            for child in dependencies[node.key]
-        }
+        child_types = {indexed[child].profile_type for child in dependencies[node.key]}
         if node.profile_type == "daily" and child_types:
             raise ConfigurationError(
                 "Daily VE profile {} cannot have dependencies".format(node.key)
             )
-        if expected_child_type is not None and child_types != {
-            expected_child_type
-        }:
+        if expected_child_type is not None and child_types != {expected_child_type}:
             raise ConfigurationError(
                 "{} VE profile {} must reference only {} profiles".format(
                     node.profile_type, node.key, expected_child_type
@@ -1070,9 +995,7 @@ def _load_ve_profile_graph(
     resolved: Set[str] = set()
     remaining = set(indexed)
     while remaining:
-        ready = {
-            key for key in remaining if dependencies[key] <= resolved
-        }
+        ready = {key for key in remaining if dependencies[key] <= resolved}
         if not ready:
             raise ConfigurationError(
                 "ve_profile_graph contains cyclic profile_ref dependencies: "
@@ -1082,12 +1005,8 @@ def _load_ve_profile_graph(
         remaining -= ready
 
     raw_outputs = _object(payload.get("outputs"), "ve_profile_graph.outputs")
-    missing_outputs = sorted(
-        set(REQUIRED_OFFICE_PROFILE_KEYS) - set(raw_outputs)
-    )
-    unknown_outputs = sorted(
-        set(raw_outputs) - set(REQUIRED_OFFICE_PROFILE_KEYS)
-    )
+    missing_outputs = sorted(set(REQUIRED_OFFICE_PROFILE_KEYS) - set(raw_outputs))
+    unknown_outputs = sorted(set(raw_outputs) - set(REQUIRED_OFFICE_PROFILE_KEYS))
     if missing_outputs or unknown_outputs:
         raise ConfigurationError(
             "ve_profile_graph output keys mismatch; missing={}, unknown={}".format(
@@ -1134,9 +1053,7 @@ def load_office_profiles(
         item = _object(value, "SIA 2024 profile {}".format(index))
         key = _text(item.get("key"), "SIA 2024 profile key")
         if key in indexed:
-            raise ConfigurationError(
-                "Duplicate SIA 2024 profile key: {}".format(key)
-            )
+            raise ConfigurationError("Duplicate SIA 2024 profile key: {}".format(key))
         indexed[key] = item
         profile_type = _text(
             item.get("profile_type"), "{}.profile_type".format(key)
@@ -1154,9 +1071,7 @@ def load_office_profiles(
             NormalizedUsageProfile(
                 key=key,
                 profile_type=profile_type,
-                reference=_text(
-                    item.get("reference"), "{}.reference".format(key)
-                ),
+                reference=_text(item.get("reference"), "{}.reference".format(key)),
                 modulating=bool(item.get("modulating", True)),
                 units=units_raw,
                 data=_profile_data(
@@ -1182,20 +1097,14 @@ def load_office_profiles(
     return NormalizedOfficeProfiles(
         use_category=_text(payload.get("use_category"), "use_category"),
         value_set=_text(payload.get("value_set"), "value_set"),
-        calendar_basis=_text(
-            payload.get("calendar_basis"), "calendar_basis"
-        ),
+        calendar_basis=_text(payload.get("calendar_basis"), "calendar_basis"),
         annual_simultaneity_method=_text(
             payload.get("annual_simultaneity_method"),
             "annual_simultaneity_method",
         ),
         profiles=tuple(normalized),
-        source_locator=_text(
-            payload.get("source_locator"), "profiles source_locator"
-        ),
-        ve_profile_graph=_load_ve_profile_graph(
-            payload.get("ve_profile_graph")
-        ),
+        source_locator=_text(payload.get("source_locator"), "profiles source_locator"),
+        ve_profile_graph=_load_ve_profile_graph(payload.get("ve_profile_graph")),
     )
 
 
@@ -1205,9 +1114,7 @@ def load_test2a_external_bindings(
     """Load all three exact external bindings required by ``test_2A/2A``."""
 
     if (readiness.variant, readiness.case_id) != ("test_2A", "2A"):
-        raise ConfigurationError(
-            "Test 2A bindings require readiness for test_2A/2A"
-        )
+        raise ConfigurationError("Test 2A bindings require readiness for test_2A/2A")
     if not readiness.ready_for_binding:
         raise ConfigurationError(
             "Test 2A external inputs are not READY_FOR_BINDING: {}".format(
@@ -1245,20 +1152,14 @@ def load_common_cell_external_bindings(
     indexed = {item.input_id: item for item in readiness.evidence}
     missing = sorted(set(TEST2A_EXTERNAL_INPUT_IDS) - set(indexed))
     if missing:
-        raise ConfigurationError(
-            "Common cell evidence is incomplete: {}".format(missing)
-        )
+        raise ConfigurationError("Common cell evidence is incomplete: {}".format(missing))
     provisional_fields = tuple(
         (input_id, binding_provisional_fields(indexed[input_id]))
         for input_id in TEST2A_EXTERNAL_INPUT_IDS
     )
     return CommonCellExternalBindings(
-        iso_cell=load_iso_test_cell(
-            indexed["iso52016_2017_chapter7_test_cell"]
-        ),
-        weather=load_weather_binding(
-            indexed["sia2028_dry_normal_zurich_kloten"]
-        ),
+        iso_cell=load_iso_test_cell(indexed["iso52016_2017_chapter7_test_cell"]),
+        weather=load_weather_binding(indexed["sia2028_dry_normal_zurich_kloten"]),
         office_profiles=load_office_profiles(
             indexed["sia2024_office_3_1_standard_profiles"]
         ),

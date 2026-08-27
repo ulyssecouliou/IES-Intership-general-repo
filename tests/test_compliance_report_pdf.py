@@ -38,7 +38,9 @@ class PdfEncodingTests(unittest.TestCase):
     """Protect readable normative symbols in the WinAnsi-only PDF writer."""
 
     def test_greek_thermal_bridge_symbols_are_transliterated(self):
-        self.assertEqual(_escape("Ponts thermiques (ψ/χ)"), b"Ponts thermiques \\(psi/chi\\)")
+        self.assertEqual(
+            _escape("Ponts thermiques (ψ/χ)"), b"Ponts thermiques \\(psi/chi\\)"
+        )
 
 
 def _write_test_png(path: Path, width: int = 12, height: int = 8) -> Path:
@@ -79,9 +81,7 @@ class LogoEmbeddingTests(unittest.TestCase):
 
     def test_contained_logo_keeps_its_original_aspect_ratio(self):
         wide = _write_test_png(OUTPUT_ROOT / "wide_logo.png", width=24, height=8)
-        portrait = _write_test_png(
-            OUTPUT_ROOT / "portrait_logo.png", width=8, height=24
-        )
+        portrait = _write_test_png(OUTPUT_ROOT / "portrait_logo.png", width=8, height=24)
         document = PdfDocument(title="logo ratios")
         page = document.add_page()
 
@@ -198,8 +198,12 @@ class VerdictEngineTests(unittest.TestCase):
     def _sia3802(self, alerts=(), comparison_status=""):
         """Build a minimal checker-shaped result for the verdict engine."""
         return {
-            "envelope": {}, "openings": {}, "ventilation": {},
-            "gains": {}, "setpoints": {}, "hvac": {},
+            "envelope": {},
+            "openings": {},
+            "ventilation": {},
+            "gains": {},
+            "setpoints": {},
+            "hvac": {},
             "alerts": list(alerts),
             "global_reference_comparison": {"status": comparison_status},
         }
@@ -329,9 +333,7 @@ class VerdictEngineTests(unittest.TestCase):
         acceptance (project value above the reference) must yield NOT_COMPLIANT,
         never a compliant statement, even with no other blocker."""
         verdict = build_compliance_verdict(
-            self._sia3802(
-                comparison_status="REVIEWED_RESULT_CONTRADICTS_ACCEPTANCE"
-            ),
+            self._sia3802(comparison_status="REVIEWED_RESULT_CONTRADICTS_ACCEPTANCE"),
             {},
             rooms_analysed=3,
         )
@@ -371,15 +373,33 @@ class ModelSummaryTests(unittest.TestCase):
 
     def test_areas_are_grouped_by_compass_sector(self):
         room = RoomData(
-            id="r", name="R", area=50.0, volume=150.0,
+            id="r",
+            name="R",
+            area=50.0,
+            volume=150.0,
             surfaces=[
-                SurfaceData(id="s", name="S", area=10.0, net_area=10.0,
-                            is_external=True, orientation=180.0),
-                SurfaceData(id="n", name="N", area=6.0, net_area=6.0,
-                            is_external=True, orientation=0.0),
+                SurfaceData(
+                    id="s",
+                    name="S",
+                    area=10.0,
+                    net_area=10.0,
+                    is_external=True,
+                    orientation=180.0,
+                ),
+                SurfaceData(
+                    id="n",
+                    name="N",
+                    area=6.0,
+                    net_area=6.0,
+                    is_external=True,
+                    orientation=0.0,
+                ),
             ],
-            openings=[OpeningData(id="w", name="W", area=2.0, is_external=True,
-                                  orientation=180.0)],
+            openings=[
+                OpeningData(
+                    id="w", name="W", area=2.0, is_external=True, orientation=180.0
+                )
+            ],
         )
         summary = summarise_model([room])
         self.assertEqual(summary["opaque_by_sector"]["S"], 10.0)
@@ -389,9 +409,18 @@ class ModelSummaryTests(unittest.TestCase):
 
     def test_unresolvable_orientation_is_not_charted_in_a_wrong_sector(self):
         room = RoomData(
-            id="r", name="R",
-            surfaces=[SurfaceData(id="s", name="S", area=9.0, net_area=9.0,
-                                  is_external=True, orientation="unknown")],
+            id="r",
+            name="R",
+            surfaces=[
+                SurfaceData(
+                    id="s",
+                    name="S",
+                    area=9.0,
+                    net_area=9.0,
+                    is_external=True,
+                    orientation="unknown",
+                )
+            ],
         )
         summary = summarise_model([room])
         self.assertEqual(sum(summary["opaque_by_sector"].values()), 0.0)
@@ -415,7 +444,9 @@ class CompanyProfileTests(unittest.TestCase):
     def test_malformed_config_is_tolerated(self):
         root = OUTPUT_ROOT / "bad"
         (root / "config").mkdir(parents=True, exist_ok=True)
-        (root / "config" / "company_profile.json").write_text("{ not json", encoding="utf-8")
+        (root / "config" / "company_profile.json").write_text(
+            "{ not json", encoding="utf-8"
+        )
         self.assertFalse(load_company_profile(root).is_configured)
 
     def test_missing_logo_file_is_ignored(self):
@@ -431,7 +462,7 @@ class CompanyProfileTests(unittest.TestCase):
     def test_placeholder_logo_is_ignored_when_office_name_is_empty(self):
         root = OUTPUT_ROOT / "placeholder_only"
         (root / "config").mkdir(parents=True, exist_ok=True)
-        logo = _write_test_png(root / "placeholder.png")
+        _write_test_png(root / "placeholder.png")
         (root / "config" / "company_profile.json").write_text(
             '{"name": "", "logo_path": "placeholder.png"}',
             encoding="utf-8",
@@ -456,8 +487,10 @@ class RenderedReportTests(unittest.TestCase):
         rooms = [build_reference_room()]
         analyzer = StaticModelAnalyzer(rooms)
         dynamic = {
-            "status": "NOT_CHECKABLE", "building_status": "NEW_BUILDING",
-            "rooms": [], "design_power_status": "NOT_CHECKABLE",
+            "status": "NOT_CHECKABLE",
+            "building_status": "NEW_BUILDING",
+            "rooms": [],
+            "design_power_status": "NOT_CHECKABLE",
         }
         cls.rooms = rooms
         cls.sia3802 = SIA3802Checker(analyzer, RuleEngine()).check_all(
@@ -487,7 +520,24 @@ class RenderedReportTests(unittest.TestCase):
             language=language,
             model_name="ZOER_32_C1.mit",
         )
-        return PdfReader(str(path)).pages[0].extract_text()
+        return PdfReader(str(path)).pages[1].extract_text()
+
+    def test_cover_matches_the_sibling_ies_report_hierarchy(self):
+        path = render_compliance_report_pdf(
+            OUTPUT_ROOT / "report_cover.pdf",
+            project_label="ZOER_32_C1",
+            rooms_data=self.rooms,
+            sia3802_results=self.sia3802,
+            sia4010_results=self.sia4010,
+            profile=self.profile,
+            language="en",
+            model_name="ZOER_32_C1.mit",
+        )
+        cover = PdfReader(str(path)).pages[0].extract_text()
+        self.assertIn("ENGINEERING ASSESSMENT REPORT", cover)
+        self.assertIn("SIA 380/2 compliance assessment", cover)
+        self.assertIn("ZOER_32_C1", cover)
+        self.assertNotIn("CERTIFICATION REPORT", cover)
 
     def test_company_identity_reaches_the_letterhead(self):
         text = self._render("fr")
@@ -532,7 +582,7 @@ class RenderedReportTests(unittest.TestCase):
         self.assertIn("SIA Compliance Report", text)
         self.assertIn("ZOER_32_C1", text)
         self.assertIn("IES  ·  www.iesve.com", text)
-        self.assertRegex(text, r"\d{2}/\d{2}/\d{4}\s+1$")
+        self.assertRegex(text, r"\d{2}/\d{2}/\d{4}\s+2$")
 
     def test_undetermined_verdict_is_reported_not_hidden(self):
         # The fixture supplies no reviewed global comparison, so the headline
@@ -576,11 +626,13 @@ class RenderedReportTests(unittest.TestCase):
         )
         page_text = [page.extract_text() for page in PdfReader(str(path)).pages]
         reserves_page = next(
-            index for index, text in enumerate(page_text)
+            index
+            for index, text in enumerate(page_text)
             if translate("annex_reserves_title", "en").upper() in text
         )
         methodology_page = next(
-            index for index, text in enumerate(page_text)
+            index
+            for index, text in enumerate(page_text)
             if translate("annex_method_title", "en").upper() in text
         )
         self.assertGreater(methodology_page, reserves_page)
@@ -593,8 +645,12 @@ class RenderedReportTests(unittest.TestCase):
             if item.get("implemented_rule") == "SIA3802_U_VALUE_EXTERNAL_WALL"
         )
         sia3802 = {
-            "envelope": {}, "openings": {}, "ventilation": {},
-            "gains": {}, "setpoints": {}, "hvac": {},
+            "envelope": {},
+            "openings": {},
+            "ventilation": {},
+            "gains": {},
+            "setpoints": {},
+            "hvac": {},
             "global_reference_comparison": {"status": "REVIEWED_RESULT_AVAILABLE"},
             "alerts": [
                 Alert(
@@ -622,6 +678,47 @@ class RenderedReportTests(unittest.TestCase):
         self.assertIn("u value: 0.41", full_text)
         self.assertIn("Review the wall construction", full_text)
 
+    def test_repetitive_findings_are_grouped_with_all_object_ids(self):
+        alerts = [
+            Alert(
+                rule="SIA3802_VISIBLE_TRANSMITTANCE",
+                description="Glazing visible transmittance requires review.",
+                severity=Severity.LOW,
+                category="Openings",
+                recommendation="Retain the value in the global comparison.",
+                data=SimpleNamespace(
+                    name="Window-{}".format(index),
+                    visible_transmittance=0.65,
+                ),
+            )
+            for index in range(1, 9)
+        ]
+        sia3802 = {
+            "envelope": {},
+            "openings": {},
+            "ventilation": {},
+            "gains": {},
+            "setpoints": {},
+            "hvac": {},
+            "alerts": alerts,
+            "global_reference_comparison": {"status": "NOT_CHECKABLE"},
+        }
+        path = render_compliance_report_pdf(
+            OUTPUT_ROOT / "report_grouped_findings.pdf",
+            project_label="P",
+            rooms_data=self.rooms,
+            sia3802_results=sia3802,
+            sia4010_results={},
+            profile=self.profile,
+            language="en",
+            scope="sia3802",
+        )
+        full_text = "\n".join(page.extract_text() for page in PdfReader(str(path)).pages)
+        self.assertIn("8 occurrences share this rule", full_text)
+        for index in range(1, 9):
+            self.assertIn("Window-{}".format(index), full_text)
+        self.assertEqual(full_text.count("SIA3802_VISIBLE_TRANSMITTANCE"), 1)
+
     def test_summer_comfort_blocker_prints_failure_values_and_source(self):
         """The client card must explain the exceedance instead of describing a pass."""
         alert = Alert(
@@ -646,8 +743,13 @@ class RenderedReportTests(unittest.TestCase):
         self.assertEqual(criterion["id"], "SIA3802_SUMMER_COMFORT")
 
         sia3802 = {
-            "envelope": {}, "openings": {}, "ventilation": {}, "gains": {},
-            "setpoints": {}, "hvac": {}, "dynamic": {"status": "CHECKED"},
+            "envelope": {},
+            "openings": {},
+            "ventilation": {},
+            "gains": {},
+            "setpoints": {},
+            "hvac": {},
+            "dynamic": {"status": "CHECKED"},
             "global_reference_comparison": {"status": "REVIEWED_RESULT_AVAILABLE"},
             "alerts": [alert],
         }
@@ -677,9 +779,7 @@ class RenderedReportTests(unittest.TestCase):
             "setpoints": {},
             "hvac": {},
             "alerts": [],
-            "global_reference_comparison": {
-                "status": "REVIEWED_RESULT_AVAILABLE"
-            },
+            "global_reference_comparison": {"status": "REVIEWED_RESULT_AVAILABLE"},
         }
         sia4010 = {
             "tests": {"test_1": {"status": "OFFICIAL_RESULTS_RECORDED"}},
@@ -703,14 +803,12 @@ class RenderedReportTests(unittest.TestCase):
             model_name="ZOER_32_C1.mit",
             scope="sia3802",
         )
-        text = PdfReader(str(path)).pages[0].extract_text()
+        text = PdfReader(str(path)).pages[1].extract_text()
         heading = text.index(translate("verdict_heading", "fr").upper())
         compliant = text.index(translate("verdict_compliant", "fr"), heading)
         undetermined = text.find(translate("verdict_not_determined", "fr"), heading)
         self.assertTrue(undetermined < 0 or compliant < undetermined)
-        self.assertNotIn(
-            translate("sia4010_readiness_attestation_required", "fr"), text
-        )
+        self.assertNotIn(translate("sia4010_readiness_attestation_required", "fr"), text)
 
     def test_unknown_report_scope_is_rejected(self):
         with self.assertRaises(ValueError):
@@ -736,7 +834,7 @@ class RenderedReportTests(unittest.TestCase):
                     profile=CompanyProfile(),
                     language=code,
                 )
-                text = PdfReader(str(path)).pages[0].extract_text()
+                text = PdfReader(str(path)).pages[1].extract_text()
                 self.assertIn(translate("report_neutral_header", code), text)
                 self.assertNotIn(translate("company_unspecified", code), text)
 
@@ -749,7 +847,7 @@ class RenderedReportTests(unittest.TestCase):
             sia4010_results=self.sia4010,
             profile=CompanyProfile(),
         )
-        text = PdfReader(str(path)).pages[0].extract_text()
+        text = PdfReader(str(path)).pages[1].extract_text()
         self.assertIn(translate("report_title", "en"), text)
         self.assertIn(translate("report_neutral_header", "en"), text)
 

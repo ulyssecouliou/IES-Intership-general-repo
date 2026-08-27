@@ -31,15 +31,9 @@ from swiss_sia.reference_model.sia4010.test2a_diagnostic_workbook import (
     load_test2a_diagnostic_workbook_binding,
 )
 
-
 ROOT = Path(__file__).resolve().parents[1]
 BINDINGS = ROOT / "config" / "sia4010_aps_bindings_ve_runtime.json"
-WORKBOOK = (
-    ROOT
-    / "SIA_4010_geteilter_Link"
-    / "Test2"
-    / "Resultaterfassung_Test2.xlsx"
-)
+WORKBOOK = ROOT / "SIA_4010_geteilter_Link" / "Test2" / "Resultaterfassung_Test2.xlsx"
 WORK_ROOT = ROOT / ".codex_tmp" / "test2a_diagnostic_aps"
 TOTAL_GAIN = "hourly_room_solar_heat_gain_total"
 TRANSMITTED = "hourly_transmitted_solar_radiation_excluding_secondary"
@@ -125,15 +119,14 @@ class Test2A2E1ApsTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.bindings = QualifiedApsBindings.load(BINDINGS)
-        cls.workbook_binding = load_test2a_diagnostic_workbook_binding(
-            WORKBOOK
-        )
+        cls.workbook_binding = load_test2a_diagnostic_workbook_binding(WORKBOOK)
         cls.reference = _reference(cls.workbook_binding)
 
     def setUp(self):
-        self.output_dir = WORK_ROOT / hashlib.sha256(
-            self._testMethodName.encode("utf-8")
-        ).hexdigest()[:12]
+        self.output_dir = (
+            WORK_ROOT
+            / hashlib.sha256(self._testMethodName.encode("utf-8")).hexdigest()[:12]
+        )
         if self.output_dir.exists():
             shutil.rmtree(self.output_dir)
         self.output_dir.mkdir(parents=True)
@@ -165,7 +158,8 @@ class Test2A2E1ApsTests(unittest.TestCase):
         self.assertFalse(contract.complete)
         self.assertEqual(len(contract.blockers), 7)
         bound = [
-            item for item in contract.series
+            item
+            for item in contract.series
             if item.status == "RUNTIME_METADATA_CONFIRMED"
         ]
         self.assertEqual(bound[0].series_id, TOTAL_GAIN)
@@ -194,9 +188,7 @@ class Test2A2E1ApsTests(unittest.TestCase):
             dict(receipt.evaluation.candidate_annual_kwh)[TOTAL_GAIN],
             1752.0,
         )
-        self.assertFalse(
-            receipt.evaluation.required_eight_series_complete
-        )
+        self.assertFalse(receipt.evaluation.required_eight_series_complete)
         self.assertFalse(receipt.evaluation.engineering_review_ready)
         self.assertFalse(receipt.evaluation.compliance_pass)
         self.assertFalse(receipt.evaluation.optical_mapping_qualified)
@@ -238,9 +230,7 @@ class Test2A2E1ApsTests(unittest.TestCase):
         self.assertEqual(payload["binding_contract"]["bound_count"], 1)
         self.assertFalse(payload["evaluation"]["compliance_pass"])
         checksum = output.with_suffix(".json.sha256")
-        self.assertTrue(
-            checksum.read_text(encoding="ascii").startswith(_sha256(output))
-        )
+        self.assertTrue(checksum.read_text(encoding="ascii").startswith(_sha256(output)))
 
 
 if __name__ == "__main__":

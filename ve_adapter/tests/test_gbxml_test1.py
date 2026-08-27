@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-u"""Tests of the trial cell gbXML (`ve_adapter/gbxml_test1.py`).
+"""Tests of the trial cell gbXML (`ve_adapter/gbxml_test1.py`).
 
 The danger targeted is the one that proved most costly this week: a
 **plausible and wrong** geometry, imported without error, simulated without
@@ -19,47 +19,46 @@ from ve_adapter import gbxml_test1 as gbxml
 from ve_adapter import geometrie_test1 as geometrie
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope="module")
 def cotes():
     try:
         return geometrie.charger_cotes()
     except geometrie.GeometrieIndisponible:
-        pytest.skip(u'cotes de référence absentes')
+        pytest.skip("cotes de référence absentes")
 
 
 # --------------------------------------------------------------------------
 # Areas, recomputed from the written geometry
 # --------------------------------------------------------------------------
 
+
 def test_chaque_polyligne_reproduit_laire_de_la_source(cotes):
     """This check does not re-read the dimensions: it MEASURES the written
     geometry. A faulty coordinate shows up here, whereas re-reading the
     dimensions would see nothing."""
-    for face, (mesuree, source) in gbxml.controler_les_polylignes(
-            cotes).items():
+    for face, (mesuree, source) in gbxml.controler_les_polylignes(cotes).items():
         assert abs(mesuree - source) < 1e-9, face
 
 
 def test_la_facade_avant_deduit_bien_son_vitrage(cotes):
     """Its polyline describes the ENTIRE wall -- 21.6 m² -- and the opaque
     area is derived from it. Confusing the two would double the opaque wall."""
-    entier = gbxml.aire(gbxml.polylignes(cotes)['front_wall'])
-    assert entier == pytest.approx(cotes['width_m'] * cotes['height_m'])
-    assert gbxml.controler_les_polylignes(cotes)['front_wall'][0] == \
-        pytest.approx(cotes['opaque_areas_m2']['front_wall'])
+    entier = gbxml.aire(gbxml.polylignes(cotes)["front_wall"])
+    assert entier == pytest.approx(cotes["width_m"] * cotes["height_m"])
+    assert gbxml.controler_les_polylignes(cotes)["front_wall"][0] == pytest.approx(
+        cotes["opaque_areas_m2"]["front_wall"]
+    )
 
 
 def test_les_deux_fenetres_totalisent_laire_annoncee(cotes):
-    total = sum(gbxml.aire(f['polyligne'])
-                for f in gbxml.polylignes_des_fenetres(cotes))
-    assert total == pytest.approx(cotes['windows']['total_area_m2'])
+    total = sum(gbxml.aire(f["polyligne"]) for f in gbxml.polylignes_des_fenetres(cotes))
+    assert total == pytest.approx(cotes["windows"]["total_area_m2"])
 
 
 def test_une_cote_falsifiee_est_detectee(cotes):
     faussees = dict(cotes)
-    faussees['width_m'] = 9.0
-    with pytest.raises((gbxml.GbxmlIncoherent,
-                        geometrie.GeometrieIncoherente)):
+    faussees["width_m"] = 9.0
+    with pytest.raises((gbxml.GbxmlIncoherent, geometrie.GeometrieIncoherente)):
         gbxml.controler_les_polylignes(faussees)
 
 
@@ -67,14 +66,18 @@ def test_une_cote_falsifiee_est_detectee(cotes):
 # Polyline winding -- the error that is invisible
 # --------------------------------------------------------------------------
 
-@pytest.mark.parametrize('face,sens', [
-    ('front_wall', (0.0, -1.0, 0.0)),
-    ('back_wall', (0.0, 1.0, 0.0)),
-    ('left_wall', (-1.0, 0.0, 0.0)),
-    ('right_wall', (1.0, 0.0, 0.0)),
-    ('floor', (0.0, 0.0, -1.0)),
-    ('ceiling', (0.0, 0.0, 1.0)),
-])
+
+@pytest.mark.parametrize(
+    "face,sens",
+    [
+        ("front_wall", (0.0, -1.0, 0.0)),
+        ("back_wall", (0.0, 1.0, 0.0)),
+        ("left_wall", (-1.0, 0.0, 0.0)),
+        ("right_wall", (1.0, 0.0, 0.0)),
+        ("floor", (0.0, 0.0, -1.0)),
+        ("ceiling", (0.0, 0.0, 1.0)),
+    ],
+)
 def test_chaque_normale_pointe_vers_lexterieur(cotes, face, sens):
     polyligne = gbxml.polylignes(cotes)[face]
     vecteur = gbxml.normale(polyligne)
@@ -89,41 +92,41 @@ def test_une_normale_retournee_est_refusee(cotes, monkeypatch):
 
     def retournee(_cotes):
         faussees = dict(vraies)
-        faussees['front_wall'] = list(reversed(vraies['front_wall']))
+        faussees["front_wall"] = list(reversed(vraies["front_wall"]))
         return faussees
 
-    monkeypatch.setattr(gbxml, 'polylignes', retournee)
-    with pytest.raises(gbxml.GbxmlIncoherent, match='interieur'):
+    monkeypatch.setattr(gbxml, "polylignes", retournee)
+    with pytest.raises(gbxml.GbxmlIncoherent, match="interieur"):
         gbxml.controler_les_polylignes(cotes)
 
 
 def test_la_normale_ne_depend_pas_du_sommet_de_depart(cotes):
     """Newell's method must be invariant under rotation of vertices;
     a simple cross-product of two edges is not."""
-    polyligne = gbxml.polylignes(cotes)['ceiling']
+    polyligne = gbxml.polylignes(cotes)["ceiling"]
     pivotee = polyligne[2:] + polyligne[:2]
-    for attendu, obtenu in zip(gbxml.normale(polyligne),
-                               gbxml.normale(pivotee)):
+    for attendu, obtenu in zip(gbxml.normale(polyligne), gbxml.normale(pivotee)):
         assert attendu == pytest.approx(obtenu)
 
 
 def test_les_fenetres_suivent_le_sens_de_leur_mur(cotes):
     """An opening wound in the opposite direction to its wall would flip its
     normal."""
-    mur = gbxml.normale(gbxml.polylignes(cotes)['front_wall'])
+    mur = gbxml.normale(gbxml.polylignes(cotes)["front_wall"])
     for fenetre in gbxml.polylignes_des_fenetres(cotes):
-        vitre = gbxml.normale(fenetre['polyligne'])
+        vitre = gbxml.normale(fenetre["polyligne"])
         produit = sum(a * b for a, b in zip(mur, vitre))
-        assert produit > 0, fenetre['rang']
+        assert produit > 0, fenetre["rang"]
 
 
 # --------------------------------------------------------------------------
 # Orientation and location
 # --------------------------------------------------------------------------
 
+
 def test_la_facade_avant_est_bien_au_sud(cotes):
     """Orientation determines the entire solar balance."""
-    for _, y, _ in gbxml.polylignes(cotes)['front_wall']:
+    for _, y, _ in gbxml.polylignes(cotes)["front_wall"]:
         assert y == 0.0
 
 
@@ -132,9 +135,14 @@ def test_aucune_localisation_nest_ecrite(cotes):
     climate file. Invented coordinates would give a plausible model whose
     solar would be wrong."""
     racine = gbxml.construire_arbre(cotes)
-    texte = ElementTree.tostring(racine, encoding='unicode')
-    for interdit in ('Latitude', 'Longitude', 'Elevation',
-                     'ZipcodeOrPostalCode', 'StationId'):
+    texte = ElementTree.tostring(racine, encoding="unicode")
+    for interdit in (
+        "Latitude",
+        "Longitude",
+        "Elevation",
+        "ZipcodeOrPostalCode",
+        "StationId",
+    ):
         assert interdit not in texte, interdit
 
 
@@ -142,100 +150,107 @@ def test_lazimut_est_ecrit_car_il_est_etabli(cotes):
     """Unlike the location, the orientation is imposed by the specification:
     that one is written."""
     racine = gbxml.construire_arbre(cotes)
-    texte = ElementTree.tostring(racine, encoding='unicode')
-    assert 'CADModelAzimuth' in texte
+    texte = ElementTree.tostring(racine, encoding="unicode")
+    assert "CADModelAzimuth" in texte
 
 
 # --------------------------------------------------------------------------
 # Document structure
 # --------------------------------------------------------------------------
 
+
 def test_la_coque_fermee_porte_les_six_faces(cotes):
     racine = gbxml.construire_arbre(cotes)
-    coque = racine.find('.//ClosedShell')
+    coque = racine.find(".//ClosedShell")
     assert coque is not None
-    assert len(coque.findall('PolyLoop')) == 6
+    assert len(coque.findall("PolyLoop")) == 6
 
 
 def test_les_six_surfaces_sont_typees(cotes):
     racine = gbxml.construire_arbre(cotes)
-    surfaces = racine.findall('.//Surface')
+    surfaces = racine.findall(".//Surface")
     assert len(surfaces) == 6
-    types = set(s.get('surfaceType') for s in surfaces)
-    assert 'Roof' in types
-    assert 'ExteriorWall' in types
+    types = set(s.get("surfaceType") for s in surfaces)
+    assert "Roof" in types
+    assert "ExteriorWall" in types
 
 
 def test_les_ouvertures_sont_sur_la_facade_avant_seulement(cotes):
     racine = gbxml.construire_arbre(cotes)
-    for surface in racine.findall('.//Surface'):
-        ouvertures = surface.findall('Opening')
-        attendu = 2 if surface.get('id').endswith('FRONT_WALL') else 0
-        assert len(ouvertures) == attendu, surface.get('id')
+    for surface in racine.findall(".//Surface"):
+        ouvertures = surface.findall("Opening")
+        attendu = 2 if surface.get("id").endswith("FRONT_WALL") else 0
+        assert len(ouvertures) == attendu, surface.get("id")
 
 
 def test_le_volume_declare_est_celui_de_la_source(cotes):
     racine = gbxml.construire_arbre(cotes)
-    volume = racine.find('.//Space/Volume')
-    assert float(volume.text) == pytest.approx(cotes['volume_m3'])
+    volume = racine.find(".//Space/Volume")
+    assert float(volume.text) == pytest.approx(cotes["volume_m3"])
 
 
 def test_les_unites_sont_declarees_en_si(cotes):
     racine = gbxml.construire_arbre(cotes)
-    assert racine.get('lengthUnit') == 'Meters'
-    assert racine.get('useSIUnitsForResults') == 'true'
+    assert racine.get("lengthUnit") == "Meters"
+    assert racine.get("useSIUnitsForResults") == "true"
 
 
 def test_chaque_sommet_a_trois_coordonnees(cotes):
     racine = gbxml.construire_arbre(cotes)
-    for point in racine.findall('.//CartesianPoint'):
-        assert len(point.findall('Coordinate')) == 3
+    for point in racine.findall(".//CartesianPoint"):
+        assert len(point.findall("Coordinate")) == 3
 
 
 # --------------------------------------------------------------------------
 # Writing
 # --------------------------------------------------------------------------
 
+
 def test_le_fichier_ecrit_se_relit(tmp_path):
     import os
-    chemin = os.path.join(str(tmp_path), 'sous', 'cellule.xml')
+
+    chemin = os.path.join(str(tmp_path), "sous", "cellule.xml")
     gbxml.ecrire(chemin)
     assert os.path.exists(chemin)
     racine = ElementTree.parse(chemin).getroot()
-    assert racine.tag.endswith('gbXML')
+    assert racine.tag.endswith("gbXML")
 
 
 def test_lecriture_refuse_une_geometrie_incoherente(tmp_path, monkeypatch):
     """Better to write nothing than to write a wrong file: it would be
     imported without error."""
     import os
+
     monkeypatch.setattr(
-        gbxml, 'controler_les_polylignes',
-        lambda _cotes: (_ for _ in ()).throw(
-            gbxml.GbxmlIncoherent('defaut simule')))
+        gbxml,
+        "controler_les_polylignes",
+        lambda _cotes: (_ for _ in ()).throw(gbxml.GbxmlIncoherent("defaut simule")),
+    )
     with pytest.raises(gbxml.GbxmlIncoherent):
-        gbxml.ecrire(os.path.join(str(tmp_path), 'x.xml'))
-    assert not os.path.exists(os.path.join(str(tmp_path), 'x.xml'))
+        gbxml.ecrire(os.path.join(str(tmp_path), "x.xml"))
+    assert not os.path.exists(os.path.join(str(tmp_path), "x.xml"))
 
 
 def test_le_module_reste_pur():
     """Rule 4: no `iesve` import."""
     import io
     import os
-    chemin = os.path.abspath(gbxml.__file__).replace('.pyc', '.py')
-    with io.open(chemin, encoding='utf-8') as flux:
+
+    chemin = os.path.abspath(gbxml.__file__).replace(".pyc", ".py")
+    with io.open(chemin, encoding="utf-8") as flux:
         for numero, ligne in enumerate(flux, 1):
             nu = ligne.strip()
-            assert not nu.startswith(('import iesve', 'from iesve')), numero
+            assert not nu.startswith(("import iesve", "from iesve")), numero
 
 
 def test_aucune_cote_nest_ecrite_en_dur():
     """All come from `geometrie_test1`, which holds them from the source."""
     import io
     import os
-    chemin = os.path.abspath(gbxml.__file__).replace('.pyc', '.py')
-    with io.open(chemin, encoding='utf-8') as flux:
+
+    chemin = os.path.abspath(gbxml.__file__).replace(".pyc", ".py")
+    with io.open(chemin, encoding="utf-8") as flux:
         for numero, ligne in enumerate(flux, 1):
-            code = ligne.split('#')[0]
-            for cote in ('8.0', '6.0', '2.7', '48.0', '129.6', '21.6'):
+            code = ligne.split("#")[0]
+            for cote in ("8.0", "6.0", "2.7", "48.0", "129.6", "21.6"):
                 assert cote not in code, (numero, cote, ligne.strip())

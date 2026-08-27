@@ -111,7 +111,9 @@ def build_project_configuration(
     configuration = json.loads(json.dumps(source_configuration))
     parameters = configuration.get("parameters")
     if not isinstance(parameters, dict):
-        raise ReferenceModelSetupError("Reference configuration has no parameters object.")
+        raise ReferenceModelSetupError(
+            "Reference configuration has no parameters object."
+        )
 
     def assign(name: str, value: Any, source: str, locator: str) -> None:
         record = parameters.get(name)
@@ -235,9 +237,7 @@ def prepare_reference_model_bundle(
     derivation_audit: Optional[Path] = None
     if selected_weather.stem.endswith("_IESVE_CANDIDATE"):
         expected_audit_name = (
-            selected_weather.stem.replace(
-                "_IESVE_CANDIDATE", "_IESVE_DERIVATION"
-            )
+            selected_weather.stem.replace("_IESVE_CANDIDATE", "_IESVE_DERIVATION")
             + ".json"
         )
         candidate_audit = selected_weather.with_name(expected_audit_name)
@@ -258,7 +258,9 @@ def prepare_reference_model_bundle(
         try:
             derivation_payload = json.loads(candidate_audit.read_text(encoding="utf-8"))
         except (OSError, ValueError) as exc:
-            raise ReferenceModelSetupError("Weather derivation audit is invalid.") from exc
+            raise ReferenceModelSetupError(
+                "Weather derivation audit is invalid."
+            ) from exc
         audited_hash = str(
             derivation_payload.get("weather", {}).get("sha256", "")
         ).casefold()
@@ -299,9 +301,7 @@ def prepare_reference_model_bundle(
         asset_manifest_path=str(destination_assets),
         weather_path=str(local_weather),
         weather_sha256=weather_hash,
-        weather_derivation_audit=(
-            str(derivation_audit) if derivation_audit else None
-        ),
+        weather_derivation_audit=(str(derivation_audit) if derivation_audit else None),
         audit_path=str(audit_path),
         config_backup=str(config_backup) if config_backup else None,
         asset_manifest_backup=str(assets_backup) if assets_backup else None,

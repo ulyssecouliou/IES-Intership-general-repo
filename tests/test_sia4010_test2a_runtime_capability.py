@@ -8,11 +8,8 @@ import json
 
 from swiss_sia.reference_model.sia4010 import test2a_runtime_capability as probe
 
-
 WORK_ROOT = (
-    Path(__file__).resolve().parents[1]
-    / ".codex_tmp"
-    / "test2a_runtime_capability"
+    Path(__file__).resolve().parents[1] / ".codex_tmp" / "test2a_runtime_capability"
 )
 WORK_ROOT.mkdir(parents=True, exist_ok=True)
 
@@ -137,9 +134,7 @@ def _iesve(properties):
             return _Database()
 
     construction_class = SimpleNamespace(glazed="glazed")
-    cdb_project_type = SimpleNamespace(
-        construction_class=construction_class
-    )
+    cdb_project_type = SimpleNamespace(construction_class=construction_class)
     return SimpleNamespace(
         VECdbDatabase=_DatabaseType,
         VECdbProject=cdb_project_type,
@@ -150,9 +145,7 @@ def _readiness(ready):
     return SimpleNamespace(
         ready_for_binding=ready,
         status="READY_FOR_BINDING" if ready else "MISSING",
-        to_dict=lambda: {
-            "status": "READY_FOR_BINDING" if ready else "MISSING"
-        },
+        to_dict=lambda: {"status": "READY_FOR_BINDING" if ready else "MISSING"},
     )
 
 
@@ -167,28 +160,27 @@ def _bindings(with_profile_graph=True):
                 ("lighting_profile", "lighting_yearly"),
             ),
         )
-    return SimpleNamespace(
-        office_profiles=SimpleNamespace(ve_profile_graph=graph)
-    )
+    return SimpleNamespace(office_profiles=SimpleNamespace(ve_profile_graph=graph))
 
 
 class Test2ARuntimeCapabilityTests(TestCase):
     """Prove that the probe only promotes complete read-only evidence."""
 
     def test_complete_runtime_evidence_is_ready_for_disposable_probe(self):
-        properties = {
-            field: 1 for field in probe.REQUIRED_EXTERNAL_SHADE_FIELDS
-        }
+        properties = {field: 1 for field in probe.REQUIRED_EXTERNAL_SHADE_FIELDS}
         project = WORK_ROOT / "complete"
         project.mkdir(parents=True, exist_ok=True)
-        with patch.object(
-            probe,
-            "external_input_readiness",
-            return_value=_readiness(True),
-        ), patch.object(
-            probe,
-            "load_test2a_external_bindings",
-            return_value=_bindings(),
+        with (
+            patch.object(
+                probe,
+                "external_input_readiness",
+                return_value=_readiness(True),
+            ),
+            patch.object(
+                probe,
+                "load_test2a_external_bindings",
+                return_value=_bindings(),
+            ),
         ):
             payload = probe.build_test2a_runtime_capability_report(
                 _iesve(properties),
@@ -204,28 +196,27 @@ class Test2ARuntimeCapabilityTests(TestCase):
         self.assertFalse(payload["mutation_authorized"])
         self.assertEqual(len(payload["profile_api"]["profiles"]), 1)
         self.assertEqual(len(payload["opening_api"]["openings"]), 1)
-        aps_binding = payload["official_shading_control"][
-            "aps_diagnostic_binding"
-        ]
+        aps_binding = payload["official_shading_control"]["aps_diagnostic_binding"]
         self.assertTrue(aps_binding["available"])
         self.assertEqual(aps_binding["bound_count"], 1)
         self.assertEqual(aps_binding["required_count"], 8)
         self.assertFalse(aps_binding["complete"])
 
     def test_ready_sources_without_native_profile_graph_remain_closed(self):
-        properties = {
-            field: 1 for field in probe.REQUIRED_EXTERNAL_SHADE_FIELDS
-        }
+        properties = {field: 1 for field in probe.REQUIRED_EXTERNAL_SHADE_FIELDS}
         project = WORK_ROOT / "profile_graph_missing"
         project.mkdir(parents=True, exist_ok=True)
-        with patch.object(
-            probe,
-            "external_input_readiness",
-            return_value=_readiness(True),
-        ), patch.object(
-            probe,
-            "load_test2a_external_bindings",
-            return_value=_bindings(False),
+        with (
+            patch.object(
+                probe,
+                "external_input_readiness",
+                return_value=_readiness(True),
+            ),
+            patch.object(
+                probe,
+                "load_test2a_external_bindings",
+                return_value=_bindings(False),
+            ),
         ):
             payload = probe.build_test2a_runtime_capability_report(
                 _iesve(properties),
@@ -264,19 +255,20 @@ class Test2ARuntimeCapabilityTests(TestCase):
         )
 
     def test_report_and_checksum_are_written_without_mutation(self):
-        properties = {
-            field: 1 for field in probe.REQUIRED_EXTERNAL_SHADE_FIELDS
-        }
+        properties = {field: 1 for field in probe.REQUIRED_EXTERNAL_SHADE_FIELDS}
         project = WORK_ROOT / "write"
         project.mkdir(parents=True, exist_ok=True)
-        with patch.object(
-            probe,
-            "external_input_readiness",
-            return_value=_readiness(True),
-        ), patch.object(
-            probe,
-            "load_test2a_external_bindings",
-            return_value=_bindings(),
+        with (
+            patch.object(
+                probe,
+                "external_input_readiness",
+                return_value=_readiness(True),
+            ),
+            patch.object(
+                probe,
+                "load_test2a_external_bindings",
+                return_value=_bindings(),
+            ),
         ):
             output = probe.write_test2a_runtime_capability_report(
                 _iesve(properties),

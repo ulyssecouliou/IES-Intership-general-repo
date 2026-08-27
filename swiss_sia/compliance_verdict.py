@@ -25,7 +25,7 @@ of the toolchain and never reads as an official validation: that requires the
 official test results plus SIA sub-commission attestation.
 """
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 COMPLIANT = "COMPLIANT"
@@ -72,15 +72,17 @@ _INDETERMINATE_RULE_MARKERS = (
 # typically unpopulated on Swiss models; EER/SEER values are read directly.
 # SIA 2024 mapping: requires licensed SIA 2024 standard, external to VE.
 # SIA 387/4 lighting control: requires licensed SIA 387/4, external to VE.
-_KNOWN_LIMITATION_RULES = frozenset({
-    "SIA3802_HEATING_DESIGN_POWER_NOT_CHECKABLE",
-    "SIA3802_COOLING_DESIGN_POWER_NOT_CHECKABLE",
-    "SIA3802_COOLING_EERPLUS_NOT_CHECKABLE",
-    "SIA3802_COOLING_NEED_SCREENING_NOT_CHECKABLE",
-    "SIA3802_COOLING_GENERATOR_CLASS_MISSING",
-    "SIA3802_SIA2024_MAPPING_MISSING",
-    "SIA3802_LIGHTING_CONTROL_TYPE_MISSING",
-})
+_KNOWN_LIMITATION_RULES = frozenset(
+    {
+        "SIA3802_HEATING_DESIGN_POWER_NOT_CHECKABLE",
+        "SIA3802_COOLING_DESIGN_POWER_NOT_CHECKABLE",
+        "SIA3802_COOLING_EERPLUS_NOT_CHECKABLE",
+        "SIA3802_COOLING_NEED_SCREENING_NOT_CHECKABLE",
+        "SIA3802_COOLING_GENERATOR_CLASS_MISSING",
+        "SIA3802_SIA2024_MAPPING_MISSING",
+        "SIA3802_LIGHTING_CONTROL_TYPE_MISSING",
+    }
+)
 
 
 @dataclass(frozen=True)
@@ -239,12 +241,9 @@ def build_compliance_verdict(
             )
         )
 
-    domain_evidence_incomplete = any(
-        item.status == NOT_DETERMINED for item in domains
-    )
+    domain_evidence_incomplete = any(item.status == NOT_DETERMINED for item in domains)
     ventilation_evidence_incomplete = any(
-        item.domain == "ventilation" and item.status == NOT_DETERMINED
-        for item in domains
+        item.domain == "ventilation" and item.status == NOT_DETERMINED for item in domains
     )
     # Solar-protection control is an AUTONOMOUS SIA 380/2:2022 §7.1.2.2-5
     # requirement, not just a Table 2 reference input: the global comparison does
@@ -273,9 +272,7 @@ def build_compliance_verdict(
     # the numbers. The checker raises SIA3802_GLOBAL_REFERENCE_DISCREPANCY, but
     # its category sits outside the six scored domains, so the verdict must act on
     # the status explicitly here rather than through blocking_total.
-    comparison_contradicts = (
-        comparison_status == "REVIEWED_RESULT_CONTRADICTS_ACCEPTANCE"
-    )
+    comparison_contradicts = comparison_status == "REVIEWED_RESULT_CONTRADICTS_ACCEPTANCE"
     # SIA 380/2:2022 §7.2.4 required electrical power is an AUTONOMOUS,
     # conditionally-blocking requirement (norm-analyst A5): a reviewed exceedance
     # with desirable/superfluous cooling is a determined NON-compliance; an

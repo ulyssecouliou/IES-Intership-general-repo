@@ -197,17 +197,14 @@ class NormativeConstantTests(unittest.TestCase):
                     ),
                     "otherwise_m3_h_m2": 0.15,
                 },
-                "occupancy_time": (
-                    "Planned use schedule or standard SIA 2024 schedule"
-                ),
+                "occupancy_time": ("Planned use schedule or standard SIA 2024 schedule"),
                 "system_schedule": {
                     "start_before_occupancy_hours": 1,
                     "stop_after_occupancy_hours": 1,
                     "operate_through_lunch_break": True,
                 },
                 "source": (
-                    "SIA 380/2:2022 FR, tableau 11, annexe C normative, "
-                    "page PDF 59"
+                    "SIA 380/2:2022 FR, tableau 11, annexe C normative, " "page PDF 59"
                 ),
             },
         )
@@ -341,9 +338,7 @@ class CheckerBehaviorTests(unittest.TestCase):
                     case["label"],
                     case["capacity_key"],
                 )
-                self.assertTrue(
-                    checker._hvac_metric_meets_limit(hvac, case["metric"])
-                )
+                self.assertTrue(checker._hvac_metric_meets_limit(hvac, case["metric"]))
                 self.assertEqual(engine.get_alerts_by_category("HVAC"), [])
 
             with self.subTest(metric=case["metric"], status="fail"):
@@ -357,9 +352,7 @@ class CheckerBehaviorTests(unittest.TestCase):
                     case["label"],
                     case["capacity_key"],
                 )
-                self.assertFalse(
-                    checker._hvac_metric_meets_limit(hvac, case["metric"])
-                )
+                self.assertFalse(checker._hvac_metric_meets_limit(hvac, case["metric"]))
                 self.assertEqual(
                     [
                         alert.rule
@@ -380,9 +373,7 @@ class CheckerBehaviorTests(unittest.TestCase):
                     case["label"],
                     case["capacity_key"],
                 )
-                self.assertFalse(
-                    checker._hvac_metric_meets_limit(hvac, case["metric"])
-                )
+                self.assertFalse(checker._hvac_metric_meets_limit(hvac, case["metric"]))
                 self.assertEqual(
                     [alert.rule for alert in engine.get_alerts_by_category("HVAC")],
                     [case["rule"] + "_VALUE_MISSING"],
@@ -452,25 +443,24 @@ class CheckerBehaviorTests(unittest.TestCase):
         checker._check_ventilation([missing_room])
         self.assertFalse(checker._ventilation_control_meets_limit(missing_room))
         self.assertEqual(
-            [
-                alert.rule
-                for alert in engine.get_alerts_by_category("Ventilation")
-            ],
+            [alert.rule for alert in engine.get_alerts_by_category("Ventilation")],
             ["SIA3802_VENTILATION_CONTROL_EVIDENCE_MISSING"],
         )
 
     def test_reviewed_ventilation_record_is_applied_only_when_band_matches(self):
         checker, _ = self._new_checker()
-        checker._reviewer_ventilation_controls = [{
-            "system_id": "SYS-1",
-            "room_or_zone": "",
-            "system_type_normalized": "monozone",
-            "control_class": "two_speeds_time_schedule",
-            "control_level_numeric": 1,
-            "airflow_band_normalized": "3-6",
-            "specific_airflow_m3_h_m2_numeric": 4.0,
-            "source_document": "ventilation_design.pdf",
-        }]
+        checker._reviewer_ventilation_controls = [
+            {
+                "system_id": "SYS-1",
+                "room_or_zone": "",
+                "system_type_normalized": "monozone",
+                "control_class": "two_speeds_time_schedule",
+                "control_level_numeric": 1,
+                "airflow_band_normalized": "3-6",
+                "specific_airflow_m3_h_m2_numeric": 4.0,
+                "source_document": "ventilation_design.pdf",
+            }
+        ]
         room = RoomData(
             id="R1",
             ventilation_rate=4.0,
@@ -530,6 +520,39 @@ class CheckerBehaviorTests(unittest.TestCase):
 
         self.assertEqual(checker._apply_reviewed_ventilation_controls(rooms), 2)
 
+    def test_semicolon_scope_applies_one_record_to_all_listed_rooms(self):
+        checker, _ = self._new_checker()
+        checker._reviewer_ventilation_controls = [
+            {
+                "system_id": "SYS-1",
+                "room_or_zone": "R1; R2; R3",
+                "system_type_normalized": "multizone",
+                "control_class": "one_speed_time_schedule",
+                "control_level_numeric": 0,
+                "airflow_band_normalized": ">6",
+                "specific_airflow_m3_h_m2_numeric": 7.25,
+                "source_document": "ventilation_design.pdf",
+            }
+        ]
+        rooms = [
+            RoomData(
+                id=room_id,
+                ventilation_rate=7.25,
+                ventilation_m3_h_m2=7.25,
+                mechanical_ventilation_present=True,
+                hvac_systems=[{"id": "SYS-1"}],
+            )
+            for room_id in ("R1", "R2", "R3")
+        ]
+
+        self.assertEqual(checker._apply_reviewed_ventilation_controls(rooms), 3)
+        self.assertTrue(
+            all(
+                room.ventilation_control_level_status == "REVIEWER_ACCEPTED"
+                for room in rooms
+            )
+        )
+
     def test_cooling_need_screening_statuses(self):
         cases = (
             (121.0, "no_window_support", "NECESSARY"),
@@ -557,22 +580,26 @@ class CheckerBehaviorTests(unittest.TestCase):
     def test_dynamic_comfort_requires_reviewed_climate_match(self):
         """Block comfort checking until reviewed and active weather files match."""
         checker, _engine = self._new_checker()
-        result = checker._check_dynamic_method({
-            "status": "AVAILABLE",
-            "building_status": "NEW_BUILDING",
-            "reviewed_weather_match_status": "MISMATCH",
-            "max_occupied_hours_above_sia180_upper": 10.0,
-            "max_occupied_hours_below_sia180_lower": 0.0,
-            "rooms": [{
-                "room_id": "room-1",
-                "room_name": "Room 1",
-                "annual_comfort_period_complete": True,
-                "occupied_hours_above_sia180_upper": 10.0,
-                "occupied_hours_below_sia180_lower": 0.0,
-                "window_operable": False,
-            }],
-            "design_power_status": "NOT_CHECKABLE",
-        })
+        result = checker._check_dynamic_method(
+            {
+                "status": "AVAILABLE",
+                "building_status": "NEW_BUILDING",
+                "reviewed_weather_match_status": "MISMATCH",
+                "max_occupied_hours_above_sia180_upper": 10.0,
+                "max_occupied_hours_below_sia180_lower": 0.0,
+                "rooms": [
+                    {
+                        "room_id": "room-1",
+                        "room_name": "Room 1",
+                        "annual_comfort_period_complete": True,
+                        "occupied_hours_above_sia180_upper": 10.0,
+                        "occupied_hours_below_sia180_lower": 0.0,
+                        "window_operable": False,
+                    }
+                ],
+                "design_power_status": "NOT_CHECKABLE",
+            }
+        )
         rules = {alert.rule for alert in result["alerts"]}
 
         self.assertEqual(result["status"], "NOT_CHECKABLE")
@@ -581,22 +608,26 @@ class CheckerBehaviorTests(unittest.TestCase):
     def test_dynamic_comfort_checks_with_reviewed_climate_match(self):
         """Run the annual comfort rule when all conservative gates are present."""
         checker, _engine = self._new_checker()
-        result = checker._check_dynamic_method({
-            "status": "AVAILABLE",
-            "building_status": "NEW_BUILDING",
-            "reviewed_weather_match_status": "MATCH",
-            "max_occupied_hours_above_sia180_upper": 10.0,
-            "max_occupied_hours_below_sia180_lower": 0.0,
-            "rooms": [{
-                "room_id": "room-1",
-                "room_name": "Room 1",
-                "annual_comfort_period_complete": True,
-                "occupied_hours_above_sia180_upper": 10.0,
-                "occupied_hours_below_sia180_lower": 0.0,
-                "window_operable": False,
-            }],
-            "design_power_status": "NOT_CHECKABLE",
-        })
+        result = checker._check_dynamic_method(
+            {
+                "status": "AVAILABLE",
+                "building_status": "NEW_BUILDING",
+                "reviewed_weather_match_status": "MATCH",
+                "max_occupied_hours_above_sia180_upper": 10.0,
+                "max_occupied_hours_below_sia180_lower": 0.0,
+                "rooms": [
+                    {
+                        "room_id": "room-1",
+                        "room_name": "Room 1",
+                        "annual_comfort_period_complete": True,
+                        "occupied_hours_above_sia180_upper": 10.0,
+                        "occupied_hours_below_sia180_lower": 0.0,
+                        "window_operable": False,
+                    }
+                ],
+                "design_power_status": "NOT_CHECKABLE",
+            }
+        )
         rules = {alert.rule for alert in result["alerts"]}
 
         self.assertEqual(result["status"], "CHECKED")
@@ -605,22 +636,26 @@ class CheckerBehaviorTests(unittest.TestCase):
     def test_unverified_comfort_method_never_emits_determined_noncompliance(self):
         """Keep computed exceedance hours as screening until the method is qualified."""
         checker, _engine = self._new_checker()
-        result = checker._check_dynamic_method({
-            "status": "AVAILABLE",
-            "building_status": "NEW_BUILDING",
-            "reviewed_weather_match_status": "MATCH",
-            "rooms": [{
-                "room_id": "room-1",
-                "room_name": "Room 1",
-                "annual_comfort_period_complete": True,
-                "occupied_hours_above_sia180_upper": 1462.0,
-                "occupied_hours_below_sia180_lower": 1.0,
-                "window_operable": True,
-                "comfort_method_status": "NOT_CHECKABLE",
-                "comfort_method_note": "PENDING norm-analyst",
-            }],
-            "design_power_status": "NOT_CHECKABLE",
-        })
+        result = checker._check_dynamic_method(
+            {
+                "status": "AVAILABLE",
+                "building_status": "NEW_BUILDING",
+                "reviewed_weather_match_status": "MATCH",
+                "rooms": [
+                    {
+                        "room_id": "room-1",
+                        "room_name": "Room 1",
+                        "annual_comfort_period_complete": True,
+                        "occupied_hours_above_sia180_upper": 1462.0,
+                        "occupied_hours_below_sia180_lower": 1.0,
+                        "window_operable": True,
+                        "comfort_method_status": "NOT_CHECKABLE",
+                        "comfort_method_note": "PENDING norm-analyst",
+                    }
+                ],
+                "design_power_status": "NOT_CHECKABLE",
+            }
+        )
         rules = {alert.rule for alert in result["alerts"]}
 
         self.assertEqual(result["status"], "NOT_CHECKABLE")
@@ -631,20 +666,24 @@ class CheckerBehaviorTests(unittest.TestCase):
     def test_unknown_operability_uses_zero_hour_screening_without_passing(self):
         """Screen unknown operability strictly while preserving the evidence gap."""
         checker, _engine = self._new_checker()
-        result = checker._check_dynamic_method({
-            "status": "AVAILABLE",
-            "building_status": "NEW_BUILDING",
-            "reviewed_weather_match_status": "MATCH",
-            "rooms": [{
-                "room_id": "room-1",
-                "room_name": "Room 1",
-                "annual_comfort_period_complete": True,
-                "occupied_hours_above_sia180_upper": 0.0,
-                "occupied_hours_below_sia180_lower": 0.0,
-                "window_operable": None,
-            }],
-            "design_power_status": "NOT_CHECKABLE",
-        })
+        result = checker._check_dynamic_method(
+            {
+                "status": "AVAILABLE",
+                "building_status": "NEW_BUILDING",
+                "reviewed_weather_match_status": "MATCH",
+                "rooms": [
+                    {
+                        "room_id": "room-1",
+                        "room_name": "Room 1",
+                        "annual_comfort_period_complete": True,
+                        "occupied_hours_above_sia180_upper": 0.0,
+                        "occupied_hours_below_sia180_lower": 0.0,
+                        "window_operable": None,
+                    }
+                ],
+                "design_power_status": "NOT_CHECKABLE",
+            }
+        )
 
         self.assertEqual(result["status"], "NOT_CHECKABLE")
         room_result = result["comfort"]["room_results"][0]
@@ -661,19 +700,23 @@ class CheckerBehaviorTests(unittest.TestCase):
     def test_unknown_building_status_is_screened_as_new_without_passing(self):
         """Use the stricter new-building allowance but retain missing evidence."""
         checker, _engine = self._new_checker()
-        result = checker._check_dynamic_method({
-            "status": "AVAILABLE",
-            "reviewed_weather_match_status": "MATCH",
-            "rooms": [{
-                "room_id": "room-1",
-                "room_name": "Room 1",
-                "annual_comfort_period_complete": True,
-                "occupied_hours_above_sia180_upper": 0.0,
-                "occupied_hours_below_sia180_lower": 0.0,
-                "window_operable": False,
-            }],
-            "design_power_status": "NOT_CHECKABLE",
-        })
+        result = checker._check_dynamic_method(
+            {
+                "status": "AVAILABLE",
+                "reviewed_weather_match_status": "MATCH",
+                "rooms": [
+                    {
+                        "room_id": "room-1",
+                        "room_name": "Room 1",
+                        "annual_comfort_period_complete": True,
+                        "occupied_hours_above_sia180_upper": 0.0,
+                        "occupied_hours_below_sia180_lower": 0.0,
+                        "window_operable": False,
+                    }
+                ],
+                "design_power_status": "NOT_CHECKABLE",
+            }
+        )
 
         self.assertEqual(result["status"], "NOT_CHECKABLE")
         self.assertEqual(result["comfort"]["upper_limit_hours"], 100.0)
@@ -685,20 +728,24 @@ class CheckerBehaviorTests(unittest.TestCase):
     def test_user_operable_room_uses_zero_hour_upper_limit(self):
         """Apply clause 3.2.4.2 without the 100/400-hour allowance."""
         checker, _engine = self._new_checker()
-        result = checker._check_dynamic_method({
-            "status": "AVAILABLE",
-            "building_status": "NEW_BUILDING",
-            "reviewed_weather_match_status": "MATCH",
-            "rooms": [{
-                "room_id": "room-1",
-                "room_name": "Room 1",
-                "annual_comfort_period_complete": True,
-                "occupied_hours_above_sia180_upper": 1.0,
-                "occupied_hours_below_sia180_lower": 0.0,
-                "window_operable": True,
-            }],
-            "design_power_status": "NOT_CHECKABLE",
-        })
+        result = checker._check_dynamic_method(
+            {
+                "status": "AVAILABLE",
+                "building_status": "NEW_BUILDING",
+                "reviewed_weather_match_status": "MATCH",
+                "rooms": [
+                    {
+                        "room_id": "room-1",
+                        "room_name": "Room 1",
+                        "annual_comfort_period_complete": True,
+                        "occupied_hours_above_sia180_upper": 1.0,
+                        "occupied_hours_below_sia180_lower": 0.0,
+                        "window_operable": True,
+                    }
+                ],
+                "design_power_status": "NOT_CHECKABLE",
+            }
+        )
 
         self.assertEqual(result["status"], "CHECKED")
         self.assertEqual(
@@ -720,26 +767,28 @@ class CheckerBehaviorTests(unittest.TestCase):
     def test_incomplete_room_blocks_annual_comfort(self):
         """Reject an aggregate conclusion when one applicable room is incomplete."""
         checker, _engine = self._new_checker()
-        result = checker._check_dynamic_method({
-            "status": "AVAILABLE",
-            "building_status": "NEW_BUILDING",
-            "reviewed_weather_match_status": "MATCH",
-            "rooms": [
-                {
-                    "room_id": "complete",
-                    "annual_comfort_period_complete": True,
-                    "occupied_hours_above_sia180_upper": 0.0,
-                    "occupied_hours_below_sia180_lower": 0.0,
-                    "window_operable": False,
-                },
-                {
-                    "room_id": "incomplete",
-                    "annual_comfort_period_complete": False,
-                    "window_operable": False,
-                },
-            ],
-            "design_power_status": "NOT_CHECKABLE",
-        })
+        result = checker._check_dynamic_method(
+            {
+                "status": "AVAILABLE",
+                "building_status": "NEW_BUILDING",
+                "reviewed_weather_match_status": "MATCH",
+                "rooms": [
+                    {
+                        "room_id": "complete",
+                        "annual_comfort_period_complete": True,
+                        "occupied_hours_above_sia180_upper": 0.0,
+                        "occupied_hours_below_sia180_lower": 0.0,
+                        "window_operable": False,
+                    },
+                    {
+                        "room_id": "incomplete",
+                        "annual_comfort_period_complete": False,
+                        "window_operable": False,
+                    },
+                ],
+                "design_power_status": "NOT_CHECKABLE",
+            }
+        )
 
         self.assertEqual(result["status"], "NOT_CHECKABLE")
         self.assertIn(
@@ -872,15 +921,15 @@ class SimulationHelperTests(unittest.TestCase):
     def test_units_type_is_resolved_without_unit_in_variable_name(self):
         """Use the ResultsReader unit catalog instead of guessing from names."""
         reader = Mock()
-        reader.get_variables.return_value = [{
-            "aps_varname": "HEAT_LOAD",
-            "display_name": "Heating load",
-            "model_level": "z",
-            "units_type": 7,
-        }]
-        reader.get_units.return_value = {
-            7: {"units_metric": {"display_name": "kW"}}
-        }
+        reader.get_variables.return_value = [
+            {
+                "aps_varname": "HEAT_LOAD",
+                "display_name": "Heating load",
+                "model_level": "z",
+                "units_type": 7,
+            }
+        ]
+        reader.get_units.return_value = {7: {"units_metric": {"display_name": "kW"}}}
         reader.get_room_list.return_value = []
         from swiss_sia.simulation_results import (
             find_aps_variable,
@@ -937,7 +986,9 @@ class SimulationHelperTests(unittest.TestCase):
             3.0,
         )
         self.assertEqual(
-            integrate_positive_result_to_kwh([1.0, 2.0, 3.0], "Cumulative energy [kWh]", 1.0),
+            integrate_positive_result_to_kwh(
+                [1.0, 2.0, 3.0], "Cumulative energy [kWh]", 1.0
+            ),
             3.0,
         )
 
@@ -947,10 +998,22 @@ class SimulationHelperTests(unittest.TestCase):
         reader.results_per_day = 24
         reader.get_units.return_value = {}
         reader.get_variables.return_value = [
-            {"aps_varname": "TEMP", "display_name": "Dry resultant temperature", "model_level": "z"},
+            {
+                "aps_varname": "TEMP",
+                "display_name": "Dry resultant temperature",
+                "model_level": "z",
+            },
             {"aps_varname": "OCC", "display_name": "Number people", "model_level": "z"},
-            {"aps_varname": "UPPER", "display_name": "Upper comfort temperature", "model_level": "w"},
-            {"aps_varname": "LOWER", "display_name": "Lower comfort temperature", "model_level": "w"},
+            {
+                "aps_varname": "UPPER",
+                "display_name": "Upper comfort temperature",
+                "model_level": "w",
+            },
+            {
+                "aps_varname": "LOWER",
+                "display_name": "Lower comfort temperature",
+                "model_level": "w",
+            },
         ]
         reader.get_room_list.return_value = [("Room 1", "room-1", 10.0)]
         reader.get_room_results.side_effect = RuntimeError("read failed")

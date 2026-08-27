@@ -1,5 +1,6 @@
 """Native Tk interface for scenario-driven model generation inside IESVE."""
 
+import copy
 import hashlib
 import json
 import os
@@ -51,13 +52,11 @@ from .test3_source_bundle import (
     build_test3_source_bound_bundle,
 )
 from .ui_translations import (
-    DEFAULT_LANGUAGE,
     LANGUAGE_LABELS,
     LANGUAGES,
     normalize_language,
     translate,
 )
-
 
 WINDOW_TITLE = "Swiss VE Model Builder - SIA 380/2 + SIA 4010"
 SCENARIO_FILENAME = "sia_model_scenario.json"
@@ -99,9 +98,7 @@ class ModelBuilderController:
 
         project = Path(project_path)
         repository = Path(repository_root)
-        source_directory = (
-            repository / "references" / "standards" / "bestest"
-        )
+        source_directory = repository / "references" / "standards" / "bestest"
         filenames = (
             "DRYCOLD_IESVE.epw",
             "DRYCOLD_IESVE_EPW_DERIVATION.json",
@@ -130,35 +127,25 @@ class ModelBuilderController:
             managed = False
             if project_audit.is_file() and source_tmy.is_file():
                 try:
-                    audit = json.loads(
-                        project_audit.read_text(encoding="utf-8")
-                    )
-                    accepted_source_checksums = {
-                        checksum(source_tmy).upper()
-                    }
+                    audit = json.loads(project_audit.read_text(encoding="utf-8"))
+                    accepted_source_checksums = {checksum(source_tmy).upper()}
                     source_verification = (
-                        source_directory
-                        / "DRYCOLD_TMY_ISO_SOURCE_VERIFICATION.json"
+                        source_directory / "DRYCOLD_TMY_ISO_SOURCE_VERIFICATION.json"
                     )
                     if source_verification.is_file():
                         verification = json.loads(
                             source_verification.read_text(encoding="utf-8")
                         )
                         accepted_source_checksums.add(
-                            str(
-                                verification["weather"]["sha256"]
-                            ).upper()
+                            str(verification["weather"]["sha256"]).upper()
                         )
                     managed = (
                         audit.get("status") == "PASS"
                         and audit["weather"].get("format") == "EPW"
                         and str(audit["weather"]["sha256"]).upper()
                         == checksum(existing).upper()
-                        and audit["source_tmy1"].get("format")
-                        == "NOAA_TMY1_FIXED_WIDTH"
-                        and str(
-                            audit["source_tmy1"]["sha256"]
-                        ).upper()
+                        and audit["source_tmy1"].get("format") == "NOAA_TMY1_FIXED_WIDTH"
+                        and str(audit["source_tmy1"]["sha256"]).upper()
                         in accepted_source_checksums
                     )
                 except (KeyError, OSError, TypeError, ValueError):
@@ -166,9 +153,7 @@ class ModelBuilderController:
             if not managed:
                 return existing
 
-            backup_weather = project / (
-                "DRYCOLD_IESVE.pre_iso_sky_boundary.epw.bak"
-            )
+            backup_weather = project / ("DRYCOLD_IESVE.pre_iso_sky_boundary.epw.bak")
             backup_audit = project / (
                 "DRYCOLD_IESVE_EPW_DERIVATION.pre_iso_sky_boundary.json"
             )
@@ -177,14 +162,9 @@ class ModelBuilderController:
                 (project_audit, backup_audit),
             ):
                 if backup.exists():
-                    if (
-                        not backup.is_file()
-                        or checksum(backup) != checksum(current)
-                    ):
+                    if not backup.is_file() or checksum(backup) != checksum(current):
                         raise FileExistsError(
-                            "Controlled weather backup collision: {}".format(
-                                backup
-                            )
+                            "Controlled weather backup collision: {}".format(backup)
                         )
                 else:
                     shutil.copy2(str(current), str(backup))
@@ -200,15 +180,10 @@ class ModelBuilderController:
             destination = project / filename
             if not source.is_file():
                 raise FileNotFoundError(
-                    "Controlled Test 1 weather input is missing: {}".format(
-                        source
-                    )
+                    "Controlled Test 1 weather input is missing: {}".format(source)
                 )
             if destination.exists():
-                if (
-                    not destination.is_file()
-                    or checksum(source) != checksum(destination)
-                ):
+                if not destination.is_file() or checksum(source) != checksum(destination):
                     raise FileExistsError(
                         "A different Test 1 weather artifact was not "
                         "overwritten: {}".format(destination)
@@ -259,9 +234,7 @@ class ModelBuilderController:
             # result depends on the machine cannot be tested the same way twice.
             # Not finding it is reported by the bundle as a blocker, never by
             # leaving the Denver climate in place under a Kloten label.
-            kloten, _searched = resolve_kloten_weather(
-                project_path, repository_root
-            )
+            kloten, _searched = resolve_kloten_weather(project_path, repository_root)
             return build_test1_diagnostic_bundle(
                 project_path,
                 repository_root,
@@ -335,25 +308,19 @@ class ModelBuilderController:
     def runtime_qualification_supported(variant: str, case_id: str) -> bool:
         """Return whether a guarded runtime qualification probe is available."""
 
-        return get_case_capability(
-            variant, case_id
-        ).runtime_qualification_supported
+        return get_case_capability(variant, case_id).runtime_qualification_supported
 
     @staticmethod
     def aps_evaluation_supported(variant: str, case_id: str) -> bool:
         """Return whether runtime-qualified APS bindings cover this exact case."""
 
-        return get_case_capability(
-            variant, case_id
-        ).aps_evaluation_supported
+        return get_case_capability(variant, case_id).aps_evaluation_supported
 
     @staticmethod
     def apachesim_qualification_supported(variant: str, case_id: str) -> bool:
         """Return whether guarded annual simulation is implemented."""
 
-        return get_case_capability(
-            variant, case_id
-        ).apachesim_qualification_supported
+        return get_case_capability(variant, case_id).apachesim_qualification_supported
 
     @staticmethod
     def prepare_validation_class(
@@ -414,9 +381,7 @@ class ModelBuilderController:
             raise FileNotFoundError(
                 "Saved VE project directory does not exist: {}".format(project)
             )
-        template = (
-            repository / "config" / "sia4010_external_inputs.example.json"
-        )
+        template = repository / "config" / "sia4010_external_inputs.example.json"
         if not template.is_file():
             raise FileNotFoundError(
                 "External-input template does not exist: {}".format(template)
@@ -447,9 +412,7 @@ class ModelBuilderController:
                 shutil.copyfile(str(source), str(destination))
             elif not destination.is_file():
                 raise FileExistsError(
-                    "External-input template path is not a file: {}".format(
-                        destination
-                    )
+                    "External-input template path is not a file: {}".format(destination)
                 )
         return target, created
 
@@ -467,9 +430,13 @@ class ModelBuilderController:
         knowingly wants the prepared contract -- so it returns the authorized
         entries with the written basis of each, for the caller to display.
 
-        An existing manifest is never overwritten: replacing one would discard
-        authorizations, blocked statuses or project-local edits that are not
-        ours to drop.
+        An existing manifest is never overwritten, except when it is still
+        byte-for-byte identical to the repository's empty template.  That
+        exact file contains no authorization or project-local edit to preserve
+        and may be upgraded by this explicit opt-in action.  A stale checksum
+        may also be refreshed when every other field exactly matches the
+        current repository-owned record.  Any substantive local edit remains
+        untouched.
 
         Args:
             project_path: Saved VE project directory.
@@ -491,42 +458,146 @@ class ModelBuilderController:
             raise FileNotFoundError(
                 "Saved VE project directory does not exist: {}".format(project)
             )
-        prepared = (
-            repository
-            / "config"
-            / "sia4010_external_inputs.test2a_prepared.json"
-        )
+        prepared = repository / "config" / "sia4010_external_inputs.test2a_prepared.json"
         if not prepared.is_file():
             raise FileNotFoundError(
-                "Prepared external-input manifest does not exist: "
-                "{}".format(prepared)
+                "Prepared external-input manifest does not exist: " "{}".format(prepared)
             )
         target = project / EXTERNAL_INPUT_FILENAME
         installed = False
-        if not target.exists():
-            shutil.copyfile(str(prepared), str(target))
+        empty_template = repository / "config" / "sia4010_external_inputs.example.json"
+
+        def materialized_prepared_payload():
+            """Load prepared evidence with config-relative paths made absolute."""
+
+            with prepared.open("r", encoding="utf-8") as stream:
+                payload = json.load(stream)
+            for record in payload.get("inputs", {}).values():
+                source_path = str(record.get("source_path") or "").strip()
+                if source_path and not Path(source_path).is_absolute():
+                    record["source_path"] = str((prepared.parent / source_path).resolve())
+                validation = record.get("technical_validation", {})
+                report_path = str(validation.get("report_path") or "").strip()
+                if report_path and not Path(report_path).is_absolute():
+                    validation["report_path"] = str(
+                        (prepared.parent / report_path).resolve()
+                    )
+            return payload
+
+        pristine_empty = (
+            target.is_file()
+            and empty_template.is_file()
+            and target.read_bytes() == empty_template.read_bytes()
+        )
+        if not target.exists() or pristine_empty:
+            # The prepared contract lives in ``config`` and intentionally uses
+            # paths relative to that directory.  A byte-for-byte copy into a VE
+            # project would make those paths resolve relative to the project
+            # instead, turning valid evidence into artificial MISSING files.
+            # Materialise only the two manifest-level file locators before the
+            # move; validation reports keep resolving their own binding paths
+            # relative to the report that owns them.
+            payload = materialized_prepared_payload()
+            with target.open("w", encoding="utf-8") as stream:
+                json.dump(payload, stream, ensure_ascii=False, indent=2)
+                stream.write("\n")
             installed = True
+        elif target.is_file():
+            # Repair only the exact sentinel paths written by versions prior
+            # to 2026-08-25, where JSON null was stringified as ``"None"``
+            # before path resolution.  No other project-local value is
+            # changed.  The repair restores null and keeps the manifest's
+            # evidentiary meaning (MISSING/PENDING) unchanged.
+            with target.open("r", encoding="utf-8") as stream:
+                existing_payload = json.load(stream)
+            none_path = str((prepared.parent / "None").resolve())
+            changed = False
+            for record in existing_payload.get("inputs", {}).values():
+                if record.get("source_path") == none_path:
+                    record["source_path"] = None
+                    changed = True
+                validation = record.get("technical_validation", {})
+                if validation.get("report_path") == none_path:
+                    validation["report_path"] = None
+                    changed = True
+
+            # Repository evidence can mature after a disposable project was
+            # created.  Merge a newly qualified entry only when the project's
+            # corresponding record is still exactly the untouched empty
+            # template record.  Any field-level operator edit makes it differ
+            # and therefore protects it from replacement.
+            if empty_template.is_file():
+                with empty_template.open("r", encoding="utf-8") as stream:
+                    empty_payload = json.load(stream)
+                prepared_payload = materialized_prepared_payload()
+                existing_inputs = existing_payload.get("inputs", {})
+                empty_inputs = empty_payload.get("inputs", {})
+                prepared_inputs = prepared_payload.get("inputs", {})
+                for input_id, existing_record in list(existing_inputs.items()):
+                    if (
+                        input_id in empty_inputs
+                        and input_id in prepared_inputs
+                        and existing_record == empty_inputs[input_id]
+                        and existing_record != prepared_inputs[input_id]
+                    ):
+                        existing_inputs[input_id] = prepared_inputs[input_id]
+                        changed = True
+                        installed = True
+                        continue
+
+                    # A repository-owned validation report can legitimately
+                    # change when its normalized binding is regenerated after
+                    # an authority clarification.  Refresh only that checksum,
+                    # and only when every other field still matches the current
+                    # prepared record.  This deliberately refuses to overwrite
+                    # any project-local source, authorization or semantic edit.
+                    if input_id not in prepared_inputs:
+                        continue
+                    prepared_record = prepared_inputs[input_id]
+                    existing_validation = existing_record.get("technical_validation", {})
+                    prepared_validation = prepared_record.get("technical_validation", {})
+                    existing_report_sha = existing_validation.get("report_sha256")
+                    prepared_report_sha = prepared_validation.get("report_sha256")
+                    if not existing_report_sha or not prepared_report_sha:
+                        continue
+                    if existing_report_sha == prepared_report_sha:
+                        continue
+                    candidate = copy.deepcopy(existing_record)
+                    candidate["technical_validation"][
+                        "report_sha256"
+                    ] = prepared_report_sha
+                    if candidate == prepared_record:
+                        existing_validation["report_sha256"] = prepared_report_sha
+                        changed = True
+                        installed = True
+            if changed:
+                with target.open("w", encoding="utf-8") as stream:
+                    json.dump(existing_payload, stream, ensure_ascii=False, indent=2)
+                    stream.write("\n")
         # Load through the strict reader either way: an existing manifest we did
         # not write still has to be a valid contract before we report on it.
         manifest = Sia4010ExternalInputManifest.load(target)
         authorizations = []
         for input_id, record in sorted(manifest.entries.items()):
-            if str(record.get(
-                "normative_authorization_status", ""
-            )).upper() != "CONFIRMED":
+            if (
+                str(record.get("normative_authorization_status", "")).upper()
+                != "CONFIRMED"
+            ):
                 continue
             # `license_reference` is the contract's own field: the strict reader
             # rejects an entry whose value is empty, so it cannot silently
             # become blank.  `normative_authorization_basis` is a richer
             # annotation some entries carry, and nothing validates it -- it is
             # shown in addition, never instead.
-            authorizations.append({
-                "input_id": input_id,
-                "basis": str(record.get("license_reference", "")).strip(),
-                "decision": str(
-                    record.get("normative_authorization_basis", "")
-                ).strip(),
-            })
+            authorizations.append(
+                {
+                    "input_id": input_id,
+                    "basis": str(record.get("license_reference", "")).strip(),
+                    "decision": str(
+                        record.get("normative_authorization_basis", "")
+                    ).strip(),
+                }
+            )
         return target, installed, authorizations
 
     def build_payload(
@@ -686,9 +757,7 @@ class NativeModelBuilderWindow(tk.Frame):
         self.variant_var = tk.StringVar(value="test_1")
         self.case_var = tk.StringVar(value="600")
         self.scenario_id_var = tk.StringVar(value="SIA4010_1A_600")
-        self.case_manifest_var = tk.StringVar(
-            value="config/sia4010_all_classes.json"
-        )
+        self.case_manifest_var = tk.StringVar(value="config/sia4010_all_classes.json")
         self.ve_config_var = tk.StringVar(value="reference_model_config.json")
         self.ve_assets_var = tk.StringVar(value="reference_model_assets.json")
         self.status_var = tk.StringVar(value=self.t("status_ready_title"))
@@ -757,12 +826,16 @@ class NativeModelBuilderWindow(tk.Frame):
         # Re-render the banner so its wording follows the new language too.
         self._set_status(
             "warning" if self.temporary_project else "ready",
-            self.t("status_unsaved_title")
-            if self.temporary_project
-            else self.t("status_ready_title"),
-            self.t("status_unsaved_detail")
-            if self.temporary_project
-            else self.t("status_ready_detail"),
+            (
+                self.t("status_unsaved_title")
+                if self.temporary_project
+                else self.t("status_ready_title")
+            ),
+            (
+                self.t("status_unsaved_detail")
+                if self.temporary_project
+                else self.t("status_ready_detail")
+            ),
         )
 
     @staticmethod
@@ -770,10 +843,7 @@ class NativeModelBuilderWindow(tk.Frame):
         """Return whether the host screen is too short for the roomy layout."""
 
         try:
-            return (
-                master.winfo_screenheight() < 900
-                or master.winfo_screenwidth() < 1280
-            )
+            return master.winfo_screenheight() < 900 or master.winfo_screenwidth() < 1280
         except tk.TclError:
             return False
 
@@ -952,9 +1022,7 @@ class NativeModelBuilderWindow(tk.Frame):
             darkcolor=self.COLORS["line_strong"],
         )
         style.map("TEntry", bordercolor=[("focus", self.COLORS["green"])])
-        style.configure(
-            "TSeparator", background=line
-        )
+        style.configure("TSeparator", background=line)
         style.configure(
             "Builder.Vertical.TScrollbar",
             background=self.COLORS["line"],
@@ -970,9 +1038,7 @@ class NativeModelBuilderWindow(tk.Frame):
         self.columnconfigure(0, weight=1)
         self.rowconfigure(1, weight=1)
 
-        header = tk.Frame(
-            self, bg=self.COLORS["forest"], height=self._scaled(118, 88)
-        )
+        header = tk.Frame(self, bg=self.COLORS["forest"], height=self._scaled(118, 88))
         header.grid(row=0, column=0, sticky="ew")
         header.grid_propagate(False)
         header.columnconfigure(1, weight=1)
@@ -980,8 +1046,12 @@ class NativeModelBuilderWindow(tk.Frame):
         # Brand lockup: square IES mark next to the product wordmark.
         mark = tk.Frame(header, bg=self.COLORS["green"], width=42, height=42)
         mark.grid(
-            row=0, column=0, rowspan=2,
-            padx=(24, 14), pady=(self._scaled(22, 14), 0), sticky="n",
+            row=0,
+            column=0,
+            rowspan=2,
+            padx=(24, 14),
+            pady=(self._scaled(22, 14), 0),
+            sticky="n",
         )
         mark.grid_propagate(False)
         tk.Label(
@@ -1045,9 +1115,7 @@ class NativeModelBuilderWindow(tk.Frame):
 
         body_host = ttk.Frame(self, style="Builder.TFrame")
         body_pad = self._scaled(18, 11)
-        body_host.grid(
-            row=1, column=0, sticky="nsew", padx=body_pad, pady=body_pad
-        )
+        body_host.grid(row=1, column=0, sticky="nsew", padx=body_pad, pady=body_pad)
         body_host.columnconfigure(0, weight=1)
         body_host.rowconfigure(0, weight=1)
 
@@ -1179,9 +1247,7 @@ class NativeModelBuilderWindow(tk.Frame):
             text=self.t("files_hint"),
             style="Muted.TLabel",
         ).grid(row=10, column=0, columnspan=2, sticky="w", pady=(2, 12))
-        self._entry_row(
-            left, self.t("label_case_manifest"), self.case_manifest_var, 11
-        )
+        self._entry_row(left, self.t("label_case_manifest"), self.case_manifest_var, 11)
         self._entry_row(left, self.t("label_ve_config"), self.ve_config_var, 13)
         self._entry_row(left, self.t("label_ve_assets"), self.ve_assets_var, 15)
 
@@ -1224,9 +1290,7 @@ class NativeModelBuilderWindow(tk.Frame):
             text=self.t("features_hint_official"),
             style="Muted.TLabel",
         )
-        self.feature_note.grid(
-            row=1, column=0, columnspan=2, sticky="w", pady=(2, 12)
-        )
+        self.feature_note.grid(row=1, column=0, columnspan=2, sticky="w", pady=(2, 12))
         features_frame = ttk.Frame(right, style="Plain.TFrame")
         features_frame.grid(row=2, column=0, columnspan=2, sticky="ew")
         features_frame.columnconfigure(0, weight=1)
@@ -1256,9 +1320,7 @@ class NativeModelBuilderWindow(tk.Frame):
         status_wrap.grid(row=3, column=0, columnspan=2, sticky="ew", pady=(18, 12))
         self.status_stripe = tk.Frame(status_wrap, bg=self.COLORS["green"], width=3)
         self.status_stripe.pack(side="left", fill="y")
-        status_box = tk.Frame(
-            status_wrap, bg=self.COLORS["green_soft"], padx=14, pady=12
-        )
+        status_box = tk.Frame(status_wrap, bg=self.COLORS["green_soft"], padx=14, pady=12)
         status_box.pack(side="left", fill="both", expand=True)
         self.status_label = tk.Label(
             status_box,
@@ -1646,9 +1708,7 @@ class NativeModelBuilderWindow(tk.Frame):
                 self.variant_var.get(), self.case_var.get()
             )
         )
-        self.create_button.configure(
-            state="normal" if mutation_ready else "disabled"
-        )
+        self.create_button.configure(state="normal" if mutation_ready else "disabled")
         qualification_ready = (
             profile == "SIA4010_OFFICIAL"
             and not self.temporary_project
@@ -1673,9 +1733,7 @@ class NativeModelBuilderWindow(tk.Frame):
                 / "reference_model_report.json"
             ).is_file()
         )
-        self.simulate_button.configure(
-            state="normal" if simulation_ready else "disabled"
-        )
+        self.simulate_button.configure(state="normal" if simulation_ready else "disabled")
         aps_ready = (
             profile == "SIA4010_OFFICIAL"
             and self.aps_evaluator is not None
@@ -1683,32 +1741,25 @@ class NativeModelBuilderWindow(tk.Frame):
                 self.variant_var.get(), self.case_var.get()
             )
         )
-        self.evaluate_aps_button.configure(
-            state="normal" if aps_ready else "disabled"
-        )
+        self.evaluate_aps_button.configure(state="normal" if aps_ready else "disabled")
         aps_probe_ready = (
             profile == "SIA4010_OFFICIAL"
             and not self.temporary_project
             and self.aps_probe is not None
         )
-        self.aps_probe_button.configure(
-            state="normal" if aps_probe_ready else "disabled"
-        )
+        self.aps_probe_button.configure(state="normal" if aps_probe_ready else "disabled")
         test1_input_probe_ready = (
             profile == "SIA4010_OFFICIAL"
             and not self.temporary_project
             and self.test1_runtime_input_probe is not None
             and self.variant_var.get() == "test_1"
-            and self.case_var.get() in {
-                "600", "640", "900", "940", "600FF", "900FF"
-            }
+            and self.case_var.get() in {"600", "640", "900", "940", "600FF", "900FF"}
         )
         self.test1_input_probe_button.configure(
             state="normal" if test1_input_probe_ready else "disabled"
         )
         test1_input_qualifier_ready = (
-            test1_input_probe_ready
-            and self.test1_runtime_input_qualifier is not None
+            test1_input_probe_ready and self.test1_runtime_input_qualifier is not None
         )
         self.test1_input_qualify_button.configure(
             state="normal" if test1_input_qualifier_ready else "disabled"
@@ -1732,11 +1783,7 @@ class NativeModelBuilderWindow(tk.Frame):
             and self.test2a_profile_qualification_authorized
         )
         self.test2a_profile_qualify_button.configure(
-            state=(
-                "normal"
-                if test2a_profile_qualification_ready
-                else "disabled"
-            )
+            state=("normal" if test2a_profile_qualification_ready else "disabled")
         )
         test2a_shading_qualification_ready = (
             test2a_probe_ready
@@ -1744,11 +1791,7 @@ class NativeModelBuilderWindow(tk.Frame):
             and self.test2a_shading_qualification_authorized
         )
         self.test2a_shading_qualify_button.configure(
-            state=(
-                "normal"
-                if test2a_shading_qualification_ready
-                else "disabled"
-            )
+            state=("normal" if test2a_shading_qualification_ready else "disabled")
         )
         test2a_optical_qualification_ready = (
             test2a_probe_ready
@@ -1756,11 +1799,7 @@ class NativeModelBuilderWindow(tk.Frame):
             and self.test2a_optical_qualification_authorized
         )
         self.test2a_optical_qualify_button.configure(
-            state=(
-                "normal"
-                if test2a_optical_qualification_ready
-                else "disabled"
-            )
+            state=("normal" if test2a_optical_qualification_ready else "disabled")
         )
         test3_probe_ready = (
             profile == "SIA4010_OFFICIAL"
@@ -1793,9 +1832,7 @@ class NativeModelBuilderWindow(tk.Frame):
             state="normal" if hvac_plant_probe_ready else "disabled"
         )
         if profile == "SIA4010_OFFICIAL":
-            capability = get_case_capability(
-                self.variant_var.get(), self.case_var.get()
-            )
+            capability = get_case_capability(self.variant_var.get(), self.case_var.get())
             if capability.mutation_supported:
                 self.status_detail_var.set(
                     "Guarded VE generator available for {}/{}.".format(
@@ -1809,10 +1846,7 @@ class NativeModelBuilderWindow(tk.Frame):
                         case=capability.case_id,
                     )
                 )
-            elif (
-                capability.variant == "test_2A"
-                and capability.case_id == "2A"
-            ):
+            elif capability.variant == "test_2A" and capability.case_id == "2A":
                 try:
                     test2a_inputs_ready = external_input_readiness(
                         self.project_path,
@@ -1922,9 +1956,7 @@ class NativeModelBuilderWindow(tk.Frame):
                     )
                 )
             payload = self._payload(execution_mode)
-            scenario = self.controller.write_and_validate(
-                self.project_path, payload
-            )
+            scenario = self.controller.write_and_validate(self.project_path, payload)
         except Exception as exc:
             self._set_status("error", self.t("status_invalid_title"), str(exc))
             self._append_log("FAIL - {}".format(exc))
@@ -1952,14 +1984,10 @@ class NativeModelBuilderWindow(tk.Frame):
         except Exception as exc:
             self._set_status("error", self.t("status_failed_title"), str(exc))
             self._append_log("FAIL - {}".format(exc))
-            messagebox.showerror(
-                "Swiss VE Model Builder", str(exc), parent=self.master
-            )
+            messagebox.showerror("Swiss VE Model Builder", str(exc), parent=self.master)
             return
 
-        payload_result = (
-            result.to_dict() if hasattr(result, "to_dict") else {}
-        )
+        payload_result = result.to_dict() if hasattr(result, "to_dict") else {}
         status = str(
             payload_result.get("status")
             or getattr(getattr(result, "status", None), "value", "")
@@ -1968,12 +1996,8 @@ class NativeModelBuilderWindow(tk.Frame):
         blockers = payload_result.get("blockers", [])
         preparation_status = str(getattr(bundle, "status", "") or "")
         preparation_blockers = list(getattr(bundle, "blockers", ()) or ())
-        if (
-            execution_mode == "PREPARE_ONLY"
-            and (
-                "BLOCKED" in preparation_status
-                or "WITH_BLOCKERS" in preparation_status
-            )
+        if execution_mode == "PREPARE_ONLY" and (
+            "BLOCKED" in preparation_status or "WITH_BLOCKERS" in preparation_status
         ):
             # The launcher may correctly return READY_FOR_PREPARATION because
             # no mutation was attempted. Preserve the stricter source/generator
@@ -1988,18 +2012,14 @@ class NativeModelBuilderWindow(tk.Frame):
                 detail or self.t("status_blocked_detail"),
             )
         elif "FAIL" in status:
-            self._set_status(
-                "error", status, self.t("status_audit_detail")
-            )
+            self._set_status("error", status, self.t("status_audit_detail"))
         else:
             self._set_status(
                 "ready",
                 status or self.t("status_done_title"),
                 self.t("status_done_detail"),
             )
-        self._append_log(
-            "{} - {}".format(status or "PASS", self.t("log_operation_done"))
-        )
+        self._append_log("{} - {}".format(status or "PASS", self.t("log_operation_done")))
         self._sync_case()
 
     def prepare(self) -> None:
@@ -2032,14 +2052,10 @@ class NativeModelBuilderWindow(tk.Frame):
         except Exception as exc:
             self._set_status("error", self.t("status_failed_title"), str(exc))
             self._append_log("FAIL - {}".format(exc))
-            messagebox.showerror(
-                "Swiss VE Model Builder", str(exc), parent=self.master
-            )
+            messagebox.showerror("Swiss VE Model Builder", str(exc), parent=self.master)
             return
-        detail = (
-            "{} exact cases prepared; {} remain blocked; audit: {}".format(
-                len(receipt.cases), receipt.blocked_cases, receipt.audit_path
-            )
+        detail = "{} exact cases prepared; {} remain blocked; audit: {}".format(
+            len(receipt.cases), receipt.blocked_cases, receipt.audit_path
         )
         self._set_status(
             "warning" if receipt.blocked_cases else "ready",
@@ -2072,9 +2088,7 @@ class NativeModelBuilderWindow(tk.Frame):
         except Exception as exc:
             self._set_status("error", self.t("status_failed_title"), str(exc))
             self._append_log("FAIL - {}".format(exc))
-            messagebox.showerror(
-                "Swiss VE Model Builder", str(exc), parent=self.master
-            )
+            messagebox.showerror("Swiss VE Model Builder", str(exc), parent=self.master)
             return
         detail = self.t("status_all_classes_result").format(
             classes=len(receipt.classes),
@@ -2113,30 +2127,22 @@ class NativeModelBuilderWindow(tk.Frame):
         except Exception as exc:
             self._set_status("error", self.t("status_failed_title"), str(exc))
             self._append_log("FAIL - {}".format(exc))
-            messagebox.showerror(
-                "SIA 4010 APS", str(exc), parent=self.master
-            )
+            messagebox.showerror("SIA 4010 APS", str(exc), parent=self.master)
             return
         status = str(getattr(receipt, "status", "NOT_CHECKABLE"))
         detail = self.t("status_aps_result").format(
             variant=getattr(receipt, "variant", self.variant_var.get()),
             case=getattr(receipt, "case_id", self.case_var.get()),
             metrics=getattr(receipt, "observed_metric_count", 0),
-            distributions=getattr(
-                receipt, "distribution_criterion_count", 0
-            ),
+            distributions=getattr(receipt, "distribution_criterion_count", 0),
             artifact=getattr(receipt, "artifact_path", ""),
         )
         if not getattr(receipt, "required_output_scope_complete", False):
-            detail = "{} {}".format(
-                detail, self.t("status_aps_partial_scope")
-            )
+            detail = "{} {}".format(detail, self.t("status_aps_partial_scope"))
         level = (
             "error"
             if "FAIL" in status
-            else "ready"
-            if status == "OFFICIAL_RESULTS_RECORDED"
-            else "warning"
+            else "ready" if status == "OFFICIAL_RESULTS_RECORDED" else "warning"
         )
         self._set_status(level, status, detail)
         self._append_log("{} - {}".format(status, detail))
@@ -2148,8 +2154,7 @@ class NativeModelBuilderWindow(tk.Frame):
             self.test1_runtime_input_probe is None
             or self.temporary_project
             or self.variant_var.get() != "test_1"
-            or self.case_var.get()
-            not in {"600", "640", "900", "940", "600FF", "900FF"}
+            or self.case_var.get() not in {"600", "640", "900", "940", "600FF", "900FF"}
         ):
             messagebox.showwarning(
                 self.t("dlg_test1_input_probe_title"),
@@ -2181,9 +2186,7 @@ class NativeModelBuilderWindow(tk.Frame):
             report=report,
         )
         self._set_status(
-            "ready"
-            if status == "READY_FOR_CONTROLLED_BINDING_REVIEW"
-            else "warning",
+            "ready" if status == "READY_FOR_CONTROLLED_BINDING_REVIEW" else "warning",
             status,
             detail,
         )
@@ -2204,8 +2207,7 @@ class NativeModelBuilderWindow(tk.Frame):
             self.test1_runtime_input_qualifier is None
             or self.temporary_project
             or self.variant_var.get() != "test_1"
-            or self.case_var.get()
-            not in {"600", "640", "900", "940", "600FF", "900FF"}
+            or self.case_var.get() not in {"600", "640", "900", "940", "600FF", "900FF"}
         ):
             messagebox.showwarning(
                 self.t("dlg_test1_input_qualify_title"),
@@ -2451,9 +2453,7 @@ class NativeModelBuilderWindow(tk.Frame):
         level = (
             "error"
             if "FAIL" in status
-            else "ready"
-            if status == "OFFICIAL_RESULTS_RECORDED"
-            else "warning"
+            else "ready" if status == "OFFICIAL_RESULTS_RECORDED" else "warning"
         )
         self._set_status(level, status, detail)
         self._append_log("{} - {}".format(status, detail))
@@ -2461,9 +2461,7 @@ class NativeModelBuilderWindow(tk.Frame):
     def open_artifacts(self) -> None:
         """Open the project-local artifact folder when it exists."""
 
-        folder = (
-            self.project_path / "sia4010_artifacts" / "model_builder"
-        )
+        folder = self.project_path / "sia4010_artifacts" / "model_builder"
         if not folder.is_dir():
             messagebox.showinfo(
                 self.t("dlg_no_artifacts_title"),
@@ -2482,11 +2480,9 @@ class NativeModelBuilderWindow(tk.Frame):
         """Create if absent, validate and open the delegated-input manifest."""
 
         try:
-            manifest_path, created = (
-                self.controller.ensure_external_input_manifest(
-                    self.project_path,
-                    self.repository_root,
-                )
+            manifest_path, created = self.controller.ensure_external_input_manifest(
+                self.project_path,
+                self.repository_root,
             )
             os.startfile(str(manifest_path))
             self._append_log(
@@ -2505,8 +2501,7 @@ class NativeModelBuilderWindow(tk.Frame):
                     self.t("dlg_external_inputs_created").format(
                         path=manifest_path,
                         templates=(
-                            self.project_path
-                            / "sia4010_external_input_templates"
+                            self.project_path / "sia4010_external_input_templates"
                         ),
                     ),
                     parent=self.master,
@@ -2539,14 +2534,10 @@ class NativeModelBuilderWindow(tk.Frame):
             payload = json.loads(report.read_text(encoding="utf-8"))
             status = str(payload.get("status", "UNKNOWN"))
             if payload.get("mutation_performed") is not False:
-                raise RuntimeError(
-                    "Test 3 read-only probe reported a mutation"
-                )
+                raise RuntimeError("Test 3 read-only probe reported a mutation")
             matrix = payload.get("variant_capability_matrix", [])
             if len(matrix) != 12:
-                raise RuntimeError(
-                    "Test 3 probe did not audit all twelve exact variants"
-                )
+                raise RuntimeError("Test 3 probe did not audit all twelve exact variants")
             detail = self.t("status_test3_probe").format(
                 status=status,
                 fields=len(payload.get("observed_lighting_fields", [])),
@@ -2557,8 +2548,7 @@ class NativeModelBuilderWindow(tk.Frame):
             self._set_status(
                 (
                     "ready"
-                    if status
-                    == "READY_FOR_DISPOSABLE_MUTATION_QUALIFICATION"
+                    if status == "READY_FOR_DISPOSABLE_MUTATION_QUALIFICATION"
                     else "warning"
                 ),
                 self.t("dlg_test3_probe_title"),
@@ -2568,12 +2558,8 @@ class NativeModelBuilderWindow(tk.Frame):
                 self.t("dlg_test3_probe_title"),
                 self.t("dlg_test3_probe_complete").format(
                     status=status,
-                    fields=len(
-                        payload.get("observed_lighting_fields", [])
-                    ),
-                    sensors=len(
-                        payload.get("sensor_related_members", [])
-                    ),
+                    fields=len(payload.get("observed_lighting_fields", [])),
+                    sensors=len(payload.get("sensor_related_members", [])),
                     report=report,
                 ),
                 parent=self.master,
@@ -2615,14 +2601,10 @@ class NativeModelBuilderWindow(tk.Frame):
             payload = json.loads(report.read_text(encoding="utf-8"))
             status = str(payload.get("status", "UNKNOWN"))
             if payload.get("mutation_performed") is not False:
-                raise RuntimeError(
-                    "Tests 4-7 read-only probe reported a mutation"
-                )
+                raise RuntimeError("Tests 4-7 read-only probe reported a mutation")
             matrix = payload.get("case_capability_matrix", [])
             if len(matrix) != 7:
-                raise RuntimeError(
-                    "Tests 4-7 probe did not audit all seven exact cases"
-                )
+                raise RuntimeError("Tests 4-7 probe did not audit all seven exact cases")
             observed = payload.get("observed_capabilities", {})
             detail = self.t("status_hvac_plant_probe").format(
                 status=status,
@@ -2635,8 +2617,7 @@ class NativeModelBuilderWindow(tk.Frame):
             self._set_status(
                 (
                     "ready"
-                    if status
-                    == "READY_FOR_DISPOSABLE_MUTATION_QUALIFICATION"
+                    if status == "READY_FOR_DISPOSABLE_MUTATION_QUALIFICATION"
                     else "warning"
                 ),
                 self.t("dlg_hvac_plant_probe_title"),
@@ -2646,15 +2627,9 @@ class NativeModelBuilderWindow(tk.Frame):
                 self.t("dlg_hvac_plant_probe_title"),
                 self.t("dlg_hvac_plant_probe_complete").format(
                     status=status,
-                    apache=observed.get(
-                        "apache_system_collection", False
-                    ),
-                    room=observed.get(
-                        "room_apache_system_readback", False
-                    ),
-                    plant=len(
-                        observed.get("plant_specific_members", [])
-                    ),
+                    apache=observed.get("apache_system_collection", False),
+                    room=observed.get("room_apache_system_readback", False),
+                    plant=len(observed.get("plant_specific_members", [])),
                     report=report,
                 ),
                 parent=self.master,
@@ -2689,36 +2664,21 @@ class NativeModelBuilderWindow(tk.Frame):
             report = Path(str(self.test2a_runtime_probe()))
             payload = json.loads(report.read_text(encoding="utf-8"))
             status = str(payload.get("status", "UNKNOWN"))
-            ready = (
-                status
-                == "READY_FOR_DISPOSABLE_MUTATION_QUALIFICATION"
-            )
-            diagnostics = (
-                self.project_path / "sia4010_artifacts" / "diagnostics"
-            )
-            profile_reports = tuple(
-                diagnostics.glob("sia2a_profiles_*.json")
-            )
+            ready = status == "READY_FOR_DISPOSABLE_MUTATION_QUALIFICATION"
+            diagnostics = self.project_path / "sia4010_artifacts" / "diagnostics"
+            profile_reports = tuple(diagnostics.glob("sia2a_profiles_*.json"))
             threshold_reports = tuple(
                 diagnostics.glob("sia2a_external_shade_setter_*.json")
             )
-            optical_reports = tuple(
-                diagnostics.glob("sia2a_2e1_optical_setter_*.json")
-            )
+            optical_reports = tuple(diagnostics.glob("sia2a_2e1_optical_setter_*.json"))
             threshold_qualified = self._qualification_report_is_valid(
                 threshold_reports,
                 required_false_field="dynamic_equivalence_qualified",
             )
-            self.test2a_profile_qualification_authorized = (
-                ready and not profile_reports
-            )
-            self.test2a_shading_qualification_authorized = (
-                ready and not threshold_reports
-            )
+            self.test2a_profile_qualification_authorized = ready and not profile_reports
+            self.test2a_shading_qualification_authorized = ready and not threshold_reports
             self.test2a_optical_qualification_authorized = (
-                ready
-                and threshold_qualified
-                and not optical_reports
+                ready and threshold_qualified and not optical_reports
             )
             self._sync_case()
             detail = self.t("status_test2a_probe").format(
@@ -2727,10 +2687,11 @@ class NativeModelBuilderWindow(tk.Frame):
             )
             self._append_log(detail)
             self._set_status(
-                "ready"
-                if status
-                == "READY_FOR_DISPOSABLE_MUTATION_QUALIFICATION"
-                else "warning",
+                (
+                    "ready"
+                    if status == "READY_FOR_DISPOSABLE_MUTATION_QUALIFICATION"
+                    else "warning"
+                ),
                 self.t("dlg_test2a_probe_title"),
                 detail,
             )
@@ -2871,16 +2832,12 @@ class NativeModelBuilderWindow(tk.Frame):
                     "Shading setter qualification returned {}".format(status)
                 )
             if payload.get("dynamic_equivalence_qualified") is not False:
-                raise RuntimeError(
-                    "Shading setter report overclaims dynamic equivalence"
-                )
+                raise RuntimeError("Shading setter report overclaims dynamic equivalence")
             self.test2a_shading_qualification_authorized = False
             self.test2a_optical_qualification_authorized = True
             self._sync_case()
             detail = self.t("status_test2a_shading_qualification").format(
-                construction=payload.get("setter_result", {}).get(
-                    "construction_id", ""
-                ),
+                construction=payload.get("setter_result", {}).get("construction_id", ""),
                 report=report,
             )
             self._append_log(detail)
@@ -2891,9 +2848,7 @@ class NativeModelBuilderWindow(tk.Frame):
             )
             messagebox.showinfo(
                 self.t("dlg_test2a_shading_qualification_title"),
-                self.t(
-                    "dlg_test2a_shading_qualification_complete"
-                ).format(report=report),
+                self.t("dlg_test2a_shading_qualification_complete").format(report=report),
                 parent=self.master,
             )
         except Exception as exc:
@@ -2924,15 +2879,11 @@ class NativeModelBuilderWindow(tk.Frame):
         if len(report_paths) != 1:
             return False
         report_path = report_paths[0]
-        checksum_path = report_path.with_suffix(
-            report_path.suffix + ".sha256"
-        )
+        checksum_path = report_path.with_suffix(report_path.suffix + ".sha256")
         if not report_path.is_file() or not checksum_path.is_file():
             return False
         try:
-            expected_sha = checksum_path.read_text(
-                encoding="utf-8"
-            ).split()[0]
+            expected_sha = checksum_path.read_text(encoding="utf-8").split()[0]
             actual_sha = hashlib.sha256(report_path.read_bytes()).hexdigest()
             payload = json.loads(report_path.read_text(encoding="utf-8"))
         except (IndexError, OSError, ValueError, TypeError):
@@ -2968,9 +2919,7 @@ class NativeModelBuilderWindow(tk.Frame):
             return
         confirmed = messagebox.askyesno(
             self.t("dlg_test2a_2e1_optical_title"),
-            self.t("dlg_test2a_2e1_optical_body").format(
-                project=self.project_name
-            ),
+            self.t("dlg_test2a_2e1_optical_body").format(project=self.project_name),
             parent=self.master,
             icon="warning",
         )
@@ -2985,9 +2934,7 @@ class NativeModelBuilderWindow(tk.Frame):
                 )
             report = Path(str(result.get("report_path", "")))
             bundle_status = str(result.get("bundle_status", ""))
-            bundle_audit = Path(
-                str(result.get("bundle_audit_path", ""))
-            )
+            bundle_audit = Path(str(result.get("bundle_audit_path", "")))
             if (
                 not report.is_file()
                 or not bundle_audit.is_file()
@@ -2999,9 +2946,7 @@ class NativeModelBuilderWindow(tk.Frame):
                     "overclaiming bundle receipt"
                 )
             payload = json.loads(report.read_text(encoding="utf-8"))
-            bundle_payload = json.loads(
-                bundle_audit.read_text(encoding="utf-8")
-            )
+            bundle_payload = json.loads(bundle_audit.read_text(encoding="utf-8"))
             if (
                 bundle_payload.get("status") != bundle_status
                 or bundle_payload.get("mutation_supported") is not False
@@ -3016,26 +2961,16 @@ class NativeModelBuilderWindow(tk.Frame):
                     )
                 )
             if payload.get("fixed_closed_storage_qualified") is not True:
-                raise RuntimeError(
-                    "2E1 optical setter storage was not qualified"
-                )
+                raise RuntimeError("2E1 optical setter storage was not qualified")
             if (
-                payload.get("fixed_closed_optical_mapping_qualified")
-                is not False
-                or payload.get(
-                    "diagnostic_candidate_generation_authorized"
-                )
-                is not False
+                payload.get("fixed_closed_optical_mapping_qualified") is not False
+                or payload.get("diagnostic_candidate_generation_authorized") is not False
             ):
-                raise RuntimeError(
-                    "2E1 optical setter report overclaims model readiness"
-                )
+                raise RuntimeError("2E1 optical setter report overclaims model readiness")
             self.test2a_optical_qualification_authorized = False
             self._sync_case()
             detail = self.t("status_test2a_2e1_optical").format(
-                construction=payload.get("setter_result", {}).get(
-                    "construction_id", ""
-                ),
+                construction=payload.get("setter_result", {}).get("construction_id", ""),
                 report=report,
                 bundle_status=bundle_status,
                 bundle=bundle_audit,
@@ -3099,9 +3034,7 @@ class NativeModelBuilderWindow(tk.Frame):
             payload = json.loads(report.read_text(encoding="utf-8"))
             status = str(payload.get("status", "UNKNOWN"))
             if status != "PASS":
-                raise RuntimeError(
-                    "Profile qualification returned {}".format(status)
-                )
+                raise RuntimeError("Profile qualification returned {}".format(status))
             self.test2a_profile_qualification_authorized = False
             self._sync_case()
             detail = self.t("status_test2a_profile_qualification").format(
@@ -3116,9 +3049,7 @@ class NativeModelBuilderWindow(tk.Frame):
             )
             messagebox.showinfo(
                 self.t("dlg_test2a_profile_qualification_title"),
-                self.t("dlg_test2a_profile_qualification_complete").format(
-                    report=report
-                ),
+                self.t("dlg_test2a_profile_qualification_complete").format(report=report),
                 parent=self.master,
             )
         except Exception as exc:
@@ -3139,9 +3070,7 @@ class NativeModelBuilderWindow(tk.Frame):
         """Rebuild and open the global checksum-verified evidence navigator."""
 
         try:
-            payload = self.controller.rebuild_evidence_navigator(
-                self.repository_root
-            )
+            payload = self.controller.rebuild_evidence_navigator(self.repository_root)
             report = Path(payload["global_artifacts"]["html"])
             if not report.is_file():
                 raise FileNotFoundError(
@@ -3153,9 +3082,7 @@ class NativeModelBuilderWindow(tk.Frame):
                 self.t("status_navigator_summary").format(
                     models=summary["checksum_valid_model_cases"],
                     simulations=summary["checksum_valid_apachesim_cases"],
-                    evaluations=summary[
-                        "simulation_linked_aps_evaluations"
-                    ],
+                    evaluations=summary["simulation_linked_aps_evaluations"],
                     total=summary["exact_cases"],
                 )
             )

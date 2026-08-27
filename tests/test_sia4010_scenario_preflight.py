@@ -13,7 +13,6 @@ from swiss_sia.reference_model.sia4010.scenario_preflight import (
     is_temporary_ve_project,
 )
 
-
 ROOT = Path(__file__).resolve().parents[1]
 OUTPUT = ROOT / ".codex_tmp" / "scenario_preflight_tests"
 
@@ -62,12 +61,7 @@ class Sia4010ScenarioPreflightTests(unittest.TestCase):
     def test_unsaved_ve_temp_project_is_detected(self):
         self.assertTrue(
             is_temporary_ve_project(
-                Path.home()
-                / "AppData"
-                / "Local"
-                / "Temp"
-                / "VEPROJ"
-                / "2025200"
+                Path.home() / "AppData" / "Local" / "Temp" / "VEPROJ" / "2025200"
             )
         )
 

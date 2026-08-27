@@ -27,7 +27,6 @@ import json
 import os
 import unittest
 
-
 REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
 TEST7_WORKBOOK = os.path.join(
     REPO_ROOT,
@@ -39,13 +38,12 @@ TEST7_REF = os.path.join(REPO_ROOT, "refs", "reference-data", "test-7.ref.json")
 
 # Frozen SHA-256 of the corrected Test 7 workbook confirmed by the
 # 2026-08-10 audit and re-verified on 2026-08-11.
-TEST7_WORKBOOK_SHA256 = (
-    "24937d8f421daa74a7f957025bfeb17a42fe2dc807b1a301a6752f4c0e808958"
-)
+TEST7_WORKBOOK_SHA256 = "24937d8f421daa74a7f957025bfeb17a42fe2dc807b1a301a6752f4c0e808958"
 
 
 try:
     import openpyxl  # noqa: F401
+
     _OPENPYXL_AVAILABLE = True
 except Exception:  # pragma: no cover
     _OPENPYXL_AVAILABLE = False

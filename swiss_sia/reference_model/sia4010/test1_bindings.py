@@ -38,8 +38,10 @@ def classify_test1_metric(expected: ExpectedResult) -> MetricBinding:
     low = expected.metric.lower()
     label_low = label.lower()
     if "peak" in low:
-        side = "heating" if label_low == "heating" else (
-            "cooling" if label_low == "cooling" else "load"
+        side = (
+            "heating"
+            if label_low == "heating"
+            else ("cooling" if label_low == "cooling" else "load")
         )
         quantity = "annual peak {} load".format(side)
         aggregation = "annual_peak"

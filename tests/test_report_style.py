@@ -142,14 +142,8 @@ class StatusPresentationTests(unittest.TestCase):
             base_channels = report_style._channels(base)
             derived_channels = report_style._channels(derived)
             self.assertEqual(
-                [
-                    sorted(base_channels).index(c)
-                    for c in base_channels
-                ],
-                [
-                    sorted(derived_channels).index(c)
-                    for c in derived_channels
-                ],
+                [sorted(base_channels).index(c) for c in base_channels],
+                [sorted(derived_channels).index(c) for c in derived_channels],
                 msg="{} -> {} changed hue order".format(base, derived),
             )
             for channel_base, channel_derived in zip(base_channels, derived_channels):

@@ -96,9 +96,7 @@ class ComplianceHubTests(unittest.TestCase):
             (root / "case.mdl").write_bytes(b"model")
             (vista / "case.aps").write_bytes(b"aps")
             (root / "sia_model_scenario.json").write_text(
-                json.dumps(
-                    {"selection": {"variant": "test_1", "case_id": "600FF"}}
-                ),
+                json.dumps({"selection": {"variant": "test_1", "case_id": "600FF"}}),
                 encoding="utf-8",
             )
             (results / "case_evaluation.json").write_text(
@@ -129,8 +127,12 @@ class ComplianceHubTests(unittest.TestCase):
         # no filesystem is required for this status rule.
         import swiss_sia.compliance_hub as module
 
-        audit_path = type("Artifact", (), {"stat": lambda self: type("S", (), {"st_mtime": 1})()})()
-        receipt_path = type("Artifact", (), {"stat": lambda self: type("S", (), {"st_mtime": 2})()})()
+        audit_path = type(
+            "Artifact", (), {"stat": lambda self: type("S", (), {"st_mtime": 1})()}
+        )()
+        receipt_path = type(
+            "Artifact", (), {"stat": lambda self: type("S", (), {"st_mtime": 2})()}
+        )()
         paths = iter([audit_path, receipt_path, None])
         payloads = iter(
             [
@@ -141,9 +143,11 @@ class ComplianceHubTests(unittest.TestCase):
                 {},
             ]
         )
-        with patch.object(module, "_latest_file", side_effect=lambda *_args: next(paths)), patch.object(
-            module, "_read_json", side_effect=lambda _path: next(payloads)
-        ), patch.object(Path, "glob", return_value=[]):
+        with (
+            patch.object(module, "_latest_file", side_effect=lambda *_args: next(paths)),
+            patch.object(module, "_read_json", side_effect=lambda _path: next(payloads)),
+            patch.object(Path, "glob", return_value=[]),
+        ):
             snapshot = build_project_snapshot(str(root))
 
         self.assertIn("Rerun the post-remediation", snapshot.recommended_action)

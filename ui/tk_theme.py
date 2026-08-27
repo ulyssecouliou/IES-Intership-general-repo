@@ -27,7 +27,6 @@ from tkinter import ttk
 
 from . import design
 
-
 #: ttk base theme we extend. ``clam`` is the one cross-platform theme that
 #: actually honours ``background``/``fieldbackground``, which the house style
 #: needs -- ``vista``/``winnative`` ignore them and would drop us back to grey.
@@ -95,15 +94,9 @@ def apply_ies_theme(root):
     # --- Grounds -----------------------------------------------------------
     style.configure("TFrame", background=design.LIGHT_GREY)
     style.configure("Card.TFrame", background=design.WHITE)
-    style.configure(
-        "Band.TFrame", background=design.NAVY
-    )  # full-width heading band
-    style.configure(
-        "Toolbar.TFrame", background=design.WHITE
-    )
-    style.configure(
-        "TSeparator", background=design.BORDER_GREY
-    )
+    style.configure("Band.TFrame", background=design.NAVY)  # full-width heading band
+    style.configure("Toolbar.TFrame", background=design.WHITE)
+    style.configure("TSeparator", background=design.BORDER_GREY)
 
     # --- Labels ------------------------------------------------------------
     style.configure(
@@ -244,9 +237,7 @@ def apply_ies_theme(root):
     )
 
     # --- Notebook ----------------------------------------------------------
-    style.configure(
-        "TNotebook", background=design.LIGHT_GREY, borderwidth=0
-    )
+    style.configure("TNotebook", background=design.LIGHT_GREY, borderwidth=0)
     style.configure(
         "TNotebook.Tab",
         background=design.LIGHT_GREY,

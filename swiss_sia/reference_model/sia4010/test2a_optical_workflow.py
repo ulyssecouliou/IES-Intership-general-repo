@@ -56,9 +56,7 @@ def run_test2a_2e1_optical_workflow(
     )
     if not report_path.is_file():
         raise ConfigurationError(
-            "2E1 optical qualification report was not written: {}".format(
-                report_path
-            )
+            "2E1 optical qualification report was not written: {}".format(report_path)
         )
     bundle = build_test2a_source_bound_bundle(
         project_root,
@@ -67,9 +65,7 @@ def run_test2a_2e1_optical_workflow(
     audit_path = Path(bundle.audit_path)
     if not audit_path.is_file():
         raise ConfigurationError(
-            "Rebuilt Test 2A bundle audit was not written: {}".format(
-                audit_path
-            )
+            "Rebuilt Test 2A bundle audit was not written: {}".format(audit_path)
         )
     audit = json.loads(audit_path.read_text(encoding="utf-8"))
     if (

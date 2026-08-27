@@ -71,9 +71,7 @@ class VeMutationPolicyProbeTests(unittest.TestCase):
         report = run_probe(iesve, project, cdb, project_id="proj_X", clock=_fake_clock())
         self.assertEqual(report.overall, ProbeStatus.WARNING)
         warning_ids = {
-            f.capability_id
-            for f in report.findings
-            if f.status is ProbeStatus.WARNING
+            f.capability_id for f in report.findings if f.status is ProbeStatus.WARNING
         }
         self.assertIn("IESVE_CONSTRUCTION_CLASS_ENUM", warning_ids)
 
@@ -87,9 +85,7 @@ class VeMutationPolicyProbeTests(unittest.TestCase):
 
         iesve, project, cdb = _fully_capable_project()
         self.assertFalse(hasattr(project, "rooms"))
-        report = run_probe(
-            iesve, project, cdb, project_id="proj_X", clock=_fake_clock()
-        )
+        report = run_probe(iesve, project, cdb, project_id="proj_X", clock=_fake_clock())
         ids = {finding.capability_id for finding in report.findings}
         self.assertIn("PROJECT_MODELS", ids)
         self.assertIn("MODEL_GET_BODIES", ids)
@@ -98,17 +94,13 @@ class VeMutationPolicyProbeTests(unittest.TestCase):
     def test_a_project_without_models_fails_closed(self) -> None:
         iesve, project, cdb = _fully_capable_project()
         project.models = []
-        report = run_probe(
-            iesve, project, cdb, project_id="proj_X", clock=_fake_clock()
-        )
+        report = run_probe(iesve, project, cdb, project_id="proj_X", clock=_fake_clock())
         self.assertEqual(report.overall, ProbeStatus.FAIL)
 
     def test_uvalue_types_is_probed_on_the_class_not_the_instance(self) -> None:
         iesve, project, cdb = _fully_capable_project()
         self.assertFalse(hasattr(cdb, "uvalue_types"))
-        report = run_probe(
-            iesve, project, cdb, project_id="proj_X", clock=_fake_clock()
-        )
+        report = run_probe(iesve, project, cdb, project_id="proj_X", clock=_fake_clock())
         finding = next(
             f for f in report.findings if f.capability_id == "CDB_UVALUE_TYPES"
         )
@@ -121,9 +113,7 @@ class VeMutationPolicyProbeTests(unittest.TestCase):
         report = run_probe(iesve, project, cdb, project_id="proj_X", clock=_fake_clock())
         self.assertEqual(report.overall, ProbeStatus.FAIL)
         fail_ids = {
-            f.capability_id
-            for f in report.findings
-            if f.status is ProbeStatus.FAIL
+            f.capability_id for f in report.findings if f.status is ProbeStatus.FAIL
         }
         self.assertIn("PROJECT_CREATE_THERMAL_TEMPLATE", fail_ids)
 
@@ -133,9 +123,7 @@ class VeMutationPolicyProbeTests(unittest.TestCase):
         report = run_probe(iesve, project, cdb, project_id="proj_X", clock=_fake_clock())
         self.assertEqual(report.overall, ProbeStatus.FAIL)
         fail_ids = {
-            f.capability_id
-            for f in report.findings
-            if f.status is ProbeStatus.FAIL
+            f.capability_id for f in report.findings if f.status is ProbeStatus.FAIL
         }
         self.assertIn("CDB_CONSTRUCTION_LOOKUP", fail_ids)
 

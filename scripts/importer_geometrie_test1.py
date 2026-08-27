@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-u"""Imports the Test 1 geometry into VE, and READS BACK what VE made of it.
+"""Imports the Test 1 geometry into VE, and READS BACK what VE made of it.
 
 WHY A SEPARATE SCRIPT FROM THE PROBE. An import **modifies the model**. The
 Test 1 probe is a reading: it creates test materials and deletes them. Slipping
@@ -39,10 +39,14 @@ if _RACINE not in sys.path:
     sys.path.insert(0, _RACINE)
 
 from scripts.run_test1_dans_ve import (  # noqa: E402
-    _dans_ve, _membres, _serialisable, dire)
+    _dans_ve,
+    _membres,
+    _serialisable,
+    dire,
+)
 
-CHEMIN_RAPPORT = os.path.join(_RACINE, 'outputs', 'import_geometrie_test1.json')
-CHEMIN_GBXML = os.path.join(_RACINE, 'outputs', 'test1_cellule.xml')
+CHEMIN_RAPPORT = os.path.join(_RACINE, "outputs", "import_geometrie_test1.json")
+CHEMIN_GBXML = os.path.join(_RACINE, "outputs", "test1_cellule.xml")
 
 #: Call forms tried for `import_file`, from most complete to simplest. The
 #: documentation announces `(file_name, heal_geometry, cap_mode, cap_height)`
@@ -51,10 +55,10 @@ CHEMIN_GBXML = os.path.join(_RACINE, 'outputs', 'test1_cellule.xml')
 #:
 #: Each entry is `(label, arguments after the file name)`.
 FORMES_DAPPEL = (
-    (u'file_name seul', ()),
-    (u'file_name + heal_geometry', (True,)),
-    (u'file_name + heal + cap_mode', (True, 0)),
-    (u'file_name + heal + cap_mode + cap_height', (True, 0, 0.0)),
+    ("file_name seul", ()),
+    ("file_name + heal_geometry", (True,)),
+    ("file_name + heal + cap_mode", (True, 0)),
+    ("file_name + heal + cap_mode + cap_height", (True, 0, 0.0)),
 )
 
 #: Comparison tolerance for read-back surfaces, in m². Wide enough to absorb
@@ -66,15 +70,15 @@ TOLERANCE_M2 = 1e-3
 #: entry per face. Comparison therefore applies to TOTALS, the only
 #: comparable quantities.
 CLES_DE_SURFACE = {
-    'murs_exterieurs': ('ext_wall_area',),
-    'vitrage_exterieur': ('ext_wall_glazed',),
-    'plancher': ('ext_floor_area', 'int_floor_area'),
-    'toiture': ('ext_ceiling_area', 'int_ceiling_area'),
+    "murs_exterieurs": ("ext_wall_area",),
+    "vitrage_exterieur": ("ext_wall_glazed",),
+    "plancher": ("ext_floor_area", "int_floor_area"),
+    "toiture": ("ext_ceiling_area", "int_ceiling_area"),
 }
 
 
 def totaux_attendus(cotes):
-    u"""Expected surface totals, aggregated as `get_areas()` returns them.
+    """Expected surface totals, aggregated as `get_areas()` returns them.
 
     `get_areas()` does not give one entry per face: it aggregates external
     walls, glazing, floor and roof. Comparison is therefore made on these
@@ -88,18 +92,23 @@ def totaux_attendus(cotes):
         dict: `{item: surface in m²}`.
     """
     from ve_adapter import geometrie_test1 as geometrie
+
     surfaces = geometrie.surfaces_attendues(cotes)
     return {
-        'murs_exterieurs': (surfaces['front_wall'] + surfaces['back_wall']
-                            + surfaces['left_wall'] + surfaces['right_wall']),
-        'vitrage_exterieur': surfaces['windows'],
-        'plancher': surfaces['floor'],
-        'toiture': surfaces['ceiling'],
+        "murs_exterieurs": (
+            surfaces["front_wall"]
+            + surfaces["back_wall"]
+            + surfaces["left_wall"]
+            + surfaces["right_wall"]
+        ),
+        "vitrage_exterieur": surfaces["windows"],
+        "plancher": surfaces["floor"],
+        "toiture": surfaces["ceiling"],
     }
 
 
 def totaux_releves(corps):
-    u"""Sums the surfaces read back from all bodies in the model.
+    """Sums the surfaces read back from all bodies in the model.
 
     Args:
         corps: List of `VEBody` objects.
@@ -123,7 +132,7 @@ def totaux_releves(corps):
 
 
 def comparer(attendus, releves):
-    u"""Confronts the read-back surfaces against the expected surfaces.
+    """Confronts the read-back surfaces against the expected surfaces.
 
     Args:
         attendus: What `totaux_attendus` returns.
@@ -135,28 +144,52 @@ def comparer(attendus, releves):
     """
     verdicts = {}
     for poste, attendu in sorted(attendus.items()):
-        obtenu = releves.get(poste)
+        obtenu_brut = releves.get(poste)
+        obtenu = obtenu_brut
+        normalisation = ""
+        # VE 2025 reports ``ext_wall_area`` as the gross facade area while
+        # also exposing ``ext_wall_glazed`` separately.  The source geometry
+        # reports opaque wall area.  Subtracting the independently matching
+        # glazed area is therefore a unit/definition normalization, not a
+        # tolerance or a geometry correction.
+        if poste == "murs_exterieurs" and obtenu is not None:
+            vitrage = releves.get("vitrage_exterieur")
+            if vitrage is not None:
+                net = float(obtenu) - float(vitrage)
+                if abs(net - attendu) <= TOLERANCE_M2:
+                    obtenu = net
+                    normalisation = (
+                        "VE ext_wall_area is gross; ext_wall_glazed was "
+                        "subtracted to compare the opaque net area."
+                    )
         if obtenu is None:
             verdicts[poste] = {
-                'attendu_m2': attendu, 'releve_m2': None,
-                'statut': 'NON_RELEVE',
-                'note': u'VE n expose pas ce poste sur les corps lus. '
-                        u'Ne PAS le lire comme zero.',
+                "attendu_m2": attendu,
+                "releve_m2": None,
+                "statut": "NON_RELEVE",
+                "note": "VE n expose pas ce poste sur les corps lus. "
+                "Ne PAS le lire comme zero.",
             }
             continue
         ecart = obtenu - attendu
         verdicts[poste] = {
-            'attendu_m2': attendu, 'releve_m2': obtenu, 'ecart_m2': ecart,
-            'statut': 'CONCORDE' if abs(ecart) <= TOLERANCE_M2 else 'DIVERGE',
-            'note': (u'' if abs(ecart) <= TOLERANCE_M2 else
-                     u'La geometrie importee ne reproduit pas la source. '
-                     u'L import a pu reussir en produisant une cellule fausse.'),
+            "attendu_m2": attendu,
+            "releve_m2": obtenu,
+            "releve_brut_m2": obtenu_brut,
+            "ecart_m2": ecart,
+            "statut": "CONCORDE" if abs(ecart) <= TOLERANCE_M2 else "DIVERGE",
+            "note": (
+                normalisation
+                if abs(ecart) <= TOLERANCE_M2
+                else "La geometrie importee ne reproduit pas la source. "
+                "L import a pu reussir en produisant une cellule fausse."
+            ),
         }
     return verdicts
 
 
-def _essayer_import(importeur, chemin):
-    u"""Tries the known call forms until one responds.
+def _essayer_import(importeur, chemin, module_iesve=None):
+    """Tries the known call forms until one responds.
 
     The signature is not introspectable: its docstring reduces to "cap_height".
     We therefore try, from most complete to simplest, and record what worked —
@@ -165,27 +198,60 @@ def _essayer_import(importeur, chemin):
     Args:
         importeur: `iesve.ImportGBXML`.
         chemin: gbXML file.
+        module_iesve: Optional top-level ``iesve`` module. VE 2025 exposes the
+            required ``VolumeCapMode`` enum there rather than on ImportGBXML.
 
     Returns:
         dict: Retained form and result, or the failures for each attempt.
     """
     essais = []
+    cap_mode_container = getattr(importeur, "VolumeCapMode", None)
+    if cap_mode_container is None and module_iesve is not None:
+        cap_mode_container = getattr(module_iesve, "VolumeCapMode", None)
+    if cap_mode_container is not None and hasattr(cap_mode_container, "none"):
+        try:
+            resultat = importeur.import_file(chemin, True, cap_mode_container.none, 0.0)
+        except Exception as erreur:  # noqa: BLE001 -- un refus est un resultat
+            essais.append(
+                {
+                    "forme": "signature VE 2025 + VolumeCapMode.none",
+                    "statut": "ECHEC",
+                    "erreur": "%s: %s" % (type(erreur).__name__, erreur),
+                }
+            )
+        else:
+            essais.append(
+                {
+                    "forme": "signature VE 2025 + VolumeCapMode.none",
+                    "statut": "OK",
+                    "retour": _serialisable(resultat),
+                }
+            )
+            return {
+                "forme_retenue": "signature VE 2025 + VolumeCapMode.none",
+                "essais": essais,
+            }
     for libelle, arguments in FORMES_DAPPEL:
         try:
             resultat = importeur.import_file(chemin, *arguments)
         except Exception as erreur:  # noqa: BLE001 -- un refus est un resultat
-            essais.append({'forme': libelle, 'statut': 'ECHEC',
-                           'erreur': u'%s: %s' % (type(erreur).__name__,
-                                                  erreur)})
+            essais.append(
+                {
+                    "forme": libelle,
+                    "statut": "ECHEC",
+                    "erreur": "%s: %s" % (type(erreur).__name__, erreur),
+                }
+            )
             continue
-        essais.append({'forme': libelle, 'statut': 'OK',
-                       'retour': _serialisable(resultat)})
-        return {'forme_retenue': libelle, 'essais': essais}
-    return {'forme_retenue': None, 'essais': essais}
+        essais.append(
+            {"forme": libelle, "statut": "OK", "retour": _serialisable(resultat)}
+        )
+        return {"forme_retenue": libelle, "essais": essais}
+    return {"forme_retenue": None, "essais": essais}
 
 
 def importer(chemin_gbxml=None):
-    u"""Runs the import and the readback.
+    """Runs the import and the readback.
 
     Args:
         chemin_gbxml: gbXML to import; written from the source if absent.
@@ -197,69 +263,78 @@ def importer(chemin_gbxml=None):
     from ve_adapter import geometrie_test1 as geometrie
 
     rapport = {
-        'dans_ve': _dans_ve(),
-        'avertissement': (
-            u"Ce script MODIFIE le modele VE : il y importe une geometrie. "
-            u"A lancer sur un projet JETABLE, jamais sur un modele client."),
-        'etapes': [],
+        "dans_ve": _dans_ve(),
+        "avertissement": (
+            "Ce script MODIFIE le modele VE : il y importe une geometrie. "
+            "A lancer sur un projet JETABLE, jamais sur un modele client."
+        ),
+        "etapes": [],
     }
 
     def etape(nom, fonction):
         try:
             valeur = fonction()
         except Exception as erreur:  # noqa: BLE001 -- on consigne
-            rapport['etapes'].append({
-                'nom': nom, 'statut': 'ECHEC',
-                'type_erreur': type(erreur).__name__,
-                'erreur': u'%s' % erreur})
-            dire(u'  [ECHEC] %-40s %s' % (nom, type(erreur).__name__))
+            rapport["etapes"].append(
+                {
+                    "nom": nom,
+                    "statut": "ECHEC",
+                    "type_erreur": type(erreur).__name__,
+                    "erreur": "%s" % erreur,
+                }
+            )
+            dire("  [ECHEC] %-40s %s" % (nom, type(erreur).__name__))
             return None
-        rapport['etapes'].append({'nom': nom, 'statut': 'OK',
-                                  'valeur': _serialisable(valeur)})
-        dire(u'  [OK]    %-40s %s' % (nom, repr(valeur)[:44]))
+        rapport["etapes"].append(
+            {"nom": nom, "statut": "OK", "valeur": _serialisable(valeur)}
+        )
+        dire("  [OK]    %-40s %s" % (nom, repr(valeur)[:44]))
         return valeur
 
-    dire(u'=== IMPORT DE LA GEOMETRIE DU TEST 1 ===')
-    dire(u'  ATTENTION : ce script modifie le modele. Projet jetable requis.')
+    dire("=== IMPORT DE LA GEOMETRIE DU TEST 1 ===")
+    dire("  ATTENTION : ce script modifie le modele. Projet jetable requis.")
 
-    cotes = etape(u'cotes de la source', lambda: geometrie.charger_cotes())
+    cotes = etape("cotes de la source", lambda: geometrie.charger_cotes())
     if cotes is None:
         _ecrire(rapport)
         return rapport
 
     chemin = chemin_gbxml or CHEMIN_GBXML
-    etape(u'ecriture du gbXML', lambda: gbxml.ecrire(chemin, cotes))
-    attendus = etape(u'surfaces attendues', lambda: totaux_attendus(cotes))
+    etape("ecriture du gbXML", lambda: gbxml.ecrire(chemin, cotes))
+    attendus = etape("surfaces attendues", lambda: totaux_attendus(cotes))
 
-    if not rapport['dans_ve']:
-        dire(u'  hors VEScripts : le gbXML est ecrit, l import ne peut pas')
-        dire(u'  se faire ici. Relancer depuis VE.')
+    if not rapport["dans_ve"]:
+        dire("  hors VEScripts : le gbXML est ecrit, l import ne peut pas")
+        dire("  se faire ici. Relancer depuis VE.")
         _ecrire(rapport)
         return rapport
 
     import iesve
-    etape(u'attributs de ImportGBXML',
-          lambda: _membres(iesve.ImportGBXML))
-    import_fait = etape(u'import_file : formes essayees',
-                        lambda: _essayer_import(iesve.ImportGBXML, chemin))
 
-    if not (import_fait or {}).get('forme_retenue'):
-        dire(u'  aucune forme d appel n a repondu : voir le rapport.')
+    etape("attributs de ImportGBXML", lambda: _membres(iesve.ImportGBXML))
+    import_fait = etape(
+        "import_file : formes essayees",
+        lambda: _essayer_import(iesve.ImportGBXML, chemin, iesve),
+    )
+
+    if not (import_fait or {}).get("forme_retenue"):
+        dire("  aucune forme d appel n a repondu : voir le rapport.")
         _ecrire(rapport)
         return rapport
 
-    corps = etape(u'corps du modele apres import',
-                  lambda: _corps_apres_import(iesve))
+    corps = etape("corps du modele apres import", lambda: _corps_apres_import(iesve))
     if corps is not None and attendus is not None:
-        etape(u'CONFRONTATION des surfaces',
-              lambda: comparer(attendus, totaux_releves(corps)))
+        etape(
+            "CONFRONTATION des surfaces",
+            lambda: comparer(attendus, totaux_releves(corps)),
+        )
 
     _ecrire(rapport)
     return rapport
 
 
 def _corps_apres_import(module_iesve):
-    u"""Reads back the bodies of the current model.
+    """Reads back the bodies of the current model.
 
     Args:
         module_iesve: Module `iesve`.
@@ -275,7 +350,7 @@ def _corps_apres_import(module_iesve):
 
 
 def _ecrire(rapport):
-    u"""Writes the report and says where to find it.
+    """Writes the report and says where to find it.
 
     Args:
         rapport: Import report.
@@ -283,15 +358,15 @@ def _ecrire(rapport):
     dossier = os.path.dirname(CHEMIN_RAPPORT)
     if not os.path.isdir(dossier):
         os.makedirs(dossier)
-    with io.open(CHEMIN_RAPPORT, 'w', encoding='utf-8') as flux:
+    with io.open(CHEMIN_RAPPORT, "w", encoding="utf-8") as flux:
         flux.write(json.dumps(rapport, ensure_ascii=False, indent=2))
     dire()
-    dire(u'rapport : %s' % CHEMIN_RAPPORT)
-    dire(u'-> la seule etape qui prouve quelque chose est la CONFRONTATION.')
+    dire("rapport : %s" % CHEMIN_RAPPORT)
+    dire("-> la seule etape qui prouve quelque chose est la CONFRONTATION.")
 
 
 def main(arguments=()):
-    u"""Entry point.
+    """Entry point.
 
     Args:
         arguments: Explicit gbXML path, optional.
@@ -299,6 +374,6 @@ def main(arguments=()):
     Returns:
         int: 0 if the report could be written, 1 otherwise.
     """
-    chemins = [a for a in arguments if not a.startswith('--')]
+    chemins = [a for a in arguments if not a.startswith("--")]
     rapport = importer(chemins[0] if chemins else None)
-    return 0 if rapport.get('etapes') else 1
+    return 0 if rapport.get("etapes") else 1

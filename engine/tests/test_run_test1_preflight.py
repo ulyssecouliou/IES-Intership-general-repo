@@ -15,10 +15,10 @@ import pytest
 
 from scripts import run_test1_dans_ve as run
 
-
 # --------------------------------------------------------------------------
 # Solar check
 # --------------------------------------------------------------------------
+
 
 def test_reference_solaire_est_celle_du_fichier_iso():
     """1547.1 kWh/m2 = SV column of the public ISO 52016-1 climate file.
@@ -31,20 +31,20 @@ def test_reference_solaire_est_celle_du_fichier_iso():
 
 def test_ecart_nul_declare_le_ciel_neutre():
     rapport = run.controler_solaire(run.IRRADIATION_SUD_REFERENCE_KWH_M2)
-    assert rapport['ecart_kwh_m2'] == 0.0
-    assert rapport['modele_de_ciel_neutre'] is True
+    assert rapport["ecart_kwh_m2"] == 0.0
+    assert rapport["modele_de_ciel_neutre"] is True
 
 
 def test_petit_ecart_reste_neutre():
     """0.83%: below the 1% tolerance."""
-    assert run.controler_solaire(1560.0)['modele_de_ciel_neutre'] is True
+    assert run.controler_solaire(1560.0)["modele_de_ciel_neutre"] is True
 
 
 def test_gros_ecart_declare_le_ciel_confondant():
     """-6.3%: any thermal discrepancy would first be explained by solar."""
     rapport = run.controler_solaire(1450.0)
-    assert rapport['modele_de_ciel_neutre'] is False
-    assert 'facteur confondant' in rapport['interpretation']
+    assert rapport["modele_de_ciel_neutre"] is False
+    assert "facteur confondant" in rapport["interpretation"]
 
 
 def test_le_signe_de_lecart_est_conserve():
@@ -52,29 +52,32 @@ def test_le_signe_de_lecart_est_conserve():
 
     Taking the absolute value too early would hide the direction of divergence.
     """
-    assert run.controler_solaire(1400.0)['ecart_kwh_m2'] < 0
-    assert run.controler_solaire(1700.0)['ecart_kwh_m2'] > 0
+    assert run.controler_solaire(1400.0)["ecart_kwh_m2"] < 0
+    assert run.controler_solaire(1700.0)["ecart_kwh_m2"] > 0
 
 
 def test_la_tolerance_est_symetrique():
     marge = run.IRRADIATION_SUD_REFERENCE_KWH_M2 * run.TOLERANCE_SOLAIRE_RELATIVE
-    for valeur in (run.IRRADIATION_SUD_REFERENCE_KWH_M2 - marge * 0.99,
-                   run.IRRADIATION_SUD_REFERENCE_KWH_M2 + marge * 0.99):
-        assert run.controler_solaire(valeur)['modele_de_ciel_neutre'] is True
+    for valeur in (
+        run.IRRADIATION_SUD_REFERENCE_KWH_M2 - marge * 0.99,
+        run.IRRADIATION_SUD_REFERENCE_KWH_M2 + marge * 0.99,
+    ):
+        assert run.controler_solaire(valeur)["modele_de_ciel_neutre"] is True
 
 
 # --------------------------------------------------------------------------
 # Scope of cases
 # --------------------------------------------------------------------------
 
+
 def test_les_six_cas_drycold_sont_ceux_du_test_1():
-    assert run.CAS_DRYCOLD == ('600', '640', '900', '940', '600FF', '900FF')
+    assert run.CAS_DRYCOLD == ("600", "640", "900", "940", "600FF", "900FF")
 
 
 def test_les_cas_kloten_sont_exclus_et_1e_en_fait_partie():
     """1E is the only case carrying the pass/fail criterion: excluding it must
     be explicit, never an oversight."""
-    assert '1E' in run.CAS_KLOTEN
+    assert "1E" in run.CAS_KLOTEN
     assert not set(run.CAS_DRYCOLD) & set(run.CAS_KLOTEN)
 
 
@@ -82,20 +85,21 @@ def test_les_cas_kloten_sont_exclus_et_1e_en_fait_partie():
 # Execution safeguards
 # --------------------------------------------------------------------------
 
+
 def test_run_refuse_de_sexecuter_hors_ve():
     """Explicitly, with the reason — never a silently empty run."""
     if run._dans_ve():
-        pytest.skip(u'session VEScripts : le refus ne s\'applique pas')
-    with pytest.raises((RuntimeError, NotImplementedError), match='iesve|VE'):
+        pytest.skip("session VEScripts : le refus ne s'applique pas")
+    with pytest.raises((RuntimeError, NotImplementedError), match="iesve|VE"):
         run.executer()
 
 
 def test_la_sonde_hors_ve_ne_pretend_rien_avoir_appris():
     if run._dans_ve():
-        pytest.skip(u'session VEScripts')
+        pytest.skip("session VEScripts")
     rapport = run.sonder()
-    assert rapport['dans_ve'] is False
-    assert rapport['etapes'] == []
+    assert rapport["dans_ve"] is False
+    assert rapport["etapes"] == []
 
 
 def test_le_preflight_ne_leve_jamais():
@@ -107,33 +111,34 @@ def test_le_preflight_ne_leve_jamais():
 # Mode selection — VEScripts has only a Run button, not a terminal
 # --------------------------------------------------------------------------
 
+
 def test_sans_argument_le_mode_depend_de_la_presence_de_ve():
     """That is the whole point: pressing Run must do the right thing."""
-    attendu = 'sonde' if run._dans_ve() else 'preflight'
+    attendu = "sonde" if run._dans_ve() else "preflight"
     assert run._mode_effectif(()) == attendu
 
 
-@pytest.mark.parametrize("mode", ['preflight', 'sonde', 'evaluer', 'run'])
+@pytest.mark.parametrize("mode", ["preflight", "sonde", "evaluer", "run"])
 def test_un_argument_explicite_prime(mode):
     """Those who have a terminal keep control."""
-    assert run._mode_effectif(('--' + mode,)) == mode
+    assert run._mode_effectif(("--" + mode,)) == mode
 
 
 def test_la_constante_mode_prime_sur_la_detection(monkeypatch):
     """The only setting to change from VE, for lack of a command line."""
-    monkeypatch.setattr(run, 'MODE', 'evaluer')
-    assert run._mode_effectif(()) == 'evaluer'
+    monkeypatch.setattr(run, "MODE", "evaluer")
+    assert run._mode_effectif(()) == "evaluer"
 
 
 def test_une_constante_mode_invalide_retombe_sur_la_detection(monkeypatch):
     """A typo must not render the script inert."""
-    monkeypatch.setattr(run, 'MODE', 'sond')  # intentional typo
-    assert run._mode_effectif(()) in ('sonde', 'preflight')
+    monkeypatch.setattr(run, "MODE", "sond")  # intentional typo
+    assert run._mode_effectif(()) in ("sonde", "preflight")
 
 
 def test_largument_prime_meme_sur_la_constante(monkeypatch):
-    monkeypatch.setattr(run, 'MODE', 'evaluer')
-    assert run._mode_effectif(('--preflight',)) == 'preflight'
+    monkeypatch.setattr(run, "MODE", "evaluer")
+    assert run._mode_effectif(("--preflight",)) == "preflight"
 
 
 def test_main_sans_argument_ne_leve_pas():
@@ -148,18 +153,19 @@ def main_sans_effet_de_bord():
     Returns:
         int: Return code of `main`.
     """
-    return run.main(('--preflight',))
+    return run.main(("--preflight",))
 
 
 def test_le_chemin_candidat_est_sous_outputs():
     """Never in refs/: it is not a frozen reference."""
-    assert 'outputs' in run.CHEMIN_CANDIDAT.replace(os.sep, '/')
-    assert 'refs' not in run.CHEMIN_CANDIDAT.replace(os.sep, '/')
+    assert "outputs" in run.CHEMIN_CANDIDAT.replace(os.sep, "/")
+    assert "refs" not in run.CHEMIN_CANDIDAT.replace(os.sep, "/")
 
 
 # --------------------------------------------------------------------------
 # Entry point of the construction database
 # --------------------------------------------------------------------------
+
 
 class FauxProjetCdb(object):
     """Stand-in for `VECdbProject`: neither a list, nor a dict, nor a string."""
@@ -173,7 +179,7 @@ def test_get_projects_rend_un_dict_pas_une_liste():
     as those of `VECdbProject`. Nothing had raised.
     """
     projet = FauxProjetCdb()
-    renvoi = {'project': [projet], 'system': [], 'manufacturer': []}
+    renvoi = {"project": [projet], "system": [], "manufacturer": []}
     assert run._premier_projet_cdb(renvoi) is projet
 
 
@@ -181,19 +187,18 @@ def test_les_bibliotheques_fournies_ne_sont_pas_le_projet():
     """'system' and 'manufacturer' are libraries shipped with VE:
     introspecting them does not tell us about the open model."""
     systeme = FauxProjetCdb()
-    assert run._premier_projet_cdb(
-        {'project': [], 'system': [systeme]}) is None
+    assert run._premier_projet_cdb({"project": [], "system": [systeme]}) is None
 
 
 def test_une_liste_imbriquee_est_refusee():
     """Sign that we took the wrong level again: better None than a
     wrong record."""
-    assert run._premier_projet_cdb({'project': [['a', 'b']]}) is None
+    assert run._premier_projet_cdb({"project": [["a", "b"]]}) is None
 
 
 def test_une_chaine_est_refusee():
     """Exactly what `projets[0]` returned before the fix."""
-    assert run._premier_projet_cdb(['project', 'system']) is None
+    assert run._premier_projet_cdb(["project", "system"]) is None
 
 
 def test_une_liste_de_projets_reste_acceptee():
@@ -203,7 +208,7 @@ def test_une_liste_de_projets_reste_acceptee():
     assert run._premier_projet_cdb([projet]) is projet
 
 
-@pytest.mark.parametrize('vide', [None, {}, [], {'project': []}])
+@pytest.mark.parametrize("vide", [None, {}, [], {"project": []}])
 def test_labsence_de_projet_donne_none(vide):
     assert run._premier_projet_cdb(vide) is None
 
@@ -211,8 +216,8 @@ def test_labsence_de_projet_donne_none(vide):
 def test_echouer_leve_avec_le_motif():
     """A step absent from the report is lost information; a failed step
     says why."""
-    with pytest.raises(RuntimeError, match='motif exact'):
-        run._echouer('motif exact')
+    with pytest.raises(RuntimeError, match="motif exact"):
+        run._echouer("motif exact")
 
 
 class FauxEnum(object):
@@ -229,7 +234,7 @@ class FauxEnum(object):
         return self.name
 
     def __repr__(self):
-        return 'iesve.project_types.%s' % self.name
+        return "iesve.project_types.%s" % self.name
 
 
 def test_les_cles_de_get_projects_sont_des_enums_pas_des_chaines():
@@ -238,25 +243,27 @@ def test_les_cles_de_get_projects_sont_des_enums_pas_des_chaines():
     silently and returns an empty list — which reads as 'no project'
     when there is one."""
     projet = FauxProjetCdb()
-    renvoi = {FauxEnum('project'): [projet],
-              FauxEnum('system'): [FauxProjetCdb()],
-              FauxEnum('manufacturer'): [FauxProjetCdb()]}
-    assert renvoi.get('project') is None      # the trap
+    renvoi = {
+        FauxEnum("project"): [projet],
+        FauxEnum("system"): [FauxProjetCdb()],
+        FauxEnum("manufacturer"): [FauxProjetCdb()],
+    }
+    assert renvoi.get("project") is None  # the trap
     assert run._premier_projet_cdb(renvoi) is projet
 
 
 def test_une_cle_chaine_reste_acceptee():
     """If a VE version indexed by strings, the probe must continue to work."""
     projet = FauxProjetCdb()
-    assert run._premier_projet_cdb({'project': [projet]}) is projet
+    assert run._premier_projet_cdb({"project": [projet]}) is projet
 
 
 def test_les_bibliotheques_fournies_restent_ecartees_avec_des_enums():
-    assert run._premier_projet_cdb({FauxEnum('system'): [FauxProjetCdb()]}) is None
+    assert run._premier_projet_cdb({FauxEnum("system"): [FauxProjetCdb()]}) is None
 
 
 def test_la_recherche_par_cle_textuelle_rend_une_liste_vide_si_absente():
-    assert run._valeur_par_cle_textuelle({FauxEnum('system'): [1]}, 'project') == []
+    assert run._valeur_par_cle_textuelle({FauxEnum("system"): [1]}, "project") == []
 
 
 def test_la_sonde_passe_le_projet_pas_la_base():
@@ -264,10 +271,11 @@ def test_la_sonde_passe_le_projet_pas_la_base():
     create_construction': create_construction is carried by the PROJECT.
     Same error class as enums looked up on the wrong container."""
     import io as _io
-    with _io.open(run.__file__.replace('.pyc', '.py'), encoding='utf-8') as f:
+
+    with _io.open(run.__file__.replace(".pyc", ".py"), encoding="utf-8") as f:
         source = f.read()
-    assert 'creer_constructions_cas(projet_cdb' in source
-    assert 'creer_constructions_cas(cdb' not in source
+    assert "creer_constructions_cas(projet_cdb" in source
+    assert "creer_constructions_cas(cdb" not in source
 
 
 class FauxModuleIesve(object):
@@ -278,20 +286,19 @@ class FauxModuleIesve(object):
 
 
 def test_le_membre_denum_est_resolu_sans_supposer():
-    assert run._membre_enum(
-        FauxModuleIesve, 'material_categories', 'other') == 15
+    assert run._membre_enum(FauxModuleIesve, "material_categories", "other") == 15
 
 
 def test_un_enum_absent_est_signale():
     """It is the API that changed: saying so is better than falling back to a
     default value, which would simulate without signalling anything."""
-    with pytest.raises(RuntimeError, match='absent du module'):
-        run._membre_enum(FauxModuleIesve, 'inexistant', 'other')
+    with pytest.raises(RuntimeError, match="absent du module"):
+        run._membre_enum(FauxModuleIesve, "inexistant", "other")
 
 
 def test_un_membre_absent_est_signale():
-    with pytest.raises(RuntimeError, match='absent de'):
-        run._membre_enum(FauxModuleIesve, 'material_categories', 'opaque')
+    with pytest.raises(RuntimeError, match="absent de"):
+        run._membre_enum(FauxModuleIesve, "material_categories", "opaque")
 
 
 def test_la_sonde_releve_les_cles_acceptees_par_set_properties():
@@ -300,16 +307,18 @@ def test_la_sonde_releve_les_cles_acceptees_par_set_properties():
     blindly would be the fifth guessing game; the probe reads get_properties()
     instead."""
     import io as _io
-    with _io.open(run.__file__.replace('.pyc', '.py'), encoding='utf-8') as f:
+
+    with _io.open(run.__file__.replace(".pyc", ".py"), encoding="utf-8") as f:
         source = f.read()
-    assert 'LES CLES ACCEPTEES' in source
-    assert 'get_properties()' in source
-    assert 'set_properties sans description' in source
+    assert "LES CLES ACCEPTEES" in source
+    assert "get_properties()" in source
+    assert "set_properties sans description" in source
 
 
 # --------------------------------------------------------------------------
 # Minimum mass accepted by VE
 # --------------------------------------------------------------------------
+
 
 def test_lechelle_commence_a_zero():
     """ISO 52016-1 gives 0 for the ideal insulator: it is the first value to
@@ -338,17 +347,19 @@ def test_le_releve_ne_conclut_pas_a_la_place_du_lecteur():
     """It records written/read pairs; reading them settles the question.
     Choosing in the script would freeze a value on a single item."""
     import io as _io
-    with _io.open(run.__file__.replace('.pyc', '.py'), encoding='utf-8') as f:
+
+    with _io.open(run.__file__.replace(".pyc", ".py"), encoding="utf-8") as f:
         source = f.read()
-    debut = source.index('def _echelle_de_minimum')
-    corps = source[debut:debut + 1800]
-    assert 'No conclusions are drawn here' in corps
-    assert 'releves.append' in corps
+    debut = source.index("def _echelle_de_minimum")
+    corps = source[debut : debut + 1800]
+    assert "No conclusions are drawn here" in corps
+    assert "releves.append" in corps
 
 
 # --------------------------------------------------------------------------
 # Are the thicknesses really written?
 # --------------------------------------------------------------------------
+
 
 def test_la_sonde_relit_les_epaisseurs_des_couches():
     """`add_layer(material_id, False)` writes NO thickness, and
@@ -356,17 +367,19 @@ def test_la_sonde_relit_les_epaisseurs_des_couches():
     itself without raising, with default thicknesses, would produce plausible
     and wrong U values — the failure mode this project must prevent."""
     import io as _io
-    with _io.open(run.__file__.replace('.pyc', '.py'), encoding='utf-8') as f:
+
+    with _io.open(run.__file__.replace(".pyc", ".py"), encoding="utf-8") as f:
         source = f.read()
-    assert 'epaisseurs REELLES' in source
-    assert '_proprietes_des_couches' in source
+    assert "epaisseurs REELLES" in source
+    assert "_proprietes_des_couches" in source
 
 
 def test_le_releve_des_couches_ne_leve_pas():
     """A probe that crashes reports nothing."""
+
     class CoucheMuette(object):
         def get_properties(self):
-            raise RuntimeError('indisponible')
+            raise RuntimeError("indisponible")
 
     class Construction(object):
         def get_layers(self):
@@ -374,16 +387,15 @@ def test_le_releve_des_couches_ne_leve_pas():
 
     releve = run._proprietes_des_couches(Construction())
     assert len(releve) == 1
-    assert 'RuntimeError' in releve[0]['proprietes']
+    assert "RuntimeError" in releve[0]["proprietes"]
 
 
 def test_un_get_layers_casse_est_consigne():
     class ConstructionCassee(object):
         def get_layers(self):
-            raise RuntimeError('pas de couches')
+            raise RuntimeError("pas de couches")
 
-    assert 'get_layers_a_echoue' in run._proprietes_des_couches(
-        ConstructionCassee())
+    assert "get_layers_a_echoue" in run._proprietes_des_couches(ConstructionCassee())
 
 
 def test_le_releve_rend_les_proprietes_de_chaque_couche():
@@ -392,24 +404,26 @@ def test_le_releve_rend_les_proprietes_de_chaque_couche():
             self._e = epaisseur
 
         def get_properties(self):
-            return {'thickness': self._e}
+            return {"thickness": self._e}
 
     class Construction(object):
         def get_layers(self):
             return [Couche(0.012), Couche(0.066)]
 
     releve = run._proprietes_des_couches(Construction())
-    assert [c['proprietes']['thickness'] for c in releve] == [0.012, 0.066]
+    assert [c["proprietes"]["thickness"] for c in releve] == [0.012, 0.066]
 
 
 # --------------------------------------------------------------------------
 # Cleanup: a probe must leave the model as it found it
 # --------------------------------------------------------------------------
 
+
 def test_les_materiaux_dessai_sont_supprimes():
     """Seven passes had left 76 materials in the user's project construction
     database: identifiers had gone from PYOP1 to PYOP76. A read-only probe
     must leave nothing behind."""
+
     class ProjetCdb(object):
         def __init__(self):
             self.supprimes = []
@@ -418,26 +432,28 @@ def test_les_materiaux_dessai_sont_supprimes():
             self.supprimes.append(identifiant)
 
     projet = ProjetCdb()
-    bilan = run._supprimer_materiaux(projet, ['PYOP1', 'PYOP2'])
-    assert projet.supprimes == ['PYOP1', 'PYOP2']
-    assert bilan['echecs'] == {}
+    bilan = run._supprimer_materiaux(projet, ["PYOP1", "PYOP2"])
+    assert projet.supprimes == ["PYOP1", "PYOP2"]
+    assert bilan["echecs"] == {}
 
 
 def test_un_refus_de_suppression_est_consigne_pas_masque():
     """A material used by a construction cannot be deleted: this is
     normal, and it must be readable in the report."""
+
     class ProjetRecalcitrant(object):
         def delete_material(self, identifiant):
-            raise RuntimeError('materiau utilise')
+            raise RuntimeError("materiau utilise")
 
-    bilan = run._supprimer_materiaux(ProjetRecalcitrant(), ['PYOP1'])
-    assert bilan['supprimes'] == []
-    assert 'materiau utilise' in bilan['echecs']['PYOP1']
+    bilan = run._supprimer_materiaux(ProjetRecalcitrant(), ["PYOP1"])
+    assert bilan["supprimes"] == []
+    assert "materiau utilise" in bilan["echecs"]["PYOP1"]
 
 
 def test_les_identifiants_vides_sont_ignores():
     """A material whose identifier could not be read must not cause
     the cleanup of the others to fail."""
+
     class Projet(object):
         def __init__(self):
             self.appels = 0
@@ -446,21 +462,23 @@ def test_les_identifiants_vides_sont_ignores():
             self.appels += 1
 
     projet = Projet()
-    run._supprimer_materiaux(projet, [None, '', 'PYOP1'])
+    run._supprimer_materiaux(projet, [None, "", "PYOP1"])
     assert projet.appels == 1
 
 
 def test_le_menage_ne_touche_pas_aux_materiaux_des_constructions():
     """Those are legitimately used by the created walls."""
     import io as _io
-    with _io.open(run.__file__.replace('.pyc', '.py'), encoding='utf-8') as f:
+
+    with _io.open(run.__file__.replace(".pyc", ".py"), encoding="utf-8") as f:
         source = f.read()
-    assert 'CONSTRUCTION materials are not concerned' in source
+    assert "CONSTRUCTION materials are not concerned" in source
 
 
 # --------------------------------------------------------------------------
 # Geometry: read before writing
 # --------------------------------------------------------------------------
+
 
 class FauxImporteur(object):
     @staticmethod
@@ -477,35 +495,36 @@ def test_les_deux_orthographes_dimport_sont_relevees():
     gives `import_file`. It was wrong once: we record both rather than
     trusting it on the rest."""
     releve = run._signature_dimport(FauxModuleAvecImport)
-    assert 'import_file' in releve
-    assert 'Import_file' in releve
-    assert releve['Import_file'] == 'absent'
-    assert 'file_name' in releve['import_file']['doc']
+    assert "import_file" in releve
+    assert "Import_file" in releve
+    assert releve["Import_file"] == "absent"
+    assert "file_name" in releve["import_file"]["doc"]
 
 
 def test_un_importeur_absent_est_signale():
     class SansImport(object):
         pass
 
-    assert 'absent du module' in run._signature_dimport(SansImport)['ImportGBXML']
+    assert "absent du module" in run._signature_dimport(SansImport)["ImportGBXML"]
 
 
 def test_les_corps_du_modele_sont_releves_avec_leurs_surfaces():
     """Without this record, a 'successful' import would prove nothing: that
     is the trap of 1 mm thicknesses."""
+
     class Corps(object):
-        id = 'B1'
-        name = 'cellule'
-        type = 'room'
+        id = "B1"
+        name = "cellule"
+        type = "room"
 
         def get_areas(self):
-            return {'floor': 48.0}
+            return {"floor": 48.0}
 
         def get_room_data(self):
-            return {'volume': 129.6}
+            return {"volume": 129.6}
 
     class Modele(object):
-        model_type = 'real'
+        model_type = "real"
 
         def get_bodies(self, _selection):
             return [Corps()]
@@ -514,51 +533,52 @@ def test_les_corps_du_modele_sont_releves_avec_leurs_surfaces():
         models = [Modele()]
 
     releve = run._corps_du_modele(Projet())
-    assert releve[0]['nb_corps'] == 1
+    assert releve[0]["nb_corps"] == 1
     # FLAT LIST and FLATTENED keys: nesting placed the surfaces at the 4th
     # level, where `_serialisable` reduces them to a truncated repr. The
     # 2026-08-07 record came out unreadable for this single reason.
-    assert releve[1]['get_areas.floor'] == 48.0
-    assert releve[1]['get_room_data.volume'] == 129.6
+    assert releve[1]["get_areas.floor"] == 48.0
+    assert releve[1]["get_room_data.volume"] == 129.6
 
 
 def test_un_modele_vide_est_signale():
     class Projet(object):
         models = []
 
-    assert run._corps_du_modele(Projet()) == {'aucun_modele': True}
+    assert run._corps_du_modele(Projet()) == {"aucun_modele": True}
 
 
 def test_un_get_bodies_casse_ne_fait_pas_planter():
     class Modele(object):
-        model_type = 'real'
+        model_type = "real"
 
         def get_bodies(self, _selection):
-            raise RuntimeError('indisponible')
+            raise RuntimeError("indisponible")
 
     class Projet(object):
         models = [Modele()]
 
-    assert 'get_bodies_a_echoue' in run._corps_du_modele(Projet())[0]
+    assert "get_bodies_a_echoue" in run._corps_du_modele(Projet())[0]
 
 
 def test_les_surfaces_ne_sont_pas_tronquees_par_la_profondeur():
     """The 2026-08-07 defect: the surface dictionary was at the 4th nesting
     level, so reduced to `repr(...)[:400]`. A truncated record is useless —
     that is exactly what one came to find there."""
+
     class Corps(object):
-        id = 'B1'
-        name = 'x'
-        type = 'room'
+        id = "B1"
+        name = "x"
+        type = "room"
 
         def get_areas(self):
-            return dict(('cle_%02d' % i, float(i)) for i in range(30))
+            return dict(("cle_%02d" % i, float(i)) for i in range(30))
 
         def get_room_data(self):
             return {}
 
     class Modele(object):
-        model_type = 'real'
+        model_type = "real"
 
         def get_bodies(self, _selection):
             return [Corps()]
@@ -567,4 +587,4 @@ def test_les_surfaces_ne_sont_pas_tronquees_par_la_profondeur():
         models = [Modele()]
 
     detail = run._corps_du_modele(Projet())[1]
-    assert detail['get_areas.cle_29'] == 29.0
+    assert detail["get_areas.cle_29"] == 29.0

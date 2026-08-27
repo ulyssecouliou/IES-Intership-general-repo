@@ -22,7 +22,6 @@ from pathlib import Path
 from swiss_sia import report_style
 from ui import design
 
-
 ROOT = Path(__file__).resolve().parents[1]
 GENERATOR = ROOT / "swiss_sia" / "excel_report.py"
 
@@ -37,6 +36,7 @@ CONVERTED_SHEETS = (
     "ALERTS",
     "ASSUMPTIONS LIMITS",
     "AUDIT LOG",
+    "CAPABILITY GUIDE",
     "CLIENT SUMMARY",
     "COMPLIANCE RESULTS",
     "COVER",
@@ -55,6 +55,7 @@ CONVERTED_SHEETS = (
     "P1 REMEDIATION",
     "PREFLIGHT",
     "REFERENCE PROJECT",
+    "REVIEW GOVERNANCE",
     "ROOMS",
     "SIA DATA COVERAGE",
     "SIA REQUIREMENTS",
@@ -130,9 +131,7 @@ class HouseStyleCoverageTests(unittest.TestCase):
         per-sheet assertion above would simply never look at it.
         """
 
-        self.assertEqual(
-            sorted(self.builders), sorted(CONVERTED_SHEETS)
-        )
+        self.assertEqual(sorted(self.builders), sorted(CONVERTED_SHEETS))
 
     def test_only_finalize_colours_a_tab(self) -> None:
         """Fifteen builders set a tab colour that finalize then overwrote.
@@ -142,9 +141,7 @@ class HouseStyleCoverageTests(unittest.TestCase):
         """
 
         builders_setting_colour = sorted(
-            name
-            for name, segment in self.builders.items()
-            if "set_tab_color(" in segment
+            name for name, segment in self.builders.items() if "set_tab_color(" in segment
         )
         self.assertEqual(builders_setting_colour, [])
         self.assertIn("set_tab_color(", self.source)
@@ -153,9 +150,7 @@ class HouseStyleCoverageTests(unittest.TestCase):
         tokens = {
             token.upper()
             for name, token in vars(design).items()
-            if isinstance(token, str)
-            and name.isupper()
-            and HEX_LITERAL.fullmatch(token)
+            if isinstance(token, str) and name.isupper() and HEX_LITERAL.fullmatch(token)
         }
         for section, colour in report_style.XW_SECTION_TAB_COLORS.items():
             with self.subTest(section=section):
@@ -165,9 +160,7 @@ class HouseStyleCoverageTests(unittest.TestCase):
         tokens = {
             token.upper()
             for name, token in vars(design).items()
-            if isinstance(token, str)
-            and name.isupper()
-            and HEX_LITERAL.fullmatch(token)
+            if isinstance(token, str) and name.isupper() and HEX_LITERAL.fullmatch(token)
         }
         for severity, colour in report_style.XW_SEVERITY_FILLS.items():
             with self.subTest(severity=severity):
@@ -179,13 +172,9 @@ class HouseStyleCoverageTests(unittest.TestCase):
         from swiss_sia.excel_report import ExcelReportGenerator
 
         declared = [
-            section
-            for section, _colour, _sheets
-            in ExcelReportGenerator._REPORT_SECTIONS
+            section for section, _colour, _sheets in ExcelReportGenerator._REPORT_SECTIONS
         ]
-        self.assertEqual(
-            sorted(declared), sorted(report_style.XW_SECTION_TAB_COLORS)
-        )
+        self.assertEqual(sorted(declared), sorted(report_style.XW_SECTION_TAB_COLORS))
 
     def test_a_table_link_is_not_marked_by_colour_alone(self) -> None:
         self.assertTrue(report_style.xw_table_link().get("underline"))
@@ -212,12 +201,8 @@ class HouseStyleCoverageTests(unittest.TestCase):
     def test_critical_escalates_fail_by_inversion_not_by_a_new_hue(self) -> None:
         roles = report_style.xw_shared_roles()
         failed = report_style.status_presentation("fail")
-        self.assertEqual(
-            roles["critical"]["bg_color"], report_style.xw_hex(failed.text)
-        )
-        self.assertNotEqual(
-            roles["critical"]["bg_color"], roles["fail"]["bg_color"]
-        )
+        self.assertEqual(roles["critical"]["bg_color"], report_style.xw_hex(failed.text))
+        self.assertNotEqual(roles["critical"]["bg_color"], roles["fail"]["bg_color"])
 
     def test_every_shared_role_clears_wcag_aa(self) -> None:
         """A verdict a reader cannot read is not a verdict."""
@@ -233,9 +218,7 @@ class HouseStyleCoverageTests(unittest.TestCase):
                 foreground = spec["font_color"]
                 large = float(spec.get("font_size", 0)) >= 14
                 self.assertTrue(
-                    report_style.meets_aa(
-                        foreground, background, large=large
-                    ),
+                    report_style.meets_aa(foreground, background, large=large),
                     "{} measures {:.2f}:1".format(
                         role,
                         report_style.contrast_ratio(foreground, background),

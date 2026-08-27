@@ -59,9 +59,7 @@ class ReferenceGeometryGenerator:
         door_width = float(self.parameters.value("door_width_m"))
         door_height = float(self.parameters.value("door_height_m"))
         overhang_depth = float(self.parameters.value("overhang_depth_m"))
-        overhang_offset = float(
-            self.parameters.value("overhang_vertical_offset_m")
-        )
+        overhang_offset = float(self.parameters.value("overhang_vertical_offset_m"))
 
         if sill + window_height + overhang_offset > height:
             raise GeometryError("Window and overhang exceed the storey height")
@@ -138,10 +136,14 @@ class ReferenceGeometryGenerator:
                     )
                 )
 
-            available_start = door_end + margin if include_door else segment_start + margin
+            available_start = (
+                door_end + margin if include_door else segment_start + margin
+            )
             available_end = segment_end - margin
             if available_end - available_start < window_width:
-                raise GeometryError("Facade segment cannot contain configured opening geometry")
+                raise GeometryError(
+                    "Facade segment cannot contain configured opening geometry"
+                )
             start = (available_start + available_end - window_width) / 2.0
             end = start + window_width
             z0, z1 = sill, sill + window_height
@@ -246,13 +248,21 @@ class ReferenceGeometryGenerator:
 
                 external_definitions = []
                 if column == 0:
-                    external_definitions.append(("west", x0, y0, y1, space.shell_faces[2]))
+                    external_definitions.append(
+                        ("west", x0, y0, y1, space.shell_faces[2])
+                    )
                 if column == columns - 1:
-                    external_definitions.append(("east", x1, y0, y1, space.shell_faces[3]))
+                    external_definitions.append(
+                        ("east", x1, y0, y1, space.shell_faces[3])
+                    )
                 if row == 0:
-                    external_definitions.append(("south", y0, x0, x1, space.shell_faces[4]))
+                    external_definitions.append(
+                        ("south", y0, x0, x1, space.shell_faces[4])
+                    )
                 if row == rows - 1:
-                    external_definitions.append(("north", y1, x0, x1, space.shell_faces[5]))
+                    external_definitions.append(
+                        ("north", y1, x0, x1, space.shell_faces[5])
+                    )
 
                 for side, fixed, start, end, polygon in external_definitions:
                     wall_id = "{}_WALL_{}_{}".format(prefix, side.upper(), token)
@@ -282,7 +292,9 @@ class ReferenceGeometryGenerator:
                 y0, y1 = row * dy, (row + 1) * dy
                 surfaces.append(
                     SurfaceSpec(
-                        identifier="{}_INT_WALL_X_R{}_B{}".format(prefix, row + 1, boundary),
+                        identifier="{}_INT_WALL_X_R{}_B{}".format(
+                            prefix, row + 1, boundary
+                        ),
                         surface_type=SurfaceType.INTERIOR_WALL,
                         polygon=_polygon(
                             (x, y0, 0.0),
@@ -302,7 +314,9 @@ class ReferenceGeometryGenerator:
                 x0, x1 = column * dx, (column + 1) * dx
                 surfaces.append(
                     SurfaceSpec(
-                        identifier="{}_INT_WALL_Y_C{}_B{}".format(prefix, column + 1, boundary),
+                        identifier="{}_INT_WALL_Y_C{}_B{}".format(
+                            prefix, column + 1, boundary
+                        ),
                         surface_type=SurfaceType.INTERIOR_WALL,
                         polygon=_polygon(
                             (x0, y, 0.0),

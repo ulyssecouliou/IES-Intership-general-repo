@@ -46,15 +46,20 @@ PROJECT_ROOT = Path(__file__).resolve().parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-# Exact case identifier.  Both probes derive the variant from the case the same
-# way -- Test 3 asserts ``scenario.case_id == scenario.variant[5:]``
-# (``test3_runtime_capability.py`` line 469) and every pair in
+# Exact case identifier for the current qualification campaign.  Both probes
+# derive the variant from the case the same way -- Test 3 asserts
+# ``scenario.case_id == scenario.variant[5:]`` and every pair in
 # ``hvac_plant_runtime_capability.EXACT_CASES`` reads ``("test_<case>",
 # "<case>")`` -- so the variant below is derived, never guessed.
-CASE = "7"
+#
+# Keep this explicit: the VEScripts Run button does not provide an interactive
+# case selector.  The previous default (7) silently prepared the wrong case
+# when the operator followed the Test 4 workflow.
+CASE = "4"
 
-# Empty means: derive the class deterministically from the published class/test
-# matrix.  Set it explicitly to prepare the case under another required class.
+# Empty means: resolve the first class that officially requires the selected
+# variant.  For Test 4 this deterministically selects class 3, while keeping
+# the reusable class resolver valid if an operator later changes ``CASE``.
 TARGET_CLASS = ""
 
 # Safety gate.  Leave False so a scenario belonging to another case is reported
@@ -68,6 +73,12 @@ ALLOW_SCENARIO_REPLACEMENT = True
 # prints every authorization it carries and the written basis of each, so what
 # was inherited is visible rather than assumed.
 INSTALL_PREPARED_EXTERNAL_INPUTS = False
+
+# Optional fail-closed guard used by dedicated disposable-project launchers.
+# The generic preparer leaves this empty because it supports many cases; a
+# dedicated launcher sets the exact saved VE project folder it is allowed to
+# touch before calling ``run``.
+EXPECTED_PROJECT_FOLDER = ""
 
 SCENARIO_FILENAME = "sia_model_scenario.json"
 
@@ -197,6 +208,15 @@ def run():
     project_path = Path(str(getattr(project, "path", "") or ""))
     if not project_path.is_dir() or is_temporary_ve_project(project_path):
         raise RuntimeError("Save the VE project before preparing a scenario")
+    expected_folder = str(EXPECTED_PROJECT_FOLDER or "").strip()
+    if expected_folder and project_path.name.casefold() != expected_folder.casefold():
+        raise RuntimeError(
+            "Wrong active VE project for this dedicated launcher: expected "
+            "folder {!r}, received {!r}. Open the disposable qualification "
+            "project and rerun; no scenario was written.".format(
+                expected_folder, project_path.name
+            )
+        )
 
     target_class = _resolve_target_class(variant)
     print("SIA 4010 CASE SCENARIO PREPARATION")

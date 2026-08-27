@@ -19,7 +19,6 @@ from dataclasses import replace
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
@@ -31,7 +30,6 @@ except Exception:  # pragma: no cover - only available inside IESVE.
 
 from . import config as config_module
 
-
 # VE can keep config.py cached between Run clicks. Reload it before importing
 # dependent modules so updated SIA values and report matrices are used.
 config_module = importlib.reload(config_module)
@@ -40,6 +38,7 @@ EXCEL_REPORT_NAME = config_module.EXCEL_REPORT_NAME
 CREATE_LATEST_REPORT_ALIAS = config_module.CREATE_LATEST_REPORT_ALIAS
 SIA4010_REQUIRED_EVIDENCE = config_module.SIA4010_REQUIRED_EVIDENCE
 SIA4010_EVIDENCE_DIR = config_module.SIA4010_EVIDENCE_DIR
+
 
 def _reload_local_module(module_name: str) -> Any:
     """Import and reload one package module retained by the VE interpreter."""
@@ -58,11 +57,10 @@ data_extractor_module = _reload_local_module("data_extractor")
 model_analyzer_module = _reload_local_module("model_analyzer")
 rule_engine_module = _reload_local_module("rule_engine")
 evidence_manager_module = _reload_local_module("evidence_manager")
+assessment_governance_module = _reload_local_module("assessment_governance")
 evidence_bootstrap_module = _reload_local_module("evidence_bootstrap")
 evidence_pack_module = _reload_local_module("evidence_pack")
-client_template_remediation_module = _reload_local_module(
-    "client_template_remediation"
-)
+client_template_remediation_module = _reload_local_module("client_template_remediation")
 simulation_results_module = _reload_local_module("simulation_results")
 _reload_local_module("value_integrity")
 
@@ -87,15 +85,21 @@ _reload_local_module("compliance_criteria")
 excel_report_module = _reload_local_module("excel_report")
 compliance_report_pdf_module = _reload_local_module("compliance_report_pdf")
 compliance_report_html_module = _reload_local_module("compliance_report_html")
-compliance_criteria_evaluator_module = _reload_local_module("compliance_criteria_evaluator")
+compliance_criteria_evaluator_module = _reload_local_module(
+    "compliance_criteria_evaluator"
+)
 
 VEDataExtractor = data_extractor_module.VEDataExtractor
 ModelAnalyzer = model_analyzer_module.ModelAnalyzer
 RuleEngine = rule_engine_module.RuleEngine
 SIA3802Checker = sia380_checker_module.SIA3802Checker
 SIA4010Checker = sia4010_checker_module.SIA4010Checker
-build_sia4010_pdf_prevalidation = sia4010_prevalidation_module.build_sia4010_pdf_prevalidation
-derive_validation_class_scope = validation_class_scope_module.derive_validation_class_scope
+build_sia4010_pdf_prevalidation = (
+    sia4010_prevalidation_module.build_sia4010_pdf_prevalidation
+)
+derive_validation_class_scope = (
+    validation_class_scope_module.derive_validation_class_scope
+)
 build_reference_project_specification = (
     reference_project_module.build_reference_project_specification
 )
@@ -103,9 +107,7 @@ load_company_profile = company_profile_module.load_company_profile
 ClientReportContext = client_report_context_module.ClientReportContext
 default_report_directory = client_report_context_module.report_directory
 build_compliance_verdict = compliance_verdict_module.build_compliance_verdict
-render_compliance_report_pdf = (
-    compliance_report_pdf_module.render_compliance_report_pdf
-)
+render_compliance_report_pdf = compliance_report_pdf_module.render_compliance_report_pdf
 render_compliance_report_html = (
     compliance_report_html_module.render_compliance_report_html
 )
@@ -140,34 +142,27 @@ prepare_evidence_folder = evidence_bootstrap_module.prepare_evidence_folder
 prefill_ventilation_control_evidence = (
     evidence_bootstrap_module.prefill_ventilation_control_evidence
 )
+prefill_cooling_generator_evidence = (
+    evidence_bootstrap_module.prefill_cooling_generator_evidence
+)
+prefill_sia2024_usage_evidence = evidence_bootstrap_module.prefill_sia2024_usage_evidence
+prefill_lighting_control_evidence = (
+    evidence_bootstrap_module.prefill_lighting_control_evidence
+)
 create_evidence_pack = evidence_pack_module.create_evidence_pack
 latest_remediation_evidence = (
     client_template_remediation_module.latest_remediation_evidence
 )
 
 REPORTS_DIR = os.path.join(str(PROJECT_ROOT), OUTPUT_DIR)
-os.makedirs(REPORTS_DIR, exist_ok=True)
 
 
 def _configure_logging() -> None:
-    """Configure console logging and add the report log when it is writable."""
-    handlers: List[logging.Handler] = [logging.StreamHandler(sys.stdout)]
-    try:
-        handlers.insert(
-            0,
-            logging.FileHandler(
-                os.path.join(REPORTS_DIR, "swiss_compliance_checker.log"),
-                encoding="utf-8",
-            ),
-        )
-    except OSError:
-        # Documentation builds and concurrent reviewers may hold the file lock.
-        pass
-
+    """Configure console logging without writing outside the active project."""
     logging.basicConfig(
         level=logging.INFO,
         format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-        handlers=handlers,
+        handlers=[logging.StreamHandler(sys.stdout)],
     )
 
 
@@ -205,7 +200,9 @@ def _build_unique_report_path(
     output_dir: Optional[object] = None,
 ) -> str:
     """Build a timestamped report path so VE runs do not overwrite each other."""
-    project_name = os.path.basename(os.path.normpath(str(project_path or ""))) or "VE_Project"
+    project_name = (
+        os.path.basename(os.path.normpath(str(project_path or ""))) or "VE_Project"
+    )
     project_name = _safe_filename_part(project_name)
     model_name = _safe_filename_part(_object_label(model, "Model_01"), "Model_01")
     base_name, extension = os.path.splitext(EXCEL_REPORT_NAME)
@@ -218,7 +215,9 @@ def _build_unique_report_path(
 
     suffix = 2
     while os.path.exists(candidate):
-        filename = f"{base_name}__{project_name}__{model_name}__{timestamp}_{suffix}{extension}"
+        filename = (
+            f"{base_name}__{project_name}__{model_name}__{timestamp}_{suffix}{extension}"
+        )
         candidate = os.path.join(destination, filename)
         suffix += 1
     return candidate
@@ -300,7 +299,11 @@ def _weather_reference_label(value: Any) -> str:
             if callable(candidate):
                 candidate = candidate()
             if candidate not in (None, ""):
-                return os.path.basename(os.fspath(candidate)) if isinstance(candidate, (str, bytes, os.PathLike)) else str(candidate)
+                return (
+                    os.path.basename(os.fspath(candidate))
+                    if isinstance(candidate, (str, bytes, os.PathLike))
+                    else str(candidate)
+                )
         except Exception:
             continue
     return str(value)
@@ -379,7 +382,9 @@ def capture_model_viewer_image(project_path: object) -> Path:
         candidates.append(
             returned_path if returned_path.is_absolute() else destination / returned_path
         )
-    candidates.extend(destination / (stem + suffix) for suffix in (".png", ".jpg", ".jpeg"))
+    candidates.extend(
+        destination / (stem + suffix) for suffix in (".png", ".jpg", ".jpeg")
+    )
     candidates.extend(
         sorted(
             (
@@ -393,11 +398,33 @@ def capture_model_viewer_image(project_path: object) -> Path:
     )
     for candidate in candidates:
         if candidate.is_file() and candidate.stat().st_size > 0:
-            return candidate
+            return _convert_to_line_drawing(candidate)
     raise RuntimeError(
         "IESVE did not create the Model Viewer image. Open Model Viewer, frame "
         "the model, and try the capture again."
     )
+
+
+def _convert_to_line_drawing(image_path: Path) -> Path:
+    """Convert a captured image to a B&W architectural line drawing.
+
+    Uses edge detection on the shaded capture to extract building outlines,
+    producing clean black lines on a white background.
+    """
+
+    try:
+        from PIL import Image, ImageFilter, ImageOps
+
+        with Image.open(image_path) as img:
+            grey = img.convert("L")
+            edges = grey.filter(ImageFilter.FIND_EDGES)
+            enhanced = edges.point(lambda x: min(255, x * 3))
+            inverted = ImageOps.invert(enhanced)
+            crisp = inverted.point(lambda x: 255 if x > 160 else 0)
+            crisp.convert("RGB").save(image_path)
+    except Exception:
+        pass
+    return image_path
 
 
 def _aps_matches_project_weather(aps_references: List[str], project_weather: str) -> bool:
@@ -475,6 +502,7 @@ def _collect_dynamic_results(project: Any) -> Dict[str, Any]:
         ),
         "building_status_source": "config fallback",
         "project_metadata_status": "NOT_PROVIDED",
+        "reviewed_project_metadata": {},
         "global_reference_comparison_status": "NOT_PROVIDED",
         "global_reference_comparison": {},
         "reviewed_weather_basis": "",
@@ -490,9 +518,10 @@ def _collect_dynamic_results(project: Any) -> Dict[str, Any]:
 
     try:
         evidence_root = Path(str(getattr(project, "path", "") or PROJECT_ROOT))
-        project_label = os.path.basename(
-            os.path.normpath(str(getattr(project, "path", "") or ""))
-        ) or "VE_Project"
+        project_label = (
+            os.path.basename(os.path.normpath(str(getattr(project, "path", "") or "")))
+            or "VE_Project"
+        )
         metadata_scan = scan_sia3802_project_metadata(
             evidence_root,
             SIA4010_EVIDENCE_DIR,
@@ -501,6 +530,7 @@ def _collect_dynamic_results(project: Any) -> Dict[str, Any]:
         summary["project_metadata_status"] = metadata_scan.get("status", "NOT_PROVIDED")
         metadata = find_accepted_project_metadata(metadata_scan, project_label)
         if metadata:
+            summary["reviewed_project_metadata"] = dict(metadata)
             summary["building_status"] = metadata.get("building_status", "UNSPECIFIED")
             summary["building_status_source"] = (
                 f"reviewed project metadata: {metadata.get('file', '')} row {metadata.get('row', '')}"
@@ -544,15 +574,21 @@ def _collect_dynamic_results(project: Any) -> Dict[str, Any]:
         ranked_aps = _rank_aps_files_by_mtime(project, aps_files)
         for candidate_aps in ranked_aps:
             aps_path = simulation_results_module.get_aps_path(project, candidate_aps)
-            binary_refs = simulation_results_module.extract_epw_references_from_aps(aps_path)
+            binary_refs = simulation_results_module.extract_epw_references_from_aps(
+                aps_path
+            )
             try:
-                candidate_reader = simulation_results_module.open_results_reader(candidate_aps)
+                candidate_reader = simulation_results_module.open_results_reader(
+                    candidate_aps
+                )
             except Exception as exc:
-                summary["skipped_aps_files"].append({
-                    "aps_file": candidate_aps,
-                    "weather_references": binary_refs,
-                    "reason": f"ResultsReader could not open the APS file: {exc}",
-                })
+                summary["skipped_aps_files"].append(
+                    {
+                        "aps_file": candidate_aps,
+                        "weather_references": binary_refs,
+                        "reason": f"ResultsReader could not open the APS file: {exc}",
+                    }
+                )
                 continue
 
             reader_weather = _weather_reference_label(
@@ -584,11 +620,13 @@ def _collect_dynamic_results(project: Any) -> Dict[str, Any]:
                 candidate_reader.close()
             except Exception:
                 pass
-            summary["skipped_aps_files"].append({
-                "aps_file": candidate_aps,
-                "weather_references": authoritative_refs,
-                "reason": f"ResultsReader weather does not match current project weather file {project_weather}.",
-            })
+            summary["skipped_aps_files"].append(
+                {
+                    "aps_file": candidate_aps,
+                    "weather_references": authoritative_refs,
+                    "reason": f"ResultsReader weather does not match current project weather file {project_weather}.",
+                }
+            )
 
         if results_file is None and fallback_reader is not None and fallback_data:
             selected_aps, selected_refs = fallback_data
@@ -600,7 +638,9 @@ def _collect_dynamic_results(project: Any) -> Dict[str, Any]:
             summary["notes"] = "No APS file found in the project Vista folder."
             return summary
         try:
-            room_results = simulation_results_module.collect_room_dynamic_results(results_file)
+            room_results = simulation_results_module.collect_room_dynamic_results(
+                results_file
+            )
         finally:
             try:
                 results_file.close()
@@ -608,34 +648,36 @@ def _collect_dynamic_results(project: Any) -> Dict[str, Any]:
                 pass
         rows = []
         for item in room_results:
-            rows.append({
-                "room_name": item.room_name,
-                "room_id": item.room_id,
-                "area_m2": item.area_m2,
-                "heating_kwh": item.heating_kwh,
-                "cooling_kwh": item.cooling_kwh,
-                "lighting_kwh": item.lighting_kwh,
-                "fan_kwh": item.fan_kwh,
-                "pump_kwh": item.pump_kwh,
-                "auxiliary_kwh": item.auxiliary_kwh,
-                "coil_heating_kwh": item.coil_heating_kwh,
-                "coil_cooling_kwh": item.coil_cooling_kwh,
-                "peak_heating_w": item.peak_heating_w,
-                "peak_cooling_w": item.peak_cooling_w,
-                "peak_co2_ppm": item.peak_co2_ppm,
-                "average_co2_ppm": item.average_co2_ppm,
-                "peak_relative_humidity_percent": item.peak_relative_humidity_percent,
-                "average_relative_humidity_percent": item.average_relative_humidity_percent,
-                "occupied_hours_above_26": item.occupied_hours_above_26,
-                "occupied_hours_above_27": item.occupied_hours_above_27,
-                "occupied_hours_above_sia180_upper": item.occupied_hours_above_sia180_upper,
-                "occupied_hours_below_sia180_lower": item.occupied_hours_below_sia180_lower,
-                "annual_comfort_period_complete": item.annual_comfort_period_complete,
-                "comfort_curve_source": item.comfort_curve_source,
-                "comfort_method_status": item.comfort_method_status,
-                "comfort_method_note": item.comfort_method_note,
-                "source_notes": item.source_notes,
-            })
+            rows.append(
+                {
+                    "room_name": item.room_name,
+                    "room_id": item.room_id,
+                    "area_m2": item.area_m2,
+                    "heating_kwh": item.heating_kwh,
+                    "cooling_kwh": item.cooling_kwh,
+                    "lighting_kwh": item.lighting_kwh,
+                    "fan_kwh": item.fan_kwh,
+                    "pump_kwh": item.pump_kwh,
+                    "auxiliary_kwh": item.auxiliary_kwh,
+                    "coil_heating_kwh": item.coil_heating_kwh,
+                    "coil_cooling_kwh": item.coil_cooling_kwh,
+                    "peak_heating_w": item.peak_heating_w,
+                    "peak_cooling_w": item.peak_cooling_w,
+                    "peak_co2_ppm": item.peak_co2_ppm,
+                    "average_co2_ppm": item.average_co2_ppm,
+                    "peak_relative_humidity_percent": item.peak_relative_humidity_percent,
+                    "average_relative_humidity_percent": item.average_relative_humidity_percent,
+                    "occupied_hours_above_26": item.occupied_hours_above_26,
+                    "occupied_hours_above_27": item.occupied_hours_above_27,
+                    "occupied_hours_above_sia180_upper": item.occupied_hours_above_sia180_upper,
+                    "occupied_hours_below_sia180_lower": item.occupied_hours_below_sia180_lower,
+                    "annual_comfort_period_complete": item.annual_comfort_period_complete,
+                    "comfort_curve_source": item.comfort_curve_source,
+                    "comfort_method_status": item.comfort_method_status,
+                    "comfort_method_note": item.comfort_method_note,
+                    "source_notes": item.source_notes,
+                }
+            )
 
         total_area = sum(float(row.get("area_m2") or 0.0) for row in rows)
         over_26_values = [
@@ -687,44 +729,86 @@ def _collect_dynamic_results(project: Any) -> Dict[str, Any]:
             and selected_refs
             and _aps_matches_project_weather(selected_refs, project_weather)
         )
-        summary.update({
-            "status": (
-                "AVAILABLE"
-                if rows and meaningful_result_count and weather_confirmed
-                else ("PARTIAL" if rows and meaningful_result_count else "NOT_CHECKABLE")
-            ),
-            "rooms": rows,
-            "total_area_m2": total_area,
-            "total_heating_kwh": total_heating,
-            "total_cooling_kwh": total_cooling,
-            "total_lighting_kwh": total_lighting,
-            "total_fan_kwh": total_fan,
-            "total_pump_kwh": total_pump,
-            "total_auxiliary_kwh": total_auxiliary,
-            "total_coil_heating_kwh": total_coil_heating,
-            "total_coil_cooling_kwh": total_coil_cooling,
-            "heating_kwh_m2": total_heating / total_area if total_heating is not None and total_area > 0 else None,
-            "cooling_kwh_m2": total_cooling / total_area if total_cooling is not None and total_area > 0 else None,
-            "lighting_kwh_m2": total_lighting / total_area if total_lighting is not None and total_area > 0 else None,
-            "fan_kwh_m2": total_fan / total_area if total_fan is not None and total_area > 0 else None,
-            "pump_kwh_m2": total_pump / total_area if total_pump is not None and total_area > 0 else None,
-            "auxiliary_kwh_m2": total_auxiliary / total_area if total_auxiliary is not None and total_area > 0 else None,
-            "peak_co2_ppm": _max_numeric_rows(rows, "peak_co2_ppm"),
-            "average_co2_ppm": _average_numeric_rows(rows, "average_co2_ppm"),
-            "peak_relative_humidity_percent": _max_numeric_rows(rows, "peak_relative_humidity_percent"),
-            "average_relative_humidity_percent": _average_numeric_rows(rows, "average_relative_humidity_percent"),
-            "occupied_hours_above_26": sum(over_26_values) if over_26_values else None,
-            "occupied_hours_above_27": sum(over_27_values) if over_27_values else None,
-            "max_occupied_hours_above_sia180_upper": max(over_sia180_upper_values) if over_sia180_upper_values else None,
-            "max_occupied_hours_below_sia180_lower": max(below_sia180_lower_values) if below_sia180_lower_values else None,
-            "sia180_curve_room_count": len(over_sia180_upper_values),
-            "annual_comfort_room_count": sum(1 for row in rows if row.get("annual_comfort_period_complete")),
-            "notes": (
-                "Read from IESVE ResultsReader with APS/project weather match."
-                if weather_confirmed
-                else "Results were read, but project/APS weather provenance is incomplete; dynamic compliance remains partial."
-            ),
-        })
+        summary.update(
+            {
+                "status": (
+                    "AVAILABLE"
+                    if rows and meaningful_result_count and weather_confirmed
+                    else (
+                        "PARTIAL" if rows and meaningful_result_count else "NOT_CHECKABLE"
+                    )
+                ),
+                "rooms": rows,
+                "total_area_m2": total_area,
+                "total_heating_kwh": total_heating,
+                "total_cooling_kwh": total_cooling,
+                "total_lighting_kwh": total_lighting,
+                "total_fan_kwh": total_fan,
+                "total_pump_kwh": total_pump,
+                "total_auxiliary_kwh": total_auxiliary,
+                "total_coil_heating_kwh": total_coil_heating,
+                "total_coil_cooling_kwh": total_coil_cooling,
+                "heating_kwh_m2": (
+                    total_heating / total_area
+                    if total_heating is not None and total_area > 0
+                    else None
+                ),
+                "cooling_kwh_m2": (
+                    total_cooling / total_area
+                    if total_cooling is not None and total_area > 0
+                    else None
+                ),
+                "lighting_kwh_m2": (
+                    total_lighting / total_area
+                    if total_lighting is not None and total_area > 0
+                    else None
+                ),
+                "fan_kwh_m2": (
+                    total_fan / total_area
+                    if total_fan is not None and total_area > 0
+                    else None
+                ),
+                "pump_kwh_m2": (
+                    total_pump / total_area
+                    if total_pump is not None and total_area > 0
+                    else None
+                ),
+                "auxiliary_kwh_m2": (
+                    total_auxiliary / total_area
+                    if total_auxiliary is not None and total_area > 0
+                    else None
+                ),
+                "peak_co2_ppm": _max_numeric_rows(rows, "peak_co2_ppm"),
+                "average_co2_ppm": _average_numeric_rows(rows, "average_co2_ppm"),
+                "peak_relative_humidity_percent": _max_numeric_rows(
+                    rows, "peak_relative_humidity_percent"
+                ),
+                "average_relative_humidity_percent": _average_numeric_rows(
+                    rows, "average_relative_humidity_percent"
+                ),
+                "occupied_hours_above_26": (
+                    sum(over_26_values) if over_26_values else None
+                ),
+                "occupied_hours_above_27": (
+                    sum(over_27_values) if over_27_values else None
+                ),
+                "max_occupied_hours_above_sia180_upper": (
+                    max(over_sia180_upper_values) if over_sia180_upper_values else None
+                ),
+                "max_occupied_hours_below_sia180_lower": (
+                    max(below_sia180_lower_values) if below_sia180_lower_values else None
+                ),
+                "sia180_curve_room_count": len(over_sia180_upper_values),
+                "annual_comfort_room_count": sum(
+                    1 for row in rows if row.get("annual_comfort_period_complete")
+                ),
+                "notes": (
+                    "Read from IESVE ResultsReader with APS/project weather match."
+                    if weather_confirmed
+                    else "Results were read, but project/APS weather provenance is incomplete; dynamic compliance remains partial."
+                ),
+            }
+        )
     except Exception as exc:
         summary["status"] = "NOT_CHECKABLE"
         summary["notes"] = (
@@ -832,23 +916,39 @@ def _build_preflight_checks(
     extraction_diagnostics: Optional[Dict[str, Any]] = None,
 ) -> List[Dict[str, Any]]:
     """Create auditable execution checks for the VE Run-button workflow."""
-    surfaces = [surface for room in rooms_data for surface in getattr(room, "surfaces", [])]
-    openings = [opening for room in rooms_data for opening in getattr(room, "openings", [])]
-    external_surfaces = [surface for surface in surfaces if getattr(surface, "is_external", False)]
-    external_openings = [opening for opening in openings if getattr(opening, "is_external", False)]
+    surfaces = [
+        surface for room in rooms_data for surface in getattr(room, "surfaces", [])
+    ]
+    openings = [
+        opening for room in rooms_data for opening in getattr(room, "openings", [])
+    ]
+    external_surfaces = [
+        surface for surface in surfaces if getattr(surface, "is_external", False)
+    ]
+    external_openings = [
+        opening for opening in openings if getattr(opening, "is_external", False)
+    ]
     evidence = sia4010_results.get("evidence", {}) or {}
     justification_results = justification_results or {}
     evidence_files = evidence.get("files", []) or []
     classified_evidence_count = int(evidence.get("classified_file_count", 0) or 0)
     evidence_present = sum(
-        1 for item in SIA4010_REQUIRED_EVIDENCE
-        if _has_evidence_item(evidence, item)
+        1 for item in SIA4010_REQUIRED_EVIDENCE if _has_evidence_item(evidence, item)
     )
     dynamic_results = sia4010_results.get("dynamic_results", {}) or {}
-    dynamic_status = str(dynamic_results.get("status", "NOT_CHECKABLE") or "NOT_CHECKABLE")
-    dynamic_preflight_status = "PASS" if dynamic_status == "AVAILABLE" else ("WARNING" if dynamic_status == "PARTIAL" else "NOT_CHECKABLE")
+    dynamic_status = str(
+        dynamic_results.get("status", "NOT_CHECKABLE") or "NOT_CHECKABLE"
+    )
+    dynamic_preflight_status = (
+        "PASS"
+        if dynamic_status == "AVAILABLE"
+        else ("WARNING" if dynamic_status == "PARTIAL" else "NOT_CHECKABLE")
+    )
     project_weather = dynamic_results.get("project_weather_file") or "Not exposed by VE"
-    selected_aps_weather = ", ".join(dynamic_results.get("selected_aps_weather_references", []) or []) or "No EPW reference detected in APS"
+    selected_aps_weather = (
+        ", ".join(dynamic_results.get("selected_aps_weather_references", []) or [])
+        or "No EPW reference detected in APS"
+    )
     skipped_aps_count = len(dynamic_results.get("skipped_aps_files", []) or [])
     report_dir = os.path.dirname(os.path.abspath(report_path))
     project_path = str(getattr(project, "path", "") or "")
@@ -950,7 +1050,11 @@ def _build_preflight_checks(
             "source": "VESurface.get_openings",
         },
         {
-            "status": "PASS" if os.path.isdir(report_dir) and os.access(report_dir, os.W_OK) else "FAIL",
+            "status": (
+                "PASS"
+                if os.path.isdir(report_dir) and os.access(report_dir, os.W_OK)
+                else "FAIL"
+            ),
             "check": "Report folder writable",
             "observed": report_dir,
             "why": "VE must be able to write the timestamped Excel report.",
@@ -959,7 +1063,11 @@ def _build_preflight_checks(
             "source": "reports directory",
         },
         {
-            "status": "PASS" if getattr(excel_report_module, "USE_XLSXWRITER", False) else "FAIL",
+            "status": (
+                "PASS"
+                if getattr(excel_report_module, "USE_XLSXWRITER", False)
+                else "FAIL"
+            ),
             "check": "Excel writer available",
             "observed": f"xlsxwriter available={getattr(excel_report_module, 'USE_XLSXWRITER', False)}",
             "why": "The VE Run workflow needs xlsxwriter to generate the client report.",
@@ -996,7 +1104,11 @@ def _build_preflight_checks(
             "source": "sia4010_evidence",
         },
         {
-            "status": "PASS" if evidence_present == len(SIA4010_REQUIRED_EVIDENCE) else "NOT_CHECKABLE",
+            "status": (
+                "PASS"
+                if evidence_present == len(SIA4010_REQUIRED_EVIDENCE)
+                else "NOT_CHECKABLE"
+            ),
             "check": "SIA 4010 official evidence completeness",
             "observed": f"{evidence_present}/{len(SIA4010_REQUIRED_EVIDENCE)} evidence families detected",
             "why": "The report must not claim SIA 4010 validation until official evidence is complete.",
@@ -1008,7 +1120,11 @@ def _build_preflight_checks(
             "status": (
                 "PASS"
                 if int(justification_results.get("accepted_count", 0) or 0)
-                else ("WARNING" if int(justification_results.get("record_count", 0) or 0) else "INFO")
+                else (
+                    "WARNING"
+                    if int(justification_results.get("record_count", 0) or 0)
+                    else "INFO"
+                )
             ),
             "check": "SIA 380/2 reviewer justifications",
             "observed": (
@@ -1075,13 +1191,16 @@ def main(
 
         project = iesve.VEProject.get_current_project()
         if not project:
-            raise RuntimeError("No active VE project found. Please open a project in IESVE.")
+            raise RuntimeError(
+                "No active VE project found. Please open a project in IESVE."
+            )
 
         logger.info("Loaded VE project: %s", project.path)
         ve_project_root = Path(str(project.path)).resolve()
-        project_label = os.path.basename(
-            os.path.normpath(str(getattr(project, "path", "") or ""))
-        ) or "VE_Project"
+        project_label = (
+            os.path.basename(os.path.normpath(str(getattr(project, "path", "") or "")))
+            or "VE_Project"
+        )
         if isinstance(report_context, ClientReportContext):
             report_context = report_context.normalized()
         elif isinstance(report_context, dict):
@@ -1091,10 +1210,14 @@ def main(
                 project_name=project_label,
                 language=os.environ.get(REPORT_LANGUAGE_ENV_VAR, "") or "en",
             ).normalized()
-        target_output_dir = Path(output_dir) if output_dir else default_report_directory(project.path)
+        target_output_dir = (
+            Path(output_dir) if output_dir else default_report_directory(project.path)
+        )
         target_output_dir.mkdir(parents=True, exist_ok=True)
 
-        logger.info("Preparing project-scoped evidence templates without overwriting reviews.")
+        logger.info(
+            "Preparing project-scoped evidence templates without overwriting reviews."
+        )
         evidence_preparation = prepare_evidence_folder(
             ve_project_root,
             project_label=project_label,
@@ -1131,6 +1254,33 @@ def main(
             ventilation_prefill.get("row_count", 0),
             ventilation_prefill.get("file", ""),
         )
+        for evidence_name, evidence_result in (
+            (
+                "SIA 380/2 cooling generator",
+                prefill_cooling_generator_evidence(
+                    rooms_data, ve_project_root, project_label
+                ),
+            ),
+            (
+                "SIA 2024 usage",
+                prefill_sia2024_usage_evidence(
+                    rooms_data, ve_project_root, project_label
+                ),
+            ),
+            (
+                "SIA 387/4 lighting control",
+                prefill_lighting_control_evidence(
+                    rooms_data, ve_project_root, project_label
+                ),
+            ),
+        ):
+            logger.info(
+                "%s evidence inventory: %s (%s row(s), %s)",
+                evidence_name,
+                evidence_result.get("status"),
+                evidence_result.get("row_count", 0),
+                evidence_result.get("file", ""),
+            )
 
         logger.info("Collecting APS/Vista dynamic results where available.")
         dynamic_results = _collect_dynamic_results(project)
@@ -1320,8 +1470,11 @@ def main(
                     language=report_context.language,
                     model_name=_object_label(data_extractor.model, ""),
                     scope=report_scope,
+                    dynamic_results=dynamic_results,
                 )
-                logger.info("Client compliance dashboard (HTML): %s", compliance_html_path)
+                logger.info(
+                    "Client compliance dashboard (HTML): %s", compliance_html_path
+                )
             except Exception as exc:
                 # The HTML dashboard is an additional deliverable; never lose the run.
                 logger.error("Could not render the compliance dashboard HTML: %s", exc)
@@ -1362,7 +1515,9 @@ def main(
             evidence_pack_result = create_evidence_pack(
                 project_root=PROJECT_ROOT,
                 report_path=Path(report_generator.output_path),
-                latest_report_path=Path(latest_report_path) if latest_report_path else None,
+                latest_report_path=(
+                    Path(latest_report_path) if latest_report_path else None
+                ),
                 sia4010_results=sia4010_results,
                 preflight_checks=preflight_checks,
                 evidence_dir_name=SIA4010_EVIDENCE_DIR,
@@ -1403,18 +1558,21 @@ def main(
         if latest_report_path:
             logger.info("Updated latest report alias: %s", latest_report_path)
         else:
-            logger.info("Latest report alias disabled; only the timestamped workbook was generated.")
+            logger.info(
+                "Latest report alias disabled; only the timestamped workbook was generated."
+            )
         if evidence_pack_result:
             logger.info("Generated evidence pack: %s", evidence_pack_result.get("path"))
 
         critical_alerts = [
-            alert for alert in score_result.alerts
-            if alert.severity.value == "Critical"
+            alert for alert in score_result.alerts if alert.severity.value == "Critical"
         ]
         if critical_alerts:
             logger.warning("%s critical issue(s) detected:", len(critical_alerts))
             for alert in critical_alerts:
-                logger.warning(" - %s (Recommendation: %s)", alert.description, alert.recommendation)
+                logger.warning(
+                    " - %s (Recommendation: %s)", alert.description, alert.recommendation
+                )
 
         logger.info("Detailed scores by category:")
         for category, score in score_result.detailed_scores.items():

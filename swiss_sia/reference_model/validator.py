@@ -4,7 +4,7 @@ import hashlib
 import json
 from itertools import combinations
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple
+from typing import Any, Dict, Iterable, List, Optional, Tuple
 
 from .asset_manifest import AssetManifest
 from .compliance_config import ParameterRegistry
@@ -79,10 +79,7 @@ def _weather_derivation_control(
     )
     candidates = [
         weather.with_name(expected_name),
-        Path(project_path)
-        / "reference_model_artifacts"
-        / "weather"
-        / expected_name,
+        Path(project_path) / "reference_model_artifacts" / "weather" / expected_name,
     ]
     audits = []
     seen = set()
@@ -139,7 +136,11 @@ def _weather_derivation_control(
             "Weather provenance",
             ValidationStatus.FAIL,
             "Converted EPW derivation evidence is unreadable or invalid",
-            evidence={"weather": str(weather), "audit": str(audit_path), "error": str(exc)},
+            evidence={
+                "weather": str(weather),
+                "audit": str(audit_path),
+                "error": str(exc),
+            },
         )
     audited_hash = str(payload.get("weather", {}).get("sha256", "")).casefold()
     audit_ready = payload.get("status") == "READY_FOR_IESVE_READ_ONLY_PROBE"
@@ -191,7 +192,9 @@ def _aabb_overlap_volume(
     return overlap_x * overlap_y * overlap_z
 
 
-def _varying_axes(bounds: Tuple[float, float, float, float, float, float], tolerance: float) -> List[int]:
+def _varying_axes(
+    bounds: Tuple[float, float, float, float, float, float], tolerance: float
+) -> List[int]:
     """Return indices of dimensions with non-negligible extent."""
 
     extents = [bounds[1] - bounds[0], bounds[3] - bounds[2], bounds[5] - bounds[4]]
@@ -217,9 +220,7 @@ def _opening_within_surface(
     )
 
 
-def _rectangles_overlap(
-    first: Polygon3D, second: Polygon3D, tolerance: float
-) -> bool:
+def _rectangles_overlap(first: Polygon3D, second: Polygon3D, tolerance: float) -> bool:
     """Return whether two coplanar rectangles overlap by positive area."""
 
     a, b = first.bounds, second.bounds
@@ -266,9 +267,11 @@ class ReferenceModelValidator:
                 "CFG-001",
                 "Configuration",
                 ValidationStatus.FAIL if metadata_errors else ValidationStatus.PASS,
-                "All parameters have description, units, source, locator and range metadata"
-                if not metadata_errors
-                else "Parameter metadata is incomplete",
+                (
+                    "All parameters have description, units, source, locator and range metadata"
+                    if not metadata_errors
+                    else "Parameter metadata is incomplete"
+                ),
                 evidence={"parameters_with_missing_metadata": metadata_errors},
             )
         )
@@ -279,9 +282,11 @@ class ReferenceModelValidator:
                 "CFG-002",
                 "Configuration",
                 ValidationStatus.FAIL if validation_errors else ValidationStatus.PASS,
-                "All populated parameter values satisfy their validation ranges"
-                if not validation_errors
-                else "One or more parameter values are invalid",
+                (
+                    "All populated parameter values satisfy their validation ranges"
+                    if not validation_errors
+                    else "One or more parameter values are invalid"
+                ),
                 evidence={"errors": validation_errors},
             )
         )
@@ -296,9 +301,11 @@ class ReferenceModelValidator:
                 "CFG-003",
                 "Configuration",
                 ValidationStatus.FAIL if unresolved else ValidationStatus.PASS,
-                "All inputs required before VE mutation are resolved"
-                if not unresolved
-                else "Required inputs are unresolved; VE mutation is blocked",
+                (
+                    "All inputs required before VE mutation are resolved"
+                    if not unresolved
+                    else "Required inputs are unresolved; VE mutation is blocked"
+                ),
                 evidence={"unresolved": [item.name for item in unresolved]},
             )
         )
@@ -313,17 +320,17 @@ class ReferenceModelValidator:
                 "CFG-004",
                 "Missing parameters",
                 ValidationStatus.WARNING if placeholders else ValidationStatus.PASS,
-                "Compliance placeholders remain and must be resolved before a compliance claim"
-                if placeholders
-                else "No optional compliance placeholders remain",
+                (
+                    "Compliance placeholders remain and must be resolved before a compliance claim"
+                    if placeholders
+                    else "No optional compliance placeholders remain"
+                ),
                 evidence={"placeholders": placeholders},
             )
         )
         return results
 
-    def validate_asset_manifest(
-        self, manifest: AssetManifest
-    ) -> List[ValidationResult]:
+    def validate_asset_manifest(self, manifest: AssetManifest) -> List[ValidationResult]:
         """Validate the source-traced create-mode asset package."""
 
         errors = manifest.validation_errors()
@@ -332,9 +339,11 @@ class ReferenceModelValidator:
                 "ASSET-001",
                 "VE asset provisioning",
                 ValidationStatus.FAIL if errors else ValidationStatus.PASS,
-                "Asset manifest is complete, source-traced and internally consistent"
-                if not errors
-                else "Asset manifest cannot be used for VE mutation",
+                (
+                    "Asset manifest is complete, source-traced and internally consistent"
+                    if not errors
+                    else "Asset manifest cannot be used for VE mutation"
+                ),
                 evidence={
                     "errors": errors,
                     "source_path": manifest.source_path,
@@ -361,9 +370,11 @@ class ReferenceModelValidator:
                 "GEO-001",
                 "Geometry",
                 ValidationStatus.FAIL if all_duplicates else ValidationStatus.PASS,
-                "All generated object identifiers are unique"
-                if not all_duplicates
-                else "Duplicate object identifiers detected",
+                (
+                    "All generated object identifiers are unique"
+                    if not all_duplicates
+                    else "Duplicate object identifiers detected"
+                ),
                 evidence={"duplicates": all_duplicates},
             )
         )
@@ -382,12 +393,16 @@ class ReferenceModelValidator:
             _result(
                 "GEO-002",
                 "Geometry",
-                ValidationStatus.FAIL
-                if invalid_dimensions or invalid_surfaces
-                else ValidationStatus.PASS,
-                "All spaces and surfaces have positive size"
-                if not invalid_dimensions and not invalid_surfaces
-                else "Zero/negative-size geometry detected",
+                (
+                    ValidationStatus.FAIL
+                    if invalid_dimensions or invalid_surfaces
+                    else ValidationStatus.PASS
+                ),
+                (
+                    "All spaces and surfaces have positive size"
+                    if not invalid_dimensions and not invalid_surfaces
+                    else "Zero/negative-size geometry detected"
+                ),
                 evidence={
                     "invalid_spaces": invalid_dimensions,
                     "invalid_surfaces": invalid_surfaces,
@@ -411,9 +426,11 @@ class ReferenceModelValidator:
                 "GEO-003",
                 "Geometry",
                 ValidationStatus.FAIL if overlaps else ValidationStatus.PASS,
-                "No thermal-zone volumes overlap"
-                if not overlaps
-                else "Overlapping thermal-zone volumes detected",
+                (
+                    "No thermal-zone volumes overlap"
+                    if not overlaps
+                    else "Overlapping thermal-zone volumes detected"
+                ),
                 evidence={"overlaps": overlaps},
             )
         )
@@ -433,18 +450,22 @@ class ReferenceModelValidator:
             for space in model.spaces
         }
         orphaned = [
-            space_id
-            for space_id, count in surface_reference_count.items()
-            if count != 6
+            space_id for space_id, count in surface_reference_count.items() if count != 6
         ]
         results.append(
             _result(
                 "GEO-004",
                 "Geometry",
-                ValidationStatus.FAIL if invalid_shells or orphaned else ValidationStatus.PASS,
-                "Every zone has a six-face closed shell and six boundary references"
-                if not invalid_shells and not orphaned
-                else "Closed-shell or boundary topology is incomplete",
+                (
+                    ValidationStatus.FAIL
+                    if invalid_shells or orphaned
+                    else ValidationStatus.PASS
+                ),
+                (
+                    "Every zone has a six-face closed shell and six boundary references"
+                    if not invalid_shells and not orphaned
+                    else "Closed-shell or boundary topology is incomplete"
+                ),
                 evidence={
                     "invalid_shells": invalid_shells,
                     "boundary_reference_counts": surface_reference_count,
@@ -455,8 +476,10 @@ class ReferenceModelValidator:
 
         bad_adjacency = []
         for surface in model.surfaces:
-            expected = 0 if surface.surface_type == SurfaceType.SHADE else (
-                2 if surface.surface_type == SurfaceType.INTERIOR_WALL else 1
+            expected = (
+                0
+                if surface.surface_type == SurfaceType.SHADE
+                else (2 if surface.surface_type == SurfaceType.INTERIOR_WALL else 1)
             )
             if len(surface.adjacent_space_ids) != expected:
                 bad_adjacency.append(surface.identifier)
@@ -465,9 +488,11 @@ class ReferenceModelValidator:
                 "GEO-005",
                 "Zone definitions",
                 ValidationStatus.FAIL if bad_adjacency else ValidationStatus.PASS,
-                "Surface adjacency cardinality is complete and unambiguous"
-                if not bad_adjacency
-                else "Invalid surface adjacency cardinality detected",
+                (
+                    "Surface adjacency cardinality is complete and unambiguous"
+                    if not bad_adjacency
+                    else "Invalid surface adjacency cardinality detected"
+                ),
                 evidence={"invalid_surfaces": bad_adjacency},
             )
         )
@@ -482,18 +507,27 @@ class ReferenceModelValidator:
             for first, second in combinations(surface.openings, 2):
                 if _rectangles_overlap(first.polygon, second.polygon, tolerance):
                     opening_overlaps.append((first.identifier, second.identifier))
-            if sum(opening.polygon.area for opening in surface.openings) >= surface.polygon.area:
+            if (
+                sum(opening.polygon.area for opening in surface.openings)
+                >= surface.polygon.area
+            ):
                 net_area_failures.append(surface.identifier)
         results.append(
             _result(
                 "GEO-006",
                 "Envelope completeness",
-                ValidationStatus.FAIL
-                if out_of_bounds or opening_overlaps or net_area_failures
-                else ValidationStatus.PASS,
-                "All openings are contained, non-overlapping and leave positive opaque area"
-                if not out_of_bounds and not opening_overlaps and not net_area_failures
-                else "Opening geometry is invalid",
+                (
+                    ValidationStatus.FAIL
+                    if out_of_bounds or opening_overlaps or net_area_failures
+                    else ValidationStatus.PASS
+                ),
+                (
+                    "All openings are contained, non-overlapping and leave positive opaque area"
+                    if not out_of_bounds
+                    and not opening_overlaps
+                    and not net_area_failures
+                    else "Opening geometry is invalid"
+                ),
                 evidence={
                     "out_of_bounds_openings": out_of_bounds,
                     "overlapping_openings": opening_overlaps,
@@ -516,12 +550,16 @@ class ReferenceModelValidator:
             _result(
                 "GEO-007",
                 "Constructions",
-                ValidationStatus.FAIL
-                if missing_construction_keys
-                else ValidationStatus.PASS,
-                "Every heat-transfer surface/opening maps to a construction parameter"
-                if not missing_construction_keys
-                else "Construction mappings are missing",
+                (
+                    ValidationStatus.FAIL
+                    if missing_construction_keys
+                    else ValidationStatus.PASS
+                ),
+                (
+                    "Every heat-transfer surface/opening maps to a construction parameter"
+                    if not missing_construction_keys
+                    else "Construction mappings are missing"
+                ),
                 evidence={"objects": missing_construction_keys},
             )
         )
@@ -540,7 +578,9 @@ class ReferenceModelValidator:
                 if surface.surface_type == SurfaceType.EXTERIOR_WALL
             ),
             "roofs": sum(
-                1 for surface in model.surfaces if surface.surface_type == SurfaceType.ROOF
+                1
+                for surface in model.surfaces
+                if surface.surface_type == SurfaceType.ROOF
             ),
             "ground_floors": sum(
                 1
@@ -566,13 +606,9 @@ class ReferenceModelValidator:
                 ),
             )
         )
-        unknown_required_types = sorted(
-            set(required_object_types) - set(object_counts)
-        )
+        unknown_required_types = sorted(set(required_object_types) - set(object_counts))
         missing_types = [
-            name
-            for name in required_object_types
-            if object_counts.get(name, 0) == 0
+            name for name in required_object_types if object_counts.get(name, 0) == 0
         ]
         if unknown_required_types:
             missing_types.extend(unknown_required_types)
@@ -581,9 +617,11 @@ class ReferenceModelValidator:
                 "GEO-008",
                 "Geometry",
                 ValidationStatus.FAIL if missing_types else ValidationStatus.PASS,
-                "The model contains every object type required by its geometry profile"
-                if not missing_types
-                else "Required geometry object types are missing",
+                (
+                    "The model contains every object type required by its geometry profile"
+                    if not missing_types
+                    else "Required geometry object types are missing"
+                ),
                 evidence={
                     "counts": object_counts,
                     "required_types": list(required_object_types),
@@ -611,12 +649,16 @@ class ReferenceModelValidator:
             _result(
                 "VE-ZONE-001",
                 "Zone definitions",
-                ValidationStatus.FAIL
-                if missing_rooms or duplicate_room_ids
-                else ValidationStatus.PASS,
-                "All generated zones exist exactly once in the VE model"
-                if not missing_rooms and not duplicate_room_ids
-                else "Generated zones are missing or duplicate",
+                (
+                    ValidationStatus.FAIL
+                    if missing_rooms or duplicate_room_ids
+                    else ValidationStatus.PASS
+                ),
+                (
+                    "All generated zones exist exactly once in the VE model"
+                    if not missing_rooms and not duplicate_room_ids
+                    else "Generated zones are missing or duplicate"
+                ),
                 evidence={
                     "missing_room_names": missing_rooms,
                     "duplicate_room_ids": duplicate_room_ids,
@@ -634,9 +676,11 @@ class ReferenceModelValidator:
                 "VE-ZONE-002",
                 "Zone definitions",
                 ValidationStatus.FAIL if orphaned_rooms else ValidationStatus.PASS,
-                "No generated room is orphaned or dimensionless"
-                if not orphaned_rooms
-                else "Orphaned/dimensionless rooms detected",
+                (
+                    "No generated room is orphaned or dimensionless"
+                    if not orphaned_rooms
+                    else "Orphaned/dimensionless rooms detected"
+                ),
                 evidence={"rooms": orphaned_rooms},
             )
         )
@@ -671,12 +715,16 @@ class ReferenceModelValidator:
             _result(
                 "VE-CON-001",
                 "Constructions",
-                ValidationStatus.FAIL
-                if missing_constructions or invalid_constructions
-                else ValidationStatus.PASS,
-                "All configured constructions exist and have valid material layers"
-                if not missing_constructions and not invalid_constructions
-                else "Missing or invalid constructions detected",
+                (
+                    ValidationStatus.FAIL
+                    if missing_constructions or invalid_constructions
+                    else ValidationStatus.PASS
+                ),
+                (
+                    "All configured constructions exist and have valid material layers"
+                    if not missing_constructions and not invalid_constructions
+                    else "Missing or invalid constructions detected"
+                ),
                 evidence={
                     "missing": missing_constructions,
                     "invalid": invalid_constructions,
@@ -702,19 +750,27 @@ class ReferenceModelValidator:
             _result(
                 "VE-ENV-001",
                 "Envelope completeness",
-                ValidationStatus.FAIL
-                if missing_surface_assignments
-                or missing_opening_assignments
-                or invalid_surface_properties
-                else ValidationStatus.PASS,
-                "Every VE surface/opening has a construction and valid basic properties"
-                if not missing_surface_assignments
-                and not missing_opening_assignments
-                and not invalid_surface_properties
-                else "VE envelope assignments or properties are incomplete",
+                (
+                    ValidationStatus.FAIL
+                    if missing_surface_assignments
+                    or missing_opening_assignments
+                    or invalid_surface_properties
+                    else ValidationStatus.PASS
+                ),
+                (
+                    "Every VE surface/opening has a construction and valid basic properties"
+                    if not missing_surface_assignments
+                    and not missing_opening_assignments
+                    and not invalid_surface_properties
+                    else "VE envelope assignments or properties are incomplete"
+                ),
                 evidence={
-                    "surfaces_without_construction": sorted(set(missing_surface_assignments)),
-                    "openings_without_construction": sorted(set(missing_opening_assignments)),
+                    "surfaces_without_construction": sorted(
+                        set(missing_surface_assignments)
+                    ),
+                    "openings_without_construction": sorted(
+                        set(missing_opening_assignments)
+                    ),
                     "invalid_properties": sorted(set(invalid_surface_properties)),
                 },
             )
@@ -731,12 +787,17 @@ class ReferenceModelValidator:
             _result(
                 "VE-TPL-001",
                 "Templates",
-                ValidationStatus.FAIL
-                if template_name not in known_template_names or rooms_without_template
-                else ValidationStatus.PASS,
-                "The configured source-traced thermal template exists and is assigned to every generated room"
-                if template_name in known_template_names and not rooms_without_template
-                else "Thermal template is missing or misassigned",
+                (
+                    ValidationStatus.FAIL
+                    if template_name not in known_template_names or rooms_without_template
+                    else ValidationStatus.PASS
+                ),
+                (
+                    "The configured source-traced thermal template exists and is assigned to every generated room"
+                    if template_name in known_template_names
+                    and not rooms_without_template
+                    else "Thermal template is missing or misassigned"
+                ),
                 evidence={
                     "configured_template": template_name,
                     "available_templates": sorted(known_template_names),
@@ -756,16 +817,21 @@ class ReferenceModelValidator:
             _result(
                 "VE-TPL-002",
                 "Templates",
-                ValidationStatus.FAIL
-                if not configured_templates or template_structure_invalid
-                else ValidationStatus.PASS,
-                "Configured template exposes room-condition and system data"
-                if configured_templates and not template_structure_invalid
-                else "Configured template is missing required structural data",
+                (
+                    ValidationStatus.FAIL
+                    if not configured_templates or template_structure_invalid
+                    else ValidationStatus.PASS
+                ),
+                (
+                    "Configured template exposes room-condition and system data"
+                    if configured_templates and not template_structure_invalid
+                    else "Configured template is missing required structural data"
+                ),
                 evidence={
                     "template_count": len(configured_templates),
                     "room_conditions_present": [
-                        bool(template.room_conditions) for template in configured_templates
+                        bool(template.room_conditions)
+                        for template in configured_templates
                     ],
                     "system_data_present": [
                         bool(template.system_data) for template in configured_templates
@@ -781,16 +847,22 @@ class ReferenceModelValidator:
             _result(
                 "VE-TPL-003",
                 "Templates",
-                ValidationStatus.WARNING
-                if not configured_templates or template_content_missing
-                else ValidationStatus.PASS,
-                "Template gain and air-exchange objects are present"
-                if configured_templates and not template_content_missing
-                else (
-                    "Template gains or air exchanges are absent; confirm intentional zero-load/zero-flow cases with evidence"
+                (
+                    ValidationStatus.WARNING
+                    if not configured_templates or template_content_missing
+                    else ValidationStatus.PASS
+                ),
+                (
+                    "Template gain and air-exchange objects are present"
+                    if configured_templates and not template_content_missing
+                    else (
+                        "Template gains or air exchanges are absent; confirm intentional zero-load/zero-flow cases with evidence"
+                    )
                 ),
                 evidence={
-                    "gain_counts": [len(template.gains) for template in configured_templates],
+                    "gain_counts": [
+                        len(template.gains) for template in configured_templates
+                    ],
                     "air_exchange_counts": [
                         len(template.air_exchanges) for template in configured_templates
                     ],
@@ -809,12 +881,16 @@ class ReferenceModelValidator:
             _result(
                 "VE-WEA-001",
                 "Weather assignment",
-                ValidationStatus.FAIL
-                if not weather_matches or not snapshot.weather_readable
-                else ValidationStatus.PASS,
-                "Configured weather is assigned and readable through WeatherFileReader"
-                if weather_matches and snapshot.weather_readable
-                else "Weather assignment is missing, different, or unreadable",
+                (
+                    ValidationStatus.FAIL
+                    if not weather_matches or not snapshot.weather_readable
+                    else ValidationStatus.PASS
+                ),
+                (
+                    "Configured weather is assigned and readable through WeatherFileReader"
+                    if weather_matches and snapshot.weather_readable
+                    else "Weather assignment is missing, different, or unreadable"
+                ),
                 evidence={
                     "configured": weather_configured,
                     "assigned": snapshot.weather_file,
@@ -848,12 +924,14 @@ class ReferenceModelValidator:
                 "VE-HVAC-001",
                 "HVAC placeholders",
                 status,
-                "HVAC remains an explicit placeholder; system-level compliance is not checkable"
-                if hvac_missing
-                else (
-                    "Configured HVAC system is assigned to every generated room"
-                    if not hvac_mismatch
-                    else "Configured HVAC system is not assigned consistently"
+                (
+                    "HVAC remains an explicit placeholder; system-level compliance is not checkable"
+                    if hvac_missing
+                    else (
+                        "Configured HVAC system is assigned to every generated room"
+                        if not hvac_mismatch
+                        else "Configured HVAC system is not assigned consistently"
+                    )
                 ),
                 evidence={
                     "configured_system": hvac_system_id,
@@ -895,15 +973,19 @@ class ReferenceModelValidator:
                 )
                 continue
             actual = construction.u_value_w_m2k if construction else None
-            matches = actual is not None and abs(float(actual) - float(expected)) <= tolerance
+            matches = (
+                actual is not None and abs(float(actual) - float(expected)) <= tolerance
+            )
             results.append(
                 _result(
                     "VE-THERM-{:03d}".format(index),
                     "Thermal properties",
                     ValidationStatus.PASS if matches else ValidationStatus.FAIL,
-                    "CDB-reported U-value matches the declared project value within QA tolerance"
-                    if matches
-                    else "CDB-reported U-value is missing or differs from the declared project value",
+                    (
+                        "CDB-reported U-value matches the declared project value within QA tolerance"
+                        if matches
+                        else "CDB-reported U-value is missing or differs from the declared project value"
+                    ),
                     object_id=str(construction_id or ""),
                     evidence={
                         "declared_w_m2k": expected,
@@ -930,7 +1012,10 @@ class ReferenceModelValidator:
                 status = ValidationStatus.WARNING
                 message = "Declared project optical property is unresolved"
             else:
-                matches = actual is not None and abs(float(actual) - float(expected)) <= optical_tolerance
+                matches = (
+                    actual is not None
+                    and abs(float(actual) - float(expected)) <= optical_tolerance
+                )
                 status = ValidationStatus.PASS if matches else ValidationStatus.FAIL
                 message = (
                     "CDB optical property matches the declared project value"

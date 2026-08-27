@@ -26,11 +26,10 @@ for the unpack helper.  Openpyxl is not required.
 
 from __future__ import annotations
 
-import io
 import json
 import zipfile
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple
+from typing import Any, Dict, List
 
 from .client_weather_conversion import (
     _combine_meteoswiss_csv_records,
@@ -41,7 +40,6 @@ from .client_weather_conversion import (
     _write_meteoswiss_epw_candidate,
 )
 from .exceptions import ConfigurationError
-
 
 __all__ = [
     "STATION_CODE_ALLOWED_CHARACTERS",
@@ -102,7 +100,7 @@ def unpack_meteoswiss_archive(
                 archive_path.name, marker
             )
         )
-    station_code = _validate_station_code(name[len(marker):])
+    station_code = _validate_station_code(name[len(marker) :])
     destination = Path(unpack_root).resolve() / name
     destination.mkdir(parents=True, exist_ok=True)
     with zipfile.ZipFile(archive_path) as archive:
@@ -118,9 +116,10 @@ def unpack_meteoswiss_archive(
             if member.is_dir():
                 continue
             # Reject absolute paths or traversal attempts.
-            if member.filename.startswith(("/", "\\")) or ".." in Path(
-                member.filename
-            ).parts:
+            if (
+                member.filename.startswith(("/", "\\"))
+                or ".." in Path(member.filename).parts
+            ):
                 raise ConfigurationError(
                     "Archive {} contains suspicious path {}".format(
                         archive_path, member.filename
@@ -242,7 +241,7 @@ def convert_meteoswiss_station_archive(
 
     extracted = unpack_meteoswiss_archive(archive_path, unpack_root)
     marker = "klimaszenarien-raumklima-"
-    station_code = _validate_station_code(extracted.name[len(marker):])
+    station_code = _validate_station_code(extracted.name[len(marker) :])
     return convert_meteoswiss_station_directory(
         station_code=station_code,
         input_directory=extracted,

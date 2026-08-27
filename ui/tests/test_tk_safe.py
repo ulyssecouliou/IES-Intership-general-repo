@@ -9,7 +9,12 @@ is missing or ``Tk()`` raises.
 import sys
 import unittest
 
-from ui.tk_safe import DialogHandle, HeadlessDialogRunner, run_dialog
+from ui.tk_safe import (
+    DialogHandle,
+    HeadlessDialogRunner,
+    bring_window_to_front,
+    run_dialog,
+)
 
 
 class HeadlessRunnerTests(unittest.TestCase):
@@ -74,6 +79,40 @@ class RunDialogGracefulDegradationTests(unittest.TestCase):
             del sys.modules["tkinter"]
             if saved is not None:
                 sys.modules["tkinter"] = saved
+
+
+class BringWindowToFrontTests(unittest.TestCase):
+    def test_portable_focus_sequence_and_temporary_topmost(self) -> None:
+        calls = []
+
+        class Root:
+            def deiconify(self):
+                calls.append(("deiconify",))
+
+            def update_idletasks(self):
+                calls.append(("update_idletasks",))
+
+            def lift(self):
+                calls.append(("lift",))
+
+            def focus_force(self):
+                calls.append(("focus_force",))
+
+            def attributes(self, *args):
+                calls.append(("attributes",) + args)
+
+            def after(self, delay, callback):
+                calls.append(("after", delay))
+                callback()
+
+        bring_window_to_front(Root(), release_after_ms=125)
+
+        self.assertIn(("deiconify",), calls)
+        self.assertIn(("lift",), calls)
+        self.assertIn(("focus_force",), calls)
+        self.assertIn(("attributes", "-topmost", True), calls)
+        self.assertIn(("attributes", "-topmost", False), calls)
+        self.assertIn(("after", 125), calls)
 
 
 if __name__ == "__main__":

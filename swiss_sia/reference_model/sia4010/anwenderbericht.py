@@ -52,9 +52,8 @@ from __future__ import annotations
 import json
 import os
 import tempfile
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple
-
 
 STATUS_DRAFT = "ANWENDERBERICHT_DRAFT_UNSIGNED"
 STATUS_READY_FOR_REVIEW = "ANWENDERBERICHT_COMPLETE_AWAITING_SIGNATURE"
@@ -206,9 +205,7 @@ def load_case_evidence(
     """
 
     if not os.path.isfile(ledger_path):
-        raise AnwenderberichtError(
-            "Evidence ledger not found: {}".format(ledger_path)
-        )
+        raise AnwenderberichtError("Evidence ledger not found: {}".format(ledger_path))
     with open(ledger_path, "r", encoding="utf-8") as handle:
         ledger = json.load(handle)
     cases = ledger.get("cases")
@@ -236,9 +233,7 @@ def load_case_evidence(
                 aps_path=str(result.get("aps_path", "") or ""),
                 aps_sha256=str(result.get("aps_sha256", "") or ""),
                 result_status=str(result.get("status", "NOT_CHECKABLE")),
-                observed_metric_count=_optional_int(
-                    result.get("observed_metric_count")
-                ),
+                observed_metric_count=_optional_int(result.get("observed_metric_count")),
                 acceptance_criterion_available=_optional_bool(
                     result.get("acceptance_criterion_available")
                 ),
@@ -278,9 +273,7 @@ def build_anwenderbericht(
         cases=cases,
         input_parameters=tuple(x for x in input_parameters if str(x).strip()),
         data_sources=tuple(x for x in data_sources if str(x).strip()),
-        special_assumptions=tuple(
-            x for x in special_assumptions if str(x).strip()
-        ),
+        special_assumptions=tuple(x for x in special_assumptions if str(x).strip()),
         observations=tuple(x for x in observations if str(x).strip()),
         author=author,
         report_date=report_date,
@@ -471,9 +464,7 @@ def render_markdown(report: Anwenderbericht) -> str:
             "software.".format(PLACEHOLDER)
         )
     lines.append("")
-    lines.append(
-        "<sub>Evidence ledger: `{}`</sub>".format(report.ledger_path)
-    )
+    lines.append("<sub>Evidence ledger: `{}`</sub>".format(report.ledger_path))
     lines.append("")
     return "\n".join(lines)
 
@@ -482,8 +473,13 @@ def _write_atomic(path: str, content: str) -> None:
     directory = os.path.dirname(path) or "."
     os.makedirs(directory, exist_ok=True)
     with tempfile.NamedTemporaryFile(
-        "w", encoding="utf-8", dir=directory, prefix=".anwenderbericht-",
-        suffix=".tmp", delete=False, newline="\n",
+        "w",
+        encoding="utf-8",
+        dir=directory,
+        prefix=".anwenderbericht-",
+        suffix=".tmp",
+        delete=False,
+        newline="\n",
     ) as handle:
         handle.write(content)
         temporary = handle.name
@@ -525,9 +521,7 @@ def write_anwenderbericht(
                 "result_status": case.result_status,
                 "aps_sha256": case.aps_sha256,
                 "observed_metric_count": case.observed_metric_count,
-                "acceptance_criterion_available": (
-                    case.acceptance_criterion_available
-                ),
+                "acceptance_criterion_available": (case.acceptance_criterion_available),
             }
             for case in report.cases
         ],
@@ -539,9 +533,7 @@ def write_anwenderbericht(
             "labels are reproduced verbatim to make that direct."
         ),
     }
-    _write_atomic(
-        status_path, json.dumps(status, indent=2, ensure_ascii=False) + "\n"
-    )
+    _write_atomic(status_path, json.dumps(status, indent=2, ensure_ascii=False) + "\n")
     return status
 
 

@@ -97,9 +97,7 @@ class Sia4010CaseManifest:
                 raise ConfigurationError(
                     "Parameter {} must be an object".format(parameter_id)
                 )
-            missing_fields = sorted(
-                cls.REQUIRED_PARAMETER_FIELDS - set(parameter)
-            )
+            missing_fields = sorted(cls.REQUIRED_PARAMETER_FIELDS - set(parameter))
             if missing_fields:
                 raise ConfigurationError(
                     "Parameter {} is missing fields: {}".format(
@@ -109,9 +107,7 @@ class Sia4010CaseManifest:
             status = str(parameter["status"]).upper()
             if status not in cls.ALLOWED_PARAMETER_STATUSES:
                 raise ConfigurationError(
-                    "Parameter {} has unsupported status {}".format(
-                        parameter_id, status
-                    )
+                    "Parameter {} has unsupported status {}".format(parameter_id, status)
                 )
             if status in cls.USABLE_PARAMETER_STATUSES and parameter["value"] is None:
                 raise ConfigurationError(
@@ -124,9 +120,7 @@ class Sia4010CaseManifest:
 
         for variant, definition in payload["variants"].items():
             if not isinstance(definition, dict):
-                raise ConfigurationError(
-                    "Variant {} must be an object".format(variant)
-                )
+                raise ConfigurationError("Variant {} must be an object".format(variant))
             parameter_ids = definition.get("required_parameters")
             if not isinstance(parameter_ids, list) or not parameter_ids:
                 raise ConfigurationError(
@@ -173,9 +167,7 @@ class Sia4010CaseManifest:
 
         if not isinstance(payload["classes"], dict) or not payload["classes"]:
             raise ConfigurationError("Case manifest contains no validation classes")
-        unknown_classes = sorted(
-            set(payload["classes"]) - set(SIA4010_CLASS_TEST_MATRIX)
-        )
+        unknown_classes = sorted(set(payload["classes"]) - set(SIA4010_CLASS_TEST_MATRIX))
         if unknown_classes:
             raise ConfigurationError(
                 "Unsupported SIA 4010 classes in case manifest: {}".format(
@@ -220,9 +212,7 @@ class Sia4010CaseManifest:
 
         definition = self.variants.get(variant)
         if definition is None:
-            raise ConfigurationError(
-                "Unknown SIA 4010 variant: {}".format(variant)
-            )
+            raise ConfigurationError("Unknown SIA 4010 variant: {}".format(variant))
         missing = tuple(
             parameter_id
             for parameter_id in definition["required_parameters"]
@@ -233,8 +223,7 @@ class Sia4010CaseManifest:
         provisional = tuple(
             parameter_id
             for parameter_id in definition["required_parameters"]
-            if str(self.parameters[parameter_id]["status"]).upper()
-            == "PUBLIC_REFERENCE"
+            if str(self.parameters[parameter_id]["status"]).upper() == "PUBLIC_REFERENCE"
             and self.parameters[parameter_id]["value"] is not None
         )
         return VariantInputReadiness(
@@ -242,9 +231,7 @@ class Sia4010CaseManifest:
             status=(
                 "BLOCKED_MISSING_INPUTS"
                 if missing
-                else "READY_PUBLIC_REFERENCE"
-                if provisional
-                else "READY"
+                else "READY_PUBLIC_REFERENCE" if provisional else "READY"
             ),
             missing_parameters=missing,
             provisional_parameters=provisional,
@@ -263,16 +250,12 @@ class Sia4010CaseManifest:
             for variant in self.classes[normalized]
         }
 
-    def case_readiness(
-        self, variant: str, case_id: str
-    ) -> VariantInputReadiness:
+    def case_readiness(self, variant: str, case_id: str) -> VariantInputReadiness:
         """Return source completeness for one exact official test case."""
 
         definition = self.variants.get(variant)
         if definition is None:
-            raise ConfigurationError(
-                "Unknown SIA 4010 variant: {}".format(variant)
-            )
+            raise ConfigurationError("Unknown SIA 4010 variant: {}".format(variant))
         if case_id not in definition.get("case_ids", []):
             raise ConfigurationError(
                 "Unknown SIA 4010 case {} for {}".format(case_id, variant)
@@ -290,8 +273,7 @@ class Sia4010CaseManifest:
         provisional = tuple(
             parameter_id
             for parameter_id in parameter_ids
-            if str(self.parameters[parameter_id]["status"]).upper()
-            == "PUBLIC_REFERENCE"
+            if str(self.parameters[parameter_id]["status"]).upper() == "PUBLIC_REFERENCE"
             and self.parameters[parameter_id]["value"] is not None
         )
         return VariantInputReadiness(
@@ -299,9 +281,7 @@ class Sia4010CaseManifest:
             status=(
                 "BLOCKED_MISSING_INPUTS"
                 if missing
-                else "READY_PUBLIC_REFERENCE"
-                if provisional
-                else "READY"
+                else "READY_PUBLIC_REFERENCE" if provisional else "READY"
             ),
             missing_parameters=missing,
             provisional_parameters=provisional,

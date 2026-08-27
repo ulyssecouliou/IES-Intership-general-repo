@@ -188,9 +188,7 @@ class ClientTemplateRemediationTests(unittest.TestCase):
         self.assertEqual(plan["status"], "READY_FOR_APPLY")
         self.assertEqual(len(plan["template"]["content"]["casual_gains"]), 1)
         self.assertEqual(len(plan["template"]["content"]["air_exchanges"]), 1)
-        self.assertTrue(
-            plan["template"]["review_observations"]["lighting_gain_detected"]
-        )
+        self.assertTrue(plan["template"]["review_observations"]["lighting_gain_detected"])
         self.assertTrue(
             plan["template"]["review_observations"][
                 "non_infiltration_air_exchange_detected"
@@ -221,15 +219,13 @@ class ClientTemplateRemediationTests(unittest.TestCase):
             project=_Project(_PeopleAndLightingTemplate()),
         )
 
-        self.assertEqual(
-            plan["status"], "BLOCKED_UNSUPPORTED_ROOM_GAIN_STRUCTURE"
-        )
+        self.assertEqual(plan["status"], "BLOCKED_UNSUPPORTED_ROOM_GAIN_STRUCTURE")
         assessment = plan["capability_assessment"]["room_gain_structure"]
-        self.assertEqual(assessment["room_gain_creation_api"],
-                         "NOT_AVAILABLE_IN_DOCUMENTED_VERoomData_API")
         self.assertEqual(
-            assessment["rooms"][0]["missing_gain_families"], ["people"]
+            assessment["room_gain_creation_api"],
+            "NOT_AVAILABLE_IN_DOCUMENTED_VERoomData_API",
         )
+        self.assertEqual(assessment["rooms"][0]["missing_gain_families"], ["people"])
         self.assertIn("TO VERIFY", assessment["message"])
         with self.assertRaisesRegex(ClientTemplateRemediationError, "not ready"):
             apply_preview_plan(object(), plan)
@@ -255,9 +251,7 @@ class ClientTemplateRemediationTests(unittest.TestCase):
         model.body = _Body(
             gains=[_Record(name="Existing equipment", type_str="Miscellaneous")]
         )
-        plan = self._plan(
-            Path("C:/Models/CLIENT_COPY"), project=project, model=model
-        )
+        plan = self._plan(Path("C:/Models/CLIENT_COPY"), project=project, model=model)
 
         assessment = plan["capability_assessment"]["room_gain_structure"]
         self.assertEqual(plan["status"], "READY_FOR_APPLY")
@@ -299,17 +293,11 @@ class ClientTemplateRemediationTests(unittest.TestCase):
         )
         model.get_bodies = lambda selected_only: [model.body, second]
 
-        plan = self._plan(
-            Path("C:/Models/CLIENT_COPY"), project=project, model=model
-        )
+        plan = self._plan(Path("C:/Models/CLIENT_COPY"), project=project, model=model)
         assessment = plan["capability_assessment"]["room_gain_structure"]
+        self.assertEqual(plan["status"], "BLOCKED_UNSUPPORTED_ROOM_GAIN_STRUCTURE")
         self.assertEqual(
-            plan["status"], "BLOCKED_UNSUPPORTED_ROOM_GAIN_STRUCTURE"
-        )
-        self.assertEqual(
-            assessment["rooms"][0][
-                "unselected_rooms_sharing_source_template"
-            ],
+            assessment["rooms"][0]["unselected_rooms_sharing_source_template"],
             ["ROOM-2"],
         )
 
@@ -328,27 +316,21 @@ class ClientTemplateRemediationTests(unittest.TestCase):
             Path("C:/Models/CLIENT_COPY"), project=_Project(_UnknownTemplate())
         )
         assessment = plan["capability_assessment"]["room_gain_structure"]
-        self.assertEqual(
-            plan["status"], "BLOCKED_UNSUPPORTED_ROOM_GAIN_STRUCTURE"
-        )
+        self.assertEqual(plan["status"], "BLOCKED_UNSUPPORTED_ROOM_GAIN_STRUCTURE")
         self.assertEqual(
             assessment["unknown_target_gain_type_labels"],
             ["Unverified VE gain type"],
         )
 
     def test_ordinary_client_project_is_never_mutated(self):
-        with self.assertRaisesRegex(
-            ClientTemplateRemediationError, "saved project copy"
-        ):
+        with self.assertRaisesRegex(ClientTemplateRemediationError, "saved project copy"):
             self._plan(Path("C:/Models/LIVE_CLIENT"))
 
     def test_incomplete_approval_evidence_blocks_preview(self):
         with self.assertRaisesRegex(
             ClientTemplateRemediationError, "reviewer is required"
         ):
-            self._plan(
-                Path("C:/Models/CLIENT_TEST"), evidence=_evidence(reviewer="")
-            )
+            self._plan(Path("C:/Models/CLIENT_TEST"), evidence=_evidence(reviewer=""))
 
     def test_automatic_evidence_requires_no_free_text_and_never_grants_claim(self):
         source = Path("C:/Sources/source.json")
@@ -378,9 +360,7 @@ class ClientTemplateRemediationTests(unittest.TestCase):
             )
 
         self.assertEqual(evidence.evidence_mode, AUTOMATIC_EVIDENCE_MODE)
-        self.assertEqual(
-            evidence.approval_status, TECHNICAL_APPLICATION_STATUS
-        )
+        self.assertEqual(evidence.approval_status, TECHNICAL_APPLICATION_STATUS)
         self.assertEqual(
             evidence.source_trace_status,
             "SOURCE_TRACED_PROVISIONING_RECEIPT",
@@ -436,9 +416,7 @@ class ClientTemplateRemediationTests(unittest.TestCase):
             apply_preview_plan(object(), plan)
 
     def test_template_with_missing_profile_is_blocked(self):
-        with self.assertRaisesRegex(
-            ClientTemplateRemediationError, "missing profiles"
-        ):
+        with self.assertRaisesRegex(ClientTemplateRemediationError, "missing profiles"):
             self._plan(
                 Path("C:/Models/CLIENT_TEST"),
                 project=_Project(_Template(profile="MISSING")),
@@ -452,17 +430,13 @@ class ClientTemplateRemediationTests(unittest.TestCase):
     def test_any_plan_edit_invalidates_checksum(self):
         plan = self._plan(Path("C:/Models/CLIENT_TEST"))
         plan["rooms"][0]["room_name"] = "Changed after approval"
-        with self.assertRaisesRegex(
-            ClientTemplateRemediationError, "checksum mismatch"
-        ):
+        with self.assertRaisesRegex(ClientTemplateRemediationError, "checksum mismatch"):
             validate_plan_hash(plan)
 
     def test_room_drift_after_preview_blocks_apply_before_gateway_write(self):
         project = _Project()
         model = _Model()
-        plan = self._plan(
-            Path("C:/Models/CLIENT_TEST"), project=project, model=model
-        )
+        plan = self._plan(Path("C:/Models/CLIENT_TEST"), project=project, model=model)
         model.body.data.general["thermal_template_name"] = "Changed in VE"
 
         class _Gateway:
@@ -484,9 +458,7 @@ class ClientTemplateRemediationTests(unittest.TestCase):
     def test_unchanged_plan_returns_verified_non_compliance_receipt(self):
         project = _Project()
         model = _Model()
-        plan = self._plan(
-            Path("C:/Models/CLIENT_TEST"), project=project, model=model
-        )
+        plan = self._plan(Path("C:/Models/CLIENT_TEST"), project=project, model=model)
 
         class _Gateway:
             project_path = Path(plan["project"]["path"])
@@ -542,12 +514,15 @@ class ClientTemplateRemediationTests(unittest.TestCase):
         def read(path):
             return plan if path is plan_path else receipt if path is receipt_path else {}
 
-        with patch(
-            "swiss_sia.client_template_remediation._latest_artifact",
-            side_effect=lambda *_arguments: next(artifacts),
-        ), patch(
-            "swiss_sia.client_template_remediation._read_json_artifact",
-            side_effect=read,
+        with (
+            patch(
+                "swiss_sia.client_template_remediation._latest_artifact",
+                side_effect=lambda *_arguments: next(artifacts),
+            ),
+            patch(
+                "swiss_sia.client_template_remediation._read_json_artifact",
+                side_effect=read,
+            ),
         ):
             summary = latest_remediation_evidence("C:/Models/CLIENT_TEST")
 

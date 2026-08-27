@@ -17,7 +17,6 @@ from pathlib import Path
 
 import xlrd
 
-
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
@@ -26,8 +25,18 @@ TMY = ROOT / "references" / "standards" / "bestest" / "DRYCOLD.TMY"
 OUTPUT = ROOT / "refs" / "reference-data" / "iso52016_epw_solar_components.csv"
 AUDIT = ROOT / "refs" / "reference-data" / "iso52016_epw_solar_components.audit.json"
 MONTHLY_HORIZONTAL_DIFFUSE_KWH_M2 = (
-    14.1, 20.4, 31.2, 35.1, 41.2, 35.5,
-    32.5, 31.8, 24.8, 17.5, 14.9, 11.8,
+    14.1,
+    20.4,
+    31.2,
+    35.1,
+    41.2,
+    35.5,
+    32.5,
+    31.8,
+    24.8,
+    17.5,
+    14.9,
+    11.8,
 )
 
 
@@ -74,9 +83,7 @@ def build():
         horizontal = max(0.0, iso[13])
         cos_zenith = _cosine_solar_zenith(tmy)
         cos_altitude_plane = math.sqrt(max(0.0, 1.0 - cos_zenith**2))
-        vertical_direct_vector = math.sqrt(
-            (east - west) ** 2 + (north - south) ** 2
-        )
+        vertical_direct_vector = math.sqrt((east - west) ** 2 + (north - south) ** 2)
         dni = (
             vertical_direct_vector / cos_altitude_plane
             if cos_altitude_plane > 1e-8 and horizontal > 0.0

@@ -39,7 +39,6 @@ from swiss_sia.reference_model.sia4010.qualified_aps import (
     Sia4010QualifiedApsExtractor,
 )
 
-
 ROOT = Path(__file__).resolve().parents[1]
 BINDINGS = ROOT / "config" / "sia4010_aps_bindings_ve_runtime.json"
 TEMP_ROOT = ROOT / ".codex_tmp"
@@ -128,9 +127,7 @@ class Test1DiagnosticRegistrationTests(unittest.TestCase):
                     "test1_diagnostic_chain_probe_v1",
                 )
                 self.assertTrue(capability.runtime_qualification_supported)
-                self.assertTrue(
-                    capability.apachesim_qualification_supported
-                )
+                self.assertTrue(capability.apachesim_qualification_supported)
                 self.assertIn(("test_1", case_id), QUALIFIED_ACTIVE_CASES)
 
     def test_diagnostic_scope_never_claims_reference_outputs_exist(self):
@@ -167,9 +164,7 @@ class Test1DiagnosticRegistrationTests(unittest.TestCase):
         """1E is judged against a band; its awning dynamics is still unstated."""
 
         capability = get_case_capability("test_1", "1E")
-        self.assertEqual(
-            capability.aps_evaluation_scope, "OFFICIAL_CRITERIA_IMPLEMENTED"
-        )
+        self.assertEqual(capability.aps_evaluation_scope, "OFFICIAL_CRITERIA_IMPLEMENTED")
         self.assertEqual(capability.generation_status, "NOT_IMPLEMENTED")
 
 
@@ -185,9 +180,7 @@ class Test1DiagnosticDeliverableTests(unittest.TestCase):
     def test_deliverable_is_two_complete_annual_hourly_power_series(self):
         """The specification asks for hourly heating and cooling power only."""
 
-        deliverable = self._extractor().test1_diagnostic_hourly_deliverable(
-            "1A"
-        )
+        deliverable = self._extractor().test1_diagnostic_hourly_deliverable("1A")
         self.assertIsNotNone(deliverable)
         self.assertEqual(deliverable.hour_count, 8760)
         self.assertEqual(len(deliverable.cooling_power_w), 8760)
@@ -196,9 +189,7 @@ class Test1DiagnosticDeliverableTests(unittest.TestCase):
         self.assertEqual(deliverable.cooling_power_w[0], 500.0)
         payload = deliverable.to_dict()
         self.assertEqual(payload["unit"], "W")
-        self.assertEqual(
-            payload["acceptance_criterion"], "NONE_STATED_BY_SPECIFICATION"
-        )
+        self.assertEqual(payload["acceptance_criterion"], "NONE_STATED_BY_SPECIFICATION")
         self.assertFalse(payload["reference_results_available"])
         self.assertIn(
             "Jahresdatensaetze",
@@ -225,9 +216,7 @@ class Test1DiagnosticDeliverableTests(unittest.TestCase):
         """An incomplete series yields nothing rather than a shorter dataset."""
 
         partial = self._extractor(steps=17519)
-        self.assertIsNone(
-            partial.test1_diagnostic_hourly_deliverable("1B")
-        )
+        self.assertIsNone(partial.test1_diagnostic_hourly_deliverable("1B"))
 
 
 class Test1DiagnosticEvaluationTests(unittest.TestCase):
@@ -313,7 +302,7 @@ class Test1DiagnosticLauncherTests(unittest.TestCase):
         self.qualifier_module = importlib.util.module_from_spec(qualifier_spec)
         qualifier_spec.loader.exec_module(self.qualifier_module)
 
-    def test_launcher_accepts_the_four_diagnostic_cases_but_not_1e(self):
+    def test_launchers_keep_1e_on_its_guarded_template_workflow(self):
         for case_id in TEST1_DIAGNOSTIC_CASES:
             with self.subTest(case_id=case_id):
                 self.assertIn(case_id, self.module.TEST1_CASES)
@@ -329,10 +318,11 @@ class Test1DiagnosticLauncherTests(unittest.TestCase):
                 )
         self.assertNotIn("1E", self.module.TEST1_CASES)
         self.assertNotIn("1E", self.active_module.TEST1_CASES)
-        self.assertNotIn("1E", self.qualifier_module.TEST1_CASES)
-        self.assertNotIn(
-            "1E", apachesim_qualification.SIMULATION_QUALIFICATION_CASES
-        )
+        # Test 1E shares the controlled room-runtime input qualification, but
+        # remains excluded from the generic Fast Start/active-case simulation
+        # launchers. Its awning model is handled by the guarded template path.
+        self.assertIn("1E", self.qualifier_module.TEST1_CASES)
+        self.assertNotIn("1E", apachesim_qualification.SIMULATION_QUALIFICATION_CASES)
 
     def test_folder_name_selection_stays_unambiguous(self):
         class _Path:
@@ -349,9 +339,7 @@ class Test1DiagnosticLauncherTests(unittest.TestCase):
         }
         for name, expected in cases.items():
             with self.subTest(folder=name):
-                self.assertEqual(
-                    self.module._select_case(_Path(name)), expected
-                )
+                self.assertEqual(self.module._select_case(_Path(name)), expected)
 
 
 class Test1DiagnosticBundleTests(unittest.TestCase):
@@ -370,25 +358,19 @@ class Test1DiagnosticBundleTests(unittest.TestCase):
             project.mkdir(parents=True)
             try:
                 with self.subTest(case_id=case_id):
-                    receipt = (
-                        ModelBuilderController.prepare_supported_mvp_bundle(
-                            project,
-                            ROOT,
-                            "SIA4010_OFFICIAL",
-                            "test_1",
-                            case_id,
-                        )
+                    receipt = ModelBuilderController.prepare_supported_mvp_bundle(
+                        project,
+                        ROOT,
+                        "SIA4010_OFFICIAL",
+                        "test_1",
+                        case_id,
                     )
                     self.assertEqual(
                         receipt.status,
                         "READY_FOR_PROVISIONAL_RUNTIME_QUALIFICATION",
                     )
-                    audit = json.loads(
-                        receipt.audit_path.read_text(encoding="utf-8")
-                    )
-                    self.assertEqual(
-                        audit["chain_applied"], expected_applied
-                    )
+                    audit = json.loads(receipt.audit_path.read_text(encoding="utf-8"))
+                    self.assertEqual(audit["chain_applied"], expected_applied)
                     self.assertEqual(audit["chain_blocked"], [])
                     self.assertEqual(
                         audit["acceptance_criterion"],

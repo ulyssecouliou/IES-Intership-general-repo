@@ -277,11 +277,7 @@ def build_project_snapshot(project_path: str) -> ProjectSnapshot:
 
     try:
         model_files = len(
-            [
-                path
-                for path in root.glob("*.mdl")
-                if "tmpsave" not in path.stem.lower()
-            ]
+            [path for path in root.glob("*.mdl") if "tmpsave" not in path.stem.lower()]
         )
         aps_files = len(list((root / "Vista").glob("*.aps")))
     except OSError:
@@ -290,8 +286,7 @@ def build_project_snapshot(project_path: str) -> ProjectSnapshot:
 
     audit_path = _latest_file(
         root,
-        "sia_compliance_artifacts/diagnostics/"
-        "swiss_sia_remediation_probe_*.json",
+        "sia_compliance_artifacts/diagnostics/" "swiss_sia_remediation_probe_*.json",
     )
     audit = _read_json(audit_path)
     client_audit_status = str(audit.get("status") or "NOT RUN").upper()
@@ -302,9 +297,7 @@ def build_project_snapshot(project_path: str) -> ProjectSnapshot:
         "sia3802_template_receipt_*.json",
     )
     remediation = _read_json(remediation_path)
-    template_remediation_status = str(
-        remediation.get("status") or "NOT RUN"
-    ).upper()
+    template_remediation_status = str(remediation.get("status") or "NOT RUN").upper()
 
     model_audit = _read_json(
         root / "reference_model_artifacts" / "reports" / "reference_model_report.json"
@@ -321,9 +314,7 @@ def build_project_snapshot(project_path: str) -> ProjectSnapshot:
     case_id = str(selection.get("case_id") or "").strip()
     scenario = "{}/{}".format(variant, case_id) if variant and case_id else "NOT SELECTED"
 
-    result = _read_json(
-        _latest_file(root, "sia4010_artifacts/results/*_evaluation.json")
-    )
+    result = _read_json(_latest_file(root, "sia4010_artifacts/results/*_evaluation.json"))
     result_status = str(result.get("status") or "NOT RUN").upper()
     scope_value = result.get("required_output_scope_complete")
     result_scope_complete = scope_value if isinstance(scope_value, bool) else None
@@ -342,7 +333,9 @@ def build_project_snapshot(project_path: str) -> ProjectSnapshot:
     elif template_remediation_status == "FAIL":
         recommended_action = "Close without saving and reopen the disposable copy."
     elif client_audit_status in {"WARNING", "FAIL"}:
-        recommended_action = "Review findings, complete evidence, then generate the report."
+        recommended_action = (
+            "Review findings, complete evidence, then generate the report."
+        )
     elif client_audit_status == "NOT RUN" and not disposable:
         recommended_action = "Run the read-only client model audit."
     elif scenario != "NOT SELECTED" and aps_files and result_status == "NOT RUN":

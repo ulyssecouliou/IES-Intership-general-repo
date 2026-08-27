@@ -13,7 +13,6 @@ Important:
 
 from pathlib import Path
 
-
 PACKAGE_ROOT = Path(__file__).resolve().parent
 PROJECT_ROOT = PACKAGE_ROOT.parent
 
@@ -894,17 +893,23 @@ SIA4010_SYSTEM_REQUIREMENT_SOURCES = {
     "domestic_hot_water": {
         "pages": "SIA 4010:2023 FR, page PDF 44",
         "table_range": "Referenced to SIA 385/2",
-        "requires": ["DHW heat demand and hourly load cycles if coupled to heat generation"],
+        "requires": [
+            "DHW heat demand and hourly load cycles if coupled to heat generation"
+        ],
     },
     "general_building_electricity": {
         "pages": "SIA 4010:2023 FR, page PDF 44",
         "table_range": "Referenced to SIA 2056 / SIA 2024 / SIA 387/4",
-        "requires": ["general technical electricity, user electricity/appliances, lighting, PV inputs"],
+        "requires": [
+            "general technical electricity, user electricity/appliances, lighting, PV inputs"
+        ],
     },
     "photovoltaics": {
         "pages": "SIA 4010:2023 FR, page PDF 45",
         "table_range": "Tables 60-61",
-        "requires": ["number/area/orientation/tilt of PV modules, peak power coefficient, system performance factor"],
+        "requires": [
+            "number/area/orientation/tilt of PV modules, peak power coefficient, system performance factor"
+        ],
     },
 }
 
@@ -1208,11 +1213,77 @@ for _variant, _fan_control, _recovery, _humidifier in (
 SIA4010_CLASS_TEST_MATRIX = {
     "1A": ["test_1", "test_2A"],
     "1B": ["test_1", "test_2B", "test_2C", "test_2D"],
-    "2A": ["test_1", "test_2A", "test_3A", "test_3B", "test_3C", "test_3D", "test_3E", "test_3F"],
-    "2B": ["test_1", "test_2B", "test_2C", "test_2D", "test_3A", "test_3B", "test_3C", "test_3D", "test_3E", "test_3F", "test_3G", "test_3H", "test_3I", "test_3J", "test_3K", "test_3L"],
+    "2A": [
+        "test_1",
+        "test_2A",
+        "test_3A",
+        "test_3B",
+        "test_3C",
+        "test_3D",
+        "test_3E",
+        "test_3F",
+    ],
+    "2B": [
+        "test_1",
+        "test_2B",
+        "test_2C",
+        "test_2D",
+        "test_3A",
+        "test_3B",
+        "test_3C",
+        "test_3D",
+        "test_3E",
+        "test_3F",
+        "test_3G",
+        "test_3H",
+        "test_3I",
+        "test_3J",
+        "test_3K",
+        "test_3L",
+    ],
     "3": ["test_1", "test_4", "test_5A", "test_5B", "test_5C", "test_5D", "test_6"],
-    "4A": ["test_1", "test_2A", "test_3A", "test_3B", "test_3C", "test_3D", "test_3E", "test_3F", "test_4", "test_5A", "test_5B", "test_5C", "test_5D", "test_6", "test_7"],
-    "4B": ["test_1", "test_2B", "test_2C", "test_2D", "test_3A", "test_3B", "test_3C", "test_3D", "test_3E", "test_3F", "test_3G", "test_3H", "test_3I", "test_3J", "test_3K", "test_3L", "test_4", "test_5A", "test_5B", "test_5C", "test_5D", "test_6", "test_7"],
+    "4A": [
+        "test_1",
+        "test_2A",
+        "test_3A",
+        "test_3B",
+        "test_3C",
+        "test_3D",
+        "test_3E",
+        "test_3F",
+        "test_4",
+        "test_5A",
+        "test_5B",
+        "test_5C",
+        "test_5D",
+        "test_6",
+        "test_7",
+    ],
+    "4B": [
+        "test_1",
+        "test_2B",
+        "test_2C",
+        "test_2D",
+        "test_3A",
+        "test_3B",
+        "test_3C",
+        "test_3D",
+        "test_3E",
+        "test_3F",
+        "test_3G",
+        "test_3H",
+        "test_3I",
+        "test_3J",
+        "test_3K",
+        "test_3L",
+        "test_4",
+        "test_5A",
+        "test_5B",
+        "test_5C",
+        "test_5D",
+        "test_6",
+        "test_7",
+    ],
     "5": ["test_7"],
 }
 
@@ -2302,11 +2373,11 @@ SIA4010_OFFICIAL_TEST_RESULT_FAIL_STATUSES = {
 # SIA 4010 readiness is scored separately and must not contaminate the SIA
 # 380/2 compliance score.
 CATEGORY_WEIGHTS = {
-    "envelope": 0.25,    # Envelope weight (walls, roofs, floors)
-    "openings": 0.20,    # Opening weight (windows, doors)
-    "ventilation": 0.15, # Ventilation weight
-    "gains": 0.15,       # Internal gains (SIA 2024 use category, lighting, equipment)
-    "hvac": 0.20,        # HVAC system weight
+    "envelope": 0.25,  # Envelope weight (walls, roofs, floors)
+    "openings": 0.20,  # Opening weight (windows, doors)
+    "ventilation": 0.15,  # Ventilation weight
+    "gains": 0.15,  # Internal gains (SIA 2024 use category, lighting, equipment)
+    "hvac": 0.20,  # HVAC system weight
 }
 
 # =============================================================================
@@ -2338,12 +2409,12 @@ EMISSION_FACTORS_SOURCE = (
     "current values are indicative and not source-verified"
 )
 EMISSION_FACTORS = {
-    "electricity": 0.05,   # Swiss electricity mix
-    "gas": 0.20,          # Natural gas
-    "oil": 0.25,          # Fuel oil
-    "wood": 0.02,         # Wood
-    "solar": 0.0,         # Solar
-    "wind": 0.0,          # Wind
+    "electricity": 0.05,  # Swiss electricity mix
+    "gas": 0.20,  # Natural gas
+    "oil": 0.25,  # Fuel oil
+    "wood": 0.02,  # Wood
+    "solar": 0.0,  # Solar
+    "wind": 0.0,  # Wind
     "district_heating": 0.1,  # District heating
 }
 
@@ -2360,10 +2431,10 @@ LOG_FILE = "swiss_compliance_checker.log"  # Log file name
 SIMULATION_PARAMS = {
     "results_filename": "swiss_compliance_simulation",  # Results file name
     "simulation_timestep": 2,  # 0=1min, 1=2min, 2=6min, 3=10min, 4=30min
-    "reporting_interval": 2,   # 0=6min, 1=10min, 2=30min, 3=60min
-    "HVAC": True,              # Include HVAC systems
-    "nat_ventilation": True,   # Include natural ventilation
-    "aux_ventilation": True,   # Include auxiliary ventilation
+    "reporting_interval": 2,  # 0=6min, 1=10min, 2=30min, 3=60min
+    "HVAC": True,  # Include HVAC systems
+    "nat_ventilation": True,  # Include natural ventilation
+    "aux_ventilation": True,  # Include auxiliary ventilation
 }
 
 # =============================================================================
@@ -2380,21 +2451,21 @@ SIMULATION_PARAMS = {
 # ALERT-TYPE PENALTIES (for Health Score calculation)
 # =============================================================================
 PENALTIES = {
-    "missing_template": 5.0,       # Missing thermal template
-    "missing_hvac": 5.0,           # Missing HVAC system
-    "missing_construction": 2.0,   # Missing construction
-    "zero_area_room": 8.0,         # Room with zero area
-    "zero_volume_room": 8.0,       # Room with zero volume
-    "tiny_area_room": 3.0,         # Room with area <= 1 m2
-    "tiny_volume_room": 2.0,       # Room with volume <= 2 m3
-    "duplicate_room_name": 2.0,    # Duplicate room name
-    "suspicious_wwr": 3.0,         # WWR > 0.80 or < 0 on external walls
-    "zero_area_surface": 3.0,      # Surface with zero area
-    "no_external_openings": 2.0,   # No external opening
-    "missing_occupancy": 4.0,      # Missing occupancy profile
-    "missing_lighting": 3.0,       # Missing lighting profile
-    "missing_equipment": 2.0,      # Missing equipment profile
-    "missing_ventilation": 4.0,    # Missing ventilation profile
-    "missing_infiltration": 3.0,   # Missing infiltration profile
-    "invalid_opening": 2.0,         # Invalid opening
+    "missing_template": 5.0,  # Missing thermal template
+    "missing_hvac": 5.0,  # Missing HVAC system
+    "missing_construction": 2.0,  # Missing construction
+    "zero_area_room": 8.0,  # Room with zero area
+    "zero_volume_room": 8.0,  # Room with zero volume
+    "tiny_area_room": 3.0,  # Room with area <= 1 m2
+    "tiny_volume_room": 2.0,  # Room with volume <= 2 m3
+    "duplicate_room_name": 2.0,  # Duplicate room name
+    "suspicious_wwr": 3.0,  # WWR > 0.80 or < 0 on external walls
+    "zero_area_surface": 3.0,  # Surface with zero area
+    "no_external_openings": 2.0,  # No external opening
+    "missing_occupancy": 4.0,  # Missing occupancy profile
+    "missing_lighting": 3.0,  # Missing lighting profile
+    "missing_equipment": 2.0,  # Missing equipment profile
+    "missing_ventilation": 4.0,  # Missing ventilation profile
+    "missing_infiltration": 3.0,  # Missing infiltration profile
+    "invalid_opening": 2.0,  # Invalid opening
 }

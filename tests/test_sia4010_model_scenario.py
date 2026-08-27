@@ -12,7 +12,6 @@ from swiss_sia.reference_model.sia4010.model_scenario import (
     official_features,
 )
 
-
 ROOT = Path(__file__).resolve().parents[1]
 OUTPUT = ROOT / ".codex_tmp" / "model_scenario_tests"
 

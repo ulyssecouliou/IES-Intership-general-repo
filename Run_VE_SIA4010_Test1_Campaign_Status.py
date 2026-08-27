@@ -1,4 +1,4 @@
-"""Read-only ten-case Test 1 campaign navigator for VEScripts."""
+"""Read-only Test 1 ISO and diagnostic campaign navigator for VEScripts."""
 
 import json
 import sys
@@ -36,10 +36,20 @@ def run():
 
     print("SIA 4010 TEST 1 CAMPAIGN: {}".format(report["status"]))
     print(
-        "Reference-result cases complete: {}/{}".format(
-            report["reference_results_complete_count"], report["case_count"]
+        "ISO reference-result cases complete: {}/{} ({})".format(
+            report["iso_reference_results_complete_count"],
+            report["iso_case_count"],
+            report["iso_status"],
         )
     )
+    print(
+        "Diagnostic hourly deliverables complete: {}/{} ({})".format(
+            report["diagnostic_deliverables_complete_count"],
+            report["diagnostic_case_count"],
+            report["diagnostic_status"],
+        )
+    )
+    print("Formal Test 1 gate: {}".format(report["formal_test1_status"]))
     for item in report["cases"]:
         print("- {}: {}".format(item["case_id"], item["stage"]))
     if report["next_case"] is not None:
@@ -47,9 +57,14 @@ def run():
         print("NEXT CASE: {}".format(item["case_id"]))
         action = item["next_action"]
         if action["requires_fresh_project"]:
-            print("Create a fresh saved VE project named: {}".format(
-                item["recommended_project_name"]
-            ))
+            if item["case_id"] == "1E":
+                print("Create a separate copy of completed case 1D named: {}".format(
+                    item["recommended_project_name"]
+                ))
+            else:
+                print("Create a fresh saved VE project named: {}".format(
+                    item["recommended_project_name"]
+                ))
         elif action["project_path"]:
             print("Open existing VE project: {}".format(action["project_path"]))
         print("Run VEScript: {}".format(action["script"]))

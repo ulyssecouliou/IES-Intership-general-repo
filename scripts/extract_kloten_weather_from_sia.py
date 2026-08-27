@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-u"""Extracts the Zürich-Kloten outdoor temperature from the OFFICIAL SIA workbooks.
+"""Extracts the Zürich-Kloten outdoor temperature from the OFFICIAL SIA workbooks.
 
 DISCOVERY OF 2026-08-05. The official evaluation workbook for Test 4,
 `Resultaterfassung Test4.xlsx`, contains a **`Wetterdaten`** sheet that
@@ -46,17 +46,18 @@ _RACINE = os.path.abspath(os.path.join(_ICI, os.pardir))
 
 # The official folder lives in the other repository (118 MB, excluded by .gitignore).
 _DOSSIER_SIA = os.environ.get(
-    'SIA_4010_DOSSIER',
-    os.path.join(os.path.expanduser('~'), 'Documents', 'IES Internship',
-                 'IES-Intership-general-repo', 'SIA_4010_geteilter_Link'))
+    "SIA_4010_DOSSIER", os.path.join(_RACINE, "SIA_4010_geteilter_Link")
+)
 
-_CLASSEUR = os.path.join(_DOSSIER_SIA, 'Test4', 'Resultaterfassung Test4.xlsx')
-_FEUILLE = u'Wetterdaten'
+_CLASSEUR = os.path.join(_DOSSIER_SIA, "Test4", "Resultaterfassung Test4.xlsx")
+_FEUILLE = "Wetterdaten"
 
-_SORTIE_JSON = os.path.join(_RACINE, 'refs', 'reference-data',
-                            'sia-2028-kloten-temperature.json')
-_SORTIE_CSV = os.path.join(_RACINE, 'refs', 'reference-data',
-                           'sia-2028-kloten-temperature.csv')
+_SORTIE_JSON = os.path.join(
+    _RACINE, "refs", "reference-data", "sia-2028-kloten-temperature.json"
+)
+_SORTIE_CSV = os.path.join(
+    _RACINE, "refs", "reference-data", "sia-2028-kloten-temperature.csv"
+)
 
 HEURES = 8760
 
@@ -75,46 +76,52 @@ class ExtractionRefusee(RuntimeError):
 def extraire():
     if not os.path.exists(_CLASSEUR):
         raise ExtractionRefusee(
-            u'classeur officiel introuvable : %s\n'
-            u'Définir SIA_4010_DOSSIER si le dossier SIA est ailleurs.'
-            % _CLASSEUR)
+            "classeur officiel introuvable : %s\n"
+            "Définir SIA_4010_DOSSIER si le dossier SIA est ailleurs." % _CLASSEUR
+        )
 
     classeur = openpyxl.load_workbook(_CLASSEUR, data_only=True, read_only=True)
     if _FEUILLE not in classeur.sheetnames:
-        raise ExtractionRefusee(u'feuille %r absente de %s'
-                                % (_FEUILLE, os.path.basename(_CLASSEUR)))
+        raise ExtractionRefusee(
+            "feuille %r absente de %s" % (_FEUILLE, os.path.basename(_CLASSEUR))
+        )
     feuille = classeur[_FEUILLE]
 
     lignes = [list(r) for r in feuille.iter_rows(values_only=True)]
     classeur.close()
 
-    entete = [unicode(v) if str is bytes else str(v) for v in lignes[0][:2]]
-    if u'Drybulb' not in entete[0]:
+    entete = [str(v) for v in lignes[0][:2]]
+    if "Drybulb" not in entete[0]:
         raise ExtractionRefusee(
-            u"colonne 1 inattendue : %r — l'extraction est refusée plutôt que "
-            u"de figer une grandeur non identifiée" % entete[0])
+            "colonne 1 inattendue : %r — l'extraction est refusée plutôt que "
+            "de figer une grandeur non identifiée" % entete[0]
+        )
 
     temperature, moyenne_48h = [], []
     for ligne in lignes[1:]:
         if isinstance(ligne[0], (int, float)):
             temperature.append(float(ligne[0]))
             moyenne_48h.append(
-                float(ligne[1]) if isinstance(ligne[1], (int, float)) else None)
+                float(ligne[1]) if isinstance(ligne[1], (int, float)) else None
+            )
 
     if len(temperature) != HEURES:
-        raise ExtractionRefusee(u'%d heures extraites, %d attendues'
-                                % (len(temperature), HEURES))
+        raise ExtractionRefusee(
+            "%d heures extraites, %d attendues" % (len(temperature), HEURES)
+        )
 
     moyenne = sum(temperature) / len(temperature)
     mini, maxi = min(temperature), max(temperature)
     for valeur, (bas, haut), nom in (
-            (moyenne, MOYENNE_ATTENDUE, u'moyenne'),
-            (mini, MIN_ATTENDU, u'minimum'),
-            (maxi, MAX_ATTENDU, u'maximum')):
+        (moyenne, MOYENNE_ATTENDUE, "moyenne"),
+        (mini, MIN_ATTENDU, "minimum"),
+        (maxi, MAX_ATTENDU, "maximum"),
+    ):
         if not (bas <= valeur <= haut):
             raise ExtractionRefusee(
-                u'%s = %.2f °C hors de la plage de vraisemblance [%.1f ; %.1f] '
-                u'pour Zürich-Kloten' % (nom, valeur, bas, haut))
+                "%s = %.2f °C hors de la plage de vraisemblance [%.1f ; %.1f] "
+                "pour Zürich-Kloten" % (nom, valeur, bas, haut)
+            )
 
     return entete, temperature, moyenne_48h
 
@@ -122,50 +129,50 @@ def extraire():
 def construire(entete, temperature, moyenne_48h):
     moyenne = sum(temperature) / len(temperature)
     return {
-        u'grandeur': u"température d'air extérieur horaire, Zürich-Kloten",
-        u'statut': u'FIGÉ — source officielle SIA, extrait le 2026-08-05',
-        u'source': {
-            u'fichier': u'SIA_4010_geteilter_Link/Test4/Resultaterfassung Test4.xlsx',
-            u'feuille': _FEUILLE,
-            u'colonnes': entete,
-            u'nature': u"sortie du programme de référence EnergyPlus, telle que "
-                       u"livrée par le SIA dans son classeur d'évaluation officiel",
-            u'origine_amont': u'fichier SIA 2028 DRY normal, station Kloten '
-                              u'(« Original-SIA-Datei » des rapports d\'application)',
+        "grandeur": "température d'air extérieur horaire, Zürich-Kloten",
+        "statut": "FIGÉ — source officielle SIA, extrait le 2026-08-05",
+        "source": {
+            "fichier": "SIA_4010_geteilter_Link/Test4/Resultaterfassung Test4.xlsx",
+            "feuille": _FEUILLE,
+            "colonnes": entete,
+            "nature": "sortie du programme de référence EnergyPlus, telle que "
+            "livrée par le SIA dans son classeur d'évaluation officiel",
+            "origine_amont": "fichier SIA 2028 DRY normal, station Kloten "
+            "(« Original-SIA-Datei » des rapports d'application)",
         },
-        u'heures': len(temperature),
-        u'agregats': {
-            u'min_c': round(min(temperature), 4),
-            u'max_c': round(max(temperature), 4),
-            u'moyenne_c': round(moyenne, 4),
+        "heures": len(temperature),
+        "agregats": {
+            "min_c": round(min(temperature), 4),
+            "max_c": round(max(temperature), 4),
+            "moyenne_c": round(moyenne, 4),
         },
-        u'moyenne_glissante_48h': {
-            u'presente': any(v is not None for v in moyenne_48h),
-            u'colonne': entete[1] if len(entete) > 1 else None,
-            u'usage': u"abscisse de la figure 1 de SIA 380/2 — permet de "
-                      u"contrôler `engine.setpoint_curves.running_mean_48h` "
-                      u"contre une série calculée par un programme de référence, "
-                      u"y compris sur les 47 premières heures où la norme ne dit "
-                      u"rien.",
+        "moyenne_glissante_48h": {
+            "presente": any(v is not None for v in moyenne_48h),
+            "colonne": entete[1] if len(entete) > 1 else None,
+            "usage": "abscisse de la figure 1 de SIA 380/2 — permet de "
+            "contrôler `engine.setpoint_curves.running_mean_48h` "
+            "contre une série calculée par un programme de référence, "
+            "y compris sur les 47 premières heures où la norme ne dit "
+            "rien.",
         },
-        u'ce_que_cela_debloque': [
-            u"Tout ce qui ne dépend que de la température d'air extérieur : "
-            u"refroidisseur sec et échangeur sur air extérieur du Test 7, donc "
-            u"le point de fonctionnement de la pompe à chaleur.",
-            u"La validation de notre moyenne glissante sur 48 h.",
+        "ce_que_cela_debloque": [
+            "Tout ce qui ne dépend que de la température d'air extérieur : "
+            "refroidisseur sec et échangeur sur air extérieur du Test 7, donc "
+            "le point de fonctionnement de la pompe à chaleur.",
+            "La validation de notre moyenne glissante sur 48 h.",
         ],
-        u'ce_que_cela_ne_debloque_pas': [
-            u"Le RAYONNEMENT SOLAIRE, absent de cette feuille. Le fichier "
-            u"SIA 2028 d'origine contient l'irradiance sur les surfaces "
-            u"verticales des orientations principales ; rien de cela n'est ici.",
-            u"Test 7 grandeur obligatoire n° 14 « Elektrische Energie PV » : "
-            u"exige l'irradiance sur le plan des modules.",
-            u"Tests 1E, 2, 3, 4, 5, 6 : tous solaires.",
-            u"L'humidité de l'air extérieur.",
+        "ce_que_cela_ne_debloque_pas": [
+            "Le RAYONNEMENT SOLAIRE, absent de cette feuille. Le fichier "
+            "SIA 2028 d'origine contient l'irradiance sur les surfaces "
+            "verticales des orientations principales ; rien de cela n'est ici.",
+            "Test 7 grandeur obligatoire n° 14 « Elektrische Energie PV » : "
+            "exige l'irradiance sur le plan des modules.",
+            "Tests 1E, 2, 3, 4, 5, 6 : tous solaires.",
+            "L'humidité de l'air extérieur.",
         ],
-        u'avertissement': u"Ce n'est PAS un substitut au jeu SIA 2028 complet. "
-                          u"C'est une pièce authentique du puzzle, d'origine "
-                          u"officielle, qui couvre la seule température.",
+        "avertissement": "Ce n'est PAS un substitut au jeu SIA 2028 complet. "
+        "C'est une pièce authentique du puzzle, d'origine "
+        "officielle, qui couvre la seule température.",
     }
 
 
@@ -173,28 +180,31 @@ def main():
     entete, temperature, moyenne_48h = extraire()
     donnees = construire(entete, temperature, moyenne_48h)
 
-    print(u'feuille  : %s' % _FEUILLE)
-    print(u'colonnes : %s' % u' | '.join(entete))
-    print(u'heures   : %d' % donnees[u'heures'])
-    agregats = donnees[u'agregats']
-    print(u'min %.2f   max %.2f   moyenne %.3f °C'
-          % (agregats[u'min_c'], agregats[u'max_c'], agregats[u'moyenne_c']))
-    print(u'moyenne glissante 48 h présente : %s'
-          % donnees[u'moyenne_glissante_48h'][u'presente'])
+    print("feuille  : %s" % _FEUILLE)
+    print("colonnes : %s" % " | ".join(entete))
+    print("heures   : %d" % donnees["heures"])
+    agregats = donnees["agregats"]
+    print(
+        "min %.2f   max %.2f   moyenne %.3f °C"
+        % (agregats["min_c"], agregats["max_c"], agregats["moyenne_c"])
+    )
+    print(
+        "moyenne glissante 48 h présente : %s"
+        % donnees["moyenne_glissante_48h"]["presente"]
+    )
 
-    if '--ecrire' in sys.argv:
-        with io.open(_SORTIE_JSON, 'w', encoding='utf-8') as f:
+    if "--ecrire" in sys.argv:
+        with io.open(_SORTIE_JSON, "w", encoding="utf-8") as f:
             f.write(json.dumps(donnees, ensure_ascii=False, indent=2))
-            f.write(u'\n')
-        with io.open(_SORTIE_CSV, 'w', encoding='utf-8') as f:
-            f.write(u'heure,theta_e_air_c,moyenne_glissante_48h_c\n')
+            f.write("\n")
+        with io.open(_SORTIE_CSV, "w", encoding="utf-8") as f:
+            f.write("heure,theta_e_air_c,moyenne_glissante_48h_c\n")
             for i, (t, m) in enumerate(zip(temperature, moyenne_48h), start=1):
-                f.write(u'%d,%.6f,%s\n'
-                        % (i, t, u'' if m is None else u'%.6f' % m))
+                f.write("%d,%.6f,%s\n" % (i, t, "" if m is None else "%.6f" % m))
         print()
-        print(u'écrit : %s' % os.path.relpath(_SORTIE_JSON, _RACINE))
-        print(u'écrit : %s' % os.path.relpath(_SORTIE_CSV, _RACINE))
+        print("écrit : %s" % os.path.relpath(_SORTIE_JSON, _RACINE))
+        print("écrit : %s" % os.path.relpath(_SORTIE_CSV, _RACINE))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

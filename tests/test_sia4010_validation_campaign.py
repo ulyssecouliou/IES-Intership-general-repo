@@ -35,7 +35,10 @@ def _complete_case(registry, tmp_path: Path, key: str):
     result_audit = project / "evaluation.json"
     for path in (model, scenario, aps, simulation_audit, result_audit):
         path.write_text(path.name, encoding="utf-8")
-    sha = lambda path: hashlib.sha256(path.read_bytes()).hexdigest()
+
+    def sha(path):
+        return hashlib.sha256(path.read_bytes()).hexdigest()
+
     record["model_evidence"] = {
         "status": "VERIFIED",
         "artifact_path": str(model),
@@ -71,7 +74,13 @@ def _complete_case(registry, tmp_path: Path, key: str):
 
 def test_phase_order_unlocks_quick_classes_first():
     assert [phase.phase_id for phase in CAMPAIGN_PHASES] == [
-        "P0", "P1", "P2", "P3", "P4", "P5", "P6"
+        "P0",
+        "P1",
+        "P2",
+        "P3",
+        "P4",
+        "P5",
+        "P6",
     ]
     assert CAMPAIGN_PHASES[1].unlocks == ("1A",)
     assert CAMPAIGN_PHASES[-1].unlocks == ("5", "4A", "4B")
@@ -103,9 +112,7 @@ def test_class_is_complete_only_with_all_linked_case_evidence(tmp_path):
         if key.startswith("test_1/") or key == "test_2A/2A":
             _complete_case(registry, tmp_path, key)
     payload = build_validation_campaign(registry)
-    assert payload["classes"]["1A"]["status"].startswith(
-        "TECHNICALLY_COMPLETE"
-    )
+    assert payload["classes"]["1A"]["status"].startswith("TECHNICALLY_COMPLETE")
     assert payload["classes"]["1A"]["official_attestation_required"] is True
     assert payload["classes"]["1B"]["status"] == "INCOMPLETE"
 
@@ -126,9 +133,7 @@ def test_writer_creates_json_and_html(tmp_path):
     repository = tmp_path / "repo"
     registry_path = repository / "ledger.json"
     registry_path.parent.mkdir()
-    registry_path.write_text(
-        json.dumps(new_registry_payload()), encoding="utf-8"
-    )
+    registry_path.write_text(json.dumps(new_registry_payload()), encoding="utf-8")
     output = repository / "campaign"
     payload = write_validation_campaign(
         repository,

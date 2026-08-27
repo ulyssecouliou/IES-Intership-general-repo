@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "artifact": "Demo_EN_16798-5-1_2021-06-09.xlsm",
+  "sha256": "73e7c74c54b87c0d4f16e6a7e1b4958fc6e57cf277c8c7c4287aabf7d3ea385a",
+  "size_bytes": 3268592,
+  "downloaded_at": "2026-08-25",
+  "download_url": "https://epb.center/wp-content/uploads/documents/Demo_EN_16798-5-1_2021-06-09.xlsm",
+  "landing_page": "https://epb.center/document/demo-en-16798-5-1/",
+  "publisher": "EPB Center",
+  "author": "Gerhard Zweifel (EPB Center expert)",
+  "published": "2019-09-20",
+  "updated": "2021-06-09",
+  "public_availability": "Freely downloadable from the publisher landing page",
+  "license_status": "No explicit reuse licence identified on the landing page; retain for internal technical evaluation only until confirmed",
+  "technical_observation": "Package metadata and shared strings expose rotary heat-recovery inputs, Annex D constants and formula references including D.5 and Table D.1.",
+  "qualification_status": "PROVISIONAL_SOURCE_REQUIRES_INDEPENDENT_VALIDATION_AND_SIA_ACCEPTANCE",
+  "claim_guardrail": "The EPB Center states that its demonstration spreadsheets support implementation and do not replace the corresponding standard."
+}

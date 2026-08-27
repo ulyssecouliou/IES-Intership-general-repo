@@ -21,7 +21,6 @@ from .normalized_external_inputs import load_test2a_external_bindings
 from .scenario_preflight import is_temporary_ve_project
 from .test2a_profile_binding import build_test2a_profile_definitions
 
-
 REPORT_SCHEMA_VERSION = "1.0"
 SCENARIO_FILENAME = "sia_model_scenario.json"
 REPORT_DIRECTORY = Path("sia4010_artifacts") / "diagnostics"
@@ -95,8 +94,7 @@ def qualify_test2a_profile_graph(
     project_path = Path(str(getattr(project, "path", "")))
     if not project_path.is_dir():
         raise ConfigurationError(
-            "Test 2A profile qualification requires a saved VE project "
-            "directory"
+            "Test 2A profile qualification requires a saved VE project " "directory"
         )
     if is_temporary_ve_project(project_path):
         raise ConfigurationError(
@@ -109,17 +107,13 @@ def qualify_test2a_profile_graph(
     ]
     if missing_methods:
         raise ConfigurationError(
-            "Required VE profile API methods are missing: {}".format(
-                missing_methods
-            )
+            "Required VE profile API methods are missing: {}".format(missing_methods)
         )
 
     scenario_path = project_path / SCENARIO_FILENAME
     if not scenario_path.is_file():
         raise ConfigurationError(
-            "Prepare test_2A/2A first; missing scenario file: {}".format(
-                scenario_path
-            )
+            "Prepare test_2A/2A first; missing scenario file: {}".format(scenario_path)
         )
     scenario = ModelScenario.load(scenario_path)
     if (
@@ -128,8 +122,7 @@ def qualify_test2a_profile_graph(
         or scenario.case_id != "2A"
     ):
         raise ConfigurationError(
-            "Profile qualification is restricted to the official "
-            "test_2A/2A scenario"
+            "Profile qualification is restricted to the official " "test_2A/2A scenario"
         )
 
     readiness = external_input_readiness(
@@ -139,9 +132,7 @@ def qualify_test2a_profile_graph(
     )
     bindings = load_test2a_external_bindings(readiness)
     evidence_sha = dict(bindings.evidence_sha256)
-    profile_binding_sha = evidence_sha[
-        "sia2024_office_3_1_standard_profiles"
-    ]
+    profile_binding_sha = evidence_sha["sia2024_office_3_1_standard_profiles"]
     profile_bundle = build_test2a_profile_definitions(
         bindings.office_profiles,
         source_sha256=profile_binding_sha,
@@ -149,9 +140,7 @@ def qualify_test2a_profile_graph(
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
     report_path = (
-        project_path
-        / REPORT_DIRECTORY
-        / "sia2a_profiles_{}.json".format(timestamp)
+        project_path / REPORT_DIRECTORY / "sia2a_profiles_{}.json".format(timestamp)
     )
     external_manifest_path = project_path / EXTERNAL_INPUT_FILENAME
     before = _profile_snapshot(project)

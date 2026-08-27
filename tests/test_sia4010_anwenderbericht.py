@@ -235,9 +235,7 @@ class WriteTests(unittest.TestCase):
             self.assertFalse(status["compliance_claim_allowed"])
             self.assertEqual(status["case_count"], 2)
             self.assertEqual(status["cases_with_recorded_result"], 1)
-            self.assertTrue(
-                (tmp_path / "out" / "Anwenderbericht_Test1.md").is_file()
-            )
+            self.assertTrue((tmp_path / "out" / "Anwenderbericht_Test1.md").is_file())
             written = json.loads(
                 (tmp_path / "out" / "Anwenderbericht_Test1.status.json").read_text(
                     encoding="utf-8"

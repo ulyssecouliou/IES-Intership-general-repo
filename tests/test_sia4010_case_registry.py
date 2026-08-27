@@ -16,7 +16,6 @@ from swiss_sia.reference_model.sia4010.preparation_bundle import (
     prepare_class,
 )
 
-
 ROOT = Path(__file__).resolve().parents[1]
 BUNDLE = ROOT / "SIA_4010_geteilter_Link"
 
@@ -86,16 +85,10 @@ class Sia4010CaseRegistryTests(unittest.TestCase):
         self.assertEqual(len(discovery), 20)
         self.assertIn(("test_2A", "2A"), discovery)
         self.assertEqual(
-            {
-                case_id
-                for variant, case_id in discovery
-                if variant.startswith("test_3")
-            },
+            {case_id for variant, case_id in discovery if variant.startswith("test_3")},
             {"3{}".format(letter) for letter in "ABCDEFGHIJKL"},
         )
-        self.assertFalse(
-            get_case_capability("test_3A", "3A").mutation_supported
-        )
+        self.assertFalse(get_case_capability("test_3A", "3A").mutation_supported)
         for variant, case_id in (
             ("test_4", "4"),
             ("test_5A", "5A"),
@@ -108,7 +101,6 @@ class Sia4010CaseRegistryTests(unittest.TestCase):
             capability = get_case_capability(variant, case_id)
             self.assertTrue(capability.runtime_discovery_supported)
             self.assertFalse(capability.mutation_supported)
-
 
     def test_source_bound_bundles_cover_test2a_and_all_test3_cases(self):
         source_bound = [
@@ -164,16 +156,10 @@ class Sia4010CaseRegistryTests(unittest.TestCase):
             get_case_capability("test_1", "600").aps_evaluation_scope,
             "REFERENCE_OUTPUTS_IMPLEMENTED",
         )
-        self.assertTrue(
-            get_case_capability(
-                "test_1", "1E"
-            ).aps_full_evaluation_supported
-        )
+        self.assertTrue(get_case_capability("test_1", "1E").aps_full_evaluation_supported)
         for case_id in ("600FF", "900FF"):
             self.assertTrue(
-                get_case_capability(
-                    "test_1", case_id
-                ).aps_full_evaluation_supported
+                get_case_capability("test_1", case_id).aps_full_evaluation_supported
             )
 
     def test_apachesim_qualification_is_limited_to_generated_test1_cases(self):
@@ -201,14 +187,10 @@ class Sia4010CaseRegistryTests(unittest.TestCase):
             ],
         )
         self.assertFalse(
-            get_case_capability(
-                "test_1", "1E"
-            ).apachesim_qualification_supported
+            get_case_capability("test_1", "1E").apachesim_qualification_supported
         )
         self.assertFalse(
-            get_case_capability(
-                "test_2A", "2A"
-            ).apachesim_qualification_supported
+            get_case_capability("test_2A", "2A").apachesim_qualification_supported
         )
 
     def test_qualified_template_simulation_closes_1e_and_test2_routes(self):
@@ -260,9 +242,7 @@ class Sia4010PreparationBundleTests(unittest.TestCase):
         with mock.patch(
             "swiss_sia.reference_model.sia4010.preparation_bundle._write_json"
         ) as write_json:
-            receipt = prepare_case(
-                ROOT, ROOT, "3", "test_5A", "5A"
-            )
+            receipt = prepare_case(ROOT, ROOT, "3", "test_5A", "5A")
             self.assertEqual(receipt.status, "PREPARED_WITH_BLOCKERS")
             self.assertFalse(receipt.mutation_supported)
             payload = write_json.call_args.args[1]
@@ -276,12 +256,8 @@ class Sia4010PreparationBundleTests(unittest.TestCase):
                 payload["generator_capability"]["generation_status"],
                 "NOT_IMPLEMENTED",
             )
-            self.assertEqual(
-                payload["confirmed_specification_input"]["test_id"], "5"
-            )
-            self.assertTrue(
-                payload["confirmed_specification_input"]["confirmed_inputs"]
-            )
+            self.assertEqual(payload["confirmed_specification_input"]["test_id"], "5")
+            self.assertTrue(payload["confirmed_specification_input"]["confirmed_inputs"])
             self.assertEqual(
                 payload["geometry_source_status"],
                 "EXTRACTED_FROM_VERIFIED_OFFICIAL_IFC",
@@ -291,9 +267,7 @@ class Sia4010PreparationBundleTests(unittest.TestCase):
                 {"100", "102", "200", "201", "202", "203", "204", "205"},
             )
             self.assertTrue(payload["source_files"])
-            self.assertFalse(
-                payload["external_input_readiness"]["ready_for_binding"]
-            )
+            self.assertFalse(payload["external_input_readiness"]["ready_for_binding"])
             self.assertTrue(
                 any(
                     item["code"].startswith("EXTERNAL_INPUT:")
@@ -301,17 +275,14 @@ class Sia4010PreparationBundleTests(unittest.TestCase):
                 )
             )
             self.assertFalse(
-                any(item["role"] == "reference_report" for item in payload["source_files"])
+                any(
+                    item["role"] == "reference_report" for item in payload["source_files"]
+                )
             )
 
     def test_whole_class_preparation_lists_every_exact_case(self):
         def fake_prepare(
-            project_root,
-            repository_root,
-            target_class,
-            variant,
-            case_id,
-            **kwargs
+            project_root, repository_root, target_class, variant, case_id, **kwargs
         ):
             return CasePreparationReceipt(
                 status="PREPARED_WITH_BLOCKERS",
@@ -326,12 +297,15 @@ class Sia4010PreparationBundleTests(unittest.TestCase):
                 blockers=("UNRESOLVED",),
             )
 
-        with mock.patch(
-            "swiss_sia.reference_model.sia4010.preparation_bundle.prepare_case",
-            side_effect=fake_prepare,
-        ), mock.patch(
-            "swiss_sia.reference_model.sia4010.preparation_bundle._write_json"
-        ) as write_json:
+        with (
+            mock.patch(
+                "swiss_sia.reference_model.sia4010.preparation_bundle.prepare_case",
+                side_effect=fake_prepare,
+            ),
+            mock.patch(
+                "swiss_sia.reference_model.sia4010.preparation_bundle._write_json"
+            ) as write_json,
+        ):
             # Note the homonym: "1A" here is a validation CLASS,
             # not the diagnostic case 1A of Test 1. Class 1A requires
             # `test_1` and `test_2A`.
@@ -352,11 +326,14 @@ class Sia4010PreparationBundleTests(unittest.TestCase):
             )
 
     def test_all_classes_preparation_uses_one_verified_source_index(self):
-        with mock.patch(
-            "swiss_sia.reference_model.sia4010.preparation_bundle._write_json"
-        ) as write_json, mock.patch(
-            "swiss_sia.reference_model.sia4010.preparation_bundle.GbxmlWriter.write",
-            side_effect=lambda model, path: Path(path),
+        with (
+            mock.patch(
+                "swiss_sia.reference_model.sia4010.preparation_bundle._write_json"
+            ) as write_json,
+            mock.patch(
+                "swiss_sia.reference_model.sia4010.preparation_bundle.GbxmlWriter.write",
+                side_effect=lambda model, path: Path(path),
+            ),
         ):
             receipt = prepare_all_classes(ROOT, ROOT)
         self.assertEqual(len(receipt.classes), 8)
@@ -383,12 +360,8 @@ class Sia4010PreparationBundleTests(unittest.TestCase):
             "ALL_CLASSES_PREPARED_WITH_BLOCKERS",
         )
         payload = write_json.call_args.args[1]
-        self.assertEqual(
-            payload["external_input_matrix"]["exact_case_count"], 34
-        )
-        self.assertEqual(
-            payload["external_input_matrix"]["catalog_input_count"], 17
-        )
+        self.assertEqual(payload["external_input_matrix"]["exact_case_count"], 34)
+        self.assertEqual(payload["external_input_matrix"]["catalog_input_count"], 17)
 
 
 if __name__ == "__main__":

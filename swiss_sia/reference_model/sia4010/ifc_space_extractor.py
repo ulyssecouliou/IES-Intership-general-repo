@@ -15,7 +15,6 @@ from typing import Dict, Iterable, List, Mapping, Optional, Tuple, Union
 
 from ..exceptions import ConfigurationError
 
-
 _ENTITY_RE = re.compile(r"^#(\d+)=([A-Z0-9_]+)\((.*)\);$")
 _REF_RE = re.compile(r"#(\d+)")
 
@@ -67,9 +66,7 @@ def _number_list(value: str) -> Tuple[float, ...]:
 
     return tuple(
         float(token)
-        for token in re.findall(
-            r"[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[Ee][-+]?\d+)?", value
-        )
+        for token in re.findall(r"[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[Ee][-+]?\d+)?", value)
     )
 
 
@@ -79,6 +76,7 @@ def _step_string(value: str) -> str:
     stripped = str(value).strip()
     if len(stripped) >= 2 and stripped[0] == stripped[-1] == "'":
         stripped = stripped[1:-1].replace("''", "'")
+
         def decode_x2(match: re.Match) -> str:
             """Decode one IFC \\X2\\ UTF-16BE escape sequence to text."""
 
@@ -100,14 +98,15 @@ def _step_string(value: str) -> str:
 def _polygon_area(points: Tuple[Tuple[float, float], ...]) -> float:
     """Return the absolute shoelace area of one closed or open footprint."""
 
-    return abs(
-        sum(
-            x0 * y1 - x1 * y0
-            for (x0, y0), (x1, y1) in zip(
-                points, points[1:] + points[:1]
+    return (
+        abs(
+            sum(
+                x0 * y1 - x1 * y0
+                for (x0, y0), (x1, y1) in zip(points, points[1:] + points[:1])
             )
         )
-    ) / 2.0
+        / 2.0
+    )
 
 
 @dataclass(frozen=True)
@@ -155,9 +154,7 @@ class AbstractBimIfcSpaceExtractor:
             raise ConfigurationError(
                 "Cannot read official example-building IFC: {}".format(exc)
             ) from exc
-        self.source_sha256 = hashlib.sha256(
-            self.path.read_bytes()
-        ).hexdigest()
+        self.source_sha256 = hashlib.sha256(self.path.read_bytes()).hexdigest()
         entities: Dict[int, Tuple[str, Tuple[str, ...]]] = {}
         for raw_line in raw.splitlines():
             line = raw_line.strip()
@@ -213,9 +210,7 @@ class AbstractBimIfcSpaceExtractor:
         _, args = self._entity(entity_id, "IFCDIRECTION")
         values = _number_list(args[0])
         if len(values) not in {2, 3}:
-            raise ConfigurationError(
-                "Unsupported IFC direction at #{}".format(entity_id)
-            )
+            raise ConfigurationError("Unsupported IFC direction at #{}".format(entity_id))
         return (
             float(values[0]),
             float(values[1]),
@@ -239,10 +234,7 @@ class AbstractBimIfcSpaceExtractor:
                 )
         if len(args) > 2 and args[2] != "$":
             direction_id = _reference(args[2])
-            if (
-                direction_id is None
-                or self._direction(direction_id) != (1.0, 0.0, 0.0)
-            ):
+            if direction_id is None or self._direction(direction_id) != (1.0, 0.0, 0.0):
                 raise ConfigurationError(
                     "Rotated IFC X axis is not supported at #{}".format(entity_id)
                 )
@@ -258,9 +250,7 @@ class AbstractBimIfcSpaceExtractor:
         axis_id = _reference(args[1])
         if axis_id is None:
             raise ConfigurationError(
-                "IFC local placement #{} has no relative placement".format(
-                    entity_id
-                )
+                "IFC local placement #{} has no relative placement".format(entity_id)
             )
         parent = self._placement(parent_id) if parent_id is not None else (0.0, 0.0, 0.0)
         relative = self._axis_translation(axis_id)
@@ -289,9 +279,7 @@ class AbstractBimIfcSpaceExtractor:
             )
         return solids[0]
 
-    def _extract_space(
-        self, entity_id: int, args: Tuple[str, ...]
-    ) -> IfcSpaceRecord:
+    def _extract_space(self, entity_id: int, args: Tuple[str, ...]) -> IfcSpaceRecord:
         """Extract one ``IfcSpace`` prism and verify its representation."""
 
         if len(args) < 8:
@@ -325,9 +313,7 @@ class AbstractBimIfcSpaceExtractor:
             raise ConfigurationError(
                 "IFC space {} has invalid extrusion depth".format(number)
             ) from exc
-        _, profile_args = self._entity(
-            profile_id, "IFCARBITRARYCLOSEDPROFILEDEF"
-        )
+        _, profile_args = self._entity(profile_id, "IFCARBITRARYCLOSEDPROFILEDEF")
         polyline_id = _reference(profile_args[2])
         if polyline_id is None:
             raise ConfigurationError(
@@ -340,9 +326,7 @@ class AbstractBimIfcSpaceExtractor:
             points.pop()
         if len(points) < 3:
             raise ConfigurationError(
-                "IFC space {} footprint has fewer than three vertices".format(
-                    number
-                )
+                "IFC space {} footprint has fewer than three vertices".format(number)
             )
         placement = self._placement(placement_id)
         solid_translation = self._axis_translation(solid_axis_id)
@@ -374,9 +358,7 @@ class AbstractBimIfcSpaceExtractor:
         """Return requested spaces by room number, rejecting missing/duplicates."""
 
         requested = (
-            {str(value) for value in space_numbers}
-            if space_numbers is not None
-            else None
+            {str(value) for value in space_numbers} if space_numbers is not None else None
         )
         records: Dict[str, IfcSpaceRecord] = {}
         for entity_id, (entity_type, args) in self.entities.items():
@@ -386,9 +368,7 @@ class AbstractBimIfcSpaceExtractor:
             if requested is not None and number not in requested:
                 continue
             if number in records:
-                raise ConfigurationError(
-                    "Duplicate IFC space number: {}".format(number)
-                )
+                raise ConfigurationError("Duplicate IFC space number: {}".format(number))
             records[number] = self._extract_space(entity_id, args)
         if requested is not None:
             missing = sorted(requested - set(records))

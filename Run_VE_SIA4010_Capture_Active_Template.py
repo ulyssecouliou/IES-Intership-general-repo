@@ -21,8 +21,23 @@ def _ask(prompt, title):
         root.destroy()
 
 
+def _purge_cached_reference_model_modules():
+    """Ensure VE does not reuse stale repository code between Run presses."""
+
+    for module_name in tuple(sys.modules):
+        if module_name == "swiss_sia.reference_model" or module_name.startswith(
+            "swiss_sia.reference_model."
+        ):
+            del sys.modules[module_name]
+
+
 def run():
     """Capture the saved project; never mark it qualified automatically."""
+
+    # VEScripts keeps one interpreter alive between Run-button presses. Drop
+    # cached repository modules so a corrected signature policy is always used
+    # without requiring the operator to restart VE.
+    _purge_cached_reference_model_modules()
 
     import iesve  # type: ignore
 

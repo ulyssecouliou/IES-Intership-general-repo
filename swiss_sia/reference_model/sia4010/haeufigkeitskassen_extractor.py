@@ -54,8 +54,7 @@ recovered even when the workbook was cached without a recalculation.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple
-
+from typing import Any, Dict, List, Optional, Tuple
 
 #: Accepted spellings of the frequency-class sheet, in lookup order. The
 #: misspelled form is real and appears in the official Tests 4, 6 and 7 files.

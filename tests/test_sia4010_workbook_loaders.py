@@ -39,9 +39,15 @@ def _build_fixture(name: str) -> Path:
     ws["B3"] = "1E"
     ws["D3"] = "kWh"
     for col, label in {
-        "A": "Month", "B": "Testprogramm", "C": "IDA ICE", "D": "EXCEL SIA 380/2",
-        "E": "Energy+/OpenStudio", "F": "EDSL-Tas", "G": "Mittelwert",
-        "H": "obere Grenze", "I": "untere Grenze",
+        "A": "Month",
+        "B": "Testprogramm",
+        "C": "IDA ICE",
+        "D": "EXCEL SIA 380/2",
+        "E": "Energy+/OpenStudio",
+        "F": "EDSL-Tas",
+        "G": "Mittelwert",
+        "H": "obere Grenze",
+        "I": "untere Grenze",
     }.items():
         ws["{}5".format(col)] = label
     ws.append([])  # spacer not used; explicit rows below
@@ -53,8 +59,12 @@ def _build_fixture(name: str) -> Path:
     ws["L3"] = 600
     ws["N3"] = "kWh"
     for col, label in {
-        "K": "Month", "L": "Testprogramm", "M": "Daten Norm EN ISO",
-        "N": "IDA ICE", "O": "EXCEL SIA 380/2", "P": "Energy+/OpenStudio",
+        "K": "Month",
+        "L": "Testprogramm",
+        "M": "Daten Norm EN ISO",
+        "N": "IDA ICE",
+        "O": "EXCEL SIA 380/2",
+        "P": "Energy+/OpenStudio",
     }.items():
         ws["{}5".format(col)] = label
     ws["K6"], ws["M6"] = 1, 1005.0
@@ -88,12 +98,20 @@ class Sia4010WorkbookLoaderTests(unittest.TestCase):
 
         def observe(value):
             return ObservedResult(
-                test_id=month1.test_id, case_id=month1.case_id, metric=month1.metric,
-                value=value, unit="kWh", evidence_locator="VE APS",
+                test_id=month1.test_id,
+                case_id=month1.case_id,
+                metric=month1.metric,
+                value=value,
+                unit="kWh",
+                evidence_locator="VE APS",
             )
 
-        self.assertEqual(comparator.compare_one(month1, observe(500.0)).status, ComparisonStatus.PASS)
-        self.assertEqual(comparator.compare_one(month1, observe(600.0)).status, ComparisonStatus.FAIL)
+        self.assertEqual(
+            comparator.compare_one(month1, observe(500.0)).status, ComparisonStatus.PASS
+        )
+        self.assertEqual(
+            comparator.compare_one(month1, observe(600.0)).status, ComparisonStatus.FAIL
+        )
 
 
 def _build_test2_fixture(name: str) -> Path:
@@ -104,8 +122,11 @@ def _build_test2_fixture(name: str) -> Path:
     ws = wb.active
     ws.title = "Zusammenfassung"
     for col, label in {
-        "D": "Testprogramm", "E": "IDA_ICE", "M": "Mittelwert",
-        "N": "obere Grenze", "O": "untere Grenze",
+        "D": "Testprogramm",
+        "E": "IDA_ICE",
+        "M": "Mittelwert",
+        "N": "obere Grenze",
+        "O": "untere Grenze",
     }.items():
         ws["{}9".format(col)] = label
     ws["A12"], ws["D12"] = "Fall", "Jahresenergie solarer Waermeeintrag"
@@ -140,7 +161,10 @@ def _build_test3_fixture(name: str) -> Path:
     ws.title = "Zusammenfassung"
     ws["A8"], ws["F8"] = "Jahreswerte", "kWh"
     ws["A10"], ws["O10"], ws["P10"], ws["Q10"] = (
-        "Testfaelle", "Mittelwert", "Obere Grenze", "Untere Grenze",
+        "Testfaelle",
+        "Mittelwert",
+        "Obere Grenze",
+        "Untere Grenze",
     )
     ws["A11"], ws["O11"], ws["P11"], ws["Q11"] = "Test 3 A", 665.4, 678.2, 652.6
     ws["A12"], ws["O12"], ws["P12"], ws["Q12"] = "Test 3 B", 1008.2, 1033.7, 982.7
@@ -174,14 +198,25 @@ def _build_test4_fixture(name: str) -> Path:
     ws = wb.active
     ws.title = "Zusammenfassung"
     ws["A8"], ws["T8"], ws["U8"], ws["V8"] = (
-        "Jahreswerte", "Mittelwert", "obere Grenze", "untere Grenze",
+        "Jahreswerte",
+        "Mittelwert",
+        "obere Grenze",
+        "untere Grenze",
     )
     ws["A9"] = "Testgroessen"  # section header, no band
     ws["A10"], ws["I10"], ws["T10"], ws["U10"], ws["V10"] = (
-        "Energiebedarf Ventilatoren", "kWh", 829.5, 970.5, 688.5,
+        "Energiebedarf Ventilatoren",
+        "kWh",
+        829.5,
+        970.5,
+        688.5,
     )
     ws["A11"], ws["I11"], ws["T11"], ws["U11"], ws["V11"] = (
-        "Waermezufuhr Lufterwaermer", "kWh", 2847.0, 3252.0, 2442.0,
+        "Waermezufuhr Lufterwaermer",
+        "kWh",
+        2847.0,
+        3252.0,
+        2442.0,
     )
     ws["A13"] = "Diagnosegroessen"  # section header -> stops collection
     ws["A14"], ws["I14"] = "Energiebedarf Zuluft", "kWh"  # diagnostic, no band
@@ -250,14 +285,26 @@ def _build_test6_fixture(name: str) -> Path:
     ws = wb.active
     ws.title = "Zusammenfassung"
     ws["E8"], ws["K8"], ws["L8"], ws["M8"] = (
-        "Testprogramm", "Mittelwert", "obere Grenze", "untere Grenze",
+        "Testprogramm",
+        "Mittelwert",
+        "obere Grenze",
+        "untere Grenze",
     )
     ws["A9"] = "Jahreswerte"
     ws["A10"], ws["B10"], ws["J10"], ws["K10"], ws["L10"], ws["M10"] = (
-        "Testgroessen", "Energiebedarf Ventilatoren", "kWh", 3854.0, 4387.0, 3321.0,
+        "Testgroessen",
+        "Energiebedarf Ventilatoren",
+        "kWh",
+        3854.0,
+        4387.0,
+        3321.0,
     )
     ws["B11"], ws["J11"], ws["K11"], ws["L11"], ws["M11"] = (
-        "Waermezufuhr Lufterwaermer", "kWh", 1789.0, 2180.0, 1398.0,
+        "Waermezufuhr Lufterwaermer",
+        "kWh",
+        1789.0,
+        2180.0,
+        1398.0,
     )
     ws["A12"] = "Diagnosegroessen"  # section -> stops
     ws["B13"], ws["J13"] = "Energiebedarf Zuluft", "kWh"  # diagnostic, no band
@@ -289,14 +336,26 @@ def _build_test7_fixture(name: str) -> Path:
     ws = wb.active
     ws.title = "Zusammenfassung"
     ws["E7"], ws["L7"], ws["M7"], ws["N7"] = (
-        "Testprogramm", "Mittelwert", "Obere Grenze", "Untere Grenze",
+        "Testprogramm",
+        "Mittelwert",
+        "Obere Grenze",
+        "Untere Grenze",
     )
     ws["A8"], ws["B8"], ws["K8"], ws["L8"], ws["M8"], ws["N8"] = (
-        "Testgroessen", "Zugefuehrte elektrische Energie", "kWh", 3929.0, 4484.0, 3374.0,
+        "Testgroessen",
+        "Zugefuehrte elektrische Energie",
+        "kWh",
+        3929.0,
+        4484.0,
+        3374.0,
     )
     # row 9 blank gap (sub-section separator); row 10 repeats the label
     ws["B10"], ws["K10"], ws["L10"], ws["M10"], ws["N10"] = (
-        "Zugefuehrte elektrische Energie", "kWh", 8081.0, 9374.0, 8081.0,
+        "Zugefuehrte elektrische Energie",
+        "kWh",
+        8081.0,
+        9374.0,
+        8081.0,
     )
     path = TEST_OUTPUT_ROOT / name
     wb.save(path)

@@ -44,27 +44,27 @@ requirement, and the only way to stay readable on a ttk theme that ignores
 # Brand palette -- read from the stylesheet
 # ---------------------------------------------------------------------------
 
-NAVY = '#1a2b4b'          #: Bands, headings, table headers.
-NAVY_DEEP = '#193054'     #: Darker variant: rules and footers.
-NAVY_TINT = '#2c3f63'     #: Derived: NAVY lightened, for band sub-text.
-ACCENT = '#0f54e8'        #: --ha-accent: links, emphasis, primary action.
-ACCENT_BRIGHT = '#4162fd'  #: Secondary accent, hover state.
-ACCENT_DEEP = '#0b3fb0'   #: Derived: ACCENT darkened, pressed state.
-LIGHT_BLUE = '#00abde'    #: --lightblue.
-BLUE_TINT = '#e8f1fb'     #: --lightblue-fade: table header ground.
-BLUE_TINT_DEEP = '#d3e3f7'  #: Derived: BLUE_TINT darkened, selected row.
-LIGHT_GREY = '#f5f7f9'    #: --light-grey: page ground, row striping.
-BORDER_GREY = '#dce0eb'   #: Table hairlines, card edges.
-BORDER_GREY_DEEP = '#c3cad9'  #: Derived: stronger edge where two cards meet.
-TEXT = '#384656'          #: Body text.
-TEXT_MUTED = '#6b7a8f'    #: Captions, table footnotes.
-TEXT_ON_DARK = '#eef2f8'  #: Derived: body text on the navy band.
-WHITE = '#ffffff'
+NAVY = "#1a2b4b"  #: Bands, headings, table headers.
+NAVY_DEEP = "#193054"  #: Darker variant: rules and footers.
+NAVY_TINT = "#2c3f63"  #: Derived: NAVY lightened, for band sub-text.
+ACCENT = "#0f54e8"  #: --ha-accent: links, emphasis, primary action.
+ACCENT_BRIGHT = "#4162fd"  #: Secondary accent, hover state.
+ACCENT_DEEP = "#0b3fb0"  #: Derived: ACCENT darkened, pressed state.
+LIGHT_BLUE = "#00abde"  #: --lightblue.
+BLUE_TINT = "#e8f1fb"  #: --lightblue-fade: table header ground.
+BLUE_TINT_DEEP = "#d3e3f7"  #: Derived: BLUE_TINT darkened, selected row.
+LIGHT_GREY = "#f5f7f9"  #: --light-grey: page ground, row striping.
+BORDER_GREY = "#dce0eb"  #: Table hairlines, card edges.
+BORDER_GREY_DEEP = "#c3cad9"  #: Derived: stronger edge where two cards meet.
+TEXT = "#384656"  #: Body text.
+TEXT_MUTED = "#6b7a8f"  #: Captions, table footnotes.
+TEXT_ON_DARK = "#eef2f8"  #: Derived: body text on the navy band.
+WHITE = "#ffffff"
 
-GREEN = '#11bb94'         #: Pass.
-RED = '#de3f3f'           #: Fail.
-AMBER = '#ff973f'         #: Reservation, attention.
-NEUTRAL_GREY = '#8b98aa'  #: Not evaluated.
+GREEN = "#11bb94"  #: Pass.
+RED = "#de3f3f"  #: Fail.
+AMBER = "#ff973f"  #: Reservation, attention.
+NEUTRAL_GREY = "#8b98aa"  #: Not evaluated.
 
 # ---------------------------------------------------------------------------
 # Status semantics
@@ -75,24 +75,24 @@ NEUTRAL_GREY = '#8b98aa'  #: Not evaluated.
 # of the three -- and NOT_CHECKABLE rendering as anything failure-like is a
 # misreport: nothing was compared, so nothing failed.
 
-PASS = 'pass'
-FAIL = 'fail'
-WARNING = 'warning'
-NOT_CHECKABLE = 'not_checkable'
-NOT_EVALUATED = 'not_evaluated'
-NOT_SIGNED = 'not_signed'
+PASS = "pass"
+FAIL = "fail"
+WARNING = "warning"
+NOT_CHECKABLE = "not_checkable"
+NOT_EVALUATED = "not_evaluated"
+NOT_SIGNED = "not_signed"
 
 STATUSES = (PASS, FAIL, WARNING, NOT_CHECKABLE, NOT_EVALUATED, NOT_SIGNED)
 
 #: Row grounds. Pale enough to stay legible under dark text -- these sit
 #: behind body copy, not beside it.
 STATUS_GROUND = {
-    PASS: '#e6f7f1',
-    FAIL: '#fdeaea',
-    WARNING: '#fff4e8',
-    NOT_CHECKABLE: '#eef1f6',
+    PASS: "#e6f7f1",
+    FAIL: "#fdeaea",
+    WARNING: "#fff4e8",
+    NOT_CHECKABLE: "#eef1f6",
     NOT_EVALUATED: LIGHT_GREY,
-    NOT_SIGNED: '#eef1f6',
+    NOT_SIGNED: "#eef1f6",
 }
 
 #: Stroke colour, for hairlines, dots and the left edge of a status card.
@@ -130,10 +130,10 @@ STATUS_STROKE = {
 # long-standing token used by the navigator too, so raising it is a decision
 # for the house style, not a side effect of this table.
 
-GREEN_TEXT = '#0a7059'    #: Derived: GREEN x0.60. 6.04:1 on white.
-RED_TEXT = '#9b2c2c'      #: Derived: RED x0.70. 7.53:1 on white.
-AMBER_TEXT = '#945825'    #: Derived: AMBER x0.58. 5.70:1 on white.
-NEUTRAL_TEXT = '#646d7a'  #: Derived: NEUTRAL_GREY x0.72. 5.24:1 on white.
+GREEN_TEXT = "#0a7059"  #: Derived: GREEN x0.60. 6.04:1 on white.
+RED_TEXT = "#9b2c2c"  #: Derived: RED x0.70. 7.53:1 on white.
+AMBER_TEXT = "#945825"  #: Derived: AMBER x0.58. 5.70:1 on white.
+NEUTRAL_TEXT = "#646d7a"  #: Derived: NEUTRAL_GREY x0.72. 5.24:1 on white.
 
 #: Colour for a verdict WORD, or any status-carrying text. Never use
 #: STATUS_STROKE for type.
@@ -149,34 +149,34 @@ STATUS_TEXT = {
 #: Deliberate redundancy with colour -- never information by colour alone.
 #: Taken verbatim by the navigator and by the PDF, so they cannot drift.
 STATUS_SYMBOL = {
-    PASS: u'✔',           # heavy check
-    FAIL: u'✘',           # heavy ballot X
-    WARNING: u'⚠',        # warning sign
-    NOT_CHECKABLE: u'—',  # em dash
-    NOT_EVALUATED: u'·',  # middle dot
-    NOT_SIGNED: u'○',     # open circle
+    PASS: "✔",  # heavy check
+    FAIL: "✘",  # heavy ballot X
+    WARNING: "⚠",  # warning sign
+    NOT_CHECKABLE: "—",  # em dash
+    NOT_EVALUATED: "·",  # middle dot
+    NOT_SIGNED: "○",  # open circle
 }
 
 #: ASCII variant, for the VEScripts console, which is not UTF-8.
 STATUS_SYMBOL_ASCII = {
-    PASS: 'OK',
-    FAIL: 'NO',
-    WARNING: '!',
-    NOT_CHECKABLE: '--',
-    NOT_EVALUATED: '.',
-    NOT_SIGNED: 'o',
+    PASS: "OK",
+    FAIL: "NO",
+    WARNING: "!",
+    NOT_CHECKABLE: "--",
+    NOT_EVALUATED: ".",
+    NOT_SIGNED: "o",
 }
 
 #: Legacy colour names, kept ONLY as an input mapping for callers that still
 #: pass 'vert' / 'rouge' / 'gris'. Nothing renders from these; they resolve to
 #: a status above. Delete when the last caller is converted.
 LEGACY_COLOUR_TO_STATUS = {
-    'vert': PASS,
-    'rouge': FAIL,
-    'gris': NOT_EVALUATED,
-    'green': PASS,
-    'red': FAIL,
-    'grey': NOT_EVALUATED,
+    "vert": PASS,
+    "rouge": FAIL,
+    "gris": NOT_EVALUATED,
+    "green": PASS,
+    "red": FAIL,
+    "grey": NOT_EVALUATED,
 }
 
 # ---------------------------------------------------------------------------
@@ -189,18 +189,18 @@ LEGACY_COLOUR_TO_STATUS = {
 #: cannot be embedded (see the module note) and Segoe UI is a Windows-only
 #: assumption for a file a client may open anywhere. Recorded here so the choice
 #: has one home rather than 285 scattered format dictionaries.
-EXCEL_FONT = 'Calibri'
+EXCEL_FONT = "Calibri"
 
 #: See the licence reservation in the module note: Camphor Pro is not
 #: embeddable, so reports set Helvetica.
-REPORT_TITLE_FONT = 'Helvetica-Bold'
-REPORT_BODY_FONT = 'Helvetica'
-REPORT_BODY_BOLD_FONT = 'Helvetica-Bold'
+REPORT_TITLE_FONT = "Helvetica-Bold"
+REPORT_BODY_FONT = "Helvetica"
+REPORT_BODY_BOLD_FONT = "Helvetica-Bold"
 
 #: Screen face. Camphor Pro is commercial; Segoe UI is the closest thing
 #: present out of the box on Windows, where VE runs.
-UI_FONT = 'Segoe UI'
-UI_FONT_MONO = 'Consolas'
+UI_FONT = "Segoe UI"
+UI_FONT_MONO = "Consolas"
 
 #: A modular scale, ratio 1.2 rounded to whole points. Sizes chosen ad hoc are
 #: what makes a hierarchy read as noise.
@@ -230,18 +230,18 @@ LINE_HEIGHT = 1.35
 #: One scale, 4 px base. Every gap in the interface is a member of this scale
 #: -- that is what makes the layout look deliberate rather than assembled.
 SPACE = {
-    'xs': 4,
-    'sm': 8,
-    'md': 12,
-    'lg': 16,
-    'xl': 24,
-    'xxl': 32,
+    "xs": 4,
+    "sm": 8,
+    "md": 12,
+    "lg": 16,
+    "xl": 24,
+    "xxl": 32,
 }
 
 #: Card and band padding, as (horizontal, vertical).
-PAD_BAND = (SPACE['xl'], SPACE['lg'])
-PAD_CARD = (SPACE['lg'], SPACE['md'])
-PAD_CONTROL = (SPACE['md'], SPACE['sm'])
+PAD_BAND = (SPACE["xl"], SPACE["lg"])
+PAD_CARD = (SPACE["lg"], SPACE["md"])
+PAD_CONTROL = (SPACE["md"], SPACE["sm"])
 
 #: Table row height. Generous: the house style divides by space.
 ROW_HEIGHT = 28
@@ -327,7 +327,7 @@ def symbol(status, ascii_only=False):
     """
     table = STATUS_SYMBOL_ASCII if ascii_only else STATUS_SYMBOL
     resolved = _resolve(status)
-    return table[resolved] if resolved else '?'
+    return table[resolved] if resolved else "?"
 
 
 def space(*names):

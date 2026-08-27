@@ -13,7 +13,10 @@ import unittest
 from collections import Counter
 from pathlib import Path
 
-from swiss_sia.reference_model.sia4010.bundle_builder import build_manifest, write_manifest
+from swiss_sia.reference_model.sia4010.bundle_builder import (
+    build_manifest,
+    write_manifest,
+)
 from swiss_sia.reference_model.sia4010.compliance_comparator import (
     ComparisonStatus,
     Sia4010ComplianceComparator,
@@ -62,7 +65,11 @@ class Test1ParserRegressionTests(unittest.TestCase):
         )
 
     def test_peak_load_bands_are_labelled_and_united(self):
-        peaks = [b for b in parse_test1_reference_bands(OFFICIAL_TEST1) if "peak" in b.metric.lower()]
+        peaks = [
+            b
+            for b in parse_test1_reference_bands(OFFICIAL_TEST1)
+            if "peak" in b.metric.lower()
+        ]
         self.assertEqual(len(peaks), 2)
         for band in peaks:
             self.assertTrue(band.metric.lower().startswith("table 31"))
@@ -203,7 +210,9 @@ class Test1BundleWiringTests(unittest.TestCase):
         runner = Sia4010TestRunner()
         bands = runner.expected_bands(bundle, "1")
         covered = bands[:5]
-        mapping = {b.key: ((b.lower_bound + b.upper_bound) / 2.0, b.unit) for b in covered}
+        mapping = {
+            b.key: ((b.lower_bound + b.upper_bound) / 2.0, b.unit) for b in covered
+        }
         observed = build_observed_results(bands, DictResultSource(mapping))
         evaluation = runner.evaluate_test(bundle, "1", observed)
         self.assertEqual(evaluation.counts["PASS"], 5)

@@ -5,7 +5,7 @@ import hashlib
 import json
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Tuple, Union
 
 from ..exceptions import ConfigurationError
 from .expected_results import ExpectedResult
@@ -101,9 +101,7 @@ class Sia4010TestLoader:
             declared_checksum = str(item["sha256"]).lower()
             actual_checksum = self._sha256(path)
             if actual_checksum != declared_checksum:
-                raise ConfigurationError(
-                    "Checksum mismatch for {}".format(relative)
-                )
+                raise ConfigurationError("Checksum mismatch for {}".format(relative))
             files.append(
                 BundleFile(
                     path=path,
@@ -130,7 +128,9 @@ class Sia4010TestLoader:
         changing the comparator or workflow contracts.
         """
 
-        result_files = [item for item in bundle.files if item.role == "expected_results_csv"]
+        result_files = [
+            item for item in bundle.files if item.role == "expected_results_csv"
+        ]
         if not result_files:
             return ()
         results: List[ExpectedResult] = []

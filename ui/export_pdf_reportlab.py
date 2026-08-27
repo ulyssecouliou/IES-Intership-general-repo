@@ -35,19 +35,24 @@ from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.units import cm
 from reportlab.platypus import (
-    SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, PageBreak,
+    SimpleDocTemplate,
+    Table,
+    TableStyle,
+    Paragraph,
+    Spacer,
+    PageBreak,
 )
 
 from ui import design as design
 from ui import verdict_view as vue
-
 
 # Couleurs PDF -- même contrat que `COULEUR_FOND_PAR_VERDICT` de
 # `ui/dialog_tkinter.py`, redondant avec le texte du verdict (jamais
 # uniquement la couleur -- accessibilité).
 _COULEUR_PDF_PAR_VERDICT = dict(
     (couleur, colors.HexColor(design.ground(couleur)))
-    for couleur in ('vert', 'rouge', 'gris'))
+    for couleur in ("vert", "rouge", "gris")
+)
 
 # ASCII plutot que des glyphes : Helvetica n a pas de coche ni de croix, et
 # ReportLab afficherait un carre noir. Le symbole reste la, ce qui compte
@@ -79,25 +84,31 @@ def _style_tableau(nb_lignes, couleurs_lignes, largeurs_speciales=None):
         list: Commandes de TableStyle.
     """
     style = [
-        ('BACKGROUND', (0, 0), (-1, 0), _NAVY),
-        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
-        ('FONTNAME', (0, 0), (-1, 0), design.REPORT_TITLE_FONT),
-        ('FONTNAME', (0, 1), (-1, -1), design.REPORT_BODY_FONT),
-        ('FONTSIZE', (0, 0), (-1, -1), design.REPORT_SIZE_TABLE),
-        ('TEXTCOLOR', (0, 1), (-1, -1), _TEXTE),
-        ('GRID', (0, 0), (-1, -1), design.RULE_PT, _BORDURE),
-        ('LINEBELOW', (0, 0), (-1, 0), design.HEADER_RULE_PT, _NAVY),
-        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-        ('TOPPADDING', (0, 0), (-1, -1), 3),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
-        ('LEFTPADDING', (0, 0), (-1, -1), 5),
+        ("BACKGROUND", (0, 0), (-1, 0), _NAVY),
+        ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+        ("FONTNAME", (0, 0), (-1, 0), design.REPORT_TITLE_FONT),
+        ("FONTNAME", (0, 1), (-1, -1), design.REPORT_BODY_FONT),
+        ("FONTSIZE", (0, 0), (-1, -1), design.REPORT_SIZE_TABLE),
+        ("TEXTCOLOR", (0, 1), (-1, -1), _TEXTE),
+        ("GRID", (0, 0), (-1, -1), design.RULE_PT, _BORDURE),
+        ("LINEBELOW", (0, 0), (-1, 0), design.HEADER_RULE_PT, _NAVY),
+        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+        ("TOPPADDING", (0, 0), (-1, -1), 3),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 3),
+        ("LEFTPADDING", (0, 0), (-1, -1), 5),
     ]
     for indice in range(1, nb_lignes + 1):
         if indice % 2 == 0:
-            style.append(('BACKGROUND', (0, indice), (-1, indice), _GRIS_CLAIR))
+            style.append(("BACKGROUND", (0, indice), (-1, indice), _GRIS_CLAIR))
     for indice, couleur in enumerate(couleurs_lignes, start=1):
-        style.append(('BACKGROUND', (0, indice), (-1, indice),
-                      _COULEUR_PDF_PAR_VERDICT.get(couleur, _GRIS_CLAIR)))
+        style.append(
+            (
+                "BACKGROUND",
+                (0, indice),
+                (-1, indice),
+                _COULEUR_PDF_PAR_VERDICT.get(couleur, _GRIS_CLAIR),
+            )
+        )
     return style
 
 
@@ -111,33 +122,42 @@ def _style_feuille():
         StyleSheet1: Feuille prete a l emploi.
     """
     styles = getSampleStyleSheet()
-    styles['Title'].fontName = design.REPORT_TITLE_FONT
-    styles['Title'].fontSize = design.REPORT_SIZE_TITLE
-    styles['Title'].textColor = _NAVY
-    styles['Title'].alignment = 0          # ferre a gauche, comme le site
-    styles['Title'].spaceAfter = 4
+    styles["Title"].fontName = design.REPORT_TITLE_FONT
+    styles["Title"].fontSize = design.REPORT_SIZE_TITLE
+    styles["Title"].textColor = _NAVY
+    styles["Title"].alignment = 0  # ferre a gauche, comme le site
+    styles["Title"].spaceAfter = 4
 
-    for nom in ('Heading2', 'Heading3'):
+    for nom in ("Heading2", "Heading3"):
         styles[nom].fontName = design.REPORT_TITLE_FONT
         styles[nom].textColor = _NAVY
-    styles['Heading2'].fontSize = design.REPORT_SIZE_SUBTITLE
-    styles['Heading3'].fontSize = design.REPORT_SIZE_SECTION
+    styles["Heading2"].fontSize = design.REPORT_SIZE_SUBTITLE
+    styles["Heading3"].fontSize = design.REPORT_SIZE_SECTION
 
-    for nom in ('Normal', 'BodyText'):
+    for nom in ("Normal", "BodyText"):
         styles[nom].fontName = design.REPORT_BODY_FONT
         styles[nom].fontSize = design.REPORT_SIZE_BODY
         styles[nom].leading = design.REPORT_SIZE_BODY * design.LINE_HEIGHT
         styles[nom].textColor = _TEXTE
 
-    styles.add(ParagraphStyle(
-        'IESNote', parent=styles['Normal'],
-        fontSize=design.REPORT_SIZE_NOTE,
-        leading=design.REPORT_SIZE_NOTE * design.LINE_HEIGHT,
-        textColor=_TEXTE_ATTENUE))
-    styles.add(ParagraphStyle(
-        'IESSousTitre', parent=styles['Normal'],
-        fontSize=design.REPORT_SIZE_SUBTITLE, textColor=_ACCENT,
-        spaceAfter=10))
+    styles.add(
+        ParagraphStyle(
+            "IESNote",
+            parent=styles["Normal"],
+            fontSize=design.REPORT_SIZE_NOTE,
+            leading=design.REPORT_SIZE_NOTE * design.LINE_HEIGHT,
+            textColor=_TEXTE_ATTENUE,
+        )
+    )
+    styles.add(
+        ParagraphStyle(
+            "IESSousTitre",
+            parent=styles["Normal"],
+            fontSize=design.REPORT_SIZE_SUBTITLE,
+            textColor=_ACCENT,
+            spaceAfter=10,
+        )
+    )
     return styles
 
 
@@ -165,58 +185,76 @@ def _bandeau(canevas, document):
     canevas.setFont(design.REPORT_BODY_FONT, design.REPORT_SIZE_NOTE)
     canevas.setFillColor(_TEXTE_ATTENUE)
     canevas.drawString(
-        design.MARGIN_CM * cm, 0.85 * cm,
-        u'IES — Validation SIA 4010 — document genere, non certifie')
+        design.MARGIN_CM * cm,
+        0.85 * cm,
+        "IES — Validation SIA 4010 — document genere, non certifie",
+    )
     canevas.drawRightString(
-        largeur - design.MARGIN_CM * cm, 0.85 * cm, u'page %d' % document.page)
+        largeur - design.MARGIN_CM * cm, 0.85 * cm, "page %d" % document.page
+    )
     canevas.setStrokeColor(_BORDURE)
     canevas.setLineWidth(design.RULE_PT)
-    canevas.line(design.MARGIN_CM * cm, 1.15 * cm,
-                 largeur - design.MARGIN_CM * cm, 1.15 * cm)
+    canevas.line(
+        design.MARGIN_CM * cm, 1.15 * cm, largeur - design.MARGIN_CM * cm, 1.15 * cm
+    )
     canevas.restoreState()
 
 
 def _entete(vue_test1, styles):
-    verdict_global = vue_test1['verdict_global']
+    verdict_global = vue_test1["verdict_global"]
     elements = [
-        Paragraph(u'Rapport de validation SIA 4010 -- ' +
-                  (vue_test1.get('test_id') or 'Test 1'), styles['Title']),
+        Paragraph(
+            "Rapport de validation SIA 4010 -- " + (vue_test1.get("test_id") or "Test 1"),
+            styles["Title"],
+        ),
         Spacer(1, 0.3 * cm),
         Paragraph(
-            u'Verdict global : <b>{0}</b> -- {1}'.format(
-                verdict_global['texte'], _SYMBOLE_PAR_VERDICT.get(
-                    verdict_global['couleur'], u'?')),
-            styles['Normal']),
-        Paragraph(u'Article : ' + verdict_global['article'], styles['Normal']),
+            "Verdict global : <b>{0}</b> -- {1}".format(
+                verdict_global["texte"],
+                _SYMBOLE_PAR_VERDICT.get(verdict_global["couleur"], "?"),
+            ),
+            styles["Normal"],
+        ),
+        Paragraph("Article : " + verdict_global["article"], styles["Normal"]),
         Spacer(1, 0.5 * cm),
     ]
     return elements
 
 
 def _tableau_classes(vue_test1, styles):
-    elements = [Paragraph(u'Classes de validation concernées', styles['Heading2'])]
-    donnees = [[u'Classe', u'Test requis', u'Verdict']]
+    elements = [Paragraph("Classes de validation concernées", styles["Heading2"])]
+    donnees = [["Classe", "Test requis", "Verdict"]]
     couleurs_lignes = []
-    for ligne in vue_test1['classes']:
-        donnees.append([
-            ligne['classe'],
-            u'Oui' if ligne['test_requis'] else u'Non',
-            _SYMBOLE_PAR_VERDICT.get(ligne['couleur'], u'?') + u' ' + ligne['texte_verdict'],
-        ])
-        couleurs_lignes.append(ligne['couleur'])
+    for ligne in vue_test1["classes"]:
+        donnees.append(
+            [
+                ligne["classe"],
+                "Oui" if ligne["test_requis"] else "Non",
+                _SYMBOLE_PAR_VERDICT.get(ligne["couleur"], "?")
+                + " "
+                + ligne["texte_verdict"],
+            ]
+        )
+        couleurs_lignes.append(ligne["couleur"])
 
     tableau = Table(donnees, colWidths=[3 * cm, 3 * cm, 10 * cm], repeatRows=1)
     style = _style_tableau(len(donnees) - 1, couleurs_lignes)
     tableau.setStyle(TableStyle(style))
     elements.append(tableau)
-    if vue_test1['classes']:
-        elements.append(Paragraph(
-            u'Article (classes concernées) : ' + vue_test1['classes'][0]['article'],
-            styles['Normal']))
+    if vue_test1["classes"]:
+        elements.append(
+            Paragraph(
+                "Article (classes concernées) : " + vue_test1["classes"][0]["article"],
+                styles["Normal"],
+            )
+        )
     else:
-        elements.append(Paragraph(
-            u'Aucune classe concernée trouvée dans le JSON du moteur.',
-            styles['Normal']))
+        elements.append(
+            Paragraph(
+                "Aucune classe concernée trouvée dans le JSON du moteur.",
+                styles["Normal"],
+            )
+        )
     elements.append(Spacer(1, 0.5 * cm))
     return elements
 
@@ -227,8 +265,8 @@ def _tableau_lignes_par_grandeur_cas(vue_test1, styles):
     elements = []
     groupes = []
     index_par_cle = {}
-    for ligne in vue_test1['lignes']:
-        cle = (ligne['grandeur'], ligne['cas'])
+    for ligne in vue_test1["lignes"]:
+        cle = (ligne["grandeur"], ligne["cas"])
         if cle not in index_par_cle:
             index_par_cle[cle] = len(groupes)
             groupes.append([])
@@ -236,29 +274,37 @@ def _tableau_lignes_par_grandeur_cas(vue_test1, styles):
 
     for groupe in groupes:
         premiere = groupe[0]
-        elements.append(Paragraph(
-            premiere['grandeur_libelle'] + u' -- cas ' + premiere['cas'],
-            styles['Heading3']))
-        donnees = [[u'Période', u'Valeur candidate', u'Verdict']]
+        elements.append(
+            Paragraph(
+                premiere["grandeur_libelle"] + " -- cas " + premiere["cas"],
+                styles["Heading3"],
+            )
+        )
+        donnees = [["Période", "Valeur candidate", "Verdict"]]
         couleurs_lignes = []
         for ligne in groupe:
-            donnees.append([
-                ligne['periode_libelle'],
-                ligne['valeur_candidate_affichee'],
-                _SYMBOLE_PAR_VERDICT.get(ligne['couleur'], u'?') + u' ' + ligne['texte_verdict'],
-            ])
-            couleurs_lignes.append(ligne['couleur'])
+            donnees.append(
+                [
+                    ligne["periode_libelle"],
+                    ligne["valeur_candidate_affichee"],
+                    _SYMBOLE_PAR_VERDICT.get(ligne["couleur"], "?")
+                    + " "
+                    + ligne["texte_verdict"],
+                ]
+            )
+            couleurs_lignes.append(ligne["couleur"])
         tableau = Table(donnees, colWidths=[4 * cm, 4 * cm, 8 * cm], repeatRows=1)
-        tableau.setStyle(TableStyle(
-            _style_tableau(len(donnees) - 1, couleurs_lignes)))
+        tableau.setStyle(TableStyle(_style_tableau(len(donnees) - 1, couleurs_lignes)))
         elements.append(tableau)
         # Article et provenance en style de note : présents et vérifiables,
         # sans concurrencer les chiffres à la lecture.
-        elements.append(Paragraph(u'Article : ' + premiere['article'],
-                                  styles['IESNote']))
-        elements.append(Paragraph(
-            u'Source de la référence : ' + premiere['source_valeur_reference'],
-            styles['IESNote']))
+        elements.append(Paragraph("Article : " + premiere["article"], styles["IESNote"]))
+        elements.append(
+            Paragraph(
+                "Source de la référence : " + premiere["source_valeur_reference"],
+                styles["IESNote"],
+            )
+        )
         elements.append(Spacer(1, 0.4 * cm))
     return elements
 
@@ -275,40 +321,47 @@ def _synthese_classes(vues, styles):
     lignes_synthese = vue.construire_synthese_classes(vues)
 
     elements = [
-        Paragraph(u'Validation SIA 4010 — synthèse par classe', styles['Title']),
+        Paragraph("Validation SIA 4010 — synthèse par classe", styles["Title"]),
         Spacer(1, 0.3 * cm),
         Paragraph(
-            u'Tests présents dans ce dossier : ' +
-            u', '.join(str(v.get('test_id') or '?') for v in vues),
-            styles['Normal']),
+            "Tests présents dans ce dossier : "
+            + ", ".join(str(v.get("test_id") or "?") for v in vues),
+            styles["Normal"],
+        ),
         Spacer(1, 0.4 * cm),
     ]
 
-    donnees = [[u'Classe', u'Tests exigés', u'Couverts', u'Verdict']]
+    donnees = [["Classe", "Tests exigés", "Couverts", "Verdict"]]
     couleurs_lignes = []
     for ligne in lignes_synthese:
-        donnees.append([
-            ligne['classe'],
-            u', '.join(ligne['tests_exiges']),
-            u', '.join(ligne['tests_couverts']) or u'—',
-            Paragraph(ligne['texte_verdict'], styles['BodyText']),
-        ])
-        couleurs_lignes.append(ligne['couleur'])
+        donnees.append(
+            [
+                ligne["classe"],
+                ", ".join(ligne["tests_exiges"]),
+                ", ".join(ligne["tests_couverts"]) or "—",
+                Paragraph(ligne["texte_verdict"], styles["BodyText"]),
+            ]
+        )
+        couleurs_lignes.append(ligne["couleur"])
 
-    tableau = Table(donnees, colWidths=[1.8 * cm, 4.6 * cm, 2.2 * cm, 9.4 * cm],
-                    repeatRows=1)
+    tableau = Table(
+        donnees, colWidths=[1.8 * cm, 4.6 * cm, 2.2 * cm, 9.4 * cm], repeatRows=1
+    )
     style = _style_tableau(len(donnees) - 1, couleurs_lignes)
     tableau.setStyle(TableStyle(style))
     elements.append(tableau)
 
     elements.append(Spacer(1, 0.4 * cm))
-    elements.append(Paragraph(u'Article : ' + vue.CITATION_TABLEAU_63,
-                              styles['Normal']))
-    elements.append(Paragraph(
-        u'Une classe n\'est déclarée conforme que si <b>tous</b> les tests que '
-        u'le tableau 63 lui impose sont présents dans ce dossier et conformes. '
-        u'Un test absent rend la classe non concluante — il n\'est jamais '
-        u'ignoré.', styles['Normal']))
+    elements.append(Paragraph("Article : " + vue.CITATION_TABLEAU_63, styles["Normal"]))
+    elements.append(
+        Paragraph(
+            "Une classe n'est déclarée conforme que si <b>tous</b> les tests que "
+            "le tableau 63 lui impose sont présents dans ce dossier et conformes. "
+            "Un test absent rend la classe non concluante — il n'est jamais "
+            "ignoré.",
+            styles["Normal"],
+        )
+    )
     return elements
 
 
@@ -323,16 +376,22 @@ def generer_pdf_rapport_multi(vues, chemin_pdf):
     """
     if not vues:
         raise ValueError(
-            u'aucune vue fournie : un rapport vide pourrait passer pour un '
-            u'dossier sans anomalie.')
+            "aucune vue fournie : un rapport vide pourrait passer pour un "
+            "dossier sans anomalie."
+        )
 
     styles = _style_feuille()
     document = SimpleDocTemplate(
-        chemin_pdf, pagesize=A4,
-        leftMargin=design.MARGIN_CM * cm, rightMargin=design.MARGIN_CM * cm,
+        chemin_pdf,
+        pagesize=A4,
+        leftMargin=design.MARGIN_CM * cm,
+        rightMargin=design.MARGIN_CM * cm,
         # Le haut laisse la place au bandeau de marque, le bas au pied.
-        topMargin=1.5 * cm, bottomMargin=1.6 * cm,
-        title=u'Validation SIA 4010', author=u'IES')
+        topMargin=1.5 * cm,
+        bottomMargin=1.6 * cm,
+        title="Validation SIA 4010",
+        author="IES",
+    )
 
     elements = _synthese_classes(vues, styles)
     for une_vue in vues:

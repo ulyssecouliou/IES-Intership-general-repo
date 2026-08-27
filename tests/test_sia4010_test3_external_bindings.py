@@ -47,15 +47,11 @@ def _control(identifier, normative_type, output):
                     },
                     "operator": ">=",
                 },
-                "actions": [
-                    {"target_ref": output, "value": _ast_literal(1.0)}
-                ],
+                "actions": [{"target_ref": output, "value": _ast_literal(1.0)}],
                 "source_locator": "controlled table rule",
             }
         ],
-        "default_actions": [
-            {"target_ref": output, "value": _ast_literal(0.0)}
-        ],
+        "default_actions": [{"target_ref": output, "value": _ast_literal(0.0)}],
         "outputs": [output],
         "required_runtime_capabilities": ["hourly_control"],
     }
@@ -105,9 +101,7 @@ def _controls_payload():
                 "value_type": "number",
                 "unit": "W/m2",
                 "source_kind": "SCENARIO_PARAMETER",
-                "scenario_parameter_ref": (
-                    "external_shading_activation_w_m2"
-                ),
+                "scenario_parameter_ref": ("external_shading_activation_w_m2"),
                 "source_locator": "controlled parameter row",
             }
         ],
@@ -139,19 +133,20 @@ class Test3ExternalBindingTests(unittest.TestCase):
             controls = load_sia3874_controls(evidence)
         self.assertEqual(len(controls.shading_controls), 3)
         self.assertEqual(len(controls.lighting_controls), 6)
-        self.assertEqual(
-            controls.control("lighting_type_6").normative_type, 6
-        )
+        self.assertEqual(controls.control("lighting_type_6").normative_type, 6)
 
     def test_missing_table10_function_is_rejected(self):
         payload = _controls_payload()
         payload["controls"]["lighting"].pop()
         evidence = mock.Mock(input_id=CONTROL_INPUT_ID)
-        with mock.patch(
-            "swiss_sia.reference_model.sia4010.test3_external_bindings."
-            "load_normalized_binding_payload",
-            return_value=payload,
-        ), self.assertRaisesRegex(ConfigurationError, "exactly"):
+        with (
+            mock.patch(
+                "swiss_sia.reference_model.sia4010.test3_external_bindings."
+                "load_normalized_binding_payload",
+                return_value=payload,
+            ),
+            self.assertRaisesRegex(ConfigurationError, "exactly"),
+        ):
             load_sia3874_controls(evidence)
 
     def test_unknown_ast_reference_is_rejected(self):
@@ -161,24 +156,28 @@ class Test3ExternalBindingTests(unittest.TestCase):
             "signal_ref": "not_declared",
         }
         evidence = mock.Mock(input_id=CONTROL_INPUT_ID)
-        with mock.patch(
-            "swiss_sia.reference_model.sia4010.test3_external_bindings."
-            "load_normalized_binding_payload",
-            return_value=payload,
-        ), self.assertRaisesRegex(ConfigurationError, "unknown not_declared"):
+        with (
+            mock.patch(
+                "swiss_sia.reference_model.sia4010.test3_external_bindings."
+                "load_normalized_binding_payload",
+                return_value=payload,
+            ),
+            self.assertRaisesRegex(ConfigurationError, "unknown not_declared"),
+        ):
             load_sia3874_controls(evidence)
 
     def test_unknown_ast_field_is_rejected(self):
         payload = _controls_payload()
-        payload["controls"]["shading"][0]["rules"][0]["when"][
-            "candidate_guess"
-        ] = 1
+        payload["controls"]["shading"][0]["rules"][0]["when"]["candidate_guess"] = 1
         evidence = mock.Mock(input_id=CONTROL_INPUT_ID)
-        with mock.patch(
-            "swiss_sia.reference_model.sia4010.test3_external_bindings."
-            "load_normalized_binding_payload",
-            return_value=payload,
-        ), self.assertRaisesRegex(ConfigurationError, "unknown"):
+        with (
+            mock.patch(
+                "swiss_sia.reference_model.sia4010.test3_external_bindings."
+                "load_normalized_binding_payload",
+                return_value=payload,
+            ),
+            self.assertRaisesRegex(ConfigurationError, "unknown"),
+        ):
             load_sia3874_controls(evidence)
 
     def test_shading_device_requires_two_unique_states(self):
@@ -199,11 +198,14 @@ class Test3ExternalBindingTests(unittest.TestCase):
                 }
             ],
         }
-        with mock.patch(
-            "swiss_sia.reference_model.sia4010.test3_external_bindings."
-            "load_normalized_binding_payload",
-            return_value=payload,
-        ), self.assertRaisesRegex(ConfigurationError, "at least two"):
+        with (
+            mock.patch(
+                "swiss_sia.reference_model.sia4010.test3_external_bindings."
+                "load_normalized_binding_payload",
+                return_value=payload,
+            ),
+            self.assertRaisesRegex(ConfigurationError, "at least two"),
+        ):
             load_shading_device(evidence)
 
     def test_authority_decision_must_resolve_device_identity(self):
@@ -229,11 +231,14 @@ class Test3ExternalBindingTests(unittest.TestCase):
                 }
             ],
         }
-        with mock.patch(
-            "swiss_sia.reference_model.sia4010.test3_external_bindings."
-            "load_normalized_binding_payload",
-            return_value=payload,
-        ), self.assertRaisesRegex(ConfigurationError, "does not resolve"):
+        with (
+            mock.patch(
+                "swiss_sia.reference_model.sia4010.test3_external_bindings."
+                "load_normalized_binding_payload",
+                return_value=payload,
+            ),
+            self.assertRaisesRegex(ConfigurationError, "does not resolve"),
+        ):
             load_authority_decision(evidence)
 
     def test_exact_case_evidence_set_is_enforced(self):
@@ -255,18 +260,22 @@ class Test3ExternalBindingTests(unittest.TestCase):
             blocked_input_ids=(),
             evidence=evidence,
         )
-        with mock.patch(
-            "swiss_sia.reference_model.sia4010.test3_external_bindings."
-            "load_common_cell_external_bindings",
-            return_value=mock.Mock(),
-        ), mock.patch(
-            "swiss_sia.reference_model.sia4010.test3_external_bindings."
-            "load_sia3874_controls",
-            return_value=mock.Mock(),
-        ), mock.patch(
-            "swiss_sia.reference_model.sia4010.test3_external_bindings."
-            "load_shading_device",
-            return_value=mock.Mock(),
+        with (
+            mock.patch(
+                "swiss_sia.reference_model.sia4010.test3_external_bindings."
+                "load_common_cell_external_bindings",
+                return_value=mock.Mock(),
+            ),
+            mock.patch(
+                "swiss_sia.reference_model.sia4010.test3_external_bindings."
+                "load_sia3874_controls",
+                return_value=mock.Mock(),
+            ),
+            mock.patch(
+                "swiss_sia.reference_model.sia4010.test3_external_bindings."
+                "load_shading_device",
+                return_value=mock.Mock(),
+            ),
         ):
             bindings = load_test3_external_bindings(readiness)
         self.assertIsNone(bindings.authority_decision)
@@ -292,23 +301,28 @@ class Test3ExternalBindingTests(unittest.TestCase):
             evidence=evidence,
         )
         decision = mock.Mock()
-        with mock.patch(
-            "swiss_sia.reference_model.sia4010.test3_external_bindings."
-            "load_common_cell_external_bindings",
-            return_value=mock.Mock(),
-        ), mock.patch(
-            "swiss_sia.reference_model.sia4010.test3_external_bindings."
-            "load_sia3874_controls",
-            return_value=mock.Mock(),
-        ), mock.patch(
-            "swiss_sia.reference_model.sia4010.test3_external_bindings."
-            "load_shading_device",
-            return_value=mock.Mock(),
-        ), mock.patch(
-            "swiss_sia.reference_model.sia4010.test3_external_bindings."
-            "load_authority_decision",
-            return_value=decision,
-        ) as loader:
+        with (
+            mock.patch(
+                "swiss_sia.reference_model.sia4010.test3_external_bindings."
+                "load_common_cell_external_bindings",
+                return_value=mock.Mock(),
+            ),
+            mock.patch(
+                "swiss_sia.reference_model.sia4010.test3_external_bindings."
+                "load_sia3874_controls",
+                return_value=mock.Mock(),
+            ),
+            mock.patch(
+                "swiss_sia.reference_model.sia4010.test3_external_bindings."
+                "load_shading_device",
+                return_value=mock.Mock(),
+            ),
+            mock.patch(
+                "swiss_sia.reference_model.sia4010.test3_external_bindings."
+                "load_authority_decision",
+                return_value=decision,
+            ) as loader,
+        ):
             bindings = load_test3_external_bindings(readiness)
         self.assertIs(bindings.authority_decision, decision)
         loader.assert_called_once()
@@ -328,9 +342,7 @@ class Test3ExternalBindingTests(unittest.TestCase):
         for filename, schema_id in expected.items():
             with self.subTest(filename=filename):
                 payload = json.loads(
-                    (ROOT / "schemas" / filename).read_text(
-                        encoding="utf-8"
-                    )
+                    (ROOT / "schemas" / filename).read_text(encoding="utf-8")
                 )
                 self.assertEqual(payload["$id"], schema_id)
 

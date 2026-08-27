@@ -8,9 +8,6 @@ downloaded archives.
 
 from __future__ import annotations
 
-import io
-import json
-import os
 import unittest
 import zipfile
 from pathlib import Path
@@ -22,7 +19,6 @@ from swiss_sia.reference_model.meteoswiss_station_import import (
     convert_meteoswiss_station_directory,
     unpack_meteoswiss_archive,
 )
-
 
 _METADATA_HEADER = (
     "Station;Abk.;Stationstyp;Type de station;Tipo di stazione;Station type;"
@@ -110,7 +106,9 @@ class StationDirectoryConversionTests(unittest.TestCase):
                 "TST_2060_RCP85_DRY_IESVE_DERIVATION.json",
                 "TST_IESVE_CONVERSION_SUMMARY.json",
             }
-            self.assertTrue(expected_files.issubset({p.name for p in station_dir.iterdir()}))
+            self.assertTrue(
+                expected_files.issubset({p.name for p in station_dir.iterdir()})
+            )
 
     def test_missing_metadata_fails_closed(self) -> None:
         with TemporaryDirectory() as tmp:
@@ -173,7 +171,9 @@ class ArchiveUnpackTests(unittest.TestCase):
         with zipfile.ZipFile(archive, "w") as z:
             z.writestr(
                 "{}_Metadata.csv".format(station),
-                "{}\n{}\n".format(_METADATA_HEADER, _METADATA_ROW.replace("TST", station)),
+                "{}\n{}\n".format(
+                    _METADATA_HEADER, _METADATA_ROW.replace("TST", station)
+                ),
             )
             # One minimal scenario CSV.
             from datetime import datetime, timedelta

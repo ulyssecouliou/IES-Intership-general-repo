@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-u"""Frequency distribution criterion for SIA 4010 tests.
+"""Frequency distribution criterion for SIA 4010 tests.
 
 The specifications of these three tests state **two** criteria. The first --
 the annual sum within the band -- is handled by `sia_bandes_engine`. The
@@ -27,7 +27,7 @@ import os
 
 _ICI = os.path.dirname(os.path.abspath(__file__))
 _RACINE = os.path.abspath(os.path.join(_ICI, os.pardir))
-_DOSSIER_REFERENCES = os.path.join(_RACINE, 'refs', 'reference-data')
+_DOSSIER_REFERENCES = os.path.join(_RACINE, "refs", "reference-data")
 
 #: JSON references currently built. The workbooks of Tests 4 and 6
 #: also contain classes and distributions; their exact scope as an
@@ -37,29 +37,30 @@ TESTS_SUPPORTES = (2, 3, 5)
 #: Criterion status. Weaker than `INFERE` from the annual sums: there, a
 #: formula existed in the workbook and could be recovered. Here, there is
 #: none.
-STATUT_CRITERE = 'CONFIRME_AUTORITE_2026-08-10'
+STATUT_CRITERE = "CONFIRME_AUTORITE_2026-08-10"
 
 JUSTIFICATION_CRITERE = (
-    u'Clarification écrite reçue le 2026-08-10 : enveloppe minimum/maximum '
-    u'des programmes de référence pour chaque classe de fréquence.'
+    "Clarification écrite reçue le 2026-08-10 : enveloppe minimum/maximum "
+    "des programmes de référence pour chaque classe de fréquence."
 )
 
 #: Both possible readings of the `Streubereich`, computed together.
-LECTURE_ENVELOPPE = 'enveloppe_min_max'
-LECTURE_BANDE = 'moyenne_plus_ecart_max'
+LECTURE_ENVELOPPE = "enveloppe_min_max"
+LECTURE_BANDE = "moyenne_plus_ecart_max"
 LECTURES = (LECTURE_ENVELOPPE, LECTURE_BANDE)
 
-VERDICT_NON_ETABLI = 'NON_ETABLI'
-VERDICT_NON_EVALUABLE = 'NOT_CHECKABLE'
-VERDICT_PASS = 'PASS'
-VERDICT_FAIL = 'FAIL'
+VERDICT_NON_ETABLI = "NON_ETABLI"
+VERDICT_NON_EVALUABLE = "NOT_CHECKABLE"
+VERDICT_PASS = "PASS"
+VERDICT_FAIL = "FAIL"
+
 
 class ReferenceIntrouvable(IOError):
-    u"""Raised when the distribution reference for a test is missing."""
+    """Raised when the distribution reference for a test is missing."""
 
 
 def chemin_reference(numero_test):
-    u"""Path of the distribution reference for a test.
+    """Path of the distribution reference for a test.
 
     Args:
         numero_test: SIA test number.
@@ -67,12 +68,13 @@ def chemin_reference(numero_test):
     Returns:
         str: Absolute path.
     """
-    return os.path.join(_DOSSIER_REFERENCES,
-                        'test-%d.distributions.ref.json' % numero_test)
+    return os.path.join(
+        _DOSSIER_REFERENCES, "test-%d.distributions.ref.json" % numero_test
+    )
 
 
 def charger_reference(numero_test, chemin=None):
-    u"""Load the distribution reference for a test.
+    """Load the distribution reference for a test.
 
     Args:
         numero_test: SIA test number.
@@ -87,16 +89,18 @@ def charger_reference(numero_test, chemin=None):
     """
     if numero_test not in TESTS_SUPPORTES:
         raise ValueError(
-            u'le test %r n\'a pas de critère de distribution. Tests '
-            u'avec référentiel exécutable : %s. Les classeurs des Tests 4 et 6 '
-            u'ont des distributions, mais leur gate exact reste en revue.'
-            % (numero_test, list(TESTS_SUPPORTES)))
+            "le test %r n'a pas de critère de distribution. Tests "
+            "avec référentiel exécutable : %s. Les classeurs des Tests 4 et 6 "
+            "ont des distributions, mais leur gate exact reste en revue."
+            % (numero_test, list(TESTS_SUPPORTES))
+        )
     chemin = chemin or chemin_reference(numero_test)
     if not os.path.exists(chemin):
         raise ReferenceIntrouvable(
-            u'référentiel absent : %s. Le produire avec '
-            u'scripts/build_sia_distribution_reference.py' % chemin)
-    with io.open(chemin, encoding='utf-8') as flux:
+            "référentiel absent : %s. Le produire avec "
+            "scripts/build_sia_distribution_reference.py" % chemin
+        )
+    with io.open(chemin, encoding="utf-8") as flux:
         return json.load(flux)
 
 
@@ -104,7 +108,7 @@ def charger_reference(numero_test, chemin=None):
 # include values above the last declared boundary. Such values are not missing
 # hours; classer_avec_hors_classes reports them separately for audit.
 def classer(serie, bornes):
-    u"""Distribute an hourly series into the workbook's classes.
+    """Distribute an hourly series into the workbook's classes.
 
     The bounds are UPPER bounds. Values exceeding the last one remain
     outside the displayed classes; use
@@ -122,12 +126,12 @@ def classer(serie, bornes):
             classification would be arbitrary.
     """
     if not bornes:
-        raise ValueError(u'aucune borne de classe fournie')
+        raise ValueError("aucune borne de classe fournie")
     if list(bornes) != sorted(bornes):
-        raise ValueError(u'bornes non croissantes : %r' % (bornes,))
+        raise ValueError("bornes non croissantes : %r" % (bornes,))
 
     effectifs = [0] * len(bornes)
-    for valeur in (serie or []):
+    for valeur in serie or []:
         if not isinstance(valeur, (int, float)) or isinstance(valeur, bool):
             continue
         place = None
@@ -141,7 +145,7 @@ def classer(serie, bornes):
 
 
 def classer_avec_hors_classes(serie, bornes):
-    u"""Classify values and audit those above the last bound.
+    """Classify values and audit those above the last bound.
 
     The 2026-08-10 authority response confirms that these values explain the
     displayed totals below 8 760. They are neither missing nor silently
@@ -149,18 +153,19 @@ def classer_avec_hors_classes(serie, bornes):
     """
     effectifs = classer(serie, bornes)
     numeriques = [
-        valeur for valeur in (serie or [])
+        valeur
+        for valeur in (serie or [])
         if isinstance(valeur, (int, float)) and not isinstance(valeur, bool)
     ]
     return {
-        'effectifs': effectifs,
-        'hors_classes_superieur': len(numeriques) - sum(effectifs),
-        'total_numerique': len(numeriques),
+        "effectifs": effectifs,
+        "hors_classes_superieur": len(numeriques) - sum(effectifs),
+        "total_numerique": len(numeriques),
     }
 
 
 def _effectifs_contributeurs(bloc, classe):
-    u"""Counts of the reference programs for a class.
+    """Counts of the reference programs for a class.
 
     Args:
         bloc: Distribution block.
@@ -170,15 +175,15 @@ def _effectifs_contributeurs(bloc, classe):
         list[int]: Counts, with unfilled columns excluded.
     """
     valeurs = []
-    for contributeur in bloc['contributeurs']:
-        valeur = classe['par_colonne'].get(contributeur['colonne'])
+    for contributeur in bloc["contributeurs"]:
+        valeur = classe["par_colonne"].get(contributeur["colonne"])
         if valeur is not None:
             valeurs.append(valeur)
     return valeurs
 
 
 def bornes_des_lectures(effectifs):
-    u"""Compute the two readings of the `Streubereich` for a class.
+    """Compute the two readings of the `Streubereich` for a class.
 
     Args:
         effectifs: Counts of the reference programs.
@@ -199,7 +204,7 @@ def bornes_des_lectures(effectifs):
 
 
 def evaluer_bloc(bloc, effectifs_candidats=None):
-    u"""Compare a candidate distribution against those of the programs.
+    """Compare a candidate distribution against those of the programs.
 
     Args:
         bloc: Distribution block from the reference data.
@@ -212,7 +217,7 @@ def evaluer_bloc(bloc, effectifs_candidats=None):
     hors = dict((lecture, 0) for lecture in LECTURES)
     evaluables = 0
 
-    for rang, entree in enumerate(bloc['effectifs']):
+    for rang, entree in enumerate(bloc["effectifs"]):
         contributions = _effectifs_contributeurs(bloc, entree)
         lectures = bornes_des_lectures(contributions)
         candidat = None
@@ -231,15 +236,16 @@ def evaluer_bloc(bloc, effectifs_candidats=None):
         if candidat is not None and lectures:
             evaluables += 1
 
-        classes.append({
-            'borne_superieure': entree['borne_superieure'],
-            'ligne_classeur': entree['ligne_classeur'],
-            'candidat': candidat,
-            'contributions': contributions,
-            'lectures': dict((nom, list(bornes))
-                             for nom, bornes in lectures.items()),
-            'dans_la_lecture': dedans,
-        })
+        classes.append(
+            {
+                "borne_superieure": entree["borne_superieure"],
+                "ligne_classeur": entree["ligne_classeur"],
+                "candidat": candidat,
+                "contributions": contributions,
+                "lectures": dict((nom, list(bornes)) for nom, bornes in lectures.items()),
+                "dans_la_lecture": dedans,
+            }
+        )
 
     if effectifs_candidats is None or evaluables != len(classes):
         verdict = VERDICT_NON_EVALUABLE
@@ -249,36 +255,37 @@ def evaluer_bloc(bloc, effectifs_candidats=None):
         verdict = VERDICT_PASS
 
     return {
-        'cas': bloc['cas'],
-        'grandeur': bloc['grandeur'],
-        'unite': bloc['unite'],
-        'colonne_bloc': bloc['colonne_bloc'],
-        'nb_classes': len(classes),
-        'nb_classes_evaluees': evaluables,
-        'nb_hors_lecture': dict(hors),
+        "cas": bloc["cas"],
+        "grandeur": bloc["grandeur"],
+        "unite": bloc["unite"],
+        "colonne_bloc": bloc["colonne_bloc"],
+        "nb_classes": len(classes),
+        "nb_classes_evaluees": evaluables,
+        "nb_hors_lecture": dict(hors),
         # Historical field retained for report compatibility. The authority
         # confirmed that short displayed totals are not partial source series.
-        'contributeurs_partiels': [],
-        'contributeurs_hors_classes': [
+        "contributeurs_partiels": [],
+        "contributeurs_hors_classes": [
             {
-                'colonne': c['colonne'],
-                'heures_hors_classes': c.get(
-                    'heures_hors_classes',
-                    max(0, 8760 - c['total_heures']),
+                "colonne": c["colonne"],
+                "heures_hors_classes": c.get(
+                    "heures_hors_classes",
+                    max(0, 8760 - c["total_heures"]),
                 ),
             }
-            for c in bloc['contributeurs']
-            if c.get('heures_hors_classes', max(0, 8760 - c['total_heures']))
+            for c in bloc["contributeurs"]
+            if c.get("heures_hors_classes", max(0, 8760 - c["total_heures"]))
         ],
-        'total_candidat': (sum(effectifs_candidats)
-                           if effectifs_candidats is not None else None),
-        'classes': classes,
-        'verdict': verdict,
+        "total_candidat": (
+            sum(effectifs_candidats) if effectifs_candidats is not None else None
+        ),
+        "classes": classes,
+        "verdict": verdict,
     }
 
 
 def evaluer(reference, candidat=None):
-    u"""Evaluate all distributions for a test.
+    """Evaluate all distributions for a test.
 
     Args:
         reference: Loaded reference data.
@@ -293,8 +300,8 @@ def evaluer(reference, candidat=None):
     resultats, ignorees = [], []
     utilisees = set()
 
-    for bloc in reference['distributions']:
-        cle = (bloc['cas'], bloc['grandeur'])
+    for bloc in reference["distributions"]:
+        cle = (bloc["cas"], bloc["grandeur"])
         effectifs = index.get(cle)
         if effectifs is not None:
             utilisees.add(cle)
@@ -304,32 +311,32 @@ def evaluer(reference, candidat=None):
         if cle not in utilisees:
             ignorees.append(list(cle))
 
-    evalues = [r for r in resultats if r['verdict'] != VERDICT_NON_EVALUABLE]
-    if any(r['verdict'] == VERDICT_FAIL for r in resultats):
+    evalues = [r for r in resultats if r["verdict"] != VERDICT_NON_EVALUABLE]
+    if any(r["verdict"] == VERDICT_FAIL for r in resultats):
         verdict_global = VERDICT_FAIL
-    elif any(r['verdict'] == VERDICT_NON_EVALUABLE for r in resultats):
+    elif any(r["verdict"] == VERDICT_NON_EVALUABLE for r in resultats):
         verdict_global = VERDICT_NON_EVALUABLE
     else:
         verdict_global = VERDICT_PASS
     return {
-        'test': reference['test'],
-        'classes_concernees': list(reference.get('classes_concernees', [])),
-        'critere': {
-            'statut': STATUT_CRITERE,
-            'justification': JUSTIFICATION_CRITERE,
-            'enonce': reference['critere'],
+        "test": reference["test"],
+        "classes_concernees": list(reference.get("classes_concernees", [])),
+        "critere": {
+            "statut": STATUT_CRITERE,
+            "justification": JUSTIFICATION_CRITERE,
+            "enonce": reference["critere"],
         },
-        'nb_distributions': len(resultats),
-        'nb_evaluees': len(evalues),
-        'nb_non_evaluables': len(resultats) - len(evalues),
-        'cles_candidat_ignorees': sorted(ignorees),
-        'distributions': resultats,
-        'verdict': verdict_global,
+        "nb_distributions": len(resultats),
+        "nb_evaluees": len(evalues),
+        "nb_non_evaluables": len(resultats) - len(evalues),
+        "cles_candidat_ignorees": sorted(ignorees),
+        "distributions": resultats,
+        "verdict": verdict_global,
     }
 
 
 def resumer(resultat):
-    u"""Render the result in a human-readable console format.
+    """Render the result in a human-readable console format.
 
     Args:
         resultat: Output of `evaluer`.
@@ -337,24 +344,31 @@ def resumer(resultat):
     Returns:
         str: Text table.
     """
-    lignes = [u'Test %d — distributions de fréquence' % resultat['test'],
-              u'critère : %s' % resultat['critere']['statut'], u'']
-    for bloc in resultat['distributions']:
-        if bloc['verdict'] == VERDICT_NON_EVALUABLE:
-            etat = u'non evaluable'
+    lignes = [
+        "Test %d — distributions de fréquence" % resultat["test"],
+        "critère : %s" % resultat["critere"]["statut"],
+        "",
+    ]
+    for bloc in resultat["distributions"]:
+        if bloc["verdict"] == VERDICT_NON_EVALUABLE:
+            etat = "non evaluable"
         else:
-            etat = u', '.join(
-                u'%s: %d/%d hors' % (lecture, bloc['nb_hors_lecture'][lecture],
-                                     bloc['nb_classes_evaluees'])
-                for lecture in LECTURES)
-        lignes.append(u'  %-12s %-38s %s'
-                      % (bloc['cas'] or u'(sans cas)',
-                         (bloc['grandeur'] or u'')[:38], etat))
-    lignes.extend([
-        u'',
-        u'%d/%d distributions evaluees.'
-        % (resultat['nb_evaluees'], resultat['nb_distributions']),
-        u'Verdict : %s — critère min/max confirmé par clarification écrite.'
-        % resultat['verdict'],
-    ])
-    return u'\n'.join(lignes)
+            etat = ", ".join(
+                "%s: %d/%d hors"
+                % (lecture, bloc["nb_hors_lecture"][lecture], bloc["nb_classes_evaluees"])
+                for lecture in LECTURES
+            )
+        lignes.append(
+            "  %-12s %-38s %s"
+            % (bloc["cas"] or "(sans cas)", (bloc["grandeur"] or "")[:38], etat)
+        )
+    lignes.extend(
+        [
+            "",
+            "%d/%d distributions evaluees."
+            % (resultat["nb_evaluees"], resultat["nb_distributions"]),
+            "Verdict : %s — critère min/max confirmé par clarification écrite."
+            % resultat["verdict"],
+        ]
+    )
+    return "\n".join(lignes)

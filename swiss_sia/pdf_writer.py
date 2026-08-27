@@ -34,24 +34,104 @@ _FONT_RESOURCES = {
 # fall back to the average width, which is accurate enough for layout.
 _AVERAGE_WIDTH = 500
 _WIDTHS = {
-    " ": 278, "!": 278, '"': 355, "#": 556, "$": 556, "%": 889, "&": 667,
-    "'": 191, "(": 333, ")": 333, "*": 389, "+": 584, ",": 278, "-": 333,
-    ".": 278, "/": 278, ":": 278, ";": 278, "<": 584, "=": 584, ">": 584,
-    "?": 556, "@": 1015, "[": 278, "\\": 278, "]": 278, "^": 469, "_": 556,
-    "`": 333, "{": 334, "|": 260, "}": 334, "~": 584,
+    " ": 278,
+    "!": 278,
+    '"': 355,
+    "#": 556,
+    "$": 556,
+    "%": 889,
+    "&": 667,
+    "'": 191,
+    "(": 333,
+    ")": 333,
+    "*": 389,
+    "+": 584,
+    ",": 278,
+    "-": 333,
+    ".": 278,
+    "/": 278,
+    ":": 278,
+    ";": 278,
+    "<": 584,
+    "=": 584,
+    ">": 584,
+    "?": 556,
+    "@": 1015,
+    "[": 278,
+    "\\": 278,
+    "]": 278,
+    "^": 469,
+    "_": 556,
+    "`": 333,
+    "{": 334,
+    "|": 260,
+    "}": 334,
+    "~": 584,
 }
 for _character in "0123456789":
     _WIDTHS[_character] = 556
 for _character, _width in zip(
     "abcdefghijklmnopqrstuvwxyz",
-    (556, 556, 500, 556, 556, 278, 556, 556, 222, 222, 500, 222, 833,
-     556, 556, 556, 556, 333, 500, 278, 556, 500, 722, 500, 500, 500),
+    (
+        556,
+        556,
+        500,
+        556,
+        556,
+        278,
+        556,
+        556,
+        222,
+        222,
+        500,
+        222,
+        833,
+        556,
+        556,
+        556,
+        556,
+        333,
+        500,
+        278,
+        556,
+        500,
+        722,
+        500,
+        500,
+        500,
+    ),
 ):
     _WIDTHS[_character] = _width
 for _character, _width in zip(
     "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
-    (667, 667, 722, 722, 667, 611, 778, 722, 278, 500, 667, 556, 833,
-     722, 778, 667, 778, 722, 667, 611, 722, 667, 944, 667, 667, 611),
+    (
+        667,
+        667,
+        722,
+        722,
+        667,
+        611,
+        778,
+        722,
+        278,
+        500,
+        667,
+        556,
+        833,
+        722,
+        778,
+        667,
+        778,
+        722,
+        667,
+        611,
+        722,
+        667,
+        944,
+        667,
+        667,
+        611,
+    ),
 ):
     _WIDTHS[_character] = _width
 
@@ -65,7 +145,9 @@ def text_width_mm(text: str, size_pt: float, bold: bool = False) -> float:
     return (total / 1000.0) * size_pt / MM_TO_PT
 
 
-def truncate_to_width(text: str, size_pt: float, max_mm: float, bold: bool = False) -> str:
+def truncate_to_width(
+    text: str, size_pt: float, max_mm: float, bold: bool = False
+) -> str:
     """Return the text shortened with an ellipsis so it fits the given width."""
 
     value = str(text)
@@ -103,16 +185,16 @@ def wrap_to_width(
 
 
 _GREEK_TO_ASCII = {
-    "ψ": "psi",   # ψ
-    "χ": "chi",   # χ
-    "Ψ": "Psi",   # Ψ
-    "Χ": "Chi",   # Χ
+    "ψ": "psi",  # ψ
+    "χ": "chi",  # χ
+    "Ψ": "Psi",  # Ψ
+    "Χ": "Chi",  # Χ
     "Δ": "Delta",  # Δ
     "α": "alpha",  # α
-    "β": "beta",   # β
-    "ε": "eps",    # ε
-    "η": "eta",    # η
-    "λ": "lambda", # λ
+    "β": "beta",  # β
+    "ε": "eps",  # ε
+    "η": "eta",  # η
+    "λ": "lambda",  # λ
 }
 
 
@@ -149,14 +231,29 @@ def _read_jpeg(data: bytes) -> Dict[str, Any]:
         if marker in (0xD8, 0xD9) or 0xD0 <= marker <= 0xD7:
             index += 2
             continue
-        segment_length = struct.unpack(">H", data[index + 2:index + 4])[0]
-        if marker in (0xC0, 0xC1, 0xC2, 0xC3, 0xC5, 0xC6, 0xC7,
-                      0xC9, 0xCA, 0xCB, 0xCD, 0xCE, 0xCF):
-            height, width = struct.unpack(">HH", data[index + 5:index + 9])
+        segment_length = struct.unpack(">H", data[index + 2 : index + 4])[0]
+        if marker in (
+            0xC0,
+            0xC1,
+            0xC2,
+            0xC3,
+            0xC5,
+            0xC6,
+            0xC7,
+            0xC9,
+            0xCA,
+            0xCB,
+            0xCD,
+            0xCE,
+            0xCF,
+        ):
+            height, width = struct.unpack(">HH", data[index + 5 : index + 9])
             components = data[index + 9]
             colour = {1: "/DeviceGray", 3: "/DeviceRGB", 4: "/DeviceCMYK"}.get(components)
             if colour is None:
-                raise ImageError("Unsupported JPEG component count: {}".format(components))
+                raise ImageError(
+                    "Unsupported JPEG component count: {}".format(components)
+                )
             return {
                 "width": width,
                 "height": height,
@@ -184,9 +281,9 @@ def _read_png(data: bytes) -> Dict[str, Any]:
     idat = bytearray()
     offset = 8
     while offset < len(data):
-        length = struct.unpack(">I", data[offset:offset + 4])[0]
-        chunk = data[offset + 4:offset + 8]
-        body = data[offset + 8:offset + 8 + length]
+        length = struct.unpack(">I", data[offset : offset + 4])[0]
+        chunk = data[offset + 4 : offset + 8]
+        body = data[offset + 8 : offset + 8 + length]
         if chunk == b"IHDR":
             width, height, bit_depth, colour_type = struct.unpack(">IIBB", body[:10])
             interlace = body[12]
@@ -366,9 +463,13 @@ class PdfPage:
         if stroke is not None:
             parts.append("{} RG {} w".format(self._colour(stroke), _number(width_pt)))
         first_x, first_y = points_mm[0]
-        parts.append("{} {} m".format(_number(self._x(first_x)), _number(self._y(first_y))))
+        parts.append(
+            "{} {} m".format(_number(self._x(first_x)), _number(self._y(first_y)))
+        )
         for point_x, point_y in points_mm[1:]:
-            parts.append("{} {} l".format(_number(self._x(point_x)), _number(self._y(point_y))))
+            parts.append(
+                "{} {} l".format(_number(self._x(point_x)), _number(self._y(point_y)))
+            )
         parts.append("h")
         if fill is not None and stroke is not None:
             parts.append("B")
@@ -498,7 +599,9 @@ class PdfDocument:
                 (
                     "<< /Type /Font /Subtype /Type1 /BaseFont /{} "
                     "/Encoding /WinAnsiEncoding >>"
-                ).format(font).encode("latin-1")
+                )
+                .format(font)
+                .encode("latin-1")
             )
         image_numbers = {}
         for key, image in self._images.items():
@@ -527,17 +630,21 @@ class PdfDocument:
         for page in self.pages:
             body = zlib.compress(page.content())
             content_number = add(
-                "<< /Length {} /Filter /FlateDecode >>".format(len(body)).encode("latin-1")
+                "<< /Length {} /Filter /FlateDecode >>".format(len(body)).encode(
+                    "latin-1"
+                )
                 + b"\nstream\n"
                 + body
                 + b"\nendstream"
             )
-            resources = ["/Font << {} >>".format(
-                " ".join(
-                    "/{} {} 0 R".format(_FONT_RESOURCES[font], number)
-                    for font, number in sorted(font_numbers.items())
+            resources = [
+                "/Font << {} >>".format(
+                    " ".join(
+                        "/{} {} 0 R".format(_FONT_RESOURCES[font], number)
+                        for font, number in sorted(font_numbers.items())
+                    )
                 )
-            )]
+            ]
             if image_numbers:
                 resources.append(
                     "/XObject << {} >>".format(
@@ -552,13 +659,15 @@ class PdfDocument:
                     (
                         "<< /Type /Page /Parent {} 0 R /MediaBox [0 0 {} {}] "
                         "/Resources << {} >> /Contents {} 0 R >>"
-                    ).format(
+                    )
+                    .format(
                         pages_number,
                         _number(self.page_size_mm[0] * MM_TO_PT),
                         _number(self.page_size_mm[1] * MM_TO_PT),
                         " ".join(resources),
                         content_number,
-                    ).encode("latin-1")
+                    )
+                    .encode("latin-1")
                 )
             )
 

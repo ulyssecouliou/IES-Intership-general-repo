@@ -1,17 +1,17 @@
 """Source-traced Test 2A fabric-awning control contract.
 
 The supplied Test 2 specification confirms an external fabric-awning
-irradiance-threshold control and a threshold value of 150 W/m2.  It does not
-state the comparison operator, the release rule, the exact signal definition
-or the timestep/state semantics.  IESVE exposes separate ``lower`` and
-``raise`` thresholds.  Those API fields are useful setter targets, but their
-dynamic equivalence cannot be inferred from the field names.
+irradiance-threshold control and a threshold value of 150 W/m2.  A direct
+written decision from Prof. Gerhard Zweifel received on 2026-08-26 confirms
+the total solar irradiance incident on the exterior glazing plane, closing at
+``>= 150 W/m2``, reopening at ``< 150 W/m2``, no hysteresis, and the use of
+both IESVE ``lower`` and ``raise`` threshold fields at 150 W/m2.
 
 This module therefore separates:
 
 * the confirmed normative rule;
 * the narrow CDB setter values that can be tested without interpretation; and
-* the dynamic/optical equivalence evidence still required before a complete
+* the optical and runtime-result evidence still required before a complete
   Test 2A model may be claimed.
 
 No VE object is created here.
@@ -24,9 +24,13 @@ from typing import Any, Dict, Mapping, Optional, Tuple
 
 from ..exceptions import ConfigurationError
 
-
-CONTROL_SCHEMA_VERSION = "1.1"
+CONTROL_SCHEMA_VERSION = "1.3"
 CONTROL_TYPE = "irradiance_threshold"
+AUTHORITY_DECISION_ID = "SIA4010_TEST1E_SOLAR_CONTROL_20260826"
+AUTHORITY_DECISION_LOCATOR = (
+    "sia4010_evidence/authority_decisions/"
+    "2026-08-26_test1e_solar_control_decision.json"
+)
 
 SETTER_FIELDS = (
     "external_shade_active",
@@ -37,10 +41,10 @@ FIXED_CLOSED_SETTER_FIELDS = (
     "external_shade_active",
     "external_shade_profile",
     "external_shade_transmittance_0",
-    "external_shade_solar_reflectance",
-    "external_shade_visible_reflectance",
 )
 FIXED_CLOSED_OUTPUT_BLOCKERS = (
+    "VE2025_CDB_EXTERNAL_SHADE_SOLAR_REFLECTANCE_SETTER_UNAVAILABLE",
+    "VE2025_CDB_EXTERNAL_SHADE_VISIBLE_REFLECTANCE_SETTER_UNAVAILABLE",
     "VE_TEST2A_2E1_ANGULAR_SOLAR_TRANSMITTANCE_NOT_MAPPED",
     "VE_TEST2A_2E1_INSIDE_SOLAR_REFLECTANCE_NOT_MAPPED",
     "VE_TEST2A_2E1_VISIBLE_TRANSMITTANCE_NOT_MAPPED",
@@ -49,10 +53,6 @@ FIXED_CLOSED_OUTPUT_BLOCKERS = (
 )
 
 DYNAMIC_EQUIVALENCE_BLOCKERS = (
-    "SIA4010_TEST2A_EXACT_IRRADIANCE_SIGNAL_NOT_CONFIRMED",
-    "SIA4010_TEST2A_THRESHOLD_COMPARISON_OPERATOR_NOT_CONFIRMED",
-    "SIA4010_TEST2A_RELEASE_RULE_NOT_CONFIRMED",
-    "VE_EXTERNAL_SHADE_TIMESTEP_STATE_HANDLING_NOT_QUALIFIED",
     "VE_TEST2A_COMBINED_G_TOTAL_OPTICAL_MAPPING_NOT_QUALIFIED",
 )
 
@@ -124,9 +124,12 @@ class Test2AFabricAwningControl:
     """Immutable normative rule plus a deliberately narrow VE setter plan."""
 
     control_type: str
-    signal: Optional[str]
-    active_operator: Optional[str]
-    inactive_operator: Optional[str]
+    signal: str
+    active_operator: str
+    inactive_operator: str
+    hysteresis_required: bool
+    timestep_semantics: str
+    required_reported_quantity: str
     threshold_w_m2: float
     device: str
     combined_g_total: float
@@ -156,10 +159,9 @@ class Test2AFabricAwningControl:
     def setter_plan(self) -> Dict[str, Any]:
         """Return only fields whose storage/read-back can be qualified safely.
 
-        Setting both VE fields to the one confirmed source value is a technical
-        storage probe, not a normative mapping decision. The returned plan is
-        consequently suitable only for the dedicated disposable-project setter
-        qualification.
+        The authority confirmed both the normative rule and this IESVE field
+        mapping. Actual assignment and read-back still belong in the dedicated
+        disposable-project qualification.
         """
 
         return {
@@ -174,23 +176,16 @@ class Test2AFabricAwningControl:
 
         The plan maps only properties with a direct semantic name match in the
         runtime CDB: active state, always-on profile, normal-incidence solar
-        transmittance and outside solar/visible reflectances. It deliberately
-        omits angular values and properties for which VE exposes no confirmed
-        equivalent field.
+        transmittance. The official VE 2025 setter list does not include the
+        solar or visible reflectance fields returned by ``get_properties``;
+        those read-only values therefore remain explicit blockers rather than
+        being presented as writable mappings.
         """
 
         return {
             "external_shade_active": True,
             "external_shade_profile": "ON",
-            "external_shade_transmittance_0": (
-                self.direct_solar_transmittance
-            ),
-            "external_shade_solar_reflectance": (
-                self.outside_solar_reflectance
-            ),
-            "external_shade_visible_reflectance": (
-                self.outside_visible_reflectance
-            ),
+            "external_shade_transmittance_0": (self.direct_solar_transmittance),
         }
 
     @property
@@ -206,41 +201,33 @@ class Test2AFabricAwningControl:
         payload["schema_version"] = CONTROL_SCHEMA_VERSION
         payload["confirmed_normative_control"] = {
             "control_type": self.control_type,
+            "signal": self.signal,
+            "activation_operator": self.active_operator,
+            "release_operator": self.inactive_operator,
             "threshold_w_m2": self.threshold_w_m2,
-            "source_wording": (
-                "Einstrahlungs-Schwellenwertregelung; Extern Aktivierung: "
-                "Schwellenwert 150 W/m2"
-            ),
+            "hysteresis_required": self.hysteresis_required,
+            "timestep_semantics": self.timestep_semantics,
+            "required_reported_quantity": self.required_reported_quantity,
+            "authority_decision_id": AUTHORITY_DECISION_ID,
+            "authority_decision_locator": AUTHORITY_DECISION_LOCATOR,
         }
-        payload["unresolved_normative_semantics"] = {
-            "exact_irradiance_signal": self.signal,
-            "activation_comparison_operator": self.active_operator,
-            "release_rule": self.inactive_operator,
-            "timestep_state_handling": None,
-        }
+        payload["unresolved_normative_semantics"] = {}
         payload["ve_cdb_setter_plan"] = self.setter_plan
-        payload["setter_plan_scope"] = "CDB_STORAGE_AND_READBACK_ONLY"
+        payload["setter_plan_scope"] = "AUTHORITY_CONFIRMED_IESVE_MAPPING"
         payload["fixed_closed_candidate_setter_plan"] = (
             self.fixed_closed_candidate_setter_plan
         )
         payload["fixed_closed_setter_plan_scope"] = (
-            "DIRECT_NAME_MATCH_STORAGE_AND_READBACK_ONLY"
+            "VE2025_DOCUMENTED_WRITABLE_SUBSET_STORAGE_AND_READBACK_ONLY"
         )
-        payload["fixed_closed_output_blockers"] = list(
-            FIXED_CLOSED_OUTPUT_BLOCKERS
-        )
-        payload["dynamic_equivalence_qualified"] = (
-            self.dynamic_equivalence_qualified
-        )
-        payload["dynamic_equivalence_blockers"] = list(
-            self.dynamic_equivalence_blockers
-        )
+        payload["fixed_closed_output_blockers"] = list(FIXED_CLOSED_OUTPUT_BLOCKERS)
+        payload["dynamic_equivalence_qualified"] = self.dynamic_equivalence_qualified
+        payload["dynamic_equivalence_blockers"] = list(self.dynamic_equivalence_blockers)
         payload["claim_guardrail"] = (
-            "The VE threshold fields are candidate storage bindings. The "
-            "supplied Test 2 specification does not confirm the comparison "
-            "operator or release rule. A setter PASS does not prove dynamic "
-            "semantics, combined-g optical equivalence, simulation results or "
-            "SIA validation."
+            "The authority confirmed the control semantics and IESVE threshold "
+            "field mapping. This does not by itself prove combined-g optical "
+            "equivalence, model assignment/read-back, APS results or SIA "
+            "validation."
         )
         return payload
 
@@ -278,24 +265,18 @@ class Test2AOpticalDiagnosticContract:
             "result_series": list(self.result_series),
             "summer_optical_identities": {
                 "g_total": self.control.combined_g_total,
-                "direct_solar_transmittance": (
-                    self.control.direct_solar_transmittance
-                ),
+                "direct_solar_transmittance": (self.control.direct_solar_transmittance),
                 "secondary_internal_heat_transfer": (
                     self.control.secondary_internal_heat_transfer_factor
                 ),
                 "identity_g_total": (
-                    "direct_solar_transmittance + "
-                    "secondary_internal_heat_transfer"
+                    "direct_solar_transmittance + " "secondary_internal_heat_transfer"
                 ),
                 "convection_factor": self.control.convection_factor,
-                "thermal_radiation_factor": (
-                    self.control.thermal_radiation_factor
-                ),
+                "thermal_radiation_factor": (self.control.thermal_radiation_factor),
                 "ventilation_factor": self.control.ventilation_factor,
                 "identity_secondary": (
-                    "convection_factor + thermal_radiation_factor + "
-                    "ventilation_factor"
+                    "convection_factor + thermal_radiation_factor + " "ventilation_factor"
                 ),
             },
             "workbook_binding_status": self.workbook_binding_status,
@@ -381,9 +362,7 @@ def build_test2a_fabric_awning_control(
     ]
     if missing:
         raise ConfigurationError(
-            "Official Test 2 contract is missing fabric-awning inputs: {}".format(
-                missing
-            )
+            "Official Test 2 contract is missing fabric-awning inputs: {}".format(missing)
         )
 
     device = official_inputs["variant_2A_shade"]
@@ -408,9 +387,7 @@ def build_test2a_fabric_awning_control(
         maximum=1200.0,
     )
     if threshold <= 0.0:
-        raise ConfigurationError(
-            "Test 2A activation threshold must be greater than zero"
-        )
+        raise ConfigurationError("Test 2A activation threshold must be greater than zero")
     reference_u = _required_number(
         official_inputs,
         "variant_2A_reference_u_w_m2k",
@@ -439,9 +416,10 @@ def build_test2a_fabric_awning_control(
         fractions["variant_2A_direct_solar_transmittance"]
         + fractions["variant_2A_secondary_internal_heat_transfer_factor"]
     )
-    if not abs(
-        direct_plus_secondary - fractions["variant_2A_combined_g_total"]
-    ) <= 1.0e-12:
+    if (
+        not abs(direct_plus_secondary - fractions["variant_2A_combined_g_total"])
+        <= 1.0e-12
+    ):
         raise ConfigurationError(
             "Test 2A summer optical identity failed: direct transmittance + "
             "secondary internal heat transfer must equal g_total"
@@ -451,10 +429,13 @@ def build_test2a_fabric_awning_control(
         + fractions["variant_2A_thermal_radiation_factor"]
         + fractions["variant_2A_ventilation_factor"]
     )
-    if not abs(
-        secondary_components
-        - fractions["variant_2A_secondary_internal_heat_transfer_factor"]
-    ) <= 1.0e-12:
+    if (
+        not abs(
+            secondary_components
+            - fractions["variant_2A_secondary_internal_heat_transfer_factor"]
+        )
+        <= 1.0e-12
+    ):
         raise ConfigurationError(
             "Test 2A secondary-gain identity failed: convection + thermal "
             "radiation + ventilation must equal qi"
@@ -462,50 +443,44 @@ def build_test2a_fabric_awning_control(
 
     return Test2AFabricAwningControl(
         control_type=CONTROL_TYPE,
-        signal=None,
-        active_operator=None,
-        inactive_operator=None,
+        signal="total_solar_irradiance_incident_on_exterior_glazing_plane",
+        active_operator=">=",
+        inactive_operator="<",
+        hysteresis_required=False,
+        timestep_semantics=(
+            "Sub-hourly activation may occur during the hour; the state affects "
+            "transmitted energy accumulated as an hourly sum."
+        ),
+        required_reported_quantity="hourly_sum_of_transmitted_energy",
         threshold_w_m2=threshold,
         device=device.strip(),
         combined_g_total=fractions["variant_2A_combined_g_total"],
-        direct_solar_transmittance=fractions[
-            "variant_2A_direct_solar_transmittance"
-        ],
-        outside_solar_reflectance=fractions[
-            "variant_2A_outside_solar_reflectance"
-        ],
-        inside_solar_reflectance=fractions[
-            "variant_2A_inside_solar_reflectance"
-        ],
-        visible_transmittance=fractions[
-            "variant_2A_visible_transmittance"
-        ],
-        outside_visible_reflectance=fractions[
-            "variant_2A_outside_visible_reflectance"
-        ],
-        inside_visible_reflectance=fractions[
-            "variant_2A_inside_visible_reflectance"
-        ],
+        direct_solar_transmittance=fractions["variant_2A_direct_solar_transmittance"],
+        outside_solar_reflectance=fractions["variant_2A_outside_solar_reflectance"],
+        inside_solar_reflectance=fractions["variant_2A_inside_solar_reflectance"],
+        visible_transmittance=fractions["variant_2A_visible_transmittance"],
+        outside_visible_reflectance=fractions["variant_2A_outside_visible_reflectance"],
+        inside_visible_reflectance=fractions["variant_2A_inside_visible_reflectance"],
         convection_factor=fractions["variant_2A_convection_factor"],
-        thermal_radiation_factor=fractions[
-            "variant_2A_thermal_radiation_factor"
-        ],
+        thermal_radiation_factor=fractions["variant_2A_thermal_radiation_factor"],
         ventilation_factor=fractions["variant_2A_ventilation_factor"],
         secondary_internal_heat_transfer_factor=fractions[
             "variant_2A_secondary_internal_heat_transfer_factor"
         ],
         uv_transmittance=fractions["variant_2A_uv_transmittance"],
-        reference_combined_g_total=fractions[
-            "variant_2A_reference_combined_g_total"
-        ],
+        reference_combined_g_total=fractions["variant_2A_reference_combined_g_total"],
         reference_u_w_m2k=reference_u,
         iso15099_winter_u_w_m2k=winter_u,
         peripheral_gap_m=peripheral_gap,
         screen_layer_thickness_m=screen_thickness,
-        source="SIA 4010:2023 Test 2 specification",
+        source=(
+            "SIA 4010:2023 Test 2 specification plus direct written authority "
+            "decision from Prof. Gerhard Zweifel received 2026-08-26"
+        ),
         source_locator=(
             "SIA_4010_geteilter_Link/Test2/Spezifikation_Test2.pdf, "
-            "page 1 description and page 2 solar-protection table"
+            "page 1 description and page 2 solar-protection table; "
+            + AUTHORITY_DECISION_LOCATOR
         ),
         optical_source=(
             "SIA 4010 example-building documentation, Soltis "

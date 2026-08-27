@@ -24,8 +24,11 @@ def _build_bundle(name: str) -> Path:
     ws1["A1"] = "Table 28 — Test results sensible energy"
     ws1["A3"], ws1["B3"], ws1["D3"] = "Case id.", "1E", "kWh"
     for col, label in {
-        "A": "Month", "B": "Testprogramm", "G": "Mittelwert",
-        "H": "obere Grenze", "I": "untere Grenze",
+        "A": "Month",
+        "B": "Testprogramm",
+        "G": "Mittelwert",
+        "H": "obere Grenze",
+        "I": "untere Grenze",
     }.items():
         ws1["{}5".format(col)] = label
     ws1["A6"], ws1["G6"], ws1["H6"], ws1["I6"] = 1, 530.6, 588.9, 472.3
@@ -34,7 +37,10 @@ def _build_bundle(name: str) -> Path:
     ws2 = wb2.active
     ws2.title = "Zusammenfassung"
     for col, label in {
-        "D": "Testprogramm", "M": "Mittelwert", "N": "obere Grenze", "O": "untere Grenze",
+        "D": "Testprogramm",
+        "M": "Mittelwert",
+        "N": "obere Grenze",
+        "O": "untere Grenze",
     }.items():
         ws2["{}9".format(col)] = label
     ws2["A12"], ws2["D12"] = "Fall", "Jahresenergie solar"
@@ -48,6 +54,7 @@ def _build_bundle(name: str) -> Path:
 class Sia4010ExecutionTests(unittest.TestCase):
     def test_run_all_tests_evaluates_registered_present_tests(self):
         root = _build_bundle("exec")
+
         # Resolver supplies within-band values for Test 1 only; Test 2 gets none.
         def resolver(expected):
             if expected.test_id == "1":

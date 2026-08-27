@@ -9,7 +9,6 @@ from typing import Any, Callable, Dict
 from .compliance_hub import (
     ACTIONS,
     HubAction,
-    ProjectSnapshot,
     build_project_snapshot,
     is_disposable_project,
 )
@@ -280,7 +279,9 @@ class ComplianceHub:
                 padx=13,
                 pady=10,
             )
-            card.grid(row=0, column=column, sticky="nsew", padx=(0 if column == 0 else 5, 0))
+            card.grid(
+                row=0, column=column, sticky="nsew", padx=(0 if column == 0 else 5, 0)
+            )
             tk.Label(
                 card,
                 text=eyebrow,
@@ -500,7 +501,9 @@ class ComplianceHub:
             os.startfile(str(path))  # type: ignore[attr-defined]
         except OSError as exc:
             if messagebox is not None:
-                messagebox.showerror("Unable to open artifact", str(exc), parent=self.root)
+                messagebox.showerror(
+                    "Unable to open artifact", str(exc), parent=self.root
+                )
 
     def _refresh(self) -> None:
         """Rebuild the cockpit from fresh project-local evidence."""

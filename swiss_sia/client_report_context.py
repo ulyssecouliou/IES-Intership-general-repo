@@ -13,7 +13,6 @@ from dataclasses import asdict, dataclass, replace
 from pathlib import Path
 from typing import Any, Dict, Optional, Union
 
-
 CONTEXT_DIR_NAME = ".sia_compliance"
 CONTEXT_FILE_NAME = "client_report_context.json"
 REPORT_DIR_NAME = "SIA Compliance Reports"
@@ -26,55 +25,55 @@ BUILDING_STRATEGY_TEXT = {
     "client_ui_strategy_title": {
         "en": "Building strategy",
         "de": "Gebaeudestrategie",
-        "fr": "Strategie du batiment",
+        "fr": "Stratégie du bâtiment",
         "it": "Strategia dell'edificio",
     },
     "client_ui_strategy_help": {
         "en": "Describe what is actually intended for this model. These declarations are saved per VE project and do not replace model evidence.",
         "de": "Beschreiben Sie, was fuer dieses Modell tatsaechlich vorgesehen ist. Diese Angaben werden je VE-Projekt gespeichert und ersetzen keine Modellnachweise.",
-        "fr": "Indiquez ce qui est reellement prevu pour ce modele. Ces declarations sont enregistrees par projet VE et ne remplacent pas les preuves du modele.",
+        "fr": "Indiquez ce qui est réellement prévu pour ce modèle. Ces déclarations sont enregistrées par projet VE et ne remplacent pas les preuves du modèle.",
         "it": "Indicare cio che e realmente previsto per questo modello. Le dichiarazioni sono salvate per progetto VE e non sostituiscono le prove del modello.",
     },
     "client_ui_strategy_solar": {
         "en": "External solar protection / blinds",
         "de": "Aussenliegender Sonnenschutz / Storen",
-        "fr": "Protections solaires exterieures / stores",
+        "fr": "Protections solaires extérieures / stores",
         "it": "Schermature solari esterne / tende",
     },
     "client_ui_strategy_windows": {
         "en": "Windows intended to be operable",
         "de": "Fenster sollen oeffenbar sein",
-        "fr": "Fenetres prevues ouvrables",
+        "fr": "Fenêtres prévues ouvrables",
         "it": "Finestre previste apribili",
     },
     "client_ui_strategy_cooling": {
         "en": "Mechanical cooling intended",
         "de": "Mechanische Kuehlung vorgesehen",
-        "fr": "Refroidissement mecanique prevu",
+        "fr": "Refroidissement mécanique prévu",
         "it": "Raffrescamento meccanico previsto",
     },
     "client_ui_strategy_notes": {
         "en": "Design notes (controls, setpoints, capacities)",
         "de": "Planungshinweise (Regelung, Sollwerte, Leistungen)",
-        "fr": "Notes de conception (regulation, consignes, capacites)",
+        "fr": "Notes de conception (régulation, consignes, capacités)",
         "it": "Note di progetto (controlli, setpoint, capacita)",
     },
     "field_building_strategy": {
         "en": "Building strategy",
         "de": "Gebaeudestrategie",
-        "fr": "Strategie du batiment",
+        "fr": "Stratégie du bâtiment",
         "it": "Strategia dell'edificio",
     },
     "field_window_operability": {
         "en": "Operable windows",
         "de": "Oeffenbare Fenster",
-        "fr": "Fenetres ouvrables",
+        "fr": "Fenêtres ouvrables",
         "it": "Finestre apribili",
     },
     "field_mechanical_cooling": {
         "en": "Mechanical cooling",
         "de": "Mechanische Kuehlung",
-        "fr": "Refroidissement mecanique",
+        "fr": "Refroidissement mécanique",
         "it": "Raffrescamento meccanico",
     },
 }
@@ -113,9 +112,7 @@ class ClientReportContext:
         if language not in {"de", "en", "fr", "it"}:
             language = "en"
         shading = normalize_building_strategy_declaration(self.solar_shading)
-        operability = normalize_building_strategy_declaration(
-            self.window_operability
-        )
+        operability = normalize_building_strategy_declaration(self.window_operability)
         cooling = normalize_building_strategy_declaration(self.mechanical_cooling)
         return ClientReportContext(
             client_name=str(self.client_name or "").strip(),
@@ -130,9 +127,7 @@ class ClientReportContext:
             solar_shading=shading,
             window_operability=operability,
             mechanical_cooling=cooling,
-            building_strategy_notes=str(
-                self.building_strategy_notes or ""
-            ).strip(),
+            building_strategy_notes=str(self.building_strategy_notes or "").strip(),
             client_logo_path=str(self.client_logo_path or "").strip(),
             model_viewer_image_path=str(self.model_viewer_image_path or "").strip(),
         )
@@ -168,25 +163,25 @@ def building_strategy_summary(context: Any, language: str = "en") -> str:
     labels = {
         "en": ("Shading", "Windows", "Cooling"),
         "de": ("Sonnenschutz", "Fenster", "Kuehlung"),
-        "fr": ("Stores", "Fenetres", "Froid"),
+        "fr": ("Stores", "Fenêtres", "Froid"),
         "it": ("Schermature", "Finestre", "Raffrescamento"),
     }
     code = str(language or "en").strip().lower()
     if code not in labels:
         code = "en"
-    getter = (
-        (lambda key: context.get(key, "TO_CONFIRM"))
-        if isinstance(context, dict)
-        else (lambda key: getattr(context, key, "TO_CONFIRM"))
-    )
+
+    def get_declaration(key: str) -> Any:
+        if isinstance(context, dict):
+            return context.get(key, "TO_CONFIRM")
+        return getattr(context, key, "TO_CONFIRM")
+
     values = (
-        normalize_building_strategy_declaration(getter("solar_shading")),
-        normalize_building_strategy_declaration(getter("window_operability")),
-        normalize_building_strategy_declaration(getter("mechanical_cooling")),
+        normalize_building_strategy_declaration(get_declaration("solar_shading")),
+        normalize_building_strategy_declaration(get_declaration("window_operability")),
+        normalize_building_strategy_declaration(get_declaration("mechanical_cooling")),
     )
     return " | ".join(
-        "{}: {}".format(label, value)
-        for label, value in zip(labels[code], values)
+        "{}: {}".format(label, value) for label, value in zip(labels[code], values)
     )
 
 
@@ -255,9 +250,7 @@ def save_client_report_context(
     return stored
 
 
-def load_client_report_context(
-    project_path: Union[str, Path]
-) -> ClientReportContext:
+def load_client_report_context(project_path: Union[str, Path]) -> ClientReportContext:
     """Load saved project information, degrading safely on malformed content."""
 
     path = context_path(project_path)

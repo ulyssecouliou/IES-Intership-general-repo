@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import io
 import json
-import os
 import unittest
 
 from swiss_sia.reference_model import sia180_comfort as sc
@@ -16,26 +15,32 @@ class Sia180ComfortTests(unittest.TestCase):
             data = json.load(handle)
         self.assertEqual(
             sc._UPPER_VERTICES,
-            [tuple(map(float, v)) for v in data["courbes"]["limite_superieure"]["sommets"]],
+            [
+                tuple(map(float, v))
+                for v in data["courbes"]["limite_superieure"]["sommets"]
+            ],
         )
         self.assertEqual(
             sc._LOWER_VERTICES,
-            [tuple(map(float, v)) for v in data["courbes"]["limite_inferieure"]["sommets"]],
+            [
+                tuple(map(float, v))
+                for v in data["courbes"]["limite_inferieure"]["sommets"]
+            ],
         )
         self.assertEqual(sc.DOMAIN, (10.0, 25.0))
 
     def test_upper_curve_matches_known_points(self):
         self.assertAlmostEqual(sc.upper_limit(12.0), 24.5)
         self.assertAlmostEqual(sc.upper_limit(17.5), 26.5)
-        self.assertAlmostEqual(sc.upper_limit(14.75), 25.5)   # segment midpoint
-        self.assertAlmostEqual(sc.upper_limit(5.0), 24.5)     # clamp below domain
-        self.assertAlmostEqual(sc.upper_limit(30.0), 26.5)    # clamp above domain
+        self.assertAlmostEqual(sc.upper_limit(14.75), 25.5)  # segment midpoint
+        self.assertAlmostEqual(sc.upper_limit(5.0), 24.5)  # clamp below domain
+        self.assertAlmostEqual(sc.upper_limit(30.0), 26.5)  # clamp above domain
 
     def test_lower_curve_matches_known_points(self):
         self.assertAlmostEqual(sc.lower_limit(19.0), 20.5)
         self.assertAlmostEqual(sc.lower_limit(23.5), 22.0)
         self.assertAlmostEqual(sc.lower_limit(21.25), 21.25)  # segment midpoint
-        self.assertAlmostEqual(sc.lower_limit(5.0), 20.5)     # clamp below domain
+        self.assertAlmostEqual(sc.lower_limit(5.0), 20.5)  # clamp below domain
 
     def test_rolling_mean_uses_a_48h_window_in_timesteps(self):
         # 96 half-hourly steps of 20 °C then a jump; the running mean lags.

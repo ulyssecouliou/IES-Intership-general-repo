@@ -49,7 +49,7 @@ import sys
 
 import pytest
 
-tk = pytest.importorskip('tkinter')
+tk = pytest.importorskip("tkinter")
 
 
 def _affichage_disponible():
@@ -67,8 +67,9 @@ def _affichage_disponible():
 
 pytestmark = pytest.mark.skipif(
     not _affichage_disponible(),
-    reason=u'Aucun affichage Tk disponible sur cette machine -- '
-           u'dialog_tkinter non testable ici (voir docstring du module).')
+    reason="Aucun affichage Tk disponible sur cette machine -- "
+    "dialog_tkinter non testable ici (voir docstring du module).",
+)
 
 _ICI = os.path.dirname(os.path.abspath(__file__))
 _RACINE = os.path.abspath(os.path.join(_ICI, os.pardir, os.pardir))
@@ -112,8 +113,10 @@ def app(resultat_fixture):
     try:
         fenetre = dlg.NavigateurTest1(resultat_fixture)
     except tk.TclError as erreur:
-        pytest.skip(u'Tk indisponible au montage de ce test (%s) -- '
-                    u'voir la docstring du module.' % erreur)
+        pytest.skip(
+            "Tk indisponible au montage de ce test (%s) -- "
+            "voir la docstring du module." % erreur
+        )
     try:
         fenetre._racine.update()
         yield fenetre
@@ -134,7 +137,7 @@ def test_construction_ne_leve_aucune_exception_avec_plusieurs_classes(app):
 
 
 def test_chaque_classe_a_un_noeud_test_et_les_bonnes_grandeurs(app, resultat_fixture):
-    nb_grandeurs = len(set(bloc['grandeur'] for bloc in resultat_fixture['cas'].values()))
+    nb_grandeurs = len(set(bloc["grandeur"] for bloc in resultat_fixture["cas"].values()))
     for noeud_classe in app._arbre.get_children():
         enfants_test = app._arbre.get_children(noeud_classe)
         assert len(enfants_test) == 1  # un seul test implemente (Test 1)
@@ -143,8 +146,8 @@ def test_chaque_classe_a_un_noeud_test_et_les_bonnes_grandeurs(app, resultat_fix
 
 
 def test_nombre_total_de_lignes_periode_indexees_est_correct(app, resultat_fixture):
-    nb_periodes = sum(len(bloc['periodes']) for bloc in resultat_fixture['cas'].values())
-    nb_classes = len(resultat_fixture['classes_concernees'])
+    nb_periodes = sum(len(bloc["periodes"]) for bloc in resultat_fixture["cas"].values())
+    nb_classes = len(resultat_fixture["classes_concernees"])
     assert len(app._lignes_par_iid) == nb_periodes * nb_classes
 
 
@@ -158,11 +161,12 @@ def test_couleurs_des_tags_narrivent_jamais_a_vert_sans_conforme_true(app):
     niveau du noeud Treeview doit correspondre a `couleur_depuis_conforme`
     -- jamais de vert pour `conforme` non strictement `True`."""
     from ui import verdict_view as vue
+
     for iid, ligne in app._lignes_par_iid.items():
-        tags = app._arbre.item(iid, 'tags')
-        assert tags == (vue.couleur_depuis_conforme(ligne['conforme']),)
-        if ligne['conforme'] is not True:
-            assert 'vert' not in tags
+        tags = app._arbre.item(iid, "tags")
+        assert tags == (vue.couleur_depuis_conforme(ligne["conforme"]),)
+        if ligne["conforme"] is not True:
+            assert "vert" not in tags
 
 
 def test_selection_dune_ligne_remplit_le_panneau_de_detail(app):
@@ -170,10 +174,10 @@ def test_selection_dune_ligne_remplit_le_panneau_de_detail(app):
     app._arbre.selection_set(un_iid)
     app._afficher_detail_selection(None)
     app._racine.update()
-    texte = app._texte_detail.get('1.0', 'end')
+    texte = app._texte_detail.get("1.0", "end")
     ligne = app._lignes_par_iid[un_iid]
-    assert ligne['grandeur_libelle'] in texte
-    assert ligne['article'] in texte
+    assert ligne["grandeur_libelle"] in texte
+    assert ligne["article"] in texte
 
 
 def test_dialogue_avec_aucun_candidat_reste_entierement_gris(resultat_sans_candidat):
@@ -186,27 +190,27 @@ def test_dialogue_avec_aucun_candidat_reste_entierement_gris(resultat_sans_candi
     try:
         fenetre = dlg.NavigateurTest1(resultat_sans_candidat)
     except Exception as erreur:  # noqa: BLE001 -- artefact de poste, pas defaut
-        pytest.skip(u'Tk indisponible au montage (%s)' % erreur)
+        pytest.skip("Tk indisponible au montage (%s)" % erreur)
     try:
         fenetre._racine.update()
         for iid in fenetre._lignes_par_iid:
-            tags = fenetre._arbre.item(iid, 'tags')
-            assert tags == ('gris',)
+            tags = fenetre._arbre.item(iid, "tags")
+            assert tags == ("gris",)
     finally:
         fenetre._racine.destroy()
 
 
 def test_pire_couleur_narrive_jamais_a_vert_si_une_periode_nest_pas_verte():
-    assert dlg._pire_couleur(['vert', 'vert']) == 'vert'
-    assert dlg._pire_couleur(['vert', 'gris']) == 'gris'
-    assert dlg._pire_couleur(['vert', 'rouge']) == 'rouge'
-    assert dlg._pire_couleur(['gris', 'rouge']) == 'rouge'
-    assert dlg._pire_couleur([]) == 'gris'
+    assert dlg._pire_couleur(["vert", "vert"]) == "vert"
+    assert dlg._pire_couleur(["vert", "gris"]) == "gris"
+    assert dlg._pire_couleur(["vert", "rouge"]) == "rouge"
+    assert dlg._pire_couleur(["gris", "rouge"]) == "rouge"
+    assert dlg._pire_couleur([]) == "gris"
 
 
 def test_iid_ligne_est_unique_entre_deux_classes_differentes():
-    ligne = {'grandeur': 'g', 'cas': 'c', 'periode': 'p'}
-    assert dlg._iid_ligne('1A', ligne) != dlg._iid_ligne('1B', ligne)
+    ligne = {"grandeur": "g", "cas": "c", "periode": "p"}
+    assert dlg._iid_ligne("1A", ligne) != dlg._iid_ligne("1B", ligne)
 
 
 def test_iid_ligne_est_unique_entre_deux_tests_de_la_meme_classe():
@@ -216,14 +220,14 @@ def test_iid_ligne_est_unique_entre_deux_tests_de_la_meme_classe():
     (grandeur, cas, période) provoqueraient `TclError: Item already exists` --
     exactement le bug déjà rencontré entre classes.
     """
-    ligne = {'grandeur': 'g', 'cas': 'c', 'periode': 'p'}
-    assert (dlg._iid_ligne('4A', ligne, 'Test 1')
-            != dlg._iid_ligne('4A', ligne, 'Test 7'))
+    ligne = {"grandeur": "g", "cas": "c", "periode": "p"}
+    assert dlg._iid_ligne("4A", ligne, "Test 1") != dlg._iid_ligne("4A", ligne, "Test 7")
 
 
 # --------------------------------------------------------------------------
 # Navigateur multi-tests (Test 1 + Test 7)
 # --------------------------------------------------------------------------
+
 
 @pytest.fixture
 def vues_deux_tests(resultat_fixture):
@@ -231,11 +235,14 @@ def vues_deux_tests(resultat_fixture):
     from ui import verdict_view as vue
     import os
     from engine import test7_engine as moteur7
+
     if not os.path.exists(moteur7.CHEMIN_REFERENCE_DEFAUT):
-        pytest.skip(u'référence Test 7 absente')
+        pytest.skip("référence Test 7 absente")
     resultat7 = moteur7.evaluer_test7(moteur7.charger_reference(), None)
-    return [vue.construire_vue_test1(resultat_fixture),
-            vue.construire_vue_test7(resultat7)]
+    return [
+        vue.construire_vue_test1(resultat_fixture),
+        vue.construire_vue_test7(resultat7),
+    ]
 
 
 @pytest.fixture
@@ -243,7 +250,7 @@ def app_multi(vues_deux_tests):
     try:
         fenetre = dlg.NavigateurSIA4010(vues_deux_tests)
     except tk.TclError as erreur:
-        pytest.skip(u'Tk indisponible au montage (%s)' % erreur)
+        pytest.skip("Tk indisponible au montage (%s)" % erreur)
     try:
         fenetre._racine.update()
         yield fenetre
@@ -258,22 +265,22 @@ def test_multi_construit_les_huit_classes(app_multi):
     """1A, 1B, 2A, 2B, 3, 4A, 4B (Test 1) + 5 (Test 7) = 8 classes."""
     enfants = app_multi._arbre.get_children()
     assert len(enfants) == 8
-    libelles = [app_multi._arbre.item(n, 'text') for n in enfants]
-    assert u'Classe 5' in libelles
+    libelles = [app_multi._arbre.item(n, "text") for n in enfants]
+    assert "Classe 5" in libelles
 
 
 def test_multi_la_classe_5_ne_porte_que_le_test_7(app_multi):
     for noeud in app_multi._arbre.get_children():
-        if app_multi._arbre.item(noeud, 'text') == u'Classe 5':
+        if app_multi._arbre.item(noeud, "text") == "Classe 5":
             tests = app_multi._arbre.get_children(noeud)
             assert len(tests) == 1
-            assert app_multi._arbre.item(tests[0], 'text') == u'Test 7'
+            assert app_multi._arbre.item(tests[0], "text") == "Test 7"
             return
-    pytest.fail(u'Classe 5 absente de l\'arbre')
+    pytest.fail("Classe 5 absente de l'arbre")
 
 
 def test_multi_aucune_collision_diid(app_multi, vues_deux_tests):
-    attendu = sum(len(v['lignes']) * len(v['classes']) for v in vues_deux_tests)
+    attendu = sum(len(v["lignes"]) * len(v["classes"]) for v in vues_deux_tests)
     assert len(app_multi._lignes_par_iid) == attendu
     for iid in app_multi._lignes_par_iid:
         assert app_multi._arbre.exists(iid)
@@ -282,10 +289,10 @@ def test_multi_aucune_collision_diid(app_multi, vues_deux_tests):
 def test_multi_la_classe_5_reste_grise_sans_candidat_test7(app_multi):
     """Le Test 7 n'a pas de candidat : sa classe ne doit jamais être verte."""
     for noeud in app_multi._arbre.get_children():
-        if app_multi._arbre.item(noeud, 'text') == u'Classe 5':
-            assert app_multi._arbre.item(noeud, 'tags') == ('gris',)
+        if app_multi._arbre.item(noeud, "text") == "Classe 5":
+            assert app_multi._arbre.item(noeud, "tags") == ("gris",)
             return
-    pytest.fail(u'Classe 5 absente de l\'arbre')
+    pytest.fail("Classe 5 absente de l'arbre")
 
 
 def test_navigateur_refuse_une_liste_de_vues_vide():

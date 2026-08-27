@@ -11,7 +11,6 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass, field
 from typing import Any, Dict, Iterable, List, Optional, Sequence
 
-
 # API geometry can contain floating-point slivers after adjacency operations.
 # This is a computational tolerance, not a SIA regulatory value.
 MIN_MEANINGFUL_AREA_M2 = 1.0e-6
@@ -159,8 +158,7 @@ def build_remediation_diagnosis(
         surface
         for room in rooms
         for surface in list(getattr(room, "surfaces", []) or [])
-        if bool(getattr(surface, "is_external", False))
-        and _has_meaningful_area(surface)
+        if bool(getattr(surface, "is_external", False)) and _has_meaningful_area(surface)
     ]
     ignored_surface_residues = [
         surface
@@ -210,7 +208,8 @@ def build_remediation_diagnosis(
         opening
         for room in rooms
         for opening in list(getattr(room, "openings", []) or [])
-        if bool(getattr(opening, "is_external", False)) and _is_window(opening)
+        if bool(getattr(opening, "is_external", False))
+        and _is_window(opening)
         and _has_meaningful_area(opening)
     ]
     invalid_windows = [
@@ -259,9 +258,7 @@ def build_remediation_diagnosis(
             room,
             ventilation_rate=getattr(room, "ventilation_rate", None),
             ventilation_m3_h_m2=getattr(room, "ventilation_m3_h_m2", None),
-            ventilation_facade_m3_h_m2=getattr(
-                room, "ventilation_facade_m3_h_m2", None
-            ),
+            ventilation_facade_m3_h_m2=getattr(room, "ventilation_facade_m3_h_m2", None),
         )
         for room in rooms
         if not any(
@@ -281,14 +278,15 @@ def build_remediation_diagnosis(
             for exchange in exchanges
             if isinstance(exchange, dict)
         ]
-        if exchanges and exchange_names and all(
-            "infiltration" in name for name in exchange_names
+        if (
+            exchanges
+            and exchange_names
+            and all("infiltration" in name for name in exchange_names)
         ):
             rooms_with_only_infiltration.append(runtime_room)
-    ventilation_runtime_confirmed = (
-        bool(missing_ventilation)
-        and len(rooms_with_only_infiltration) == len(missing_ventilation)
-    )
+    ventilation_runtime_confirmed = bool(missing_ventilation) and len(
+        rooms_with_only_infiltration
+    ) == len(missing_ventilation)
     controls.append(
         _control(
             "MODEL-003",
@@ -306,10 +304,12 @@ def build_remediation_diagnosis(
                 "is intended, enter its flows and profiles in VE; otherwise document "
                 "the natural-ventilation or zero-ventilation assumption explicitly."
                 if ventilation_runtime_confirmed
-                else "Review Air Exchanges / Apache Systems. If VE already contains the "
-                "flows, preserve the model and qualify the extraction path."
-                if missing_ventilation
-                else "No action required."
+                else (
+                    "Review Air Exchanges / Apache Systems. If VE already contains the "
+                    "flows, preserve the model and qualify the extraction path."
+                    if missing_ventilation
+                    else "No action required."
+                )
             ),
             "HVAC engineer / developer",
             missing_ventilation,
@@ -337,10 +337,9 @@ def build_remediation_diagnosis(
             token in gain_types for token in ("lighting", "fluorescent", "tungsten")
         ):
             rooms_without_runtime_lighting.append(runtime_room)
-    lighting_runtime_confirmed = (
-        bool(missing_lighting)
-        and len(rooms_without_runtime_lighting) == len(missing_lighting)
-    )
+    lighting_runtime_confirmed = bool(missing_lighting) and len(
+        rooms_without_runtime_lighting
+    ) == len(missing_lighting)
     controls.append(
         _control(
             "MODEL-004",
@@ -357,10 +356,12 @@ def build_remediation_diagnosis(
                 "Add or assign a source-traced, profiled Lighting gain in the thermal "
                 "template only if lighting is in scope; otherwise document its exclusion."
                 if lighting_runtime_confirmed
-                else "Review Lighting gains in the thermal template. If power is present "
-                "in VE, preserve the model and qualify its extraction."
-                if missing_lighting
-                else "No action required."
+                else (
+                    "Review Lighting gains in the thermal template. If power is present "
+                    "in VE, preserve the model and qualify its extraction."
+                    if missing_lighting
+                    else "No action required."
+                )
             ),
             "Lighting engineer / developer",
             missing_lighting,
@@ -402,9 +403,11 @@ def build_remediation_diagnosis(
             "SIMULATION_OUTPUT",
             "Readable APS file",
             str(dynamic.get("selected_aps_file") or "No APS selected"),
-            "Run ApacheSim again on the copy and retain the active APS file."
-            if not aps_available
-            else "No action required.",
+            (
+                "Run ApacheSim again on the copy and retain the active APS file."
+                if not aps_available
+                else "No action required."
+            ),
             "Simulation engineer",
         )
     )
@@ -415,9 +418,8 @@ def build_remediation_diagnosis(
         str((item.get("room_conditions") or {}).get("heating_profile") or "")
         for item in runtime_rooms
     ]
-    heating_profiles_off = (
-        bool(runtime_heating_profiles)
-        and all(profile.upper() == "OFF" for profile in runtime_heating_profiles)
+    heating_profiles_off = bool(runtime_heating_profiles) and all(
+        profile.upper() == "OFF" for profile in runtime_heating_profiles
     )
     heating_bound_but_inactive = (
         not heating_available and bool(heating_binding) and heating_profiles_off
@@ -439,13 +441,15 @@ def build_remediation_diagnosis(
                 )
             ),
             (
-                "Confirm that the absence of heating is intentional. If annual heating "
-                "need is required, assign the correct heating profile and resimulate."
-                if heating_bound_but_inactive
-                else "Enable/export heating need in ApacheSim/Vista and resimulate."
-            )
-            if not heating_available
-            else "No action required.",
+                (
+                    "Confirm that the absence of heating is intentional. If annual heating "
+                    "need is required, assign the correct heating profile and resimulate."
+                    if heating_bound_but_inactive
+                    else "Enable/export heating need in ApacheSim/Vista and resimulate."
+                )
+                if not heating_available
+                else "No action required."
+            ),
             "Simulation engineer / developer",
         )
     )
@@ -466,25 +470,32 @@ def build_remediation_diagnosis(
             "WARNING" if missing_end_uses else "PASS",
             "SIMULATION_OUTPUT",
             "APS end-use and auxiliary energy",
-            "Missing: " + ", ".join(missing_end_uses)
-            + (
-                "; APS variables not present: " + ", ".join(unresolved_aps_bindings)
-                if unresolved_aps_bindings
-                else ""
-            )
-            if missing_end_uses
-            else "All expected output families are available.",
-            "Enable the ApacheSim/Vista outputs required by the scope, resimulate, then "
-            "qualify their names, units and signs; do not create zero-value substitutes."
-            if missing_end_uses
-            else "No action required.",
+            (
+                "Missing: "
+                + ", ".join(missing_end_uses)
+                + (
+                    "; APS variables not present: " + ", ".join(unresolved_aps_bindings)
+                    if unresolved_aps_bindings
+                    else ""
+                )
+                if missing_end_uses
+                else "All expected output families are available."
+            ),
+            (
+                "Enable the ApacheSim/Vista outputs required by the scope, resimulate, then "
+                "qualify their names, units and signs; do not create zero-value substitutes."
+                if missing_end_uses
+                else "No action required."
+            ),
             "Simulation engineer / developer",
         )
     )
 
     metadata_status = str(dynamic.get("project_metadata_status") or "NOT_PROVIDED")
     weather_match = str(dynamic.get("reviewed_weather_match_status") or "NOT_CHECKABLE")
-    metadata_ready = metadata_status.upper() == "AVAILABLE" and weather_match.upper() == "MATCH"
+    metadata_ready = (
+        metadata_status.upper() == "AVAILABLE" and weather_match.upper() == "MATCH"
+    )
     controls.append(
         _control(
             "EVID-001",
@@ -492,9 +503,11 @@ def build_remediation_diagnosis(
             "REVIEWER_EVIDENCE",
             "Reviewed climate metadata",
             f"metadata={metadata_status}; weather_match={weather_match}",
-            "Complete project_metadata.csv with actual data and an accepted review."
-            if not metadata_ready
-            else "No action required.",
+            (
+                "Complete project_metadata.csv with actual data and an accepted review."
+                if not metadata_ready
+                else "No action required."
+            ),
             "Compliance reviewer",
         )
     )

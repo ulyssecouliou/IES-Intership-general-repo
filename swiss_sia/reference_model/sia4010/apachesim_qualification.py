@@ -33,7 +33,6 @@ from .test1_runtime_inputs import (
     validate_prescribed_infiltration_preserved,
 )
 
-
 SIMULATION_QUALIFICATION_CASES: Tuple[str, ...] = (
     "600",
     "640",
@@ -53,12 +52,8 @@ TEST1_SIMULATION_SOURCE = "SIA 4010 Test 1 specification, pages 1-2"
 MODEL_REPORT_RELATIVE_PATH = Path(
     "reference_model_artifacts/reports/reference_model_report.json"
 )
-RUNTIME_INPUT_REPORT_GLOB = (
-    "sia4010_test1_runtime_input_qualification_*.json"
-)
-RUNTIME_INPUT_READY_STATUS = (
-    "PROVISIONAL_ENGINE_MAPPING_APPLIED_READY_FOR_SIMULATION"
-)
+RUNTIME_INPUT_REPORT_GLOB = "sia4010_test1_runtime_input_qualification_*.json"
+RUNTIME_INPUT_READY_STATUS = "PROVISIONAL_ENGINE_MAPPING_APPLIED_READY_FOR_SIMULATION"
 
 
 class ApacheSimQualificationError(RuntimeError):
@@ -142,9 +137,7 @@ def _apache_worker_failure(project_path: Path) -> str:
     parts = [str(value) for value in (detail_id, explanation) if value]
     if not parts:
         return ""
-    return "Apache worker: {} (status: {})".format(
-        " - ".join(parts), status_path
-    )
+    return "Apache worker: {} (status: {})".format(" - ".join(parts), status_path)
 
 
 def _sha256(path: Path) -> str:
@@ -161,9 +154,7 @@ def _json_safe_mapping(value: Any, context: str) -> Dict[str, Any]:
     """Normalize an ApacheSim option mapping for evidence serialization."""
 
     if not isinstance(value, Mapping):
-        raise ApacheSimQualificationError(
-            "{} did not return a mapping".format(context)
-        )
+        raise ApacheSimQualificationError("{} did not return a mapping".format(context))
     return {str(key): item for key, item in value.items()}
 
 
@@ -253,9 +244,7 @@ def _validate_runtime_input_evidence(
                 expected_pair[1],
             )
         )
-    if str(report.get("scenario_sha256") or "").upper() != _sha256(
-        scenario_path
-    ):
+    if str(report.get("scenario_sha256") or "").upper() != _sha256(scenario_path):
         raise ApacheSimQualificationError(
             "Runtime-input qualification is stale: scenario checksum mismatch"
         )
@@ -323,17 +312,14 @@ def _validate_runtime_input_evidence(
     # cannot prove clause 7.2.2.14 was retained; it is stale for this guardrail.
     infiltration = mutation.get("prescribed_infiltration_verified_after") or {}
     try:
-        qualified_infiltration_flow = float(
-            infiltration.get("ve_infiltration_max_flow")
-        )
+        qualified_infiltration_flow = float(infiltration.get("ve_infiltration_max_flow"))
     except (TypeError, ValueError) as exc:
         raise ApacheSimQualificationError(
             "Runtime-input qualification contains no prescribed-infiltration "
             "read-back evidence; re-run the runtime-input qualification"
         ) from exc
     if infiltration.get("verified") is not True or not (
-        math.isfinite(qualified_infiltration_flow)
-        and qualified_infiltration_flow > 0.0
+        math.isfinite(qualified_infiltration_flow) and qualified_infiltration_flow > 0.0
     ):
         raise ApacheSimQualificationError(
             "Runtime-input qualification does not prove the prescribed Test 1 "
@@ -343,12 +329,8 @@ def _validate_runtime_input_evidence(
     qualified_cooling_radiant = None
     if conditioned:
         try:
-            qualified_heating_radiant = float(
-                emission.get("ve_heating_radiant_fraction")
-            )
-            qualified_cooling_radiant = float(
-                emission.get("ve_cooling_radiant_fraction")
-            )
+            qualified_heating_radiant = float(emission.get("ve_heating_radiant_fraction"))
+            qualified_cooling_radiant = float(emission.get("ve_cooling_radiant_fraction"))
         except (TypeError, ValueError) as exc:
             raise ApacheSimQualificationError(
                 "Runtime-input qualification contains invalid ideal-load emission evidence"
@@ -360,10 +342,7 @@ def _validate_runtime_input_evidence(
             raise ApacheSimQualificationError(
                 "Runtime-input qualification does not prove fully convective ideal loads"
             )
-    elif not (
-        emission.get("applicable") is False
-        and emission.get("verified") is True
-    ):
+    elif not (emission.get("applicable") is False and emission.get("verified") is True):
         raise ApacheSimQualificationError(
             "Free-floating runtime qualification does not prove that ideal-load "
             "emission is inapplicable"
@@ -421,9 +400,7 @@ def _validate_runtime_input_evidence(
         raise ApacheSimQualificationError(
             "Live VE furniture_mass_factor is unavailable"
         ) from exc
-    if not math.isclose(
-        live_factor, verified_factor, rel_tol=0.0, abs_tol=1.0e-6
-    ):
+    if not math.isclose(live_factor, verified_factor, rel_tol=0.0, abs_tol=1.0e-6):
         raise ApacheSimQualificationError(
             "Live VE furniture factor does not match the qualification report: "
             "live={}, qualified={}. Save/reapply the controlled qualification.".format(
@@ -432,9 +409,7 @@ def _validate_runtime_input_evidence(
         )
     live_system = dict(room_data.get_apache_systems())
     try:
-        live_system_air_flow = float(
-            live_system.get("system_air_minimum_flowrate")
-        )
+        live_system_air_flow = float(live_system.get("system_air_minimum_flowrate"))
     except (TypeError, ValueError) as exc:
         raise ApacheSimQualificationError(
             "Live VE Test 1 mechanical-ventilation flow is unavailable"
@@ -559,9 +534,7 @@ def _validate_model_evidence(
                 mode
             )
         )
-    asset_manifest = (
-        report.get("additional_data", {}).get("asset_manifest") or {}
-    )
+    asset_manifest = report.get("additional_data", {}).get("asset_manifest") or {}
     if not isinstance(asset_manifest, Mapping):
         asset_manifest = {}
     metadata = asset_manifest.get("metadata") or {}
@@ -574,9 +547,9 @@ def _validate_model_evidence(
     if actual_pair == ("", ""):
         frozen_checksum = str(asset_manifest.get("source_checksum") or "")
         generated = report.get("generated_geometry") or {}
-        generated_spaces = generated.get("spaces") if isinstance(
-            generated, Mapping
-        ) else []
+        generated_spaces = (
+            generated.get("spaces") if isinstance(generated, Mapping) else []
+        )
         if not isinstance(generated_spaces, list):
             generated_spaces = []
         expected_building = "SIA4010_TEST_1_{}_BUILDING".format(case_id)
@@ -620,9 +593,7 @@ def _validate_model_evidence(
             )
         )
     expected_room_name = "SIA4010_TEST_1_{}_ZONE".format(case_id)
-    room_name = str(rooms[0].get("name") or "") if isinstance(
-        rooms[0], Mapping
-    ) else ""
+    room_name = str(rooms[0].get("name") or "") if isinstance(rooms[0], Mapping) else ""
     if room_name and room_name != expected_room_name:
         raise ApacheSimQualificationError(
             "Verified VE room is {!r}, expected {!r}".format(
@@ -764,10 +735,7 @@ def run_qualified_apachesim(
             )
         )
     capability = get_case_capability(scenario.variant, scenario.case_id)
-    if not (
-        capability.mutation_supported
-        or capability.runtime_qualification_supported
-    ):
+    if not (capability.mutation_supported or capability.runtime_qualification_supported):
         raise ApacheSimQualificationError(
             "No guarded model generator exists for {}/{}".format(
                 scenario.variant, scenario.case_id
@@ -781,9 +749,7 @@ def run_qualified_apachesim(
     )
     if not specification_path.is_file():
         raise ApacheSimQualificationError(
-            "Official Test 1 specification is missing: {}".format(
-                specification_path
-            )
+            "Official Test 1 specification is missing: {}".format(specification_path)
         )
     initialization_source_path = (
         Path(repository_root)
@@ -806,28 +772,22 @@ def run_qualified_apachesim(
         variant=scenario.variant,
         case_id=scenario.case_id,
     )
-    runtime_input_report_path, runtime_input_report = (
-        _validate_runtime_input_evidence(
-            project=project,
-            project_path=project_path,
-            scenario=scenario,
-            scenario_path=scenario_path,
-        )
+    runtime_input_report_path, runtime_input_report = _validate_runtime_input_evidence(
+        project=project,
+        project_path=project_path,
+        scenario=scenario,
+        scenario_path=scenario_path,
     )
 
     current_time = now or datetime.now(timezone.utc)
     if current_time.tzinfo is None:
         current_time = current_time.replace(tzinfo=timezone.utc)
     stamp = current_time.astimezone(timezone.utc).strftime("%Y%m%d_%H%M%S")
-    results_filename = _safe_result_stem(
-        scenario.variant, scenario.case_id, stamp
-    )
+    results_filename = _safe_result_stem(scenario.variant, scenario.case_id, stamp)
     results_path = project_path / "Vista" / results_filename
     if results_path.exists():
         raise ApacheSimQualificationError(
-            "Refusing to overwrite existing APS evidence: {}".format(
-                results_path
-            )
+            "Refusing to overwrite existing APS evidence: {}".format(results_path)
         )
 
     audit_path = (
@@ -908,9 +868,7 @@ def run_qualified_apachesim(
                 raise ApacheSimQualificationError(
                     "ApacheSim.{} is unavailable".format(method)
                 )
-        options_before = _json_safe_mapping(
-            sim.get_options(), "ApacheSim.get_options()"
-        )
+        options_before = _json_safe_mapping(sim.get_options(), "ApacheSim.get_options()")
         if sim.set_options(dict(requested_options)) is not True:
             raise ApacheSimQualificationError(
                 "ApacheSim.set_options() did not return True"
@@ -922,15 +880,14 @@ def run_qualified_apachesim(
         if sim.run_simulation(queue_to_tasks=False) is not True:
             worker_failure = _apache_worker_failure(project_path)
             raise ApacheSimQualificationError(
-                "ApacheSim.run_simulation(queue_to_tasks=False) did not return True{}"
-                .format(". " + worker_failure if worker_failure else "")
+                "ApacheSim.run_simulation(queue_to_tasks=False) did not return True{}".format(
+                    ". " + worker_failure if worker_failure else ""
+                )
             )
         _wait_for_nonempty_file(results_path, file_wait_seconds)
         control_temperature_evidence = _control_temperature_evidence(project_path)
         observed_rfcont = float(control_temperature_evidence["rfcont"])
-        control_requirement_applicable = (
-            scenario.case_id not in FREE_FLOATING_CASES
-        )
+        control_requirement_applicable = scenario.case_id not in FREE_FLOATING_CASES
         control_temperature_evidence.update(
             {
                 "requirement_applicable": control_requirement_applicable,
@@ -966,8 +923,9 @@ def run_qualified_apachesim(
                 "ApacheSim used RFCONT={:.6g}; ISO 52016-1 Test 1 requires "
                 "RFCONT=0.5 (dry-resultant/operative temperature control). "
                 "In Apache, open Settings > Building, set Control Temperature "
-                "Radiant Fraction to 0.50, save the project, then rerun."
-                .format(observed_rfcont)
+                "Radiant Fraction to 0.50, save the project, then rerun.".format(
+                    observed_rfcont
+                )
             )
         if control_requirement_applicable:
             control_temperature_evidence["verification_status"] = "PASS"
@@ -1016,12 +974,8 @@ def run_qualified_apachesim(
         {
             "source": TEST1_SIMULATION_SOURCE,
             "source_file": base_audit["source_file"],
-            "initialization_source_file": base_audit[
-                "initialization_source_file"
-            ],
-            "runtime_input_qualification": base_audit[
-                "runtime_input_qualification"
-            ],
+            "initialization_source_file": base_audit["initialization_source_file"],
+            "runtime_input_qualification": base_audit["runtime_input_qualification"],
             "confirmed_contract": base_audit["confirmed_contract"],
             "deliberately_unset_engine_options": base_audit[
                 "deliberately_unset_engine_options"

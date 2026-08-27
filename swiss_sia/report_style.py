@@ -33,10 +33,9 @@ any environment and testable without either library.
 
 from __future__ import annotations
 
-from typing import Any, Dict, Mapping, Optional, Sequence, Tuple
+from typing import Any, Dict, Optional, Tuple
 
 from ui import design
-
 
 __all__ = [
     "PDF",
@@ -288,9 +287,7 @@ def status_presentation(status: str) -> StatusPresentation:
     key = design.LEGACY_COLOUR_TO_STATUS.get(status, status)
     if key not in design.STATUSES:
         raise KeyError(
-            "Unknown status {!r}. Known: {}".format(
-                status, ", ".join(design.STATUSES)
-            )
+            "Unknown status {!r}. Known: {}".format(status, ", ".join(design.STATUSES))
         )
     return StatusPresentation(
         status=key,
@@ -585,6 +582,7 @@ def xw_status(
 
 #: Tab colour for the two landing sheets. Navy, matching the band.
 XW_TAB_COLOR = xw_hex(design.NAVY)
+
 
 def xw_shared_roles() -> Dict[str, Dict[str, Any]]:
     """Return the seven formats the workbook shares across its many sheets.

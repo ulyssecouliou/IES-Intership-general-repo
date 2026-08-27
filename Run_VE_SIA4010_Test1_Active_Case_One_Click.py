@@ -1,10 +1,16 @@
-"""State-aware one-click execution of one prepared ISO Test 1 project.
+"""State-aware guarded execution of one prepared ISO Test 1 project.
 
 The native Model Builder must first prepare ``sia_model_scenario.json`` in a
 saved disposable project.  This launcher then creates the case when the
 expected room is absent, safely resumes when exactly that room already exists,
 applies the qualified runtime inputs, runs ApacheSim, evaluates the new APS and
 updates the central evidence ledger.
+
+For a freshly generated project the launcher deliberately pauses after runtime
+qualification. Importing the model can reset Apache's building-level RFCONT
+setting, and the public ``iesve`` API exposes no qualified setter for it. The
+operator must therefore set RFCONT to 0.50, save, and run the guarded simulation
+launcher. A resumed, already generated project may continue to simulation.
 
 One VE project remains one exact official case.  The launcher never deletes or
 replaces rooms and never switches an active project to a different case.
@@ -105,6 +111,15 @@ def _outcome_failed(outcome):
     if not status:
         status = str(getattr(outcome, "status", ""))
     return "FAIL" in status.upper()
+
+
+def _requires_operator_checkpoint(expected_room_count, case_id):
+    """Pause after fresh conditioned generation so RFCONT can be persisted."""
+
+    return int(expected_room_count) == 0 and str(case_id).upper() not in {
+        "600FF",
+        "900FF",
+    }
 
 
 def _exact_floor_insulation_mismatch(project_path):
@@ -298,6 +313,20 @@ def run():
     runtime_report = runtime_qualifier.run()
     if not Path(runtime_report).is_file():
         raise RuntimeError("Runtime-input qualification report was not created")
+
+    if _requires_operator_checkpoint(expected_count, scenario.case_id):
+        print("TEST 1 FRESH MODEL: READY_FOR_RFCONT_OPERATOR_CHECKPOINT")
+        print(
+            "In Apache > Settings > Building, set Control Temperature Radiant "
+            "Fraction to 0.50, apply the change and save this VE project."
+        )
+        print("Then run: Run_VE_SIA4010_Simulate_Active_Case.py")
+        print(
+            "ApacheSim was deliberately not started because model generation "
+            "can reset this building-level setting and iesve exposes no "
+            "qualified setter for it."
+        )
+        return runtime_report
 
     print("Step 3/3 - guarded ApacheSim plus qualified APS evaluation")
     simulator = _reload_launcher("Run_VE_SIA4010_Simulate_Active_Case")

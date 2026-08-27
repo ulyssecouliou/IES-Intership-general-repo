@@ -26,7 +26,9 @@ from typing import List, Optional
 WINDOW_HOURS = 48
 
 
-def rolling_mean_48h(exterior: List[Optional[float]], window: int = WINDOW_HOURS) -> List[Optional[float]]:
+def rolling_mean_48h(
+    exterior: List[Optional[float]], window: int = WINDOW_HOURS
+) -> List[Optional[float]]:
     """θrm pour chaque pas, à partir d'une série extérieure alignée au pas horaire.
 
     ``exterior[i]`` est la température extérieure (°C) du pas ``i`` (ou ``None``
@@ -37,6 +39,6 @@ def rolling_mean_48h(exterior: List[Optional[float]], window: int = WINDOW_HOURS
     out: List[Optional[float]] = []
     for i in range(len(exterior)):
         lo = max(0, i - window + 1)
-        vals = [v for v in exterior[lo:i + 1] if v is not None]
+        vals = [v for v in exterior[lo : i + 1] if v is not None]
         out.append(sum(vals) / len(vals) if vals else None)
     return out

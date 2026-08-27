@@ -23,7 +23,6 @@ from .test3_external_bindings import (
 )
 from .workbook_loaders import parse_test3_reference_bands
 
-
 TEST3_VARIANTS = tuple("test_3{}".format(letter) for letter in "ABCDEFGHIJKL")
 GENERATOR_INPUT_SCHEMA_VERSION = "1.0"
 GENERATOR_INPUT_FILENAME = "generator_input.json"
@@ -35,9 +34,7 @@ RUNTIME_BLOCKERS = (
     "VE_TEST3_LIGHTING_CONTROL_BINDING_NOT_QUALIFIED",
     "VE_TEST3_APS_BINDINGS_NOT_QUALIFIED",
 )
-MISSING_NATIVE_PROFILE_GRAPH_BLOCKER = (
-    "SIA2024_NATIVE_VE_PROFILE_GRAPH_NOT_SUPPLIED"
-)
+MISSING_NATIVE_PROFILE_GRAPH_BLOCKER = "SIA2024_NATIVE_VE_PROFILE_GRAPH_NOT_SUPPLIED"
 AUTHORITY_MAPPING_BLOCKER = (
     "TEST3_3K_3L_AUTHORITY_DECISION_RUNTIME_MAPPING_NOT_IMPLEMENTED"
 )
@@ -110,9 +107,7 @@ def _geometry_consistency_checks(
         "south_window_width_m": bindings.common.iso_cell.window_width_m,
         "south_window_height_m": bindings.common.iso_cell.window_height_m,
         "south_window_sill_m": bindings.common.iso_cell.window_sill_m,
-        "south_window_side_margin_m": (
-            bindings.common.iso_cell.window_side_margin_m
-        ),
+        "south_window_side_margin_m": (bindings.common.iso_cell.window_side_margin_m),
         "south_window_gap_m": bindings.common.iso_cell.window_gap_m,
     }
     checks = {}
@@ -121,17 +116,14 @@ def _geometry_consistency_checks(
         matches = (
             int(specification_value) == int(normalized_value)
             if parameter_id == "south_window_count"
-            else abs(float(specification_value) - float(normalized_value))
-            <= 1.0e-9
+            else abs(float(specification_value) - float(normalized_value)) <= 1.0e-9
         )
         checks[parameter_id] = {
             "status": "PASS" if matches else "FAIL",
             "specification_value": specification_value,
             "normalized_iso_value": normalized_value,
         }
-    failed = [
-        key for key, result in checks.items() if result["status"] != "PASS"
-    ]
+    failed = [key for key, result in checks.items() if result["status"] != "PASS"]
     if failed:
         raise ConfigurationError(
             "Test 3 source conflict between SIA geometry and normalized ISO "
@@ -214,9 +206,7 @@ def build_test3_source_bound_bundle(
                 external_manifest_path
             )
         )
-    external_manifest = Sia4010ExternalInputManifest.load(
-        external_manifest_path
-    )
+    external_manifest = Sia4010ExternalInputManifest.load(external_manifest_path)
     readiness = external_input_readiness(
         project,
         variant,
@@ -237,26 +227,16 @@ def build_test3_source_bound_bundle(
             "Test 3 preparation did not produce deterministic geometry"
         )
 
-    geometry_manifest_path = (
-        repository / "config" / "sia4010_classes_1a_1b.json"
-    )
+    geometry_manifest_path = repository / "config" / "sia4010_classes_1a_1b.json"
     geometry_manifest = Sia4010CaseManifest.load(geometry_manifest_path)
-    geometry_checks = _geometry_consistency_checks(
-        geometry_manifest, bindings
-    )
+    geometry_checks = _geometry_consistency_checks(geometry_manifest, bindings)
     official_contract_path = (
         repository / "config" / "sia4010_official_input_contract.json"
     )
-    official_contract = Sia4010OfficialInputContract.load(
-        official_contract_path
-    )
+    official_contract = Sia4010OfficialInputContract.load(official_contract_path)
     test3 = official_contract.test("3")
-    official_matrix = dict(
-        official_contract.payload["tests"]["3"]["variant_matrix"]
-    )
-    if set(official_matrix) != {
-        "3{}".format(letter) for letter in "ABCDEFGHIJKL"
-    }:
+    official_matrix = dict(official_contract.payload["tests"]["3"]["variant_matrix"])
+    if set(official_matrix) != {"3{}".format(letter) for letter in "ABCDEFGHIJKL"}:
         raise ConfigurationError("Official Test 3 variant matrix is incomplete")
     selected_pair = tuple(official_matrix[case_id])
     if len(selected_pair) != 2:
@@ -278,16 +258,11 @@ def build_test3_source_bound_bundle(
         ) from exc
 
     result_workbook = (
-        repository
-        / "SIA_4010_geteilter_Link"
-        / "Test3"
-        / "Resultaterfassung_Test3.xlsx"
+        repository / "SIA_4010_geteilter_Link" / "Test3" / "Resultaterfassung_Test3.xlsx"
     )
     if not result_workbook.is_file():
         raise ConfigurationError(
-            "Official Test 3 result workbook is missing: {}".format(
-                result_workbook
-            )
+            "Official Test 3 result workbook is missing: {}".format(result_workbook)
         )
     annual_band = _selected_annual_band(result_workbook, case_id)
     profile_graph = bindings.common.office_profiles.ve_profile_graph
@@ -310,29 +285,19 @@ def build_test3_source_bound_bundle(
         status = "SOURCE_BOUND_PROFILE_GRAPH_REQUIRED"
 
     artifact_directory = (
-        project
-        / "sia4010_artifacts"
-        / "model_builder"
-        / "test3"
-        / case_id
+        project / "sia4010_artifacts" / "model_builder" / "test3" / case_id
     )
     generator_input_path = artifact_directory / GENERATOR_INPUT_FILENAME
     audit_path = artifact_directory / AUDIT_FILENAME
     generator_input = {
         "schema_version": GENERATOR_INPUT_SCHEMA_VERSION,
-        "scenario_id": "SIA4010_{}_{}".format(
-            str(target_class).upper(), case_id
-        ),
+        "scenario_id": "SIA4010_{}_{}".format(str(target_class).upper(), case_id),
         "target_class": str(target_class).upper(),
         "variant": variant,
         "case_id": case_id,
-        "geometry_and_lightweight_opaque_envelope": (
-            bindings.common.iso_cell.to_dict()
-        ),
+        "geometry_and_lightweight_opaque_envelope": (bindings.common.iso_cell.to_dict()),
         "weather": bindings.common.weather.to_dict(),
-        "sia2024_office_profiles": (
-            bindings.common.office_profiles.to_dict()
-        ),
+        "sia2024_office_profiles": (bindings.common.office_profiles.to_dict()),
         "official_test3_parameters": dict(test3.confirmed_inputs),
         "official_variant_matrix": official_matrix,
         "selected_control_pair": {
@@ -353,9 +318,7 @@ def build_test3_source_bound_bundle(
                 official_contract.payload["tests"]["3"]["required_results"]
             ),
             "mandatory_criteria": list(
-                official_contract.payload["tests"]["3"][
-                    "mandatory_criteria"
-                ]
+                official_contract.payload["tests"]["3"]["mandatory_criteria"]
             ),
             "annual_reference_band": annual_band,
             "hourly_distribution": _distribution_contract(),

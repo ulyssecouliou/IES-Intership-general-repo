@@ -62,8 +62,7 @@ class ReferenceModelGeometryTests(unittest.TestCase):
         self.assertEqual(len(root.findall(".//g:Opening", namespace)), 9)
         self.assertEqual(len(root.findall("./g:Zone", namespace)), 4)
         identifiers = [
-            element.attrib["id"]
-            for element in root.findall(".//*[@id]", namespace)
+            element.attrib["id"] for element in root.findall(".//*[@id]", namespace)
         ]
         self.assertEqual(len(identifiers), len(set(identifiers)))
 

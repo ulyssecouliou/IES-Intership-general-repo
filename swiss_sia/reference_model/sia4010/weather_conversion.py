@@ -18,12 +18,11 @@ import hashlib
 import json
 import math
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Mapping, Optional, Tuple, Union
 
 from ..exceptions import ConfigurationError
-
 
 PathLike = Union[str, Path]
 DENVER_LATITUDE_DEGREES = 39.74
@@ -79,26 +78,18 @@ def _parse_tmy1(path: Path) -> List[_RawTmy1]:
         if not line.strip():
             continue
         if len(line) < 120:
-            raise ConfigurationError(
-                "TMY1 line {} is too short".format(line_number)
-            )
+            raise ConfigurationError("TMY1 line {} is too short".format(line_number))
         try:
             global_horizontal = (
-                None
-                if line[53] == "9"
-                else max(0.0, float(line[54:58]) / 3.6)
+                None if line[53] == "9" else max(0.0, float(line[54:58]) / 3.6)
             )
             if global_horizontal is None:
                 raise ValueError("global horizontal radiation is missing")
             direct_normal = (
-                None
-                if line[23] == "9"
-                else max(0.0, float(line[24:28]) / 3.6)
+                None if line[23] == "9" else max(0.0, float(line[24:28]) / 3.6)
             )
             diffuse_horizontal = (
-                None
-                if line[28] == "9"
-                else max(0.0, float(line[29:33]) / 3.6)
+                None if line[28] == "9" else max(0.0, float(line[29:33]) / 3.6)
             )
             record = _RawTmy1(
                 station_id=line[0:5],
@@ -117,9 +108,7 @@ def _parse_tmy1(path: Path) -> List[_RawTmy1]:
             )
         except (TypeError, ValueError) as exc:
             raise ConfigurationError(
-                "Malformed TMY1 data at line {}: {}".format(
-                    line_number, exc
-                )
+                "Malformed TMY1 data at line {}: {}".format(line_number, exc)
             ) from exc
         records.append(record)
     return records
@@ -129,14 +118,10 @@ def _cosine_solar_zenith(record: _RawTmy1) -> float:
     """Return midpoint-of-hour solar zenith cosine using NOAA equations."""
 
     hour_start = record.hour_ending - 1
-    local_midpoint = datetime(
-        2001, record.month, record.day, hour_start, 30
-    )
+    local_midpoint = datetime(2001, record.month, record.day, hour_start, 30)
     day_of_year = local_midpoint.timetuple().tm_yday
     fractional_hour = local_midpoint.hour + local_midpoint.minute / 60.0
-    gamma = 2.0 * math.pi / 365.0 * (
-        day_of_year - 1 + (fractional_hour - 12.0) / 24.0
-    )
+    gamma = 2.0 * math.pi / 365.0 * (day_of_year - 1 + (fractional_hour - 12.0) / 24.0)
     equation_of_time = 229.18 * (
         0.000075
         + 0.001868 * math.cos(gamma)
@@ -155,17 +140,14 @@ def _cosine_solar_zenith(record: _RawTmy1) -> float:
     )
     minutes = local_midpoint.hour * 60.0 + local_midpoint.minute
     time_offset = (
-        equation_of_time
-        + 4.0 * DENVER_LONGITUDE_DEGREES
-        - 60.0 * DENVER_TIME_ZONE_HOURS
+        equation_of_time + 4.0 * DENVER_LONGITUDE_DEGREES - 60.0 * DENVER_TIME_ZONE_HOURS
     )
     true_solar_minutes = (minutes + time_offset) % 1440.0
     hour_angle = math.radians(true_solar_minutes / 4.0 - 180.0)
     latitude = math.radians(DENVER_LATITUDE_DEGREES)
-    cosine = (
-        math.sin(latitude) * math.sin(declination)
-        + math.cos(latitude) * math.cos(declination) * math.cos(hour_angle)
-    )
+    cosine = math.sin(latitude) * math.sin(declination) + math.cos(latitude) * math.cos(
+        declination
+    ) * math.cos(hour_angle)
     return max(0.0, min(1.0, cosine))
 
 
@@ -175,15 +157,9 @@ def _relative_humidity(dry_bulb_c: float, dew_point_c: float) -> int:
     def saturation_pressure(temperature_c: float) -> float:
         """Return the saturation vapour pressure in hPa for a temperature in C."""
 
-        return 6.112 * math.exp(
-            17.67 * temperature_c / (temperature_c + 243.5)
-        )
+        return 6.112 * math.exp(17.67 * temperature_c / (temperature_c + 243.5))
 
-    relative = (
-        100.0
-        * saturation_pressure(dew_point_c)
-        / saturation_pressure(dry_bulb_c)
-    )
+    relative = 100.0 * saturation_pressure(dew_point_c) / saturation_pressure(dry_bulb_c)
     return int(round(max(0.0, min(100.0, relative))))
 
 
@@ -217,44 +193,30 @@ def _horizontal_infrared_radiation_w_m2(dry_bulb_c: float) -> float:
     """
 
     apparent_sky_temperature_k = (
-        float(dry_bulb_c)
-        + 273.15
-        - APPARENT_SKY_TEMPERATURE_OFFSET_K
+        float(dry_bulb_c) + 273.15 - APPARENT_SKY_TEMPERATURE_OFFSET_K
     )
     if apparent_sky_temperature_k <= 0.0:
         raise ConfigurationError(
             "Invalid apparent sky temperature derived from dry bulb: "
             "{} degC".format(dry_bulb_c)
         )
-    return (
-        STEFAN_BOLTZMANN_W_M2_K4
-        * apparent_sky_temperature_k**4
-    )
+    return STEFAN_BOLTZMANN_W_M2_K4 * apparent_sky_temperature_k**4
 
 
 def _apparent_sky_temperature_c(horizontal_infrared_w_m2: float) -> float:
     """Return apparent sky temperature decoded from EPW field 13."""
 
     if horizontal_infrared_w_m2 <= 0.0:
-        raise ConfigurationError(
-            "Horizontal infrared radiation must be positive"
-        )
-    return (
-        (horizontal_infrared_w_m2 / STEFAN_BOLTZMANN_W_M2_K4) ** 0.25
-        - 273.15
-    )
+        raise ConfigurationError("Horizontal infrared radiation must be positive")
+    return (horizontal_infrared_w_m2 / STEFAN_BOLTZMANN_W_M2_K4) ** 0.25 - 273.15
 
 
 def _epw_line(record: _RawTmy1) -> str:
     """Return one EPW-formatted hourly line for a raw TMY1 record."""
 
     ghi, dni, dhi = _solar_components(record)
-    relative_humidity = _relative_humidity(
-        record.dry_bulb_c, record.dew_point_c
-    )
-    horizontal_infrared = _horizontal_infrared_radiation_w_m2(
-        record.dry_bulb_c
-    )
+    relative_humidity = _relative_humidity(record.dry_bulb_c, record.dew_point_c)
+    horizontal_infrared = _horizontal_infrared_radiation_w_m2(record.dry_bulb_c)
     fields = [
         2001,
         record.month,
@@ -276,13 +238,13 @@ def _epw_line(record: _RawTmy1) -> str:
         999999,
         999999,
         9999,
-        record.wind_direction_degrees
-        if 0 <= record.wind_direction_degrees <= 360
-        else 999,
+        (
+            record.wind_direction_degrees
+            if 0 <= record.wind_direction_degrees <= 360
+            else 999
+        ),
         "{:.1f}".format(record.wind_speed_m_s),
-        record.total_cloud_tenths
-        if 0 <= record.total_cloud_tenths <= 10
-        else 99,
+        record.total_cloud_tenths if 0 <= record.total_cloud_tenths <= 10 else 99,
         99,
         9999,
         99999,
@@ -323,16 +285,11 @@ def convert_tmy1_to_iesve_epw(
     records = _parse_tmy1(source)
     if len(records) != EXPECTED_HOURS:
         raise ConfigurationError(
-            "Expected {} TMY1 hours, found {}".format(
-                EXPECTED_HOURS, len(records)
-            )
+            "Expected {} TMY1 hours, found {}".format(EXPECTED_HOURS, len(records))
         )
     destination.parent.mkdir(parents=True, exist_ok=True)
     header = [
-        (
-            "LOCATION,Denver,Colorado,USA,TMY1-23062,23062,"
-            "39.740,-104.990,-7.0,1609.0"
-        ),
+        ("LOCATION,Denver,Colorado,USA,TMY1-23062,23062," "39.740,-104.990,-7.0,1609.0"),
         "DESIGN CONDITIONS,0",
         "TYPICAL/EXTREME PERIODS,0",
         "GROUND TEMPERATURES,0",
@@ -365,10 +322,7 @@ def convert_tmy1_to_iesve_epw(
     )
     apparent_sky_offset_difference = max(
         abs(
-            (
-                float(fields[6])
-                - _apparent_sky_temperature_c(float(fields[12]))
-            )
+            (float(fields[6]) - _apparent_sky_temperature_c(float(fields[12])))
             - APPARENT_SKY_TEMPERATURE_OFFSET_K
         )
         for fields in parsed
@@ -434,15 +388,9 @@ def convert_tmy1_to_iesve_epw(
                 "maximum_absolute_difference_w_m2": ghi_rounding_difference,
             },
             "fixed_apparent_sky_temperature_offset": {
-                "status": (
-                    "PASS"
-                    if apparent_sky_offset_difference <= 0.1
-                    else "FAIL"
-                ),
+                "status": ("PASS" if apparent_sky_offset_difference <= 0.1 else "FAIL"),
                 "expected_offset_k": APPARENT_SKY_TEMPERATURE_OFFSET_K,
-                "maximum_absolute_difference_k": (
-                    apparent_sky_offset_difference
-                ),
+                "maximum_absolute_difference_k": (apparent_sky_offset_difference),
             },
         },
         "limitations": [
@@ -460,18 +408,12 @@ def convert_tmy1_to_iesve_epw(
             ),
         ],
     }
-    if any(
-        control["status"] != "PASS"
-        for control in audit["controls"].values()
-    ):
+    if any(control["status"] != "PASS" for control in audit["controls"].values()):
         audit["status"] = "FAIL"
     audit_destination.parent.mkdir(parents=True, exist_ok=True)
     _write_json(audit_destination, audit)
     if audit["status"] != "PASS":
         raise ConfigurationError(
-            "Generated EPW failed validation; see {}".format(
-                audit_destination
-            )
+            "Generated EPW failed validation; see {}".format(audit_destination)
         )
     return audit
-

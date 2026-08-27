@@ -28,7 +28,6 @@ from .model_scenario import ModelScenario
 from .official_input_contract import Sia4010OfficialInputContract
 from .scenario_preflight import is_temporary_ve_project
 
-
 REPORT_DIRECTORY = Path("sia4010_artifacts") / "diagnostics"
 SCENARIO_FILENAME = "sia_model_scenario.json"
 MUTATION_SCOPE = "ONE_UNASSIGNED_GLAZED_CDB_LAYER_RESISTANCE"
@@ -176,7 +175,9 @@ def qualify_test2a_base_glazing_thermal_storage(
         )
     optical_path, optical = _load_combined_optical_report(project_path)
     construction_id = str(optical["setter_result"]["construction_id"])
-    root = Path(repository_root) if repository_root else Path(__file__).resolve().parents[3]
+    root = (
+        Path(repository_root) if repository_root else Path(__file__).resolve().parents[3]
+    )
     contract_path = root / "config" / "sia4010_official_input_contract.json"
     contract = Sia4010OfficialInputContract.load(contract_path)
     inputs = contract.test("2").confirmed_inputs
@@ -184,8 +185,10 @@ def qualify_test2a_base_glazing_thermal_storage(
     combined_reference_u = float(inputs["variant_2A_reference_u_w_m2k"])
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
-    report_path = project_path / REPORT_DIRECTORY / (
-        "sia2a_thermal_glazing_{}.json".format(timestamp)
+    report_path = (
+        project_path
+        / REPORT_DIRECTORY
+        / ("sia2a_thermal_glazing_{}.json".format(timestamp))
     )
     report: Dict[str, Any] = {
         "schema_version": "1.0",
@@ -287,4 +290,3 @@ def qualify_test2a_base_glazing_thermal_storage(
         encoding="ascii",
     )
     return report_path
-

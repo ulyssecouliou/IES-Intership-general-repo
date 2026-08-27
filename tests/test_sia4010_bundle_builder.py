@@ -37,9 +37,7 @@ class Sia4010BundleBuilderTests(unittest.TestCase):
             by_path["Test1/Resultaterfassung_Test1.xlsx"]["role"],
             "evaluation_workbook",
         )
-        self.assertEqual(
-            by_path["Test1/Resultaterfassung_Test1.xlsx"]["test_ids"], ["1"]
-        )
+        self.assertEqual(by_path["Test1/Resultaterfassung_Test1.xlsx"]["test_ids"], ["1"])
         self.assertEqual(
             by_path["Test1/Spezifikation_Test1.pdf"]["role"], "test_specification"
         )

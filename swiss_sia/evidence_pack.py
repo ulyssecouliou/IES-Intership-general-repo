@@ -23,7 +23,6 @@ from .config import (
     SIA4010_OFFICIAL_TEST_RESULTS_PREFIXES,
 )
 
-
 BLOCKED_EVIDENCE_SUFFIXES = {
     ".bat",
     ".cmd",
@@ -66,7 +65,9 @@ def create_evidence_pack(
     project_root = Path(project_root).resolve()
     evidence_project_root = Path(evidence_project_root or project_root).resolve()
     report_path = Path(report_path).resolve()
-    latest_report_path = Path(latest_report_path).resolve() if latest_report_path else None
+    latest_report_path = (
+        Path(latest_report_path).resolve() if latest_report_path else None
+    )
     output_path = _build_pack_path(report_path)
 
     manifest = _build_manifest(
@@ -90,22 +91,30 @@ def create_evidence_pack(
     evidence_root = evidence_project_root / evidence_dir_name
     for file_path in _iter_existing_files(evidence_root):
         if not matches_active_project_scope(file_path, project_label):
-            excluded_files.append({
-                "path": _relative_or_absolute(project_root, file_path),
-                "reason": (
-                    "Project-scoped helper/manifest file belongs to another VE project; "
-                    f"active project is {project_label}."
-                ),
-            })
+            excluded_files.append(
+                {
+                    "path": _relative_or_absolute(project_root, file_path),
+                    "reason": (
+                        "Project-scoped helper/manifest file belongs to another VE project; "
+                        f"active project is {project_label}."
+                    ),
+                }
+            )
             continue
-        include_file, exclusion_reason = _should_include_evidence_file(file_path, evidence_root)
+        include_file, exclusion_reason = _should_include_evidence_file(
+            file_path, evidence_root
+        )
         if include_file:
-            _collect_file_entry(evidence_project_root, file_path, file_entries, evidence_dir_name)
+            _collect_file_entry(
+                evidence_project_root, file_path, file_entries, evidence_dir_name
+            )
         else:
-            excluded_files.append({
-                "path": _relative_or_absolute(project_root, file_path),
-                "reason": exclusion_reason,
-            })
+            excluded_files.append(
+                {
+                    "path": _relative_or_absolute(project_root, file_path),
+                    "reason": exclusion_reason,
+                }
+            )
 
     for file_path in _iter_existing_files(project_root / "templates" / "evidence"):
         _collect_file_entry(project_root, file_path, file_entries, "templates/evidence")
@@ -117,7 +126,9 @@ def create_evidence_pack(
         "docs/project/SIA_COMPLIANCE_EXECUTION_TRACKER.md",
         "docs/project/GLAZING_EVIDENCE_GUIDE.md",
     ]:
-        _collect_file_entry(project_root, project_root / relative_doc, file_entries, "docs/project")
+        _collect_file_entry(
+            project_root, project_root / relative_doc, file_entries, "docs/project"
+        )
 
     included_files = [
         {
@@ -136,9 +147,15 @@ def create_evidence_pack(
     try:
         if temporary_path.exists():
             temporary_path.unlink()
-        with zipfile.ZipFile(temporary_path, "w", compression=zipfile.ZIP_DEFLATED) as package:
+        with zipfile.ZipFile(
+            temporary_path, "w", compression=zipfile.ZIP_DEFLATED
+        ) as package:
             _write_text(package, "README_EVIDENCE_PACK.md", _build_pack_readme(manifest))
-            _write_text(package, "manifest/evidence_pack_manifest.json", json.dumps(manifest, indent=2, sort_keys=True))
+            _write_text(
+                package,
+                "manifest/evidence_pack_manifest.json",
+                json.dumps(manifest, indent=2, sort_keys=True),
+            )
             for entry in file_entries:
                 package.write(str(entry["source_path"]), entry["archive_name"])
         temporary_path.replace(output_path)
@@ -161,7 +178,9 @@ def create_evidence_pack(
 
 def _build_pack_path(report_path: Path) -> Path:
     """Return the timestamped ZIP path associated with one report workbook."""
-    stem = report_path.stem.replace("Swiss_Compliance_Report", "Swiss_Compliance_Evidence_Pack")
+    stem = report_path.stem.replace(
+        "Swiss_Compliance_Report", "Swiss_Compliance_Evidence_Pack"
+    )
     output_path = report_path.with_name(f"{stem}.zip")
     suffix = 2
     while output_path.exists():
@@ -182,9 +201,15 @@ def _build_manifest(
     evidence_project_root: Optional[Path] = None,
 ) -> Dict[str, Any]:
     """Build the JSON manifest embedded in the ZIP evidence pack."""
-    evidence = sia4010_results.get("evidence", {}) if isinstance(sia4010_results, dict) else {}
+    evidence = (
+        sia4010_results.get("evidence", {}) if isinstance(sia4010_results, dict) else {}
+    )
     evidence_summary = evidence.get("summary", {}) if isinstance(evidence, dict) else {}
-    official_summary = evidence_summary.get("official_test_result_summary", {}) if isinstance(evidence_summary, dict) else {}
+    official_summary = (
+        evidence_summary.get("official_test_result_summary", {})
+        if isinstance(evidence_summary, dict)
+        else {}
+    )
     preflight_counts: Dict[str, int] = {}
     for check in preflight_checks or []:
         status = str(check.get("status", "UNKNOWN") or "UNKNOWN")
@@ -197,15 +222,23 @@ def _build_manifest(
         "evidence_project_root": str(evidence_project_root or project_root),
         "project_label": project_label or "",
         "report_path": _relative_or_absolute(project_root, report_path),
-        "latest_report_alias": _relative_or_absolute(project_root, latest_report_path) if latest_report_path else "",
+        "latest_report_alias": (
+            _relative_or_absolute(project_root, latest_report_path)
+            if latest_report_path
+            else ""
+        ),
         "package_path": _relative_or_absolute(project_root, output_path),
         "evidence_directory": evidence_dir_name,
         "sia4010_status": evidence_summary.get("status", "NOT_CHECKABLE"),
         "sia4010_validation_class": evidence_summary.get("validation_class") or "",
-        "sia4010_validation_class_status": evidence_summary.get("validation_class_selection_status", "NOT_SELECTED"),
+        "sia4010_validation_class_status": evidence_summary.get(
+            "validation_class_selection_status", "NOT_SELECTED"
+        ),
         "sia4010_present_evidence_count": evidence_summary.get("present_count", 0),
         "sia4010_required_evidence_count": evidence_summary.get("required_count", 0),
-        "sia4010_manifest_documented_count": evidence_summary.get("manifest_documented_count", 0),
+        "sia4010_manifest_documented_count": evidence_summary.get(
+            "manifest_documented_count", 0
+        ),
         "sia4010_official_test_result_rows": official_summary.get("result_row_count", 0),
         "sia4010_recorded_pass_tests": official_summary.get("recorded_pass_tests", []),
         "sia4010_official_failed_tests": official_summary.get("failed_tests", []),
@@ -221,41 +254,43 @@ def _build_pack_readme(manifest: Dict[str, Any]) -> str:
     """Return the README text stored in the generated evidence pack."""
     recorded_pass_tests = manifest.get("sia4010_recorded_pass_tests") or []
     failed_tests = manifest.get("sia4010_official_failed_tests") or []
-    return "\n".join([
-        "# Swiss SIA Evidence Pack",
-        "",
-        "This ZIP was generated by the IESVE Run-button workflow.",
-        "",
-        "It is a reviewer handoff package, not an official SIA certificate.",
-        "",
-        "## Included Scope",
-        "",
-        "- Timestamped Swiss compliance Excel report.",
-        "- Allowed evidence files currently present in `sia4010_evidence/`.",
-        "- Evidence templates and key project guidance documents.",
-        "- Machine-readable manifest at `manifest/evidence_pack_manifest.json`.",
-        "- Excluded evidence-folder files are listed in the manifest.",
-        "",
-        "## Current SIA 4010 State",
-        "",
-        f"- Evidence status: `{manifest.get('sia4010_status', 'NOT_CHECKABLE')}`.",
-        f"- Selected validation class: `{manifest.get('sia4010_validation_class') or 'not selected'}`.",
-        f"- Class selection status: `{manifest.get('sia4010_validation_class_status', 'NOT_SELECTED')}`.",
-        f"- Evidence families present: `{manifest.get('sia4010_present_evidence_count', 0)}/{manifest.get('sia4010_required_evidence_count', 0)}`.",
-        f"- Manifest-documented evidence families: `{manifest.get('sia4010_manifest_documented_count', 0)}`.",
-        f"- Official result rows: `{manifest.get('sia4010_official_test_result_rows', 0)}`.",
-        f"- Tests with recorded PASS result rows: `{', '.join(recorded_pass_tests) if recorded_pass_tests else 'none'}`.",
-        f"- Official failed tests: `{', '.join(failed_tests) if failed_tests else 'none'}`.",
-        "",
-        "## Important Guardrail",
-        "",
-        manifest.get("copyright_note", ""),
-        "",
-        "Before making any official SIA 4010 validation claim, the responsible",
-        "authority/reviewer must confirm the official evidence files, class scope,",
-        "candidate results, reference comparisons, and PASS/FAIL outcomes.",
-        "",
-    ])
+    return "\n".join(
+        [
+            "# Swiss SIA Evidence Pack",
+            "",
+            "This ZIP was generated by the IESVE Run-button workflow.",
+            "",
+            "It is a reviewer handoff package, not an official SIA certificate.",
+            "",
+            "## Included Scope",
+            "",
+            "- Timestamped Swiss compliance Excel report.",
+            "- Allowed evidence files currently present in `sia4010_evidence/`.",
+            "- Evidence templates and key project guidance documents.",
+            "- Machine-readable manifest at `manifest/evidence_pack_manifest.json`.",
+            "- Excluded evidence-folder files are listed in the manifest.",
+            "",
+            "## Current SIA 4010 State",
+            "",
+            f"- Evidence status: `{manifest.get('sia4010_status', 'NOT_CHECKABLE')}`.",
+            f"- Selected validation class: `{manifest.get('sia4010_validation_class') or 'not selected'}`.",
+            f"- Class selection status: `{manifest.get('sia4010_validation_class_status', 'NOT_SELECTED')}`.",
+            f"- Evidence families present: `{manifest.get('sia4010_present_evidence_count', 0)}/{manifest.get('sia4010_required_evidence_count', 0)}`.",
+            f"- Manifest-documented evidence families: `{manifest.get('sia4010_manifest_documented_count', 0)}`.",
+            f"- Official result rows: `{manifest.get('sia4010_official_test_result_rows', 0)}`.",
+            f"- Tests with recorded PASS result rows: `{', '.join(recorded_pass_tests) if recorded_pass_tests else 'none'}`.",
+            f"- Official failed tests: `{', '.join(failed_tests) if failed_tests else 'none'}`.",
+            "",
+            "## Important Guardrail",
+            "",
+            manifest.get("copyright_note", ""),
+            "",
+            "Before making any official SIA 4010 validation claim, the responsible",
+            "authority/reviewer must confirm the official evidence files, class scope,",
+            "candidate results, reference comparisons, and PASS/FAIL outcomes.",
+            "",
+        ]
+    )
 
 
 def _iter_existing_files(root: Path) -> Iterable[Path]:
@@ -296,7 +331,7 @@ def matches_active_project_scope(file_path: Path, project_label: Optional[str]) 
         scope_key
         and prefix_key
         and file_key.startswith(prefix_key)
-        and file_key[len(prefix_key):] == scope_key
+        and file_key[len(prefix_key) :] == scope_key
     )
 
 
@@ -316,15 +351,19 @@ def _collect_file_entry(
     relative = file_path.relative_to(project_root).as_posix()
     if any(entry.get("archive_name") == relative for entry in file_entries):
         return
-    file_entries.append({
-        "source_path": file_path,
-        "archive_name": relative,
-        "group": archive_group,
-        "size_bytes": file_path.stat().st_size,
-    })
+    file_entries.append(
+        {
+            "source_path": file_path,
+            "archive_name": relative,
+            "group": archive_group,
+            "size_bytes": file_path.stat().st_size,
+        }
+    )
 
 
-def _should_include_evidence_file(file_path: Path, evidence_root: Path) -> Tuple[bool, str]:
+def _should_include_evidence_file(
+    file_path: Path, evidence_root: Path
+) -> Tuple[bool, str]:
     """Return whether one evidence-folder file is safe and relevant for export."""
     if file_path.is_symlink():
         return False, "Symbolic links are not included in evidence packs."
@@ -336,7 +375,10 @@ def _should_include_evidence_file(file_path: Path, evidence_root: Path) -> Tuple
         return False, f"Blocked evidence-pack file type: {suffix}."
 
     if _looks_like_licensed_sia_standard(normalized_name):
-        return False, "Licensed SIA standard/reference PDFs are intentionally not redistributed in evidence packs."
+        return (
+            False,
+            "Licensed SIA standard/reference PDFs are intentionally not redistributed in evidence packs.",
+        )
 
     if any(fnmatch(normalized_name, pattern) for pattern in HELPER_EVIDENCE_PATTERNS):
         return True, ""
@@ -362,7 +404,9 @@ def _should_include_evidence_file(file_path: Path, evidence_root: Path) -> Tuple
             str(prefix).lower()
             for prefix in requirement.get("required_prefixes", []) or []
         ]
-        if suffix in accepted_extensions and any(normalized_name.startswith(prefix) for prefix in required_prefixes):
+        if suffix in accepted_extensions and any(
+            normalized_name.startswith(prefix) for prefix in required_prefixes
+        ):
             return True, ""
 
     try:

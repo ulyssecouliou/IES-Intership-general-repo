@@ -51,9 +51,9 @@ import shutil
 # `B16 = IF(Daten_Testprogramm!$H$3="Handeingabe"; ...)` on sheet
 # `Zusammenfassung Testfälle`) -- THE ONLY cell address this module knows with
 # certainty.
-DATA_SHEET = u'Daten_Testprogramm'
-ENTRY_MODE_CELL = u'H3'
-HANDEINGABE_MODE_VALUE = u'Handeingabe'
+DATA_SHEET = "Daten_Testprogramm"
+ENTRY_MODE_CELL = "H3"
+HANDEINGABE_MODE_VALUE = "Handeingabe"
 
 
 class MissingCellMap(RuntimeError):
@@ -85,14 +85,15 @@ def _win32com():
     """
     try:
         import win32com.client
+
         return win32com.client
     except ImportError as error:
         raise ImportError(
             "Module 'win32com' unavailable: the COM Excel export needs "
             "Pywin32, which ships inside VEScripts "
             "(docs/ADR-001-architecture-MSP.md 2) or installs with "
-            "`pip install pywin32` in development. Original error: "
-            + str(error))
+            "`pip install pywin32` in development. Original error: " + str(error)
+        )
 
 
 def _row_value(test1_view, period_key):
@@ -108,16 +109,20 @@ def _row_value(test1_view, period_key):
         then writes nothing into the corresponding cell.
     """
     quantity, case, period = period_key
-    for row in test1_view['lignes']:
-        if (row['grandeur'], row['cas'], row['periode']) == (quantity, case,
-                                                             period):
-            return row['valeur_candidate']
+    for row in test1_view["lignes"]:
+        if (row["grandeur"], row["cas"], row["periode"]) == (quantity, case, period):
+            return row["valeur_candidate"]
     return None
 
 
-def fill_sia_workbook_reporting(source_path, test1_view, cell_map=None,
-                                output_path=None, sheet=DATA_SHEET,
-                                keep_excel_visible=False):
+def fill_sia_workbook_reporting(
+    source_path,
+    test1_view,
+    cell_map=None,
+    output_path=None,
+    sheet=DATA_SHEET,
+    keep_excel_visible=False,
+):
     """Fill a COPY of the official SIA workbook in `Handeingabe` mode.
 
     Args:
@@ -149,22 +154,23 @@ def fill_sia_workbook_reporting(source_path, test1_view, cell_map=None,
     """
     if not cell_map:
         raise MissingCellMap(
-            'No (quantity, case, period) -> cell map supplied. ADR-001 5 '
-            'defers that map to a future descriptor '
-            '(refs/reference-data/testN.map.json), absent to date. Pass '
-            '`cell_map` explicitly rather than guessing a Handeingabe cell '
-            'address.')
+            "No (quantity, case, period) -> cell map supplied. ADR-001 5 "
+            "defers that map to a future descriptor "
+            "(refs/reference-data/testN.map.json), absent to date. Pass "
+            "`cell_map` explicitly rather than guessing a Handeingabe cell "
+            "address."
+        )
 
     if output_path is None:
         stem, extension = _split_extension(source_path)
-        output_path = stem + u'_rempli' + extension
+        output_path = stem + "_rempli" + extension
 
     # Defence in depth: never open source_path for writing, even when the
     # caller has already copied it themselves (ADR-001 4).
     shutil.copyfile(source_path, output_path)
 
     win32com_client = _win32com()
-    excel = win32com_client.Dispatch(u'Excel.Application')
+    excel = win32com_client.Dispatch("Excel.Application")
     excel.Visible = bool(keep_excel_visible)
     excel.DisplayAlerts = False
     workbook = None
@@ -173,8 +179,7 @@ def fill_sia_workbook_reporting(source_path, test1_view, cell_map=None,
         data_sheet = workbook.Worksheets(sheet)
 
         # Turn on Handeingabe mode -- the ONLY address ADR-001 4 confirms.
-        _write_and_verify_cell(data_sheet, ENTRY_MODE_CELL,
-                               HANDEINGABE_MODE_VALUE)
+        _write_and_verify_cell(data_sheet, ENTRY_MODE_CELL, HANDEINGABE_MODE_VALUE)
 
         written, skipped_no_value = [], []
         for period_key, cell_address in cell_map.items():
@@ -202,21 +207,27 @@ def fill_sia_workbook_reporting(source_path, test1_view, cell_map=None,
         excel.Quit()
 
     return {
-        'chemin_sortie': output_path,
-        'test_id': test1_view.get('test_id'),
-        'feuille': sheet,
-        'cellules_ecrites': written,
+        "chemin_sortie": output_path,
+        "test_id": test1_view.get("test_id"),
+        "feuille": sheet,
+        "cellules_ecrites": written,
         # Cells left INTACT for want of a candidate value. These used to be
         # counted and then discarded: a workbook could leave with blank cells
         # and nobody learning of it. That is exactly the Test 7 photovoltaic
         # case.
-        'cellules_ignorees_valeur_absente': skipped_no_value,
-        'complet': not skipped_no_value,
+        "cellules_ignorees_valeur_absente": skipped_no_value,
+        "complet": not skipped_no_value,
     }
 
 
-def fill_sia_workbook(source_path, test1_view, cell_map=None, output_path=None,
-                      sheet=DATA_SHEET, keep_excel_visible=False):
+def fill_sia_workbook(
+    source_path,
+    test1_view,
+    cell_map=None,
+    output_path=None,
+    sheet=DATA_SHEET,
+    keep_excel_visible=False,
+):
     """Fill a copy of the SIA workbook and return the PATH of the result.
 
     Kept for existing callers. To learn which cells were left blank for want of
@@ -236,8 +247,13 @@ def fill_sia_workbook(source_path, test1_view, cell_map=None, output_path=None,
         str: Path of the filled workbook.
     """
     return fill_sia_workbook_reporting(
-        source_path, test1_view, cell_map=cell_map, output_path=output_path,
-        sheet=sheet, keep_excel_visible=keep_excel_visible)['chemin_sortie']
+        source_path,
+        test1_view,
+        cell_map=cell_map,
+        output_path=output_path,
+        sheet=sheet,
+        keep_excel_visible=keep_excel_visible,
+    )["chemin_sortie"]
 
 
 def fill_sia_workbooks(jobs, keep_excel_visible=False):
@@ -264,26 +280,31 @@ def fill_sia_workbooks(jobs, keep_excel_visible=False):
     """
     reports, failures = [], []
     for job in jobs:
-        view = job['vue']
+        view = job["vue"]
         try:
-            reports.append(fill_sia_workbook_reporting(
-                job['chemin_source'], view,
-                cell_map=job.get('carte_cellules'),
-                output_path=job.get('chemin_sortie'),
-                sheet=job.get('feuille', DATA_SHEET),
-                keep_excel_visible=keep_excel_visible))
+            reports.append(
+                fill_sia_workbook_reporting(
+                    job["chemin_source"],
+                    view,
+                    cell_map=job.get("carte_cellules"),
+                    output_path=job.get("chemin_sortie"),
+                    sheet=job.get("feuille", DATA_SHEET),
+                    keep_excel_visible=keep_excel_visible,
+                )
+            )
         except Exception as error:  # noqa: BLE001 -- one failure must not stop
-            failures.append({
-                'test_id': view.get('test_id'),
-                'chemin_source': job.get('chemin_source'),
-                'erreur': '%s: %s' % (type(error).__name__, error),
-            })
+            failures.append(
+                {
+                    "test_id": view.get("test_id"),
+                    "chemin_source": job.get("chemin_source"),
+                    "erreur": "%s: %s" % (type(error).__name__, error),
+                }
+            )
 
     return {
-        'rapports': reports,
-        'echecs': failures,
-        'complet': ((not failures)
-                    and all(report['complet'] for report in reports)),
+        "rapports": reports,
+        "echecs": failures,
+        "complet": ((not failures) and all(report["complet"] for report in reports)),
     }
 
 
@@ -297,9 +318,9 @@ def _split_extension(path):
         tuple[str, str]: `(stem, extension)`; the extension is `''` when there
         is no dot.
     """
-    dot = path.rfind(u'.')
+    dot = path.rfind(".")
     if dot == -1:
-        return path, u''
+        return path, ""
     return path[:dot], path[dot:]
 
 
@@ -323,12 +344,13 @@ def _write_and_verify_cell(com_sheet, cell_address, value, tolerance=1e-9):
     cell.Value = value
     read_back = cell.Value
     if isinstance(value, (int, float)) and not isinstance(value, bool):
-        if read_back is None \
-                or abs(float(read_back) - float(value)) > tolerance:
+        if read_back is None or abs(float(read_back) - float(value)) > tolerance:
             raise ExcelWriteDiverged(
-                u'Cell {0}: written={1!r}, read back={2!r} -- divergence, do '
-                u'not continue.'.format(cell_address, value, read_back))
+                "Cell {0}: written={1!r}, read back={2!r} -- divergence, do "
+                "not continue.".format(cell_address, value, read_back)
+            )
     elif read_back != value:
         raise ExcelWriteDiverged(
-            u'Cell {0}: written={1!r}, read back={2!r} -- divergence, do not '
-            u'continue.'.format(cell_address, value, read_back))
+            "Cell {0}: written={1!r}, read back={2!r} -- divergence, do not "
+            "continue.".format(cell_address, value, read_back)
+        )

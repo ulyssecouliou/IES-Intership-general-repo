@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-u"""Tests of the geometry import (`scripts/importer_geometrie_test1.py`).
+"""Tests of the geometry import (`scripts/importer_geometrie_test1.py`).
 
 This script is the only one in the repository that deliberately MODIFIES the
 VE model. Two things must therefore hold:
@@ -20,87 +20,103 @@ from scripts import importer_geometrie_test1 as importateur
 from ve_adapter import geometrie_test1 as geometrie
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope="module")
 def cotes():
     try:
         return geometrie.charger_cotes()
     except geometrie.GeometrieIndisponible:
-        pytest.skip(u'cotes de référence absentes')
+        pytest.skip("cotes de référence absentes")
 
 
 # --------------------------------------------------------------------------
 # The expected totals, aggregated as VE returns them
 # --------------------------------------------------------------------------
 
+
 def test_les_murs_sont_agreges_comme_get_areas_les_rend(cotes):
     """`get_areas()` does not give one entry per face: it aggregates. Comparing
     face by face would compare what VE does not separate."""
     attendus = importateur.totaux_attendus(cotes)
-    assert attendus['murs_exterieurs'] == pytest.approx(9.6 + 21.6 + 16.2 * 2)
+    assert attendus["murs_exterieurs"] == pytest.approx(9.6 + 21.6 + 16.2 * 2)
 
 
 def test_le_vitrage_est_compte_a_part_des_murs(cotes):
     """Confusing it with the opaque would double the wall."""
     attendus = importateur.totaux_attendus(cotes)
-    assert attendus['vitrage_exterieur'] == pytest.approx(12.0)
-    assert attendus['murs_exterieurs'] == pytest.approx(63.6)
+    assert attendus["vitrage_exterieur"] == pytest.approx(12.0)
+    assert attendus["murs_exterieurs"] == pytest.approx(63.6)
 
 
 def test_plancher_et_toiture_valent_la_surface_au_sol(cotes):
     attendus = importateur.totaux_attendus(cotes)
-    assert attendus['plancher'] == pytest.approx(48.0)
-    assert attendus['toiture'] == pytest.approx(48.0)
+    assert attendus["plancher"] == pytest.approx(48.0)
+    assert attendus["toiture"] == pytest.approx(48.0)
 
 
 # --------------------------------------------------------------------------
 # The confrontation — the only step that proves something
 # --------------------------------------------------------------------------
 
+
 def test_des_surfaces_identiques_concordent():
-    attendus = {'plancher': 48.0}
-    verdicts = importateur.comparer(attendus, {'plancher': 48.0})
-    assert verdicts['plancher']['statut'] == 'CONCORDE'
+    attendus = {"plancher": 48.0}
+    verdicts = importateur.comparer(attendus, {"plancher": 48.0})
+    assert verdicts["plancher"]["statut"] == "CONCORDE"
 
 
 def test_un_ecart_de_surface_est_declare_divergent():
-    verdicts = importateur.comparer({'plancher': 48.0}, {'plancher': 47.0})
-    assert verdicts['plancher']['statut'] == 'DIVERGE'
-    assert 'cellule fausse' in verdicts['plancher']['note']
+    verdicts = importateur.comparer({"plancher": 48.0}, {"plancher": 47.0})
+    assert verdicts["plancher"]["statut"] == "DIVERGE"
+    assert "cellule fausse" in verdicts["plancher"]["note"]
+
+
+def test_ve_2025_gross_wall_area_is_normalized_with_separate_glazing():
+    """Observed VE 2025 semantics are gross wall plus separate glazing."""
+
+    verdicts = importateur.comparer(
+        {"murs_exterieurs": 63.6, "vitrage_exterieur": 12.0},
+        {"murs_exterieurs": 75.6, "vitrage_exterieur": 12.0},
+    )
+    wall = verdicts["murs_exterieurs"]
+    assert wall["statut"] == "CONCORDE"
+    assert wall["releve_brut_m2"] == pytest.approx(75.6)
+    assert wall["releve_m2"] == pytest.approx(63.6)
+    assert "gross" in wall["note"]
 
 
 def test_le_flottant_32_bits_est_tolere():
     """VE stores in float32: an exact equality would fail on a correct import."""
-    verdicts = importateur.comparer({'plancher': 48.0},
-                                    {'plancher': 48.00000023841858})
-    assert verdicts['plancher']['statut'] == 'CONCORDE'
+    verdicts = importateur.comparer({"plancher": 48.0}, {"plancher": 48.00000023841858})
+    assert verdicts["plancher"]["statut"] == "CONCORDE"
 
 
 def test_un_poste_absent_nest_jamais_lu_comme_zero():
     """This is the central rule of the repository: an absence is not a measurement."""
-    verdicts = importateur.comparer({'toiture': 48.0}, {'toiture': None})
-    assert verdicts['toiture']['statut'] == 'NON_RELEVE'
-    assert verdicts['toiture']['releve_m2'] is None
-    assert 'zero' in verdicts['toiture']['note']
+    verdicts = importateur.comparer({"toiture": 48.0}, {"toiture": None})
+    assert verdicts["toiture"]["statut"] == "NON_RELEVE"
+    assert verdicts["toiture"]["releve_m2"] is None
+    assert "zero" in verdicts["toiture"]["note"]
 
 
 def test_le_verdict_est_rendu_poste_par_poste():
     """A global boolean would hide WHICH item diverges."""
     verdicts = importateur.comparer(
-        {'plancher': 48.0, 'toiture': 48.0},
-        {'plancher': 48.0, 'toiture': 12.0})
-    assert verdicts['plancher']['statut'] == 'CONCORDE'
-    assert verdicts['toiture']['statut'] == 'DIVERGE'
+        {"plancher": 48.0, "toiture": 48.0}, {"plancher": 48.0, "toiture": 12.0}
+    )
+    assert verdicts["plancher"]["statut"] == "CONCORDE"
+    assert verdicts["toiture"]["statut"] == "DIVERGE"
 
 
 def test_lecart_signe_est_conserve():
     """Too large and too small are not corrected the same way."""
-    verdicts = importateur.comparer({'plancher': 48.0}, {'plancher': 50.0})
-    assert verdicts['plancher']['ecart_m2'] > 0
+    verdicts = importateur.comparer({"plancher": 48.0}, {"plancher": 50.0})
+    assert verdicts["plancher"]["ecart_m2"] > 0
 
 
 # --------------------------------------------------------------------------
 # Cumulation of read-back surfaces
 # --------------------------------------------------------------------------
+
 
 class CorpsFactice(object):
     """Stand-in for `VEBody`, returning the real keys of `get_areas()`."""
@@ -113,27 +129,24 @@ class CorpsFactice(object):
 
 
 def test_les_surfaces_sont_cumulees_sur_tous_les_corps():
-    corps = [CorpsFactice({'ext_wall_area': 30.0}),
-             CorpsFactice({'ext_wall_area': 33.6})]
-    assert importateur.totaux_releves(corps)['murs_exterieurs'] == \
-        pytest.approx(63.6)
+    corps = [CorpsFactice({"ext_wall_area": 30.0}), CorpsFactice({"ext_wall_area": 33.6})]
+    assert importateur.totaux_releves(corps)["murs_exterieurs"] == pytest.approx(63.6)
 
 
 def test_un_plancher_interieur_et_exterieur_sont_additionnes():
     """VE distinguishes `ext_floor_area` and `int_floor_area`; the cell has
     only one floor, but the aggregation must hold in both cases."""
-    corps = [CorpsFactice({'ext_floor_area': 48.0, 'int_floor_area': 0.0})]
-    assert importateur.totaux_releves(corps)['plancher'] == pytest.approx(48.0)
+    corps = [CorpsFactice({"ext_floor_area": 48.0, "int_floor_area": 0.0})]
+    assert importateur.totaux_releves(corps)["plancher"] == pytest.approx(48.0)
 
 
 def test_un_corps_muet_ne_fait_pas_planter_le_cumul():
     class Muet(object):
         def get_areas(self):
-            raise RuntimeError('indisponible')
+            raise RuntimeError("indisponible")
 
-    releve = importateur.totaux_releves([Muet(),
-                                         CorpsFactice({'ext_wall_area': 1.0})])
-    assert releve['murs_exterieurs'] == pytest.approx(1.0)
+    releve = importateur.totaux_releves([Muet(), CorpsFactice({"ext_wall_area": 1.0})])
+    assert releve["murs_exterieurs"] == pytest.approx(1.0)
 
 
 def test_sans_aucun_corps_tous_les_postes_restent_nuls_pas_zero():
@@ -146,32 +159,60 @@ def test_sans_aucun_corps_tous_les_postes_restent_nuls_pas_zero():
 # Call shapes for import_file
 # --------------------------------------------------------------------------
 
+
 def test_la_premiere_forme_qui_repond_est_retenue():
     """The signature is not introspectable: its docstring reduces to
     'cap_height'. We try, and record what works."""
+
     class Importeur(object):
         @staticmethod
         def import_file(chemin, *arguments):
             if len(arguments) != 0:
-                raise TypeError('trop d arguments')
+                raise TypeError("trop d arguments")
             return True
 
-    resultat = importateur._essayer_import(Importeur, 'x.xml')
-    assert resultat['forme_retenue'] == u'file_name seul'
+    resultat = importateur._essayer_import(Importeur, "x.xml")
+    assert resultat["forme_retenue"] == "file_name seul"
+
+
+def test_enum_volume_cap_mode_natif_est_utilise_quand_disponible():
+    """VE 2025 rejects an integer cap mode and requires its native enum."""
+
+    sentinel = object()
+
+    class Importeur(object):
+        appels = []
+
+        @staticmethod
+        def import_file(*arguments):
+            Importeur.appels.append(arguments)
+            if arguments == ("x.xml", True, sentinel, 0.0):
+                return "importe"
+            raise TypeError("mauvaise signature")
+
+    module = type(
+        "Iesve",
+        (),
+        {"VolumeCapMode": type("VolumeCapMode", (), {"none": sentinel})},
+    )
+    resultat = importateur._essayer_import(Importeur, "x.xml", module)
+    assert resultat["forme_retenue"] == "signature VE 2025 + VolumeCapMode.none"
+    assert Importeur.appels == [("x.xml", True, sentinel, 0.0)]
 
 
 def test_les_echecs_sont_tous_consignes():
     """Error messages name what the API expects: losing them
     would require redoing the trial."""
+
     class Importeur(object):
         @staticmethod
         def import_file(chemin, *arguments):
-            raise TypeError('signature refusee')
+            raise TypeError("signature refusee")
 
-    resultat = importateur._essayer_import(Importeur, 'x.xml')
-    assert resultat['forme_retenue'] is None
-    assert len(resultat['essais']) == len(importateur.FORMES_DAPPEL)
-    assert all(e['statut'] == 'ECHEC' for e in resultat['essais'])
+    resultat = importateur._essayer_import(Importeur, "x.xml")
+    assert resultat["forme_retenue"] is None
+    assert len(resultat["essais"]) == len(importateur.FORMES_DAPPEL)
+    assert all(e["statut"] == "ECHEC" for e in resultat["essais"])
 
 
 def test_les_formes_vont_du_plus_simple_au_plus_complet():
@@ -186,46 +227,48 @@ def test_les_formes_vont_du_plus_simple_au_plus_complet():
 # Safeguards
 # --------------------------------------------------------------------------
 
+
 def test_le_rapport_avertit_que_le_modele_est_modifie():
     """This is the only script in the repository that deliberately mutates the model."""
     rapport = importateur.importer()
-    assert 'MODIFIE' in rapport['avertissement']
-    assert 'JETABLE' in rapport['avertissement']
+    assert "MODIFIE" in rapport["avertissement"]
+    assert "JETABLE" in rapport["avertissement"]
 
 
 def test_hors_ve_le_gbxml_est_ecrit_mais_rien_nest_importe(monkeypatch):
-    monkeypatch.setattr(importateur, '_dans_ve', lambda: False)
+    monkeypatch.setattr(importateur, "_dans_ve", lambda: False)
     rapport = importateur.importer()
-    noms = [e['nom'] for e in rapport['etapes']]
-    assert u'ecriture du gbXML' in noms
-    assert not any('import_file' in nom for nom in noms)
+    noms = [e["nom"] for e in rapport["etapes"]]
+    assert "ecriture du gbXML" in noms
+    assert not any("import_file" in nom for nom in noms)
 
 
 def test_le_rapport_va_sous_outputs():
-    normalise = importateur.CHEMIN_RAPPORT.replace(os.sep, '/')
-    assert '/outputs/' in normalise
-    assert '/refs/' not in normalise
+    normalise = importateur.CHEMIN_RAPPORT.replace(os.sep, "/")
+    assert "/outputs/" in normalise
+    assert "/refs/" not in normalise
 
 
 def test_le_gbxml_est_ecrit_sous_outputs():
-    normalise = importateur.CHEMIN_GBXML.replace(os.sep, '/')
-    assert '/outputs/' in normalise
+    normalise = importateur.CHEMIN_GBXML.replace(os.sep, "/")
+    assert "/outputs/" in normalise
 
 
 def test_main_hors_ve_rend_un_entier(monkeypatch):
-    monkeypatch.setattr(importateur, '_dans_ve', lambda: False)
+    monkeypatch.setattr(importateur, "_dans_ve", lambda: False)
     assert importateur.main(()) == 0
 
 
 def test_le_lanceur_avertit_avant_de_muter():
     chemin = os.path.join(
         os.path.dirname(os.path.dirname(os.path.abspath(importateur.__file__))),
-        'Run_VE_SIA4010_Importer_Geometrie_Test1.py')
+        "Run_VE_SIA4010_Importer_Geometrie_Test1.py",
+    )
     if not os.path.exists(chemin):
-        pytest.skip(u'lanceur absent')
-    with io.open(chemin, encoding='utf-8') as flux:
+        pytest.skip("lanceur absent")
+    with io.open(chemin, encoding="utf-8") as flux:
         source = flux.read()
     # The launcher was moved to English; the preserved property is the same:
     # it must WARN before mutating, and name the throwaway project.
-    assert 'MODIFIES the VE model' in source
-    assert 'THROWAWAY' in source
+    assert "MODIFIES the VE model" in source
+    assert "THROWAWAY" in source

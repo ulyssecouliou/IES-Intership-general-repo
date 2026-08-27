@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-u"""Freeze the Test 4 temperature setpoint, read off the specification chart.
+"""Freeze the Test 4 temperature setpoint, read off the specification chart.
 
 POURQUOI CE FICHIER EXISTE. Dans `Spezifikation_Test4.pdf`, la ligne
 "Sollwerte / Raumlufttemperatur" is **empty in the text layer**. The
@@ -36,45 +36,42 @@ import sys
 _ICI = os.path.dirname(os.path.abspath(__file__))
 _RACINE = os.path.abspath(os.path.join(_ICI, os.pardir))
 
-_SORTIE = os.path.join(_RACINE, 'refs', 'reference-data',
-                       'test-4.consignes.json')
+_SORTIE = os.path.join(_RACINE, "refs", "reference-data", "test-4.consignes.json")
 
-_SPEC = os.path.join('SIA_4010_geteilter_Link', 'Test4',
-                     'Spezifikation_Test4.pdf')
+_SPEC = os.path.join("SIA_4010_geteilter_Link", "Test4", "Spezifikation_Test4.pdf")
 
 #: Bounding box of the image that carries it, page 2 (index 1). Recorded so
 #: the reading can be reproduced exactly.
-_RECTANGLE_IMAGE = {'page': 2, 'x0': 307.35, 'y0': 74.55,
-                    'x1': 581.10, 'y1': 182.55}
+_RECTANGLE_IMAGE = {"page": 2, "x0": 307.35, "y0": 74.55, "x1": 581.10, "y1": 182.55}
 
 #: Break points, as ANNOTATED on the plot. Each pair is
 #: `(48-hour rolling mean of outdoor temperature, setpoint)`, in degrees C.
 #: Hors de ces bornes, les deux courbes sont horizontales.
 CONSIGNES = {
-    u'chauffage': {
-        u'couleur_du_trace': u'rouge (la plus basse)',
-        u'points': [[19.0, 22.0], [23.5, 23.5]],
-        u'etiquettes_lues': [u'19;22', u'23.5;23.5'],
+    "chauffage": {
+        "couleur_du_trace": "rouge (la plus basse)",
+        "points": [[19.0, 22.0], [23.5, 23.5]],
+        "etiquettes_lues": ["19;22", "23.5;23.5"],
     },
-    u'refroidissement': {
-        u'couleur_du_trace': u'bleu (la plus haute)',
-        u'points': [[12.0, 23.0], [17.0, 25.0]],
-        u'etiquettes_lues': [u'12;23', u'17;25'],
+    "refroidissement": {
+        "couleur_du_trace": "bleu (la plus haute)",
+        "points": [[12.0, 23.0], [17.0, 25.0]],
+        "etiquettes_lues": ["12;23", "17;25"],
     },
 }
 
 RESERVES = [
-    u'La consigne est ABSENTE de la couche texte du PDF : elle n\'existe que '
-    u'sous forme d\'image. Une extraction textuelle conclut à tort qu\'il n\'y '
-    u'a pas de consigne.',
-    u'L\'attribution chauffage/refroidissement est DÉDUITE de la position '
-    u'relative des courbes, faute de légende sur le graphique. Cohérente (la '
-    u'bande morte passe de 1,0 K à 1,5 K) mais non certifiée.',
-    u'Les quatre points viennent des étiquettes portées sur le tracé, pas '
-    u'd\'une lecture de pixels. Entre deux points, l\'interpolation linéaire '
-    u'est supposée d\'après l\'allure du tracé.',
-    u'Hors des bornes, les deux courbes sont horizontales — palier bas avant '
-    u'le premier point, palier haut après le second.',
+    "La consigne est ABSENTE de la couche texte du PDF : elle n'existe que "
+    "sous forme d'image. Une extraction textuelle conclut à tort qu'il n'y "
+    "a pas de consigne.",
+    "L'attribution chauffage/refroidissement est DÉDUITE de la position "
+    "relative des courbes, faute de légende sur le graphique. Cohérente (la "
+    "bande morte passe de 1,0 K à 1,5 K) mais non certifiée.",
+    "Les quatre points viennent des étiquettes portées sur le tracé, pas "
+    "d'une lecture de pixels. Entre deux points, l'interpolation linéaire "
+    "est supposée d'après l'allure du tracé.",
+    "Hors des bornes, les deux courbes sont horizontales — palier bas avant "
+    "le premier point, palier haut après le second.",
 ]
 
 
@@ -93,7 +90,7 @@ def consigne(role, moyenne_48h):
         KeyError: If the role is unknown. Returning a default setpoint
             would put an unmeasured number into a validation chain.
     """
-    points = CONSIGNES[role][u'points']
+    points = CONSIGNES[role]["points"]
     (x1, y1), (x2, y2) = points[0], points[1]
     if moyenne_48h <= x1:
         return y1
@@ -111,22 +108,22 @@ def construire():
         so they stay French exactly as the `ui/i18n.py` table does.
     """
     return {
-        u'grandeur': u'Consigne de température de l\'air du local — Test SIA '
-                     u'4010 n° 4 (Hörsaal)',
-        u'statut': u'FIGÉ — lu sur le graphique de la spécification',
-        u'type': u'consigne glissante sur la moyenne mobile 48 h de la '
-                 u'température extérieure',
-        u'unite': u'°C',
-        u'source': {
-            u'fichier': _SPEC,
-            u'emplacement': u'ligne « Sollwerte / Raumlufttemperatur »',
-            u'image': _RECTANGLE_IMAGE,
-            u'pourquoi': u'La cellule est VIDE dans la couche texte du PDF. '
-                         u'La consigne n\'existe que sous forme d\'image.',
+        "grandeur": "Consigne de température de l'air du local — Test SIA "
+        "4010 n° 4 (Hörsaal)",
+        "statut": "FIGÉ — lu sur le graphique de la spécification",
+        "type": "consigne glissante sur la moyenne mobile 48 h de la "
+        "température extérieure",
+        "unite": "°C",
+        "source": {
+            "fichier": _SPEC,
+            "emplacement": "ligne « Sollwerte / Raumlufttemperatur »",
+            "image": _RECTANGLE_IMAGE,
+            "pourquoi": "La cellule est VIDE dans la couche texte du PDF. "
+            "La consigne n'existe que sous forme d'image.",
         },
-        u'abscisse': u'Gleitender 48-h Mittelwert Aussenlufttemperatur, °C',
-        u'consignes': CONSIGNES,
-        u'reserves': RESERVES,
+        "abscisse": "Gleitender 48-h Mittelwert Aussenlufttemperatur, °C",
+        "consignes": CONSIGNES,
+        "reserves": RESERVES,
     }
 
 
@@ -140,24 +137,30 @@ def main(arguments):
         int: 0 when everything went well.
     """
     donnees = construire()
-    for role in sorted(donnees[u'consignes']):
-        points = donnees[u'consignes'][role][u'points']
-        print(u'%-16s %s  (paliers hors bornes)'
-              % (role, u' -> '.join(u'%.1f °C ext = %.1f °C' % tuple(p)
-                                    for p in points)))
+    for role in sorted(donnees["consignes"]):
+        points = donnees["consignes"][role]["points"]
+        print(
+            "%-16s %s  (paliers hors bornes)"
+            % (role, " -> ".join("%.1f °C ext = %.1f °C" % tuple(p) for p in points))
+        )
     print()
     for exterieure in (-10.0, 12.0, 15.0, 19.0, 21.0, 30.0):
-        print(u'  ext %6.1f °C : chauffage %.2f  refroidissement %.2f'
-              % (exterieure, consigne('chauffage', exterieure),
-                 consigne('refroidissement', exterieure)))
-    if '--ecrire' in arguments:
-        with io.open(_SORTIE, 'w', encoding='utf-8') as flux:
+        print(
+            "  ext %6.1f °C : chauffage %.2f  refroidissement %.2f"
+            % (
+                exterieure,
+                consigne("chauffage", exterieure),
+                consigne("refroidissement", exterieure),
+            )
+        )
+    if "--ecrire" in arguments:
+        with io.open(_SORTIE, "w", encoding="utf-8") as flux:
             flux.write(json.dumps(donnees, ensure_ascii=False, indent=1))
-            flux.write(u'\n')
+            flux.write("\n")
         print()
-        print(u'written: %s' % os.path.relpath(_SORTIE, _RACINE))
+        print("written: %s" % os.path.relpath(_SORTIE, _RACINE))
     return 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main(sys.argv[1:]))

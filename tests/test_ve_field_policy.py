@@ -20,7 +20,6 @@ from swiss_sia.reference_model.ve_field_policy import (
     CODE_ROOM_CONDITION_AUDIT_ONLY,
     CODE_ZERO_AIR_FLOW_PROFILE_CANONICALIZED_ON,
     CODE_ZERO_GAIN_PROFILE_CANONICALIZED_ON,
-    OptionFilterResult,
     ReadbackStatus,
     VE_THERMAL_MASS_MINIMUM,
     partition_options,
@@ -162,9 +161,7 @@ class ConstructionSurfaceResistanceTests(unittest.TestCase):
             CODE_CONSTRUCTION_SURFACE_RESISTANCE_ROUNDED_4DP,
         )
         self.assertEqual(
-            verdict.warnings[0]["fields"]["inside_surface_resistance"][
-                "canonical_4dp"
-            ],
+            verdict.warnings[0]["fields"]["inside_surface_resistance"]["canonical_4dp"],
             0.1311,
         )
 

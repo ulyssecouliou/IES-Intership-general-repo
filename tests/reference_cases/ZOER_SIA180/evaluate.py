@@ -48,7 +48,7 @@ class C2Result:
     n_occupied: int
     n_above_fig4_upper: int
     n_below_fig4_lower: int
-    n_outside_fig3: int        # observation (résumé rapport) : hors courbes Fig.3
+    n_outside_fig3: int  # observation (résumé rapport) : hors courbes Fig.3
     fig4_hour_threshold: int
     verdict: str
     skipped_no_theta_rm: int = 0
@@ -78,10 +78,15 @@ def evaluate_c1(case: ZoneCase) -> C1Result:
             n_below += 1
     verdict = "PASS" if (n_above == 0 and n_below == 0) else "FAIL"
     return C1Result(
-        zone=case.zone, case=case.case, n_hours_evaluated=evaluated,
-        n_above_upper=n_above, n_below_lower=n_below,
-        max_operative=max(ops), min_operative=min(ops),
-        verdict=verdict, skipped_no_theta_rm=skipped,
+        zone=case.zone,
+        case=case.case,
+        n_hours_evaluated=evaluated,
+        n_above_upper=n_above,
+        n_below_lower=n_below,
+        max_operative=max(ops),
+        min_operative=min(ops),
+        verdict=verdict,
+        skipped_no_theta_rm=skipped,
     )
 
 
@@ -104,15 +109,24 @@ def evaluate_c2(case: ZoneCase) -> C2Result:
             n_above4 += 1
         if s.operative < curves.fig4_lower(th) - _EPS:
             n_below4 += 1
-        if (s.operative > curves.fig3_upper(th) + _EPS
-                or s.operative < curves.fig3_lower(th) - _EPS):
+        if (
+            s.operative > curves.fig3_upper(th) + _EPS
+            or s.operative < curves.fig3_lower(th) - _EPS
+        ):
             n_outside3 += 1
-    verdict = "PASS" if (n_above4 <= FIG4_MAX_HOURS_PER_YEAR and n_below4 == 0) else "FAIL"
+    verdict = (
+        "PASS" if (n_above4 <= FIG4_MAX_HOURS_PER_YEAR and n_below4 == 0) else "FAIL"
+    )
     return C2Result(
-        zone=case.zone, case=case.case, n_occupied=case.n_occupied,
-        n_above_fig4_upper=n_above4, n_below_fig4_lower=n_below4,
-        n_outside_fig3=n_outside3, fig4_hour_threshold=FIG4_MAX_HOURS_PER_YEAR,
-        verdict=verdict, skipped_no_theta_rm=skipped,
+        zone=case.zone,
+        case=case.case,
+        n_occupied=case.n_occupied,
+        n_above_fig4_upper=n_above4,
+        n_below_fig4_lower=n_below4,
+        n_outside_fig3=n_outside3,
+        fig4_hour_threshold=FIG4_MAX_HOURS_PER_YEAR,
+        verdict=verdict,
+        skipped_no_theta_rm=skipped,
     )
 
 

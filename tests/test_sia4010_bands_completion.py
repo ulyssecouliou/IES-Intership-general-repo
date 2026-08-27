@@ -17,7 +17,6 @@ scatter band) and every real VE/APS run.
 import glob
 import shutil
 import unittest
-from collections import Counter
 from functools import lru_cache
 from pathlib import Path
 
@@ -31,7 +30,9 @@ from swiss_sia.reference_model.sia4010.observed_extraction import (
     VeApsResolver,
     build_observed_results,
 )
-from swiss_sia.reference_model.sia4010.placeholder_bindings import build_annual_sum_bindings
+from swiss_sia.reference_model.sia4010.placeholder_bindings import (
+    build_annual_sum_bindings,
+)
 from swiss_sia.reference_model.sia4010.test_runner import (
     Sia4010TestRunner,
     to_test_results_map,
@@ -56,8 +57,18 @@ CONFIGS = [
     {"id": "3", "parse": parse_test3_reference_bands, "bands": 12, "pin": (652.6, 678.2)},
     {"id": "4", "parse": parse_test4_reference_bands, "bands": 3, "pin": (688.5, 970.5)},
     {"id": "5", "parse": parse_test5_reference_bands, "bands": 16, "pin": (426.0, 592.8)},
-    {"id": "6", "parse": parse_test6_reference_bands, "bands": 6, "pin": (3320.8, 4386.5)},
-    {"id": "7", "parse": parse_test7_reference_bands, "bands": 11, "pin": (3373.8, 4483.8)},
+    {
+        "id": "6",
+        "parse": parse_test6_reference_bands,
+        "bands": 6,
+        "pin": (3320.8, 4386.5),
+    },
+    {
+        "id": "7",
+        "parse": parse_test7_reference_bands,
+        "bands": 11,
+        "pin": (3373.8, 4483.8),
+    },
 ]
 CONFIGS_BY_ID = {config["id"]: config for config in CONFIGS}
 # A small, fast workbook that represents the runner/manifest path for all tests.
@@ -105,7 +116,9 @@ class AnnualSumBandsTests(unittest.TestCase):
                 self.assertTrue(all(b.case_id and b.metric for b in bands))
                 self.assertTrue(
                     _has_pin(bands, config["pin"]),
-                    "pinned band {} missing for Test {}".format(config["pin"], config["id"]),
+                    "pinned band {} missing for Test {}".format(
+                        config["pin"], config["id"]
+                    ),
                 )
 
     def test_within_band_passes_and_outside_fails(self):
@@ -113,7 +126,10 @@ class AnnualSumBandsTests(unittest.TestCase):
             with self.subTest(test=config["id"]):
                 bands = _bands(config["id"])
                 within = DictResultSource(
-                    {b.key: ((b.lower_bound + b.upper_bound) / 2.0, b.unit) for b in bands}
+                    {
+                        b.key: ((b.lower_bound + b.upper_bound) / 2.0, b.unit)
+                        for b in bands
+                    }
                 )
                 outcomes = self.comparator.compare_all(
                     bands, build_observed_results(bands, within)
@@ -231,7 +247,9 @@ class AnnualSumBundleWiringTests(unittest.TestCase):
             evaluation.band_status,
             "OFFICIAL_RESULTS_RECORDED",
         )
-        self.assertTrue(all(c.status == ComparisonStatus.PASS for c in evaluation.comparisons))
+        self.assertTrue(
+            all(c.status == ComparisonStatus.PASS for c in evaluation.comparisons)
+        )
 
 
 if __name__ == "__main__":

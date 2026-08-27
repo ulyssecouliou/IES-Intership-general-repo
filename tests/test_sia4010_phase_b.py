@@ -28,11 +28,19 @@ from swiss_sia.reference_model.sia4010.workbook_loaders import (
 
 def _band_expected(metric="M", lower=90.0, upper=110.0):
     return ExpectedResult(
-        test_id="1", case_id="1E", metric=metric, expected_value=100.0, unit="kWh",
-        absolute_tolerance=None, relative_tolerance=None,
-        source_locator="loc", source_checksum="chk",
-        lower_bound=lower, upper_bound=upper,
+        test_id="1",
+        case_id="1E",
+        metric=metric,
+        expected_value=100.0,
+        unit="kWh",
+        absolute_tolerance=None,
+        relative_tolerance=None,
+        source_locator="loc",
+        source_checksum="chk",
+        lower_bound=lower,
+        upper_bound=upper,
     )
+
 
 TEST_ROOT = Path(__file__).resolve().parents[1]
 TEST_OUTPUT_ROOT = TEST_ROOT / ".codex_tmp" / "sia4010_phase_b_tests"
@@ -49,8 +57,11 @@ def _build_bundle(name: str) -> Path:
     ws["A1"] = "Table 28 — Test results sensible energy"
     ws["A3"], ws["B3"], ws["D3"] = "Case id.", "1E", "kWh"
     for col, label in {
-        "A": "Month", "B": "Testprogramm", "G": "Mittelwert",
-        "H": "obere Grenze", "I": "untere Grenze",
+        "A": "Month",
+        "B": "Testprogramm",
+        "G": "Mittelwert",
+        "H": "obere Grenze",
+        "I": "untere Grenze",
     }.items():
         ws["{}5".format(col)] = label
     ws["A6"], ws["G6"], ws["H6"], ws["I6"] = 1, 530.6, 588.9, 472.3
@@ -96,10 +107,12 @@ class Sia4010PhaseBDryRunTests(unittest.TestCase):
         # Resolver supplies only the first metric; the rest are omitted.
         first_key = expected[0].key
         source = DictResultSource(
-            {first_key: (
-                (expected[0].lower_bound + expected[0].upper_bound) / 2,
-                expected[0].unit,
-            )}
+            {
+                first_key: (
+                    (expected[0].lower_bound + expected[0].upper_bound) / 2,
+                    expected[0].unit,
+                )
+            }
         )
         observed = build_observed_results(expected, source)
         self.assertEqual(len(observed), 1)  # nothing fabricated for the others
@@ -174,7 +187,9 @@ class VeApsResultAccessorTests(unittest.TestCase):
 
         accessor = VeApsResultAccessor(aps_results=None, quantity_extractors={"q": boom})
         self.assertIsNone(
-            accessor(MetricBinding(quantity="q", unit="kWh", confirmed=True), _band_expected())
+            accessor(
+                MetricBinding(quantity="q", unit="kWh", confirmed=True), _band_expected()
+            )
         )
 
     def test_non_numeric_extractor_value_is_fail_closed(self):
@@ -184,7 +199,9 @@ class VeApsResultAccessorTests(unittest.TestCase):
         accessor = VeApsResultAccessor(aps_results=None)
         accessor.register("q", lambda aps, b, e: "not-a-number")
         self.assertIsNone(
-            accessor(MetricBinding(quantity="q", unit="kWh", confirmed=True), _band_expected())
+            accessor(
+                MetricBinding(quantity="q", unit="kWh", confirmed=True), _band_expected()
+            )
         )
 
     def test_end_to_end_via_resolver_and_accessor(self):
@@ -194,7 +211,9 @@ class VeApsResultAccessorTests(unittest.TestCase):
         accessor = VeApsResultAccessor(aps_results=mid)
         accessor.register("band_mid", lambda aps, b, e: aps.get(e.key))
         bindings = {
-            ("1", e.metric): MetricBinding(quantity="band_mid", unit=e.unit, confirmed=True)
+            ("1", e.metric): MetricBinding(
+                quantity="band_mid", unit=e.unit, confirmed=True
+            )
             for e in expected
         }
         resolver = VeApsResolver(accessor, bindings)

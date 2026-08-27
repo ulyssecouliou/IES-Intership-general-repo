@@ -897,12 +897,8 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
             "Für diesen Fall ist kein abgesicherter Generator zur "
             "Laufzeitqualifikation vorhanden."
         ),
-        "fr": (
-            "Aucun générateur de qualification VE contrôlé n’existe pour ce cas."
-        ),
-        "it": (
-            "Per questo caso non esiste un generatore controllato di qualifica VE."
-        ),
+        "fr": ("Aucun générateur de qualification VE contrôlé n’existe pour ce cas."),
+        "it": ("Per questo caso non esiste un generatore controllato di qualifica VE."),
     },
     "dlg_simulation_title": {
         "en": "Run ApacheSim and evaluate the APS?",
@@ -1097,13 +1093,8 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
             "Waehlen Sie den offiziellen Fall test_2A / 2A in einem "
             "gespeicherten Projekt."
         ),
-        "fr": (
-            "Selectionnez le cas officiel test_2A / 2A dans un projet "
-            "enregistre."
-        ),
-        "it": (
-            "Seleziona il caso ufficiale test_2A / 2A in un progetto salvato."
-        ),
+        "fr": ("Selectionnez le cas officiel test_2A / 2A dans un projet " "enregistre."),
+        "it": ("Seleziona il caso ufficiale test_2A / 2A in un progetto salvato."),
     },
     "dlg_test2a_probe_complete": {
         "en": (
@@ -1352,8 +1343,7 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
             "sorties APS."
         ),
         "it": (
-            "Salva il progetto ed esegui ApacheSim prima di sondare le "
-            "uscite APS."
+            "Salva il progetto ed esegui ApacheSim prima di sondare le " "uscite APS."
         ),
     },
     "dlg_aps_probe_complete": {
@@ -1480,49 +1470,57 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
         "en": (
             "This creates one unassigned glazed CDB construction in disposable "
             "project {project} and tests only the active flag and the two "
-            "150 W/m2 threshold setters. It does not qualify dynamic behaviour "
-            "or optics. Continue?"
+            "150 W/m2 threshold setters. The control rule and this IESVE field "
+            "mapping are authority-confirmed; this operation tests storage and "
+            "read-back only, not the optical result. Continue?"
         ),
         "de": (
             "Dies erstellt eine nicht zugewiesene verglaste CDB-Konstruktion "
             "im Wegwerfprojekt {project} und prueft nur das Aktiv-Flag sowie "
-            "die beiden 150-W/m2-Schwellenwert-Setter. Dynamik und Optik werden "
-            "nicht qualifiziert. Fortfahren?"
+            "die beiden 150-W/m2-Schwellenwert-Setter. Regel und IESVE-Zuordnung "
+            "sind bestaetigt; hier werden nur Speicherung und Ruecklesen, nicht "
+            "das optische Ergebnis qualifiziert. Fortfahren?"
         ),
         "fr": (
             "Cette opération crée une construction vitrée CDB non affectée "
             "dans le projet jetable {project} et teste uniquement le drapeau "
-            "actif ainsi que les deux setters de seuil à 150 W/m². Elle ne "
-            "qualifie ni le comportement dynamique ni l’optique. Continuer ?"
+            "actif ainsi que les deux setters de seuil à 150 W/m². La règle et "
+            "ce mapping IESVE sont confirmés par l’autorité ; cette opération "
+            "teste uniquement le stockage et la relecture, pas le résultat "
+            "optique. Continuer ?"
         ),
         "it": (
             "Questa operazione crea una costruzione vetrata CDB non assegnata "
             "nel progetto usa e getta {project} e verifica solo il flag attivo "
-            "e i due setter di soglia a 150 W/m². Non qualifica il comportamento "
-            "dinamico né l’ottica. Continuare?"
+            "e i due setter di soglia a 150 W/m². La regola e questa mappatura "
+            "IESVE sono confermate dall'autorità; l'operazione verifica solo "
+            "memorizzazione e rilettura, non il risultato ottico. Continuare?"
         ),
     },
     "dlg_test2a_shading_qualification_complete": {
         "en": (
             "CDB shade-field storage and exact read-back passed.\n\n"
-            "Report: {report}\n\nDynamic equality, timestep handling and "
-            "Soltis optical equivalence remain blocked."
+            "Report: {report}\n\nThe authority-confirmed threshold mapping is "
+            "stored correctly. Soltis optical equivalence and result binding "
+            "remain to be qualified."
         ),
         "de": (
             "Speicherung und exaktes Ruecklesen der CDB-Sonnenschutzfelder "
-            "bestanden.\n\nBericht: {report}\n\nDynamische Gleichheit, "
-            "Zeitschrittbehandlung und optische Soltis-Aequivalenz bleiben "
-            "gesperrt."
+            "bestanden.\n\nBericht: {report}\n\nDie bestaetigte "
+            "Schwellenwert-Zuordnung ist korrekt gespeichert. Optische "
+            "Soltis-Aequivalenz und Ergebnisbindung sind noch zu qualifizieren."
         ),
         "fr": (
             "Le stockage et la relecture exacte des champs CDB du store ont "
-            "réussi.\n\nRapport : {report}\n\nL’égalité dynamique, la gestion "
-            "des pas de temps et l’équivalence optique Soltis restent bloquées."
+            "réussi.\n\nRapport : {report}\n\nLe mapping de seuil confirmé "
+            "par l’autorité est correctement stocké. L’équivalence optique "
+            "Soltis et la liaison des résultats restent à qualifier."
         ),
         "it": (
             "Memorizzazione e rilettura esatta dei campi CDB della schermatura "
-            "superate.\n\nRapporto: {report}\n\nUguaglianza dinamica, gestione "
-            "del passo temporale ed equivalenza ottica Soltis restano bloccate."
+            "superate.\n\nRapporto: {report}\n\nLa mappatura delle soglie "
+            "confermata dall'autorità è memorizzata correttamente. Restano da "
+            "qualificare l'equivalenza ottica Soltis e i risultati."
         ),
     },
     "status_test2a_shading_qualification": {
@@ -1530,9 +1528,7 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
             "Test 2A shade setter qualification: construction {construction} "
             "- {report}"
         ),
-        "de": (
-            "Test-2A-Sonnenschutz-Setter: Konstruktion {construction} - {report}"
-        ),
+        "de": ("Test-2A-Sonnenschutz-Setter: Konstruktion {construction} - {report}"),
         "fr": (
             "Qualification des setters du store Test 2A : construction "
             "{construction} - {report}"
@@ -2384,16 +2380,22 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
         "it": "Area di valutazione tecnica",
     },
     "client_ui_active_project": {
-        "en": "Active VE project", "de": "Aktives VE-Projekt",
-        "fr": "Projet VE actif", "it": "Progetto VE attivo",
+        "en": "Active VE project",
+        "de": "Aktives VE-Projekt",
+        "fr": "Projet VE actif",
+        "it": "Progetto VE attivo",
     },
     "client_ui_weather_short": {
-        "en": "Weather data", "de": "Wetterdaten",
-        "fr": "Donnees meteo", "it": "Dati meteo",
+        "en": "Weather data",
+        "de": "Wetterdaten",
+        "fr": "Donnees meteo",
+        "it": "Dati meteo",
     },
     "client_ui_output_short": {
-        "en": "Report location", "de": "Berichtsablage",
-        "fr": "Dossier des rapports", "it": "Cartella dei rapporti",
+        "en": "Report location",
+        "de": "Berichtsablage",
+        "fr": "Dossier des rapports",
+        "it": "Cartella dei rapporti",
     },
     "client_ui_window_title": {
         "en": "Swiss SIA 380/2 Compliance",
@@ -2426,12 +2428,16 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
         "it": "Cliente / committente *",
     },
     "client_ui_project_name_required": {
-        "en": "Project name *", "de": "Projektname *",
-        "fr": "Nom du projet *", "it": "Nome del progetto *",
+        "en": "Project name *",
+        "de": "Projektname *",
+        "fr": "Nom du projet *",
+        "it": "Nome del progetto *",
     },
     "client_ui_project_address": {
-        "en": "Project address", "de": "Projektadresse",
-        "fr": "Adresse du projet", "it": "Indirizzo del progetto",
+        "en": "Project address",
+        "de": "Projektadresse",
+        "fr": "Adresse du projet",
+        "it": "Indirizzo del progetto",
     },
     "client_ui_contact_details": {
         "en": "Client contact (name, email or phone)",
@@ -2446,8 +2452,10 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
         "it": "Riferimento incarico / rapporto",
     },
     "client_ui_report_language": {
-        "en": "Report language", "de": "Berichtssprache",
-        "fr": "Langue des rapports", "it": "Lingua dei rapporti",
+        "en": "Report language",
+        "de": "Berichtssprache",
+        "fr": "Langue des rapports",
+        "it": "Lingua dei rapporti",
     },
     "client_ui_project_name": {
         "en": "Project name",
@@ -2512,10 +2520,16 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
     "client_ui_yes": {"en": "Yes", "de": "Ja", "fr": "Oui", "it": "Si"},
     "client_ui_no": {"en": "No", "de": "Nein", "fr": "Non", "it": "No"},
     "client_ui_to_confirm": {
-        "en": "To confirm", "de": "Zu bestaetigen", "fr": "A confirmer", "it": "Da confermare"
+        "en": "To confirm",
+        "de": "Zu bestaetigen",
+        "fr": "A confirmer",
+        "it": "Da confermare",
     },
     "client_ui_logo": {
-        "en": "Client logo", "de": "Logo Auftraggeber", "fr": "Logo du client", "it": "Logo del cliente"
+        "en": "Client logo",
+        "de": "Logo Auftraggeber",
+        "fr": "Logo du client",
+        "it": "Logo del cliente",
     },
     "client_ui_logo_report": {
         "en": "Client logo to display in the reports",
@@ -2524,10 +2538,16 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
         "it": "Logo del cliente da mostrare nei rapporti",
     },
     "client_ui_choose_logo": {
-        "en": "Choose logo", "de": "Logo waehlen", "fr": "Choisir le logo", "it": "Scegli logo"
+        "en": "Choose logo",
+        "de": "Logo waehlen",
+        "fr": "Choisir le logo",
+        "it": "Scegli logo",
     },
     "client_ui_viewer": {
-        "en": "Model Viewer image", "de": "Model-Viewer-Bild", "fr": "Capture du Model Viewer", "it": "Immagine Model Viewer"
+        "en": "Model Viewer image",
+        "de": "Model-Viewer-Bild",
+        "fr": "Capture du Model Viewer",
+        "it": "Immagine Model Viewer",
     },
     "client_ui_viewer_report": {
         "en": "Model view to include in the reports",
@@ -2536,10 +2556,16 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
         "it": "Vista del modello da inserire nei rapporti",
     },
     "client_ui_capture_viewer": {
-        "en": "Capture now", "de": "Jetzt aufnehmen", "fr": "Capturer maintenant", "it": "Cattura ora"
+        "en": "Capture now",
+        "de": "Jetzt aufnehmen",
+        "fr": "Capturer maintenant",
+        "it": "Cattura ora",
     },
     "client_ui_choose_viewer": {
-        "en": "Choose existing file", "de": "Vorhandene Datei waehlen", "fr": "Choisir un fichier existant", "it": "Scegli file esistente"
+        "en": "Choose existing file",
+        "de": "Vorhandene Datei waehlen",
+        "fr": "Choisir un fichier existant",
+        "it": "Scegli file esistente",
     },
     "client_ui_viewer_hint": {
         "en": "Frame the model in Model Viewer, then click Capture now. Choose an existing PNG/JPG only as a fallback.",
@@ -2578,17 +2604,28 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
         "it": "Questa immagine non puo essere aggiunta al PDF. Usa un PNG RGB non trasparente o un JPEG.",
     },
     "client_ui_generate": {
-        "en": "Generate Excel + PDF", "de": "Excel + PDF erzeugen", "fr": "Generer Excel + PDF", "it": "Genera Excel + PDF"
+        "en": "Generate Excel + PDF",
+        "de": "Excel + PDF erzeugen",
+        "fr": "Generer Excel + PDF",
+        "it": "Genera Excel + PDF",
     },
     "client_ui_generating": {
-        "en": "Analysing the active VE model...", "de": "Aktives VE-Modell wird analysiert...", "fr": "Analyse du modele VE actif...", "it": "Analisi del modello VE attivo..."
+        "en": "Analysing the active VE model...",
+        "de": "Aktives VE-Modell wird analysiert...",
+        "fr": "Analyse du modele VE actif...",
+        "it": "Analisi del modello VE attivo...",
     },
     "client_ui_result": {
-        "en": "Compliance result", "de": "Konformitaetsergebnis", "fr": "Resultat de conformite", "it": "Risultato di conformita"
+        "en": "Compliance result",
+        "de": "Konformitaetsergebnis",
+        "fr": "Resultat de conformite",
+        "it": "Risultato di conformita",
     },
     "client_ui_result_pending": {
-        "en": "Assessment ready to run", "de": "Beurteilung kann gestartet werden",
-        "fr": "Evaluation prete a etre lancee", "it": "Valutazione pronta per l'avvio",
+        "en": "Assessment ready to run",
+        "de": "Beurteilung kann gestartet werden",
+        "fr": "Evaluation prete a etre lancee",
+        "it": "Valutazione pronta per l'avvio",
     },
     "client_ui_result_pending_help": {
         "en": "The decision and the six assessed domains will appear here after the model analysis.",
@@ -2615,16 +2652,22 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
         "it": "Generare e aprire i rapporti Excel e PDF aggiornati",
     },
     "client_ui_decision": {
-        "en": "SIA 380/2 decision", "de": "Entscheid nach SIA 380/2",
-        "fr": "Decision SIA 380/2", "it": "Decisione SIA 380/2",
+        "en": "SIA 380/2 decision",
+        "de": "Entscheid nach SIA 380/2",
+        "fr": "Decision SIA 380/2",
+        "it": "Decisione SIA 380/2",
     },
     "client_ui_blocking_findings": {
-        "en": "Blocking findings", "de": "Blockierende Feststellungen",
-        "fr": "Points bloquants", "it": "Rilievi bloccanti",
+        "en": "Blocking findings",
+        "de": "Blockierende Feststellungen",
+        "fr": "Points bloquants",
+        "it": "Rilievi bloccanti",
     },
     "client_ui_advisory_findings": {
-        "en": "Points to review", "de": "Zu pruefende Punkte",
-        "fr": "Points a examiner", "it": "Punti da verificare",
+        "en": "Points to review",
+        "de": "Zu pruefende Punkte",
+        "fr": "Points a examiner",
+        "it": "Punti da verificare",
     },
     "client_ui_current_reports": {
         "en": "Reports from this run",
@@ -2633,13 +2676,22 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
         "it": "Rapporti di questa esecuzione",
     },
     "client_ui_open_excel": {
-        "en": "Open current Excel", "de": "Aktuelles Excel oeffnen", "fr": "Ouvrir l'Excel a jour", "it": "Apri Excel aggiornato"
+        "en": "Open current Excel",
+        "de": "Aktuelles Excel oeffnen",
+        "fr": "Ouvrir l'Excel a jour",
+        "it": "Apri Excel aggiornato",
     },
     "client_ui_open_pdf": {
-        "en": "Open PDF report", "de": "PDF-Bericht oeffnen", "fr": "Ouvrir le rapport PDF", "it": "Apri rapporto PDF"
+        "en": "Open PDF report",
+        "de": "PDF-Bericht oeffnen",
+        "fr": "Ouvrir le rapport PDF",
+        "it": "Apri rapporto PDF",
     },
     "client_ui_open_folder": {
-        "en": "Open report folder", "de": "Berichtsordner oeffnen", "fr": "Ouvrir le dossier des rapports", "it": "Apri cartella rapporti"
+        "en": "Open report folder",
+        "de": "Berichtsordner oeffnen",
+        "fr": "Ouvrir le dossier des rapports",
+        "it": "Apri cartella rapporti",
     },
     "client_ui_required": {
         "en": "Enter the client and project names before generating the reports.",
@@ -2648,12 +2700,17 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
         "it": "Inserisci cliente e nome del progetto prima di generare i rapporti.",
     },
     "client_ui_no_file": {
-        "en": "No file selected", "de": "Keine Datei gewaehlt", "fr": "Aucun fichier selectionne", "it": "Nessun file selezionato"
+        "en": "No file selected",
+        "de": "Keine Datei gewaehlt",
+        "fr": "Aucun fichier selectionne",
+        "it": "Nessun file selezionato",
     },
     # ------------------------------------------ detailed PDF diagnostics
     "report_details_title": {
-        "en": "Detailed compliance analysis", "de": "Detaillierte Konformitaetsanalyse",
-        "fr": "Analyse detaillee de la conformite", "it": "Analisi dettagliata della conformita",
+        "en": "Detailed compliance analysis",
+        "de": "Detaillierte Konformitaetsanalyse",
+        "fr": "Analyse detaillee de la conformite",
+        "it": "Analisi dettagliata della conformita",
     },
     "report_details_subtitle": {
         "en": "Decision basis, blocking findings, missing evidence and corrective actions",
@@ -2662,36 +2719,58 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
         "it": "Base decisionale, rilievi bloccanti, prove mancanti e azioni correttive",
     },
     "report_details_continued": {
-        "en": "Detailed analysis - continued", "de": "Detaillierte Analyse - Fortsetzung",
-        "fr": "Analyse detaillee - suite", "it": "Analisi dettagliata - continuazione",
+        "en": "Detailed analysis - continued",
+        "de": "Detaillierte Analyse - Fortsetzung",
+        "fr": "Analyse detaillee - suite",
+        "it": "Analisi dettagliata - continuazione",
     },
     "report_decision_basis": {
-        "en": "Why this decision was reached", "de": "Begruendung des Entscheids",
-        "fr": "Pourquoi cette decision", "it": "Motivo della decisione",
+        "en": "Why this decision was reached",
+        "de": "Begruendung des Entscheids",
+        "fr": "Pourquoi cette decision",
+        "it": "Motivo della decisione",
     },
     "report_global_comparison": {
-        "en": "Decisive project / reference comparison", "de": "Entscheidender Projekt-/Referenzvergleich",
-        "fr": "Comparaison decisive projet / reference", "it": "Confronto decisivo progetto / riferimento",
+        "en": "Decisive project / reference comparison",
+        "de": "Entscheidender Projekt-/Referenzvergleich",
+        "fr": "Comparaison decisive projet / reference",
+        "it": "Confronto decisivo progetto / riferimento",
     },
     "report_comparison_project_value": {
-        "en": "Project value", "de": "Projektwert", "fr": "Valeur du projet", "it": "Valore del progetto",
+        "en": "Project value",
+        "de": "Projektwert",
+        "fr": "Valeur du projet",
+        "it": "Valore del progetto",
     },
     "report_comparison_reference_value": {
-        "en": "Reference value", "de": "Referenzwert", "fr": "Valeur de reference", "it": "Valore di riferimento",
+        "en": "Reference value",
+        "de": "Referenzwert",
+        "fr": "Valeur de reference",
+        "it": "Valore di riferimento",
     },
     "report_comparison_status": {
-        "en": "Review state", "de": "Pruefstatus", "fr": "Etat de la verification", "it": "Stato della verifica",
+        "en": "Review state",
+        "de": "Pruefstatus",
+        "fr": "Etat de la verification",
+        "it": "Stato della verifica",
     },
     "report_comparison_source": {
-        "en": "Calculation source", "de": "Berechnungsquelle", "fr": "Source du calcul", "it": "Fonte del calcolo",
+        "en": "Calculation source",
+        "de": "Berechnungsquelle",
+        "fr": "Source du calcul",
+        "it": "Fonte del calcolo",
     },
     "report_domains_detailed": {
-        "en": "Assessment by domain", "de": "Beurteilung nach Bereich",
-        "fr": "Evaluation par domaine", "it": "Valutazione per ambito",
+        "en": "Assessment by domain",
+        "de": "Beurteilung nach Bereich",
+        "fr": "Evaluation par domaine",
+        "it": "Valutazione per ambito",
     },
     "report_findings_title": {
-        "en": "Detailed findings", "de": "Detaillierte Feststellungen",
-        "fr": "Constats detailles", "it": "Rilievi dettagliati",
+        "en": "Detailed findings",
+        "de": "Detaillierte Feststellungen",
+        "fr": "Constats detailles",
+        "it": "Rilievi dettagliati",
     },
     "report_findings_none": {
         "en": "No individual alert was raised. The decision above still depends on the decisive comparison and the stated reserves.",
@@ -2700,20 +2779,28 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
         "it": "Non e stato emesso alcun avviso individuale. La decisione resta comunque legata al confronto decisivo e alle riserve indicate.",
     },
     "report_finding_blocking": {
-        "en": "Determined non-compliance", "de": "Festgestellte Nichtkonformitaet",
-        "fr": "Non-conformite averee", "it": "Non conformita accertata",
+        "en": "Determined non-compliance",
+        "de": "Festgestellte Nichtkonformitaet",
+        "fr": "Non-conformite averee",
+        "it": "Non conformita accertata",
     },
     "report_finding_missing": {
-        "en": "Evidence incomplete / not checkable", "de": "Nachweis unvollstaendig / nicht pruefbar",
-        "fr": "Preuve incomplete / non verifiable", "it": "Prova incompleta / non verificabile",
+        "en": "Evidence incomplete / not checkable",
+        "de": "Nachweis unvollstaendig / nicht pruefbar",
+        "fr": "Preuve incomplete / non verifiable",
+        "it": "Prova incompleta / non verificabile",
     },
     "report_finding_advisory": {
-        "en": "Point to review", "de": "Zu pruefender Punkt",
-        "fr": "Point a examiner", "it": "Punto da verificare",
+        "en": "Point to review",
+        "de": "Zu pruefender Punkt",
+        "fr": "Point a examiner",
+        "it": "Punto da verificare",
     },
     "report_finding_why": {
-        "en": "Effect on compliance", "de": "Auswirkung auf die Konformitaet",
-        "fr": "Effet sur la conformite", "it": "Effetto sulla conformita",
+        "en": "Effect on compliance",
+        "de": "Auswirkung auf die Konformitaet",
+        "fr": "Effet sur la conformite",
+        "it": "Effetto sulla conformita",
     },
     "report_finding_why_blocking": {
         "en": "The criterion was evaluated and a critical or high-severity deviation was found; it blocks a compliant conclusion until corrected.",
@@ -2734,31 +2821,52 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
         "it": "Questo punto non blocca da solo la conclusione decisiva, ma resta documentato e da verificare.",
     },
     "report_finding_observation": {
-        "en": "Finding", "de": "Feststellung", "fr": "Constat", "it": "Rilievo",
+        "en": "Finding",
+        "de": "Feststellung",
+        "fr": "Constat",
+        "it": "Rilievo",
     },
     "report_finding_rule": {
-        "en": "Automated check", "de": "Automatische Pruefung", "fr": "Controle automatise", "it": "Controllo automatico",
+        "en": "Automated check",
+        "de": "Automatische Pruefung",
+        "fr": "Controle automatise",
+        "it": "Controllo automatico",
     },
     "report_finding_limit": {
-        "en": "Limit / reference input", "de": "Grenz-/Referenzwert",
-        "fr": "Limite / valeur de reference", "it": "Limite / valore di riferimento",
+        "en": "Limit / reference input",
+        "de": "Grenz-/Referenzwert",
+        "fr": "Limite / valeur de reference",
+        "it": "Limite / valore di riferimento",
     },
     "report_finding_target": {
-        "en": "Target value", "de": "Zielwert", "fr": "Valeur cible", "it": "Valore obiettivo",
+        "en": "Target value",
+        "de": "Zielwert",
+        "fr": "Valeur cible",
+        "it": "Valore obiettivo",
     },
     "report_finding_source": {
-        "en": "Normative source", "de": "Normative Quelle", "fr": "Source normative", "it": "Fonte normativa",
+        "en": "Normative source",
+        "de": "Normative Quelle",
+        "fr": "Source normative",
+        "it": "Fonte normativa",
     },
     "report_finding_model_data": {
-        "en": "Model data read", "de": "Gelesene Modelldaten", "fr": "Donnees lues dans le modele", "it": "Dati letti dal modello",
+        "en": "Model data read",
+        "de": "Gelesene Modelldaten",
+        "fr": "Donnees lues dans le modele",
+        "it": "Dati letti dal modello",
     },
     "report_finding_action": {
-        "en": "Required next action", "de": "Erforderliche naechste Massnahme",
-        "fr": "Action attendue", "it": "Azione richiesta",
+        "en": "Required next action",
+        "de": "Erforderliche naechste Massnahme",
+        "fr": "Action attendue",
+        "it": "Azione richiesta",
     },
     "report_value_not_available": {
-        "en": "Not available in the analysed evidence", "de": "In den analysierten Nachweisen nicht verfuegbar",
-        "fr": "Non disponible dans les preuves analysees", "it": "Non disponibile nelle prove analizzate",
+        "en": "Not available in the analysed evidence",
+        "de": "In den analysierten Nachweisen nicht verfuegbar",
+        "fr": "Non disponible dans les preuves analysees",
+        "it": "Non disponibile nelle prove analizzate",
     },
     "report_reason_no_room_analysed": {
         "en": "No usable thermal room was analysed; no building-level conclusion can be established.",
@@ -2845,20 +2953,28 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
         "it": "Conservare il confronto verificato e il pacchetto di prove generato con il rapporto emesso.",
     },
     "report_domain_reason_domain_not_evaluated": {
-        "en": "Domain not evaluated", "de": "Bereich nicht bewertet",
-        "fr": "Domaine non evalue", "it": "Ambito non valutato",
+        "en": "Domain not evaluated",
+        "de": "Bereich nicht bewertet",
+        "fr": "Domaine non evalue",
+        "it": "Ambito non valutato",
     },
     "report_domain_reason_blocking_findings": {
-        "en": "Determined blocking finding(s)", "de": "Festgestellte blockierende Abweichung(en)",
-        "fr": "Point(s) bloquant(s) avere(s)", "it": "Rilievo/i bloccante/i accertato/i",
+        "en": "Determined blocking finding(s)",
+        "de": "Festgestellte blockierende Abweichung(en)",
+        "fr": "Point(s) bloquant(s) avere(s)",
+        "it": "Rilievo/i bloccante/i accertato/i",
     },
     "report_domain_reason_evidence_incomplete": {
-        "en": "Evidence incomplete", "de": "Nachweise unvollstaendig",
-        "fr": "Preuves incompletes", "it": "Prove incomplete",
+        "en": "Evidence incomplete",
+        "de": "Nachweise unvollstaendig",
+        "fr": "Preuves incompletes",
+        "it": "Prove incomplete",
     },
     "report_domain_reason_no_blocking_finding": {
-        "en": "No determined blocking finding", "de": "Kein festgestellter Blocker",
-        "fr": "Aucun point bloquant avere", "it": "Nessun blocco accertato",
+        "en": "No determined blocking finding",
+        "de": "Kein festgestellter Blocker",
+        "fr": "Aucun point bloquant avere",
+        "it": "Nessun blocco accertato",
     },
     "report_domain_reason_no_blocking_finding_with_limitations": {
         "en": "No determined blocking finding (with documented limitations)",
@@ -2903,8 +3019,10 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
         "it": "Questa cartella di lavoro presenta la conformita SIA 380/2 valutata del modello cliente. E una valutazione tecnica, non un certificato SIA ufficiale. Le prove mancanti o non verificabili restano visibili e non sono mai considerate conformi. Vedere il foglio INDEX per i dettagli.",
     },
     "excel_model_viewer_title": {
-        "en": "Model Viewer capture", "de": "Model-Viewer-Aufnahme",
-        "fr": "Capture du Model Viewer", "it": "Cattura del Model Viewer",
+        "en": "Model Viewer capture",
+        "de": "Model-Viewer-Aufnahme",
+        "fr": "Capture du Model Viewer",
+        "it": "Cattura del Model Viewer",
     },
     "excel_model_viewer_note": {
         "en": "Project model view supplied for report identification and visual context. It is illustrative and does not replace the technical evidence used for the compliance decision.",
@@ -2925,12 +3043,16 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
         "it": "Per questo rapporto non e stata fornita alcuna cattura del Model Viewer.",
     },
     "excel_report_index": {
-        "en": "Report index", "de": "Berichtsindex",
-        "fr": "Index du rapport", "it": "Indice del rapporto",
+        "en": "Report index",
+        "de": "Berichtsindex",
+        "fr": "Index du rapport",
+        "it": "Indice del rapporto",
     },
     "excel_client_summary_title": {
-        "en": "Client compliance summary", "de": "Konformitaetsuebersicht fuer den Kunden",
-        "fr": "Synthese de conformite client", "it": "Sintesi di conformita per il cliente",
+        "en": "Client compliance summary",
+        "de": "Konformitaetsuebersicht fuer den Kunden",
+        "fr": "Synthese de conformite client",
+        "it": "Sintesi di conformita per il cliente",
     },
     "excel_client_summary_intro": {
         "en": "SIA 380/2 compliance statement for the active client VE model. Missing data is reported explicitly and is never assumed compliant.",
@@ -2939,19 +3061,28 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
         "it": "Dichiarazione di conformita SIA 380/2 per il modello VE attivo del cliente. I dati mancanti sono segnalati esplicitamente e non sono mai presunti conformi.",
     },
     "excel_current_decision": {
-        "en": "Current decision", "de": "Aktueller Entscheid",
-        "fr": "Decision actuelle", "it": "Decisione attuale",
+        "en": "Current decision",
+        "de": "Aktueller Entscheid",
+        "fr": "Decision actuelle",
+        "it": "Decisione attuale",
     },
     "excel_value": {
-        "en": "Value", "de": "Wert", "fr": "Valeur", "it": "Valore",
+        "en": "Value",
+        "de": "Wert",
+        "fr": "Valeur",
+        "it": "Valore",
     },
     "excel_interpretation": {
-        "en": "Interpretation", "de": "Interpretation",
-        "fr": "Interpretation", "it": "Interpretazione",
+        "en": "Interpretation",
+        "de": "Interpretation",
+        "fr": "Interpretation",
+        "it": "Interpretazione",
     },
     "excel_rooms_analysed": {
-        "en": "Rooms analysed", "de": "Analysierte Raeume",
-        "fr": "Locaux analyses", "it": "Locali analizzati",
+        "en": "Rooms analysed",
+        "de": "Analysierte Raeume",
+        "fr": "Locaux analyses",
+        "it": "Locali analizzati",
     },
     "excel_rooms_interpretation": {
         "en": "Thermal rooms/zones extracted from VE.",
@@ -2960,16 +3091,22 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
         "it": "Locali/zone termiche estratti da VE.",
     },
     "excel_floor_area_analysed": {
-        "en": "Floor area analysed (m2)", "de": "Analysierte Flaeche (m2)",
-        "fr": "Surface analysee (m2)", "it": "Superficie analizzata (m2)",
+        "en": "Floor area analysed (m2)",
+        "de": "Analysierte Flaeche (m2)",
+        "fr": "Surface analysee (m2)",
+        "it": "Superficie analizzata (m2)",
     },
     "excel_floor_area_interpretation": {
-        "en": "Sum of extracted room areas.", "de": "Summe der extrahierten Raumflaechen.",
-        "fr": "Somme des surfaces des locaux extraits.", "it": "Somma delle superfici dei locali estratti.",
+        "en": "Sum of extracted room areas.",
+        "de": "Summe der extrahierten Raumflaechen.",
+        "fr": "Somme des surfaces des locaux extraits.",
+        "it": "Somma delle superfici dei locali estratti.",
     },
     "excel_p1_groups": {
-        "en": "P1 action groups", "de": "P1-Massnahmengruppen",
-        "fr": "Groupes d'actions P1", "it": "Gruppi di azioni P1",
+        "en": "P1 action groups",
+        "de": "P1-Massnahmengruppen",
+        "fr": "Groupes d'actions P1",
+        "it": "Gruppi di azioni P1",
     },
     "excel_p1_interpretation": {
         "en": "Priority groups to resolve before issuing the client compliance statement.",
@@ -2978,8 +3115,10 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
         "it": "Gruppi prioritari da risolvere prima di emettere la dichiarazione di conformita del cliente.",
     },
     "excel_high_critical": {
-        "en": "High + critical findings", "de": "Hohe + kritische Feststellungen",
-        "fr": "Constats eleves + critiques", "it": "Rilievi alti + critici",
+        "en": "High + critical findings",
+        "de": "Hohe + kritische Feststellungen",
+        "fr": "Constats eleves + critiques",
+        "it": "Rilievi alti + critici",
     },
     "excel_high_critical_interpretation": {
         "en": "Blocking or near-blocking review items.",
@@ -2988,15 +3127,22 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
         "it": "Punti di revisione bloccanti o quasi bloccanti.",
     },
     "excel_safe_claim": {
-        "en": "Safe claim", "de": "Zulaessige Aussage",
-        "fr": "Formulation sure", "it": "Dicitura sicura",
+        "en": "Safe claim",
+        "de": "Zulaessige Aussage",
+        "fr": "Formulation sure",
+        "it": "Dicitura sicura",
     },
     "excel_use_avoid": {
-        "en": "Use / avoid", "de": "Verwenden / vermeiden",
-        "fr": "Utiliser / eviter", "it": "Usare / evitare",
+        "en": "Use / avoid",
+        "de": "Verwenden / vermeiden",
+        "fr": "Utiliser / eviter",
+        "it": "Usare / evitare",
     },
     "excel_reason": {
-        "en": "Reason", "de": "Begruendung", "fr": "Raison", "it": "Motivo",
+        "en": "Reason",
+        "de": "Begruendung",
+        "fr": "Raison",
+        "it": "Motivo",
     },
     "excel_use": {"en": "Use", "de": "Verwenden", "fr": "Utiliser", "it": "Usare"},
     "excel_avoid": {"en": "Avoid", "de": "Vermeiden", "fr": "Eviter", "it": "Evitare"},
@@ -3025,15 +3171,143 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
         "it": "I punti bloccanti aperti o le prove mancanti non consentono tale affermazione.",
     },
     "excel_immediate_decision": {
-        "en": "Immediate next decision", "de": "Naechster Entscheid",
-        "fr": "Prochaine decision immediate", "it": "Prossima decisione immediata",
+        "en": "Immediate next decision",
+        "de": "Naechster Entscheid",
+        "fr": "Prochaine decision immediate",
+        "it": "Prossima decisione immediata",
     },
-    "excel_owner": {"en": "Owner", "de": "Verantwortlich", "fr": "Responsable", "it": "Responsabile"},
+    "excel_owner": {
+        "en": "Owner",
+        "de": "Verantwortlich",
+        "fr": "Responsable",
+        "it": "Responsabile",
+    },
     "excel_evidence_expected": {
-        "en": "Evidence expected", "de": "Erwarteter Nachweis",
-        "fr": "Preuve attendue", "it": "Prova richiesta",
+        "en": "Evidence expected",
+        "de": "Erwarteter Nachweis",
+        "fr": "Preuve attendue",
+        "it": "Prova richiesta",
+    },
+    "client_ui_evidence_title": {
+        "en": "SIA 380/2 technical evidence",
+        "de": "Technische Nachweise nach SIA 380/2",
+        "fr": "Preuves techniques SIA 380/2",
+        "it": "Prove tecniche SIA 380/2",
+    },
+    "client_ui_evidence_help": {
+        "en": "Project, climate, global comparison, ventilation, cooling, lighting and electrical power.",
+        "de": "Projekt, Klima, Gesamtvergleich, Lüftung, Kühlung, Beleuchtung und elektrische Leistung.",
+        "fr": "Projet, climat, comparaison globale, ventilation, froid, éclairage et puissance électrique.",
+        "it": "Progetto, clima, confronto globale, ventilazione, raffrescamento, illuminazione e potenza elettrica.",
+    },
+    "client_ui_evidence_open": {
+        "en": "Complete evidence…",
+        "de": "Nachweise ergänzen…",
+        "fr": "Compléter les preuves…",
+        "it": "Completa le prove…",
+    },
+    "client_ui_evidence_error_title": {
+        "en": "SIA 380/2 evidence",
+        "de": "Nachweise nach SIA 380/2",
+        "fr": "Preuves SIA 380/2",
+        "it": "Prove SIA 380/2",
+    },
+    "client_ui_evidence_error": {
+        "en": "The evidence editor could not be opened.",
+        "de": "Der Nachweis-Editor konnte nicht geöffnet werden.",
+        "fr": "Impossible d’ouvrir l’éditeur de preuves.",
+        "it": "Impossibile aprire l’editor delle prove.",
+    },
+    "client_ui_badge": {
+        "en": "SIA 380/2  /  CLIENT",
+        "de": "SIA 380/2  /  AUFTRAGGEBER",
+        "fr": "SIA 380/2  /  CLIENT",
+        "it": "SIA 380/2  /  CLIENTE",
+    },
+    "client_ui_image_files": {
+        "en": "PNG / JPEG images",
+        "de": "PNG-/JPEG-Bilder",
+        "fr": "Images PNG / JPEG",
+        "it": "Immagini PNG / JPEG",
+    },
+    "client_ui_all_files": {
+        "en": "All files",
+        "de": "Alle Dateien",
+        "fr": "Tous les fichiers",
+        "it": "Tutti i file",
     },
 }
+
+
+# Older VEScripts builds required ASCII-only UI copy. The current interfaces
+# and report writers are UTF-8 throughout; restore correct French typography
+# centrally so every consumer (Tk, HTML, Excel and PDF) receives the same text.
+_FRENCH_TYPOGRAPHY = {
+    "Conformite": "Conformité",
+    "conformite": "conformité",
+    "Evaluation": "Évaluation",
+    "evaluation": "évaluation",
+    "Modele": "Modèle",
+    "modele": "modèle",
+    "modeles": "modèles",
+    "Meteo": "Météo",
+    "meteo": "météo",
+    "detecte": "détecté",
+    "detectee": "détectée",
+    "Presentation": "Présentation",
+    "presentation": "présentation",
+    "Reference": "Référence",
+    "reference": "référence",
+    "maitre": "maître",
+    "Etabli": "Établi",
+    "Generer": "Générer",
+    "generer": "générer",
+    "Resultat": "Résultat",
+    "resultat": "résultat",
+    "Decision": "Décision",
+    "decision": "décision",
+    "Fenetres": "Fenêtres",
+    "fenetres": "fenêtres",
+    "Completer": "Compléter",
+    "completer": "compléter",
+    "identite": "identité",
+    "elements": "éléments",
+    "selectionnee": "sélectionnée",
+    "enregistree": "enregistrée",
+    "echoue": "échoué",
+    "reessayez": "réessayez",
+    "prete": "prête",
+    "lancee": "lancée",
+    "evalues": "évalués",
+    "apparaitront": "apparaîtront",
+    "generation": "génération",
+    "etre": "être",
+    "a jour": "à jour",
+    "A confirmer": "À confirmer",
+    "Donnees": "Données",
+    "donnees": "données",
+    "telephone": "téléphone",
+    "utilise": "utilisé",
+    "represente": "représenté",
+    "reponse": "réponse",
+    "a afficher": "à afficher",
+    "a integrer": "à intégrer",
+    "ajoutee": "ajoutée",
+    "prete a": "prête à",
+    "prête a": "prête à",
+    "apres": "après",
+    "Points a examiner": "Points à examiner",
+    "selectionne": "sélectionné",
+}
+
+
+def _polish_french(text: str) -> str:
+    """Restore reviewed accents in legacy ASCII French catalogue entries."""
+
+    polished = str(text)
+    for source, replacement in _FRENCH_TYPOGRAPHY.items():
+        polished = polished.replace(source, replacement)
+    return polished
 
 
 def normalize_language(language: str) -> str:
@@ -3063,7 +3337,9 @@ def translate(key: str, language: str = DEFAULT_LANGUAGE) -> str:
     entry = TRANSLATIONS.get(key)
     if entry is None:
         return key
-    return entry.get(normalize_language(language)) or entry.get(DEFAULT_LANGUAGE, key)
+    code = normalize_language(language)
+    value = entry.get(code) or entry.get(DEFAULT_LANGUAGE, key)
+    return _polish_french(value) if code == "fr" else value
 
 
 def catalog_for(language: str) -> Dict[str, str]:

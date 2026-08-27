@@ -29,7 +29,6 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import (
     Any,
-    Callable,
     Dict,
     FrozenSet,
     Iterable,
@@ -38,7 +37,6 @@ from typing import (
     Optional,
     Tuple,
 )
-
 
 # ---------------------------------------------------------------------------
 # Tolerances (IEEE-754 float32 round-trip only; NOT a compliance tolerance)
@@ -175,7 +173,9 @@ def values_match(
     return expected == actual
 
 
-def _diff(expected: Mapping[str, Any], actual: Mapping[str, Any]) -> Dict[str, Dict[str, Any]]:
+def _diff(
+    expected: Mapping[str, Any], actual: Mapping[str, Any]
+) -> Dict[str, Dict[str, Any]]:
     """Return per-key mismatch report for a subset comparison."""
 
     return {
@@ -524,7 +524,9 @@ def apply_air_exchange_readback_rules(
     expected_profile = str(expected.get("variation_profile", "") or "")
     actual_profile = str(residual.get("variation_profile", "") or "")
     max_flow = expected.get("max_flow")
-    is_zero_flow = values_match(max_flow, 0.0) if isinstance(max_flow, (int, float)) else False
+    is_zero_flow = (
+        values_match(max_flow, 0.0) if isinstance(max_flow, (int, float)) else False
+    )
 
     if (
         expected_profile
@@ -755,9 +757,7 @@ def verify_layer(
     *,
     context: str = "layer",
 ) -> ReadbackVerdict:
-    residual, warnings = apply_layer_readback_rules(
-        construction_class, expected, actual
-    )
+    residual, warnings = apply_layer_readback_rules(construction_class, expected, actual)
     return evaluate_readback(context, residual, actual, warnings)
 
 

@@ -7,7 +7,6 @@ from pathlib import Path
 from swiss_sia.reference_model.exceptions import ConfigurationError
 from swiss_sia.reference_model.sia4010.case_manifest import Sia4010CaseManifest
 
-
 ROOT = Path(__file__).resolve().parents[1]
 MANIFEST = ROOT / "config" / "sia4010_classes_1a_1b.json"
 OUTPUT = ROOT / ".codex_tmp" / "sia4010_case_manifest"
@@ -31,9 +30,7 @@ class Sia4010CaseManifestTests(unittest.TestCase):
         readiness = self.manifest.variant_readiness("test_1")
         self.assertEqual(readiness.status, "BLOCKED_MISSING_INPUTS")
         self.assertIn("denver_drycold_weather_file", readiness.missing_parameters)
-        self.assertNotIn(
-            "iso_lightweight_construction", readiness.provisional_parameters
-        )
+        self.assertNotIn("iso_lightweight_construction", readiness.provisional_parameters)
         self.assertNotIn("iso_test1_glazing", readiness.provisional_parameters)
         self.assertNotIn("iso_test1_infiltration", readiness.provisional_parameters)
 
@@ -41,22 +38,12 @@ class Sia4010CaseManifestTests(unittest.TestCase):
         case_600 = self.manifest.case_readiness("test_1", "600")
         case_600ff = self.manifest.case_readiness("test_1", "600FF")
         case_1e = self.manifest.case_readiness("test_1", "1E")
-        self.assertEqual(
-            case_600.missing_parameters, ("denver_drycold_weather_file",)
-        )
-        self.assertNotIn(
-            "iso_lightweight_construction", case_600.provisional_parameters
-        )
-        self.assertNotIn(
-            "test1_night_setback_schedule", case_600.missing_parameters
-        )
-        self.assertNotIn(
-            "test1_heating_setpoint_c", case_600ff.missing_parameters
-        )
+        self.assertEqual(case_600.missing_parameters, ("denver_drycold_weather_file",))
+        self.assertNotIn("iso_lightweight_construction", case_600.provisional_parameters)
+        self.assertNotIn("test1_night_setback_schedule", case_600.missing_parameters)
+        self.assertNotIn("test1_heating_setpoint_c", case_600ff.missing_parameters)
         self.assertNotIn("sia2024_office_profiles", case_1e.missing_parameters)
-        self.assertIn(
-            "zurich_kloten_dry_weather_file", case_1e.missing_parameters
-        )
+        self.assertIn("zurich_kloten_dry_weather_file", case_1e.missing_parameters)
         self.assertNotIn("iso_test1_glazing", case_1e.missing_parameters)
         self.assertNotIn("denver_drycold_weather_file", case_1e.missing_parameters)
 
@@ -82,22 +69,19 @@ class Sia4010CaseManifestTests(unittest.TestCase):
         profiles = self.manifest.value("sia2024_office_profiles")
         self.assertEqual(profiles["use_category"], "3.1 Einzel-/Gruppenbüro")
         self.assertEqual(profiles["value_set"], "standard values")
-        self.assertAlmostEqual(
-            sum(profiles["source_hour_bins"]["occupancy"]), 7.2
-        )
-        self.assertAlmostEqual(
-            sum(profiles["source_hour_bins"]["equipment"]), 11.1
-        )
-        self.assertAlmostEqual(
-            sum(profiles["source_hour_bins"]["lighting"]), 11.1
-        )
+        self.assertAlmostEqual(sum(profiles["source_hour_bins"]["occupancy"]), 7.2)
+        self.assertAlmostEqual(sum(profiles["source_hour_bins"]["equipment"]), 11.1)
+        self.assertAlmostEqual(sum(profiles["source_hour_bins"]["lighting"]), 11.1)
         self.assertEqual(profiles["rest_days_per_week"], 2)
         self.assertEqual(profiles["use_days_per_year"], 261)
         self.assertEqual(profiles["people_annual_simultaneity"], 0.8)
         self.assertEqual(
             profiles["native_ve_calendar_mapping_status"],
-            "PENDING_EXACT_WEEKDAY_DATE_AND_HOUR_BOUNDARY_BINDING",
+            "AUTHORITY_CONFIRMED_READY_FOR_NATIVE_VE_MATERIALIZATION",
         )
+        self.assertEqual(profiles["january_1_weekday"], "Saturday")
+        self.assertEqual(profiles["holiday_exceptions"], [])
+        self.assertEqual(profiles["hour_label_convention"], "ordinal_hour_ending")
 
     def test_every_parameter_has_required_metadata(self):
         for parameter in self.manifest.parameters.values():

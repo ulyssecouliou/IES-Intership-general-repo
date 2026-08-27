@@ -21,7 +21,6 @@ from ..exceptions import ConfigurationError
 from .model_scenario import ModelScenario
 from .scenario_preflight import is_temporary_ve_project
 
-
 REPORT_DIRECTORY = Path("sia4010_artifacts") / "diagnostics"
 REPORT_PATTERN = "sia4010_test2a_qualification_chain_*.json"
 SCENARIO_FILENAME = "sia_model_scenario.json"
@@ -105,9 +104,20 @@ def _report_evidence(
         )
     payload = json.loads(path.read_text(encoding="utf-8"))
     if payload.get("status") != expected_status:
+        blockers = [
+            str(item)
+            for item in payload.get("technical_blockers", [])
+            if str(item).strip()
+        ]
+        detail = ""
+        if blockers:
+            detail += "; blockers: {}".format(", ".join(blockers))
+        next_action = str(payload.get("next_action", "")).strip()
+        if next_action:
+            detail += "; next action: {}".format(next_action)
         raise Test2AQualificationBlocked(
-            "{} status is {!r}; expected {!r}".format(
-                label, payload.get("status"), expected_status
+            "{} status is {!r}; expected {!r}{}".format(
+                label, payload.get("status"), expected_status, detail
             )
         )
     if payload.get("compliance_claim_allowed") is True:
@@ -149,9 +159,7 @@ def _optical_evidence(output: Mapping[str, Any]) -> Dict[str, Any]:
     audit_checksum = audit_path.with_suffix(audit_path.suffix + ".sha256")
     if not audit_checksum.is_file():
         raise Test2AQualificationBlocked(
-            "Rebuilt Test 2A bundle checksum was not written: {}".format(
-                audit_checksum
-            )
+            "Rebuilt Test 2A bundle checksum was not written: {}".format(audit_checksum)
         )
     expected_audit_sha = audit_checksum.read_text(encoding="ascii").split()[0]
     actual_audit_sha = _sha256(audit_path)
@@ -186,9 +194,7 @@ def _opening_assignment_evidence(output: Union[str, Path]) -> Dict[str, Any]:
         output,
         label="transient_opening_assignment_and_restoration",
         expected_status="PASS",
-        expected_scope=(
-            "ONE_OPENING_TRANSIENT_ASSIGNMENT_WITH_VERIFIED_RESTORATION"
-        ),
+        expected_scope=("ONE_OPENING_TRANSIENT_ASSIGNMENT_WITH_VERIFIED_RESTORATION"),
     )
     payload = json.loads(Path(output).read_text(encoding="utf-8"))
     if (
@@ -247,18 +253,10 @@ def run_test2a_qualification_chain(
     report_directory = project_path / REPORT_DIRECTORY
     prior_chains = sorted(report_directory.glob(REPORT_PATTERN))
     prior_mutations = sorted(report_directory.glob("sia2a_profiles_*.json"))
-    prior_mutations += sorted(
-        report_directory.glob("sia2a_external_shade_setter_*.json")
-    )
-    prior_mutations += sorted(
-        report_directory.glob("sia2a_2e1_optical_setter_*.json")
-    )
-    prior_mutations += sorted(
-        report_directory.glob("sia2a_thermal_glazing_*.json")
-    )
-    prior_mutations += sorted(
-        report_directory.glob("sia2a_opening_assignment_*.json")
-    )
+    prior_mutations += sorted(report_directory.glob("sia2a_external_shade_setter_*.json"))
+    prior_mutations += sorted(report_directory.glob("sia2a_2e1_optical_setter_*.json"))
+    prior_mutations += sorted(report_directory.glob("sia2a_thermal_glazing_*.json"))
+    prior_mutations += sorted(report_directory.glob("sia2a_opening_assignment_*.json"))
     if prior_chains or prior_mutations:
         previous = (prior_chains + prior_mutations)[-1]
         raise Test2AQualificationBlocked(
@@ -305,9 +303,7 @@ def run_test2a_qualification_chain(
         preparation_result = prepare()
         if preparation_result not in (None, 0):
             raise Test2AQualificationBlocked(
-                "Test 2A scenario preparation returned {!r}".format(
-                    preparation_result
-                )
+                "Test 2A scenario preparation returned {!r}".format(preparation_result)
             )
         scenario_path = project_path / SCENARIO_FILENAME
         scenario = ModelScenario.load(scenario_path)
@@ -364,15 +360,11 @@ def run_test2a_qualification_chain(
         audit["stages"].append(optical)
 
         stage = "base_glazing_thermal_storage"
-        thermal = _thermal_glazing_evidence(
-            thermal_glazing_qualification()
-        )
+        thermal = _thermal_glazing_evidence(thermal_glazing_qualification())
         audit["stages"].append(thermal)
 
         stage = "transient_opening_assignment_and_restoration"
-        assignment = _opening_assignment_evidence(
-            opening_assignment_qualification()
-        )
+        assignment = _opening_assignment_evidence(opening_assignment_qualification())
         audit["stages"].append(assignment)
         audit.update(
             {

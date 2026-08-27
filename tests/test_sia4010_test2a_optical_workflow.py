@@ -12,7 +12,6 @@ from swiss_sia.reference_model.sia4010.test2a_optical_workflow import (
     run_test2a_2e1_optical_workflow,
 )
 
-
 ROOT = Path(__file__).resolve().parents[1]
 WORK_ROOT = ROOT / ".codex_tmp" / "test2a_optical_workflow"
 

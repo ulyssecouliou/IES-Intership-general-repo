@@ -13,6 +13,7 @@ import re
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional
 
+from .assessment_governance import project_metadata_governance_gaps
 
 ACCEPTED_REVIEW_STATUSES = {
     "accepted",
@@ -114,11 +115,14 @@ def normalize_reviewer_evidence(family: str, raw_row: Dict[str, Any]) -> Dict[st
     key = str(family or "").strip().lower()
     if key == "lighting_mapping":
         return _normalize_mapping_record(raw_row, "sia3874_control_type")
+    if key == "usage_mapping":
+        return _normalize_mapping_record(raw_row, "sia2024_category")
     try:
         normalizer = normalizers[key]
     except KeyError as exc:
         raise ValueError("Unsupported evidence family: {}".format(family)) from exc
     return normalizer(raw_row)
+
 
 SIA3802_ELECTRICAL_POWER_FILE_PATTERNS = (
     "SIA3802_electrical_power_*.csv",
@@ -158,7 +162,11 @@ def scan_sia3802_justifications(
         "record_count": len(records),
         "accepted_count": len(accepted_records),
         "errors": errors,
-        "status": "AVAILABLE" if accepted_records else ("PENDING_REVIEW" if records else "NOT_PROVIDED"),
+        "status": (
+            "AVAILABLE"
+            if accepted_records
+            else ("PENDING_REVIEW" if records else "NOT_PROVIDED")
+        ),
     }
 
 
@@ -229,7 +237,11 @@ def scan_sia3802_project_metadata(
         "record_count": len(records),
         "accepted_count": len(accepted_records),
         "errors": errors,
-        "status": "AVAILABLE" if accepted_records else ("PENDING_REVIEW" if records else "NOT_PROVIDED"),
+        "status": (
+            "AVAILABLE"
+            if accepted_records
+            else ("PENDING_REVIEW" if records else "NOT_PROVIDED")
+        ),
     }
 
 
@@ -244,7 +256,9 @@ def find_accepted_project_metadata(
     if not isinstance(accepted, list):
         return None
     for record in accepted:
-        if isinstance(record, dict) and _field_matches(record.get("project_id"), project_label):
+        if isinstance(record, dict) and _field_matches(
+            record.get("project_id"), project_label
+        ):
             return record
     return None
 
@@ -284,7 +298,11 @@ def scan_sia3802_global_comparisons(
         "record_count": len(records),
         "accepted_count": len(accepted_records),
         "errors": errors,
-        "status": "AVAILABLE" if accepted_records else ("PENDING_REVIEW" if records else "NOT_PROVIDED"),
+        "status": (
+            "AVAILABLE"
+            if accepted_records
+            else ("PENDING_REVIEW" if records else "NOT_PROVIDED")
+        ),
     }
 
 
@@ -299,7 +317,9 @@ def find_accepted_global_comparison(
     if not isinstance(accepted, list):
         return None
     for record in accepted:
-        if isinstance(record, dict) and _field_matches(record.get("project_id"), project_label):
+        if isinstance(record, dict) and _field_matches(
+            record.get("project_id"), project_label
+        ):
             return record
     return None
 
@@ -345,7 +365,11 @@ def _scan_reviewer_records(
         "record_count": len(records),
         "accepted_count": len(accepted_records),
         "errors": errors,
-        "status": "AVAILABLE" if accepted_records else ("PENDING_REVIEW" if records else "NOT_PROVIDED"),
+        "status": (
+            "AVAILABLE"
+            if accepted_records
+            else ("PENDING_REVIEW" if records else "NOT_PROVIDED")
+        ),
     }
 
 
@@ -360,7 +384,9 @@ def _find_accepted_for_project(
     if not isinstance(accepted, list):
         return None
     for record in accepted:
-        if isinstance(record, dict) and _field_matches(record.get("project_id"), project_label):
+        if isinstance(record, dict) and _field_matches(
+            record.get("project_id"), project_label
+        ):
             return record
     return None
 
@@ -587,7 +613,15 @@ def _normalize_electrical_power_record(raw_row: Dict[str, Any]) -> Dict[str, Any
     status_key = str(record.get("building_status") or "").strip().lower()
     if status_key in ("new", "neuf", "new_building", "neubau"):
         record["building_status_key"] = "new"
-    elif status_key in ("existing", "existant", "renovated", "renovation", "renove", "rénové", "sanierung"):
+    elif status_key in (
+        "existing",
+        "existant",
+        "renovated",
+        "renovation",
+        "renove",
+        "rénové",
+        "sanierung",
+    ):
         record["building_status_key"] = "existing"
     else:
         record["building_status_key"] = ""
@@ -595,9 +629,24 @@ def _normalize_electrical_power_record(raw_row: Dict[str, Any]) -> Dict[str, Any
     # blocks when cooling is desirable/superfluous (not necessary). Left blank
     # (or unrecognised) means the category is indeterminate.
     cat = str(record.get("cooling_category") or "").strip().lower()
-    if cat in ("necessary", "necessaire", "nécessaire", "required", "erforderlich", "notwendig"):
+    if cat in (
+        "necessary",
+        "necessaire",
+        "nécessaire",
+        "required",
+        "erforderlich",
+        "notwendig",
+    ):
         record["cooling_category_key"] = "necessary"
-    elif cat in ("desirable", "souhaitable", "superfluous", "superflu", "optional", "wuenschenswert", "gewuenscht"):
+    elif cat in (
+        "desirable",
+        "souhaitable",
+        "superfluous",
+        "superflu",
+        "optional",
+        "wuenschenswert",
+        "gewuenscht",
+    ):
         record["cooling_category_key"] = "desirable"
     elif cat in ("none", "no_cooling", "aucun", "sans", "keine"):
         record["cooling_category_key"] = "none"
@@ -613,7 +662,8 @@ def _normalize_electrical_power_record(raw_row: Dict[str, Any]) -> Dict[str, Any
     unit_text = str(record.get("unit") or "").strip().lower().replace(" ", "")
     unit_is_w_m2 = (unit_text == "") or (
         ("w/m" in unit_text or "w/(m" in unit_text)
-        and "kw" not in unit_text and "mw" not in unit_text
+        and "kw" not in unit_text
+        and "mw" not in unit_text
     )
     record["unit_is_w_per_m2"] = unit_is_w_m2
     record["accepted"] = (
@@ -852,7 +902,9 @@ def _normalize_ventilation_control_record(raw_row: Dict[str, Any]) -> Dict[str, 
     numeric_airflow = record.get("specific_airflow_m3_h_m2_numeric")
     if numeric_airflow is not None:
         record["airflow_band_from_numeric"] = (
-            "<=3" if numeric_airflow <= 3.0 else ("3-6" if numeric_airflow <= 6.0 else ">6")
+            "<=3"
+            if numeric_airflow <= 3.0
+            else ("3-6" if numeric_airflow <= 6.0 else ">6")
         )
         if record["airflow_band_normalized"] is None:
             record["airflow_band_normalized"] = record["airflow_band_from_numeric"]
@@ -901,12 +953,13 @@ def _normalize_thermal_bridge_record(raw_row: Dict[str, Any]) -> Dict[str, Any]:
     record.setdefault("source_reference", "")
     record.setdefault("notes", "")
     try:
-        record["total_psi_chi_w_per_k_numeric"] = float(record.get("total_psi_chi_w_per_k"))
+        record["total_psi_chi_w_per_k_numeric"] = float(
+            record.get("total_psi_chi_w_per_k")
+        )
     except (TypeError, ValueError):
         record["total_psi_chi_w_per_k_numeric"] = None
-    has_quantum = (
-        record.get("total_psi_chi_w_per_k_numeric") is not None
-        or bool(record.get("schedule_reference"))
+    has_quantum = record.get("total_psi_chi_w_per_k_numeric") is not None or bool(
+        record.get("schedule_reference")
     )
     record["accepted"] = (
         _status_key(record.get("review_status")) in ACCEPTED_REVIEW_STATUSES
@@ -939,7 +992,11 @@ def find_accepted_mapping(
         mapped_template = record.get("thermal_template_id") or record.get("template_id")
         if room_id and mapped_room and _field_matches(mapped_room, room_id):
             return record
-        if thermal_template_id and mapped_template and _field_matches(mapped_template, thermal_template_id):
+        if (
+            thermal_template_id
+            and mapped_template
+            and _template_field_matches(mapped_template, thermal_template_id)
+        ):
             return record
     return None
 
@@ -965,11 +1022,21 @@ def find_accepted_justification(
             continue
         if rule and not _field_matches(record.get("rule"), rule):
             continue
-        if construction and not _scope_matches(record.get("construction_or_scope"), construction):
+        if construction and not _scope_matches(
+            record.get("construction_or_scope"), construction
+        ):
             continue
-        if domain and record.get("domain") and not _field_matches(record.get("domain"), domain):
+        if (
+            domain
+            and record.get("domain")
+            and not _field_matches(record.get("domain"), domain)
+        ):
             continue
-        if standard and record.get("standard") and not _field_matches(record.get("standard"), standard):
+        if (
+            standard
+            and record.get("standard")
+            and not _field_matches(record.get("standard"), standard)
+        ):
             continue
         return record
     return None
@@ -983,7 +1050,9 @@ def describe_justification(record: Optional[Dict[str, Any]]) -> str:
     reviewer = str(record.get("reviewer") or "").strip()
     source = str(record.get("source_document") or record.get("source_file") or "").strip()
     reference = str(record.get("source_reference") or "").strip()
-    summary = str(record.get("justification_summary") or record.get("notes") or "").strip()
+    summary = str(
+        record.get("justification_summary") or record.get("notes") or ""
+    ).strip()
     if reviewer:
         bits.append(f"reviewer={reviewer}")
     if source:
@@ -1038,7 +1107,7 @@ def _matches_project_scoped_filename(
         prefix = str(pattern).split("*", 1)[0]
         prefix_key = _key(Path(prefix).stem)
         if prefix_key and stem_key.startswith(prefix_key):
-            return stem_key[len(prefix_key):] == project_key
+            return stem_key[len(prefix_key) :] == project_key
     return False
 
 
@@ -1083,11 +1152,17 @@ def _scan_reviewer_mapping_files(
         "record_count": len(records),
         "accepted_count": len(accepted_records),
         "errors": errors,
-        "status": "AVAILABLE" if accepted_records else ("PENDING_REVIEW" if records else "NOT_PROVIDED"),
+        "status": (
+            "AVAILABLE"
+            if accepted_records
+            else ("PENDING_REVIEW" if records else "NOT_PROVIDED")
+        ),
     }
 
 
-def _normalize_mapping_record(raw_row: Dict[str, Any], mapping_field: str) -> Dict[str, Any]:
+def _normalize_mapping_record(
+    raw_row: Dict[str, Any], mapping_field: str
+) -> Dict[str, Any]:
     """Normalize and validate one reviewer-owned mapping record."""
     record = {
         _normalize_header(key): _clean_value(value)
@@ -1140,6 +1215,8 @@ def _normalize_project_metadata_record(raw_row: Dict[str, Any]) -> Dict[str, Any
     record.setdefault("source_reference", "")
     record.setdefault("notes", "")
     record["placeholder_provenance"] = _has_placeholder_review_provenance(record)
+    record["governance_gaps"] = project_metadata_governance_gaps(record)
+    record["governance_complete"] = not record["governance_gaps"]
     record["accepted"] = (
         _status_key(record.get("review_status")) in ACCEPTED_REVIEW_STATUSES
         and bool(record.get("project_id"))
@@ -1283,9 +1360,7 @@ def _key(value: Any) -> str:
 def _scope_key(value: Any) -> str:
     """Normalize comma/semicolon separated scope labels for matching."""
     tokens = [
-        _key(token)
-        for token in re.split(r"[,;|]+", str(value or ""))
-        if token.strip()
+        _key(token) for token in re.split(r"[,;|]+", str(value or "")) if token.strip()
     ]
     return "|".join(sorted(token for token in tokens if token))
 
@@ -1294,7 +1369,30 @@ def _field_matches(record_value: Any, requested_value: Any) -> bool:
     """Return true when a record field matches the requested value fuzzily."""
     record_key = _key(record_value)
     requested_key = _key(requested_value)
-    return bool(record_key and requested_key and (record_key == requested_key or requested_key in record_key or record_key in requested_key))
+    return bool(
+        record_key
+        and requested_key
+        and (
+            record_key == requested_key
+            or requested_key in record_key
+            or record_key in requested_key
+        )
+    )
+
+
+def _template_field_matches(record_value: Any, requested_value: Any) -> bool:
+    """Match VE template identifiers, including documented ``4.01``/``4P01`` forms."""
+
+    if _field_matches(record_value, requested_value):
+        return True
+
+    def template_key(value: Any) -> str:
+        # VE template/profile naming commonly encodes a decimal point as ``P``.
+        return re.sub(r"(?<=\d)P(?=\d)", "", _key(value))
+
+    record_key = template_key(record_value)
+    requested_key = template_key(requested_value)
+    return bool(record_key and requested_key and record_key == requested_key)
 
 
 def _scope_matches(record_scope: Any, requested_scope: Any) -> bool:
@@ -1307,4 +1405,8 @@ def _scope_matches(record_scope: Any, requested_scope: Any) -> bool:
         return True
     record_parts = set(record_key.split("|"))
     requested_parts = set(requested_key.split("|"))
-    return bool(record_parts and requested_parts and (record_parts <= requested_parts or requested_parts <= record_parts))
+    return bool(
+        record_parts
+        and requested_parts
+        and (record_parts <= requested_parts or requested_parts <= record_parts)
+    )

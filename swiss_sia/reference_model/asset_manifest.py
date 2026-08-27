@@ -10,11 +10,21 @@ import hashlib
 import json
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence, Set, Tuple, Union
+from typing import (
+    Any,
+    Dict,
+    Iterable,
+    List,
+    Mapping,
+    Optional,
+    Sequence,
+    Set,
+    Tuple,
+    Union,
+)
 
 from .compliance_config import ValidationRange
 from .exceptions import ConfigurationError
-
 
 SUPPORTED_ASSET_MANIFEST_VERSIONS = {"1.0"}
 SUPPORTED_PROFILE_TYPES = {
@@ -46,9 +56,7 @@ def _strict_keys(
 
     unknown = sorted(set(payload) - set(allowed))
     if unknown:
-        raise ConfigurationError(
-            "Unsupported fields in {}: {}".format(context, unknown)
-        )
+        raise ConfigurationError("Unsupported fields in {}: {}".format(context, unknown))
 
 
 def _required_text(payload: Mapping[str, Any], key: str, context: str) -> str:
@@ -124,9 +132,7 @@ class TraceableField:
     required: bool = True
 
     @classmethod
-    def from_mapping(
-        cls, payload: Mapping[str, Any], context: str
-    ) -> "TraceableField":
+    def from_mapping(cls, payload: Mapping[str, Any], context: str) -> "TraceableField":
         """Parse and structurally validate one traceable value."""
 
         _strict_keys(
@@ -229,7 +235,9 @@ def _parse_fields(value: Any, context: str) -> Dict[str, TraceableField]:
 def _raw_fields(fields: Mapping[str, TraceableField]) -> Dict[str, Any]:
     """Return populated raw values ready for a VE API setter."""
 
-    return {name: field.value for name, field in fields.items() if field.value is not None}
+    return {
+        name: field.value for name, field in fields.items() if field.value is not None
+    }
 
 
 @dataclass(frozen=True)
@@ -467,8 +475,7 @@ class ThermalTemplateDefinition:
                 "name": self.name,
                 "standard": self.standard,
                 "room_conditions": {
-                    name: field.to_dict()
-                    for name, field in self.room_conditions.items()
+                    name: field.to_dict() for name, field in self.room_conditions.items()
                 },
                 "system_data": {
                     name: field.to_dict() for name, field in self.system_data.items()
@@ -579,9 +586,7 @@ class AssetManifest:
                 for record in records:
                     field = record.properties.get("variation_profile")
                     if field is None or field.value != "ON":
-                        invalid_builtin_profiles.append(
-                            "{} {}".format(label, record.key)
-                        )
+                        invalid_builtin_profiles.append("{} {}".format(label, record.key))
             if invalid_builtin_profiles:
                 errors.append(
                     "manifests without project profiles require explicit VE "
@@ -620,9 +625,7 @@ class AssetManifest:
             dependencies = _profile_references(profile.data.value)
             if profile_type == "daily" and dependencies:
                 errors.append(
-                    "daily profile {} cannot reference other profiles".format(
-                        profile.key
-                    )
+                    "daily profile {} cannot reference other profiles".format(profile.key)
                 )
             if profile_type in {"weekly", "yearly"} and not dependencies:
                 errors.append(
@@ -644,7 +647,9 @@ class AssetManifest:
                         )
                     )
         for material in self.materials:
-            errors.extend(_field_errors("material {}".format(material.key), material.properties))
+            errors.extend(
+                _field_errors("material {}".format(material.key), material.properties)
+            )
         for construction in self.constructions:
             errors.extend(
                 _field_errors(
@@ -673,10 +678,14 @@ class AssetManifest:
                 _field_errors("air exchange {}".format(exchange.key), exchange.properties)
             )
         errors.extend(
-            _field_errors("thermal template room conditions", self.thermal_template.room_conditions)
+            _field_errors(
+                "thermal template room conditions", self.thermal_template.room_conditions
+            )
         )
         errors.extend(
-            _field_errors("thermal template system data", self.thermal_template.system_data)
+            _field_errors(
+                "thermal template system data", self.thermal_template.system_data
+            )
         )
 
         missing_gains = sorted(set(self.thermal_template.gain_keys) - gain_keys)
@@ -684,7 +693,9 @@ class AssetManifest:
             set(self.thermal_template.air_exchange_keys) - exchange_keys
         )
         if missing_gains:
-            errors.append("thermal template references unknown gains: {}".format(missing_gains))
+            errors.append(
+                "thermal template references unknown gains: {}".format(missing_gains)
+            )
         if missing_exchanges:
             errors.append(
                 "thermal template references unknown air exchanges: {}".format(
@@ -694,7 +705,9 @@ class AssetManifest:
         if set(self.thermal_template.gain_keys) != gain_keys:
             errors.append("every defined gain must be linked to the thermal template")
         if set(self.thermal_template.air_exchange_keys) != exchange_keys:
-            errors.append("every defined air exchange must be linked to the thermal template")
+            errors.append(
+                "every defined air exchange must be linked to the thermal template"
+            )
 
         referenced_profiles: Set[str] = set()
         for profile in self.profiles:
@@ -708,7 +721,9 @@ class AssetManifest:
             referenced_profiles.update(_profile_references(field.value))
         unknown_profiles = sorted(referenced_profiles - profile_keys)
         if unknown_profiles:
-            errors.append("unknown logical profile references: {}".format(unknown_profiles))
+            errors.append(
+                "unknown logical profile references: {}".format(unknown_profiles)
+            )
         profile_dependencies = {
             profile.key: _profile_references(profile.data.value) & profile_keys
             for profile in self.profiles
@@ -805,7 +820,9 @@ def _parse_material(payload: Mapping[str, Any], context: str) -> MaterialDefinit
     return MaterialDefinition(
         key=_required_text(payload, "key", context),
         category=_required_text(payload, "category", context),
-        properties=_parse_fields(payload.get("properties"), "{}.properties".format(context)),
+        properties=_parse_fields(
+            payload.get("properties"), "{}.properties".format(context)
+        ),
         evidence=Evidence.from_mapping(payload, context),
     )
 
@@ -817,7 +834,9 @@ def _parse_layer(payload: Mapping[str, Any], context: str) -> LayerDefinition:
     return LayerDefinition(
         material_key=_required_text(payload, "material_key", context),
         is_cavity=bool(payload.get("is_cavity", False)),
-        properties=_parse_fields(payload.get("properties", {}), "{}.properties".format(context)),
+        properties=_parse_fields(
+            payload.get("properties", {}), "{}.properties".format(context)
+        ),
     )
 
 
@@ -842,15 +861,22 @@ def _parse_construction(
         context,
     )
     layers = tuple(
-        _parse_layer(_as_mapping(item, "{} layer".format(context)), "{}.layers[{}]".format(context, index))
-        for index, item in enumerate(_as_sequence(payload.get("layers"), "{}.layers".format(context)))
+        _parse_layer(
+            _as_mapping(item, "{} layer".format(context)),
+            "{}.layers[{}]".format(context, index),
+        )
+        for index, item in enumerate(
+            _as_sequence(payload.get("layers"), "{}.layers".format(context))
+        )
     )
     return ConstructionDefinition(
         key=_required_text(payload, "key", context),
         assignment_parameter=_required_text(payload, "assignment_parameter", context),
         category=_required_text(payload, "category", context),
         construction_class=_required_text(payload, "construction_class", context),
-        properties=_parse_fields(payload.get("properties", {}), "{}.properties".format(context)),
+        properties=_parse_fields(
+            payload.get("properties", {}), "{}.properties".format(context)
+        ),
         layers=layers,
         evidence=Evidence.from_mapping(payload, context),
     )
@@ -881,7 +907,9 @@ def _parse_gain(payload: Mapping[str, Any], context: str) -> GainDefinition:
         category=category,
         subtype=_required_text(payload, "subtype", context),
         units=_required_text(payload, "units", context),
-        properties=_parse_fields(payload.get("properties"), "{}.properties".format(context)),
+        properties=_parse_fields(
+            payload.get("properties"), "{}.properties".format(context)
+        ),
         evidence=Evidence.from_mapping(payload, context),
     )
 
@@ -910,7 +938,9 @@ def _parse_air_exchange(
         exchange_type=_required_text(payload, "exchange_type", context),
         units=_required_text(payload, "units", context),
         adjacent_condition=_required_text(payload, "adjacent_condition", context),
-        properties=_parse_fields(payload.get("properties"), "{}.properties".format(context)),
+        properties=_parse_fields(
+            payload.get("properties"), "{}.properties".format(context)
+        ),
         evidence=Evidence.from_mapping(payload, context),
     )
 
@@ -946,7 +976,9 @@ def _parse_template(
         ),
         gain_keys=tuple(
             str(value)
-            for value in _as_sequence(payload.get("gain_keys"), "{}.gain_keys".format(context))
+            for value in _as_sequence(
+                payload.get("gain_keys"), "{}.gain_keys".format(context)
+            )
         ),
         air_exchange_keys=tuple(
             str(value)
@@ -958,9 +990,7 @@ def _parse_template(
     )
 
 
-def _parse_apache_system(
-    value: Any, context: str
-) -> Optional[ApacheSystemDefinition]:
+def _parse_apache_system(value: Any, context: str) -> Optional[ApacheSystemDefinition]:
     """Parse an optional simplified Apache-system definition."""
 
     if value is None:
@@ -973,7 +1003,9 @@ def _parse_apache_system(
     )
     from_id = payload.get("from_id")
     if from_id is not None and (not isinstance(from_id, str) or not from_id.strip()):
-        raise ConfigurationError("{}.from_id must be null or non-empty text".format(context))
+        raise ConfigurationError(
+            "{}.from_id must be null or non-empty text".format(context)
+        )
     return ApacheSystemDefinition(
         name=_required_text(payload, "name", context),
         from_id=from_id.strip() if isinstance(from_id, str) else None,

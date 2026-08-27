@@ -34,7 +34,6 @@ from .test2a_diagnostic_aps import (
     build_test2a_2e1_aps_binding_contract,
 )
 
-
 GENERATOR_INPUT_SCHEMA_VERSION = "1.0"
 GENERATOR_INPUT_FILENAME = "generator_input.json"
 AUDIT_FILENAME = "source_binding_audit.json"
@@ -43,17 +42,13 @@ RUNTIME_BLOCKERS = (
     "VE_SIA2024_PROFILE_TYPE_BINDING_NOT_QUALIFIED",
     "VE_TEST2A_ASSET_BUNDLE_NOT_IMPLEMENTED",
 )
-MISSING_NATIVE_PROFILE_GRAPH_BLOCKER = (
-    "SIA2024_NATIVE_VE_PROFILE_GRAPH_NOT_SUPPLIED"
-)
+MISSING_NATIVE_PROFILE_GRAPH_BLOCKER = "SIA2024_NATIVE_VE_PROFILE_GRAPH_NOT_SUPPLIED"
 #: Raised into the blocker set when a delegated binding carries a value its
 #: primary source does not state.  Test 2A, unlike the 1A-1D diagnostic cases,
 #: has published acceptance criteria: a provisional input reaching a comparison
 #: would produce a verdict that looks authoritative and is not. The blocker
 #: keeps generation reachable and keeps the verdict out of reach.
-PROVISIONAL_EXTERNAL_INPUT_BLOCKER = (
-    "DELEGATED_INPUT_CARRIES_PROVISIONAL_VALUE"
-)
+PROVISIONAL_EXTERNAL_INPUT_BLOCKER = "DELEGATED_INPUT_CARRIES_PROVISIONAL_VALUE"
 QUALIFICATION_REPORT_SPECS = {
     "native_profiles": {
         "pattern": "sia2a_profiles_*.json",
@@ -155,9 +150,7 @@ def _runtime_qualification_evidence(project: Path) -> Dict[str, Any]:
     diagnostics = project / "sia4010_artifacts" / "diagnostics"
     evidence: Dict[str, Any] = {}
     for key, specification in QUALIFICATION_REPORT_SPECS.items():
-        reports = tuple(
-            sorted(diagnostics.glob(str(specification["pattern"])))
-        )
+        reports = tuple(sorted(diagnostics.glob(str(specification["pattern"]))))
         if not reports:
             evidence[key] = {
                 "status": "NOT_RUN",
@@ -175,9 +168,7 @@ def _runtime_qualification_evidence(project: Path) -> Dict[str, Any]:
         report = reports[0]
         checksum_path = report.with_suffix(report.suffix + ".sha256")
         try:
-            expected_sha = checksum_path.read_text(
-                encoding="utf-8"
-            ).split()[0]
+            expected_sha = checksum_path.read_text(encoding="utf-8").split()[0]
             actual_sha = _sha256(report)
             payload = json.loads(report.read_text(encoding="utf-8"))
         except (IndexError, OSError, ValueError, TypeError) as exc:
@@ -267,8 +258,7 @@ def _geometry_consistency_checks(
         matches = (
             int(specification_value) == int(normalized_value)
             if parameter_id == "south_window_count"
-            else abs(float(specification_value) - float(normalized_value))
-            <= 1.0e-9
+            else abs(float(specification_value) - float(normalized_value)) <= 1.0e-9
         )
         checks[parameter_id] = {
             "status": "PASS" if matches else "FAIL",
@@ -293,19 +283,13 @@ def _confirmed_test2_inputs(
     missing = [
         key
         for key in _OFFICIAL_TEST2_REQUIRED_KEYS
-        if key not in test2.confirmed_inputs
-        or test2.confirmed_inputs[key] is None
+        if key not in test2.confirmed_inputs or test2.confirmed_inputs[key] is None
     ]
     if missing:
         raise ConfigurationError(
-            "Official Test 2 contract is missing Case 2A inputs: {}".format(
-                missing
-            )
+            "Official Test 2 contract is missing Case 2A inputs: {}".format(missing)
         )
-    return {
-        key: test2.confirmed_inputs[key]
-        for key in _OFFICIAL_TEST2_REQUIRED_KEYS
-    }
+    return {key: test2.confirmed_inputs[key] for key in _OFFICIAL_TEST2_REQUIRED_KEYS}
 
 
 def build_test2a_source_bound_bundle(
@@ -328,9 +312,7 @@ def build_test2a_source_bound_bundle(
                 external_manifest_path
             )
         )
-    external_manifest = Sia4010ExternalInputManifest.load(
-        external_manifest_path
-    )
+    external_manifest = Sia4010ExternalInputManifest.load(external_manifest_path)
     readiness = external_input_readiness(
         project,
         "test_2A",
@@ -343,9 +325,7 @@ def build_test2a_source_bound_bundle(
     runtime_blockers = RUNTIME_BLOCKERS
     status = "SOURCE_BINDINGS_READY_VE_BINDING_REQUIRED"
     if profile_graph is None:
-        runtime_blockers = runtime_blockers + (
-            MISSING_NATIVE_PROFILE_GRAPH_BLOCKER,
-        )
+        runtime_blockers = runtime_blockers + (MISSING_NATIVE_PROFILE_GRAPH_BLOCKER,)
         status = "SOURCE_BINDINGS_READY_PROFILE_GRAPH_REQUIRED"
     elif qualification_evidence["all_storage_boundaries_qualified"]:
         status = "RUNTIME_STORAGE_QUALIFIED_MODEL_BINDING_REQUIRED"
@@ -355,51 +335,36 @@ def build_test2a_source_bound_bundle(
         if fields
     }
     if provisional_fields:
-        runtime_blockers = runtime_blockers + (
-            PROVISIONAL_EXTERNAL_INPUT_BLOCKER,
-        )
+        runtime_blockers = runtime_blockers + (PROVISIONAL_EXTERNAL_INPUT_BLOCKER,)
         status = "SOURCE_BINDINGS_PROVISIONAL_RECALCULATION_REQUIRED"
 
-    geometry_manifest_path = (
-        repository / "config" / "sia4010_classes_1a_1b.json"
-    )
+    geometry_manifest_path = repository / "config" / "sia4010_classes_1a_1b.json"
     official_contract_path = (
         repository / "config" / "sia4010_official_input_contract.json"
     )
     geometry_manifest = Sia4010CaseManifest.load(geometry_manifest_path)
-    official_contract = Sia4010OfficialInputContract.load(
-        official_contract_path
-    )
-    geometry_checks = _geometry_consistency_checks(
-        geometry_manifest, bindings.iso_cell
-    )
+    official_contract = Sia4010OfficialInputContract.load(official_contract_path)
+    geometry_checks = _geometry_consistency_checks(geometry_manifest, bindings.iso_cell)
     official_inputs = _confirmed_test2_inputs(official_contract)
     shading_control = build_test2a_fabric_awning_control(official_inputs)
     test2_workbook_path = (
-        repository
-        / "SIA_4010_geteilter_Link"
-        / "Test2"
-        / "Resultaterfassung_Test2.xlsx"
+        repository / "SIA_4010_geteilter_Link" / "Test2" / "Resultaterfassung_Test2.xlsx"
     )
-    diagnostic_workbook_binding = (
-        load_test2a_diagnostic_workbook_binding(test2_workbook_path)
+    diagnostic_workbook_binding = load_test2a_diagnostic_workbook_binding(
+        test2_workbook_path
     )
     optical_diagnostic = build_test2a_optical_diagnostic_contract(
         shading_control,
         diagnostic_workbook_binding.to_dict(),
     )
-    aps_binding_path = (
-        repository / "config" / "sia4010_aps_bindings_ve_runtime.json"
-    )
+    aps_binding_path = repository / "config" / "sia4010_aps_bindings_ve_runtime.json"
     aps_bindings = QualifiedApsBindings.load(aps_binding_path)
     aps_diagnostic_binding = build_test2a_2e1_aps_binding_contract(
         aps_bindings,
         diagnostic_workbook_binding,
     )
 
-    artifact_directory = (
-        project / "sia4010_artifacts" / "model_builder" / "test2a"
-    )
+    artifact_directory = project / "sia4010_artifacts" / "model_builder" / "test2a"
     generator_input_path = artifact_directory / GENERATOR_INPUT_FILENAME
     audit_path = artifact_directory / AUDIT_FILENAME
     generator_input = {
@@ -407,17 +372,13 @@ def build_test2a_source_bound_bundle(
         "scenario_id": "SIA4010_TEST_2A_2A",
         "variant": "test_2A",
         "case_id": "2A",
-        "geometry_and_lightweight_opaque_envelope": (
-            bindings.iso_cell.to_dict()
-        ),
+        "geometry_and_lightweight_opaque_envelope": (bindings.iso_cell.to_dict()),
         "weather": bindings.weather.to_dict(),
         "sia2024_office_profiles": bindings.office_profiles.to_dict(),
         "official_test2_parameters": official_inputs,
         "fabric_awning_control": shading_control.to_dict(),
         "fabric_awning_optical_diagnostic": optical_diagnostic.to_dict(),
-        "fabric_awning_aps_diagnostic_binding": (
-            aps_diagnostic_binding.to_dict()
-        ),
+        "fabric_awning_aps_diagnostic_binding": (aps_diagnostic_binding.to_dict()),
         "source_contracts": {
             "external_manifest": {
                 "path": str(external_manifest_path.resolve()),
@@ -450,15 +411,13 @@ def build_test2a_source_bound_bundle(
                     else []
                 ),
                 "output_nodes": (
-                    dict(profile_graph.outputs)
-                    if profile_graph is not None
-                    else {}
+                    dict(profile_graph.outputs) if profile_graph is not None else {}
                 ),
             },
             "fabric_awning": {
                 "cdb_setter_plan_available": True,
                 "cdb_setter_plan": shading_control.setter_plan,
-                "cdb_setter_plan_scope": "CDB_STORAGE_AND_READBACK_ONLY",
+                "cdb_setter_plan_scope": "AUTHORITY_CONFIRMED_IESVE_MAPPING",
                 "dynamic_equivalence_qualified": (
                     shading_control.dynamic_equivalence_qualified
                 ),
@@ -476,7 +435,7 @@ def build_test2a_source_bound_bundle(
                 "people, equipment and lighting gains",
                 "facade-area-specific infiltration",
                 "external fabric awning optical state",
-                "source threshold value 150 W/m2 stored in candidate VE fields",
+                "authority-confirmed 150 W/m2 lower/raise thresholds assigned and read back in VE",
                 "authorized SIA 2028 weather identity",
             ],
         },
@@ -510,9 +469,7 @@ def build_test2a_source_bound_bundle(
         "official_input_keys": list(official_inputs),
         "fabric_awning_control": shading_control.to_dict(),
         "fabric_awning_optical_diagnostic": optical_diagnostic.to_dict(),
-        "fabric_awning_aps_diagnostic_binding": (
-            aps_diagnostic_binding.to_dict()
-        ),
+        "fabric_awning_aps_diagnostic_binding": (aps_diagnostic_binding.to_dict()),
         "runtime_qualification_evidence": qualification_evidence,
         "runtime_blockers": list(runtime_blockers),
         "provisional_external_input_fields": provisional_fields,
@@ -524,20 +481,20 @@ def build_test2a_source_bound_bundle(
             "before any Test 2A comparison. Generation may proceed; no "
             "verdict may."
             if provisional_fields
-            else "Supply a source-traced native VE daily/weekly/yearly profile "
-            "graph before runtime qualification."
-            if profile_graph is None
             else (
-                "Implement the guarded Test 2A model binding. Profile, shade "
-                "threshold and direct-name fixed-closed optical storage are "
-                "qualified, but dynamic shade semantics, complete 2E1 optics "
-                "and APS equivalence remain blocked."
-                if qualification_evidence[
-                    "all_storage_boundaries_qualified"
-                ]
-                else "Run the guarded disposable-project profile, shade "
-                "threshold and fixed-closed optical storage qualifications "
-                "against this immutable generator input."
+                "Supply a source-traced native VE daily/weekly/yearly profile "
+                "graph before runtime qualification."
+                if profile_graph is None
+                else (
+                    "Implement the guarded Test 2A model binding. Profile, shade "
+                    "threshold and direct-name fixed-closed optical storage are "
+                    "qualified, but dynamic shade semantics, complete 2E1 optics "
+                    "and APS equivalence remain blocked."
+                    if qualification_evidence["all_storage_boundaries_qualified"]
+                    else "Run the guarded disposable-project profile, shade "
+                    "threshold and fixed-closed optical storage qualifications "
+                    "against this immutable generator input."
+                )
             )
         ),
         "claim_guardrail": generator_input["claim_guardrail"],

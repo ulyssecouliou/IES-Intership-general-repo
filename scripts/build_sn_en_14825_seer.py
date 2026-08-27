@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-u"""Freezes the SN EN 14825:2018 cooling-SEER reference data.
+"""Freezes the SN EN 14825:2018 cooling-SEER reference data.
 
 Why a build script (not a hand-written JSON): refs/reference-data/ files must be
 produced by code that RECOMPUTES and CONFRONTS the transcribed values to their
@@ -34,8 +34,9 @@ import sys
 
 _ICI = os.path.dirname(os.path.abspath(__file__))
 _RACINE = os.path.abspath(os.path.join(_ICI, os.pardir))
-_SORTIE = os.path.join(_RACINE, "refs", "reference-data",
-                       "sn-en-14825-2018.cooling-seer.json")
+_SORTIE = os.path.join(
+    _RACINE, "refs", "reference-data", "sn-en-14825-2018.cooling-seer.json"
+)
 
 T_DESIGN_C = 35  # reference design temperature for cooling (Clause 4.1)
 
@@ -50,10 +51,26 @@ POINTS_FROID = [
 
 # Transcribed from Table A.1 (== Table D.1 "Average"): reference cooling season.
 BINS_FROID = [
-    (1, 17, 205), (2, 18, 227), (3, 19, 225), (4, 20, 225), (5, 21, 216),
-    (6, 22, 215), (7, 23, 218), (8, 24, 197), (9, 25, 178), (10, 26, 158),
-    (11, 27, 137), (12, 28, 109), (13, 29, 88), (14, 30, 63), (15, 31, 39),
-    (16, 32, 31), (17, 33, 24), (18, 34, 17), (19, 35, 13), (20, 36, 9),
+    (1, 17, 205),
+    (2, 18, 227),
+    (3, 19, 225),
+    (4, 20, 225),
+    (5, 21, 216),
+    (6, 22, 215),
+    (7, 23, 218),
+    (8, 24, 197),
+    (9, 25, 178),
+    (10, 26, 158),
+    (11, 27, 137),
+    (12, 28, 109),
+    (13, 29, 88),
+    (14, 30, 63),
+    (15, 31, 39),
+    (16, 32, 31),
+    (17, 33, 24),
+    (18, 34, 17),
+    (19, 35, 13),
+    (20, 36, 9),
     (21, 37, 4),
 ]
 TOTAL_HEURES_TRANSCRIT = 2598
@@ -62,19 +79,19 @@ TOTAL_HEURES_TRANSCRIT = 2598
 def _cross_check():
     """Recompute part-load ratios and bin-hour total; raise on any mismatch."""
     for pt in POINTS_FROID:
-        recompute = round(
-            (pt["T_ext_C"] - 16.0) / (T_DESIGN_C - 16.0) * 100.0, 2
-        )
+        recompute = round((pt["T_ext_C"] - 16.0) / (T_DESIGN_C - 16.0) * 100.0, 2)
         if abs(recompute - pt["taux_transcrit"]) > 0.01:
             raise SystemExit(
-                "CROSS-CHECK FAILED: point {} ratio recomputed {} != transcribed {}"
-                .format(pt["point"], recompute, pt["taux_transcrit"])
+                "CROSS-CHECK FAILED: point {} ratio recomputed {} != transcribed {}".format(
+                    pt["point"], recompute, pt["taux_transcrit"]
+                )
             )
     total = sum(h for _, _, h in BINS_FROID)
     if total != TOTAL_HEURES_TRANSCRIT:
         raise SystemExit(
-            "CROSS-CHECK FAILED: bin-hour sum {} != transcribed total {}"
-            .format(total, TOTAL_HEURES_TRANSCRIT)
+            "CROSS-CHECK FAILED: bin-hour sum {} != transcribed total {}".format(
+                total, TOTAL_HEURES_TRANSCRIT
+            )
         )
     return total
 
@@ -83,26 +100,26 @@ def _build(total_heures):
     return {
         "norme": "SN EN 14825:2018",
         "titre": (
-            u"Climatiseurs, groupes refroidisseurs de liquides et pompes à "
-            u"chaleur, avec compresseur entraîné par moteur électrique — "
-            u"Essais et détermination des caractéristiques à charge partielle "
-            u"et calcul des performances saisonnières"
+            "Climatiseurs, groupes refroidisseurs de liquides et pompes à "
+            "chaleur, avec compresseur entraîné par moteur électrique — "
+            "Essais et détermination des caractéristiques à charge partielle "
+            "et calcul des performances saisonnières"
         ),
         "portee_de_ce_fichier": (
-            u"Base numérique du SEER (froid) référencée par SIA 380/2:2022 "
-            u"tableau 5. Localisateur de traçabilité interne, PAS une "
-            u"redistribution du standard."
+            "Base numérique du SEER (froid) référencée par SIA 380/2:2022 "
+            "tableau 5. Localisateur de traçabilité interne, PAS une "
+            "redistribution du standard."
         ),
         "statut": (
-            u"FIGÉ pour le SEER froid (voie A : SEER déclaré fabricant). "
-            u"SCOP chaud NON figé (tables 6-9 reçues, clause de calcul chaud "
-            u"non vérifiée)."
+            "FIGÉ pour le SEER froid (voie A : SEER déclaré fabricant). "
+            "SCOP chaud NON figé (tables 6-9 reçues, clause de calcul chaud "
+            "non vérifiée)."
         ),
         "date_extraction": "2026-08-20",
         "genere_par": "scripts/build_sn_en_14825_seer.py",
         "source": {
-            "nature": u"captures d'écran ciblées du document publié",
-            "fournisseur": u"utilisateur (accès SN EN 14825:2018)",
+            "nature": "captures d'écran ciblées du document publié",
+            "fournisseur": "utilisateur (accès SN EN 14825:2018)",
             "date_reception": "2026-08-20",
             "elements": [
                 "Clause 1 (Scope)",
@@ -113,18 +130,18 @@ def _build(total_heures):
         },
         "lien_sia_380_2": {
             "citation": (
-                u"SIA 380/2:2022 FR, tableau 5, page PDF 38 : colonnes "
-                u"« EER à pleine charge — valeur minimale » ET "
-                u"« SEER selon SN EN 14825 — valeur minimale »."
+                "SIA 380/2:2022 FR, tableau 5, page PDF 38 : colonnes "
+                "« EER à pleine charge — valeur minimale » ET "
+                "« SEER selon SN EN 14825 — valeur minimale »."
             ),
             "reference_normative": (
-                u"SIA 380/2:2022 FR, page PDF 6 : SN EN 14825:2018 listée comme "
-                u"référence normative."
+                "SIA 380/2:2022 FR, page PDF 6 : SN EN 14825:2018 listée comme "
+                "référence normative."
             ),
             "consequence": (
-                u"Le seuil SEER de SIA 380/2 tableau 5 est défini SELON EN 14825:2018. "
-                u"Un SEER déclaré fabricant (ErP/Ecodesign, calculé selon EN 14825) "
-                u"est donc directement comparable à la bande SEER de SIA."
+                "Le seuil SEER de SIA 380/2 tableau 5 est défini SELON EN 14825:2018. "
+                "Un SEER déclaré fabricant (ErP/Ecodesign, calculé selon EN 14825) "
+                "est donc directement comparable à la bande SEER de SIA."
             ),
         },
         "champ_application": {
@@ -134,8 +151,14 @@ def _build(total_heures):
                 "EN 14511-1; DX-to-water(brine) per EN 15879-1; hybrid units."
             ),
             "grandeurs_definies": [
-                "SEER", "SEERon", "eta_s_c", "SCOP", "SCOPon", "SCOPnet",
-                "eta_s_h", "SEPR",
+                "SEER",
+                "SEERon",
+                "eta_s_c",
+                "SCOP",
+                "SCOPon",
+                "SCOPnet",
+                "eta_s_h",
+                "SEPR",
             ],
         },
         "conditions_charge_partielle_froid": {
@@ -157,23 +180,21 @@ def _build(total_heures):
             "unite_T": "degC",
             "unite_heures": "h",
             "total_heures": total_heures,
-            "bins": [
-                {"j": j, "T_j": t, "h_j": h} for (j, t, h) in BINS_FROID
-            ],
+            "bins": [{"j": j, "T_j": t, "h_j": h} for (j, t, h) in BINS_FROID],
         },
         "voie_de_verification_retenue": {
             "voie": "A - SEER declare fabricant",
             "justification": (
-                u"Sur le marché EU/CH, le SEER déclaré (fiche ErP/Ecodesign) est "
-                u"calculé selon EN 14825 par obligation réglementaire ; il est donc "
-                u"EN 14825 par construction et comparable à la bande SIA sans recalcul. "
-                u"La clause de calcul (agrégation SEERon + Cd) n'est nécessaire que "
-                u"pour la voie B (recalcul depuis les 4 points A/B/C/D), non retenue."
+                "Sur le marché EU/CH, le SEER déclaré (fiche ErP/Ecodesign) est "
+                "calculé selon EN 14825 par obligation réglementaire ; il est donc "
+                "EN 14825 par construction et comparable à la bande SIA sans recalcul. "
+                "La clause de calcul (agrégation SEERon + Cd) n'est nécessaire que "
+                "pour la voie B (recalcul depuis les 4 points A/B/C/D), non retenue."
             ),
             "reserve_restante": (
-                u"Si le SEER provient du calcul interne de VE (et non d'une fiche), "
-                u"il faut confirmer que VE calcule selon EN 14825. Un SEER déclaré "
-                u"fabricant ne porte pas cette réserve."
+                "Si le SEER provient du calcul interne de VE (et non d'une fiche), "
+                "il faut confirmer que VE calcule selon EN 14825. Un SEER déclaré "
+                "fabricant ne porte pas cette réserve."
             ),
         },
     }
@@ -184,8 +205,7 @@ def main():
     payload = _build(total)
     print("SN EN 14825:2018 cooling-SEER reference")
     print("  part-load ratios recomputed and confirmed (A/B/C/D).")
-    print("  reference cooling season bins:", len(BINS_FROID),
-          "total hours:", total)
+    print("  reference cooling season bins:", len(BINS_FROID), "total hours:", total)
     print("  output:", _SORTIE)
     if "--ecrire" in sys.argv:
         with open(_SORTIE, "w", encoding="utf-8") as handle:

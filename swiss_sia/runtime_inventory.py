@@ -59,11 +59,13 @@ def collect_model_runtime_inventory(extractor: Any) -> Dict[str, Any]:
             room_name = room_id
         room_data = extractor.get_room_data(body)
         if room_data is None:
-            rooms.append({
-                "room_id": room_id,
-                "room_name": room_name,
-                "room_data_status": "UNAVAILABLE",
-            })
+            rooms.append(
+                {
+                    "room_id": room_id,
+                    "room_name": room_name,
+                    "room_data_status": "UNAVAILABLE",
+                }
+            )
             continue
         general = extractor.get_room_general(room_data)
         conditions = extractor.get_room_conditions(room_data)
@@ -79,18 +81,20 @@ def collect_model_runtime_inventory(extractor: Any) -> Dict[str, Any]:
             json_safe(_child_data(item))
             for item in extractor.get_air_exchanges(room_data)
         ]
-        rooms.append({
-            "room_id": room_id,
-            "room_name": room_name,
-            "room_data_status": "AVAILABLE",
-            "general": json_safe(general),
-            "room_conditions": json_safe(conditions),
-            "apache_system_assignment": json_safe(apache_systems),
-            "internal_gain_count": len(gains),
-            "internal_gains": gains,
-            "air_exchange_count": len(exchanges),
-            "air_exchanges": exchanges,
-        })
+        rooms.append(
+            {
+                "room_id": room_id,
+                "room_name": room_name,
+                "room_data_status": "AVAILABLE",
+                "general": json_safe(general),
+                "room_conditions": json_safe(conditions),
+                "apache_system_assignment": json_safe(apache_systems),
+                "internal_gain_count": len(gains),
+                "internal_gains": gains,
+                "air_exchange_count": len(exchanges),
+                "air_exchanges": exchanges,
+            }
+        )
 
     systems = {
         system_id: json_safe(extractor.get_apache_system_data(system_id))
@@ -110,27 +114,38 @@ _APS_BINDING_TOKEN_SETS: Dict[str, Sequence[Sequence[str]]] = {
     "heating_load": (("heating", "load"),),
     "cooling_load": (("cooling", "load"),),
     "lighting": (
-        ("lighting", "power"), ("lights", "power"),
-        ("lighting", "electric"), ("lighting", "energy"),
+        ("lighting", "power"),
+        ("lights", "power"),
+        ("lighting", "electric"),
+        ("lighting", "energy"),
     ),
     "fan": (
-        ("fan", "power"), ("fans", "power"),
-        ("fan", "electric"), ("fan", "energy"),
+        ("fan", "power"),
+        ("fans", "power"),
+        ("fan", "electric"),
+        ("fan", "energy"),
     ),
     "pump": (
-        ("pump", "power"), ("pumps", "power"),
-        ("pump", "electric"), ("pump", "energy"),
+        ("pump", "power"),
+        ("pumps", "power"),
+        ("pump", "electric"),
+        ("pump", "energy"),
     ),
     "auxiliary": (
-        ("auxiliary", "power"), ("auxiliary", "energy"),
-        ("aux", "power"), ("aux", "energy"),
+        ("auxiliary", "power"),
+        ("auxiliary", "energy"),
+        ("aux", "power"),
+        ("aux", "energy"),
     ),
     "heating_coil": (
-        ("heating", "coil"), ("reheat", "coil"),
-        ("heater", "coil"), ("supply", "heating"),
+        ("heating", "coil"),
+        ("reheat", "coil"),
+        ("heater", "coil"),
+        ("supply", "heating"),
     ),
     "cooling_coil": (
-        ("cooling", "coil"), ("cooler", "coil"),
+        ("cooling", "coil"),
+        ("cooler", "coil"),
         ("supply", "cooling"),
     ),
 }
@@ -180,15 +195,17 @@ def build_aps_variable_inventory(
         display_name = str(variable.get("display_name") or aps_name)
         haystack = "{} {}".format(aps_name, display_name).lower()
         if any(keyword in haystack for keyword in keywords):
-            candidates.append({
-                "aps_varname": aps_name,
-                "display_name": display_name,
-                "model_level": str(
-                    variable.get("model_level") or variable.get("level") or ""
-                ),
-                "metric_unit": str(variable.get("resolved_metric_unit") or ""),
-                "units_type": json_safe(variable.get("units_type")),
-            })
+            candidates.append(
+                {
+                    "aps_varname": aps_name,
+                    "display_name": display_name,
+                    "model_level": str(
+                        variable.get("model_level") or variable.get("level") or ""
+                    ),
+                    "metric_unit": str(variable.get("resolved_metric_unit") or ""),
+                    "units_type": json_safe(variable.get("units_type")),
+                }
+            )
     return {
         "available_variable_count": len(variable_rows),
         "production_bindings": bindings,

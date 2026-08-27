@@ -72,35 +72,45 @@ class ReferenceModelSetupDialog:
         ttk.Label(card, text="Projet jetable", style="Card.TLabel").grid(
             row=0, column=0, sticky="w"
         )
-        ttk.Label(
-            card, text=str(self.project_path), style="Card.TLabel"
-        ).grid(row=0, column=1, columnspan=2, sticky="w", padx=(design.SPACE["md"], 0))
+        ttk.Label(card, text=str(self.project_path), style="Card.TLabel").grid(
+            row=0, column=1, columnspan=2, sticky="w", padx=(design.SPACE["md"], 0)
+        )
 
-        ttk.Label(
-            card, text="Fichier meteo EPW", style="Card.TLabel"
-        ).grid(row=1, column=0, sticky="w", pady=pad_y)
+        ttk.Label(card, text="Fichier meteo EPW", style="Card.TLabel").grid(
+            row=1, column=0, sticky="w", pady=pad_y
+        )
         ttk.Entry(card, textvariable=self.weather).grid(
             row=1, column=1, sticky="ew", padx=design.SPACE["md"], pady=pad_y
         )
         ttk.Button(
-            card, text="Parcourir...", style="Secondary.TButton",
+            card,
+            text="Parcourir...",
+            style="Secondary.TButton",
             command=self._browse,
         ).grid(row=1, column=2, pady=pad_y)
 
-        ttk.Label(
-            card, text="Station EPW detectee", style="Card.TLabel"
-        ).grid(row=2, column=0, sticky="w", pady=pad_y)
-        ttk.Label(
-            card, textvariable=self.station, style="Card.TLabel"
-        ).grid(row=2, column=1, columnspan=2, sticky="w",
-               padx=(design.SPACE["md"], 0), pady=pad_y)
+        ttk.Label(card, text="Station EPW detectee", style="Card.TLabel").grid(
+            row=2, column=0, sticky="w", pady=pad_y
+        )
+        ttk.Label(card, textvariable=self.station, style="Card.TLabel").grid(
+            row=2,
+            column=1,
+            columnspan=2,
+            sticky="w",
+            padx=(design.SPACE["md"], 0),
+            pady=pad_y,
+        )
 
-        ttk.Label(
-            card, text="Scenario/horizon (facultatif)", style="Card.TLabel"
-        ).grid(row=3, column=0, sticky="w", pady=pad_y)
+        ttk.Label(card, text="Scenario/horizon (facultatif)", style="Card.TLabel").grid(
+            row=3, column=0, sticky="w", pady=pad_y
+        )
         ttk.Entry(card, textvariable=self.scenario).grid(
-            row=3, column=1, columnspan=2, sticky="ew",
-            padx=(design.SPACE["md"], 0), pady=pad_y,
+            row=3,
+            column=1,
+            columnspan=2,
+            sticky="ew",
+            padx=(design.SPACE["md"], 0),
+            pady=pad_y,
         )
 
         ttk.Label(
@@ -111,18 +121,21 @@ class ReferenceModelSetupDialog:
             ),
             style="CardCaption.TLabel",
             wraplength=680,
-        ).grid(row=4, column=0, columnspan=3, sticky="w",
-               pady=(design.SPACE["lg"], 0))
+        ).grid(row=4, column=0, columnspan=3, sticky="w", pady=(design.SPACE["lg"], 0))
 
         # Footer: quiet Cancel, then the one accent-blue primary action.
         buttons = ttk.Frame(self.root, style="TFrame", padding=design.PAD_CARD)
         buttons.pack(fill="x")
         ttk.Button(
-            buttons, text="Preparer puis lancer", style="Primary.TButton",
+            buttons,
+            text="Preparer puis lancer",
+            style="Primary.TButton",
             command=self._prepare,
         ).pack(side="right")
         ttk.Button(
-            buttons, text="Annuler", style="Secondary.TButton",
+            buttons,
+            text="Annuler",
+            style="Secondary.TButton",
             command=self.root.destroy,
         ).pack(side="right", padx=(0, design.SPACE["sm"]))
 
@@ -137,7 +150,9 @@ class ReferenceModelSetupDialog:
         self.weather.set(selected)
         try:
             epw = read_epw_metadata(Path(selected))
-            label = ", ".join(item for item in (epw.station, epw.region, epw.country) if item)
+            label = ", ".join(
+                item for item in (epw.station, epw.region, epw.country) if item
+            )
             self.station.set(label or "LOCATION presente, station non renseignee")
         except ReferenceModelSetupError as exc:
             self.station.set("EPW invalide")

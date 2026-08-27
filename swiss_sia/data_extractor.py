@@ -72,6 +72,7 @@ def _missing_member_audit(placeholder: str, member: str) -> Dict[str, Any]:
         "note": f"{VE_MEMBER_ABSENT_NOTE}: {member}",
     }
 
+
 class VEDataExtractor:
     """Extract SIA-relevant data from the active VE project."""
 
@@ -81,13 +82,16 @@ class VEDataExtractor:
         if self.project is None:
             try:
                 import importlib
+
                 iesve = importlib.import_module("iesve")
                 self.project = iesve.VEProject.get_current_project()
             except Exception:
                 self.project = None
 
         if not self.project:
-            raise RuntimeError("No VE project found. Open a project in IESVE before running the checker.")
+            raise RuntimeError(
+                "No VE project found. Open a project in IESVE before running the checker."
+            )
 
         # Cache frequently accessed VE objects to keep the Run-button workflow fast.
         self._model: Optional[Any] = None
@@ -138,18 +142,19 @@ class VEDataExtractor:
             except Exception as e:
                 error = str(e)
 
-            relevant_count = sum(
-                1 for body in raw_bodies
-                if self._is_relevant_body(body)
-            )
+            relevant_count = sum(1 for body in raw_bodies if self._is_relevant_body(body))
             raw_count = len(raw_bodies)
-            model_rows.append({
-                "index": index,
-                "model_type": self._normalize_enum_name(getattr(model, "model_type", None)),
-                "raw_body_count": raw_count,
-                "relevant_body_count": relevant_count,
-                "error": error,
-            })
+            model_rows.append(
+                {
+                    "index": index,
+                    "model_type": self._normalize_enum_name(
+                        getattr(model, "model_type", None)
+                    ),
+                    "raw_body_count": raw_count,
+                    "relevant_body_count": relevant_count,
+                    "error": error,
+                }
+            )
 
         selected_row = max(
             model_rows,
@@ -183,8 +188,7 @@ class VEDataExtractor:
             try:
                 all_bodies = self._as_list(self.model.get_bodies(selected_only))
                 self._bodies[selected_only] = [
-                    body for body in all_bodies
-                    if self._is_relevant_body(body)
+                    body for body in all_bodies if self._is_relevant_body(body)
                 ]
             except Exception as e:
                 logger.error("Error while retrieving VE bodies: %s", e)
@@ -209,31 +213,35 @@ class VEDataExtractor:
                 model_diagnostics = self.get_model_selection_diagnostics()
                 raw_bodies = self._as_list(self.model.get_bodies(False))
                 relevant_bodies = [
-                    body for body in raw_bodies
-                    if self._is_relevant_body(body)
+                    body for body in raw_bodies if self._is_relevant_body(body)
                 ]
                 discarded_bodies = [
-                    body for body in raw_bodies
-                    if not self._is_relevant_body(body)
+                    body for body in raw_bodies if not self._is_relevant_body(body)
                 ]
-                diagnostics.update({
-                    "status": "OK",
-                    "raw_body_count": len(raw_bodies),
-                    "relevant_body_count": len(relevant_bodies),
-                    "discarded_body_count": len(discarded_bodies),
-                    "discarded_sample": [
-                        self._body_debug_summary(body)
-                        for body in discarded_bodies[:5]
-                    ],
-                    "model_count": model_diagnostics.get("model_count", 0),
-                    "selected_model_index": model_diagnostics.get("selected_model_index", 0),
-                    "model_summaries": model_diagnostics.get("models", []),
-                })
+                diagnostics.update(
+                    {
+                        "status": "OK",
+                        "raw_body_count": len(raw_bodies),
+                        "relevant_body_count": len(relevant_bodies),
+                        "discarded_body_count": len(discarded_bodies),
+                        "discarded_sample": [
+                            self._body_debug_summary(body)
+                            for body in discarded_bodies[:5]
+                        ],
+                        "model_count": model_diagnostics.get("model_count", 0),
+                        "selected_model_index": model_diagnostics.get(
+                            "selected_model_index", 0
+                        ),
+                        "model_summaries": model_diagnostics.get("models", []),
+                    }
+                )
             except Exception as e:
-                diagnostics.update({
-                    "status": "ERROR",
-                    "error": str(e),
-                })
+                diagnostics.update(
+                    {
+                        "status": "ERROR",
+                        "error": str(e),
+                    }
+                )
             self._body_extraction_diagnostics = diagnostics
         return dict(self._body_extraction_diagnostics)
 
@@ -244,7 +252,9 @@ class VEDataExtractor:
             try:
                 self._surfaces[body_id] = self._as_list(body.get_surfaces())
             except Exception as e:
-                logger.error("Error while retrieving surfaces for body %s: %s", body_id, e)
+                logger.error(
+                    "Error while retrieving surfaces for body %s: %s", body_id, e
+                )
                 self._surfaces[body_id] = []
         return self._surfaces[body_id]
 
@@ -255,7 +265,9 @@ class VEDataExtractor:
             try:
                 self._openings[surface_id] = self._as_list(surface.get_openings())
             except Exception as e:
-                logger.error("Error while retrieving openings for surface %s: %s", surface_id, e)
+                logger.error(
+                    "Error while retrieving openings for surface %s: %s", surface_id, e
+                )
                 self._openings[surface_id] = []
         return self._openings[surface_id]
 
@@ -294,13 +306,18 @@ class VEDataExtractor:
         }
         try:
             import importlib
+
             iesve = importlib.import_module("iesve")
         except Exception as exc:
             summary["errors"].append("iesve unavailable: {}".format(exc))
             return summary
 
-        nonrep_none = getattr(getattr(iesve, "ThermalBridge_NonRepType", None), "none", object())
-        random_point = getattr(getattr(iesve, "ThermalBridge_RandomType", None), "point", object())
+        nonrep_none = getattr(
+            getattr(iesve, "ThermalBridge_NonRepType", None), "none", object()
+        )
+        random_point = getattr(
+            getattr(iesve, "ThermalBridge_RandomType", None), "point", object()
+        )
 
         bodies = self.get_bodies()
         for body in bodies:
@@ -314,13 +331,17 @@ class VEDataExtractor:
                 summary["surfaces_scanned"] += 1
                 if has_nonrep:
                     try:
-                        for bd in self._as_list(surface.get_thermal_bridges_non_repeating()):
+                        for bd in self._as_list(
+                            surface.get_thermal_bridges_non_repeating()
+                        ):
                             if getattr(bd, "type", None) == nonrep_none:
                                 continue
                             summary["readable"] = True
                             psi = self._to_float_or_none(getattr(bd, "psi", None))
                             length = self._to_float_or_none(getattr(bd, "length", None))
-                            flux = self._to_float_or_none(getattr(bd, "flux_factor", None))
+                            flux = self._to_float_or_none(
+                                getattr(bd, "flux_factor", None)
+                            )
                             flux = 1.0 if flux is None else flux
                             if psi is None or length is None:
                                 continue
@@ -331,13 +352,19 @@ class VEDataExtractor:
                             else:
                                 summary["nonzero_count"] += 1
                     except Exception as exc:
-                        summary["errors"].append("non_repeating read failed: {}".format(exc))
+                        summary["errors"].append(
+                            "non_repeating read failed: {}".format(exc)
+                        )
                 if has_random:
                     try:
                         for bd in self._as_list(surface.get_thermal_bridges_random()):
                             summary["readable"] = True
-                            transmittance = self._to_float_or_none(getattr(bd, "transmittance", None))
-                            dimension = self._to_float_or_none(getattr(bd, "dimension", None))
+                            transmittance = self._to_float_or_none(
+                                getattr(bd, "transmittance", None)
+                            )
+                            dimension = self._to_float_or_none(
+                                getattr(bd, "dimension", None)
+                            )
                             if transmittance is None or dimension is None:
                                 continue
                             contribution = transmittance * dimension
@@ -407,7 +434,9 @@ class VEDataExtractor:
         key = str(profile_id or "").strip()
         placeholder = "DAILY_INTERNAL_GAINS_PROFILE_TO_VERIFY"
         if not key:
-            return _missing_member_audit(placeholder, "RoomInternalGain.get().variation_profile")
+            return _missing_member_audit(
+                placeholder, "RoomInternalGain.get().variation_profile"
+            )
         if key in self._profile_daily_audits:
             return dict(self._profile_daily_audits[key])
 
@@ -418,7 +447,11 @@ class VEDataExtractor:
                 "note": f"NOT_CHECKABLE: VE profile {key!r} was not returned by VEProject.profiles()",
             }
         elif not hasattr(profile, "get_data") or not hasattr(profile, "is_modulating"):
-            missing = "VEProfile.get_data" if not hasattr(profile, "get_data") else "VEProfile.is_modulating"
+            missing = (
+                "VEProfile.get_data"
+                if not hasattr(profile, "get_data")
+                else "VEProfile.is_modulating"
+            )
             audit = _missing_member_audit(placeholder, missing)
         else:
             value = self._resolve_profile_daily_equivalent_hours(key, set())
@@ -442,7 +475,9 @@ class VEDataExtractor:
         self._profile_daily_hours[key] = audit["value"]
         return dict(audit)
 
-    def _resolve_profile_daily_equivalent_hours(self, profile_id: str, visited: set) -> Optional[float]:
+    def _resolve_profile_daily_equivalent_hours(
+        self, profile_id: str, visited: set
+    ) -> Optional[float]:
         """Resolve one VE daily/group profile without following recursive loops."""
         if profile_id in visited:
             return None
@@ -467,16 +502,14 @@ class VEDataExtractor:
                 for row in self._as_list(data):
                     if isinstance(row, (list, tuple)) and row:
                         child_values.append(
-                            self._resolve_profile_daily_equivalent_hours(str(row[0]), visited)
+                            self._resolve_profile_daily_equivalent_hours(
+                                str(row[0]), visited
+                            )
                         )
                 numeric = [value for value in child_values if value is not None]
                 return max(numeric) if numeric else None
-            if (
-                hasattr(profile, "is_compact")
-                and profile.is_compact()
-            ) or (
-                hasattr(profile, "is_freeform")
-                and profile.is_freeform()
+            if (hasattr(profile, "is_compact") and profile.is_compact()) or (
+                hasattr(profile, "is_freeform") and profile.is_freeform()
             ):
                 return None
             return self._integrate_daily_profile_points(data)
@@ -522,7 +555,9 @@ class VEDataExtractor:
             try:
                 self._room_data_cache[body_id] = body.get_room_data()
             except Exception as e:
-                logger.error("Error while retrieving room data for body %s: %s", body_id, e)
+                logger.error(
+                    "Error while retrieving room data for body %s: %s", body_id, e
+                )
                 self._room_data_cache[body_id] = None
         return self._room_data_cache[body_id]
 
@@ -773,7 +808,9 @@ class VEDataExtractor:
                 if not zone_group_id:
                     continue
                 for zone in self._as_list(room_groups.get_zones(zone_group_id)):
-                    zone_rooms = [str(room_id) for room_id in (zone or {}).get("rooms", [])]
+                    zone_rooms = [
+                        str(room_id) for room_id in (zone or {}).get("rooms", [])
+                    ]
                     for room_id in zone_rooms:
                         membership[room_id] = {
                             "zone_group_id": zone_group_id,
@@ -794,9 +831,7 @@ class VEDataExtractor:
             return dict(self._macroflo_openings)
         openings: Dict[str, Dict[str, Any]] = {}
         try:
-            opening_types = self._as_list(
-                self.project.get_macro_flo_opening_types()
-            )
+            opening_types = self._as_list(self.project.get_macro_flo_opening_types())
             for opening_type in opening_types:
                 row = opening_type.get()
                 if not isinstance(row, dict):
@@ -814,6 +849,7 @@ class VEDataExtractor:
         if not self._energy_sources:
             try:
                 import importlib
+
                 iesve = importlib.import_module("iesve")
                 sources = iesve.EnergySources.get_all_energy_source_data()
                 self._energy_sources = {
@@ -831,7 +867,11 @@ class VEDataExtractor:
         try:
             return self._as_dict(body.get_areas())
         except Exception as e:
-            logger.error("Error while retrieving body areas for %s: %s", self.get_object_id(body), e)
+            logger.error(
+                "Error while retrieving body areas for %s: %s",
+                self.get_object_id(body),
+                e,
+            )
             return {}
 
     def get_surface_properties(self, surface: Any) -> Dict[str, Any]:
@@ -840,7 +880,9 @@ class VEDataExtractor:
             props = self._safe_properties(surface)
             construction_ids = self.get_constructions(surface)
             areas = self.get_surface_areas(surface)
-            surface_type = self._safe_lookup(props, "type") or self._get_surface_type(surface)
+            surface_type = self._safe_lookup(props, "type") or self._get_surface_type(
+                surface
+            )
             construction_props = self._select_surface_construction_properties(
                 construction_ids,
                 surface_type,
@@ -848,22 +890,32 @@ class VEDataExtractor:
             )
             area = self._safe_lookup(props, "area")
             if area is None:
-                area = self._safe_lookup(areas, "total_gross") or self._safe_lookup(areas, "total_net")
+                area = self._safe_lookup(areas, "total_gross") or self._safe_lookup(
+                    areas, "total_net"
+                )
             return {
                 "area": area,
                 "U-value": (
-                    self._find_first_present(props, ("U-value", "u_value", "u", "u-value"))
+                    self._find_first_present(
+                        props, ("U-value", "u_value", "u", "u-value")
+                    )
                     or self._extract_u_value(construction_props)
                 ),
                 "orientation": self._safe_lookup(props, "orientation"),
                 "tilt": self._safe_lookup(props, "tilt"),
                 "type": surface_type,
-                "materials": self._safe_lookup(props, "materials") or construction_props.get("materials", []) or [],
+                "materials": self._safe_lookup(props, "materials")
+                or construction_props.get("materials", [])
+                or [],
                 "construction_ids": construction_ids,
                 "construction_properties": construction_props,
             }
         except Exception as e:
-            logger.error("Error while retrieving surface properties for %s: %s", self.get_surface_id(surface), e)
+            logger.error(
+                "Error while retrieving surface properties for %s: %s",
+                self.get_surface_id(surface),
+                e,
+            )
             return {}
 
     def get_opening_properties(self, opening: Any) -> Dict[str, Any]:
@@ -875,7 +927,11 @@ class VEDataExtractor:
                 raw_opening_type = getattr(opening, "type", None)
             opening_type_audit = self._opening_type_audit(raw_opening_type)
             construction_id = self.get_opening_construction(opening)
-            construction_props = self.get_construction_properties(construction_id) if construction_id else {}
+            construction_props = (
+                self.get_construction_properties(construction_id)
+                if construction_id
+                else {}
+            )
             g_audit = self._extract_g_value_audit(props, construction_props)
             tau_v_audit = self._opening_audit(
                 construction_props,
@@ -898,7 +954,9 @@ class VEDataExtractor:
             return {
                 "area": self._safe_lookup(props, "area"),
                 "U-value": (
-                    self._find_first_present(props, ("U-value", "u_value", "u", "u-value"))
+                    self._find_first_present(
+                        props, ("U-value", "u_value", "u", "u-value")
+                    )
                     or self._extract_u_value(construction_props)
                 ),
                 "solar_factor": g_audit["selected_sia_g_value"],
@@ -919,8 +977,12 @@ class VEDataExtractor:
                 "frame_fraction_placeholder": frame_audit["placeholder"],
                 "frame_fraction_note": frame_audit["note"],
                 "shading_type": self._extract_shading_type(props, construction_props),
-                "shading_control": self._extract_shading_control(props, construction_props),
-                "shading_properties": self._extract_shading_properties(props, construction_props),
+                "shading_control": self._extract_shading_control(
+                    props, construction_props
+                ),
+                "shading_properties": self._extract_shading_properties(
+                    props, construction_props
+                ),
                 "g_total": g_total_audit["value"],
                 "g_total_source": g_total_audit["source"],
                 "g_total_status": g_total_audit["status"],
@@ -938,7 +1000,11 @@ class VEDataExtractor:
                 "construction_properties": construction_props,
             }
         except Exception as e:
-            logger.error("Error while retrieving opening properties for %s: %s", self.get_surface_id(opening), e)
+            logger.error(
+                "Error while retrieving opening properties for %s: %s",
+                self.get_surface_id(opening),
+                e,
+            )
             return {}
 
     def get_surface_areas(self, surface: Any) -> Dict[str, float]:
@@ -946,7 +1012,11 @@ class VEDataExtractor:
         try:
             return self._as_dict(surface.get_areas())
         except Exception as e:
-            logger.error("Error while retrieving surface areas for %s: %s", self.get_surface_id(surface), e)
+            logger.error(
+                "Error while retrieving surface areas for %s: %s",
+                self.get_surface_id(surface),
+                e,
+            )
             return {}
 
     def get_adjacencies(self, surface: Any) -> List[Any]:
@@ -954,7 +1024,11 @@ class VEDataExtractor:
         try:
             return self._as_list(surface.get_adjacencies())
         except Exception as e:
-            logger.error("Error while retrieving adjacencies for surface %s: %s", self.get_surface_id(surface), e)
+            logger.error(
+                "Error while retrieving adjacencies for surface %s: %s",
+                self.get_surface_id(surface),
+                e,
+            )
             return []
 
     def get_constructions(self, surface: Any) -> List[str]:
@@ -962,7 +1036,11 @@ class VEDataExtractor:
         try:
             return self._as_list(surface.get_constructions())
         except Exception as e:
-            logger.error("Error while retrieving constructions for surface %s: %s", self.get_surface_id(surface), e)
+            logger.error(
+                "Error while retrieving constructions for surface %s: %s",
+                self.get_surface_id(surface),
+                e,
+            )
             return []
 
     def get_opening_construction(self, opening: Any) -> str:
@@ -979,16 +1057,23 @@ class VEDataExtractor:
         if not construction_key:
             return {}
         if construction_key not in self._construction_properties:
-            self._construction_properties[construction_key] = self._resolve_construction_properties(construction_key)
+            self._construction_properties[construction_key] = (
+                self._resolve_construction_properties(construction_key)
+            )
         return self._construction_properties[construction_key]
 
     def _resolve_construction_properties(self, construction_id: str) -> Dict[str, Any]:
         """Query ``VECdbConstruction`` using multiple classes for VE compatibility."""
         try:
             import importlib
+
             iesve = importlib.import_module("iesve")
         except Exception as e:
-            logger.debug("iesve is unavailable while resolving construction %s: %s", construction_id, e)
+            logger.debug(
+                "iesve is unavailable while resolving construction %s: %s",
+                construction_id,
+                e,
+            )
             return {}
 
         construction_classes = self._get_cdb_construction_classes(iesve)
@@ -996,7 +1081,9 @@ class VEDataExtractor:
 
         for cdb_project in self._get_cdb_projects():
             for construction_class in construction_classes:
-                construction = self._safe_get_cdb_construction(cdb_project, construction_id, construction_class)
+                construction = self._safe_get_cdb_construction(
+                    cdb_project, construction_id, construction_class
+                )
                 if construction is None:
                     continue
                 return self._read_cdb_construction(construction, construction_id)
@@ -1010,6 +1097,7 @@ class VEDataExtractor:
         projects: List[Any] = []
         try:
             import importlib
+
             iesve = importlib.import_module("iesve")
             database = iesve.VECdbDatabase.get_current_database()
             raw_projects = database.get_projects()
@@ -1026,7 +1114,11 @@ class VEDataExtractor:
         construction_classes = []
         enum_candidates = []
         for owner_name in ("VECdbProject", "VECdbConstruction", ""):
-            owner = iesve_module if owner_name == "" else getattr(iesve_module, owner_name, None)
+            owner = (
+                iesve_module
+                if owner_name == ""
+                else getattr(iesve_module, owner_name, None)
+            )
             if owner is None:
                 continue
             for enum_name in (
@@ -1041,7 +1133,11 @@ class VEDataExtractor:
                     enum_candidates.append(enum)
 
         for owner_name in ("VECdbProject", "VECdbConstruction", ""):
-            owner = iesve_module if owner_name == "" else getattr(iesve_module, owner_name, None)
+            owner = (
+                iesve_module
+                if owner_name == ""
+                else getattr(iesve_module, owner_name, None)
+            )
             if owner is None:
                 continue
             for attr_name in dir(owner):
@@ -1053,7 +1149,15 @@ class VEDataExtractor:
 
         seen = set()
         for enum in enum_candidates:
-            for name in ("none", "opaque", "glazed", "hard_landscaping", "soft_landscaping", "shade", "misc"):
+            for name in (
+                "none",
+                "opaque",
+                "glazed",
+                "hard_landscaping",
+                "soft_landscaping",
+                "shade",
+                "misc",
+            ):
                 value = getattr(enum, name, None)
                 marker = repr(value)
                 if value is not None and marker not in seen:
@@ -1108,7 +1212,9 @@ class VEDataExtractor:
         return projects
 
     @staticmethod
-    def _safe_get_cdb_construction(cdb_project: Any, construction_id: str, construction_class: Any) -> Optional[Any]:
+    def _safe_get_cdb_construction(
+        cdb_project: Any, construction_id: str, construction_class: Any
+    ) -> Optional[Any]:
         """Return a CDB construction while tolerating VE binding signature variants."""
         try:
             if construction_class is None:
@@ -1117,7 +1223,9 @@ class VEDataExtractor:
         except Exception:
             return None
 
-    def _read_cdb_construction(self, construction: Any, construction_id: str) -> Dict[str, Any]:
+    def _read_cdb_construction(
+        self, construction: Any, construction_id: str
+    ) -> Dict[str, Any]:
         """Extract normalized construction, U-value, g-value, and layer metadata."""
         props: Dict[str, Any] = {
             "id": construction_id,
@@ -1141,6 +1249,7 @@ class VEDataExtractor:
         u_values: Dict[str, Any] = {}
         try:
             import importlib
+
             iesve = importlib.import_module("iesve")
             uvalue_types = self._get_cdb_uvalue_types(iesve)
             for name, value in uvalue_types:
@@ -1155,7 +1264,9 @@ class VEDataExtractor:
 
         try:
             layers = construction.get_layers()
-            props["layers"] = [self._read_cdb_layer(layer) for layer in self._as_list(layers)]
+            props["layers"] = [
+                self._read_cdb_layer(layer) for layer in self._as_list(layers)
+            ]
             if props["layers"]:
                 props["materials"] = [
                     layer.get("material")
@@ -1273,7 +1384,11 @@ class VEDataExtractor:
         member: str,
     ) -> Dict[str, Any]:
         """Return a cached CDB audit or a named fail-closed placeholder."""
-        audit = construction_properties.get(key) if isinstance(construction_properties, dict) else None
+        audit = (
+            construction_properties.get(key)
+            if isinstance(construction_properties, dict)
+            else None
+        )
         if isinstance(audit, dict):
             return dict(audit)
         return _missing_member_audit(placeholder, member)
@@ -1289,6 +1404,7 @@ class VEDataExtractor:
 
         try:
             import importlib
+
             iesve = importlib.import_module("iesve")
             uvalue_types = self._get_cdb_uvalue_types(iesve)
             for name, value in uvalue_types:
@@ -1309,10 +1425,19 @@ class VEDataExtractor:
         seen = set()
         enum_candidates = []
         for owner_name in ("VECdbConstruction", "VECdbProject", ""):
-            owner = iesve_module if owner_name == "" else getattr(iesve_module, owner_name, None)
+            owner = (
+                iesve_module
+                if owner_name == ""
+                else getattr(iesve_module, owner_name, None)
+            )
             if owner is None:
                 continue
-            for enum_name in ("uvalue_types", "u_value_types", "UValueTypes", "eUValueTypes"):
+            for enum_name in (
+                "uvalue_types",
+                "u_value_types",
+                "UValueTypes",
+                "eUValueTypes",
+            ):
                 enum = getattr(owner, enum_name, None)
                 if enum is not None:
                     enum_candidates.append(enum)
@@ -1502,7 +1627,9 @@ class VEDataExtractor:
         """Extract and normalize the type of a ``VESurface`` object."""
         try:
             props = self._safe_properties(surface)
-            surface_type = self._safe_lookup(props, "type") or getattr(surface, "type", None)
+            surface_type = self._safe_lookup(props, "type") or getattr(
+                surface, "type", None
+            )
         except Exception:
             surface_type = getattr(surface, "type", None)
         return self._normalize_surface_type(surface_type)
@@ -1511,7 +1638,9 @@ class VEDataExtractor:
         """Extract and normalize the type of a ``VEGeometry`` opening."""
         try:
             props = self._safe_properties(opening)
-            opening_type = self._safe_lookup(props, "type") or getattr(opening, "type", None)
+            opening_type = self._safe_lookup(props, "type") or getattr(
+                opening, "type", None
+            )
         except Exception:
             opening_type = getattr(opening, "type", None)
         return self._normalize_opening_type(opening_type)
@@ -1602,7 +1731,9 @@ class VEDataExtractor:
             if value not in (None, ""):
                 return value
         if isinstance(mapping, dict):
-            normalized = {str(k).strip().lower().replace("_", "-"): v for k, v in mapping.items()}
+            normalized = {
+                str(k).strip().lower().replace("_", "-"): v for k, v in mapping.items()
+            }
             for key in keys:
                 value = normalized.get(str(key).strip().lower().replace("_", "-"))
                 if value not in (None, ""):
@@ -1677,7 +1808,10 @@ class VEDataExtractor:
 
         fallback_candidates = (
             (cdb_g_value, f"VECdbConstruction.get_properties().{cdb_key or 'g_value'}"),
-            (normalized_g_values.get("building_regulations"), "VECdbConstruction.get_g_values().building_regulations"),
+            (
+                normalized_g_values.get("building_regulations"),
+                "VECdbConstruction.get_g_values().building_regulations",
+            ),
             (normalized_g_values.get("bfrc"), "VECdbConstruction.get_g_values().bfrc"),
         )
         fallback_value: Optional[float] = None
@@ -1705,7 +1839,14 @@ class VEDataExtractor:
         """Collect and normalize VECdbConstruction.get_g_values() output."""
         values: Dict[str, float] = {}
         aliases = {
-            "bs_en_410": ("bs_en_410", "bs-en-410", "bs en 410", "en_410", "en-410", "en 410"),
+            "bs_en_410": (
+                "bs_en_410",
+                "bs-en-410",
+                "bs en 410",
+                "en_410",
+                "en-410",
+                "en 410",
+            ),
             "building_regulations": (
                 "building_regulations",
                 "building-regulations",
@@ -1785,7 +1926,11 @@ class VEDataExtractor:
         for mapping in mappings:
             descriptions.extend(cls._active_shade_descriptions(mapping))
         if descriptions:
-            return direct if direct and not cls._is_no_shading_label(direct) else "; ".join(descriptions)
+            return (
+                direct
+                if direct and not cls._is_no_shading_label(direct)
+                else "; ".join(descriptions)
+            )
         if any(cls._has_explicit_no_shading(mapping) for mapping in mappings):
             return "none declared in CDB"
         if direct and not cls._is_no_shading_label(direct):
@@ -1815,7 +1960,9 @@ class VEDataExtractor:
                 "internal_shade_profile",
             ),
         )
-        control_parts = [direct] if direct and not cls._is_no_shading_label(direct) else []
+        control_parts = (
+            [direct] if direct and not cls._is_no_shading_label(direct) else []
+        )
 
         for mapping in mappings:
             for key in (
@@ -1998,9 +2145,25 @@ class VEDataExtractor:
             return []
         descriptions = []
         shade_groups = (
-            ("external", "external_shade_active", ("external_shade_code", "external_shade_profile")),
-            ("internal", "internal_shade_active", ("internal_shade_code", "internal_shade_blind_or_curtain", "internal_shade_profile")),
-            ("local", "local_shade_active", ("local_shade_code", "local_shade_overhang_type")),
+            (
+                "external",
+                "external_shade_active",
+                ("external_shade_code", "external_shade_profile"),
+            ),
+            (
+                "internal",
+                "internal_shade_active",
+                (
+                    "internal_shade_code",
+                    "internal_shade_blind_or_curtain",
+                    "internal_shade_profile",
+                ),
+            ),
+            (
+                "local",
+                "local_shade_active",
+                ("local_shade_code", "local_shade_overhang_type"),
+            ),
         )
         for label, active_key, detail_keys in shade_groups:
             if not cls._truthy(mapping.get(active_key)):
@@ -2010,7 +2173,9 @@ class VEDataExtractor:
                 for key in detail_keys
                 if mapping.get(key) not in (None, "")
             ]
-            descriptions.append(f"{label} shade" + (f" ({', '.join(details)})" if details else ""))
+            descriptions.append(
+                f"{label} shade" + (f" ({', '.join(details)})" if details else "")
+            )
         return descriptions
 
     @classmethod
@@ -2018,7 +2183,11 @@ class VEDataExtractor:
         """Return true when VE exposes shade-active fields and all are disabled."""
         if not isinstance(mapping, dict):
             return False
-        active_keys = ("external_shade_active", "internal_shade_active", "local_shade_active")
+        active_keys = (
+            "external_shade_active",
+            "internal_shade_active",
+            "local_shade_active",
+        )
         present = [key for key in active_keys if key in mapping]
         return bool(present) and all(not cls._truthy(mapping.get(key)) for key in present)
 
@@ -2052,7 +2221,15 @@ class VEDataExtractor:
         if isinstance(value, (int, float)):
             return value != 0
         if isinstance(value, str):
-            return value.strip().lower() in {"1", "true", "yes", "y", "on", "active", "enabled"}
+            return value.strip().lower() in {
+                "1",
+                "true",
+                "yes",
+                "y",
+                "on",
+                "active",
+                "enabled",
+            }
         return bool(value)
 
     @staticmethod

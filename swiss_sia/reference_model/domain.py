@@ -3,7 +3,7 @@
 from dataclasses import asdict, dataclass, field
 from enum import Enum
 from math import sqrt
-from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 
 @dataclass(frozen=True, order=True)
@@ -191,9 +191,7 @@ class GeometryModel:
     def openings(self) -> Tuple[OpeningSpec, ...]:
         """Return all openings flattened from their parent surfaces."""
 
-        return tuple(
-            opening for surface in self.surfaces for opening in surface.openings
-        )
+        return tuple(opening for surface in self.surfaces for opening in surface.openings)
 
     @property
     def shades(self) -> Tuple[SurfaceSpec, ...]:

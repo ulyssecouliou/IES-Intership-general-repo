@@ -17,7 +17,7 @@ import hashlib
 import json
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Any, Dict, Mapping, Optional, Sequence, Tuple, Union
+from typing import Any, Dict, Mapping, Optional, Tuple, Union
 
 from ..exceptions import ConfigurationError
 from .qualified_aps import QualifiedApsBindings, Sia4010QualifiedApsExtractor
@@ -27,7 +27,6 @@ from .test2a_diagnostic_evaluation import (
     evaluate_test2a_2e1_diagnostic,
 )
 from .test2a_diagnostic_workbook import Test2ADiagnosticWorkbookBinding
-
 
 APS_CONTRACT_SCHEMA_VERSION = "1.0"
 EXPECTED_SCENARIO_ID = "SIA4010_TEST_2A_2E1"
@@ -179,9 +178,7 @@ def build_test2a_2e1_aps_binding_contract(
                 "no exact exterior window surface identity and complete "
                 "surface-series read-back were qualified."
             )
-        elif item.series_id == (
-            "hourly_transmitted_solar_radiation_excluding_secondary"
-        ):
+        elif item.series_id == ("hourly_transmitted_solar_radiation_excluding_secondary"):
             reason = (
                 "The existing binding file explicitly leaves transmitted "
                 "solar radiation unbound because no qualified power series "
@@ -206,12 +203,8 @@ def build_test2a_2e1_aps_binding_contract(
         )
     return Test2A2E1ApsBindingContract(
         source_binding_path=bindings.path.resolve(),
-        source_probe_filename=str(
-            bindings.source_probe.get("filename", "")
-        ),
-        source_probe_sha256=str(
-            bindings.source_probe.get("sha256", "")
-        ),
+        source_probe_filename=str(bindings.source_probe.get("filename", "")),
+        source_probe_sha256=str(bindings.source_probe.get("sha256", "")),
         series=tuple(rows),
     )
 
@@ -224,10 +217,7 @@ def extract_test2a_2e1_candidate_series(
 
     result: Dict[str, Tuple[float, ...]] = {}
     for item in contract.series:
-        if (
-            item.status != "RUNTIME_METADATA_CONFIRMED"
-            or item.quantity_id is None
-        ):
+        if item.status != "RUNTIME_METADATA_CONFIRMED" or item.quantity_id is None:
             continue
         values = extractor.hourly_power_watts(item.quantity_id)
         if len(values) == 8760:
@@ -264,9 +254,7 @@ def _validate_simulation_evidence(
         )
     actual_sha = _sha256(aps_path)
     if str(evidence.get("aps_sha256", "")).lower() != actual_sha:
-        raise ConfigurationError(
-            "2E1 simulation evidence APS SHA-256 does not match"
-        )
+        raise ConfigurationError("2E1 simulation evidence APS SHA-256 does not match")
     return actual_sha
 
 
@@ -284,9 +272,7 @@ def evaluate_test2a_2e1_qualified_aps(
 
     aps = Path(aps_path)
     if not aps.is_file():
-        raise ConfigurationError(
-            "2E1 APS evidence does not exist: {}".format(aps)
-        )
+        raise ConfigurationError("2E1 APS evidence does not exist: {}".format(aps))
     aps_sha = _validate_simulation_evidence(aps, simulation_evidence)
     contract = build_test2a_2e1_aps_binding_contract(
         bindings,
@@ -299,9 +285,7 @@ def evaluate_test2a_2e1_qualified_aps(
         "{}#sha256={}".format(aps, aps_sha),
     )
     candidate = extract_test2a_2e1_candidate_series(extractor, contract)
-    required_series_ids = tuple(
-        item.series_id for item in workbook_binding.series
-    )
+    required_series_ids = tuple(item.series_id for item in workbook_binding.series)
     evaluation = evaluate_test2a_2e1_diagnostic(
         candidate,
         reference,

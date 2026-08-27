@@ -7,9 +7,7 @@ dataset. A second group runs against the real file when it is present.
 
 from __future__ import annotations
 
-import json
 import math
-import os
 import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -17,12 +15,10 @@ from tempfile import TemporaryDirectory
 from swiss_sia.reference_model.sia_dry_weather_import import (
     EXPECTED_COLUMNS,
     EXPECTED_HOURS,
-    KLOTEN,
     SiaDryImportError,
     convert_sia_dry_to_epw,
     parse_sia_dry_file,
 )
-
 
 ROOT = Path(__file__).resolve().parents[1]
 OFFICIAL_FILE = ROOT / "references" / "standards" / "sia2028" / "KLO_dry.txt"
@@ -65,8 +61,10 @@ def _write_fixture(
         dew = _dew_point(dry_bulb, relative_humidity) + dew_point_offset
         daytime = 8 <= moment.hour <= 17
         global_h = 300 if daytime else 0
-        diffuse = (global_h + 50) if diffuse_above_global and daytime else (
-            120 if daytime else 0
+        diffuse = (
+            (global_h + 50)
+            if diffuse_above_global and daytime
+            else (120 if daytime else 0)
         )
         direct = 400 if daytime else 0
         # 40 percent -> exactly 4 tenths, avoiding a rounding tie so the test
@@ -240,9 +238,7 @@ class SiaDryConversionTests(unittest.TestCase):
 class OfficialKlotenFileTests(unittest.TestCase):
     """Pins what the supplied Zuerich Kloten dataset actually contains."""
 
-    OFFICIAL_SHA256 = (
-        "aa3f3853300ceb55293c418d75ebfa36ef74353693acbaf369703c65bd337ffd"
-    )
+    OFFICIAL_SHA256 = "aa3f3853300ceb55293c418d75ebfa36ef74353693acbaf369703c65bd337ffd"
 
     def test_official_file_checksum(self) -> None:
         import hashlib
@@ -257,9 +253,7 @@ class OfficialKlotenFileTests(unittest.TestCase):
         temperatures = [row.dry_bulb_c for row in rows]
         self.assertAlmostEqual(min(temperatures), -13.1, places=4)
         self.assertAlmostEqual(max(temperatures), 34.1, places=4)
-        self.assertAlmostEqual(
-            sum(temperatures) / len(temperatures), 9.4692, places=3
-        )
+        self.assertAlmostEqual(sum(temperatures) / len(temperatures), 9.4692, places=3)
 
     def test_official_file_has_full_pressure_and_infrared_but_sparse_sky_cover(
         self,
@@ -267,9 +261,7 @@ class OfficialKlotenFileTests(unittest.TestCase):
         _rows, audit = parse_sia_dry_file(str(OFFICIAL_FILE))
         availability = audit["provisional_column_availability"]
         self.assertEqual(availability["prestahs"]["hours_present"], EXPECTED_HOURS)
-        self.assertEqual(
-            availability["ir.horizontal"]["hours_present"], EXPECTED_HOURS
-        )
+        self.assertEqual(availability["ir.horizontal"]["hours_present"], EXPECTED_HOURS)
         self.assertEqual(availability["nto000sw"]["hours_present"], 1095)
 
     def test_official_dew_point_column_holds_across_the_whole_year(self) -> None:

@@ -30,12 +30,14 @@ class StaticModelAnalyzer:
         external_wall_area = sum(
             surface.area
             for surface in room_data.surfaces
-            if surface.is_external and self._normalize_surface_type(surface.surface_type) == "wall"
+            if surface.is_external
+            and self._normalize_surface_type(surface.surface_type) == "wall"
         )
         window_area = sum(
             opening.area
             for opening in room_data.openings
-            if opening.is_external and self._normalize_opening_type(opening.opening_type) == "window"
+            if opening.is_external
+            and self._normalize_opening_type(opening.opening_type) == "window"
         )
         return window_area / external_wall_area if external_wall_area > 0 else 0.0
 
@@ -143,19 +145,21 @@ def build_reference_room() -> RoomData:
         infiltration_rate=0.10,
         infiltration_unit="m3/(h.m2)",
         infiltration_m3_h_m2=0.10,
-        hvac_systems=[{
-            "id": "REF_HVAC",
-            "type": "apache_system",
-            "cooling_generator_class": "air_cooled",
-            "cooling_capacity_kw": 10.0,
-            "eer": 3.0,
-            "seer": 4.0,
-            "heating_generator_class": "air_water_heat_pump",
-            "heating_capacity_kw": 10.0,
-            "scop": 3.2,
-            "fan_control": "DIRECT",
-            "heat_recovery_type": "PLATE",
-        }],
+        hvac_systems=[
+            {
+                "id": "REF_HVAC",
+                "type": "apache_system",
+                "cooling_generator_class": "air_cooled",
+                "cooling_capacity_kw": 10.0,
+                "eer": 3.0,
+                "seer": 4.0,
+                "heating_generator_class": "air_water_heat_pump",
+                "heating_capacity_kw": 10.0,
+                "scop": 3.2,
+                "fan_control": "DIRECT",
+                "heat_recovery_type": "PLATE",
+            }
+        ],
         room_conditions={"heating_setpoint": 21.0, "cooling_setpoint": 26.0},
         ventilation_installation_type="monozone",
         ventilation_control="one speed, time schedule control",
@@ -252,5 +256,6 @@ def collect_high_or_critical_alert_rules(results: Dict[str, Any]) -> Set[str]:
     return {
         str(alert.rule)
         for alert in results.get("alerts", [])
-        if isinstance(alert, Alert) and alert.severity in {Severity.HIGH, Severity.CRITICAL}
+        if isinstance(alert, Alert)
+        and alert.severity in {Severity.HIGH, Severity.CRITICAL}
     }

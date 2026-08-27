@@ -38,12 +38,16 @@ def _official_inputs():
 class Test2AShadingControlTests(unittest.TestCase):
     """The normative rule and the VE setter candidate remain distinct."""
 
-    def test_keeps_unspecified_control_semantics_unknown(self):
+    def test_uses_authority_confirmed_control_semantics(self):
         control = build_test2a_fabric_awning_control(_official_inputs())
         self.assertEqual(control.threshold_w_m2, 150.0)
-        self.assertIsNone(control.signal)
-        self.assertIsNone(control.active_operator)
-        self.assertIsNone(control.inactive_operator)
+        self.assertEqual(
+            control.signal,
+            "total_solar_irradiance_incident_on_exterior_glazing_plane",
+        )
+        self.assertEqual(control.active_operator, ">=")
+        self.assertEqual(control.inactive_operator, "<")
+        self.assertFalse(control.hysteresis_required)
         self.assertEqual(
             control.setter_plan,
             {
@@ -59,8 +63,6 @@ class Test2AShadingControlTests(unittest.TestCase):
                 "external_shade_active": True,
                 "external_shade_profile": "ON",
                 "external_shade_transmittance_0": 0.04,
-                "external_shade_solar_reflectance": 0.49,
-                "external_shade_visible_reflectance": 0.496,
             },
         )
         self.assertAlmostEqual(
@@ -75,32 +77,36 @@ class Test2AShadingControlTests(unittest.TestCase):
             control.secondary_internal_heat_transfer_factor,
         )
         self.assertEqual(
+            control.dynamic_equivalence_blockers, DYNAMIC_EQUIVALENCE_BLOCKERS
+        )
+        self.assertNotIn(
+            "SIA4010_TEST2A_THRESHOLD_COMPARISON_OPERATOR_NOT_CONFIRMED",
             control.dynamic_equivalence_blockers,
-            DYNAMIC_EQUIVALENCE_BLOCKERS,
         )
 
     def test_payload_never_upgrades_setter_plan_to_dynamic_equivalence(self):
-        payload = build_test2a_fabric_awning_control(
-            _official_inputs()
-        ).to_dict()
+        payload = build_test2a_fabric_awning_control(_official_inputs()).to_dict()
         self.assertFalse(payload["dynamic_equivalence_qualified"])
         self.assertEqual(
-            payload["setter_plan_scope"],
-            "CDB_STORAGE_AND_READBACK_ONLY",
+            payload["setter_plan_scope"], "AUTHORITY_CONFIRMED_IESVE_MAPPING"
         )
         self.assertEqual(
             payload["confirmed_normative_control"]["threshold_w_m2"],
             150.0,
         )
-        self.assertIsNone(
-            payload["unresolved_normative_semantics"][
-                "activation_comparison_operator"
-            ]
+        self.assertEqual(payload["unresolved_normative_semantics"], {})
+        self.assertEqual(
+            payload["confirmed_normative_control"]["activation_operator"],
+            ">=",
         )
-        self.assertIn("does not confirm", payload["claim_guardrail"])
+        self.assertIn("authority confirmed", payload["claim_guardrail"].lower())
         self.assertEqual(
             payload["fixed_closed_setter_plan_scope"],
-            "DIRECT_NAME_MATCH_STORAGE_AND_READBACK_ONLY",
+            "VE2025_DOCUMENTED_WRITABLE_SUBSET_STORAGE_AND_READBACK_ONLY",
+        )
+        self.assertIn(
+            "VE2025_CDB_EXTERNAL_SHADE_SOLAR_REFLECTANCE_SETTER_UNAVAILABLE",
+            payload["fixed_closed_output_blockers"],
         )
         self.assertEqual(
             tuple(payload["fixed_closed_output_blockers"]),
@@ -165,9 +171,7 @@ class Test2AShadingControlTests(unittest.TestCase):
             "AVAILABLE_NO_ACCEPTANCE_CRITERION",
         )
         self.assertFalse(
-            payload["technical_reference_comparison"][
-                "acceptance_criterion_available"
-            ]
+            payload["technical_reference_comparison"]["acceptance_criterion_available"]
         )
         self.assertNotIn(
             "OFFICIAL_TEST2_DIAGNOSTIC_2E1_SERIES_NOT_BOUND",

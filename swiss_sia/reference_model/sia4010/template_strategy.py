@@ -13,6 +13,7 @@ from __future__ import annotations
 import hashlib
 import json
 import shutil
+import sqlite3
 from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -21,7 +22,6 @@ from typing import Any, Dict, Iterable, Mapping, Optional, Tuple, Union
 from ..exceptions import ConfigurationError
 from .case_registry import get_case_capability
 from .model_scenario import TEST_CASES
-
 
 TEMPLATE_BINDINGS_FILENAME = "sia4010_template_bindings.json"
 QUALIFIED = "QUALIFIED"
@@ -62,6 +62,12 @@ _SUBDIRECTORY_CRITICAL_SUFFIXES = {
 _ROOT_CRITICAL_NAMES = {"project content.db", "roomgroups.xml"}
 
 
+def _is_transient_ve_file(path: Path) -> bool:
+    """Return whether *path* is a VE lifecycle file, not a model input."""
+
+    return path.name.lower().endswith("-tmpsave.mdl")
+
+
 def _load_json(path: Path, context: str) -> Dict[str, Any]:
     try:
         payload = json.loads(path.read_text(encoding="utf-8"))
@@ -80,6 +86,76 @@ def _sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
+def _canonical_sqlite_value(value: Any) -> Any:
+    """Convert a SQLite value to deterministic JSON-compatible content."""
+
+    if isinstance(value, bytes):
+        return {"type": "bytes", "hex": value.hex()}
+    return value
+
+
+def _semantic_sqlite_sha256(path: Path) -> str:
+    """Hash logical SQLite content, independent of page layout and home path."""
+
+    connection = sqlite3.connect(
+        "file:{}?mode=ro".format(path.resolve().as_posix()),
+        uri=True,
+    )
+    try:
+        tables = [
+            row[0]
+            for row in connection.execute(
+                "SELECT name FROM sqlite_master "
+                "WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name"
+            )
+        ]
+        payload = []
+        for table in tables:
+            escaped = table.replace('"', '""')
+            columns = [
+                tuple(_canonical_sqlite_value(value) for value in row)
+                for row in connection.execute(
+                    'PRAGMA table_info("{}")'.format(escaped)
+                ).fetchall()
+            ]
+            names = [str(row[1]) for row in columns]
+            rows = []
+            for raw_row in connection.execute(
+                'SELECT * FROM "{}"'.format(escaped)
+            ).fetchall():
+                normalized = []
+                for column, value in zip(names, raw_row):
+                    # Project Content.db records the directory in which VE has
+                    # opened the copy. That relocation metadata is expected to
+                    # differ and is not a model input.
+                    if table == "Project_Reference" and column == "home":
+                        value = "<ACTIVE_PROJECT_DIRECTORY>"
+                    normalized.append(_canonical_sqlite_value(value))
+                rows.append(normalized)
+            rows.sort(key=lambda row: json.dumps(row, sort_keys=True, ensure_ascii=False))
+            payload.append({"table": table, "columns": columns, "rows": rows})
+        return _canonical_sha256({"sqlite_tables": payload})
+    finally:
+        connection.close()
+
+
+def _critical_file_sha256(path: Path) -> str:
+    """Hash stable model semantics for SQLite, raw bytes for other inputs."""
+
+    if path.suffix.lower() == ".mdl" or path.name.lower() == "project content.db":
+        with path.open("rb") as handle:
+            is_sqlite = handle.read(16) == b"SQLite format 3\x00"
+        if not is_sqlite:
+            return _sha256(path)
+        try:
+            return _semantic_sqlite_sha256(path)
+        except sqlite3.DatabaseError as exc:
+            raise ConfigurationError(
+                "Critical VE SQLite file is unreadable: {} ({})".format(path, exc)
+            ) from exc
+    return _sha256(path)
+
+
 def _canonical_sha256(payload: Mapping[str, Any]) -> str:
     encoded = json.dumps(
         payload,
@@ -92,9 +168,7 @@ def _canonical_sha256(payload: Mapping[str, Any]) -> str:
 
 def _case_key(variant: str, case_id: str) -> str:
     if case_id not in TEST_CASES.get(variant, ()):
-        raise ConfigurationError(
-            "Unknown SIA 4010 case: {}/{}".format(variant, case_id)
-        )
+        raise ConfigurationError("Unknown SIA 4010 case: {}/{}".format(variant, case_id))
     return "{}/{}".format(variant, case_id)
 
 
@@ -109,6 +183,12 @@ def critical_project_files(project_path: Union[str, Path]) -> Tuple[Path, ...]:
     selected = []
     for path in root.iterdir():
         if not path.is_file():
+            continue
+        # VE creates this transient recovery file while a project is open. It
+        # is not a model input and may disappear or change when VE closes.
+        # Signing it would therefore invalidate an unchanged reviewed template
+        # during normal application lifecycle behaviour.
+        if _is_transient_ve_file(path):
             continue
         if (
             path.name.lower() in _ROOT_CRITICAL_NAMES
@@ -142,11 +222,11 @@ def project_signature(project_path: Union[str, Path]) -> Dict[str, Any]:
 
     root = Path(project_path).resolve()
     files = {
-        path.relative_to(root).as_posix(): _sha256(path)
+        path.relative_to(root).as_posix(): _critical_file_sha256(path)
         for path in critical_project_files(root)
     }
     return {
-        "algorithm": "sha256",
+        "algorithm": "sha256-semantic-sqlite-v1",
         "critical_file_count": len(files),
         "files": files,
         "template_signature_sha256": _canonical_sha256(files),
@@ -319,9 +399,7 @@ def load_bindings(path: Union[str, Path]) -> Tuple[TemplateBinding, ...]:
             TemplateBinding(
                 template_id=template_id,
                 project_path=Path(str(row.get("project_path") or "")),
-                qualification_manifest=Path(
-                    str(row.get("qualification_manifest") or "")
-                ),
+                qualification_manifest=Path(str(row.get("qualification_manifest") or "")),
                 covered_cases=cases,
                 status=str(row.get("status") or "").upper(),
             )
@@ -442,14 +520,8 @@ def build_hybrid_case_plans(
                 continue
             if variant == "test_1" and case_id == "1E":
                 key = _case_key(variant, case_id)
-                binding, validation = _find_template(
-                    key, requirement, binding_rows
-                )
-                if (
-                    binding is not None
-                    and validation is not None
-                    and validation.usable
-                ):
+                binding, validation = _find_template(key, requirement, binding_rows)
+                if binding is not None and validation is not None and validation.usable:
                     plans.append(
                         HybridCasePlan(
                             variant,
@@ -539,16 +611,9 @@ def write_hybrid_readiness(
     direct = sum(item.route == "DIRECT_VESCRIPT" for item in cases)
     templated = sum(item.status == "READY_FROM_QUALIFIED_TEMPLATE" for item in cases)
     blocked = sum(item.status == "BLOCKED_TEMPLATE_REQUIRED" for item in cases)
-    status = (
-        "READY_FOR_CASE_EXECUTION"
-        if blocked == 0
-        else "HYBRID_EXECUTION_BLOCKED"
-    )
+    status = "READY_FOR_CASE_EXECUTION" if blocked == 0 else "HYBRID_EXECUTION_BLOCKED"
     report_path = (
-        project
-        / "sia4010_artifacts"
-        / "templates"
-        / "sia4010_hybrid_readiness.json"
+        project / "sia4010_artifacts" / "templates" / "sia4010_hybrid_readiness.json"
     )
     report_path.parent.mkdir(parents=True, exist_ok=True)
     payload = {
@@ -638,9 +703,7 @@ def instantiate_qualified_case(
         )
     if source == parent or source in parent.parents or source in target.parents:
         raise ConfigurationError(
-            "Disposable target must be outside the qualified template: {}".format(
-                source
-            )
+            "Disposable target must be outside the qualified template: {}".format(source)
         )
     before = project_signature(source)
     shutil.copytree(source, target, copy_function=shutil.copy2)
@@ -648,18 +711,13 @@ def instantiate_qualified_case(
     copied = project_signature(target)
     signature = str(before["template_signature_sha256"])
     if after_source["template_signature_sha256"] != signature:
-        raise ConfigurationError(
-            "Qualified template changed while it was being copied"
-        )
+        raise ConfigurationError("Qualified template changed while it was being copied")
     if copied["template_signature_sha256"] != signature:
         raise ConfigurationError(
             "Disposable copy does not match the qualified template signature"
         )
     report_path = (
-        target
-        / "sia4010_artifacts"
-        / "templates"
-        / "template_instantiation.json"
+        target / "sia4010_artifacts" / "templates" / "template_instantiation.json"
     )
     report_path.parent.mkdir(parents=True, exist_ok=True)
     payload = {
@@ -705,9 +763,11 @@ def qualify_instantiated_template_model(
     """Prove that an active project is an unchanged, exact qualified copy.
 
     This function deliberately accepts only projects created by
-    :func:`instantiate_qualified_case`.  It rechecks the source qualification,
-    the source signature, the disposable-project signature and the exact
-    official scenario before producing model evidence.  It does not inspect
+    :func:`instantiate_qualified_case`. It rechecks the qualification against
+    the copied project itself, its stable semantic signature and the exact
+    official scenario before producing model evidence. The source may have
+    subsequently been opened or closed by VE, so its lifecycle-rewritten files
+    are not used to invalidate an already verified copy. It does not inspect
     or accept APS results and therefore cannot create a compliance claim.
     """
 
@@ -726,10 +786,7 @@ def qualify_instantiated_template_model(
         )
     key = _case_key(scenario.variant, scenario.case_id)
     instantiation_path = (
-        project
-        / "sia4010_artifacts"
-        / "templates"
-        / "template_instantiation.json"
+        project / "sia4010_artifacts" / "templates" / "template_instantiation.json"
     )
     instantiation = _load_json(
         instantiation_path,
@@ -747,9 +804,7 @@ def qualify_instantiated_template_model(
     )
     if actual_key != key:
         raise ConfigurationError(
-            "Template instantiation belongs to {} instead of {}".format(
-                actual_key, key
-            )
+            "Template instantiation belongs to {} instead of {}".format(actual_key, key)
         )
     try:
         reported_project = Path(
@@ -776,25 +831,17 @@ def qualify_instantiated_template_model(
         qualification_path,
         "template qualification manifest",
     )
-    covered_cases = tuple(
-        str(item) for item in qualification.get("covered_cases", ())
-    )
+    covered_cases = tuple(str(item) for item in qualification.get("covered_cases", ()))
     if key not in covered_cases:
-        raise ConfigurationError(
-            "Qualified template does not cover {}".format(key)
-        )
-    base_test_id = get_case_capability(
-        scenario.variant, scenario.case_id
-    ).base_test_id
+        raise ConfigurationError("Qualified template does not cover {}".format(key))
+    base_test_id = get_case_capability(scenario.variant, scenario.case_id).base_test_id
     requirements = load_requirements(
-        Path(repository_root)
-        / "config"
-        / "sia4010_template_requirements.json"
+        Path(repository_root) / "config" / "sia4010_template_requirements.json"
     )
     requirement = requirements[base_test_id]
     binding = TemplateBinding(
         template_id=template_id,
-        project_path=source,
+        project_path=project,
         qualification_manifest=qualification_path,
         covered_cases=(key,),
         status=QUALIFIED,
@@ -802,32 +849,23 @@ def qualify_instantiated_template_model(
     validation = validate_binding(binding, requirement)
     if not validation.usable:
         raise ConfigurationError(
-            "Template qualification is no longer valid: {}".format(
+            "Disposable template qualification is not valid: {}".format(
                 "; ".join(validation.issues)
             )
         )
-    expected_signature = str(
-        instantiation.get("template_signature_sha256") or ""
-    ).lower()
+    expected_signature = str(instantiation.get("template_signature_sha256") or "").lower()
     if expected_signature != validation.template_signature_sha256.lower():
         raise ConfigurationError(
-            "Instantiation signature no longer matches its qualified source"
+            "Instantiation signature does not match the qualified disposable model"
         )
     current_signature = project_signature(project)
-    current_digest = str(
-        current_signature["template_signature_sha256"]
-    ).lower()
+    current_digest = str(current_signature["template_signature_sha256"]).lower()
     if current_digest != expected_signature:
         raise ConfigurationError(
             "Disposable VE model changed after the qualified copy was created"
         )
 
-    output = (
-        project
-        / "sia4010_artifacts"
-        / "templates"
-        / "template_model_evidence.json"
-    )
+    output = project / "sia4010_artifacts" / "templates" / "template_model_evidence.json"
     payload = {
         "schema_version": "1.0",
         "status": "QUALIFIED_TEMPLATE_MODEL_VERIFIED",
@@ -892,10 +930,7 @@ def capture_template_candidate(
         raise ConfigurationError("At least one covered case is required")
     signature = project_signature(project)
     output = (
-        project
-        / "sia4010_artifacts"
-        / "templates"
-        / "sia4010_template_candidate.json"
+        project / "sia4010_artifacts" / "templates" / "sia4010_template_candidate.json"
     )
     output.parent.mkdir(parents=True, exist_ok=True)
     payload = {

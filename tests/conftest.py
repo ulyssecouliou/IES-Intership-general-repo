@@ -24,7 +24,6 @@ The full authoritative boundary is documented in
 
 import pytest
 
-
 #: Tests of the SIA 380/2 client-compliance product (swiss_sia top-level:
 #: data_extractor, model_analyzer, sia380_checker, compliance_*, reference_project,
 #: evidence_* client workflow, remediation probe, the company Excel/PDF report).

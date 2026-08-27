@@ -17,7 +17,6 @@ from swiss_sia.reference_model.sia4010.external_input_manifest import (
     required_external_input_ids,
 )
 
-
 ROOT = Path(__file__).resolve().parents[1]
 WORK_ROOT = ROOT / ".codex_tmp" / "external_inputs"
 
@@ -154,25 +153,17 @@ class Sia4010ExternalInputManifestTests(unittest.TestCase):
             required_external_input_ids("test_2A", "2D")
 
     def test_case_without_delegated_inputs_is_not_blocked_by_manifest(self):
-        readiness = external_input_readiness(
-            self.project, "test_1", "600"
-        )
+        readiness = external_input_readiness(self.project, "test_1", "600")
         self.assertEqual(readiness.status, "NOT_REQUIRED")
         self.assertTrue(readiness.ready_for_binding)
         self.assertEqual(readiness.required_input_ids, ())
 
     def test_missing_manifest_lists_every_required_input(self):
-        readiness = external_input_readiness(
-            self.project, "test_2A", "2A"
-        )
+        readiness = external_input_readiness(self.project, "test_2A", "2A")
         self.assertEqual(readiness.status, "MISSING_MANIFEST")
         self.assertFalse(readiness.ready_for_binding)
-        self.assertEqual(
-            readiness.blocked_input_ids, readiness.required_input_ids
-        )
-        self.assertTrue(
-            all(item.status == "MISSING" for item in readiness.evidence)
-        )
+        self.assertEqual(readiness.blocked_input_ids, readiness.required_input_ids)
+        self.assertTrue(all(item.status == "MISSING" for item in readiness.evidence))
 
     def test_matrix_accounts_for_all_34_exact_cases(self):
         """34 since the registration of diagnostic cases 1A through 1D of Test 1.
@@ -183,9 +174,7 @@ class Sia4010ExternalInputManifestTests(unittest.TestCase):
         """
         matrix = build_external_input_matrix(self.project)
         self.assertEqual(matrix["exact_case_count"], 34)
-        self.assertEqual(
-            matrix["catalog_input_count"], len(EXTERNAL_INPUT_CATALOG)
-        )
+        self.assertEqual(matrix["catalog_input_count"], len(EXTERNAL_INPUT_CATALOG))
         # NOT_REQUIRED stays exactly 6: the six ISO cases of Test 1, which
         # run on the supplied DRYCOLD weather. That this count did not change
         # after adding 1A through 1D proves the four new cases properly received
@@ -215,10 +204,7 @@ class Sia4010ExternalInputManifestTests(unittest.TestCase):
     def test_complete_authorized_checksum_evidence_is_ready(self):
         input_ids = required_external_input_ids("test_2A", "2A")
         path = self._write_manifest(
-            {
-                input_id: self._ready_entry(input_id)
-                for input_id in input_ids
-            }
+            {input_id: self._ready_entry(input_id) for input_id in input_ids}
         )
         readiness = external_input_readiness(
             self.project,
@@ -231,10 +217,7 @@ class Sia4010ExternalInputManifestTests(unittest.TestCase):
         self.assertEqual(readiness.ready_input_ids, input_ids)
         self.assertEqual(readiness.blocked_input_ids, ())
         self.assertTrue(
-            all(
-                item.binding_artifact_path is not None
-                for item in readiness.evidence
-            )
+            all(item.binding_artifact_path is not None for item in readiness.evidence)
         )
 
     def test_unconfirmed_authorization_remains_blocked(self):
@@ -246,9 +229,7 @@ class Sia4010ExternalInputManifestTests(unittest.TestCase):
         )
         evidence = manifest.evidence(input_id)
         self.assertEqual(evidence.status, "BLOCKED")
-        self.assertIn(
-            "normative authorization is unconfirmed", evidence.issues
-        )
+        self.assertIn("normative authorization is unconfirmed", evidence.issues)
 
     def test_source_checksum_tampering_is_rejected(self):
         input_id = "iso52016_2017_chapter7_test_cell"
@@ -265,26 +246,20 @@ class Sia4010ExternalInputManifestTests(unittest.TestCase):
         input_id = "iso52016_2017_chapter7_test_cell"
         entry = self._ready_entry(input_id)
         path = self._write_manifest({input_id: entry})
-        (
-            self.project / "{}_validation.json".format(input_id)
-        ).write_text('{"status": "FAIL"}\n', encoding="utf-8")
+        (self.project / "{}_validation.json".format(input_id)).write_text(
+            '{"status": "FAIL"}\n', encoding="utf-8"
+        )
         manifest = Sia4010ExternalInputManifest.load(path)
-        with self.assertRaisesRegex(
-            ConfigurationError, "validation-report checksum"
-        ):
+        with self.assertRaisesRegex(ConfigurationError, "validation-report checksum"):
             manifest.evidence(input_id)
 
     def test_validation_report_must_bind_exact_source_and_checks(self):
         input_id = "iso52016_2017_chapter7_test_cell"
         entry = self._ready_entry(input_id)
-        report_path = (
-            self.project / "{}_validation.json".format(input_id)
-        )
+        report_path = self.project / "{}_validation.json".format(input_id)
         report = json.loads(report_path.read_text(encoding="utf-8"))
         report["source_sha256"] = "0" * 64
-        report_path.write_text(
-            json.dumps(report) + "\n", encoding="utf-8"
-        )
+        report_path.write_text(json.dumps(report) + "\n", encoding="utf-8")
         entry["technical_validation"]["report_sha256"] = _sha256(report_path)
         manifest = Sia4010ExternalInputManifest.load(
             self._write_manifest({input_id: entry})
@@ -294,9 +269,7 @@ class Sia4010ExternalInputManifestTests(unittest.TestCase):
 
         report["source_sha256"] = entry["source_sha256"]
         report["checks"] = []
-        report_path.write_text(
-            json.dumps(report) + "\n", encoding="utf-8"
-        )
+        report_path.write_text(json.dumps(report) + "\n", encoding="utf-8")
         entry["technical_validation"]["report_sha256"] = _sha256(report_path)
         manifest = Sia4010ExternalInputManifest.load(
             self._write_manifest({input_id: entry})
@@ -307,14 +280,10 @@ class Sia4010ExternalInputManifestTests(unittest.TestCase):
     def test_binding_artifact_schema_and_checksum_are_enforced(self):
         input_id = "iso52016_2017_chapter7_test_cell"
         entry = self._ready_entry(input_id)
-        report_path = (
-            self.project / "{}_validation.json".format(input_id)
-        )
+        report_path = self.project / "{}_validation.json".format(input_id)
         report = json.loads(report_path.read_text(encoding="utf-8"))
         report["binding_artifact"]["schema_id"] = "wrong.schema"
-        report_path.write_text(
-            json.dumps(report) + "\n", encoding="utf-8"
-        )
+        report_path.write_text(json.dumps(report) + "\n", encoding="utf-8")
         entry["technical_validation"]["report_sha256"] = _sha256(report_path)
         manifest = Sia4010ExternalInputManifest.load(
             self._write_manifest({input_id: entry})
@@ -322,27 +291,19 @@ class Sia4010ExternalInputManifestTests(unittest.TestCase):
         with self.assertRaisesRegex(ConfigurationError, "requires binding schema"):
             manifest.evidence(input_id)
 
-        report["binding_artifact"]["schema_id"] = (
-            EXTERNAL_INPUT_BINDING_SCHEMAS[input_id]
-        )
+        report["binding_artifact"]["schema_id"] = EXTERNAL_INPUT_BINDING_SCHEMAS[input_id]
         report["binding_artifact"]["sha256"] = "0" * 64
-        report_path.write_text(
-            json.dumps(report) + "\n", encoding="utf-8"
-        )
+        report_path.write_text(json.dumps(report) + "\n", encoding="utf-8")
         entry["technical_validation"]["report_sha256"] = _sha256(report_path)
         manifest = Sia4010ExternalInputManifest.load(
             self._write_manifest({input_id: entry})
         )
-        with self.assertRaisesRegex(
-            ConfigurationError, "binding artifact checksum"
-        ):
+        with self.assertRaisesRegex(ConfigurationError, "binding artifact checksum"):
             manifest.evidence(input_id)
 
     def test_unknown_input_and_schema_are_rejected(self):
         with self.assertRaisesRegex(ConfigurationError, "Unknown"):
-            Sia4010ExternalInputManifest.load(
-                self._write_manifest({"misspelled": {}})
-            )
+            Sia4010ExternalInputManifest.load(self._write_manifest({"misspelled": {}}))
         with self.assertRaisesRegex(ConfigurationError, "Unsupported"):
             Sia4010ExternalInputManifest.load(
                 self._write_manifest({}, schema_version="99")
@@ -352,10 +313,7 @@ class Sia4010ExternalInputManifestTests(unittest.TestCase):
         input_ids = required_external_input_ids("test_2A", "2A")
         manifest = Sia4010ExternalInputManifest.load(
             self._write_manifest(
-                {
-                    input_id: self._ready_entry(input_id)
-                    for input_id in input_ids
-                }
+                {input_id: self._ready_entry(input_id) for input_id in input_ids}
             )
         )
         other_project = self.project / "other"

@@ -635,7 +635,15 @@
           "equipment": 2910,
           "lighting": 1400
         },
-        "native_ve_calendar_mapping_status": "PENDING_EXACT_WEEKDAY_DATE_AND_HOUR_BOUNDARY_BINDING"
+        "native_ve_calendar_mapping_status": "AUTHORITY_CONFIRMED_READY_FOR_NATIVE_VE_MATERIALIZATION",
+        "calendar_authority_decision": "SIA4010_SIA2024_3_1_CALENDAR_20260826",
+        "calendar_days": 365,
+        "january_1_weekday": "Saturday",
+        "use_weekdays": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+        "rest_weekdays": ["Saturday", "Sunday"],
+        "holiday_exceptions": [],
+        "hour_label_convention": "ordinal_hour_ending",
+        "people_annual_simultaneity_application": "direct multiplier to hourly occupancy values"
       }
     },
     "shading_activation_w_m2": {

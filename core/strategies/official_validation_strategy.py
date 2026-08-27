@@ -44,9 +44,7 @@ CRITERION_SOURCE = (
 #: ce qui se défend mal devant la sous-commission. Le statut équivalent côté
 #: moteur est `sia_bandes_engine.CRITERE_PAR_TEST`, tenu indépendamment et
 #: confronté par `engine/tests/test_references_bandes.py`.
-TESTS_WITH_WRITTEN_CRITERION = frozenset(
-    {"test_1", "test_2", "test_3", "test_5"}
-)
+TESTS_WITH_WRITTEN_CRITERION = frozenset({"test_1", "test_2", "test_3", "test_5"})
 
 
 class OfficialValidationStrategy(ValidationStrategy):

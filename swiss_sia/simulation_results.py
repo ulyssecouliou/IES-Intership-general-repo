@@ -18,7 +18,6 @@ from typing import Any, Dict, Iterable, List, Optional, Tuple
 
 from .reference_model import sia180_comfort
 
-
 APSVariable = Tuple[str, str, str, str, float, float]
 
 
@@ -58,17 +57,23 @@ def list_aps_files(project: Any) -> List[str]:
     """Return APS files available in the active project's Vista folder."""
     vista_path = os.path.join(str(getattr(project, "path", "") or ""), "Vista")
     try:
-        return sorted(name for name in os.listdir(vista_path) if name.lower().endswith(".aps"))
+        return sorted(
+            name for name in os.listdir(vista_path) if name.lower().endswith(".aps")
+        )
     except Exception:
         return []
 
 
 def get_aps_path(project: Any, aps_file_name: str) -> str:
     """Return the expected full path for an APS file in the project Vista folder."""
-    return os.path.join(str(getattr(project, "path", "") or ""), "Vista", str(aps_file_name or ""))
+    return os.path.join(
+        str(getattr(project, "path", "") or ""), "Vista", str(aps_file_name or "")
+    )
 
 
-def extract_epw_references_from_aps(aps_path: str, max_bytes: int = 8_000_000) -> List[str]:
+def extract_epw_references_from_aps(
+    aps_path: str, max_bytes: int = 8_000_000
+) -> List[str]:
     """Extract visible EPW filename references from an APS file without opening ResultsReader."""
     try:
         with open(aps_path, "rb") as handle:
@@ -148,7 +153,9 @@ def read_room_result(
     """Read one room result series using the documented ResultsReader call."""
     vista_var = vista_var or aps_var
     try:
-        return series_to_list(results_file.get_room_results(room_id, aps_var, vista_var, level))
+        return series_to_list(
+            results_file.get_room_results(room_id, aps_var, vista_var, level)
+        )
     except Exception:
         return []
 
@@ -208,9 +215,7 @@ def get_available_variables(results_file: Any) -> List[Dict[str, Any]]:
             if not unit_entry and units_type is not None:
                 unit_entry = units_catalog.get(str(units_type), {})
             metric_entry = (
-                unit_entry.get("units_metric", {})
-                if isinstance(unit_entry, dict)
-                else {}
+                unit_entry.get("units_metric", {}) if isinstance(unit_entry, dict) else {}
             )
             if isinstance(metric_entry, dict):
                 variable["resolved_metric_unit"] = str(
@@ -274,7 +279,11 @@ def find_aps_variables(
             variable.get("resolved_metric_offset"),
             0.0,
         )
-        model_level = str(variable.get("model_level") or variable.get("level") or "").strip().lower()
+        model_level = (
+            str(variable.get("model_level") or variable.get("level") or "")
+            .strip()
+            .lower()
+        )
         haystack = f"{aps_name} {display_name}".lower()
         if expected_level and model_level and model_level != expected_level:
             continue
@@ -325,9 +334,11 @@ def find_room_sensible_load_variable(
     preferred_aps_name = "room units {} load".format(normalized_mode)
     for variable in variable_rows:
         aps_name = str(variable.get("aps_varname") or variable.get("name") or "")
-        model_level = str(
-            variable.get("model_level") or variable.get("level") or ""
-        ).strip().lower()
+        model_level = (
+            str(variable.get("model_level") or variable.get("level") or "")
+            .strip()
+            .lower()
+        )
         if aps_name.strip().lower() != preferred_aps_name or model_level not in {"", "z"}:
             continue
         return (
@@ -434,7 +445,9 @@ def integrate_positive_result_to_kwh(
 
     label = variable_label.lower()
     if "kwh" in label:
-        if any(token in label for token in ("cumulative", "accumulated", "meter reading")):
+        if any(
+            token in label for token in ("cumulative", "accumulated", "meter reading")
+        ):
             return positives[-1]
         return sum(positives)
     if re.search(r"\bkw\b", label):
@@ -482,7 +495,9 @@ def read_optional_energy_result(
     values = read_metric_room_result(results_file, room_id, aps_variable)
     if not values:
         return None, f"{result_label(aps_variable)} found but returned no data"
-    energy = integrate_positive_result_to_kwh(values, result_label(aps_variable), results_per_hour)
+    energy = integrate_positive_result_to_kwh(
+        values, result_label(aps_variable), results_per_hour
+    )
     return energy, result_label(aps_variable)
 
 
@@ -500,7 +515,9 @@ def read_optional_point_result(
     return peak_positive(values), average_positive(values), result_label(aps_variable)
 
 
-def normalize_co2_series_to_ppm(values: List[float], variable_label: str) -> Tuple[List[float], str]:
+def normalize_co2_series_to_ppm(
+    values: List[float], variable_label: str
+) -> Tuple[List[float], str]:
     """Normalize common APS CO2 result units to ppm for report readability."""
     positives = [value for value in values if value > 0]
     if not positives:
@@ -509,7 +526,9 @@ def normalize_co2_series_to_ppm(values: List[float], variable_label: str) -> Tup
     label = variable_label.lower()
     peak_value = max(positives)
     if peak_value <= 0.02:
-        return [value * 1_000_000.0 for value in positives], "converted from fraction to ppm"
+        return [
+            value * 1_000_000.0 for value in positives
+        ], "converted from fraction to ppm"
     if "ppm" in label:
         return positives, "ppm"
     if "%" in label or "percent" in label:
@@ -533,7 +552,11 @@ def read_optional_co2_result(
     if not normalized_values:
         return None, None, f"{label} found but returned no positive CO2 values"
     readable_label = f"{label}; {unit_note}" if unit_note else label
-    return peak_positive(normalized_values), average_positive(normalized_values), readable_label
+    return (
+        peak_positive(normalized_values),
+        average_positive(normalized_values),
+        readable_label,
+    )
 
 
 def count_occupied_hours_above(
@@ -715,12 +738,12 @@ def collect_room_dynamic_results(results_file: Any) -> List[RoomDynamicResult]:
     if not upper_weather_limits or not lower_weather_limits:
         exterior_var = find_aps_variable(variables, ("dry", "bulb", "temperature"), "w")
         exterior = (
-            read_metric_weather_result(results_file, exterior_var)
-            if exterior_var
-            else []
+            read_metric_weather_result(results_file, exterior_var) if exterior_var else []
         )
         if exterior:
-            sia180_upper, sia180_lower = sia180_comfort.comfort_limit_series(exterior, rph)
+            sia180_upper, sia180_lower = sia180_comfort.comfort_limit_series(
+                exterior, rph
+            )
             if not upper_weather_limits:
                 upper_weather_limits = sia180_upper
             if not lower_weather_limits:
@@ -780,40 +803,52 @@ def collect_room_dynamic_results(results_file: Any) -> List[RoomDynamicResult]:
         if temp_var and occ_var:
             temperatures = read_metric_room_result(results_file, room_id, temp_var)
             occupancy = read_metric_room_result(results_file, room_id, occ_var)
-            result.occupied_hours_above_26 = count_occupied_hours_above(temperatures, occupancy, 26.0, rph)
-            result.occupied_hours_above_27 = count_occupied_hours_above(temperatures, occupancy, 27.0, rph)
+            result.occupied_hours_above_26 = count_occupied_hours_above(
+                temperatures, occupancy, 26.0, rph
+            )
+            result.occupied_hours_above_27 = count_occupied_hours_above(
+                temperatures, occupancy, 27.0, rph
+            )
             upper_limits = (
                 upper_weather_limits
                 if upper_weather_limits
-                else read_metric_room_result(results_file, room_id, upper_limit_var)
-                if upper_limit_var
-                else []
+                else (
+                    read_metric_room_result(results_file, room_id, upper_limit_var)
+                    if upper_limit_var
+                    else []
+                )
             )
             lower_limits = (
                 lower_weather_limits
                 if lower_weather_limits
-                else read_metric_room_result(results_file, room_id, lower_limit_var)
-                if lower_limit_var
-                else []
+                else (
+                    read_metric_room_result(results_file, room_id, lower_limit_var)
+                    if lower_limit_var
+                    else []
+                )
             )
             result.annual_comfort_period_complete = all(
                 is_complete_365_day_series(series, rph)
                 for series in (temperatures, occupancy, upper_limits, lower_limits)
             )
             if result.annual_comfort_period_complete:
-                result.occupied_hours_above_sia180_upper = count_occupied_hours_outside_limits(
-                    temperatures,
-                    occupancy,
-                    upper_limits,
-                    rph,
-                    direction="above",
+                result.occupied_hours_above_sia180_upper = (
+                    count_occupied_hours_outside_limits(
+                        temperatures,
+                        occupancy,
+                        upper_limits,
+                        rph,
+                        direction="above",
+                    )
                 )
-                result.occupied_hours_below_sia180_lower = count_occupied_hours_outside_limits(
-                    temperatures,
-                    occupancy,
-                    lower_limits,
-                    rph,
-                    direction="below",
+                result.occupied_hours_below_sia180_lower = (
+                    count_occupied_hours_outside_limits(
+                        temperatures,
+                        occupancy,
+                        lower_limits,
+                        rph,
+                        direction="below",
+                    )
                 )
             result.comfort_curve_source = "; ".join(
                 part
@@ -834,7 +869,9 @@ def collect_room_dynamic_results(results_file: Any) -> List[RoomDynamicResult]:
                 "pending normative review. Exceedance hours are screening values."
             )
             if not result.annual_comfort_period_complete:
-                notes.append("temperature, occupancy and both comfort-limit series are not aligned exact 365-day series")
+                notes.append(
+                    "temperature, occupancy and both comfort-limit series are not aligned exact 365-day series"
+                )
             if not upper_limit_var:
                 notes.append("SIA 180 upper-limit series not found")
             if not lower_limit_var:
@@ -851,7 +888,9 @@ def collect_room_dynamic_results(results_file: Any) -> List[RoomDynamicResult]:
             ("cooling coil", cooling_coil_var, "cooling coil result variable not found"),
         )
         for category, variable, missing_note in optional_energy_vars:
-            energy, label = read_optional_energy_result(results_file, room_id, variable, rph)
+            energy, label = read_optional_energy_result(
+                results_file, room_id, variable, rph
+            )
             if category == "lighting":
                 result.lighting_kwh = energy
             elif category == "fan":
@@ -871,7 +910,9 @@ def collect_room_dynamic_results(results_file: Any) -> List[RoomDynamicResult]:
             else:
                 notes.append(missing_note)
 
-        co2_peak, co2_average, co2_label = read_optional_co2_result(results_file, room_id, co2_var)
+        co2_peak, co2_average, co2_label = read_optional_co2_result(
+            results_file, room_id, co2_var
+        )
         result.peak_co2_ppm = co2_peak
         result.average_co2_ppm = co2_average
         if co2_label:
@@ -879,7 +920,9 @@ def collect_room_dynamic_results(results_file: Any) -> List[RoomDynamicResult]:
         else:
             notes.append("CO2 result variable not found")
 
-        humidity_peak, humidity_average, humidity_label = read_optional_point_result(results_file, room_id, relative_humidity_var)
+        humidity_peak, humidity_average, humidity_label = read_optional_point_result(
+            results_file, room_id, relative_humidity_var
+        )
         result.peak_relative_humidity_percent = humidity_peak
         result.average_relative_humidity_percent = humidity_average
         if humidity_label:

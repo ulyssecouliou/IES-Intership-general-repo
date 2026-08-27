@@ -18,6 +18,13 @@ from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
 
 from .company_profile import CompanyProfile, load_company_profile
 from .client_report_context import building_strategy_text
+from .assessment_governance import (
+    evaluate_assessment_governance,
+    governance_summary,
+    legal_wording,
+    report_text,
+    status_label as governance_status_label,
+)
 from .compliance_criteria import CLIENT_LIMITATIONS
 from .config import SIA_COMPLIANCE_REQUIREMENT_MATRIX
 from .compliance_verdict import (
@@ -68,6 +75,11 @@ BAD_BG = _status("fail").pdf_ground
 WARN = _status("warning").pdf_text
 WARN_BG = _status("warning").pdf_ground
 
+COVER_NAVY = (0.006, 0.055, 0.151)
+COVER_MID = (0.008, 0.255, 0.467)
+COVER_BLUE = (0.027, 0.525, 0.745)
+COVER_CYAN = (0.169, 0.659, 0.824)
+
 MARGIN = 16.0
 CONTENT_WIDTH = A4_MM[0] - 2 * MARGIN
 ANNEX_CONTENT_BOTTOM = A4_MM[1] - 24.0
@@ -76,6 +88,33 @@ _STATUS_COLOURS = {
     COMPLIANT: (OK, OK_BG),
     NOT_COMPLIANT: (BAD, BAD_BG),
     NOT_DETERMINED: (WARN, WARN_BG),
+}
+
+_COVER_COPY = {
+    "en": {
+        "eyebrow": "ENGINEERING ASSESSMENT REPORT",
+        "title": "SIA 380/2 compliance assessment",
+        "framework": "Assessment against SIA 380/2:2022",
+        "generated": "Generated on",
+    },
+    "de": {
+        "eyebrow": "TECHNISCHER BEURTEILUNGSBERICHT",
+        "title": "SIA 380/2 Konformitätsbeurteilung",
+        "framework": "Beurteilung nach SIA 380/2:2022",
+        "generated": "Erstellt am",
+    },
+    "fr": {
+        "eyebrow": "RAPPORT D’ÉVALUATION D’INGÉNIERIE",
+        "title": "Évaluation de conformité SIA 380/2",
+        "framework": "Évaluation selon SIA 380/2:2022",
+        "generated": "Généré le",
+    },
+    "it": {
+        "eyebrow": "RAPPORTO DI VALUTAZIONE TECNICA",
+        "title": "Valutazione di conformità SIA 380/2",
+        "framework": "Valutazione secondo SIA 380/2:2022",
+        "generated": "Generato il",
+    },
 }
 
 _ORIENTATION_ORDER = ("N", "NE", "E", "SE", "S", "SW", "W", "NW")
@@ -172,9 +211,11 @@ def summarise_model(rooms_data: Optional[Sequence[Any]]) -> Dict[str, Any]:
         for surface in getattr(room, "surfaces", None) or ():
             if not getattr(surface, "is_external", False):
                 continue
-            area = _float_or_none(
-                getattr(surface, "net_area", None)
-            ) or _float_or_none(getattr(surface, "area", None)) or 0.0
+            area = (
+                _float_or_none(getattr(surface, "net_area", None))
+                or _float_or_none(getattr(surface, "area", None))
+                or 0.0
+            )
             sector = _compass_sector(getattr(surface, "orientation", None))
             if sector is None:
                 unplaced_opaque += area
@@ -203,6 +244,97 @@ def summarise_model(rooms_data: Optional[Sequence[Any]]) -> Dict[str, Any]:
         "unplaced_glazed_m2": unplaced_glazed,
         "window_wall_ratio": (total_glazed / total_opaque) if total_opaque else None,
     }
+
+
+def _draw_cover_page(
+    page: PdfPage,
+    profile: CompanyProfile,
+    language: str,
+    project_label: str,
+    model_name: str,
+    generated_at: datetime,
+    banner_path: Optional[Path] = None,
+) -> None:
+    """Draw the DGNB-aligned IES cover without implying official certification."""
+
+    copy = _COVER_COPY.get(language, _COVER_COPY["en"])
+    page.rect(0, 0, A4_MM[0], A4_MM[1], fill=COVER_NAVY)
+    page.rect(0, 92.0, A4_MM[0], 80.0, fill=(0.006, 0.180, 0.345))
+    page.rect(0, 172.0, A4_MM[0], 125.0, fill=COVER_MID)
+    page.rect(0, 245.0, A4_MM[0], 52.0, fill=(0.018, 0.420, 0.650))
+
+    # Abstract geometry shared with the sibling DGNB report's visual language.
+    for x, y, width, height, colour in (
+        (0.0, 124.0, 46.0, 88.0, (0.020, 0.310, 0.505)),
+        (46.0, 88.0, 72.0, 72.0, (0.030, 0.255, 0.430)),
+        (120.0, 146.0, 36.0, 66.0, (0.020, 0.335, 0.540)),
+        (156.0, 88.0, 54.0, 83.0, (0.025, 0.290, 0.480)),
+        (46.0, 212.0, 50.0, 85.0, (0.020, 0.350, 0.560)),
+        (122.0, 196.0, 34.0, 53.0, (0.035, 0.390, 0.600)),
+    ):
+        page.rect(x, y, width, height, fill=colour)
+
+    # IES wordmark: use the banner image when available, vector fallback.
+    banner_drawn = False
+    if banner_path is not None:
+        try:
+            page.image_contain(18.0, 16.0, 100.0, 24.0, banner_path)
+            banner_drawn = True
+        except Exception:
+            pass
+    if not banner_drawn:
+        mark_x, mark_y, mark_size = 18.0, 18.5, 18.0
+        page.rect(mark_x, mark_y, mark_size, mark_size, stroke=WHITE, width_pt=2.0)
+        page.text(
+            mark_x + 3.0, mark_y + 12.2, "IES", size_pt=16.0, bold=True, colour=WHITE
+        )
+        for index, line in enumerate(("INTEGRATED", "ENVIRONMENTAL", "SOLUTIONS")):
+            page.text(
+                mark_x + 22.0,
+                mark_y + 6.5 + index * 5.0,
+                line,
+                size_pt=8.6,
+                colour=WHITE,
+            )
+
+    # Two restrained cross motifs echo the reference cover.
+    for origin_x, origin_y in ((145.0, 94.0), (49.0, 246.0)):
+        for row in range(5):
+            for column in range(5):
+                x = origin_x + column * 4.6
+                y = origin_y + row * 4.6
+                page.line(x - 1.3, y, x + 1.3, y, width_pt=0.55, colour=COVER_CYAN)
+                page.line(x, y - 1.3, x, y + 1.3, width_pt=0.55, colour=COVER_CYAN)
+
+    title_y = 181.0
+    page.text(18.0, title_y, copy["eyebrow"], size_pt=8.0, colour=COVER_CYAN)
+    title_y += 10.0
+    for line in wrap_to_width(copy["title"], 20.0, 176.0, bold=True):
+        page.text(18.0, title_y, line, size_pt=20.0, bold=True, colour=WHITE)
+        title_y += 8.0
+    page.text(
+        18.0,
+        title_y + 2.0,
+        project_label or translate("value_unavailable", language),
+        size_pt=11.0,
+        colour=WHITE,
+    )
+    subtitle = "{}  ·  {} {:%d/%m/%Y}".format(
+        copy["framework"], copy["generated"], generated_at
+    )
+    page.text(18.0, title_y + 9.0, subtitle, size_pt=8.0, colour=COVER_CYAN)
+    if model_name:
+        page.text(18.0, title_y + 15.0, model_name, size_pt=7.2, colour=COVER_CYAN)
+
+    company = profile.name.strip() if profile.name.strip() else "IES"
+    page.text(18.0, 280.0, "www.iesve.com", size_pt=7.8, bold=True, colour=WHITE)
+    page.text(
+        52.0,
+        280.0,
+        "{}   |   EUROPE   |   NORTH AMERICA   |   ASIA   |   AUSTRALIA".format(company),
+        size_pt=6.6,
+        colour=WHITE,
+    )
 
 
 def _draw_letterhead(
@@ -457,9 +589,7 @@ def _draw_model_thumbnail(
     )
     if image_path:
         try:
-            page.image_contain(
-                x + 4.0, top + 9.0, width - 8.0, height - 13.0, image_path
-            )
+            page.image_contain(x + 4.0, top + 9.0, width - 8.0, height - 13.0, image_path)
             return top + height + 3.0
         except Exception:
             # A broken optional presentation image cannot block the report.
@@ -481,7 +611,9 @@ def _draw_model_thumbnail(
         if opaque_height > 0.15:
             page.rect(left, base - opaque_height, bar, opaque_height, fill=BRAND)
         if glazed_height > 0.15:
-            page.rect(left + bar + 0.7, base - glazed_height, bar, glazed_height, fill=ACCENT)
+            page.rect(
+                left + bar + 0.7, base - glazed_height, bar, glazed_height, fill=ACCENT
+            )
         page.text(
             left,
             base + 3.4,
@@ -493,9 +625,21 @@ def _draw_model_thumbnail(
         )
     page.line(x + 5.0, base, x + width - 5.0, base, width_pt=0.4, colour=LINE)
     page.rect(x + 4.0, top + 8.6, 2.4, 2.4, fill=BRAND)
-    page.text(x + 8.0, top + 11.0, translate("legend_opaque", language), size_pt=6.0, colour=MUTED)
+    page.text(
+        x + 8.0,
+        top + 11.0,
+        translate("legend_opaque", language),
+        size_pt=6.0,
+        colour=MUTED,
+    )
     page.rect(x + 34.0, top + 8.6, 2.4, 2.4, fill=ACCENT)
-    page.text(x + 38.0, top + 11.0, translate("legend_glazed", language), size_pt=6.0, colour=MUTED)
+    page.text(
+        x + 38.0,
+        top + 11.0,
+        translate("legend_glazed", language),
+        size_pt=6.0,
+        colour=MUTED,
+    )
     return top + height + 3.0
 
 
@@ -539,7 +683,11 @@ def _draw_key_figures(
         ),
         (
             translate("figure_wwr", language),
-            "{:.1%}".format(ratio) if ratio is not None else translate("value_unavailable", language),
+            (
+                "{:.1%}".format(ratio)
+                if ratio is not None
+                else translate("value_unavailable", language)
+            ),
         ),
     ]
     for label, value in rows:
@@ -578,8 +726,7 @@ def _draw_scope_block(
         statements.append(
             translate("scope_outstanding", language).format(
                 items=", ".join(
-                    translate("outstanding_" + item, language)
-                    for item in outstanding
+                    translate("outstanding_" + item, language) for item in outstanding
                 )
             )
         )
@@ -624,7 +771,9 @@ def _draw_signature(
         )
     ):
         left = MARGIN + column * (CONTENT_WIDTH / 3.0)
-        page.line(left, top, left + CONTENT_WIDTH / 3.0 - 8.0, top, width_pt=0.5, colour=MUTED)
+        page.line(
+            left, top, left + CONTENT_WIDTH / 3.0 - 8.0, top, width_pt=0.5, colour=MUTED
+        )
         page.text(left, top + 4.2, label, size_pt=7.0, colour=MUTED)
         if value:
             page.text(left, top - 1.6, value, size_pt=8.0, colour=INK)
@@ -680,6 +829,17 @@ def _resolve_ies_logo(project_root: Optional[Union[str, Path]]) -> Optional[Path
     return None
 
 
+def _resolve_ies_banner(project_root: Optional[Union[str, Path]]) -> Optional[Path]:
+    """Return the wide IES banner asset for the cover page."""
+
+    root = Path(project_root) if project_root else Path.cwd()
+    for name in ("assets/ies_banner.png", "assets/ies_banner.jpg"):
+        candidate = root / name
+        if candidate.is_file():
+            return candidate
+    return None
+
+
 def _alert_value(alert: Any, key: str, default: Any = "") -> Any:
     """Read one alert field from either the real dataclass or a test mapping."""
 
@@ -727,15 +887,27 @@ def _criterion_for_alert(alert: Any) -> Dict[str, Any]:
             for item in str(entry.get("implemented_rule") or "").split("/")
             if item.strip()
         ]
-        if any(rule == item or rule.startswith(item + "_") or item in rule for item in candidates):
+        if any(
+            rule == item or rule.startswith(item + "_") or item in rule
+            for item in candidates
+        ):
             return entry
 
     # Missing-data alerts often permute the same tokens as the evaluated rule
     # (e.g. WINDOW_U_VALUE_MISSING vs U_VALUE_WINDOW). Token overlap gives the
     # report its configured reference only when the match is unambiguous enough.
     ignored = {
-        "SIA3802", "SIA4010", "MISSING", "NOT", "CHECKABLE", "UNAVAILABLE",
-        "SOURCE", "COMPARABLE", "ERROR", "RULE", "MODEL",
+        "SIA3802",
+        "SIA4010",
+        "MISSING",
+        "NOT",
+        "CHECKABLE",
+        "UNAVAILABLE",
+        "SOURCE",
+        "COMPARABLE",
+        "ERROR",
+        "RULE",
+        "MODEL",
     }
     rule_tokens = {part for part in rule.split("_") if part and part not in ignored}
     category = str(_alert_value(alert, "category", "") or "")
@@ -752,7 +924,11 @@ def _criterion_for_alert(alert: Any) -> Dict[str, Any]:
         if str(entry.get("domain") or "") not in compatible_domains:
             continue
         implemented = str(entry.get("implemented_rule") or "").upper()
-        tokens = {part for part in implemented.replace(" / ", "_").split("_") if part and part not in ignored}
+        tokens = {
+            part
+            for part in implemented.replace(" / ", "_").split("_")
+            if part and part not in ignored
+        }
         score = len(rule_tokens.intersection(tokens))
         if score >= 2:
             scored.append((score, entry))
@@ -793,12 +969,33 @@ def _model_data_text(alert: Any, language: str) -> str:
         except TypeError:
             values = {}
     preferred = (
-        "name", "id", "room_name", "surface_name", "opening_name",
-        "value", "actual", "u_value", "solar_factor", "g_total",
-        "visible_transmittance", "frame_fraction", "air_exchange_rate",
-        "infiltration_rate", "area", "orientation", "heating_setpoint",
-        "cooling_setpoint", "power_density", "efficiency", "eer", "seer", "scop",
-        "upper_hours", "upper_limit_hours", "lower_hours", "window_operable",
+        "name",
+        "id",
+        "room_name",
+        "surface_name",
+        "opening_name",
+        "value",
+        "actual",
+        "u_value",
+        "solar_factor",
+        "g_total",
+        "visible_transmittance",
+        "frame_fraction",
+        "air_exchange_rate",
+        "infiltration_rate",
+        "area",
+        "orientation",
+        "heating_setpoint",
+        "cooling_setpoint",
+        "power_density",
+        "efficiency",
+        "eer",
+        "seer",
+        "scop",
+        "upper_hours",
+        "upper_limit_hours",
+        "lower_hours",
+        "window_operable",
         "method",
     )
     parts: List[str] = []
@@ -811,6 +1008,68 @@ def _model_data_text(alert: Any, language: str) -> str:
         if len(parts) == 6:
             break
     return "; ".join(parts) or translate("report_value_not_available", language)
+
+
+def _alert_subject(alert: Any) -> str:
+    """Return the most useful stable identifier for one affected model object."""
+
+    data = _alert_value(alert, "data", None)
+    if isinstance(data, dict):
+        values = data
+    else:
+        try:
+            values = vars(data) if data is not None else {}
+        except TypeError:
+            values = {}
+    for key in ("name", "room_name", "surface_name", "opening_name", "id"):
+        value = values.get(key)
+        if value not in (None, ""):
+            return str(value)
+    return str(_alert_value(alert, "category", "") or "model item")
+
+
+def _group_repetitive_alerts(alerts: Sequence[Any]) -> List[List[Any]]:
+    """Group same-rule findings while retaining every affected object identifier."""
+
+    grouped: Dict[Tuple[str, str, str], List[Any]] = {}
+    order: List[Tuple[str, str, str]] = []
+    for alert in alerts:
+        key = (
+            _alert_kind(alert),
+            str(_alert_value(alert, "category", "") or ""),
+            str(_alert_value(alert, "rule", "") or ""),
+        )
+        if key not in grouped:
+            grouped[key] = []
+            order.append(key)
+        grouped[key].append(alert)
+    return [grouped[key] for key in order]
+
+
+def _grouped_finding_copy(language: str, count: int, subjects: Sequence[str]) -> str:
+    """Explain PDF aggregation without concealing row-level evidence."""
+
+    code = language if language in {"de", "en", "fr", "it"} else "en"
+    text = {
+        "en": "{} occurrences share this rule. Affected elements: {}. Full row-level evidence remains available in the Excel report.",
+        "de": "{} Vorkommen folgen derselben Regel. Betroffene Elemente: {}. Die vollständigen Einzelnachweise bleiben im Excel-Bericht verfügbar.",
+        "fr": "{} occurrences relèvent de la même règle. Éléments concernés : {}. Les preuves détaillées par ligne restent disponibles dans le rapport Excel.",
+        "it": "{} occorrenze seguono la stessa regola. Elementi interessati: {}. Le prove complete per riga restano disponibili nel rapporto Excel.",
+    }[code]
+    return text.format(count, ", ".join(subjects))
+
+
+def _grouped_model_data_copy(
+    language: str, subjects: Sequence[str], representative: str
+) -> str:
+    code = language if language in {"de", "en", "fr", "it"} else "en"
+    text = {
+        "en": "Affected elements: {}. Representative extracted evidence: {}",
+        "de": "Betroffene Elemente: {}. Repräsentativer extrahierter Nachweis: {}",
+        "fr": "Éléments concernés : {}. Preuve extraite représentative : {}",
+        "it": "Elementi interessati: {}. Prova estratta rappresentativa: {}",
+    }[code]
+    return text.format(", ".join(subjects), representative)
 
 
 def _decision_reason(verdict: ComplianceVerdict, language: str) -> str:
@@ -828,7 +1087,14 @@ def _decision_action(verdict: ComplianceVerdict, language: str) -> str:
 def _detail_section_header(page: PdfPage, top: float, key: str, language: str) -> float:
     """Draw a reusable detailed-report section heading."""
 
-    page.text(MARGIN, top, translate(key, language).upper(), size_pt=8.0, bold=True, colour=BRAND)
+    page.text(
+        MARGIN,
+        top,
+        translate(key, language).upper(),
+        size_pt=8.0,
+        bold=True,
+        colour=BRAND,
+    )
     top += 3.0
     page.line(MARGIN, top, A4_MM[0] - MARGIN, top, width_pt=0.5, colour=LINE)
     return top + 5.5
@@ -858,7 +1124,10 @@ def _draw_detailed_pages(
         detail_page.text(
             MARGIN,
             top,
-            translate("report_details_continued" if continued else "report_details_title", language),
+            translate(
+                "report_details_continued" if continued else "report_details_title",
+                language,
+            ),
             size_pt=15.0,
             bold=True,
             colour=INK,
@@ -881,22 +1150,39 @@ def _draw_detailed_pages(
 
     # Explicit decision rationale and decisive project/reference figures.
     cursor = _detail_section_header(page, cursor, "report_decision_basis", language)
-    status_colour, status_bg = _STATUS_COLOURS.get(verdict.sia3802_status, (WARN, WARN_BG))
-    reason_lines = wrap_to_width(_decision_reason(verdict, language), 8.1, CONTENT_WIDTH - 12.0)
-    action_lines = wrap_to_width(_decision_action(verdict, language), 7.6, CONTENT_WIDTH - 44.0)
+    status_colour, status_bg = _STATUS_COLOURS.get(
+        verdict.sia3802_status, (WARN, WARN_BG)
+    )
+    reason_lines = wrap_to_width(
+        _decision_reason(verdict, language), 8.1, CONTENT_WIDTH - 12.0
+    )
+    action_lines = wrap_to_width(
+        _decision_action(verdict, language), 7.6, CONTENT_WIDTH - 44.0
+    )
     decision_height = 19.0 + len(reason_lines) * 4.2 + max(1, len(action_lines)) * 3.9
     page.rect(MARGIN, cursor, CONTENT_WIDTH, decision_height, fill=status_bg)
     page.rect(MARGIN, cursor, 2.2, decision_height, fill=status_colour)
     page.text(
-        MARGIN + 6.0, cursor + 6.0, _status_label(verdict.sia3802_status, language),
-        size_pt=11.0, bold=True, colour=status_colour,
+        MARGIN + 6.0,
+        cursor + 6.0,
+        _status_label(verdict.sia3802_status, language),
+        size_pt=11.0,
+        bold=True,
+        colour=status_colour,
     )
     y = cursor + 12.0
     for line in reason_lines:
         page.text(MARGIN + 6.0, y, line, size_pt=8.1, colour=INK)
         y += 4.2
     y += 1.0
-    page.text(MARGIN + 6.0, y, translate("report_finding_action", language), size_pt=6.8, bold=True, colour=status_colour)
+    page.text(
+        MARGIN + 6.0,
+        y,
+        translate("report_finding_action", language),
+        size_pt=6.8,
+        bold=True,
+        colour=status_colour,
+    )
     for line_index, line in enumerate(action_lines):
         page.text(MARGIN + 40.0, y + line_index * 3.9, line, size_pt=7.6, colour=INK)
     cursor += decision_height + 6.0
@@ -904,7 +1190,14 @@ def _draw_detailed_pages(
     comparison = results.get("global_reference_comparison", {}) or {}
     if not isinstance(comparison, dict):
         comparison = {}
-    page.text(MARGIN, cursor, translate("report_global_comparison", language), size_pt=9.0, bold=True, colour=INK)
+    page.text(
+        MARGIN,
+        cursor,
+        translate("report_global_comparison", language),
+        size_pt=9.0,
+        bold=True,
+        colour=INK,
+    )
     cursor += 5.0
     comparison_rows = (
         ("report_comparison_status", comparison.get("status")),
@@ -917,15 +1210,24 @@ def _draw_detailed_pages(
         x = MARGIN + (index % 2) * cell_width
         y = cursor + (index // 2) * 10.0
         page.rect(x, y, cell_width - 2.0, 8.0, fill=PANEL)
-        page.text(x + 3.0, y + 3.4, translate(label_key, language), size_pt=6.5, colour=MUTED)
         page.text(
-            x + 3.0, y + 6.6,
+            x + 3.0, y + 3.4, translate(label_key, language), size_pt=6.5, colour=MUTED
+        )
+        page.text(
+            x + 3.0,
+            y + 6.6,
             truncate_to_width(
-                str(value) if value not in (None, "") else translate("report_value_not_available", language),
+                (
+                    str(value)
+                    if value not in (None, "")
+                    else translate("report_value_not_available", language)
+                ),
                 7.3,
                 cell_width - 8.0,
             ),
-            size_pt=7.3, bold=True, colour=INK,
+            size_pt=7.3,
+            bold=True,
+            colour=INK,
         )
     cursor += 24.0
 
@@ -935,21 +1237,35 @@ def _draw_detailed_pages(
         colour, background = _STATUS_COLOURS.get(domain.status, (WARN, WARN_BG))
         page.rect(MARGIN, cursor, CONTENT_WIDTH, 8.0, fill=PANEL)
         page.rect(MARGIN, cursor, 2.0, 8.0, fill=colour)
-        page.text(MARGIN + 5.0, cursor + 5.0, translate("domain_" + domain.domain, language), size_pt=8.0, bold=True, colour=INK)
         page.text(
-            MARGIN + 54.0, cursor + 5.0,
-            translate("report_domain_reason_" + domain.reason, language),
-            size_pt=7.2, colour=MUTED,
+            MARGIN + 5.0,
+            cursor + 5.0,
+            translate("domain_" + domain.domain, language),
+            size_pt=8.0,
+            bold=True,
+            colour=INK,
         )
         page.text(
-            A4_MM[0] - MARGIN - 53.0, cursor + 5.0,
+            MARGIN + 54.0,
+            cursor + 5.0,
+            translate("report_domain_reason_" + domain.reason, language),
+            size_pt=7.2,
+            colour=MUTED,
+        )
+        page.text(
+            A4_MM[0] - MARGIN - 53.0,
+            cursor + 5.0,
             "{}  |  B:{} M:{} A:{}".format(
                 _status_label(domain.status, language),
                 domain.blocking_count,
                 domain.missing_count,
                 domain.advisory_count,
             ),
-            size_pt=7.1, bold=True, colour=colour, align="right", width_mm=53.0,
+            size_pt=7.1,
+            bold=True,
+            colour=colour,
+            align="right",
+            width_mm=53.0,
         )
         cursor += 9.5
     cursor += 4.0
@@ -958,20 +1274,24 @@ def _draw_detailed_pages(
     # even when no alert exists because every applicable room passed.
     rooms = list(rooms_data or [])
     mechanical_rooms = [
-        room for room in rooms
+        room
+        for room in rooms
         if getattr(room, "mechanical_ventilation_present", None) is True
     ]
     normalized_rooms = [
-        room for room in mechanical_rooms
+        room
+        for room in mechanical_rooms
         if _float_or_none(getattr(room, "ventilation_m3_h_m2", None)) is not None
     ]
     controlled_rooms = [
-        room for room in mechanical_rooms
+        room
+        for room in mechanical_rooms
         if getattr(room, "ventilation_installation_type", None)
         and getattr(room, "ventilation_control_level", None) is not None
     ]
     reviewed_rooms = [
-        room for room in controlled_rooms
+        room
+        for room in controlled_rooms
         if str(getattr(room, "ventilation_control_level_status", "") or "")
         == "REVIEWER_ACCEPTED"
     ]
@@ -1018,7 +1338,9 @@ def _draw_detailed_pages(
         x = MARGIN + (index % 2) * cell_width
         y = cursor + (index // 2) * 10.0
         page.rect(x, y, cell_width - 2.0, 8.0, fill=PANEL)
-        page.text(x + 3.0, y + 3.2, translate(label_key, language), size_pt=6.3, colour=MUTED)
+        page.text(
+            x + 3.0, y + 3.2, translate(label_key, language), size_pt=6.3, colour=MUTED
+        )
         page.text(
             x + 3.0,
             y + 6.5,
@@ -1031,22 +1353,49 @@ def _draw_detailed_pages(
 
     cursor = _detail_section_header(page, cursor, "report_findings_title", language)
     if not alerts:
-        for line in wrap_to_width(translate("report_findings_none", language), 8.0, CONTENT_WIDTH - 4.0):
+        for line in wrap_to_width(
+            translate("report_findings_none", language), 8.0, CONTENT_WIDTH - 4.0
+        ):
             page.text(MARGIN + 2.0, cursor, line, size_pt=8.0, colour=MUTED)
             cursor += 4.2
         return pages
 
     priority = {"blocking": 0, "missing": 1, "advisory": 2}
-    alerts.sort(key=lambda item: (priority[_alert_kind(item)], str(_alert_value(item, "category", "")), str(_alert_value(item, "rule", ""))))
-    for number, alert in enumerate(alerts, 1):
+    alerts.sort(
+        key=lambda item: (
+            priority[_alert_kind(item)],
+            str(_alert_value(item, "category", "")),
+            str(_alert_value(item, "rule", "")),
+        )
+    )
+    alert_groups = _group_repetitive_alerts(alerts)
+    for number, alert_group in enumerate(alert_groups, 1):
+        alert = alert_group[0]
         kind = _alert_kind(alert)
         criterion = _criterion_for_alert(alert)
         unit = criterion.get("unit")
-        title = str(criterion.get("criterion") or _alert_value(alert, "category", "") or _alert_value(alert, "rule", ""))
+        title = str(
+            criterion.get("criterion")
+            or _alert_value(alert, "category", "")
+            or _alert_value(alert, "rule", "")
+        )
+        observation = str(
+            _alert_value(alert, "description", "")
+            or translate("report_value_not_available", language)
+        )
+        model_data = _model_data_text(alert, language)
+        if len(alert_group) > 1:
+            subjects = list(dict.fromkeys(_alert_subject(item) for item in alert_group))
+            observation = _grouped_finding_copy(language, len(alert_group), subjects)
+            model_data = _grouped_model_data_copy(
+                language,
+                subjects,
+                _model_data_text(alert, language),
+            )
         fields = [
             (
                 "report_finding_observation",
-                str(_alert_value(alert, "description", "") or translate("report_value_not_available", language)),
+                observation,
             ),
             ("report_finding_why", translate("report_finding_why_" + kind, language)),
             (
@@ -1055,17 +1404,29 @@ def _draw_detailed_pages(
             ),
         ]
         if criterion.get("target") not in (None, ""):
-            fields.append(("report_finding_target", _format_reference_value(criterion.get("target"), unit, language)))
+            fields.append(
+                (
+                    "report_finding_target",
+                    _format_reference_value(criterion.get("target"), unit, language),
+                )
+            )
         fields.extend(
             [
-                ("report_finding_model_data", _model_data_text(alert, language)),
+                ("report_finding_model_data", model_data),
                 (
                     "report_finding_source",
-                    str(criterion.get("source") or translate("report_value_not_available", language)),
+                    str(
+                        criterion.get("source")
+                        or translate("report_value_not_available", language)
+                    ),
                 ),
                 (
                     "report_finding_action",
-                    str(_alert_value(alert, "recommendation", "") or criterion.get("next_action") or translate("report_value_not_available", language)),
+                    str(
+                        _alert_value(alert, "recommendation", "")
+                        or criterion.get("next_action")
+                        or translate("report_value_not_available", language)
+                    ),
                 ),
             ]
         )
@@ -1076,7 +1437,9 @@ def _draw_detailed_pages(
         card_height = 13.0 + sum(max(1, len(lines)) * 3.7 + 1.3 for _, lines in wrapped)
         if cursor + card_height > A4_MM[1] - 24.0:
             page, cursor = new_page(continued=True)
-            cursor = _detail_section_header(page, cursor, "report_findings_title", language)
+            cursor = _detail_section_header(
+                page, cursor, "report_findings_title", language
+            )
 
         if kind == "blocking":
             tone, ground = BAD, BAD_BG
@@ -1084,10 +1447,25 @@ def _draw_detailed_pages(
             tone, ground = WARN, WARN_BG
         else:
             tone, ground = BRAND, PANEL
-        page.rect(MARGIN, cursor, CONTENT_WIDTH, card_height, fill=WHITE, stroke=LINE, width_pt=0.5)
+        page.rect(
+            MARGIN,
+            cursor,
+            CONTENT_WIDTH,
+            card_height,
+            fill=WHITE,
+            stroke=LINE,
+            width_pt=0.5,
+        )
         page.rect(MARGIN, cursor, CONTENT_WIDTH, 10.0, fill=ground)
         page.rect(MARGIN, cursor, 2.2, card_height, fill=tone)
-        page.text(MARGIN + 6.0, cursor + 6.2, "{:02d}  {}".format(number, title), size_pt=8.7, bold=True, colour=INK)
+        page.text(
+            MARGIN + 6.0,
+            cursor + 6.2,
+            "{:02d}  {}".format(number, title),
+            size_pt=8.7,
+            bold=True,
+            colour=INK,
+        )
         page.text(
             A4_MM[0] - MARGIN - 62.0,
             cursor + 6.2,
@@ -1099,12 +1477,27 @@ def _draw_detailed_pages(
             width_mm=59.0,
         )
         rule = str(_alert_value(alert, "rule", "") or "")
-        page.text(MARGIN + 6.0, cursor + 10.8, "{}: {}".format(translate("report_finding_rule", language), rule), size_pt=6.2, colour=MUTED)
+        page.text(
+            MARGIN + 6.0,
+            cursor + 10.8,
+            "{}: {}".format(translate("report_finding_rule", language), rule),
+            size_pt=6.2,
+            colour=MUTED,
+        )
         y = cursor + 15.0
         for label_key, lines in wrapped:
-            page.text(MARGIN + 6.0, y, translate(label_key, language), size_pt=6.8, bold=True, colour=BRAND)
+            page.text(
+                MARGIN + 6.0,
+                y,
+                translate(label_key, language),
+                size_pt=6.8,
+                bold=True,
+                colour=BRAND,
+            )
             for line_index, line in enumerate(lines or [""]):
-                page.text(MARGIN + 40.0, y + line_index * 3.7, line, size_pt=7.2, colour=INK)
+                page.text(
+                    MARGIN + 40.0, y + line_index * 3.7, line, size_pt=7.2, colour=INK
+                )
             y += max(1, len(lines)) * 3.7 + 1.3
         cursor += card_height + 5.0
     return pages
@@ -1123,14 +1516,24 @@ def _draw_annex_page(
     page = document.add_page()
     cursor = _draw_letterhead(page, office, language, project_label)
     page.text(
-        MARGIN, cursor, translate("annex_title", language),
-        size_pt=15.0, bold=True, colour=INK,
+        MARGIN,
+        cursor,
+        translate("annex_title", language),
+        size_pt=15.0,
+        bold=True,
+        colour=INK,
     )
     cursor += 9.0
 
     def _section_header(top: float, key: str) -> float:
-        page.text(MARGIN, top, translate(key, language).upper(),
-                  size_pt=8.0, bold=True, colour=BRAND)
+        page.text(
+            MARGIN,
+            top,
+            translate(key, language).upper(),
+            size_pt=8.0,
+            bold=True,
+            colour=BRAND,
+        )
         top += 3.0
         page.line(MARGIN, top, A4_MM[0] - MARGIN, top, width_pt=0.5, colour=LINE)
         return top + 5.5
@@ -1158,8 +1561,13 @@ def _draw_annex_page(
                 cursor += 4.2
             cursor += 1.0
     else:
-        page.text(MARGIN + 2.0, cursor, translate("annex_reserves_none", language),
-                  size_pt=7.8, colour=OK)
+        page.text(
+            MARGIN + 2.0,
+            cursor,
+            translate("annex_reserves_none", language),
+            size_pt=7.8,
+            colour=OK,
+        )
         cursor += 5.0
     cursor += 4.0
 
@@ -1174,8 +1582,12 @@ def _draw_annex_page(
         page = document.add_page()
         cursor = _draw_letterhead(page, office, language, project_label)
         page.text(
-            MARGIN, cursor, translate("annex_title", language),
-            size_pt=15.0, bold=True, colour=INK,
+            MARGIN,
+            cursor,
+            translate("annex_title", language),
+            size_pt=15.0,
+            bold=True,
+            colour=INK,
         )
         cursor += 9.0
 
@@ -1184,6 +1596,119 @@ def _draw_annex_page(
         page.text(MARGIN + 2.0, cursor, line, size_pt=7.8, colour=INK)
         cursor += 4.2
     return page
+
+
+def _draw_governance_pages(
+    document: PdfDocument,
+    office: CompanyProfile,
+    dynamic_results: Dict[str, Any],
+    language: str,
+    project_label: str,
+) -> None:
+    """Render traceability, uncertainty and ownership for the seven review domains."""
+
+    metadata = dynamic_results.get("reviewed_project_metadata", {})
+    if not isinstance(metadata, dict):
+        metadata = {}
+    findings = evaluate_assessment_governance(metadata, dynamic_results, language)
+    summary = governance_summary(findings)
+    page = document.add_page()
+    cursor = _draw_letterhead(page, office, language, project_label)
+
+    def new_page() -> None:
+        nonlocal page, cursor
+        page = document.add_page()
+        cursor = _draw_letterhead(page, office, language, project_label)
+        page.text(
+            MARGIN,
+            cursor,
+            report_text("section_title", language),
+            size_pt=12.0,
+            bold=True,
+            colour=INK,
+        )
+        cursor += 8.0
+
+    page.text(
+        MARGIN,
+        cursor,
+        report_text("section_title", language),
+        size_pt=15.0,
+        bold=True,
+        colour=INK,
+    )
+    cursor += 8.0
+    page.text(
+        MARGIN,
+        cursor,
+        "{}: {}".format(
+            report_text("overall_status", language),
+            governance_status_label(summary["overall_status"], language),
+        ),
+        size_pt=9.0,
+        bold=True,
+        colour=WARN if summary["overall_status"] != "DOCUMENTED" else OK,
+    )
+    cursor += 6.0
+    for line in wrap_to_width(legal_wording(language), 8.0, CONTENT_WIDTH):
+        page.text(MARGIN, cursor, line, size_pt=8.0, colour=MUTED)
+        cursor += 4.2
+    cursor += 4.0
+
+    for finding_index, finding in enumerate(findings):
+        if finding_index and finding_index % 4 == 0:
+            new_page()
+        evidence_lines = wrap_to_width(finding.evidence, 7.2, CONTENT_WIDTH - 4.0)
+        uncertainty_lines = wrap_to_width(finding.uncertainty, 7.2, CONTENT_WIDTH - 4.0)
+        action_lines = wrap_to_width(
+            "{}: {}".format(report_text("action", language), finding.required_action),
+            7.2,
+            CONTENT_WIDTH - 4.0,
+        )
+        required_height = 12.0 + 3.8 * (
+            len(evidence_lines) + len(uncertainty_lines) + len(action_lines)
+        )
+        if cursor + required_height > ANNEX_CONTENT_BOTTOM:
+            new_page()
+        page.text(MARGIN, cursor, finding.title, size_pt=9.0, bold=True, colour=INK)
+        page.text(
+            A4_MM[0] - MARGIN,
+            cursor,
+            governance_status_label(finding.status, language),
+            size_pt=8.0,
+            bold=True,
+            colour=OK if finding.status == "DOCUMENTED" else WARN,
+            align="right",
+        )
+        cursor += 4.8
+        for lines, label in (
+            (evidence_lines, report_text("evidence", language)),
+            (uncertainty_lines, report_text("uncertainty", language)),
+            (action_lines, ""),
+        ):
+            if label:
+                page.text(
+                    MARGIN + 2.0,
+                    cursor,
+                    label + ":",
+                    size_pt=7.2,
+                    bold=True,
+                    colour=BRAND,
+                )
+                cursor += 3.8
+            for line in lines:
+                page.text(MARGIN + 2.0, cursor, line, size_pt=7.2, colour=MUTED)
+                cursor += 3.8
+        page.text(
+            MARGIN + 2.0,
+            cursor,
+            "{}: {}".format(
+                report_text("responsible", language), finding.responsible_party
+            ),
+            size_pt=7.2,
+            colour=MUTED,
+        )
+        cursor += 6.0
 
 
 def render_compliance_report_pdf(
@@ -1223,8 +1748,19 @@ def render_compliance_report_pdf(
     document = PdfDocument(
         title="{} - {}".format(translate("report_title", code), project_label)
     )
-    page = document.add_page()
     generated_at = datetime.now()
+    cover_page = document.add_page()
+    ies_banner = _resolve_ies_banner(project_root)
+    _draw_cover_page(
+        cover_page,
+        office,
+        code,
+        project_label,
+        model_name,
+        generated_at,
+        banner_path=ies_banner,
+    )
+    page = document.add_page()
     cursor = _draw_letterhead(page, office, code, project_label)
     context_value = (
         (lambda key, default="": report_context.get(key, default))
@@ -1267,21 +1803,68 @@ def render_compliance_report_pdf(
 
     to_complete = translate("value_to_complete", code)
     identification = [
-        (translate("field_client", code), str(context_value("client_name", "") or to_complete)),
-        (translate("field_project", code), str(context_value("project_name", "") or project_label or translate("value_unavailable", code))),
-        (translate("field_project_address", code), str(context_value("project_address", "") or to_complete)),
-        (translate("field_model", code), model_name or translate("value_unavailable", code)),
-        (translate("field_mandate", code), str(context_value("report_reference", "") or office.report_reference or to_complete)),
+        (
+            translate("field_client", code),
+            str(context_value("client_name", "") or to_complete),
+        ),
+        (
+            translate("field_project", code),
+            str(
+                context_value("project_name", "")
+                or project_label
+                or translate("value_unavailable", code)
+            ),
+        ),
+        (
+            translate("field_project_address", code),
+            str(context_value("project_address", "") or to_complete),
+        ),
+        (
+            translate("field_model", code),
+            model_name or translate("value_unavailable", code),
+        ),
+        (
+            translate("field_mandate", code),
+            str(
+                context_value("report_reference", "")
+                or office.report_reference
+                or to_complete
+            ),
+        ),
         (
             translate("field_generated", code),
             generated_at.strftime("%Y-%m-%d %H:%M"),
         ),
-        (translate("field_prepared_by", code), str(context_value("prepared_by", "") or office.author_name or to_complete)),
-        (translate("client_ui_weather", code), str(context_value("weather_file", "") or translate("value_unavailable", code))),
-        (translate("field_framework", code), "SIA 380/2:2022" if report_scope == "sia3802" else "SIA 380/2:2022 + SIA 4010:2023"),
-        (translate("field_solar_shading", code), str(context_value("solar_shading", "TO_CONFIRM") or "TO_CONFIRM")),
-        (building_strategy_text("field_window_operability", code), str(context_value("window_operability", "TO_CONFIRM") or "TO_CONFIRM")),
-        (building_strategy_text("field_mechanical_cooling", code), str(context_value("mechanical_cooling", "TO_CONFIRM") or "TO_CONFIRM")),
+        (
+            translate("field_prepared_by", code),
+            str(context_value("prepared_by", "") or office.author_name or to_complete),
+        ),
+        (
+            translate("client_ui_weather", code),
+            str(
+                context_value("weather_file", "") or translate("value_unavailable", code)
+            ),
+        ),
+        (
+            translate("field_framework", code),
+            (
+                "SIA 380/2:2022"
+                if report_scope == "sia3802"
+                else "SIA 380/2:2022 + SIA 4010:2023"
+            ),
+        ),
+        (
+            translate("field_solar_shading", code),
+            str(context_value("solar_shading", "TO_CONFIRM") or "TO_CONFIRM"),
+        ),
+        (
+            building_strategy_text("field_window_operability", code),
+            str(context_value("window_operability", "TO_CONFIRM") or "TO_CONFIRM"),
+        ),
+        (
+            building_strategy_text("field_mechanical_cooling", code),
+            str(context_value("mechanical_cooling", "TO_CONFIRM") or "TO_CONFIRM"),
+        ),
     ]
     cursor = _draw_identification(page, cursor, identification, code)
     cursor = _draw_domain_table(page, cursor, verdict, code)
@@ -1327,8 +1910,12 @@ def render_compliance_report_pdf(
         report_scope,
         project_label=project_label,
     )
+    dynamic_results = dict((sia4010_results or {}).get("dynamic_results", {}) or {})
+    _draw_governance_pages(document, office, dynamic_results, code, project_label)
     total_pages = len(document.pages)
     for page_number, report_page in enumerate(document.pages, 1):
+        if page_number == 1:
+            continue
         _draw_footer(
             report_page,
             page_number,

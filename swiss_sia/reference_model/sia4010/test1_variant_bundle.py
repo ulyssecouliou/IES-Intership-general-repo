@@ -19,7 +19,6 @@ source-confirmed input and ApacheSim results have been evaluated against the
 official SIA workbook.
 """
 
-import copy
 from pathlib import Path
 from typing import Any, Dict, Optional, Union
 
@@ -38,17 +37,13 @@ from .mvp_bundle import (
     build_case600_mvp_bundle,
 )
 
-
 LIGHTWEIGHT_RUNTIME_QUALIFICATION_CASES = ("640", "600FF")
 HEAVYWEIGHT_RUNTIME_QUALIFICATION_CASES = ("900", "940", "900FF")
 RUNTIME_QUALIFICATION_CASES = (
-    LIGHTWEIGHT_RUNTIME_QUALIFICATION_CASES
-    + HEAVYWEIGHT_RUNTIME_QUALIFICATION_CASES
+    LIGHTWEIGHT_RUNTIME_QUALIFICATION_CASES + HEAVYWEIGHT_RUNTIME_QUALIFICATION_CASES
 )
 TEST1_SPECIFICATION_LOCATOR = "SIA 4010 Test 1 specification pages 1-2"
-ASHRAE_HIGH_MASS_SOURCE = (
-    "Addendum a to ANSI/ASHRAE Standard 140-2017, Table 5-27"
-)
+ASHRAE_HIGH_MASS_SOURCE = "Addendum a to ANSI/ASHRAE Standard 140-2017, Table 5-27"
 ASHRAE_HIGH_MASS_URL = (
     "https://www.ashrae.org/file%20library/technical%20resources/"
     "standards%20and%20guidelines/standards%20addenda/"
@@ -107,9 +102,7 @@ def _rename_runtime_assets(assets: Dict[str, Any], case_id: str) -> None:
     assets["thermal_template"]["name"] = "SIA4010_TEST1_CASE{}".format(case_id)
 
 
-def _apply_night_setback_controls(
-    assets: Dict[str, Any], case_id: str
-) -> None:
+def _apply_night_setback_controls(assets: Dict[str, Any], case_id: str) -> None:
     """Add the exact Test 1 Case 640/940 heating-setback contract."""
 
     profiles = _by_key(assets["profiles"])
@@ -134,57 +127,57 @@ def _apply_night_setback_controls(
     )
     assets["profiles"].extend(
         [
-        {
-            "key": daily_key,
-            "profile_type": "daily",
-            "reference": "SIA{}_HEATING_SETPOINT_ABSOLUTE_DAY".format(case_id),
-            "modulating": False,
-            "units": 0,
-            "description": (
-                "Case {} daily heating setpoint: 20 degC from 07:00 to "
-                "23:00 and 10 degC otherwise.".format(case_id)
-            ),
-            "source": "SIA 4010 Test 1 specification",
-            "source_locator": TEST1_SPECIFICATION_LOCATOR,
-            # Duplicate breakpoints express a step without introducing an
-            # invented transition hour. The VE runtime probe must accept and
-            # read back these points exactly before the case is promoted.
-            "data": _sia_field(
-                [
-                    [0.0, 10.0, ""],
-                    [7.0, 10.0, ""],
-                    [7.0, 20.0, ""],
-                    [23.0, 20.0, ""],
-                    [23.0, 10.0, ""],
-                    [24.0, 10.0, ""],
-                ],
-                "Exact Case {} two-level daily heating setpoint.".format(case_id),
-                "degC versus hour",
-                "array",
-            ),
-        },
-        {
-            "key": weekly_key,
-            "profile_type": "weekly",
-            "reference": "SIA{}_HEATING_SETPOINT_WEEK_V4".format(case_id),
-            "modulating": False,
-            "units": 0,
-            "description": (
-                "VE weekly group profile applying the exact Case {} daily "
-                "setpoint on all calendar and heating/cooling design days.".format(
-                    case_id
-                )
-            ),
-            "source": "SIA 4010 Test 1 specification",
-            "source_locator": TEST1_SPECIFICATION_LOCATOR,
-            "data": _sia_field(
-                [{"profile_ref": daily_key}] * VE_WEEKLY_PROFILE_SLOT_COUNT,
-                "Exact Case {} mapping for the twelve native VE weekly slots "
-                "including calendar, room and system design days.".format(case_id),
-                "daily profile references",
-                "array",
-            ),
-        },
+            {
+                "key": daily_key,
+                "profile_type": "daily",
+                "reference": "SIA{}_HEATING_SETPOINT_ABSOLUTE_DAY".format(case_id),
+                "modulating": False,
+                "units": 0,
+                "description": (
+                    "Case {} daily heating setpoint: 20 degC from 07:00 to "
+                    "23:00 and 10 degC otherwise.".format(case_id)
+                ),
+                "source": "SIA 4010 Test 1 specification",
+                "source_locator": TEST1_SPECIFICATION_LOCATOR,
+                # Duplicate breakpoints express a step without introducing an
+                # invented transition hour. The VE runtime probe must accept and
+                # read back these points exactly before the case is promoted.
+                "data": _sia_field(
+                    [
+                        [0.0, 10.0, ""],
+                        [7.0, 10.0, ""],
+                        [7.0, 20.0, ""],
+                        [23.0, 20.0, ""],
+                        [23.0, 10.0, ""],
+                        [24.0, 10.0, ""],
+                    ],
+                    "Exact Case {} two-level daily heating setpoint.".format(case_id),
+                    "degC versus hour",
+                    "array",
+                ),
+            },
+            {
+                "key": weekly_key,
+                "profile_type": "weekly",
+                "reference": "SIA{}_HEATING_SETPOINT_WEEK_V4".format(case_id),
+                "modulating": False,
+                "units": 0,
+                "description": (
+                    "VE weekly group profile applying the exact Case {} daily "
+                    "setpoint on all calendar and heating/cooling design days.".format(
+                        case_id
+                    )
+                ),
+                "source": "SIA 4010 Test 1 specification",
+                "source_locator": TEST1_SPECIFICATION_LOCATOR,
+                "data": _sia_field(
+                    [{"profile_ref": daily_key}] * VE_WEEKLY_PROFILE_SLOT_COUNT,
+                    "Exact Case {} mapping for the twelve native VE weekly slots "
+                    "including calendar, room and system design days.".format(case_id),
+                    "daily profile references",
+                    "array",
+                ),
+            },
         ]
     )
     conditions = assets["thermal_template"]["room_conditions"]
@@ -202,8 +195,7 @@ def _apply_night_setback_controls(
     )
     conditions["heating_setpoint_type"] = _sia_field(
         "variable",
-        "VE room-condition setpoint mode required for an absolute setpoint "
-        "profile.",
+        "VE room-condition setpoint mode required for an absolute setpoint " "profile.",
         "VE setpoint_type",
         "string",
     )
@@ -220,9 +212,7 @@ def _apply_night_setback_controls(
     )
 
 
-def _apply_free_float_controls(
-    assets: Dict[str, Any], case_id: str
-) -> None:
+def _apply_free_float_controls(assets: Dict[str, Any], case_id: str) -> None:
     """Disable room conditioning for the official free-floating case."""
 
     conditions = assets["thermal_template"]["room_conditions"]
@@ -319,9 +309,7 @@ def _apply_heavyweight_envelope(
                     collection_name, expected_order, actual_order
                 )
             )
-        indexed_layers[collection_name] = {
-            str(item["material"]): item for item in layers
-        }
+        indexed_layers[collection_name] = {str(item["material"]): item for item in layers}
 
     materials = _by_key(assets["materials"])
     material_bindings = {
@@ -346,9 +334,7 @@ def _apply_heavyweight_envelope(
             "PLASTERBOARD",
         ),
         "xps_ground": (
-            indexed_layers["floor_layers_outside_to_inside"][
-                "ideal_floor_insulation"
-            ],
+            indexed_layers["floor_layers_outside_to_inside"]["ideal_floor_insulation"],
             "IDEAL_FLOOR_INSULATION",
         ),
         "reinforced_concrete": (
@@ -569,9 +555,9 @@ def build_test1_runtime_probe_bundle(
     )
     _rename_runtime_assets(assets, normalized_case)
     if is_heavyweight:
-        heavyweight = case_manifest["parameters"][
-            "iso_heavyweight_construction"
-        ].get("value")
+        heavyweight = case_manifest["parameters"]["iso_heavyweight_construction"].get(
+            "value"
+        )
         if not isinstance(heavyweight, dict):
             raise ConfigurationError(
                 "iso_heavyweight_construction must contain a structured value"
@@ -601,9 +587,7 @@ def build_test1_runtime_probe_bundle(
 
     manifest = Sia4010CaseManifest.load(receipt.case_manifest_path)
     readiness = manifest.case_readiness("test_1", normalized_case)
-    required = manifest.variants["test_1"]["case_required_parameters"][
-        normalized_case
-    ]
+    required = manifest.variants["test_1"]["case_required_parameters"][normalized_case]
     unresolved = list(readiness.missing_parameters)
     provisional = list(readiness.provisional_parameters)
     confirmed = [
@@ -635,27 +619,27 @@ def build_test1_runtime_probe_bundle(
     if normalized_case in {"640", "940"}:
         case_specific_uncertainties.append(
             {
-            "id": "VE_HEATING_PROFILE_RUNTIME_QUALIFICATION",
-            "severity": "WARNING",
-            "detail": (
-                "VE must accept and read back the two-level absolute setpoint "
-                "profile, keep heating availability ON, and resolve the room's "
-                "heating_setpoint_type/profile as variable and the exact WEEK ID."
-            ),
+                "id": "VE_HEATING_PROFILE_RUNTIME_QUALIFICATION",
+                "severity": "WARNING",
+                "detail": (
+                    "VE must accept and read back the two-level absolute setpoint "
+                    "profile, keep heating availability ON, and resolve the room's "
+                    "heating_setpoint_type/profile as variable and the exact WEEK ID."
+                ),
             }
         )
     elif normalized_case in {"600FF", "900FF"}:
         case_specific_uncertainties.append(
             {
-            "id": "VE_FREE_FLOAT_RUNTIME_QUALIFICATION",
-            "severity": "WARNING",
-            "detail": (
-                "VE must read back heating_profile=OFF and cooling_profile=OFF; "
-                "ApacheSim must then prove that the free-floating room has no "
-                "ideal heating or cooling delivery. The derived conditioned flag "
-                "is recorded as advisory only because VE does not expose it on "
-                "the room-level system setter."
-            ),
+                "id": "VE_FREE_FLOAT_RUNTIME_QUALIFICATION",
+                "severity": "WARNING",
+                "detail": (
+                    "VE must read back heating_profile=OFF and cooling_profile=OFF; "
+                    "ApacheSim must then prove that the free-floating room has no "
+                    "ideal heating or cooling delivery. The derived conditioned flag "
+                    "is recorded as advisory only because VE does not expose it on "
+                    "the room-level system setter."
+                ),
             }
         )
     else:
@@ -692,8 +676,9 @@ def build_test1_runtime_probe_bundle(
                 "detail": (
                     "The {} ISO fabric is source-confirmed, but the exact "
                     "IESVE furniture_mass_factor mapping for the ISO hourly "
-                    "air-and-furniture capacity must still be set and read back."
-                    .format("high-mass" if is_heavyweight else "lightweight")
+                    "air-and-furniture capacity must still be set and read back.".format(
+                        "high-mass" if is_heavyweight else "lightweight"
+                    )
                 ),
             },
             *case_specific_uncertainties,
@@ -721,9 +706,7 @@ def build_test1_runtime_probe_bundle(
             {
                 "title": PUBLIC_BESTEST_SOURCE,
                 "url": PUBLIC_BESTEST_URL,
-                "scope": (
-                    "Public-reference Case 600 physics and BESTEST lineage"
-                ),
+                "scope": ("Public-reference Case 600 physics and BESTEST lineage"),
             },
             *(
                 [

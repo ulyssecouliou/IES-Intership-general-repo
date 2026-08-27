@@ -9,7 +9,7 @@ been corrected in between, because a module already loaded is never reloaded.
 It happened on 2026-08-06:
 
     ImportError: cannot import name 'sonde_aps' from 'scripts'
-    (C:\\Users\\ulysse.couliou\\Documents\\SIA_Compliance_Scripts\\scripts\\__init__.py)
+    (<another-repository>/scripts/__init__.py)
 
 The file existed -- in the consolidated repository, not in the one VE had in
 memory.
@@ -32,7 +32,7 @@ import sys
 
 #: The project's packages. A module loaded from another repository under one of
 #: these names is an error, not a variant.
-PACKAGES = ('scripts', 've_adapter', 'engine', 'ui', 'swiss_sia')
+PACKAGES = ("scripts", "ve_adapter", "engine", "ui", "swiss_sia")
 
 
 def prefixes_to_purge():
@@ -41,7 +41,7 @@ def prefixes_to_purge():
     Returns:
         tuple[str]: Exact names, and submodule prefixes.
     """
-    return PACKAGES + tuple(name + '.' for name in PACKAGES)
+    return PACKAGES + tuple(name + "." for name in PACKAGES)
 
 
 def modules_outside_repository(root, modules=None):
@@ -60,7 +60,7 @@ def modules_outside_repository(root, modules=None):
     for name, module in list(table.items()):
         if not _belongs_to_project(name):
             continue
-        origin = getattr(module, '__file__', None)
+        origin = getattr(module, "__file__", None)
         if not origin:
             # A namespace package: no file to compare, so nothing to hold
             # against it. Do not report it for want of evidence.
@@ -81,7 +81,8 @@ def _belongs_to_project(name):
         bool: True for a project package or any of its children.
     """
     return name in PACKAGES or name.startswith(
-        tuple(package + '.' for package in PACKAGES))
+        tuple(package + "." for package in PACKAGES)
+    )
 
 
 def intrusion_message(root, intruders):
@@ -95,24 +96,26 @@ def intrusion_message(root, intruders):
         str: Ready to print; empty when there is nothing to say.
     """
     if not intruders:
-        return u''
+        return ""
     lines = [
-        u'STOP: project modules are coming from another repository.',
-        u'',
-        u'  expected under: %s' % root,
+        "STOP: project modules are coming from another repository.",
+        "",
+        "  expected under: %s" % root,
     ]
     for name, origin in intruders:
-        lines.append(u'  %-28s <- %s' % (name, origin))
-    lines.extend([
-        u'',
-        u'VEScripts keeps the same interpreter from one Run to the next: a',
-        u'module already loaded is never reloaded, even if sys.path changes.',
-        u'Closing VE and reopening it is enough to clear the cache.',
-        u'',
-        u'While this message shows, no result is trustworthy: the code being',
-        u'executed is not the code in this repository.',
-    ])
-    return u'\n'.join(lines)
+        lines.append("  %-28s <- %s" % (name, origin))
+    lines.extend(
+        [
+            "",
+            "VEScripts keeps the same interpreter from one Run to the next: a",
+            "module already loaded is never reloaded, even if sys.path changes.",
+            "Closing VE and reopening it is enough to clear the cache.",
+            "",
+            "While this message shows, no result is trustworthy: the code being",
+            "executed is not the code in this repository.",
+        ]
+    )
+    return "\n".join(lines)
 
 
 def check(root):

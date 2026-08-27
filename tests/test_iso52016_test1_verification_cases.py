@@ -4,7 +4,6 @@ import json
 import unittest
 from pathlib import Path
 
-
 ROOT = Path(__file__).resolve().parents[1]
 CATALOG = ROOT / "config" / "iso52016_test1_verification_cases.json"
 
@@ -39,7 +38,9 @@ class Iso52016Test1VerificationCasesTests(unittest.TestCase):
     def test_reference_values_never_become_an_invented_verdict(self):
         policy = self.payload["reference_results"]["comparison_policy"]
         self.assertEqual(policy["mode"], "REFERENCE_ONLY")
-        self.assertFalse(policy["official_acceptance_tolerance_available_in_captured_pages"])
+        self.assertFalse(
+            policy["official_acceptance_tolerance_available_in_captured_pages"]
+        )
 
     def test_apachesim_alternative_methods_are_declared_fail_closed(self):
         alternatives = self.payload["alternative_method_validation"]

@@ -14,7 +14,6 @@ from swiss_sia.reference_model.sia4010.scenario_preflight import (
     evaluate_scenario,
 )
 
-
 ROOT = Path(__file__).resolve().parents[1]
 TEMP_ROOT = ROOT / ".codex_tmp"
 
@@ -40,9 +39,7 @@ class Sia4010MvpBundleTests(unittest.TestCase):
         weather = self.project / "DRYCOLD.epw"
         weather.write_text("provisional test weather\n", encoding="utf-8")
         receipt = build_case600_mvp_bundle(self.project, ROOT)
-        self.assertEqual(
-            receipt.status, "READY_FOR_PROVISIONAL_DEMONSTRATION"
-        )
+        self.assertEqual(receipt.status, "READY_FOR_PROVISIONAL_DEMONSTRATION")
         controller = ModelBuilderController()
         payload = controller.build_payload(
             "SIA4010_1A_600",
@@ -62,9 +59,7 @@ class Sia4010MvpBundleTests(unittest.TestCase):
         preflight = evaluate_scenario(
             ModelScenario.load(scenario_path), self.project, ROOT
         )
-        self.assertEqual(
-            preflight.status, "READY_FOR_PROVISIONAL_VE_MUTATION"
-        )
+        self.assertEqual(preflight.status, "READY_FOR_PROVISIONAL_VE_MUTATION")
         self.assertTrue(preflight.allows_mutation)
         self.assertFalse(
             preflight.scenario["input_readiness"]["compliance_claim_allowed"]
@@ -114,9 +109,7 @@ class Sia4010MvpBundleTests(unittest.TestCase):
     def test_checksum_bound_weather_verification_is_preserved(self):
         weather = self.project / "DRYCOLD.TMY"
         weather.write_text("provisional TMY test weather\n", encoding="ascii")
-        verification = self.project / (
-            "DRYCOLD_TMY_ISO_SOURCE_VERIFICATION.json"
-        )
+        verification = self.project / ("DRYCOLD_TMY_ISO_SOURCE_VERIFICATION.json")
         verification.write_text(
             json.dumps(
                 {
@@ -129,21 +122,13 @@ class Sia4010MvpBundleTests(unittest.TestCase):
         )
         receipt = build_case600_mvp_bundle(self.project, ROOT)
         audit = json.loads(receipt.audit_path.read_text(encoding="utf-8"))
-        self.assertEqual(
-            audit["weather_source_identity_verification"]["status"], "PASS"
-        )
-        self.assertFalse(
-            audit["weather"]["identity_confirmation_required"]
-        )
-        self.assertTrue(
-            audit["weather"]["acquisition_provenance_approval_required"]
-        )
+        self.assertEqual(audit["weather_source_identity_verification"]["status"], "PASS")
+        self.assertFalse(audit["weather"]["identity_confirmation_required"])
+        self.assertTrue(audit["weather"]["acquisition_provenance_approval_required"])
 
     def test_case600_glass_uses_ve2025_supported_material_properties(self):
         receipt = build_case600_mvp_bundle(self.project, ROOT)
-        assets = json.loads(
-            receipt.asset_manifest_path.read_text(encoding="utf-8")
-        )
+        assets = json.loads(receipt.asset_manifest_path.read_text(encoding="utf-8"))
         glass = next(
             material
             for material in assets["materials"]
@@ -158,31 +143,21 @@ class Sia4010MvpBundleTests(unittest.TestCase):
 
     def test_case600_uses_generic_ve_template_with_traced_evidence(self):
         receipt = build_case600_mvp_bundle(self.project, ROOT)
-        assets = json.loads(
-            receipt.asset_manifest_path.read_text(encoding="utf-8")
-        )
+        assets = json.loads(receipt.asset_manifest_path.read_text(encoding="utf-8"))
         template = assets["thermal_template"]
         self.assertEqual(template["standard"], "generic")
         self.assertEqual(template["name"], "SIA4010_TEST1_CASE600")
         self.assertIn("ISO Test 1", template["description"])
         self.assertIn("ISO 52016-1:2017", template["source"])
         system_data = template["system_data"]
-        self.assertEqual(
-            system_data["heating_plant_radiant_fraction"]["value"], 0.0
-        )
-        self.assertEqual(
-            system_data["cooling_plant_radiant_fraction"]["value"], 0.0
-        )
+        self.assertEqual(system_data["heating_plant_radiant_fraction"]["value"], 0.0)
+        self.assertEqual(system_data["cooling_plant_radiant_fraction"]["value"], 0.0)
         self.assertIn(
             "ISO 52016-1:2017",
             system_data["heating_plant_radiant_fraction"]["source"],
         )
-        self.assertEqual(
-            system_data["system_air_minimum_flowrate"]["value"], 0.0
-        )
-        self.assertEqual(
-            system_data["system_air_minimum_flowrate_units"]["value"], 3
-        )
+        self.assertEqual(system_data["system_air_minimum_flowrate"]["value"], 0.0)
+        self.assertEqual(system_data["system_air_minimum_flowrate_units"]["value"], 3)
         self.assertIn(
             "no mechanical ventilation",
             system_data["system_air_minimum_flowrate"]["description"],
@@ -190,13 +165,9 @@ class Sia4010MvpBundleTests(unittest.TestCase):
 
     def test_case600_internal_gain_is_constant_sensible_200w_with_60_40_split(self):
         receipt = build_case600_mvp_bundle(self.project, ROOT)
-        assets = json.loads(
-            receipt.asset_manifest_path.read_text(encoding="utf-8")
-        )
+        assets = json.loads(receipt.asset_manifest_path.read_text(encoding="utf-8"))
         config = json.loads(receipt.config_path.read_text(encoding="utf-8"))
-        self.assertEqual(
-            config["parameters"]["occupancy_profile_id"]["value"], "ON"
-        )
+        self.assertEqual(config["parameters"]["occupancy_profile_id"]["value"], "ON")
         gains = {item["key"]: item for item in assets["gains"]}
         equipment = gains["equipment_gain"]["properties"]
 
@@ -214,38 +185,28 @@ class Sia4010MvpBundleTests(unittest.TestCase):
             )
         )
         self.assertEqual(
-            assets["thermal_template"]["system_data"][
-                "system_air_variation_profile"
-            ]["value"],
+            assets["thermal_template"]["system_data"]["system_air_variation_profile"][
+                "value"
+            ],
             "ON",
         )
         self.assertNotIn(
             "profile_ref",
             json.dumps(assets["thermal_template"]["system_data"]),
         )
-        self.assertAlmostEqual(
-            equipment["max_power_consumption"]["value"] * 48.0, 200.0
-        )
-        self.assertAlmostEqual(
-            equipment["max_sensible_gain"]["value"] * 48.0, 200.0
-        )
+        self.assertAlmostEqual(equipment["max_power_consumption"]["value"] * 48.0, 200.0)
+        self.assertAlmostEqual(equipment["max_sensible_gain"]["value"] * 48.0, 200.0)
         self.assertEqual(equipment["max_latent_gain"]["value"], 0.0)
         self.assertEqual(equipment["radiant_fraction"]["value"], 0.6)
         self.assertIn("ISO 52016-1:2017", equipment["radiant_fraction"]["source"])
 
     def test_verified_runtime_glazing_calibration_survives_bundle_rebuild(self):
         receipt = build_case600_mvp_bundle(self.project, ROOT)
-        assets = json.loads(
-            receipt.asset_manifest_path.read_text(encoding="utf-8")
-        )
+        assets = json.loads(receipt.asset_manifest_path.read_text(encoding="utf-8"))
         glazing = next(
-            item
-            for item in assets["constructions"]
-            if item["key"] == "external_glazing"
+            item for item in assets["constructions"] if item["key"] == "external_glazing"
         )
-        cavity = next(
-            layer for layer in glazing["layers"] if layer["is_cavity"]
-        )
+        cavity = next(layer for layer in glazing["layers"] if layer["is_cavity"])
         cavity["properties"]["resistance"] = {
             "value": 0.14933,
             "description": "Runtime calibrated resistance.",
@@ -282,17 +243,13 @@ class Sia4010MvpBundleTests(unittest.TestCase):
             if item["key"] == "external_glazing"
         )
         rebuilt_cavity = next(
-            layer
-            for layer in rebuilt_glazing["layers"]
-            if layer["is_cavity"]
+            layer for layer in rebuilt_glazing["layers"] if layer["is_cavity"]
         )
-        self.assertEqual(
-            rebuilt_cavity["properties"]["resistance"]["value"], 0.14933
-        )
+        self.assertEqual(rebuilt_cavity["properties"]["resistance"]["value"], 0.14933)
         self.assertTrue(
-            rebuilt_assets["metadata"][
-                "external_glazing_runtime_calibration"
-            ]["preserved_by_bundle_rebuild"]
+            rebuilt_assets["metadata"]["external_glazing_runtime_calibration"][
+                "preserved_by_bundle_rebuild"
+            ]
         )
 
 

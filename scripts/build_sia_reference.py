@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-u"""Freezes the reference values for any SIA 4010 test.
+"""Freezes the reference values for any SIA 4010 test.
 
 Generalises `build_test7_reference.py` and `build_test2_reference.py`. The
 workbook layout varies from test to test — Test 7 stacks its quantities
@@ -52,13 +52,14 @@ if _RACINE not in sys.path:
 from engine import scatter_band  # noqa: E402
 
 _DOSSIER_SIA = os.environ.get(
-    'SIA_4010_DOSSIER', os.path.join(_RACINE, 'SIA_4010_geteilter_Link'))
+    "SIA_4010_DOSSIER", os.path.join(_RACINE, "SIA_4010_geteilter_Link")
+)
 
 TOLERANCE = 1e-6
 
-_REFERENCE_CELLULE = re.compile(r'([A-Z]{1,3})(\d{1,5})')
-_PLAGE = re.compile(r'([A-Z]{1,3})(\d{1,5})\s*:\s*([A-Z]{1,3})(\d{1,5})')
-_PLANCHER = re.compile(r'^=\s*MAX\(\s*0\s*,', re.I)
+_REFERENCE_CELLULE = re.compile(r"([A-Z]{1,3})(\d{1,5})")
+_PLAGE = re.compile(r"([A-Z]{1,3})(\d{1,5})\s*:\s*([A-Z]{1,3})(\d{1,5})")
+_PLANCHER = re.compile(r"^=\s*MAX\(\s*0\s*,", re.I)
 
 #: Layout specific to each test, READ from the workbook and never assumed.
 #: `lignes` bounds the scan; `meta` names the context columns.
@@ -79,76 +80,76 @@ _PLANCHER = re.compile(r'^=\s*MAX\(\s*0\s*,', re.I)
 #   test 5:        a MATRIX, quantity in row and case in column.
 DISPOSITIONS = {
     2: {
-        'fichier': os.path.join('Test2', 'Resultaterfassung_Test2.xlsx'),
-        'feuille': u'Zusammenfassung',
-        'lignes': (13, 25),
-        'ligne_programmes': 9,
-        'ligne_variantes': 10,
-        'libelle': ('bloc', 12),
-        'cas': ('ligne', 1),
-        'unite': ('bloc', 13),
-        'meta': {'remarque': 2},
-        'classes': ['1A', '1B', '2A', '2B', '4A', '4B'],
+        "fichier": os.path.join("Test2", "Resultaterfassung_Test2.xlsx"),
+        "feuille": "Zusammenfassung",
+        "lignes": (13, 25),
+        "ligne_programmes": 9,
+        "ligne_variantes": 10,
+        "libelle": ("bloc", 12),
+        "cas": ("ligne", 1),
+        "unite": ("bloc", 13),
+        "meta": {"remarque": 2},
+        "classes": ["1A", "1B", "2A", "2B", "4A", "4B"],
     },
     3: {
-        'fichier': os.path.join('Test3', 'Resultaterfassung_Test3.xlsx'),
-        'feuille': u'Zusammenfassung',
-        'lignes': (10, 27),
-        'ligne_programmes': 8,
-        'ligne_variantes': 10,
-        'libelle': ('bloc', 7),
-        'cas': ('ligne', 1),
+        "fichier": os.path.join("Test3", "Resultaterfassung_Test3.xlsx"),
+        "feuille": "Zusammenfassung",
+        "lignes": (10, 27),
+        "ligne_programmes": 8,
+        "ligne_variantes": 10,
+        "libelle": ("bloc", 7),
+        "cas": ("ligne", 1),
         # F7 carries the label, H7 the unit: two columns further, with no
         # usable relative rule. It is therefore designated explicitly.
-        'unite': ('cellule', (7, 8)),
-        'meta': {'protection_solaire': 2, 'regulation_eclairage': 3},
-        'classes': ['2A', '2B', '4A', '4B'],
+        "unite": ("cellule", (7, 8)),
+        "meta": {"protection_solaire": 2, "regulation_eclairage": 3},
+        "classes": ["2A", "2B", "4A", "4B"],
     },
     4: {
-        'fichier': os.path.join('Test4', 'Resultaterfassung Test4.xlsx'),
-        'feuille': u'Zusammenfassung',
-        'lignes': (9, 13),
-        'ligne_programmes': 8,
-        'ligne_variantes': 9,
-        'libelle': ('ligne', 1),
-        'cas': None,
-        'unite': ('ligne', 9),
-        'meta': {},
-        'classes': ['3', '4A', '4B'],
+        "fichier": os.path.join("Test4", "Resultaterfassung Test4.xlsx"),
+        "feuille": "Zusammenfassung",
+        "lignes": (9, 13),
+        "ligne_programmes": 8,
+        "ligne_variantes": 9,
+        "libelle": ("ligne", 1),
+        "cas": None,
+        "unite": ("ligne", 9),
+        "meta": {},
+        "classes": ["3", "4A", "4B"],
     },
     5: {
-        'fichier': os.path.join('Test5', 'Resultaterfassung_Test5.xlsx'),
-        'feuille': u'Zusammenfassung',
-        'lignes': (9, 17),
-        'ligne_programmes': 6,
-        'ligne_variantes': 7,
-        'libelle': ('ligne', 1),
-        'cas': ('contributeur', 8),
-        'unite': ('ligne', 5),
-        'meta': {},
-        'classes': ['3', '4A', '4B'],
+        "fichier": os.path.join("Test5", "Resultaterfassung_Test5.xlsx"),
+        "feuille": "Zusammenfassung",
+        "lignes": (9, 17),
+        "ligne_programmes": 6,
+        "ligne_variantes": 7,
+        "libelle": ("ligne", 1),
+        "cas": ("contributeur", 8),
+        "unite": ("ligne", 5),
+        "meta": {},
+        "classes": ["3", "4A", "4B"],
     },
     6: {
-        'fichier': os.path.join('Test6', 'Resultaterfassung_Test6.xlsx'),
-        'feuille': u'Zusammenfassung',
-        'lignes': (10, 16),
-        'ligne_programmes': 8,
-        'ligne_variantes': 9,
-        'libelle': ('ligne', 2),
-        'cas': None,
-        'unite': ('ligne', 10),
-        'meta': {},
-        'classes': ['3', '4A', '4B'],
+        "fichier": os.path.join("Test6", "Resultaterfassung_Test6.xlsx"),
+        "feuille": "Zusammenfassung",
+        "lignes": (10, 16),
+        "ligne_programmes": 8,
+        "ligne_variantes": 9,
+        "libelle": ("ligne", 2),
+        "cas": None,
+        "unite": ("ligne", 10),
+        "meta": {},
+        "classes": ["3", "4A", "4B"],
     },
 }
 
 
 class ExtractionRefusee(RuntimeError):
-    u"""Raised as soon as a value cannot be established with certainty."""
+    """Raised as soon as a value cannot be established with certainty."""
 
 
 def _valeur_numerique(feuille, ligne, colonne):
-    u"""Value of a cell if and only if it is numeric.
+    """Value of a cell if and only if it is numeric.
 
     Args:
         feuille: Sheet in values mode.
@@ -166,7 +167,7 @@ def _valeur_numerique(feuille, ligne, colonne):
 
 
 def _colonnes_citees(formule):
-    u"""Column letters referenced by a formula.
+    """Column letters referenced by a formula.
 
     Args:
         formule: Excel formula, or any other value.
@@ -174,14 +175,15 @@ def _colonnes_citees(formule):
     Returns:
         list[str]: Letters in order of appearance; empty if not a formula.
     """
-    if not isinstance(formule, str) or '(' not in formule:
+    if not isinstance(formule, str) or "(" not in formule:
         return []
-    return [m.group(1)
-            for m in _REFERENCE_CELLULE.finditer(formule[formule.find('(') + 1:])]
+    return [
+        m.group(1) for m in _REFERENCE_CELLULE.finditer(formule[formule.find("(") + 1 :])
+    ]
 
 
 def _colonnes_dune_plage(formule):
-    u"""Expands ranges in a formula into individual columns.
+    """Expands ranges in a formula into individual columns.
 
     `AVERAGE(E10:H10)` references E and H; the actual contributors are E, F,
     G, H. Not expanding would cause the consistency check to fail on tests
@@ -204,7 +206,7 @@ def _colonnes_dune_plage(formule):
 
 
 def _bornes_de_la_moyenne(feuille_formules, ligne, colonne_moyenne):
-    u"""Finds the bound columns by reading the row's formulae.
+    """Finds the bound columns by reading the row's formulae.
 
     Workbooks do NOT place bounds at the same offset: Test 2 puts them at
     mean+1 and +2, Test 5 at +4 and +8, with four interleaved quantities.
@@ -222,22 +224,22 @@ def _bornes_de_la_moyenne(feuille_formules, ligne, colonne_moyenne):
     Returns:
         tuple[int | None, int | None]: Columns (upper, lower).
     """
-    reference = '%s%d' % (get_column_letter(colonne_moyenne), ligne)
+    reference = "%s%d" % (get_column_letter(colonne_moyenne), ligne)
     haut = bas = None
     for cellule in feuille_formules[ligne]:
         valeur = cellule.value
-        if not isinstance(valeur, str) or 'MAX' not in valeur.upper():
+        if not isinstance(valeur, str) or "MAX" not in valeur.upper():
             continue
-        compact = valeur.replace(' ', '')
-        if reference + '+MAX(' in compact:
+        compact = valeur.replace(" ", "")
+        if reference + "+MAX(" in compact:
             haut = cellule.column
-        elif reference + '-MAX(' in compact:
+        elif reference + "-MAX(" in compact:
             bas = cellule.column
     return haut, bas
 
 
 def _bandes_du_classeur(feuille_formules, plage_lignes):
-    u"""Locates bands by their AVERAGE formula.
+    """Locates bands by their AVERAGE formula.
 
     Args:
         feuille_formules: Sheet in formulas mode.
@@ -251,13 +253,13 @@ def _bandes_du_classeur(feuille_formules, plage_lignes):
     for rangee in feuille_formules.iter_rows(min_row=debut, max_row=fin):
         for cellule in rangee:
             valeur = cellule.value
-            if isinstance(valeur, str) and 'AVERAGE' in valeur.upper():
+            if isinstance(valeur, str) and "AVERAGE" in valeur.upper():
                 trouvees.append((cellule.row, cellule.column))
     return sorted(trouvees)
 
 
 def _controler_coherence(ligne, lettres_moyenne, lettres_haut, colonne_moyenne):
-    u"""Verifies that the MAX covers the same columns as the AVERAGE.
+    """Verifies that the MAX covers the same columns as the AVERAGE.
 
     A discrepancy would mean that the workbook weights the mean and the
     deviation on different sets — a case we refuse to interpret.
@@ -275,12 +277,13 @@ def _controler_coherence(ligne, lettres_moyenne, lettres_haut, colonne_moyenne):
     observees = set(lettres_haut) - {get_column_letter(colonne_moyenne)}
     if observees and observees != attendues:
         raise ExtractionRefusee(
-            u'ligne %d : AVERAGE porte sur %s mais MAX sur %s'
-            % (ligne, sorted(attendues), sorted(observees)))
+            "ligne %d : AVERAGE porte sur %s mais MAX sur %s"
+            % (ligne, sorted(attendues), sorted(observees))
+        )
 
 
 def _unite_apres(feuille, ligne, col_libelle, col_moyenne):
-    u"""Unit of a quantity, searched TO THE RIGHT of its label.
+    """Unit of a quantity, searched TO THE RIGHT of its label.
 
     Workbooks do not place it at the same position: Test 2 puts it on the row
     following the label, Test 3 on the SAME row, two columns further. A fixed
@@ -303,9 +306,8 @@ def _unite_apres(feuille, ligne, col_libelle, col_moyenne):
     return None
 
 
-def _etiquette(feuille, origine, ligne, col_moyenne, col_bloc,
-               col_contributeur=None):
-    u"""Reads a label according to the origin declared by the layout.
+def _etiquette(feuille, origine, ligne, col_moyenne, col_bloc, col_contributeur=None):
+    """Reads a label according to the origin declared by the layout.
 
     Args:
         feuille: Sheet in values mode.
@@ -323,15 +325,15 @@ def _etiquette(feuille, origine, ligne, col_moyenne, col_bloc,
     if not origine:
         return None
     genre, indice = origine
-    if genre == 'ligne':
+    if genre == "ligne":
         valeur = feuille.cell(row=ligne, column=indice).value
-    elif genre == 'bloc':
+    elif genre == "bloc":
         valeur = feuille.cell(row=indice, column=col_bloc).value
-    elif genre == 'colonne':
+    elif genre == "colonne":
         valeur = feuille.cell(row=indice, column=col_moyenne).value
-    elif genre == 'contributeur' and col_contributeur is not None:
+    elif genre == "contributeur" and col_contributeur is not None:
         valeur = feuille.cell(row=indice, column=col_contributeur).value
-    elif genre == 'cellule':
+    elif genre == "cellule":
         valeur = feuille.cell(row=indice[0], column=indice[1]).value
     else:
         return None
@@ -352,44 +354,44 @@ def _etiquette(feuille, origine, ligne, col_moyenne, col_bloc,
 # the frozen reference is the evidence against which the engine is judged; it
 # cannot derive from the engine. The two are compared by
 # `engine/tests/test_references_bandes.py`, which fails if they diverge.
-_CRITERE_ENONCE = u'ENONCE_DANS_LA_SPEC'
-_CRITERE_INFERE = u'INFERE'
+_CRITERE_ENONCE = "ENONCE_DANS_LA_SPEC"
+_CRITERE_INFERE = "INFERE"
 _CRITERE_PAR_TEST = {
     2: (
         _CRITERE_ENONCE,
-        u"Spezifikation_Test2.pdf page 2/2, section « Testkriterien » : "
-        u"« Jahressumme der solaren Wärmeeinträge oder der total "
-        u"transmittierten Strahlung: Mittelwert der Referenzprogramme +/- "
-        u"maximale Abweichung ». La même section énonce aussi le critère de "
-        u"distribution : « Häufigkeitsverteilung … muss im Streubereich der "
-        u"Referenzprogramme liegen ».",
+        "Spezifikation_Test2.pdf page 2/2, section « Testkriterien » : "
+        "« Jahressumme der solaren Wärmeeinträge oder der total "
+        "transmittierten Strahlung: Mittelwert der Referenzprogramme +/- "
+        "maximale Abweichung ». La même section énonce aussi le critère de "
+        "distribution : « Häufigkeitsverteilung … muss im Streubereich der "
+        "Referenzprogramme liegen ».",
     ),
     3: (
         _CRITERE_ENONCE,
-        u"Spezifikation_Test3.pdf page 3/3, section « Testkriterien » : "
-        u"« Jahressumme: Mittelwert +/- max. Abweichung der "
-        u"Referenzprogramme », suivie de « Häufigkeitsverteilung innerhalb des "
-        u"Streubereichs der Referenzprogramme ».",
+        "Spezifikation_Test3.pdf page 3/3, section « Testkriterien » : "
+        "« Jahressumme: Mittelwert +/- max. Abweichung der "
+        "Referenzprogramme », suivie de « Häufigkeitsverteilung innerhalb des "
+        "Streubereichs der Referenzprogramme ».",
     ),
     5: (
         _CRITERE_ENONCE,
-        u"Spezifikation_Test5.pdf page 5/5, section « Testkriterien » : "
-        u"« Zulässiger Bereich für Jahressummen: Mittelwerte der "
-        u"Referenzprogramme +/- maximale Abweichung. Die "
-        u"Häufigkeitsverteilungen müssen im Streubereich der "
-        u"Referenzprogramme liegen. »",
+        "Spezifikation_Test5.pdf page 5/5, section « Testkriterien » : "
+        "« Zulässiger Bereich für Jahressummen: Mittelwerte der "
+        "Referenzprogramme +/- maximale Abweichung. Die "
+        "Häufigkeitsverteilungen müssen im Streubereich der "
+        "Referenzprogramme liegen. »",
     ),
 }
 _CRITERE_DELEGUE = (
-    u"La spécification de ce test ne comporte aucune section « Testkriterien » "
-    u"(recherche plein texte : zéro occurrence). SIA 4010:2023 §4.4 délègue "
-    u"alors la comparaison au classeur d'évaluation, qui porte les bandes. À "
-    u"confirmer par la sous-commission (§4.6.2)."
+    "La spécification de ce test ne comporte aucune section « Testkriterien » "
+    "(recherche plein texte : zéro occurrence). SIA 4010:2023 §4.4 délègue "
+    "alors la comparaison au classeur d'évaluation, qui porte les bandes. À "
+    "confirmer par la sous-commission (§4.6.2)."
 )
 
 
 def _critere_du_test(numero_test):
-    u"""Returns the `critere` block for a test, including status and origin.
+    """Returns the `critere` block for a test, including status and origin.
 
     Args:
         numero_test: SIA test number.
@@ -402,14 +404,14 @@ def _critere_du_test(numero_test):
         numero_test, (_CRITERE_INFERE, _CRITERE_DELEGUE)
     )
     return {
-        'formule': u'moyenne ± MAX(ABS(programme − moyenne)), bornes incluses',
-        'statut': statut,
-        'origine': origine,
+        "formule": "moyenne ± MAX(ABS(programme − moyenne)), bornes incluses",
+        "statut": statut,
+        "origine": origine,
     }
 
 
 def extraire(numero_test):
-    u"""Extracts and verifies all bands for a test.
+    """Extracts and verifies all bands for a test.
 
     Args:
         numero_test: SIA test number, e.g. 2.
@@ -422,43 +424,51 @@ def extraire(numero_test):
     """
     if numero_test not in DISPOSITIONS:
         raise ExtractionRefusee(
-            u'disposition inconnue pour le test %s ; connues : %s'
-            % (numero_test, sorted(DISPOSITIONS)))
+            "disposition inconnue pour le test %s ; connues : %s"
+            % (numero_test, sorted(DISPOSITIONS))
+        )
     plan = DISPOSITIONS[numero_test]
-    chemin = os.path.join(_DOSSIER_SIA, plan['fichier'])
+    chemin = os.path.join(_DOSSIER_SIA, plan["fichier"])
     if not os.path.exists(chemin):
-        raise ExtractionRefusee(u'classeur introuvable : %s' % chemin)
+        raise ExtractionRefusee("classeur introuvable : %s" % chemin)
 
-    sf = openpyxl.load_workbook(chemin, data_only=False)[plan['feuille']]
-    sv = openpyxl.load_workbook(chemin, data_only=True)[plan['feuille']]
+    sf = openpyxl.load_workbook(chemin, data_only=False)[plan["feuille"]]
+    sv = openpyxl.load_workbook(chemin, data_only=True)[plan["feuille"]]
 
     par_bloc = {}
-    for ligne, col_moy in _bandes_du_classeur(sf, plan['lignes']):
+    for ligne, col_moy in _bandes_du_classeur(sf, plan["lignes"]):
         col_haut, col_bas = _bornes_de_la_moyenne(sf, ligne, col_moy)
         if col_haut is None or col_bas is None:
             raise ExtractionRefusee(
-                u'ligne %d col %s : bornes introuvables -- aucune formule ne '
-                u'reference cette moyenne avec un MAX'
-                % (ligne, get_column_letter(col_moy)))
+                "ligne %d col %s : bornes introuvables -- aucune formule ne "
+                "reference cette moyenne avec un MAX"
+                % (ligne, get_column_letter(col_moy))
+            )
 
         formule_moy = sf.cell(row=ligne, column=col_moy).value
-        citees = (_colonnes_dune_plage(formule_moy)
-                  or _colonnes_citees(formule_moy))
+        citees = _colonnes_dune_plage(formule_moy) or _colonnes_citees(formule_moy)
         # Range OR list, Excel ignores non-numeric cells in an AVERAGE --
         # typically a string like « ='Daten EnergyPlus'!G11 » left there by
         # the SIA to flag a programme that did not submit. The actual
         # contributors are therefore the NUMERIC cells referenced, which is
         # exactly what the MAX list enumerates on its side.
-        lettres = [l for l in citees
-                   if _valeur_numerique(
-                       sv, ligne, column_index_from_string(l)) is not None]
+        lettres = [
+            column_letter
+            for column_letter in citees
+            if _valeur_numerique(sv, ligne, column_index_from_string(column_letter))
+            is not None
+        ]
         if not lettres:
             raise ExtractionRefusee(
-                u'ligne %d col %s : contributeurs illisibles'
-                % (ligne, get_column_letter(col_moy)))
+                "ligne %d col %s : contributeurs illisibles"
+                % (ligne, get_column_letter(col_moy))
+            )
         _controler_coherence(
-            ligne, lettres,
-            _colonnes_citees(sf.cell(row=ligne, column=col_haut).value), col_moy)
+            ligne,
+            lettres,
+            _colonnes_citees(sf.cell(row=ligne, column=col_haut).value),
+            col_moy,
+        )
 
         contributions, par_colonne = [], {}
         for lettre in lettres:
@@ -466,56 +476,58 @@ def extraire(numero_test):
             valeur = _valeur_numerique(sv, ligne, colonne)
             if valeur is None:
                 raise ExtractionRefusee(
-                    u'ligne %d colonne %s : contributeur déclaré mais valeur '
-                    u'non numérique' % (ligne, lettre))
+                    "ligne %d colonne %s : contributeur déclaré mais valeur "
+                    "non numérique" % (ligne, lettre)
+                )
             contributions.append(valeur)
             par_colonne[lettre] = {
-                'valeur': valeur,
-                'programme': sv.cell(row=plan['ligne_programmes'],
-                                     column=colonne).value,
-                'variante': sv.cell(row=plan['ligne_variantes'],
-                                    column=colonne).value,
+                "valeur": valeur,
+                "programme": sv.cell(row=plan["ligne_programmes"], column=colonne).value,
+                "variante": sv.cell(row=plan["ligne_variantes"], column=colonne).value,
             }
 
-        plancher = bool(_PLANCHER.match(
-            str(sf.cell(row=ligne, column=col_bas).value or '')))
+        plancher = bool(
+            _PLANCHER.match(str(sf.cell(row=ligne, column=col_bas).value or ""))
+        )
         bande = scatter_band.build_band(contributions, floor_at_zero=plancher)
 
-        for nom, colonne, obtenu in ((u'moyenne', col_moy, bande.mean),
-                                     (u'haut', col_haut, bande.upper_bound),
-                                     (u'bas', col_bas, bande.lower_bound)):
+        for nom, colonne, obtenu in (
+            ("moyenne", col_moy, bande.mean),
+            ("haut", col_haut, bande.upper_bound),
+            ("bas", col_bas, bande.lower_bound),
+        ):
             reference = sv.cell(row=ligne, column=colonne).value
             if not isinstance(reference, (int, float)):
                 raise ExtractionRefusee(
-                    u'ligne %d : %s non mis en cache par le classeur'
-                    % (ligne, nom))
+                    "ligne %d : %s non mis en cache par le classeur" % (ligne, nom)
+                )
             if abs(float(reference) - obtenu) > TOLERANCE:
                 raise ExtractionRefusee(
-                    u'ligne %d, %s : classeur %.10f, recalcul %.10f'
-                    % (ligne, nom, reference, obtenu))
+                    "ligne %d, %s : classeur %.10f, recalcul %.10f"
+                    % (ligne, nom, reference, obtenu)
+                )
 
-        col_premier = min(column_index_from_string(l) for l in lettres)
+        col_premier = min(
+            column_index_from_string(column_letter) for column_letter in lettres
+        )
         col_bloc = col_premier - 1
-        libelle = _etiquette(sv, plan['libelle'], ligne, col_moy, col_bloc,
-                             col_premier)
-        nom_cas = _etiquette(sv, plan['cas'], ligne, col_moy, col_bloc,
-                             col_premier)
-        unite = _etiquette(sv, plan['unite'], ligne, col_moy, col_bloc,
-                           col_premier)
+        libelle = _etiquette(sv, plan["libelle"], ligne, col_moy, col_bloc, col_premier)
+        nom_cas = _etiquette(sv, plan["cas"], ligne, col_moy, col_bloc, col_premier)
+        unite = _etiquette(sv, plan["unite"], ligne, col_moy, col_bloc, col_premier)
 
         entree = {
-            'ligne_classeur': ligne,
-            'colonne_moyenne': get_column_letter(col_moy),
-            'cas': nom_cas if nom_cas else u'(ensemble)',
-            'contributeurs': lettres,
-            'par_colonne': par_colonne,
-            'moyenne': bande.mean,
-            'borne_haute': bande.upper_bound,
-            'borne_basse': bande.lower_bound,
-            'ecart_max': bande.max_deviation,
-            'plancher_a_zero': plancher,
+            "ligne_classeur": ligne,
+            "colonne_moyenne": get_column_letter(col_moy),
+            "cas": nom_cas if nom_cas else "(ensemble)",
+            "contributeurs": lettres,
+            "par_colonne": par_colonne,
+            "moyenne": bande.mean,
+            "borne_haute": bande.upper_bound,
+            "borne_basse": bande.lower_bound,
+            "ecart_max": bande.max_deviation,
+            "plancher_a_zero": plancher,
         }
-        for nom_meta, colonne_meta in plan['meta'].items():
+        for nom_meta, colonne_meta in plan["meta"].items():
             valeur = sv.cell(row=ligne, column=colonne_meta).value
             entree[nom_meta] = valeur.strip() if isinstance(valeur, str) else valeur
         par_bloc.setdefault((libelle, unite), []).append(entree)
@@ -523,35 +535,37 @@ def extraire(numero_test):
     # Grouping by (label, unit): that is the quantity, regardless of how the
     # workbook presents it -- as a column block or as a row.
     grandeurs = []
-    for cle in sorted(par_bloc, key=lambda c: (u'%s' % c[0], u'%s' % c[1])):
+    for cle in sorted(par_bloc, key=lambda c: ("%s" % c[0], "%s" % c[1])):
         libelle, unite = cle
-        grandeurs.append({
-            'libelle_de': libelle,
-            'unite': unite,
-            'cas': par_bloc[cle],
-        })
+        grandeurs.append(
+            {
+                "libelle_de": libelle,
+                "unite": unite,
+                "cas": par_bloc[cle],
+            }
+        )
 
     return {
-        'test': numero_test,
-        'classes_concernees': plan['classes'],
-        'statut': u'FIGÉ — bandes recalculées et confrontées au classeur',
-        'date_extraction': u'2026-08-06',
-        'source': {
-            'fichier': u'SIA_4010_geteilter_Link/' + plan['fichier'].replace('\\', '/'),
-            'feuille': plan['feuille'],
+        "test": numero_test,
+        "classes_concernees": plan["classes"],
+        "statut": "FIGÉ — bandes recalculées et confrontées au classeur",
+        "date_extraction": "2026-08-06",
+        "source": {
+            "fichier": "SIA_4010_geteilter_Link/" + plan["fichier"].replace("\\", "/"),
+            "feuille": plan["feuille"],
         },
-        'critere': _critere_du_test(numero_test),
-        'piege_variantes': (
-            u"Les colonnes sont des VARIANTES de programme, pas des programmes. "
-            u"Le SIA retient une variante par programme, et pas la même d'un "
-            u"programme à l'autre : le jeu contributeur est lu sur la formule."
+        "critere": _critere_du_test(numero_test),
+        "piege_variantes": (
+            "Les colonnes sont des VARIANTES de programme, pas des programmes. "
+            "Le SIA retient une variante par programme, et pas la même d'un "
+            "programme à l'autre : le jeu contributeur est lu sur la formule."
         ),
-        'grandeurs': grandeurs,
+        "grandeurs": grandeurs,
     }
 
 
 def main(arguments):
-    u"""Command-line entry point.
+    """Command-line entry point.
 
     Args:
         arguments: Arguments excluding the script name.
@@ -561,37 +575,46 @@ def main(arguments):
     """
     numeros = [int(a) for a in arguments if a.isdigit()]
     if not numeros:
-        print(u'usage : python scripts/build_sia_reference.py <N> [--ecrire]')
-        print(u'  tests disponibles : %s' % sorted(DISPOSITIONS))
+        print("usage : python scripts/build_sia_reference.py <N> [--ecrire]")
+        print("  tests disponibles : %s" % sorted(DISPOSITIONS))
         return 1
 
     for numero in numeros:
         donnees = extraire(numero)
-        total = sum(len(g['cas']) for g in donnees['grandeurs'])
-        print(u'Test %d — %d grandeur(s), %d bande(s)'
-              % (numero, len(donnees['grandeurs']), total))
-        for grandeur in donnees['grandeurs']:
+        total = sum(len(g["cas"]) for g in donnees["grandeurs"])
+        print(
+            "Test %d — %d grandeur(s), %d bande(s)"
+            % (numero, len(donnees["grandeurs"]), total)
+        )
+        for grandeur in donnees["grandeurs"]:
             print()
-            print(u'  %s [%s]' % (grandeur['libelle_de'], grandeur['unite']))
-            for entree in grandeur['cas']:
-                print(u'    %-12s %10.1f  (%10.1f … %10.1f)  %s%s'
-                      % (entree.get('cas') or u'?', entree['moyenne'],
-                         entree['borne_basse'], entree['borne_haute'],
-                         u''.join(entree['contributeurs']),
-                         u'  [plancher 0]' if entree['plancher_a_zero'] else u''))
+            print("  %s [%s]" % (grandeur["libelle_de"], grandeur["unite"]))
+            for entree in grandeur["cas"]:
+                print(
+                    "    %-12s %10.1f  (%10.1f … %10.1f)  %s%s"
+                    % (
+                        entree.get("cas") or "?",
+                        entree["moyenne"],
+                        entree["borne_basse"],
+                        entree["borne_haute"],
+                        "".join(entree["contributeurs"]),
+                        "  [plancher 0]" if entree["plancher_a_zero"] else "",
+                    )
+                )
         print()
-        print(u'  toutes les bandes concordent (tol. %g)' % TOLERANCE)
+        print("  toutes les bandes concordent (tol. %g)" % TOLERANCE)
 
-        if '--ecrire' in arguments:
-            sortie = os.path.join(_RACINE, 'refs', 'reference-data',
-                                  'test-%d.ref.json' % numero)
-            with io.open(sortie, 'w', encoding='utf-8') as flux:
+        if "--ecrire" in arguments:
+            sortie = os.path.join(
+                _RACINE, "refs", "reference-data", "test-%d.ref.json" % numero
+            )
+            with io.open(sortie, "w", encoding="utf-8") as flux:
                 flux.write(json.dumps(donnees, ensure_ascii=False, indent=2))
-                flux.write(u'\n')
-            print(u'  écrit : %s' % os.path.relpath(sortie, _RACINE))
+                flux.write("\n")
+            print("  écrit : %s" % os.path.relpath(sortie, _RACINE))
         print()
     return 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main(sys.argv[1:]))

@@ -31,7 +31,7 @@ def run():
         gateway.project_path,
         PROJECT_ROOT,
     )
-    print("CONTROLLED TEST 2A 2E1 OPTICAL SETTER QUALIFICATION: PASS")
+    print("CONTROLLED TEST 2A 2E1 WRITABLE OPTICAL SUBSET: PASS")
     print("Project: {}".format(gateway.project.name))
     print("Report: {}".format(receipt.report_path))
     print(
@@ -41,11 +41,15 @@ def run():
     )
     print("Bundle audit: {}".format(receipt.bundle_audit_path))
     print(
-        "Only direct-name fixed-closed CDB storage/read-back was qualified."
+        "Only the VE 2025 documented writable fixed-closed CDB subset was "
+        "qualified: active state, ON profile, normal-incidence transmittance "
+        "and the two threshold expressions."
     )
     print(
-        "Angular optics, inside reflectance, secondary heat transfer, APS "
-        "equivalence and dynamic control remain fail-closed."
+        "The threshold control and IESVE field mapping are authority-confirmed. "
+        "External-shade solar/visible reflectance setters are unavailable; "
+        "angular optics, secondary heat transfer and APS equivalence also "
+        "remain fail-closed."
     )
     return receipt.to_dict()
 

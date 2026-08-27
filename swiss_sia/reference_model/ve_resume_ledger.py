@@ -35,8 +35,7 @@ import os
 import tempfile
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, Iterable, List, Mapping, Optional
-
+from typing import Any, Dict, List, Mapping, Optional
 
 LEDGER_SCHEMA_VERSION = "1.0"
 LEDGER_STATUS_COMPLETED = "COMPLETED"
@@ -264,7 +263,9 @@ class ResumeLedger:
             self.flush()
         return entry
 
-    def discard(self, step_id: str, *, reason: str, flush: bool = True) -> Optional[LedgerEntry]:
+    def discard(
+        self, step_id: str, *, reason: str, flush: bool = True
+    ) -> Optional[LedgerEntry]:
         """Remove a step's ledger entry; ``reason`` is required for audit trail."""
 
         if not reason.strip():

@@ -35,7 +35,6 @@ import json
 import sys
 from pathlib import Path
 
-
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
@@ -67,9 +66,7 @@ def _load_facts(path):
         raise SystemExit(
             "A facts file may not supply {}: the Feststellungen, the author "
             "and the date must be given deliberately on the command line by "
-            "the engineer answering for the submission.".format(
-                ", ".join(present)
-            )
+            "the engineer answering for the submission.".format(", ".join(present))
         )
     return {key: value for key, value in facts.items() if not key.startswith("_")}
 
@@ -158,13 +155,10 @@ def main() -> int:
                 supplier=args.supplier or program_facts.get("supplier", ""),
                 notes=args.program_note or program_facts.get("notes", ""),
             ),
-            input_parameters=(
-                args.input_parameter or facts.get("input_parameters", [])
-            ),
+            input_parameters=(args.input_parameter or facts.get("input_parameters", [])),
             data_sources=args.data_source or facts.get("data_sources", []),
             special_assumptions=(
-                args.special_assumption
-                or facts.get("special_assumptions", [])
+                args.special_assumption or facts.get("special_assumptions", [])
             ),
             observations=args.observation,
             author=args.author,

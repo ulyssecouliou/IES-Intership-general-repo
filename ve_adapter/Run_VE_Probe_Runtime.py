@@ -18,23 +18,22 @@ si le guide dit vrai.
 import os
 import sys
 
-
 BIBLIOTHEQUES = [
     # (module importable, usage prevu dans le produit)
-    ('numpy', 'agregation des series horaires'),
-    ('pandas', 'classes de frequence'),
-    ('scipy', 'statistiques'),
-    ('matplotlib', 'graphiques du PDF'),
-    ('win32com.client', 'PILOTAGE EXCEL PAR COM — remplissage du classeur SIA'),
-    ('reportlab', 'PDF client'),
-    ('xlsxwriter', 'creation de classeurs'),
-    ('xlrd', 'lecture de classeurs'),
-    ('openpyxl', 'lecture/ecriture xlsx (non documente comme fourni)'),
-    ('jinja2', 'gabarits de rapport'),
-    ('PIL', 'images'),
-    ('tkinter', "interface dans VE"),
-    ('dataclasses', 'exige Python 3.7+ — presence = guide VE perime'),
-    ('iesve', "API VE elle-meme"),
+    ("numpy", "agregation des series horaires"),
+    ("pandas", "classes de frequence"),
+    ("scipy", "statistiques"),
+    ("matplotlib", "graphiques du PDF"),
+    ("win32com.client", "PILOTAGE EXCEL PAR COM — remplissage du classeur SIA"),
+    ("reportlab", "PDF client"),
+    ("xlsxwriter", "creation de classeurs"),
+    ("xlrd", "lecture de classeurs"),
+    ("openpyxl", "lecture/ecriture xlsx (non documente comme fourni)"),
+    ("jinja2", "gabarits de rapport"),
+    ("PIL", "images"),
+    ("tkinter", "interface dans VE"),
+    ("dataclasses", "exige Python 3.7+ — presence = guide VE perime"),
+    ("iesve", "API VE elle-meme"),
 ]
 
 
@@ -45,46 +44,50 @@ def _ligne(texte, sortie):
 
 def main():
     sortie = []
-    _ligne('=== SONDE RUNTIME VESCRIPTS ===', sortie)
-    _ligne('sys.version      : ' + sys.version.replace('\n', ' '), sortie)
-    _ligne('sys.version_info : ' + repr(tuple(sys.version_info)), sortie)
-    _ligne('sys.executable   : ' + str(sys.executable), sortie)
-    _ligne('plateforme       : ' + sys.platform, sortie)
-    _ligne('', sortie)
+    _ligne("=== SONDE RUNTIME VESCRIPTS ===", sortie)
+    _ligne("sys.version      : " + sys.version.replace("\n", " "), sortie)
+    _ligne("sys.version_info : " + repr(tuple(sys.version_info)), sortie)
+    _ligne("sys.executable   : " + str(sys.executable), sortie)
+    _ligne("plateforme       : " + sys.platform, sortie)
+    _ligne("", sortie)
 
-    _ligne('--- bibliotheques ---', sortie)
+    _ligne("--- bibliotheques ---", sortie)
     for nom, usage in BIBLIOTHEQUES:
         try:
             module = __import__(nom)
         except Exception as erreur:  # ImportError et tout le reste
-            _ligne('  ABSENT   {0:20s} ({1}) : {2}'.format(
-                nom, usage, erreur.__class__.__name__), sortie)
+            _ligne(
+                "  ABSENT   {0:20s} ({1}) : {2}".format(
+                    nom, usage, erreur.__class__.__name__
+                ),
+                sortie,
+            )
             continue
-        version = getattr(module, '__version__', None)
+        version = getattr(module, "__version__", None)
         if version is None:
-            version = getattr(module, 'version', '(version inconnue)')
-        _ligne('  present  {0:20s} {1:12s} {2}'.format(
-            nom, str(version), usage), sortie)
+            version = getattr(module, "version", "(version inconnue)")
+        _ligne("  present  {0:20s} {1:12s} {2}".format(nom, str(version), usage), sortie)
 
-    _ligne('', sortie)
-    _ligne('--- verdict ---', sortie)
+    _ligne("", sortie)
+    _ligne("--- verdict ---", sortie)
     if sys.version_info >= (3, 7):
-        _ligne('  Python >= 3.7 : le guide VE 2023 est PERIME sur ce point.', sortie)
-        _ligne('  Aucune contrainte 3.4 a imposer au code.', sortie)
+        _ligne("  Python >= 3.7 : le guide VE 2023 est PERIME sur ce point.", sortie)
+        _ligne("  Aucune contrainte 3.4 a imposer au code.", sortie)
     else:
-        _ligne('  Python < 3.7 : le guide dit vrai. Pas de f-string ni de', sortie)
-        _ligne('  dataclasses dans le code destine a VE.', sortie)
+        _ligne("  Python < 3.7 : le guide dit vrai. Pas de f-string ni de", sortie)
+        _ligne("  dataclasses dans le code destine a VE.", sortie)
 
-    chemin = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                          'probe_runtime_resultat.txt')
+    chemin = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)), "probe_runtime_resultat.txt"
+    )
     try:
-        with open(chemin, 'w') as flux:
-            flux.write('\n'.join(sortie))
-        print('')
-        print('Ecrit dans : ' + chemin)
+        with open(chemin, "w") as flux:
+            flux.write("\n".join(sortie))
+        print("")
+        print("Ecrit dans : " + chemin)
     except Exception as erreur:
-        print('Ecriture impossible (' + str(erreur) + ') — copier la sortie ci-dessus.')
+        print("Ecriture impossible (" + str(erreur) + ") — copier la sortie ci-dessus.")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

@@ -16,9 +16,7 @@ class EmissionFactorProvenanceTests(unittest.TestCase):
         """Provenance markers must flag the factors as non-authoritative."""
 
         self.assertEqual(config.EMISSION_FACTORS_STATUS, "INDICATIVE_UNVERIFIED")
-        self.assertTrue(
-            config.EMISSION_FACTORS_SOURCE.upper().startswith("PLACEHOLDER")
-        )
+        self.assertTrue(config.EMISSION_FACTORS_SOURCE.upper().startswith("PLACEHOLDER"))
         self.assertEqual(config.EMISSION_FACTORS_UNITS, "kg CO2/kWh")
 
     def test_factor_values_are_pinned(self):

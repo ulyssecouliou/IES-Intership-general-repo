@@ -154,62 +154,280 @@ _APS_QUANTITIES = {
 # auto-decided (they are reserves, never silent passes).
 CLIENT_LIMITATIONS = {
     "fr": [
-        {"title": "Ponts thermiques (ψ/χ)",
-         "why": "VE 2025.2 expose ψ/χ par surface : la conductance de ponts thermiques H_tb (W/K) est lue directement. Une jonction laissée à ψ=0 peut être un défaut non saisi (à vérifier). Sur VE plus ancienne ou modèle non renseigné, un calcul relu (CSV) reste le repli."},
-        {"title": "Puissance de dimensionnement",
-         "why": "Le calcul par les jours de dimensionnement prescrits n'est pas implémenté ; les pics annuels ne peuvent pas s'y substituer."},
-        {"title": "SEER saisonnier (froid)",
-         "why": "SN EN 14825:2018 est désormais une référence vérifiée et SIA 380/2 table 5 définit ses minima SEER « selon SN EN 14825» : un SEER déclaré fabricant (ErP/Ecodesign) est comparé proprement à la bande SIA. Seul un indice saisonnier lu du modèle VE reste [TO VERIFY] (calcul EN 14825 non confirmé)."},
-        {"title": "SCoP saisonnier (chaud)",
-         "why": "La clause de calcul du SCoP (EN 14825, chaud) n'est pas encore vérifiée : verdict indicatif [TO VERIFY], pas un pass prouvé."},
-        {"title": "Contrôle de l'éclairage",
-         "why": "SIA 387/4 (référence de contrôle éclairage) est absente des sources vérifiées : le verdict de contrôle ne peut pas être clôturé."},
-        {"title": "Comparaison globale (§ 7.2.5.2)",
-         "why": "Décisive pour la conformité SIA 380/2, elle n'est pas calculée côté client (le projet de référence n'est pas simulé) : elle est fournie et acceptée par un relecteur."},
-        {"title": "Écriture des gains / ventilation dans les pièces",
-         "why": "L'API VE documentée n'expose pas de membre pour écrire des gains au niveau pièce (VERoomData) ; la préparation du modèle se fait dans l'interface VE. L'outil lit et audite, il ne modifie pas le modèle."},
-        {"title": "Confort d'été (SIA 180)",
-         "why": "Le verdict de surchauffe exige un résultat APS annuel complet et la provenance météo vérifiée. Si l'opérabilité des fenêtres est inconnue, le contrôle utilise 0 h comme valeur de dépistage conservatrice mais le domaine reste NOT_DETERMINED. Pour une fenêtre non opérable avec statut bâtiment inconnu, 100 h/an (NEUF) est utilisé pour le dépistage, sans transformer la preuve manquante en conformité."},
-        {"title": "Protection solaire — stratégie de régulation",
-         "why": "VE expose les dispositifs d'ombrage mais pas la stratégie de régulation active (SIA 380/2 table 10). La catégorie de contrôle et le g_total actif doivent être fournis par preuve du relecteur. Tant que cette preuve manque, le verdict global reste NOT_DETERMINED (porte autonome §7.1.2)."},
-        {"title": "Catégorie d'usage SIA 2024",
-         "why": "L'affectation de chaque zone thermique à une catégorie SIA 2024 n'est pas déductible automatiquement du modèle VE. Un mapping relecteur (CSV) est requis ; sans lui, les horaires, gains et hypothèses de vitrage ne sont pas comparables aux références normatives."},
-        {"title": "Classification générateur froid (air/eau)",
-         "why": "Le champ VE NCM chiller-type est UK-spécifique et typiquement vide sur les modèles suisses. Les valeurs EER/SEER sont lues directement, mais la classification air-cooled/water-cooled (nécessaire pour la bande table 5-7) reste une limitation structurelle en l'absence d'accès au réseau ApacheHVAC."},
-        {"title": "Récupération de chaleur CTA",
-         "why": "La classe d'étanchéité des conduits, le type et l'efficacité de récupération de chaleur et les pertes de charge ne sont que partiellement exposés par VE. La preuve complète (fiche technique CTA, classe L1/L2) doit être fournie par le relecteur."},
-        {"title": "Horaires et profils d'utilisation",
-         "why": "VE expose les profils de template sous forme de profil équivalent journalier. Les horaires hebdomadaires complets et les exceptions ne sont pas automatiquement extraits : un export ou une confirmation du relecteur est nécessaire pour la traçabilité normative."},
+        {
+            "title": "Ponts thermiques (ψ/χ)",
+            "why": "VE 2025.2 expose ψ/χ par surface : la conductance de ponts thermiques H_tb (W/K) est lue directement. Une jonction laissée à ψ=0 peut être un défaut non saisi (à vérifier). Sur VE plus ancienne ou modèle non renseigné, un calcul relu (CSV) reste le repli.",
+        },
+        {
+            "title": "Puissance de dimensionnement",
+            "why": "Le calcul par les jours de dimensionnement prescrits n'est pas implémenté ; les pics annuels ne peuvent pas s'y substituer.",
+        },
+        {
+            "title": "SEER saisonnier (froid)",
+            "why": "SN EN 14825:2018 est désormais une référence vérifiée et SIA 380/2 table 5 définit ses minima SEER « selon SN EN 14825» : un SEER déclaré fabricant (ErP/Ecodesign) est comparé proprement à la bande SIA. Seul un indice saisonnier lu du modèle VE reste [TO VERIFY] (calcul EN 14825 non confirmé).",
+        },
+        {
+            "title": "SCoP saisonnier (chaud)",
+            "why": "La clause de calcul du SCoP (EN 14825, chaud) n'est pas encore vérifiée : verdict indicatif [TO VERIFY], pas un pass prouvé.",
+        },
+        {
+            "title": "Contrôle de l'éclairage",
+            "why": "SIA 387/4 (référence de contrôle éclairage) est absente des sources vérifiées : le verdict de contrôle ne peut pas être clôturé.",
+        },
+        {
+            "title": "Comparaison globale (§ 7.2.5.2)",
+            "why": "Décisive pour la conformité SIA 380/2, elle n'est pas calculée côté client (le projet de référence n'est pas simulé) : elle est fournie et acceptée par un relecteur.",
+        },
+        {
+            "title": "Écriture des gains / ventilation dans les pièces",
+            "why": "L'API VE documentée n'expose pas de membre pour écrire des gains au niveau pièce (VERoomData) ; la préparation du modèle se fait dans l'interface VE. L'outil lit et audite, il ne modifie pas le modèle.",
+        },
+        {
+            "title": "Confort d'été (SIA 180)",
+            "why": "Le verdict de surchauffe exige un résultat APS annuel complet et la provenance météo vérifiée. Si l'opérabilité des fenêtres est inconnue, le contrôle utilise 0 h comme valeur de dépistage conservatrice mais le domaine reste NOT_DETERMINED. Pour une fenêtre non opérable avec statut bâtiment inconnu, 100 h/an (NEUF) est utilisé pour le dépistage, sans transformer la preuve manquante en conformité.",
+        },
+        {
+            "title": "Protection solaire — stratégie de régulation",
+            "why": "VE expose les dispositifs d'ombrage mais pas la stratégie de régulation active (SIA 380/2 table 10). La catégorie de contrôle et le g_total actif doivent être fournis par preuve du relecteur. Tant que cette preuve manque, le verdict global reste NOT_DETERMINED (porte autonome §7.1.2).",
+        },
+        {
+            "title": "Catégorie d'usage SIA 2024",
+            "why": "L'affectation de chaque zone thermique à une catégorie SIA 2024 n'est pas déductible automatiquement du modèle VE. Un mapping relecteur (CSV) est requis ; sans lui, les horaires, gains et hypothèses de vitrage ne sont pas comparables aux références normatives.",
+        },
+        {
+            "title": "Classification générateur froid (air/eau)",
+            "why": "Le champ VE NCM chiller-type est UK-spécifique et typiquement vide sur les modèles suisses. Les valeurs EER/SEER sont lues directement, mais la classification air-cooled/water-cooled (nécessaire pour la bande table 5-7) reste une limitation structurelle en l'absence d'accès au réseau ApacheHVAC.",
+        },
+        {
+            "title": "Récupération de chaleur CTA",
+            "why": "La classe d'étanchéité des conduits, le type et l'efficacité de récupération de chaleur et les pertes de charge ne sont que partiellement exposés par VE. La preuve complète (fiche technique CTA, classe L1/L2) doit être fournie par le relecteur.",
+        },
+        {
+            "title": "Horaires et profils d'utilisation",
+            "why": "VE expose les profils de template sous forme de profil équivalent journalier. Les horaires hebdomadaires complets et les exceptions ne sont pas automatiquement extraits : un export ou une confirmation du relecteur est nécessaire pour la traçabilité normative.",
+        },
     ],
     "en": [
-        {"title": "Thermal bridges (ψ/χ)",
-         "why": "VE 2025.2 exposes ψ/χ per surface: the thermal-bridge conductance H_tb (W/K) is read directly. A junction left at ψ=0 may be an un-entered default (to verify). On older VE or an unset model, a reviewed calculation (CSV) is the fallback."},
-        {"title": "Design-day power",
-         "why": "The prescribed heating/cooling design-day workflow is not implemented; annual room peaks must never be substituted for it."},
-        {"title": "Seasonal SEER (cooling)",
-         "why": "SN EN 14825:2018 is now a verified reference and SIA 380/2 table 5 defines its SEER minima 'selon SN EN 14825': a declared SEER (manufacturer ErP/Ecodesign) is compared cleanly to the SIA band. Only a seasonal index read from the VE model stays [TO VERIFY] (its EN 14825 computation is unconfirmed)."},
-        {"title": "Seasonal SCoP (heating)",
-         "why": "The heating SCoP calculation clause (EN 14825) is not yet verified: indicative [TO VERIFY], not a proven pass."},
-        {"title": "Lighting control",
-         "why": "SIA 387/4 (lighting-control reference) is absent from the verified sources: the control verdict cannot be closed."},
-        {"title": "Global comparison (§ 7.2.5.2)",
-         "why": "Decisive for SIA 380/2 compliance, it is not computed client-side (the reference project is not simulated): it is supplied and accepted by a reviewer."},
-        {"title": "Writing room gains / ventilation",
-         "why": "The documented VE API exposes no member to write room-level gains (VERoomData); model preparation is done in the VE interface. The tool reads and audits, it does not modify the model."},
-        {"title": "Summer comfort (SIA 180)",
-         "why": "The overheating verdict requires a complete annual APS result and verified weather provenance. When window operability is unknown, the check uses 0 h as a conservative screening value but the domain remains NOT_DETERMINED. For a non-operable window with unknown building status, 100 h/year (NEW) is used for screening without turning missing evidence into compliance."},
-        {"title": "Solar protection — control strategy",
-         "why": "VE exposes shading devices but not the active control strategy (SIA 380/2 table 10). The control category and active g_total must be supplied as reviewer evidence. Until this evidence is provided, the overall verdict stays NOT_DETERMINED (autonomous gate §7.1.2)."},
-        {"title": "SIA 2024 use category",
-         "why": "Assigning each thermal zone to a SIA 2024 use category cannot be derived automatically from the VE model. A reviewer mapping (CSV) is required; without it, schedules, gains and glazing assumptions are not comparable to normative references."},
-        {"title": "Cooling generator classification (air/water)",
-         "why": "The VE NCM chiller-type field is UK-specific and typically unpopulated on Swiss models. EER/SEER values are read directly, but the air-cooled/water-cooled classification (needed for table 5-7 band selection) is a structural limitation without ApacheHVAC network access."},
-        {"title": "AHU heat recovery",
-         "why": "Duct leakage class, heat-recovery type/efficiency and pressure drops are only partially exposed by VE. Complete evidence (AHU data sheet, L1/L2 class) must be supplied by the reviewer."},
-        {"title": "Schedules and usage profiles",
-         "why": "VE exposes template profiles as daily-equivalent profiles. Full weekly schedules and exceptions are not automatically extracted: an export or reviewer confirmation is needed for normative traceability."},
+        {
+            "title": "Thermal bridges (ψ/χ)",
+            "why": "VE 2025.2 exposes ψ/χ per surface: the thermal-bridge conductance H_tb (W/K) is read directly. A junction left at ψ=0 may be an un-entered default (to verify). On older VE or an unset model, a reviewed calculation (CSV) is the fallback.",
+        },
+        {
+            "title": "Design-day power",
+            "why": "The prescribed heating/cooling design-day workflow is not implemented; annual room peaks must never be substituted for it.",
+        },
+        {
+            "title": "Seasonal SEER (cooling)",
+            "why": "SN EN 14825:2018 is now a verified reference and SIA 380/2 table 5 defines its SEER minima 'selon SN EN 14825': a declared SEER (manufacturer ErP/Ecodesign) is compared cleanly to the SIA band. Only a seasonal index read from the VE model stays [TO VERIFY] (its EN 14825 computation is unconfirmed).",
+        },
+        {
+            "title": "Seasonal SCoP (heating)",
+            "why": "The heating SCoP calculation clause (EN 14825) is not yet verified: indicative [TO VERIFY], not a proven pass.",
+        },
+        {
+            "title": "Lighting control",
+            "why": "SIA 387/4 (lighting-control reference) is absent from the verified sources: the control verdict cannot be closed.",
+        },
+        {
+            "title": "Global comparison (§ 7.2.5.2)",
+            "why": "Decisive for SIA 380/2 compliance, it is not computed client-side (the reference project is not simulated): it is supplied and accepted by a reviewer.",
+        },
+        {
+            "title": "Writing room gains / ventilation",
+            "why": "The documented VE API exposes no member to write room-level gains (VERoomData); model preparation is done in the VE interface. The tool reads and audits, it does not modify the model.",
+        },
+        {
+            "title": "Summer comfort (SIA 180)",
+            "why": "The overheating verdict requires a complete annual APS result and verified weather provenance. When window operability is unknown, the check uses 0 h as a conservative screening value but the domain remains NOT_DETERMINED. For a non-operable window with unknown building status, 100 h/year (NEW) is used for screening without turning missing evidence into compliance.",
+        },
+        {
+            "title": "Solar protection — control strategy",
+            "why": "VE exposes shading devices but not the active control strategy (SIA 380/2 table 10). The control category and active g_total must be supplied as reviewer evidence. Until this evidence is provided, the overall verdict stays NOT_DETERMINED (autonomous gate §7.1.2).",
+        },
+        {
+            "title": "SIA 2024 use category",
+            "why": "Assigning each thermal zone to a SIA 2024 use category cannot be derived automatically from the VE model. A reviewer mapping (CSV) is required; without it, schedules, gains and glazing assumptions are not comparable to normative references.",
+        },
+        {
+            "title": "Cooling generator classification (air/water)",
+            "why": "The VE NCM chiller-type field is UK-specific and typically unpopulated on Swiss models. EER/SEER values are read directly, but the air-cooled/water-cooled classification (needed for table 5-7 band selection) is a structural limitation without ApacheHVAC network access.",
+        },
+        {
+            "title": "AHU heat recovery",
+            "why": "Duct leakage class, heat-recovery type/efficiency and pressure drops are only partially exposed by VE. Complete evidence (AHU data sheet, L1/L2 class) must be supplied by the reviewer.",
+        },
+        {
+            "title": "Schedules and usage profiles",
+            "why": "VE exposes template profiles as daily-equivalent profiles. Full weekly schedules and exceptions are not automatically extracted: an export or reviewer confirmation is needed for normative traceability.",
+        },
     ],
 }
+
+# User-facing explanation of every important boundary in the client workflow.
+# Keep this separate from rule logic: a limitation explains evidence ownership;
+# it must never turn missing information into either PASS or FAIL.
+CLIENT_CAPABILITY_GUIDE = {
+    "fr": [
+        {
+            "topic": "Comparaison globale projet / référence",
+            "available": "Le logiciel importe et contrôle une comparaison déjà calculée.",
+            "missing": "Il ne construit ni ne simule automatiquement le bâtiment de référence SIA.",
+            "why": "Cette comparaison dépend d'hypothèses de référence et d'un calcul complet qui doivent être approuvés par le responsable énergie.",
+            "evidence": "Valeur projet, valeur référence, même unité, résultat, méthode, source, nom et date du réviseur.",
+            "owner": "Responsable énergie / spécialiste SIA",
+            "effect": "Porte décisive : sans preuve acceptée, le verdict global reste NOT DETERMINED.",
+        },
+        {
+            "topic": "Puissances de dimensionnement chauffage et froid",
+            "available": "Le logiciel lit les charges et les pics disponibles dans l'APS annuel.",
+            "missing": "Il ne produit pas encore les séquences de jours de dimensionnement prescrites avec préconditionnement.",
+            "why": "Un pic annuel n'est pas équivalent au protocole de dimensionnement SIA et ne peut pas le remplacer.",
+            "evidence": "APS dédié, série 15 minutes, période et préconditionnement documentés, météo et paramètres traçables.",
+            "owner": "Ingénieur simulation / utilisateur ApacheSim",
+            "effect": "Aucune affirmation de puissance de dimensionnement n'est autorisée.",
+        },
+        {
+            "topic": "Puissance électrique des auxiliaires",
+            "available": "Le logiciel connaît la surface conditionnée et les systèmes détectés.",
+            "missing": "La puissance électrique simultanée de conception n'est pas une consommation annuelle APS.",
+            "why": "Elle dépend du dimensionnement des ventilateurs, pompes, auxiliaires et de leur simultanéité.",
+            "evidence": "Puissance requise en W/m², périmètre des équipements, coefficient de simultanéité et note de calcul.",
+            "owner": "Ingénieur CVC / électricité",
+            "effect": "Le contrôle SIA 380/2 §7.2.4 reste non vérifiable.",
+        },
+        {
+            "topic": "Commande de ventilation et données CTA",
+            "available": "Le logiciel lit les débits, horaires et liaisons système exposés par VE.",
+            "missing": "La classe de commande, les capteurs, le débit minimal, l'étanchéité et certaines données de récupération ne sont que partiellement exposés.",
+            "why": "Ces informations appartiennent à la régulation réelle et aux fiches techniques, pas seulement au modèle thermique de pièce.",
+            "evidence": "Type mono/multizone, commande ventilateur, DCV/capteur, débit minimal, rendement de récupération, pertes de charge et source.",
+            "owner": "Ingénieur CVC / automaticien / fabricant CTA",
+            "effect": "Le domaine ventilation reste NOT DETERMINED tant que la cellule applicable du tableau 4 n'est pas prouvée.",
+        },
+        {
+            "topic": "Usage SIA 2024 et commande d'éclairage SIA 387/4",
+            "available": "Le logiciel lit les noms de pièces, templates, gains et profils VE.",
+            "missing": "Un nom de template ne prouve ni l'usage réel de la pièce ni la catégorie de commande normative.",
+            "why": "La destination contractuelle des locaux et la stratégie de commande proviennent des plans et descriptifs approuvés.",
+            "evidence": "Mapping pièce-template-usage, contrôle manuel/présence/lumière du jour, source, réviseur et date.",
+            "owner": "Architecte / ingénieur éclairage / automaticien",
+            "effect": "Les gains, horaires et contrôles restent des diagnostics, pas une preuve de conformité.",
+        },
+        {
+            "topic": "Générateur froid et performances saisonnières",
+            "available": "Le logiciel lit les EER/SEER que VE expose.",
+            "missing": "Il ne peut pas toujours distinguer une charge idéale d'un équipement installé ni confirmer le rejet de chaleur air/eau.",
+            "why": "La bonne ligne des tableaux SIA dépend de la technologie physique et d'une performance fabricant vérifiable.",
+            "evidence": "Présence réelle, classe air/eau, puissance, EER/SEER certifié, fabricant, modèle et fiche technique.",
+            "owner": "Ingénieur CVC / fabricant",
+            "effect": "Aucun pass d'efficacité n'est accordé sur une classe de générateur inconnue.",
+        },
+        {
+            "topic": "Protections solaires et ponts thermiques",
+            "available": "Le logiciel lit les dispositifs, valeurs de vitrage et psi/chi lorsqu'ils sont renseignés dans VE.",
+            "missing": "La stratégie active, le g_total et une valeur psi=0 non saisie ne peuvent pas être validés automatiquement.",
+            "why": "Un objet présent ne prouve pas sa commande réelle; zéro peut signifier absence physique ou donnée oubliée.",
+            "evidence": "Stratégie de commande, g_total, bordereau de jonctions ou somme psi.L+chi, source et approbation.",
+            "owner": "Architecte / façadier / ingénieur enveloppe",
+            "effect": "La réserve reste visible et peut bloquer le verdict lorsque la protection solaire est applicable.",
+        },
+        {
+            "topic": "Validation officielle SIA 4010",
+            "available": "Le logiciel prépare les cas, inventorie les preuves et compare les résultats disponibles.",
+            "missing": "Il ne peut ni délivrer une classe officielle ni signer à la place de la sous-commission.",
+            "why": "SIA 4010 valide la chaîne logicielle au moyen des dossiers officiels et d'une décision de l'autorité; ce n'est pas un contrôle du bâtiment client.",
+            "evidence": "Spécifications et classeurs officiels, résultats candidat/référence, classe visée et confirmation officielle.",
+            "owner": "IES / SIA / autorité compétente",
+            "effect": "Le rapport client reste une évaluation d'ingénierie, jamais un certificat officiel SIA.",
+        },
+    ],
+}
+
+CLIENT_CAPABILITY_GUIDE["en"] = [
+    {
+        "topic": row["topic"],
+        "available": row["available"],
+        "missing": row["missing"],
+        "why": row["why"],
+        "evidence": row["evidence"],
+        "owner": row["owner"],
+        "effect": row["effect"],
+    }
+    for row in [
+        {
+            "topic": "Global project / reference comparison",
+            "available": "The tool imports and checks an existing reviewed comparison.",
+            "missing": "It does not automatically build or simulate the SIA reference building.",
+            "why": "The result depends on approved reference assumptions and a complete energy calculation owned by the responsible engineer.",
+            "evidence": "Project value, reference value, common unit, result, method, source, reviewer and date.",
+            "owner": "Energy lead / SIA specialist",
+            "effect": "Decisive gate: without accepted evidence, the overall verdict remains NOT DETERMINED.",
+        },
+        {
+            "topic": "Heating and cooling design power",
+            "available": "The tool reads loads and peaks available in the annual APS.",
+            "missing": "It does not yet run the prescribed design-day sequences with preconditioning.",
+            "why": "An annual peak is not equivalent to the SIA design protocol and cannot replace it.",
+            "evidence": "Dedicated APS, 15-minute series, documented period and preconditioning, traceable weather and settings.",
+            "owner": "Simulation engineer / ApacheSim user",
+            "effect": "No design-power compliance claim is permitted.",
+        },
+        {
+            "topic": "Auxiliary electrical power",
+            "available": "The tool knows conditioned area and detected systems.",
+            "missing": "Coincident electrical design power is not annual APS energy.",
+            "why": "It depends on fan, pump and auxiliary sizing and their simultaneity.",
+            "evidence": "Required W/m², equipment scope, simultaneity factor and calculation note.",
+            "owner": "HVAC / electrical engineer",
+            "effect": "SIA 380/2 §7.2.4 remains not checkable.",
+        },
+        {
+            "topic": "Ventilation control and AHU data",
+            "available": "The tool reads VE-exposed airflow, schedules and system links.",
+            "missing": "Control class, sensors, minimum flow, leakage and some recovery data are only partly exposed.",
+            "why": "These facts belong to real controls and technical schedules, not only the room thermal model.",
+            "evidence": "Mono/multizone type, fan control, DCV/sensor, minimum flow, recovery efficiency, pressure drops and source.",
+            "owner": "HVAC engineer / controls engineer / AHU supplier",
+            "effect": "Ventilation remains NOT DETERMINED until the applicable table-4 cell is proven.",
+        },
+        {
+            "topic": "SIA 2024 use and SIA 387/4 lighting control",
+            "available": "The tool reads VE room names, templates, gains and profiles.",
+            "missing": "A template name proves neither actual room use nor the normative control category.",
+            "why": "Contractual room use and control strategy come from approved schedules and specifications.",
+            "evidence": "Room-template-use mapping, manual/presence/daylight control, source, reviewer and date.",
+            "owner": "Architect / lighting engineer / controls engineer",
+            "effect": "Gains, schedules and controls remain diagnostics rather than compliance evidence.",
+        },
+        {
+            "topic": "Cooling generator and seasonal performance",
+            "available": "The tool reads EER/SEER values exposed by VE.",
+            "missing": "It cannot always distinguish ideal loads from installed plant or confirm air/water heat rejection.",
+            "why": "The applicable SIA row depends on physical technology and verifiable manufacturer performance.",
+            "evidence": "Actual presence, air/water class, capacity, certified EER/SEER, manufacturer, model and data sheet.",
+            "owner": "HVAC engineer / manufacturer",
+            "effect": "No efficiency pass is granted for an unknown generator class.",
+        },
+        {
+            "topic": "Solar protection and thermal bridges",
+            "available": "The tool reads devices, glazing values and psi/chi when entered in VE.",
+            "missing": "Active control, g_total and an unentered psi=0 cannot be validated automatically.",
+            "why": "A present object does not prove real control; zero may mean physical absence or omitted data.",
+            "evidence": "Control strategy, g_total, junction schedule or psi.L+chi total, source and approval.",
+            "owner": "Architect / facade / envelope engineer",
+            "effect": "The reserve remains visible and may block the verdict when solar protection applies.",
+        },
+        {
+            "topic": "Official SIA 4010 validation",
+            "available": "The tool prepares cases, inventories evidence and compares available results.",
+            "missing": "It cannot award an official class or sign for the sub-commission.",
+            "why": "SIA 4010 validates the software chain using official packs and an authority decision; it is not a client-building check.",
+            "evidence": "Official specifications/workbooks, candidate/reference results, target class and official confirmation.",
+            "owner": "IES / SIA / competent authority",
+            "effect": "The client report remains an engineering assessment, never an official SIA certificate.",
+        },
+    ]
+]
 
 
 def classify_data_source(expected_source: str) -> List[str]:
@@ -219,15 +437,34 @@ def classify_data_source(expected_source: str) -> List[str]:
     """
     text = (expected_source or "").lower()
     aps = "aps" in text or "vista" in text or "resultsreader" in text
-    static = ("model api" in text or "cdb" in text or "construction" in text
-              or "opening" in text or "air-exchange" in text or "apache systems" in text
-              or "plant data" in text or "templates" in text or "shading" in text
-              or "profiles" in text or "system data" in text)
-    reviewer = ("reviewer" in text or "csv" in text or "official" in text
-                or "manufacturer" in text or "authority" in text
-                or "evidence" in text or "sub-commission" in text
-                or "decision" in text or "schedule" in text or "export" in text
-                or "note" in text or "data sheet" in text or "metadata" in text)
+    static = (
+        "model api" in text
+        or "cdb" in text
+        or "construction" in text
+        or "opening" in text
+        or "air-exchange" in text
+        or "apache systems" in text
+        or "plant data" in text
+        or "templates" in text
+        or "shading" in text
+        or "profiles" in text
+        or "system data" in text
+    )
+    reviewer = (
+        "reviewer" in text
+        or "csv" in text
+        or "official" in text
+        or "manufacturer" in text
+        or "authority" in text
+        or "evidence" in text
+        or "sub-commission" in text
+        or "decision" in text
+        or "schedule" in text
+        or "export" in text
+        or "note" in text
+        or "data sheet" in text
+        or "metadata" in text
+    )
     project = "project settings" in text or "weather" in text or "location" in text
     sources: List[str] = []
     if project:
@@ -247,8 +484,18 @@ def _key_match(cov: Dict[str, Any], req: Dict[str, Any]) -> bool:
     req_crit = (req.get("criterion") or "").lower()
     if not cov_crit or not req_crit:
         return False
-    tokens = ("u-value", "uw", "solar factor", "transmittance", "frame",
-              "infiltration", "eer", "scop", "ventilation control", "dynamic")
+    tokens = (
+        "u-value",
+        "uw",
+        "solar factor",
+        "transmittance",
+        "frame",
+        "infiltration",
+        "eer",
+        "scop",
+        "ventilation control",
+        "dynamic",
+    )
     for token in tokens:
         if token in cov_crit and token in req_crit:
             return True
@@ -281,29 +528,31 @@ def build_manifest() -> Dict[str, Any]:
                 }
                 break
 
-        criteria.append({
-            "id": cov["id"],
-            "standard": cov.get("standard"),
-            "domain": cov.get("domain"),
-            "criterion": cov.get("criterion"),
-            "expected_value": cov.get("expected_value"),
-            "article_source": cov.get("source"),
-            "thresholds": thresholds,
-            "data_needed": cov.get("data_needed"),
-            "expected_source": cov.get("expected_source"),
-            "data_source": classify_data_source(cov.get("expected_source")),
-            "aps_quantities": _APS_QUANTITIES.get(cov["id"], []),
-            "automation": automation,
-            "ve_capability": capability,
-            "ve_capability_note": note,
-            "coverage_key": cov.get("coverage_key", ""),
-            "preferred_format": cov.get("preferred_format"),
-            "destination": cov.get("destination"),
-            "owner": cov.get("owner"),
-            "runtime_status": "TO_BE_EVALUATED",
-            "runtime_evidence": "",
-            "next_action": cov.get("next_action"),
-        })
+        criteria.append(
+            {
+                "id": cov["id"],
+                "standard": cov.get("standard"),
+                "domain": cov.get("domain"),
+                "criterion": cov.get("criterion"),
+                "expected_value": cov.get("expected_value"),
+                "article_source": cov.get("source"),
+                "thresholds": thresholds,
+                "data_needed": cov.get("data_needed"),
+                "expected_source": cov.get("expected_source"),
+                "data_source": classify_data_source(cov.get("expected_source")),
+                "aps_quantities": _APS_QUANTITIES.get(cov["id"], []),
+                "automation": automation,
+                "ve_capability": capability,
+                "ve_capability_note": note,
+                "coverage_key": cov.get("coverage_key", ""),
+                "preferred_format": cov.get("preferred_format"),
+                "destination": cov.get("destination"),
+                "owner": cov.get("owner"),
+                "runtime_status": "TO_BE_EVALUATED",
+                "runtime_evidence": "",
+                "next_action": cov.get("next_action"),
+            }
+        )
 
     return {
         "meta": {

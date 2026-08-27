@@ -20,7 +20,6 @@ from swiss_sia.reference_model.sia4010.test2a_profile_qualification import (
     qualify_test2a_profile_graph,
 )
 
-
 ROOT = Path(__file__).resolve().parents[1]
 WORK_ROOT = ROOT / ".codex_tmp" / "test2a_profile_qualification"
 
@@ -201,9 +200,7 @@ class Test2AProfileQualificationTests(unittest.TestCase):
             },
         )
         self.assertEqual(self.project.save_count, 3)
-        self.assertTrue(
-            report.with_suffix(report.suffix + ".sha256").is_file()
-        )
+        self.assertTrue(report.with_suffix(report.suffix + ".sha256").is_file())
 
     def test_repeat_fails_on_collision_without_new_profile(self):
         patches = self._patches()
@@ -211,9 +208,7 @@ class Test2AProfileQualificationTests(unittest.TestCase):
             qualify_test2a_profile_graph(SimpleNamespace(), self.project)
         patches = self._patches()
         with patches[0], patches[1], patches[2]:
-            with self.assertRaisesRegex(
-                VeMutationError, "Profile already exists"
-            ):
+            with self.assertRaisesRegex(VeMutationError, "Profile already exists"):
                 qualify_test2a_profile_graph(
                     SimpleNamespace(),
                     self.project,
@@ -221,9 +216,7 @@ class Test2AProfileQualificationTests(unittest.TestCase):
         self.assertEqual(len(self.project._profiles), 3)
 
     def test_wrong_scenario_fails_before_profile_creation(self):
-        first, second, third = self._patches(
-            scenario=_scenario("test_2B", "2B")
-        )
+        first, second, third = self._patches(scenario=_scenario("test_2B", "2B"))
         with first, second, third:
             with self.assertRaisesRegex(
                 ConfigurationError, "restricted to the official test_2A/2A"

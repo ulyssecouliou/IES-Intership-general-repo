@@ -7,7 +7,6 @@ from swiss_sia.reference_model.sia4010.test1_iso_reference import (
     load_test1_iso_reference_results,
 )
 
-
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -28,9 +27,7 @@ class Test1IsoReferenceTests(unittest.TestCase):
     def test_table_33_published_integer_scale_is_applied(self):
         expected = load_test1_iso_reference_results(ROOT, "600")
         hour_one = next(
-            item
-            for item in expected
-            if item.metric.endswith("January 4 | 1")
+            item for item in expected if item.metric.endswith("January 4 | 1")
         )
         self.assertEqual(hour_one.expected_value, 4.189)
         self.assertEqual(hour_one.unit, "kWh")

@@ -34,21 +34,36 @@ def _dossier_complet(**surcharges):
         "building_status": "EXISTING_BUILDING",
         "weather_basis": "SIA 2028 DRY",
         "weather_file": "DRYCOLD_IESVE.epw",
+        "weather_source_authority": "SIA 2028 C2:2023 project climate brief",
+        "weather_use_case": "SIA3802_COOLING_NEED",
+        "weather_scenario_period": "2035 RCP8.5 DRY",
         "location": "Zurich Kloten",
         "altitude_m": "426",
+        "location_source": "Approved project climate brief, p. 2",
+        "altitude_source": "Approved project survey, p. 3",
         "review_status": "accepted",
         "reviewer": "U. Couliou",
+        "reviewer_role": "Responsible energy specialist",
+        "reviewer_organisation": "IES",
+        "reviewer_competence_basis": "Building simulation engineer",
+        "reviewer_acceptance_scope": "Weather, model inputs and reported reserves",
         "review_date": "2026-08-10",
         "source_document": "Cahier des charges v3",
         "source_reference": "clause 4.2",
         "notes": "",
         "ventilation_strategy": "NATURAL_ONLY",
         "ventilation_justification": "Aucune CTA au projet, confirme MEP.",
+        "ventilation_scope": "All conditioned rooms",
         "ventilation_flow_source": "",
         "lighting_scope": "OUT_OF_SCOPE",
         "lighting_power_source": "",
+        "lighting_scope_justification": "Lighting excluded by the approved brief.",
         "aps_outputs_required": "NO",
         "aps_outputs_justification": "Aucun systeme aeraulique modelise.",
+        "system_power_source": "Not applicable: no modelled fan/pump system.",
+        "assumptions_status": "NO_UNRESOLVED_ASSUMPTIONS",
+        "assumptions_register": "Climate brief v3, assumptions register section 7",
+        "report_use_acknowledgement": "ENGINEERING_ASSESSMENT_ONLY",
     }
     reponses.update(surcharges)
     return reponses
@@ -104,11 +119,12 @@ class TestRefusDAcceptation(unittest.TestCase):
         self.assertEqual(resultat["statut_effectif"], w.EN_ATTENTE)
 
     def test_chaque_champ_obligatoire_bloque_a_lui_seul(self):
-        for nom in [c["nom"] for c in w.CHAMPS
-                    if c["obligatoire_pour_accepter"]
-                    and c["nom"] != "review_status"]:
-            resultat = w.evaluer_acceptation(_dossier_complet(**{nom: ""}),
-                                             True)
+        for nom in [
+            c["nom"]
+            for c in w.CHAMPS
+            if c["obligatoire_pour_accepter"] and c["nom"] != "review_status"
+        ]:
+            resultat = w.evaluer_acceptation(_dossier_complet(**{nom: ""}), True)
             self.assertFalse(resultat["accepte"], nom)
             self.assertIn(nom, resultat["manquants"])
 
@@ -116,35 +132,38 @@ class TestRefusDAcceptation(unittest.TestCase):
         """Sans source, la puissance devrait etre deduite du gain
         Miscellaneous — c est-a-dire inventee."""
         resultat = w.evaluer_acceptation(
-            _dossier_complet(lighting_scope="IN_SCOPE",
-                             lighting_power_source=""), True)
+            _dossier_complet(lighting_scope="IN_SCOPE", lighting_power_source=""), True
+        )
         self.assertFalse(resultat["accepte"])
-        self.assertTrue(any("source de la puissance" in m
-                            for m in resultat["motifs_de_refus"]))
+        self.assertTrue(
+            any("source de la puissance" in m for m in resultat["motifs_de_refus"])
+        )
 
     def test_une_ventilation_mecanique_exige_la_source_des_debits(self):
         resultat = w.evaluer_acceptation(
-            _dossier_complet(ventilation_strategy="MECHANICAL_PRESENT",
-                             ventilation_flow_source=""), True)
+            _dossier_complet(
+                ventilation_strategy="MECHANICAL_PRESENT", ventilation_flow_source=""
+            ),
+            True,
+        )
         self.assertFalse(resultat["accepte"])
-        self.assertTrue(any("debits" in m
-                            for m in resultat["motifs_de_refus"]))
+        self.assertTrue(any("debits" in m for m in resultat["motifs_de_refus"]))
 
     def test_des_sorties_declarees_inutiles_exigent_leur_justification(self):
         resultat = w.evaluer_acceptation(
-            _dossier_complet(aps_outputs_justification=""), True)
+            _dossier_complet(aps_outputs_justification=""), True
+        )
         self.assertFalse(resultat["accepte"])
 
     def test_under_review_bloque_lacceptation(self):
-        for nom in ("ventilation_strategy", "lighting_scope",
-                    "aps_outputs_required"):
+        for nom in ("ventilation_strategy", "lighting_scope", "aps_outputs_required"):
             resultat = w.evaluer_acceptation(
-                _dossier_complet(**{nom: "UNDER_REVIEW"}), True)
+                _dossier_complet(**{nom: "UNDER_REVIEW"}), True
+            )
             self.assertFalse(resultat["accepte"], nom)
 
     def test_une_valeur_invalide_bloque_meme_si_le_champ_est_rempli(self):
-        resultat = w.evaluer_acceptation(
-            _dossier_complet(review_date="10/08/2026"), True)
+        resultat = w.evaluer_acceptation(_dossier_complet(review_date="10/08/2026"), True)
         self.assertFalse(resultat["accepte"])
         self.assertIn("review_date", resultat["erreurs"])
 
@@ -153,12 +172,22 @@ class TestPrefill(unittest.TestCase):
     """On ne pre-remplit que ce qui est techniquement demontre."""
 
     def test_seul_le_project_id_est_prerempli(self):
-        valeurs = w.prefill({"project_id": "ZOER_32_C1_TEST",
-                             "detected_weather_file": "DRYCOLD_IESVE.epw",
-                             "total_area_m2": 392.5})
+        valeurs = w.prefill(
+            {
+                "project_id": "ZOER_32_C1_TEST",
+                "detected_weather_file": "DRYCOLD_IESVE.epw",
+                "total_area_m2": 392.5,
+            }
+        )
         self.assertEqual(valeurs["project_id"], "ZOER_32_C1_TEST")
-        for nom in ("location", "altitude_m", "weather_basis", "reviewer",
-                    "source_document", "ventilation_strategy"):
+        for nom in (
+            "location",
+            "altitude_m",
+            "weather_basis",
+            "reviewer",
+            "source_document",
+            "ventilation_strategy",
+        ):
             self.assertEqual(valeurs[nom], "", nom)
 
     def test_la_meteo_detectee_nest_pas_recopiee_dans_la_meteo_revue(self):
@@ -173,8 +202,7 @@ class TestPrefill(unittest.TestCase):
     def test_un_fait_absent_est_non_verifiable_pas_zero(self):
         faits = w.faits_techniques({})
         self.assertEqual(faits["total_heating_kwh"]["valeur"], w.NON_FOURNI)
-        self.assertEqual(faits["total_heating_kwh"]["statut"],
-                         w.NON_VERIFIABLE)
+        self.assertEqual(faits["total_heating_kwh"]["statut"], w.NON_VERIFIABLE)
 
     def test_la_meteo_detectee_porte_sa_reserve(self):
         faits = w.faits_techniques({"detected_weather_file": "DRYCOLD_IESVE.epw"})
@@ -184,22 +212,21 @@ class TestPrefill(unittest.TestCase):
         """La provenance de la grandeur doit rester lisible : c est elle qui
         distingue la bonne serie de la serie steady state."""
         faits = w.faits_techniques({"total_heating_kwh": 9586.63})
-        self.assertIn("Room units heating load",
-                      faits["total_heating_kwh"]["note"])
+        self.assertIn("Room units heating load", faits["total_heating_kwh"]["note"])
 
 
 class TestCorrespondanceMeteo(unittest.TestCase):
     """Une correspondance technique ne vaut pas approbation du climat."""
 
     def test_deux_fichiers_identiques_correspondent(self):
-        resultat = w.correspondance_meteo("DRYCOLD_IESVE.epw",
-                                          "DRYCOLD_IESVE.epw")
+        resultat = w.correspondance_meteo("DRYCOLD_IESVE.epw", "DRYCOLD_IESVE.epw")
         self.assertEqual(resultat["statut"], w.PASS_TECHNIQUE)
         self.assertIn("RIEN", resultat["note"])
 
     def test_le_chemin_complet_est_reduit_au_nom(self):
         resultat = w.correspondance_meteo(
-            r"C:\Weather\DRYCOLD_IESVE.epw", "DRYCOLD_IESVE.epw")
+            r"C:\Weather\DRYCOLD_IESVE.epw", "DRYCOLD_IESVE.epw"
+        )
         self.assertEqual(resultat["statut"], w.PASS_TECHNIQUE)
 
     def test_deux_fichiers_differents_sont_un_defaut_de_modele(self):
@@ -212,8 +239,9 @@ class TestCorrespondanceMeteo(unittest.TestCase):
         self.assertEqual(resultat["revu"], w.NON_FOURNI)
 
     def test_sans_meteo_detectee_le_controle_est_non_verifiable(self):
-        self.assertEqual(w.correspondance_meteo("", "KLO.epw")["statut"],
-                         w.NON_VERIFIABLE)
+        self.assertEqual(
+            w.correspondance_meteo("", "KLO.epw")["statut"], w.NON_VERIFIABLE
+        )
 
 
 class TestEcritureCsv(unittest.TestCase):
@@ -225,16 +253,16 @@ class TestEcritureCsv(unittest.TestCase):
             w.ecrire_csv(chemin, _dossier_complet(), w.ACCEPTE)
             with io.open(chemin, encoding="utf-8") as flux:
                 entetes = next(csv.reader(flux))
-            self.assertEqual(entetes[:len(w.COLONNES_GABARIT)],
-                             list(w.COLONNES_GABARIT))
+            self.assertEqual(entetes[: len(w.COLONNES_GABARIT)], list(w.COLONNES_GABARIT))
 
     def test_un_fichier_existant_est_sauvegarde_avant_ecrasement(self):
         with TemporaryDirectory() as dossier:
             chemin = os.path.join(dossier, "preuves.csv")
             with io.open(chemin, "w", encoding="utf-8") as flux:
-                flux.write(u"ancien contenu")
-            ecriture = w.ecrire_csv(chemin, _dossier_complet(), w.ACCEPTE,
-                                    "20260810_120000")
+                flux.write("ancien contenu")
+            ecriture = w.ecrire_csv(
+                chemin, _dossier_complet(), w.ACCEPTE, "20260810_120000"
+            )
             self.assertIsNotNone(ecriture["sauvegarde"])
             self.assertTrue(os.path.exists(ecriture["sauvegarde"]))
             with io.open(ecriture["sauvegarde"], encoding="utf-8") as flux:
@@ -242,8 +270,9 @@ class TestEcritureCsv(unittest.TestCase):
 
     def test_sans_fichier_existant_aucune_sauvegarde_nest_creee(self):
         with TemporaryDirectory() as dossier:
-            ecriture = w.ecrire_csv(os.path.join(dossier, "neuf.csv"),
-                                    _dossier_complet(), w.EN_ATTENTE)
+            ecriture = w.ecrire_csv(
+                os.path.join(dossier, "neuf.csv"), _dossier_complet(), w.EN_ATTENTE
+            )
             self.assertIsNone(ecriture["sauvegarde"])
 
     def test_le_statut_ecrit_est_le_statut_recalcule(self):
@@ -269,12 +298,16 @@ class TestAudit(unittest.TestCase):
     def _audit(self, **surcharges):
         reponses = _dossier_complet(**surcharges)
         acceptation = w.evaluer_acceptation(reponses, True)
-        detecte = {"detected_weather_file": "DRYCOLD_IESVE.epw",
-                   "total_area_m2": 392.5}
+        detecte = {"detected_weather_file": "DRYCOLD_IESVE.epw", "total_area_m2": 392.5}
         return w.construire_audit(
-            reponses, detecte, acceptation,
+            reponses,
+            detecte,
+            acceptation,
             w.actions_restantes(reponses, detecte, acceptation),
-            "C:/x/preuves.csv", None, "20260810_120000")
+            "C:/x/preuves.csv",
+            None,
+            "20260810_120000",
+        )
 
     def test_laudit_declare_quaucune_donnee_ve_na_ete_modifiee(self):
         audit = self._audit()
@@ -292,8 +325,7 @@ class TestAudit(unittest.TestCase):
 
     def test_laudit_porte_les_deux_meteos_et_leur_correspondance(self):
         audit = self._audit()
-        self.assertEqual(audit["weather"]["detected_in_ve"],
-                         "DRYCOLD_IESVE.epw")
+        self.assertEqual(audit["weather"]["detected_in_ve"], "DRYCOLD_IESVE.epw")
         self.assertEqual(audit["weather"]["match_status"], w.PASS_TECHNIQUE)
 
     def test_laudit_distingue_statut_demande_et_statut_effectif(self):
@@ -303,8 +335,7 @@ class TestAudit(unittest.TestCase):
 
     def test_une_source_absente_est_marquee_non_fournie_pas_vide(self):
         audit = self._audit(ventilation_flow_source="")
-        self.assertEqual(audit["sources"]["ventilation_flow_source"],
-                         w.NON_FOURNI)
+        self.assertEqual(audit["sources"]["ventilation_flow_source"], w.NON_FOURNI)
 
     def test_laudit_secrit_sans_ecraser(self):
         with TemporaryDirectory() as dossier:
@@ -321,46 +352,49 @@ class TestVentilationInfiltrationSeule(unittest.TestCase):
 
     def test_infiltration_seule_est_un_pass_technique_pas_un_defaut(self):
         actions = w.actions_ventilation(
-            {"ventilation_strategy": "NATURAL_ONLY",
-             "ventilation_justification": "Confirme MEP."},
-            {"infiltration_only": True, "oa_max_flow": 0.0})
+            {
+                "ventilation_strategy": "NATURAL_ONLY",
+                "ventilation_justification": "Confirme MEP.",
+            },
+            {"infiltration_only": True, "oa_max_flow": 0.0},
+        )
         categories = [a["categorie"] for a in actions]
         self.assertNotIn(w.DEFAUT_MODELE, categories)
         self.assertIn(w.PASS_TECHNIQUE, categories)
 
     def test_un_debit_nul_est_coherent_avec_linfiltration_seule(self):
         actions = w.actions_ventilation(
-            {"ventilation_strategy": "NATURAL_ONLY",
-             "ventilation_justification": "x"},
-            {"infiltration_only": True, "oa_max_flow": 0.0})
-        self.assertTrue(any("OA_max_flow = 0" in a["constat"]
-                            for a in actions))
+            {"ventilation_strategy": "NATURAL_ONLY", "ventilation_justification": "x"},
+            {"infiltration_only": True, "oa_max_flow": 0.0},
+        )
+        self.assertTrue(any("OA_max_flow = 0" in a["constat"] for a in actions))
 
     def test_un_debit_non_expose_est_une_limite_vescripts(self):
         """Ni un defaut du modele, ni une donnee manquante du client."""
         actions = w.actions_ventilation(
             {"ventilation_strategy": "NATURAL_ONLY"},
-            {"infiltration_only": True, "oa_max_flow": None})
-        self.assertIn(w.LIMITE_VESCRIPTS,
-                      [a["categorie"] for a in actions])
+            {"infiltration_only": True, "oa_max_flow": None},
+        )
+        self.assertIn(w.LIMITE_VESCRIPTS, [a["categorie"] for a in actions])
 
     def test_une_ventilation_mecanique_attendue_est_un_defaut_de_modele(self):
         actions = w.actions_ventilation(
             {"ventilation_strategy": "MECHANICAL_EXPECTED"},
-            {"infiltration_only": True, "oa_max_flow": 0.0})
+            {"infiltration_only": True, "oa_max_flow": 0.0},
+        )
         defauts = [a for a in actions if a["categorie"] == w.DEFAUT_MODELE]
         self.assertEqual(len(defauts), 1)
         self.assertIn("NE PAS creer cet echange", defauts[0]["action"])
 
     def test_laction_nomme_lendroit_exact_dans_ve(self):
         actions = w.actions_ventilation(
-            {"ventilation_strategy": "MECHANICAL_EXPECTED"}, {})
+            {"ventilation_strategy": "MECHANICAL_EXPECTED"}, {}
+        )
         self.assertTrue(any("Air Exchanges" in a["action"] for a in actions))
 
     def test_une_strategie_non_tranchee_est_une_donnee_client_manquante(self):
         actions = w.actions_ventilation({}, {"infiltration_only": True})
-        self.assertIn(w.DONNEE_CLIENT_MANQUANTE,
-                      [a["categorie"] for a in actions])
+        self.assertIn(w.DONNEE_CLIENT_MANQUANTE, [a["categorie"] for a in actions])
 
 
 class TestEclairageAbsent(unittest.TestCase):
@@ -369,75 +403,69 @@ class TestEclairageAbsent(unittest.TestCase):
     def test_labsence_de_lighting_est_constatee_avec_le_gain_miscellaneous(self):
         actions = w.actions_eclairage(
             {"lighting_scope": "OUT_OF_SCOPE"},
-            {"lighting_gain_present": False, "misc_gain_w_m2": 5.0})
+            {"lighting_gain_present": False, "misc_gain_w_m2": 5.0},
+        )
         self.assertTrue(any("5.0 W/m2" in a["constat"] for a in actions))
 
     def test_la_conversion_automatique_est_explicitement_interdite(self):
         actions = w.actions_eclairage(
             {"lighting_scope": "OUT_OF_SCOPE"},
-            {"lighting_gain_present": False, "misc_gain_w_m2": 5.0})
-        self.assertTrue(any("NE PAS convertir" in a["action"]
-                            for a in actions))
+            {"lighting_gain_present": False, "misc_gain_w_m2": 5.0},
+        )
+        self.assertTrue(any("NE PAS convertir" in a["action"] for a in actions))
 
     def test_hors_perimetre_le_controle_est_non_applicable(self):
-        actions = w.actions_eclairage({"lighting_scope": "OUT_OF_SCOPE"},
-                                      {"lighting_gain_present": False})
+        actions = w.actions_eclairage(
+            {"lighting_scope": "OUT_OF_SCOPE"}, {"lighting_gain_present": False}
+        )
         self.assertIn(w.NON_APPLICABLE, [a["categorie"] for a in actions])
 
     def test_dans_le_perimetre_cest_une_donnee_client_manquante(self):
         """Pas un defaut du modele : le client n a pas fourni la puissance."""
-        actions = w.actions_eclairage({"lighting_scope": "IN_SCOPE"},
-                                      {"lighting_gain_present": False})
-        self.assertIn(w.DONNEE_CLIENT_MANQUANTE,
-                      [a["categorie"] for a in actions])
+        actions = w.actions_eclairage(
+            {"lighting_scope": "IN_SCOPE"}, {"lighting_gain_present": False}
+        )
+        self.assertIn(w.DONNEE_CLIENT_MANQUANTE, [a["categorie"] for a in actions])
         self.assertTrue(any("NE PAS deduire" in a["action"] for a in actions))
 
 
 class TestSortiesApsManquantes(unittest.TestCase):
     """SIM-003 : une sortie absente ne vaut jamais zero."""
 
-    ABSENTES = ("lighting", "fan", "pump", "auxiliary", "heating_coil",
-                "cooling_coil")
+    ABSENTES = ("lighting", "fan", "pump", "auxiliary", "heating_coil", "cooling_coil")
 
     def test_non_applicable_quand_le_systeme_nen_produit_pas(self):
-        actions = w.actions_sorties_aps(
-            {"aps_outputs_required": "NO"}, self.ABSENTES)
-        self.assertEqual([a["categorie"] for a in actions],
-                         [w.NON_APPLICABLE])
+        actions = w.actions_sorties_aps({"aps_outputs_required": "NO"}, self.ABSENTES)
+        self.assertEqual([a["categorie"] for a in actions], [w.NON_APPLICABLE])
         self.assertIn("ne valent pas zero", actions[0]["action"])
 
     def test_sortie_non_activee_quand_elles_sont_necessaires(self):
-        actions = w.actions_sorties_aps(
-            {"aps_outputs_required": "YES"}, self.ABSENTES)
+        actions = w.actions_sorties_aps({"aps_outputs_required": "YES"}, self.ABSENTES)
         categories = set(a["categorie"] for a in actions)
         self.assertEqual(categories, {w.SORTIE_NON_ACTIVEE})
         self.assertNotIn(w.NON_APPLICABLE, categories)
 
     def test_chaque_sortie_recoit_son_emplacement_dans_apachesim(self):
-        actions = w.actions_sorties_aps(
-            {"aps_outputs_required": "YES"}, self.ABSENTES)
+        actions = w.actions_sorties_aps({"aps_outputs_required": "YES"}, self.ABSENTES)
         for grandeur in self.ABSENTES:
-            self.assertTrue(
-                any(grandeur in a["constat"] for a in actions), grandeur)
-        self.assertTrue(any("ApacheSim > Results" in a["action"]
-                            for a in actions))
+            self.assertTrue(any(grandeur in a["constat"] for a in actions), grandeur)
+        self.assertTrue(any("ApacheSim > Results" in a["action"] for a in actions))
 
     def test_non_tranche_reste_non_verifiable(self):
         """Different de NON_APPLICABLE : on n a pas decide, on n a pas su."""
         actions = w.actions_sorties_aps({}, self.ABSENTES)
-        self.assertEqual([a["categorie"] for a in actions],
-                         [w.NON_VERIFIABLE])
+        self.assertEqual([a["categorie"] for a in actions], [w.NON_VERIFIABLE])
 
     def test_aucune_action_ne_propose_de_combler_par_zero(self):
         for besoin in ("YES", "NO", ""):
             for action in w.actions_sorties_aps(
-                    {"aps_outputs_required": besoin}, self.ABSENTES):
+                {"aps_outputs_required": besoin}, self.ABSENTES
+            ):
                 self.assertNotIn("= 0", action["action"])
 
     def test_sans_sortie_absente_le_controle_passe(self):
         actions = w.actions_sorties_aps({"aps_outputs_required": "YES"}, ())
-        self.assertEqual([a["categorie"] for a in actions],
-                         [w.PASS_TECHNIQUE])
+        self.assertEqual([a["categorie"] for a in actions], [w.PASS_TECHNIQUE])
 
 
 class TestDistinctionDesCategories(unittest.TestCase):
@@ -453,8 +481,10 @@ class TestDistinctionDesCategories(unittest.TestCase):
 
     def test_non_applicable_et_non_verifiable_ne_sont_pas_synonymes(self):
         self.assertNotEqual(w.NON_APPLICABLE, w.NON_VERIFIABLE)
-        self.assertNotEqual(w.EXPLICATION_DES_CATEGORIES[w.NON_APPLICABLE],
-                            w.EXPLICATION_DES_CATEGORIES[w.NON_VERIFIABLE])
+        self.assertNotEqual(
+            w.EXPLICATION_DES_CATEGORIES[w.NON_APPLICABLE],
+            w.EXPLICATION_DES_CATEGORIES[w.NON_VERIFIABLE],
+        )
 
     def test_un_pass_technique_ne_vaut_ni_conformite_ni_validation(self):
         explication = w.EXPLICATION_DES_CATEGORIES[w.PASS_TECHNIQUE]
@@ -473,11 +503,14 @@ class TestDistinctionDesCategories(unittest.TestCase):
         reponses = _dossier_complet()
         acceptation = w.evaluer_acceptation(reponses, True)
         actions = w.actions_restantes(
-            reponses, {"detected_weather_file": "DRYCOLD_IESVE.epw",
-                       "ventilation": {"infiltration_only": True,
-                                       "oa_max_flow": 0.0},
-                       "lighting": {"lighting_gain_present": False}},
-            acceptation)
+            reponses,
+            {
+                "detected_weather_file": "DRYCOLD_IESVE.epw",
+                "ventilation": {"infiltration_only": True, "oa_max_flow": 0.0},
+                "lighting": {"lighting_gain_present": False},
+            },
+            acceptation,
+        )
         conclusion = actions[-1]
         self.assertNotEqual(conclusion["categorie"], w.PASS_TECHNIQUE)
         self.assertIn("ne le prononce pas", conclusion["action"])
@@ -491,15 +524,19 @@ class TestAbsenceDeMutationVE(unittest.TestCase):
         with io.open(chemin, encoding="utf-8") as flux:
             for numero, ligne in enumerate(flux, 1):
                 nu = ligne.strip()
-                self.assertFalse(nu.startswith(("import iesve", "from iesve")),
-                                 numero)
+                self.assertFalse(nu.startswith(("import iesve", "from iesve")), numero)
 
     def test_le_noyau_nappelle_aucun_setter_ve(self):
         chemin = os.path.abspath(w.__file__).replace(".pyc", ".py")
         with io.open(chemin, encoding="utf-8") as flux:
             source = flux.read()
-        for interdit in ("set_properties", "create_material", "add_layer",
-                         "create_apache_system", "assign_construction"):
+        for interdit in (
+            "set_properties",
+            "create_material",
+            "add_layer",
+            "create_apache_system",
+            "assign_construction",
+        ):
             self.assertNotIn(interdit, source, interdit)
 
 
@@ -511,23 +548,28 @@ class TestPrioriteDeLaLiaisonChauffage(unittest.TestCase):
     """
 
     def test_la_serie_steady_state_ne_gagne_pas(self):
-        from swiss_sia.simulation_results import (
-            find_room_sensible_load_variable)
+        from swiss_sia.simulation_results import find_room_sensible_load_variable
+
         variables = [
-            {"aps_varname": "Room units steady state htg load",
-             "display_name": "Steady state heating plant load",
-             "model_level": "z", "resolved_metric_unit": "kW"},
-            {"aps_varname": "Room units heating load",
-             "display_name": "Heating plant sensible load",
-             "model_level": "z", "resolved_metric_unit": "kW"},
+            {
+                "aps_varname": "Room units steady state htg load",
+                "display_name": "Steady state heating plant load",
+                "model_level": "z",
+                "resolved_metric_unit": "kW",
+            },
+            {
+                "aps_varname": "Room units heating load",
+                "display_name": "Heating plant sensible load",
+                "model_level": "z",
+                "resolved_metric_unit": "kW",
+            },
         ]
         binding = find_room_sensible_load_variable(variables, "heating")
         self.assertIsNotNone(binding)
         self.assertEqual(binding[0], "Room units heating load")
 
     def test_la_provenance_du_chauffage_est_citee_dans_les_faits(self):
-        note = w.faits_techniques({"total_heating_kwh": 1.0})[
-            "total_heating_kwh"]["note"]
+        note = w.faits_techniques({"total_heating_kwh": 1.0})["total_heating_kwh"]["note"]
         self.assertIn("Room units heating load", note)
         self.assertIn("steady state", note)
 

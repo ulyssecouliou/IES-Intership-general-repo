@@ -108,9 +108,7 @@ class TkThemeApplicationTests(unittest.TestCase):
         )
         for style_name, option, expected in cases:
             with self.subTest(style=style_name, option=option):
-                self.assertEqual(
-                    self.style.lookup(style_name, option), expected
-                )
+                self.assertEqual(self.style.lookup(style_name, option), expected)
 
     def test_table_row_height_is_the_house_token(self):
         self.assertEqual(
@@ -155,9 +153,9 @@ class SetupDialogStyleTests(unittest.TestCase):
     """The reference-model setup dialog no longer carries an ad-hoc style."""
 
     def test_setup_dialog_source_is_on_the_shared_theme(self):
-        source = (
-            ROOT / "swiss_sia" / "reference_model_setup_ui.py"
-        ).read_text(encoding="utf-8")
+        source = (ROOT / "swiss_sia" / "reference_model_setup_ui.py").read_text(
+            encoding="utf-8"
+        )
         # It adopts the shared theme...
         self.assertIn("tk_theme.apply_ies_theme", source)
         # ...and carries no hardcoded face or colour of its own.

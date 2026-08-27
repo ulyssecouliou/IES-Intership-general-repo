@@ -46,11 +46,12 @@ import sys
 import openpyxl
 
 RACINE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-REF_JSON = os.path.join(RACINE, 'refs', 'reference-data', 'test-1.ref.json')
-EMPREINTE = os.path.join(RACINE, 'refs', 'reference-data', 'test-1.cells.json')
-CLASSEUR = os.path.join(RACINE, 'SIA_4010_geteilter_Link', 'Test1',
-                        'Resultaterfassung_Test1.xlsx')
-FEUILLE = u'Zusammenfassung Testf\xe4lle'
+REF_JSON = os.path.join(RACINE, "refs", "reference-data", "test-1.ref.json")
+EMPREINTE = os.path.join(RACINE, "refs", "reference-data", "test-1.cells.json")
+CLASSEUR = os.path.join(
+    RACINE, "SIA_4010_geteilter_Link", "Test1", "Resultaterfassung_Test1.xlsx"
+)
+FEUILLE = "Zusammenfassung Testf\xe4lle"
 
 # Header rows of the extracted tables, reconstructed against the source and
 # confirmed by the independent audit (AUDIT.md).
@@ -65,13 +66,13 @@ def _cellules_citees(reference):
         """Recursively collect cited cell addresses from one JSON node."""
 
         if isinstance(noeud, dict):
-            if 'value' in noeud and 'cell' in noeud:
-                adresses.add(noeud['cell'])
+            if "value" in noeud and "cell" in noeud:
+                adresses.add(noeud["cell"])
                 return
             for valeur in noeud.values():
                 parcourir(valeur)
 
-    parcourir(reference['reference_values'])
+    parcourir(reference["reference_values"])
     return adresses
 
 
@@ -79,15 +80,17 @@ def main():
     """Generate the immutable Test 1 workbook-cell fingerprint."""
 
     if not os.path.exists(CLASSEUR):
-        sys.stderr.write('Classeur source absent : ' + CLASSEUR + '\n'
-                         "L'empreinte ne peut etre generee que depuis la source figee.\n")
+        sys.stderr.write(
+            "Classeur source absent : " + CLASSEUR + "\n"
+            "L'empreinte ne peut etre generee que depuis la source figee.\n"
+        )
         return 1
 
-    with open(REF_JSON, encoding='utf-8') as flux:
+    with open(REF_JSON, encoding="utf-8") as flux:
         reference = json.load(flux)
     adresses = _cellules_citees(reference)
 
-    with open(CLASSEUR, 'rb') as flux:
+    with open(CLASSEUR, "rb") as flux:
         somme = hashlib.sha256(flux.read()).hexdigest()
 
     classeur = openpyxl.load_workbook(CLASSEUR, data_only=True)
@@ -109,34 +112,50 @@ def main():
         entetes[str(ligne)] = colonnes
     classeur.close()
 
-    empreinte = collections.OrderedDict([
-        ('_comment',
-         "Cellules BRUTES du classeur officiel, figees pour que la CI puisse "
-         "verifier test-1.ref.json sans les 14 Mo du .xlsx. Genere par "
-         "scripts/build_cell_fingerprint.py -- ne pas editer a la main."),
-        ('source', collections.OrderedDict([
-            ('file', 'SIA_4010_geteilter_Link/Test1/Resultaterfassung_Test1.xlsx'),
-            ('sheet', FEUILLE),
-            ('sha256', somme),
-        ])),
-        ('reference_status', reference.get('status')),
-        ('header_rows', entetes),
-        ('cells', cellules),
-    ])
+    empreinte = collections.OrderedDict(
+        [
+            (
+                "_comment",
+                "Cellules BRUTES du classeur officiel, figees pour que la CI puisse "
+                "verifier test-1.ref.json sans les 14 Mo du .xlsx. Genere par "
+                "scripts/build_cell_fingerprint.py -- ne pas editer a la main.",
+            ),
+            (
+                "source",
+                collections.OrderedDict(
+                    [
+                        (
+                            "file",
+                            "SIA_4010_geteilter_Link/Test1/Resultaterfassung_Test1.xlsx",
+                        ),
+                        ("sheet", FEUILLE),
+                        ("sha256", somme),
+                    ]
+                ),
+            ),
+            ("reference_status", reference.get("status")),
+            ("header_rows", entetes),
+            ("cells", cellules),
+        ]
+    )
 
-    with open(EMPREINTE, 'w', encoding='utf-8') as flux:
+    with open(EMPREINTE, "w", encoding="utf-8") as flux:
         json.dump(empreinte, flux, ensure_ascii=False, indent=1, sort_keys=False)
 
     taille = os.path.getsize(EMPREINTE)
     erreurs = sum(1 for v in cellules.values() if isinstance(v, str))
-    print('Empreinte ecrite : {0}'.format(EMPREINTE))
-    print('  cellules      : {0}'.format(len(cellules)))
+    print("Empreinte ecrite : {0}".format(EMPREINTE))
+    print("  cellules      : {0}".format(len(cellules)))
     print("  dont erreurs Excel conservees : {0}".format(erreurs))
-    print('  lignes d en-tete : {0}'.format(', '.join(str(l) for l in LIGNES_ENTETE)))
-    print('  taille        : {0} Ko'.format(taille // 1024))
-    print('  sha256 source : {0}'.format(somme[:16] + '...'))
+    print(
+        "  lignes d en-tete : {0}".format(
+            ", ".join(str(line_number) for line_number in LIGNES_ENTETE)
+        )
+    )
+    print("  taille        : {0} Ko".format(taille // 1024))
+    print("  sha256 source : {0}".format(somme[:16] + "..."))
     return 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

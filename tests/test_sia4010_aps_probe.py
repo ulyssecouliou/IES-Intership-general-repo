@@ -76,11 +76,7 @@ class _Results:
         aps_var,
         vista_var,
     ):
-        if (
-            room_id == "R1"
-            and aps_handle == 77
-            and aps_var == "SURFACE_SOLAR"
-        ):
+        if room_id == "R1" and aps_handle == 77 and aps_var == "SURFACE_SOLAR":
             return [0.0, 300.0, 500.0]
         return []
 
@@ -148,13 +144,9 @@ class Sia4010ApsProbeTests(unittest.TestCase):
         self.assertEqual(report["candidate_variable_count"], 3)
         rows = {row["aps_varname"]: row for row in report["candidate_variables"]}
         self.assertEqual(rows["QHEAT"]["metric_unit"], "W")
-        self.assertEqual(
-            rows["QHEAT"]["room_series"][0]["series"]["maximum"], 200.0
-        )
+        self.assertEqual(rows["QHEAT"]["room_series"][0]["series"]["maximum"], 200.0)
         self.assertEqual(rows["AIR_TEMP"]["metric_unit"], "°C")
-        self.assertEqual(
-            rows["AIR_TEMP"]["room_series"][0]["series"]["maximum"], 21.0
-        )
+        self.assertEqual(rows["AIR_TEMP"]["room_series"][0]["series"]["maximum"], 21.0)
         self.assertNotIn("full_series", rows["QHEAT"])
         self.assertEqual(
             report["surface_binding_status"],

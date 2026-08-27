@@ -22,9 +22,7 @@ class ProjectMetadataEvidenceTests(unittest.TestCase):
     def setUp(self) -> None:
         """Prepare a writable evidence path directly in the test directory."""
         self.project_root = Path(__file__).resolve().parents[1]
-        self.csv_path = Path(__file__).with_name(
-            "SIA3802_project_metadata_unit_test.csv"
-        )
+        self.csv_path = Path(__file__).with_name("SIA3802_project_metadata_unit_test.csv")
         self.comparison_path = Path(__file__).with_name(
             "SIA3802_global_reference_comparison_unit_test.csv"
         )
@@ -50,14 +48,12 @@ class ProjectMetadataEvidenceTests(unittest.TestCase):
             "source_reference,notes\n"
         )
         self.active_metadata_path.write_text(
-            header
-            + "Demo_Project,new building,SIA 2028 DRY,demo.epw,Zurich,408,"
+            header + "Demo_Project,new building,SIA 2028 DRY,demo.epw,Zurich,408,"
             "accepted,Reviewer,2026-07-15,Project brief,Section 3,Reviewed\n",
             encoding="utf-8",
         )
         self.foreign_metadata_path.write_text(
-            header
-            + "Demo_Project_10,existing building,Other weather,other.epw,Bern,540,"
+            header + "Demo_Project_10,existing building,Other weather,other.epw,Bern,540,"
             "accepted,Other reviewer,2026-07-15,Other brief,Section 2,Reviewed\n",
             encoding="utf-8",
         )
@@ -130,12 +126,20 @@ class ProjectMetadataEvidenceTests(unittest.TestCase):
         }
         project = SimpleNamespace(path=r"C:\VE\Demo_Project")
         with (
-            patch.object(app, "scan_sia3802_project_metadata", return_value={"status": "AVAILABLE"}),
+            patch.object(
+                app, "scan_sia3802_project_metadata", return_value={"status": "AVAILABLE"}
+            ),
             patch.object(app, "find_accepted_project_metadata", return_value=metadata),
-            patch.object(app, "scan_sia3802_global_comparisons", return_value={"status": "NOT_PROVIDED"}),
+            patch.object(
+                app,
+                "scan_sia3802_global_comparisons",
+                return_value={"status": "NOT_PROVIDED"},
+            ),
             patch.object(app, "find_accepted_global_comparison", return_value=None),
             patch.object(app, "_current_project_weather_label", return_value="demo.epw"),
-            patch.object(app.simulation_results_module, "list_aps_files", return_value=[]),
+            patch.object(
+                app.simulation_results_module, "list_aps_files", return_value=[]
+            ),
         ):
             summary = app._collect_dynamic_results(project)
 

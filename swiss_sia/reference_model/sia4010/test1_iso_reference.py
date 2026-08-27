@@ -11,11 +11,10 @@ from __future__ import annotations
 import hashlib
 import json
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Mapping, Tuple, Union
+from typing import Any, Dict, List, Mapping, Tuple, Union
 
 from ..exceptions import ConfigurationError
 from .expected_results import ExpectedResult
-
 
 CATALOG_RELATIVE_PATH = Path("config/iso52016_test1_verification_cases.json")
 CONDITIONED_CASES = frozenset({"600", "640", "900", "940"})
@@ -36,9 +35,7 @@ def _load_catalog(path: Path) -> Dict[str, Any]:
         payload = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, ValueError) as exc:
         raise ConfigurationError(
-            "Unable to read ISO Test 1 reference catalog '{}': {}".format(
-                path, exc
-            )
+            "Unable to read ISO Test 1 reference catalog '{}': {}".format(path, exc)
         ) from exc
     if not isinstance(payload, dict):
         raise ConfigurationError("ISO Test 1 reference catalog must be an object")

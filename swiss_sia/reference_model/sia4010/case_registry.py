@@ -12,7 +12,6 @@ from typing import Any, Dict, Tuple
 from ..exceptions import ConfigurationError
 from .model_scenario import TEST_CASES
 
-
 PREPARATION_READY = "PREPARATION_READY"
 GUARDED_MUTATION_READY = "GUARDED_MUTATION_READY"
 RUNTIME_QUALIFICATION_READY = "RUNTIME_QUALIFICATION_READY"
@@ -56,18 +55,16 @@ class Sia4010CaseCapability:
         """Return whether a read-only VE API discovery probe is implemented."""
 
         return (
-            (self.variant == "test_2A" and self.case_id == "2A")
-            or self.base_test_id in {"3", "4", "5", "6", "7"}
-        )
+            self.variant == "test_2A" and self.case_id == "2A"
+        ) or self.base_test_id in {"3", "4", "5", "6", "7"}
 
     @property
     def source_bound_bundle_supported(self) -> bool:
         """Return whether exact delegated inputs can build a generator contract."""
 
         return (
-            (self.variant == "test_2A" and self.case_id == "2A")
-            or self.base_test_id == "3"
-        )
+            self.variant == "test_2A" and self.case_id == "2A"
+        ) or self.base_test_id == "3"
 
     @property
     def geometry_artifact_supported(self) -> bool:
@@ -90,10 +87,7 @@ class Sia4010CaseCapability:
             and self.case_id
             in set(TEST1_DIAGNOSTIC_CASES)
             | {"600", "640", "600FF", "900", "940", "900FF"}
-            and (
-                self.mutation_supported
-                or self.runtime_qualification_supported
-            )
+            and (self.mutation_supported or self.runtime_qualification_supported)
         )
 
     @property
@@ -151,25 +145,17 @@ class Sia4010CaseCapability:
         return {
             **asdict(self),
             "mutation_supported": self.mutation_supported,
-            "runtime_qualification_supported": (
-                self.runtime_qualification_supported
-            ),
+            "runtime_qualification_supported": (self.runtime_qualification_supported),
             "runtime_discovery_supported": self.runtime_discovery_supported,
-            "source_bound_bundle_supported": (
-                self.source_bound_bundle_supported
-            ),
+            "source_bound_bundle_supported": (self.source_bound_bundle_supported),
             "geometry_artifact_supported": self.geometry_artifact_supported,
             "aps_evaluation_supported": self.aps_evaluation_supported,
-            "apachesim_qualification_supported": (
-                self.apachesim_qualification_supported
-            ),
+            "apachesim_qualification_supported": (self.apachesim_qualification_supported),
             "qualified_template_simulation_supported": (
                 self.qualified_template_simulation_supported
             ),
             "aps_evaluation_scope": self.aps_evaluation_scope,
-            "aps_full_evaluation_supported": (
-                self.aps_full_evaluation_supported
-            ),
+            "aps_full_evaluation_supported": (self.aps_full_evaluation_supported),
         }
 
 
@@ -245,9 +231,7 @@ def get_case_capability(variant: str, case_id: str) -> Sia4010CaseCapability:
     cases = TEST_CASES.get(variant)
     if cases is None or case_id not in cases:
         raise ConfigurationError(
-            "Unknown SIA 4010 variant/case combination: {}/{}".format(
-                variant, case_id
-            )
+            "Unknown SIA 4010 variant/case combination: {}/{}".format(variant, case_id)
         )
     test_id = base_test_id(variant)
     if variant == "test_1" and case_id == "600":
@@ -326,9 +310,7 @@ def get_case_capability(variant: str, case_id: str) -> Sia4010CaseCapability:
     blocker_code, blocker_detail = _blocker_for_test(test_id)
     roles = ["test_specification", "evaluation_workbook"]
     if test_id in {"4", "5", "6", "7"}:
-        roles.extend(
-            ("example_building_documentation", "example_building_ifc")
-        )
+        roles.extend(("example_building_documentation", "example_building_ifc"))
     if test_id == "7":
         roles.extend(("load_profile", "reference_document"))
     return Sia4010CaseCapability(

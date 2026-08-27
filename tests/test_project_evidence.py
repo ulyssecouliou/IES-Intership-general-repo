@@ -24,15 +24,19 @@ class ProjectEvidenceTests(unittest.TestCase):
 
     def test_invalid_requested_acceptance_is_forced_pending(self) -> None:
         result = save_records(
-                self.root, "project_metadata", "My VE Project",
-                [{
+            self.root,
+            "project_metadata",
+            "My VE Project",
+            [
+                {
                     "building_status": "NEW_BUILDING",
                     "review_status": "accepted",
                     "reviewer": "",
                     "review_date": "",
                     "source_document": "",
-                }],
-            )
+                }
+            ],
+        )
         self.assertEqual(result["forced_pending_count"], 1)
         with Path(result["path"]).open(encoding="utf-8", newline="") as handle:
             row = next(csv.DictReader(handle))
@@ -41,18 +45,39 @@ class ProjectEvidenceTests(unittest.TestCase):
 
     def test_complete_metadata_is_accepted_and_backup_is_created(self) -> None:
         record = {
-                "building_status": "EXISTING_BUILDING", "weather_basis": "SIA 2028 DRY",
-                "weather_file": "reviewed.epw", "location": "Geneva", "altitude_m": "420",
-                "review_status": "accepted", "reviewer": "Energy engineer",
-                "review_date": "2026-08-24", "source_document": "Climate brief",
-                "source_reference": "p. 4", "notes": "Reviewed",
-                "ventilation_strategy": "MECHANICAL_PRESENT",
-                "ventilation_justification": "Mechanical ventilation documented in VE.",
-                "ventilation_flow_source": "VE room air-exchange readback",
-                "lighting_scope": "IN_SCOPE",
-                "lighting_power_source": "VE template readback",
-                "aps_outputs_required": "YES",
-                "aps_outputs_justification": "Required for the assessed systems.",
+            "building_status": "EXISTING_BUILDING",
+            "weather_basis": "SIA 2028 DRY",
+            "weather_file": "reviewed.epw",
+            "weather_source_authority": "SIA 2028 C2:2023 climate brief",
+            "weather_use_case": "SIA3802_COOLING_NEED",
+            "weather_scenario_period": "2035 RCP8.5 DRY",
+            "location": "Geneva",
+            "altitude_m": "420",
+            "location_source": "Approved climate brief",
+            "altitude_source": "Approved survey",
+            "review_status": "accepted",
+            "reviewer": "Energy engineer",
+            "reviewer_role": "Responsible energy specialist",
+            "reviewer_organisation": "IES",
+            "reviewer_competence_basis": "Building simulation engineer",
+            "reviewer_acceptance_scope": "Weather, inputs and report reserves",
+            "review_date": "2026-08-24",
+            "source_document": "Climate brief",
+            "source_reference": "p. 4",
+            "notes": "Reviewed",
+            "ventilation_strategy": "MECHANICAL_PRESENT",
+            "ventilation_justification": "Mechanical ventilation documented in VE.",
+            "ventilation_scope": "All conditioned rooms",
+            "ventilation_flow_source": "VE room air-exchange readback",
+            "lighting_scope": "IN_SCOPE",
+            "lighting_power_source": "VE template readback",
+            "lighting_scope_justification": "Lighting included for all assessed rooms.",
+            "aps_outputs_required": "YES",
+            "aps_outputs_justification": "Required for the assessed systems.",
+            "system_power_source": "HVAC design schedule and VE readback",
+            "assumptions_status": "NO_UNRESOLVED_ASSUMPTIONS",
+            "assumptions_register": "Climate brief, assumptions section",
+            "report_use_acknowledgement": "ENGINEERING_ASSESSMENT_ONLY",
         }
         first = save_records(self.root, "project_metadata", "Project A", [record])
         second = save_records(self.root, "project_metadata", "Project A", [record])
@@ -70,10 +95,14 @@ class ProjectEvidenceTests(unittest.TestCase):
 
     def test_multiple_ventilation_rows_are_preserved(self) -> None:
         base = {
-                "system_type": "monozone", "control_class": "two_speeds_time_schedule",
-                "airflow_band": "3_TO_6", "specific_airflow_m3_h_m2": "4",
-                "review_status": "accepted", "reviewer": "HVAC engineer",
-                "review_date": "2026-08-24", "source_document": "Ventilation design",
+            "system_type": "monozone",
+            "control_class": "two_speeds_time_schedule",
+            "airflow_band": "3_TO_6",
+            "specific_airflow_m3_h_m2": "4",
+            "review_status": "accepted",
+            "reviewer": "HVAC engineer",
+            "review_date": "2026-08-24",
+            "source_document": "Ventilation design",
         }
         rows = [dict(base, system_id="SYS-1"), dict(base, system_id="SYS-2")]
         result = save_records(self.root, "ventilation_control", "P", rows)

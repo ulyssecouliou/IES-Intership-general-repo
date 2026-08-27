@@ -49,21 +49,27 @@ if _ROOT not in sys.path:
 
 from ve_adapter import bandes_adapter as adapter  # noqa: E402
 
-DEFAULT_PROBE = os.path.join(_ROOT, 'outputs', 'sonde_aps.json')
-REPORT_JSON = os.path.join(_ROOT, 'outputs', 'aps_variable_match.json')
-REPORT_SHEET = os.path.join(_ROOT, 'docs', 'FICHE-LIAISONS-APS.md')
+DEFAULT_PROBE = os.path.join(_ROOT, "outputs", "sonde_aps.json")
+REPORT_JSON = os.path.join(_ROOT, "outputs", "aps_variable_match.json")
+REPORT_SHEET = os.path.join(_ROOT, "docs", "FICHE-LIAISONS-APS.md")
 
 #: States a quantity can be in against one probe. Ordered from "done" to
 #: "nothing to go on", which is also the order the sheet reads in.
-BOUND = 'BOUND'
-CANDIDATE_PRESENT = 'CANDIDATE_PRESENT'
-CANDIDATE_WRONG_LEVEL = 'CANDIDATE_WRONG_LEVEL'
-CANDIDATE_ABSENT = 'CANDIDATE_ABSENT'
-CANDIDATE_IMPOSSIBLE = 'CANDIDATE_IMPOSSIBLE'
-NO_CANDIDATE = 'NO_CANDIDATE'
+BOUND = "BOUND"
+CANDIDATE_PRESENT = "CANDIDATE_PRESENT"
+CANDIDATE_WRONG_LEVEL = "CANDIDATE_WRONG_LEVEL"
+CANDIDATE_ABSENT = "CANDIDATE_ABSENT"
+CANDIDATE_IMPOSSIBLE = "CANDIDATE_IMPOSSIBLE"
+NO_CANDIDATE = "NO_CANDIDATE"
 
-STATE_ORDER = (BOUND, CANDIDATE_PRESENT, CANDIDATE_WRONG_LEVEL,
-               CANDIDATE_ABSENT, CANDIDATE_IMPOSSIBLE, NO_CANDIDATE)
+STATE_ORDER = (
+    BOUND,
+    CANDIDATE_PRESENT,
+    CANDIDATE_WRONG_LEVEL,
+    CANDIDATE_ABSENT,
+    CANDIDATE_IMPOSSIBLE,
+    NO_CANDIDATE,
+)
 
 #: How many of a level's variables to list for a quantity that has no
 #: candidate. Enough to be useful, few enough that the reader still opens VE.
@@ -94,18 +100,19 @@ def load_probe(path=None):
     path = path or DEFAULT_PROBE
     if not os.path.exists(path):
         raise ProbeUnreadable(
-            'probe absent: %s. Produce it by running '
-            'Run_VE_SIA4010_Sonde_APS.py from VEScripts on a model that has '
-            'been simulated over the full year.' % path)
+            "probe absent: %s. Produce it by running "
+            "Run_VE_SIA4010_Sonde_APS.py from VEScripts on a model that has "
+            "been simulated over the full year." % path
+        )
     try:
-        with io.open(path, encoding='utf-8') as stream:
+        with io.open(path, encoding="utf-8") as stream:
             probe = json.load(stream)
     except ValueError as error:
-        raise ProbeUnreadable('probe unreadable: %s (%s)' % (path, error))
-    if not isinstance(probe, dict) or 'variables' not in probe:
+        raise ProbeUnreadable("probe unreadable: %s (%s)" % (path, error))
+    if not isinstance(probe, dict) or "variables" not in probe:
         raise ProbeUnreadable(
-            'file %s carries no `variables` list: it is not an APS probe.'
-            % path)
+            "file %s carries no `variables` list: it is not an APS probe." % path
+        )
     return probe
 
 
@@ -119,8 +126,8 @@ def index_by_level(probe):
         dict: `{level: [variable, ...]}`.
     """
     by_level = {}
-    for variable in probe.get('variables') or []:
-        by_level.setdefault(variable.get('model_level'), []).append(variable)
+    for variable in probe.get("variables") or []:
+        by_level.setdefault(variable.get("model_level"), []).append(variable)
     return by_level
 
 
@@ -136,7 +143,7 @@ def _find(by_level, level, name):
         dict | None: The variable, or `None`.
     """
     for variable in by_level.get(level) or []:
-        if variable.get('aps_varname') == name:
+        if variable.get("aps_varname") == name:
             return variable
     return None
 
@@ -156,8 +163,11 @@ def _levels_carrying(by_level, name):
     Returns:
         list[str]: Levels carrying it, sorted.
     """
-    return sorted(level for level, variables in by_level.items()
-                  if any(v.get('aps_varname') == name for v in variables))
+    return sorted(
+        level
+        for level, variables in by_level.items()
+        if any(v.get("aps_varname") == name for v in variables)
+    )
 
 
 def confront(probe, test_number):
@@ -177,45 +187,52 @@ def confront(probe, test_number):
 
     for label in sorted(declared):
         binding = declared[label]
-        level = binding.get('niveau')
+        level = binding.get("niveau")
         at_level = by_level.get(level) or []
         row = {
-            'test': test_number,
-            'libelle_de': label,
-            'niveau': level,
-            'variables_au_niveau': len(at_level),
-            'piste': binding.get('piste'),
+            "test": test_number,
+            "libelle_de": label,
+            "niveau": level,
+            "variables_au_niveau": len(at_level),
+            "piste": binding.get("piste"),
         }
 
-        if binding.get('aps_varname'):
-            found = _find(by_level, level, binding['aps_varname'])
-            row.update({
-                'etat': BOUND,
-                'aps_varname': binding['aps_varname'],
-                # A bound name that this probe does not carry is worth saying:
-                # either the model changed, or the binding was wrong.
-                'present_dans_le_releve': found is not None,
-            })
+        if binding.get("aps_varname"):
+            found = _find(by_level, level, binding["aps_varname"])
+            row.update(
+                {
+                    "etat": BOUND,
+                    "aps_varname": binding["aps_varname"],
+                    # A bound name that this probe does not carry is worth saying:
+                    # either the model changed, or the binding was wrong.
+                    "present_dans_le_releve": found is not None,
+                }
+            )
             rows.append(row)
             continue
 
         candidate = candidates.get(label)
         if candidate is None:
-            row.update({
-                'etat': NO_CANDIDATE,
-                'offre_du_niveau': [
-                    v.get('aps_varname') for v in at_level[:OFFER_LIMIT]],
-                'offre_non_montree': max(0, len(at_level) - OFFER_LIMIT),
-            })
+            row.update(
+                {
+                    "etat": NO_CANDIDATE,
+                    "offre_du_niveau": [
+                        v.get("aps_varname") for v in at_level[:OFFER_LIMIT]
+                    ],
+                    "offre_non_montree": max(0, len(at_level) - OFFER_LIMIT),
+                }
+            )
             rows.append(row)
             continue
 
-        name = candidate.get('aps_varname_candidat')
+        name = candidate.get("aps_varname_candidat")
         if name is None:
-            row.update({
-                'etat': CANDIDATE_IMPOSSIBLE,
-                'a_confirmer': candidate.get('a_confirmer'),
-            })
+            row.update(
+                {
+                    "etat": CANDIDATE_IMPOSSIBLE,
+                    "a_confirmer": candidate.get("a_confirmer"),
+                }
+            )
             rows.append(row)
             continue
 
@@ -227,14 +244,16 @@ def confront(probe, test_number):
             state = CANDIDATE_WRONG_LEVEL
         else:
             state = CANDIDATE_ABSENT
-        row.update({
-            'etat': state,
-            'niveaux_portant_le_candidat': elsewhere,
-            'aps_varname_candidat': name,
-            'display_name': candidate.get('display_name'),
-            'niveau_de_preuve': candidate.get('niveau_de_preuve'),
-            'a_confirmer': candidate.get('a_confirmer'),
-        })
+        row.update(
+            {
+                "etat": state,
+                "niveaux_portant_le_candidat": elsewhere,
+                "aps_varname_candidat": name,
+                "display_name": candidate.get("display_name"),
+                "niveau_de_preuve": candidate.get("niveau_de_preuve"),
+                "a_confirmer": candidate.get("a_confirmer"),
+            }
+        )
         rows.append(row)
 
     return rows
@@ -255,19 +274,19 @@ def confront_all(probe):
 
     tally = dict((state, 0) for state in STATE_ORDER)
     for row in rows:
-        tally[row['etat']] = tally.get(row['etat'], 0) + 1
+        tally[row["etat"]] = tally.get(row["etat"], 0) + 1
 
     by_level = index_by_level(probe)
     return {
-        'releve': probe.get('aps', {}).get('nom'),
-        'nb_variables_relevees': len(probe.get('variables') or []),
-        'recensement_par_niveau': dict(
-            (level, len(variables))
-            for level, variables in sorted(by_level.items())),
-        'lignes': rows,
-        'effectifs': tally,
-        'resolues': tally.get(BOUND, 0),
-        'total': len(rows),
+        "releve": probe.get("aps", {}).get("nom"),
+        "nb_variables_relevees": len(probe.get("variables") or []),
+        "recensement_par_niveau": dict(
+            (level, len(variables)) for level, variables in sorted(by_level.items())
+        ),
+        "lignes": rows,
+        "effectifs": tally,
+        "resolues": tally.get(BOUND, 0),
+        "total": len(rows),
     }
 
 
@@ -285,9 +304,9 @@ def empty_levels(report):
         list[tuple]: `(level, number of quantities needing it)`.
     """
     needed = {}
-    for row in report['lignes']:
-        if row['variables_au_niveau'] == 0:
-            needed[row['niveau']] = needed.get(row['niveau'], 0) + 1
+    for row in report["lignes"]:
+        if row["variables_au_niveau"] == 0:
+            needed[row["niveau"]] = needed.get(row["niveau"], 0) + 1
     return sorted(needed.items())
 
 
@@ -301,93 +320,110 @@ def build_sheet(report):
         str: Markdown.
     """
     lines = [
-        u'# Fiche de liaisons APS — confrontation d\'un relevé',
-        u'',
-        u'> **Document généré** par `scripts/match_aps_variables.py`. Il '
-        u'compare un relevé de sonde aux grandeurs déclarées dans '
-        u'`ve_adapter/bandes_adapter.py`. Il **ne lie rien** : trouver un nom '
-        u'dans le relevé ne prouve pas que c\'est la bonne variable. Seule '
-        u'une lecture du modèle VE le prouve.',
-        u'',
-        u'- Relevé : `%s`' % (report['releve'] or u'(sans nom)'),
-        u'- Variables relevées : **%d**' % report['nb_variables_relevees'],
-        u'- Grandeurs déclarées : **%d**, dont **%d liées**'
-        % (report['total'], report['resolues']),
-        u'',
-        u'| État | Effectif | Ce que ça veut dire |',
-        u'|---|---|---|',
-        u'| `BOUND` | %d | Liaison déjà déclarée. |'
-        % report['effectifs'].get(BOUND, 0),
-        u'| `CANDIDATE_PRESENT` | %d | Un candidat existe ET figure dans ce '
-        u'relevé. **À confirmer dans VE**, pas acquis. |'
-        % report['effectifs'].get(CANDIDATE_PRESENT, 0),
-        u'| `CANDIDATE_WRONG_LEVEL` | %d | Le candidat existe, mais à un '
-        u'AUTRE niveau que celui déclaré. Le niveau décide du PÉRIMÈTRE : '
-        u'ce n\'est pas un organe manquant, et ce n\'est pas non plus une '
-        u'simple faute de frappe. |'
-        % report['effectifs'].get(CANDIDATE_WRONG_LEVEL, 0),
-        u'| `CANDIDATE_ABSENT` | %d | Un candidat existe mais ne figure PAS '
-        u'dans ce relevé : le modèle ne porte probablement pas l\'organe. |'
-        % report['effectifs'].get(CANDIDATE_ABSENT, 0),
-        u'| `CANDIDATE_IMPOSSIBLE` | %d | Aucun candidat n\'est possible, et '
-        u'la raison est écrite. |'
-        % report['effectifs'].get(CANDIDATE_IMPOSSIBLE, 0),
-        u'| `NO_CANDIDATE` | %d | Rien de proposé. Le relevé offre la liste '
-        u'ci-dessous, sans classement — un classement plausible se ferait '
-        u'accepter sans vérification. |'
-        % report['effectifs'].get(NO_CANDIDATE, 0),
-        u'',
+        "# Fiche de liaisons APS — confrontation d'un relevé",
+        "",
+        "> **Document généré** par `scripts/match_aps_variables.py`. Il "
+        "compare un relevé de sonde aux grandeurs déclarées dans "
+        "`ve_adapter/bandes_adapter.py`. Il **ne lie rien** : trouver un nom "
+        "dans le relevé ne prouve pas que c'est la bonne variable. Seule "
+        "une lecture du modèle VE le prouve.",
+        "",
+        "- Relevé : `%s`" % (report["releve"] or "(sans nom)"),
+        "- Variables relevées : **%d**" % report["nb_variables_relevees"],
+        "- Grandeurs déclarées : **%d**, dont **%d liées**"
+        % (report["total"], report["resolues"]),
+        "",
+        "| État | Effectif | Ce que ça veut dire |",
+        "|---|---|---|",
+        "| `BOUND` | %d | Liaison déjà déclarée. |" % report["effectifs"].get(BOUND, 0),
+        "| `CANDIDATE_PRESENT` | %d | Un candidat existe ET figure dans ce "
+        "relevé. **À confirmer dans VE**, pas acquis. |"
+        % report["effectifs"].get(CANDIDATE_PRESENT, 0),
+        "| `CANDIDATE_WRONG_LEVEL` | %d | Le candidat existe, mais à un "
+        "AUTRE niveau que celui déclaré. Le niveau décide du PÉRIMÈTRE : "
+        "ce n'est pas un organe manquant, et ce n'est pas non plus une "
+        "simple faute de frappe. |" % report["effectifs"].get(CANDIDATE_WRONG_LEVEL, 0),
+        "| `CANDIDATE_ABSENT` | %d | Un candidat existe mais ne figure PAS "
+        "dans ce relevé : le modèle ne porte probablement pas l'organe. |"
+        % report["effectifs"].get(CANDIDATE_ABSENT, 0),
+        "| `CANDIDATE_IMPOSSIBLE` | %d | Aucun candidat n'est possible, et "
+        "la raison est écrite. |" % report["effectifs"].get(CANDIDATE_IMPOSSIBLE, 0),
+        "| `NO_CANDIDATE` | %d | Rien de proposé. Le relevé offre la liste "
+        "ci-dessous, sans classement — un classement plausible se ferait "
+        "accepter sans vérification. |" % report["effectifs"].get(NO_CANDIDATE, 0),
+        "",
     ]
 
     vides = empty_levels(report)
     if vides:
-        lines.extend([
-            u'## ⚠ Niveaux vides — l\'organe manque, pas le nom',
-            u'',
-            u'Un niveau sans aucune variable ne veut pas dire qu\'un nom est '
-            u'introuvable : il veut dire que **le composant n\'est pas dans '
-            u'le modèle**. Chercher davantage dans le relevé n\'y changera '
-            u'rien.',
-            u'',
-        ])
+        lines.extend(
+            [
+                "## ⚠ Niveaux vides — l'organe manque, pas le nom",
+                "",
+                "Un niveau sans aucune variable ne veut pas dire qu'un nom est "
+                "introuvable : il veut dire que **le composant n'est pas dans "
+                "le modèle**. Chercher davantage dans le relevé n'y changera "
+                "rien.",
+                "",
+            ]
+        )
         for level, count in vides:
-            lines.append(u'- Niveau `%s` : **0 variable**, alors que %d '
-                         u'grandeur(s) en dépendent.' % (level, count))
-        lines.append(u'')
+            lines.append(
+                "- Niveau `%s` : **0 variable**, alors que %d "
+                "grandeur(s) en dépendent." % (level, count)
+            )
+        lines.append("")
 
-    lines.extend([u'## Recensement du relevé, par niveau', u'',
-                  u'| Niveau | Variables |', u'|---|---|'])
-    for level, count in sorted(report['recensement_par_niveau'].items()):
-        lines.append(u'| `%s` | %d |' % (level, count))
-    lines.append(u'')
+    lines.extend(
+        [
+            "## Recensement du relevé, par niveau",
+            "",
+            "| Niveau | Variables |",
+            "|---|---|",
+        ]
+    )
+    for level, count in sorted(report["recensement_par_niveau"].items()):
+        lines.append("| `%s` | %d |" % (level, count))
+    lines.append("")
 
-    for test_number in sorted(set(row['test'] for row in report['lignes'])):
-        lines.append(u'## Test %d' % test_number)
-        lines.append(u'')
-        lines.append(u'| Grandeur (libellé du classeur) | Niveau | État | '
-                     u'Variable | À faire |')
-        lines.append(u'|---|---|---|---|---|')
+    for test_number in sorted(set(row["test"] for row in report["lignes"])):
+        lines.append("## Test %d" % test_number)
+        lines.append("")
+        lines.append(
+            "| Grandeur (libellé du classeur) | Niveau | État | " "Variable | À faire |"
+        )
+        lines.append("|---|---|---|---|---|")
         for row in sorted(
-                (r for r in report['lignes'] if r['test'] == test_number),
-                key=lambda r: (STATE_ORDER.index(r['etat']), r['libelle_de'])):
-            lines.append(u'| `%s` | `%s` (%d var.) | **%s** | %s | %s |'
-                         % (row['libelle_de'], row['niveau'],
-                            row['variables_au_niveau'], row['etat'],
-                            _variable_cell(row), _action_cell(row)))
-        lines.append(u'')
+            (r for r in report["lignes"] if r["test"] == test_number),
+            key=lambda r: (STATE_ORDER.index(r["etat"]), r["libelle_de"]),
+        ):
+            lines.append(
+                "| `%s` | `%s` (%d var.) | **%s** | %s | %s |"
+                % (
+                    row["libelle_de"],
+                    row["niveau"],
+                    row["variables_au_niveau"],
+                    row["etat"],
+                    _variable_cell(row),
+                    _action_cell(row),
+                )
+            )
+        lines.append("")
 
-    lines.extend([
-        u'## Ce que cette fiche ne dit pas',
-        u'',
-        u'- Qu\'une variable présente est la BONNE. Elle est présente, rien '
-        u'de plus.',
-        u'- Qu\'une variable absente n\'existe pas. Ce relevé vient d\'UN '
-        u'modèle ; un autre modèle en porterait d\'autres.',
-        u'- Rien sur la conformité. Une liaison résolue permet de mesurer ; '
-        u'elle ne décide d\'aucun verdict.',
-        u'',
-    ])
-    return u'\n'.join(lines) + u'\n'
+    lines.extend(
+        [
+            "## Ce que cette fiche ne dit pas",
+            "",
+            "- Qu'une variable présente est la BONNE. Elle est présente, rien "
+            "de plus.",
+            "- Qu'une variable absente n'existe pas. Ce relevé vient d'UN "
+            "modèle ; un autre modèle en porterait d'autres.",
+            "- Rien sur la conformité. Une liaison résolue permet de mesurer ; "
+            "elle ne décide d'aucun verdict.",
+            "",
+        ]
+    )
+    return "\n".join(lines) + "\n"
 
 
 def _variable_cell(row):
@@ -399,19 +435,19 @@ def _variable_cell(row):
     Returns:
         str: Markdown cell.
     """
-    if row['etat'] == BOUND:
-        marque = u'' if row.get('present_dans_le_releve') \
-            else u' — **absente de ce relevé**'
-        return u'`%s`%s' % (row['aps_varname'], marque)
-    if row.get('aps_varname_candidat'):
-        return u'`%s` (%s)' % (row['aps_varname_candidat'],
-                               row.get('display_name') or u'—')
-    if row['etat'] == NO_CANDIDATE and row.get('offre_du_niveau'):
-        offre = u', '.join(u'`%s`' % nom for nom in row['offre_du_niveau'])
-        if row.get('offre_non_montree'):
-            offre += u' … et %d autres' % row['offre_non_montree']
+    if row["etat"] == BOUND:
+        marque = (
+            "" if row.get("present_dans_le_releve") else " — **absente de ce relevé**"
+        )
+        return "`%s`%s" % (row["aps_varname"], marque)
+    if row.get("aps_varname_candidat"):
+        return "`%s` (%s)" % (row["aps_varname_candidat"], row.get("display_name") or "—")
+    if row["etat"] == NO_CANDIDATE and row.get("offre_du_niveau"):
+        offre = ", ".join("`%s`" % nom for nom in row["offre_du_niveau"])
+        if row.get("offre_non_montree"):
+            offre += " … et %d autres" % row["offre_non_montree"]
         return offre
-    return u'—'
+    return "—"
 
 
 def _action_cell(row):
@@ -423,39 +459,39 @@ def _action_cell(row):
     Returns:
         str: Markdown cell.
     """
-    if row['etat'] == BOUND:
-        if row.get('present_dans_le_releve'):
-            return u'Rien.'
-        return (u'Vérifier : la liaison déclarée ne figure pas dans ce '
-                u'relevé.')
-    if row['etat'] == CANDIDATE_PRESENT:
-        return u'Confirmer dans VE que cette variable mesure bien : %s' \
-            % (row.get('piste') or u'la grandeur attendue')
-    if row['etat'] == CANDIDATE_WRONG_LEVEL:
+    if row["etat"] == BOUND:
+        if row.get("present_dans_le_releve"):
+            return "Rien."
+        return "Vérifier : la liaison déclarée ne figure pas dans ce " "relevé."
+    if row["etat"] == CANDIDATE_PRESENT:
+        return "Confirmer dans VE que cette variable mesure bien : %s" % (
+            row.get("piste") or "la grandeur attendue"
+        )
+    if row["etat"] == CANDIDATE_WRONG_LEVEL:
         # DO NOT say "fix the level". The level of a VE variable decides its
         # SCOPE — room, system, building. Moving the declaration to make the
         # two coincide amounts to changing what is measured so that it comes
         # out right, which is the inverse of the work. The question is which
         # scope the workbook requires, and that is settled against the
         # specification.
-        return (u'**Incohérence de périmètre.** La variable existe, mais au '
-                u'niveau `%s` et non `%s`. Le niveau décide du périmètre '
-                u'(local / système / bâtiment) : lire la spécification pour '
-                u'savoir lequel le classeur demande, PUIS corriger soit le '
-                u'niveau, soit la variable. Aucune simulation ne réglera '
-                u'cela.'
-                % (u'`, `'.join(row.get('niveaux_portant_le_candidat') or []),
-                   row['niveau']))
-    if row['etat'] == CANDIDATE_ABSENT:
-        return (u'Le modèle ne porte pas cet organe. Le construire, '
-                u'simuler, re-sonder.')
-    if row['etat'] == CANDIDATE_IMPOSSIBLE:
-        return row.get('a_confirmer') or u'Voir l\'adaptateur.'
-    if row['variables_au_niveau'] == 0:
-        return (u'Niveau vide : construire l\'organe avant de chercher un '
-                u'nom.')
-    return u'Choisir dans VE parmi les variables du niveau : %s' \
-        % (row.get('piste') or u'—')
+        return (
+            "**Incohérence de périmètre.** La variable existe, mais au "
+            "niveau `%s` et non `%s`. Le niveau décide du périmètre "
+            "(local / système / bâtiment) : lire la spécification pour "
+            "savoir lequel le classeur demande, PUIS corriger soit le "
+            "niveau, soit la variable. Aucune simulation ne réglera "
+            "cela."
+            % ("`, `".join(row.get("niveaux_portant_le_candidat") or []), row["niveau"])
+        )
+    if row["etat"] == CANDIDATE_ABSENT:
+        return "Le modèle ne porte pas cet organe. Le construire, " "simuler, re-sonder."
+    if row["etat"] == CANDIDATE_IMPOSSIBLE:
+        return row.get("a_confirmer") or "Voir l'adaptateur."
+    if row["variables_au_niveau"] == 0:
+        return "Niveau vide : construire l'organe avant de chercher un " "nom."
+    return "Choisir dans VE parmi les variables du niveau : %s" % (
+        row.get("piste") or "—"
+    )
 
 
 def main(arguments=()):
@@ -467,35 +503,42 @@ def main(arguments=()):
     Returns:
         int: 0 when the confrontation ran, 1 when the probe is unusable.
     """
-    paths = [a for a in arguments if not a.startswith('--')]
+    paths = [a for a in arguments if not a.startswith("--")]
     try:
         probe = load_probe(paths[0] if paths else None)
     except ProbeUnreadable as error:
-        print(u'%s' % error)
+        print("%s" % error)
         return 1
 
     report = confront_all(probe)
-    print(u'relevé : %d variables, %d grandeurs déclarées'
-          % (report['nb_variables_relevees'], report['total']))
+    print(
+        "relevé : %d variables, %d grandeurs déclarées"
+        % (report["nb_variables_relevees"], report["total"])
+    )
     for state in STATE_ORDER:
-        print(u'    %-22s %d' % (state, report['effectifs'].get(state, 0)))
+        print("    %-22s %d" % (state, report["effectifs"].get(state, 0)))
     for level, count in empty_levels(report):
-        print(u'    niveau `%s` VIDE — %d grandeur(s) en dépendent : '
-              u'l\'organe manque au modèle, pas le nom.' % (level, count))
+        print(
+            "    niveau `%s` VIDE — %d grandeur(s) en dépendent : "
+            "l'organe manque au modèle, pas le nom." % (level, count)
+        )
 
-    if '--write' in arguments:
+    if "--write" in arguments:
         for path, payload in (
-                (REPORT_JSON, json.dumps(report, ensure_ascii=False,
-                                         indent=2, sort_keys=True)),
-                (REPORT_SHEET, build_sheet(report))):
+            (
+                REPORT_JSON,
+                json.dumps(report, ensure_ascii=False, indent=2, sort_keys=True),
+            ),
+            (REPORT_SHEET, build_sheet(report)),
+        ):
             folder = os.path.dirname(path)
             if not os.path.isdir(folder):
                 os.makedirs(folder)
-            with io.open(path, 'w', encoding='utf-8') as stream:
+            with io.open(path, "w", encoding="utf-8") as stream:
                 stream.write(payload)
-            print(u'    écrit : %s' % os.path.relpath(path, _ROOT))
+            print("    écrit : %s" % os.path.relpath(path, _ROOT))
     return 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main(sys.argv[1:]))

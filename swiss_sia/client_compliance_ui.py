@@ -24,6 +24,7 @@ from .reference_model.sia4010.ui_translations import (
     normalize_language,
     translate,
 )
+from ui.tk_safe import bring_window_to_front
 
 try:
     import tkinter as tk
@@ -136,13 +137,9 @@ class ClientComplianceWindow:
             "mechanical_cooling": tk.StringVar(
                 value=saved.mechanical_cooling or "TO_CONFIRM"
             ),
-            "building_strategy_notes": tk.StringVar(
-                value=saved.building_strategy_notes
-            ),
+            "building_strategy_notes": tk.StringVar(value=saved.building_strategy_notes),
             "client_logo_path": tk.StringVar(value=saved.client_logo_path),
-            "model_viewer_image_path": tk.StringVar(
-                value=saved.model_viewer_image_path
-            ),
+            "model_viewer_image_path": tk.StringVar(value=saved.model_viewer_image_path),
         }
         self.language_choice = tk.StringVar(value=LANGUAGE_LABELS[self.language])
         self.result: Dict[str, Any] = {}
@@ -164,7 +161,7 @@ class ClientComplianceWindow:
         readable = str(key or "").strip()
         for prefix in ("client_ui_", "field_", "domain_", "verdict_"):
             if readable.startswith(prefix):
-                readable = readable[len(prefix):]
+                readable = readable[len(prefix) :]
                 break
         return readable.replace("_", " ").strip().capitalize() or "-"
 
@@ -256,7 +253,7 @@ class ClientComplianceWindow:
         ).pack(anchor="w", pady=(5, 0))
         tk.Label(
             heading,
-            text="SIA 380/2  /  CLIENT",
+            text=self.t("client_ui_badge"),
             background=self.COLORS["navy_soft"],
             foreground="#ffffff",
             padx=13,
@@ -264,7 +261,9 @@ class ClientComplianceWindow:
             font=("Consolas", 9, "bold"),
         ).pack(side="right", anchor="n", padx=(24, 0))
 
-        metadata = tk.Frame(self.root, background=self.COLORS["navy_soft"], padx=30, pady=9)
+        metadata = tk.Frame(
+            self.root, background=self.COLORS["navy_soft"], padx=30, pady=9
+        )
         metadata.pack(fill="x")
         output_location = str(report_directory(self.project_path))
         if len(output_location) > 58:
@@ -279,15 +278,23 @@ class ClientComplianceWindow:
         )
         for index, (label_key, value) in enumerate(meta_items):
             block = tk.Frame(metadata, background=self.COLORS["navy_soft"])
-            block.pack(side="left", fill="x", expand=True, padx=(0, 24 if index < 2 else 0))
+            block.pack(
+                side="left", fill="x", expand=True, padx=(0, 24 if index < 2 else 0)
+            )
             tk.Label(
-                block, text=self.t(label_key).upper(),
-                background=self.COLORS["navy_soft"], foreground="#8fb0c8",
+                block,
+                text=self.t(label_key).upper(),
+                background=self.COLORS["navy_soft"],
+                foreground="#8fb0c8",
                 font=("Segoe UI Semibold", 7),
             ).pack(anchor="w")
             tk.Label(
-                block, text=value, background=self.COLORS["navy_soft"],
-                foreground="#ffffff", font=("Segoe UI", 8), anchor="w",
+                block,
+                text=value,
+                background=self.COLORS["navy_soft"],
+                foreground="#ffffff",
+                font=("Segoe UI", 8),
+                anchor="w",
             ).pack(anchor="w")
 
         container = ttk.Frame(self.root, style="Client.TFrame", padding=(22, 18))
@@ -297,7 +304,9 @@ class ClientComplianceWindow:
         container.rowconfigure(0, weight=1)
 
         left_border = tk.Frame(
-            container, background=self.COLORS["card"], highlightthickness=1,
+            container,
+            background=self.COLORS["card"],
+            highlightthickness=1,
             highlightbackground=self.COLORS["line"],
         )
         left_border.grid(row=0, column=0, sticky="nsew", padx=(0, 9))
@@ -330,9 +339,7 @@ class ClientComplianceWindow:
         form_canvas.bind(
             "<Enter>", lambda _event: self.root.bind_all("<MouseWheel>", _scroll_form)
         )
-        form_canvas.bind(
-            "<Leave>", lambda _event: self.root.unbind_all("<MouseWheel>")
-        )
+        form_canvas.bind("<Leave>", lambda _event: self.root.unbind_all("<MouseWheel>"))
         for column in (0, 1):
             self.form.columnconfigure(column, weight=1, uniform="fields")
 
@@ -347,10 +354,19 @@ class ClientComplianceWindow:
         )
         for key, variable, row, column in fields:
             field = tk.Frame(self.form, background=self.COLORS["card"])
-            field.grid(row=row, column=column, sticky="ew", padx=(0, 10 if column == 0 else 0), pady=(0, 10))
+            field.grid(
+                row=row,
+                column=column,
+                sticky="ew",
+                padx=(0, 10 if column == 0 else 0),
+                pady=(0, 10),
+            )
             tk.Label(
-                field, text=self.t(key), background=self.COLORS["card"],
-                foreground=self.COLORS["text"], font=("Segoe UI Semibold", 8),
+                field,
+                text=self.t(key),
+                background=self.COLORS["card"],
+                foreground=self.COLORS["text"],
+                font=("Segoe UI Semibold", 8),
             ).pack(anchor="w", pady=(0, 4))
             entry = ttk.Entry(
                 field,
@@ -364,8 +380,10 @@ class ClientComplianceWindow:
         locale_row.grid(row=4, column=0, columnspan=2, sticky="ew", pady=(0, 13))
         locale_row.columnconfigure(1, weight=1)
         tk.Label(
-            locale_row, text=self.t("client_ui_report_language"),
-            background=self.COLORS["card"], foreground=self.COLORS["text"],
+            locale_row,
+            text=self.t("client_ui_report_language"),
+            background=self.COLORS["card"],
+            foreground=self.COLORS["text"],
             font=("Segoe UI Semibold", 8),
         ).grid(row=0, column=0, sticky="w", pady=(0, 4))
         language_box = ttk.Combobox(
@@ -378,30 +396,38 @@ class ClientComplianceWindow:
         language_box.grid(row=1, column=0, sticky="w")
         language_box.bind("<<ComboboxSelected>>", self._change_language)
         tk.Label(
-            locale_row, text=self.t("client_ui_weather_detected"),
-            background=self.COLORS["card"], foreground=self.COLORS["text"],
+            locale_row,
+            text=self.t("client_ui_weather_detected"),
+            background=self.COLORS["card"],
+            foreground=self.COLORS["text"],
             font=("Segoe UI Semibold", 8),
         ).grid(row=0, column=1, sticky="w", padx=(18, 0), pady=(0, 4))
         weather = ttk.Entry(
-            locale_row, textvariable=self.vars["weather_file"], state="readonly",
+            locale_row,
+            textvariable=self.vars["weather_file"],
+            state="readonly",
             style="Client.TEntry",
         )
         weather.grid(row=1, column=1, sticky="ew", padx=(18, 0))
 
         self._section_heading(self.form, 5, "02", "client_ui_section_model")
-        strategy = tk.Frame(
-            self.form, background=self.COLORS["paper"], padx=12, pady=10
-        )
+        strategy = tk.Frame(self.form, background=self.COLORS["paper"], padx=12, pady=10)
         strategy.grid(row=6, column=0, columnspan=2, sticky="ew", pady=(0, 10))
         tk.Label(
-            strategy, text=self.t("client_ui_strategy_title"),
-            background=self.COLORS["paper"], foreground=self.COLORS["text"],
+            strategy,
+            text=self.t("client_ui_strategy_title"),
+            background=self.COLORS["paper"],
+            foreground=self.COLORS["text"],
             font=("Segoe UI Semibold", 10),
         ).pack(anchor="w")
         tk.Label(
-            strategy, text=self.t("client_ui_strategy_help"),
-            background=self.COLORS["paper"], foreground=self.COLORS["muted"],
-            font=("Segoe UI", 8), wraplength=570, justify="left",
+            strategy,
+            text=self.t("client_ui_strategy_help"),
+            background=self.COLORS["paper"],
+            foreground=self.COLORS["muted"],
+            font=("Segoe UI", 8),
+            wraplength=570,
+            justify="left",
         ).pack(anchor="w", pady=(2, 9))
         for label_key, variable in (
             ("client_ui_strategy_solar", "solar_shading"),
@@ -410,8 +436,10 @@ class ClientComplianceWindow:
         ):
             self._strategy_declaration_row(strategy, label_key, variable)
         tk.Label(
-            strategy, text=self.t("client_ui_strategy_notes"),
-            background=self.COLORS["paper"], foreground=self.COLORS["text"],
+            strategy,
+            text=self.t("client_ui_strategy_notes"),
+            background=self.COLORS["paper"],
+            foreground=self.COLORS["text"],
             font=("Segoe UI Semibold", 8),
         ).pack(anchor="w", pady=(7, 4))
         notes = ttk.Entry(
@@ -437,26 +465,30 @@ class ClientComplianceWindow:
             wraplength=570,
         ).grid(row=9, column=0, columnspan=2, sticky="w", pady=(0, 10))
 
-        evidence_box = tk.Frame(
-            self.form, background="#eaf3f7", padx=12, pady=10
-        )
+        evidence_box = tk.Frame(self.form, background="#eaf3f7", padx=12, pady=10)
         evidence_box.grid(row=10, column=0, columnspan=2, sticky="ew", pady=(0, 10))
         evidence_box.columnconfigure(0, weight=1)
         tk.Label(
             evidence_box,
-            text="PREUVES TECHNIQUES SIA 380/2",
-            background="#eaf3f7", foreground=self.COLORS["navy"],
+            text=self.t("client_ui_evidence_title").upper(),
+            background="#eaf3f7",
+            foreground=self.COLORS["navy"],
             font=("Segoe UI Semibold", 9),
         ).grid(row=0, column=0, sticky="w")
         tk.Label(
             evidence_box,
-            text="Projet, climat, comparaison globale, ventilation, froid, éclairage et puissance électrique.",
-            background="#eaf3f7", foreground=self.COLORS["muted"],
-            font=("Segoe UI", 8), wraplength=420, justify="left",
+            text=self.t("client_ui_evidence_help"),
+            background="#eaf3f7",
+            foreground=self.COLORS["muted"],
+            font=("Segoe UI", 8),
+            wraplength=420,
+            justify="left",
         ).grid(row=1, column=0, sticky="w", pady=(3, 0))
         ttk.Button(
-            evidence_box, text="Compléter les preuves…",
-            style="Client.TButton", command=self._open_project_evidence,
+            evidence_box,
+            text=self.t("client_ui_evidence_open"),
+            style="Client.TButton",
+            command=self._open_project_evidence,
         ).grid(row=0, column=1, rowspan=2, sticky="e", padx=(12, 0))
 
         self.status_text = tk.StringVar(value="")
@@ -476,7 +508,9 @@ class ClientComplianceWindow:
         self.generate_button.grid(row=11, column=1, sticky="e")
 
         right_border = tk.Frame(
-            container, background=self.COLORS["card"], highlightthickness=1,
+            container,
+            background=self.COLORS["card"],
+            highlightthickness=1,
             highlightbackground=self.COLORS["line"],
         )
         right_border.grid(row=0, column=1, sticky="nsew", padx=(9, 0))
@@ -535,12 +569,20 @@ class ClientComplianceWindow:
         else:
             heading.grid(row=row, column=0, columnspan=2, sticky="ew", pady=(0, 12))
         tk.Label(
-            heading, text=number, background=self.COLORS["navy"], foreground="#ffffff",
-            padx=7, pady=4, font=("Consolas", 8, "bold"),
+            heading,
+            text=number,
+            background=self.COLORS["navy"],
+            foreground="#ffffff",
+            padx=7,
+            pady=4,
+            font=("Consolas", 8, "bold"),
         ).pack(side="left")
         tk.Label(
-            heading, text=self.t(key).upper(), background=self.COLORS["card"],
-            foreground=self.COLORS["navy"], font=("Segoe UI Semibold", 10),
+            heading,
+            text=self.t(key).upper(),
+            background=self.COLORS["card"],
+            foreground=self.COLORS["navy"],
+            font=("Segoe UI Semibold", 10),
         ).pack(side="left", padx=(9, 0))
         tk.Frame(heading, height=1, background=self.COLORS["line"]).pack(
             side="left", fill="x", expand=True, padx=(10, 0)
@@ -559,11 +601,16 @@ class ClientComplianceWindow:
         box.grid(row=row, column=0, columnspan=2, sticky="ew", pady=(0, 8))
         box.columnconfigure(1, weight=1)
         tk.Label(
-            box, text=self.t(label_key), background=self.COLORS["paper"],
-            foreground=self.COLORS["text"], font=("Segoe UI Semibold", 8),
+            box,
+            text=self.t(label_key),
+            background=self.COLORS["paper"],
+            foreground=self.COLORS["text"],
+            font=("Segoe UI Semibold", 8),
         ).grid(row=0, column=0, sticky="w")
         ttk.Label(
-            box, textvariable=self.vars[variable], style="ClientMuted.TLabel",
+            box,
+            textvariable=self.vars[variable],
+            style="ClientMuted.TLabel",
             background=self.COLORS["paper"],
         ).grid(row=1, column=0, columnspan=2, sticky="w", pady=(5, 0))
         ttk.Button(
@@ -580,8 +627,10 @@ class ClientComplianceWindow:
         box.grid(row=row, column=0, columnspan=2, sticky="ew", pady=(0, 5))
         box.columnconfigure(0, weight=1)
         tk.Label(
-            box, text=self.t("client_ui_viewer_report"),
-            background=self.COLORS["paper"], foreground=self.COLORS["text"],
+            box,
+            text=self.t("client_ui_viewer_report"),
+            background=self.COLORS["paper"],
+            foreground=self.COLORS["text"],
             font=("Segoe UI Semibold", 8),
         ).grid(row=0, column=0, sticky="w")
         actions = tk.Frame(box, background=self.COLORS["paper"])
@@ -601,8 +650,10 @@ class ClientComplianceWindow:
         tk.Label(
             box,
             textvariable=self.vars["model_viewer_image_path"],
-            background=self.COLORS["paper"], foreground=self.COLORS["muted"],
-            font=("Segoe UI", 8), wraplength=440,
+            background=self.COLORS["paper"],
+            foreground=self.COLORS["muted"],
+            font=("Segoe UI", 8),
+            wraplength=440,
         ).grid(row=1, column=0, columnspan=2, sticky="w", pady=(5, 0))
 
     def _choose_image(self, title: str, target: str) -> None:
@@ -610,7 +661,10 @@ class ClientComplianceWindow:
             return
         selected = filedialog.askopenfilename(
             title=title,
-            filetypes=(("PNG / JPEG", "*.png *.jpg *.jpeg"), ("All files", "*.*")),
+            filetypes=(
+                (self.t("client_ui_image_files"), "*.png *.jpg *.jpeg"),
+                (self.t("client_ui_all_files"), "*.*"),
+            ),
             parent=self.root,
         )
         if selected:
@@ -640,19 +694,29 @@ class ClientComplianceWindow:
                 self.project_path.name,
                 self.vars["weather_file"].get(),
                 parent=self.root,
+                language=self.language,
             )
         except Exception as exc:
             if messagebox is not None:
                 messagebox.showerror(
-                    "Preuves SIA 380/2",
-                    "Impossible d'ouvrir l'éditeur de preuves.\n\n{}".format(exc),
+                    self.t("client_ui_evidence_error_title"),
+                    "{}\n\n{}".format(self.t("client_ui_evidence_error"), exc),
                     parent=self.root,
                 )
+        finally:
+            self._restore_foreground()
+
+    def _restore_foreground(self) -> None:
+        """Return the client interface above VE after an external/modal action."""
+
+        try:
+            self.root.after_idle(lambda: bring_window_to_front(self.root))
+        except Exception:
+            # A focus convenience must never block report generation or capture.
+            pass
 
     def _choose_viewer(self) -> None:
-        self._choose_image(
-            self.t("client_ui_choose_viewer"), "model_viewer_image_path"
-        )
+        self._choose_image(self.t("client_ui_choose_viewer"), "model_viewer_image_path")
 
     def _capture_viewer(self) -> None:
         """Capture the active VE Model Viewer and select the resulting image."""
@@ -679,6 +743,8 @@ class ClientComplianceWindow:
                     "{}\n\n{}".format(self.t("client_ui_capture_failed"), exc),
                     parent=self.root,
                 )
+        finally:
+            self._restore_foreground()
 
     def _context(self) -> ClientReportContext:
         # IESVE can host Tkinter in a long-lived embedded interpreter. In that
@@ -745,13 +811,20 @@ class ClientComplianceWindow:
             row = tk.Frame(checklist, background=self.COLORS["card"])
             row.pack(fill="x", pady=(0, 10))
             tk.Label(
-                row, text=number, background=self.COLORS["chip"],
-                foreground=self.COLORS["navy"], width=2, pady=3,
+                row,
+                text=number,
+                background=self.COLORS["chip"],
+                foreground=self.COLORS["navy"],
+                width=2,
+                pady=3,
                 font=("Consolas", 8, "bold"),
             ).pack(side="left")
             tk.Label(
-                row, text=self.t(key), background=self.COLORS["card"],
-                foreground=self.COLORS["muted"], font=("Segoe UI", 9),
+                row,
+                text=self.t(key),
+                background=self.COLORS["card"],
+                foreground=self.COLORS["muted"],
+                font=("Segoe UI", 9),
             ).pack(side="left", padx=(9, 0))
 
     def _render_result(self, result: Dict[str, Any]) -> None:
@@ -780,18 +853,30 @@ class ClientComplianceWindow:
         counters.pack(fill="x", pady=(11, 3))
         counter_items = (
             (result.get("blocking_total", 0), "client_ui_blocking_findings", "#9b2c2c"),
-            (result.get("advisory_total", 0), "client_ui_advisory_findings", self.COLORS["blue"]),
+            (
+                result.get("advisory_total", 0),
+                "client_ui_advisory_findings",
+                self.COLORS["blue"],
+            ),
         )
         for index, (value, label_key, colour) in enumerate(counter_items):
             card = tk.Frame(counters, background=self.COLORS["paper"], padx=11, pady=8)
-            card.pack(side="left", fill="x", expand=True, padx=(0, 5 if index == 0 else 0))
+            card.pack(
+                side="left", fill="x", expand=True, padx=(0, 5 if index == 0 else 0)
+            )
             tk.Label(
-                card, text=str(value), background=self.COLORS["paper"],
-                foreground=colour, font=("Georgia", 16, "bold"),
+                card,
+                text=str(value),
+                background=self.COLORS["paper"],
+                foreground=colour,
+                font=("Georgia", 16, "bold"),
             ).pack(anchor="w")
             tk.Label(
-                card, text=self.t(label_key), background=self.COLORS["paper"],
-                foreground=self.COLORS["muted"], font=("Segoe UI", 8),
+                card,
+                text=self.t(label_key),
+                background=self.COLORS["paper"],
+                foreground=self.COLORS["muted"],
+                font=("Segoe UI", 8),
             ).pack(anchor="w")
 
         domains = tk.Frame(self.result_body, background=self.COLORS["card"])
@@ -848,9 +933,7 @@ class ClientComplianceWindow:
         context = self._context()
         issue = validate_client_context(context)
         if issue:
-            missing_field = (
-                "client_name" if not context.client_name else "project_name"
-            )
+            missing_field = "client_name" if not context.client_name else "project_name"
             entry = getattr(self, "field_entries", {}).get(missing_field)
             if entry is not None:
                 try:

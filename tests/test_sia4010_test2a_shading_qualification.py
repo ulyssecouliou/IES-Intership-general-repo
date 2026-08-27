@@ -19,7 +19,6 @@ from swiss_sia.reference_model.sia4010.test2a_shading_qualification import (
     qualify_test2a_shading_setters,
 )
 
-
 ROOT = Path(__file__).resolve().parents[1]
 WORK_ROOT = ROOT / ".codex_tmp" / "test2a_shading_qualification"
 
@@ -32,6 +31,7 @@ class _Construction:
         marker="",
         broken_readback=False,
         broken_optical_readback=False,
+        string_thresholds=False,
     ):
         self.id = identifier
         self._broken_readback = broken_readback
@@ -40,8 +40,12 @@ class _Construction:
             "description": marker,
             "external_shade_active": False,
             "external_shade_profile": "NONE",
-            "external_shade_radiation_to_lower": 0.0,
-            "external_shade_radiation_to_raise": 0.0,
+            "external_shade_radiation_to_lower": (
+                "ii>3000.0" if string_thresholds else 0.0
+            ),
+            "external_shade_radiation_to_raise": (
+                "ii<3000.0" if string_thresholds else 0.0
+            ),
             "external_shade_transmittance_0": 0.0,
             "external_shade_solar_reflectance": 0.1,
             "external_shade_visible_reflectance": 0.1,
@@ -56,15 +60,9 @@ class _Construction:
 
     def set_properties(self, values):
         for key, value in values.items():
-            if (
-                self._broken_readback
-                and key == "external_shade_radiation_to_lower"
-            ):
+            if self._broken_readback and key == "external_shade_radiation_to_lower":
                 continue
-            if (
-                self._broken_optical_readback
-                and key == "external_shade_transmittance_0"
-            ):
+            if self._broken_optical_readback and key == "external_shade_transmittance_0":
                 continue
             self._properties[key] = value
 
@@ -79,13 +77,16 @@ class _CdbProject:
         existing_marker=False,
         broken_readback=False,
         broken_optical_readback=False,
+        string_thresholds=False,
     ):
         self._broken_readback = broken_readback
         self._broken_optical_readback = broken_optical_readback
+        self._string_thresholds = string_thresholds
         self._constructions = {
             "BASE": _Construction(
                 "BASE",
                 marker=PROBE_MARKER if existing_marker else "",
+                string_thresholds=string_thresholds,
             )
         }
 
@@ -101,6 +102,7 @@ class _CdbProject:
             identifier,
             broken_readback=self._broken_readback,
             broken_optical_readback=self._broken_optical_readback,
+            string_thresholds=self._string_thresholds,
         )
         self._constructions[identifier] = construction
         return construction
@@ -143,15 +145,14 @@ class Test2AShadingQualificationTests(unittest.TestCase):
     """Only the one-object setter scope can receive a PASS."""
 
     def setUp(self):
-        self.project = WORK_ROOT / hashlib.sha256(
-            self._testMethodName.encode("utf-8")
-        ).hexdigest()[:12]
+        self.project = (
+            WORK_ROOT
+            / hashlib.sha256(self._testMethodName.encode("utf-8")).hexdigest()[:12]
+        )
         if self.project.exists():
             shutil.rmtree(self.project)
         self.project.mkdir(parents=True)
-        (self.project / "sia_model_scenario.json").write_text(
-            "{}\n", encoding="utf-8"
-        )
+        (self.project / "sia_model_scenario.json").write_text("{}\n", encoding="utf-8")
         self.ve_project = SimpleNamespace(
             path=str(self.project),
             name="TEST2A_SHADE_PROBE",
@@ -169,18 +170,22 @@ class Test2AShadingQualificationTests(unittest.TestCase):
                 ("sia2024_office_3_1_standard_profiles", "3" * 64),
             )
         )
-        with mock.patch(
-            "swiss_sia.reference_model.sia4010."
-            "test2a_shading_qualification.ModelScenario.load",
-            return_value=_scenario(),
-        ), mock.patch(
-            "swiss_sia.reference_model.sia4010."
-            "test2a_shading_qualification.external_input_readiness",
-            return_value=SimpleNamespace(ready_for_binding=True),
-        ), mock.patch(
-            "swiss_sia.reference_model.sia4010."
-            "test2a_shading_qualification.load_test2a_external_bindings",
-            return_value=bindings,
+        with (
+            mock.patch(
+                "swiss_sia.reference_model.sia4010."
+                "test2a_shading_qualification.ModelScenario.load",
+                return_value=_scenario(),
+            ),
+            mock.patch(
+                "swiss_sia.reference_model.sia4010."
+                "test2a_shading_qualification.external_input_readiness",
+                return_value=SimpleNamespace(ready_for_binding=True),
+            ),
+            mock.patch(
+                "swiss_sia.reference_model.sia4010."
+                "test2a_shading_qualification.load_test2a_external_bindings",
+                return_value=bindings,
+            ),
         ):
             return qualify_test2a_shading_setters(
                 _iesve(cdb),
@@ -196,18 +201,22 @@ class Test2AShadingQualificationTests(unittest.TestCase):
                 ("sia2024_office_3_1_standard_profiles", "3" * 64),
             )
         )
-        with mock.patch(
-            "swiss_sia.reference_model.sia4010."
-            "test2a_shading_qualification.ModelScenario.load",
-            return_value=_scenario(),
-        ), mock.patch(
-            "swiss_sia.reference_model.sia4010."
-            "test2a_shading_qualification.external_input_readiness",
-            return_value=SimpleNamespace(ready_for_binding=True),
-        ), mock.patch(
-            "swiss_sia.reference_model.sia4010."
-            "test2a_shading_qualification.load_test2a_external_bindings",
-            return_value=bindings,
+        with (
+            mock.patch(
+                "swiss_sia.reference_model.sia4010."
+                "test2a_shading_qualification.ModelScenario.load",
+                return_value=_scenario(),
+            ),
+            mock.patch(
+                "swiss_sia.reference_model.sia4010."
+                "test2a_shading_qualification.external_input_readiness",
+                return_value=SimpleNamespace(ready_for_binding=True),
+            ),
+            mock.patch(
+                "swiss_sia.reference_model.sia4010."
+                "test2a_shading_qualification.load_test2a_external_bindings",
+                return_value=bindings,
+            ),
         ):
             return qualify_test2a_2e1_optical_setters(
                 _iesve(cdb),
@@ -230,15 +239,20 @@ class Test2AShadingQualificationTests(unittest.TestCase):
             ],
             150.0,
         )
-        self.assertTrue(
-            report_path.with_suffix(report_path.suffix + ".sha256").is_file()
-        )
+        self.assertTrue(report_path.with_suffix(report_path.suffix + ".sha256").is_file())
 
     def test_existing_probe_fails_before_second_creation(self):
         cdb = _CdbProject(existing_marker=True)
         with self.assertRaisesRegex(VeMutationError, "already exists"):
             self._run(cdb)
         self.assertEqual(list(cdb._constructions), ["BASE"])
+
+    def test_ve_string_threshold_expressions_are_encoded_and_read_back(self):
+        report_path = self._run(_CdbProject(string_thresholds=True))
+        payload = json.loads(report_path.read_text(encoding="utf-8"))
+        written = payload["setter_result"]["written_properties"]
+        self.assertEqual(written["external_shade_radiation_to_lower"], "ii>150.0")
+        self.assertEqual(written["external_shade_radiation_to_raise"], "ii<150.0")
 
     def test_readback_mismatch_remains_a_failed_qualification(self):
         cdb = _CdbProject(broken_readback=True)
@@ -274,49 +288,38 @@ class Test2AShadingQualificationTests(unittest.TestCase):
         payload = json.loads(report_path.read_text(encoding="utf-8"))
         self.assertEqual(payload["status"], "PASS")
         self.assertTrue(payload["fixed_closed_storage_qualified"])
-        self.assertTrue(
-            payload["combined_threshold_optical_storage_qualified"]
-        )
+        self.assertTrue(payload["combined_threshold_optical_storage_qualified"])
         self.assertFalse(payload["fixed_closed_optical_mapping_qualified"])
-        self.assertFalse(
-            payload["diagnostic_candidate_generation_authorized"]
-        )
+        self.assertFalse(payload["diagnostic_candidate_generation_authorized"])
         written = payload["setter_result"]["written_properties"]
         self.assertTrue(
-            payload["setter_result"][
-                "threshold_and_optical_fields_co_stored"
-            ]
+            payload["setter_result"]["threshold_and_optical_fields_co_stored"]
         )
-        self.assertEqual(
-            written["external_shade_radiation_to_lower"], 150.0
-        )
-        self.assertEqual(
-            written["external_shade_radiation_to_raise"], 150.0
-        )
+        self.assertEqual(written["external_shade_radiation_to_lower"], 150.0)
+        self.assertEqual(written["external_shade_radiation_to_raise"], 150.0)
         self.assertEqual(written["external_shade_profile"], "ON")
         self.assertAlmostEqual(
             written["external_shade_transmittance_0"],
             0.04,
         )
-        self.assertAlmostEqual(
-            written["external_shade_solar_reflectance"],
-            0.49,
-        )
-        self.assertAlmostEqual(
-            written["external_shade_visible_reflectance"],
-            0.496,
-        )
+        self.assertNotIn("external_shade_solar_reflectance", written)
+        self.assertNotIn("external_shade_visible_reflectance", written)
         self.assertEqual(
             cdb._constructions[
                 payload["setter_result"]["construction_id"]
             ].get_properties()["description"],
             FIXED_CLOSED_PROBE_MARKER,
         )
-        self.assertTrue(
-            report_path.with_suffix(
-                report_path.suffix + ".sha256"
-            ).is_file()
-        )
+        self.assertTrue(report_path.with_suffix(report_path.suffix + ".sha256").is_file())
+
+    def test_2e1_combined_probe_preserves_ve_string_threshold_encoding(self):
+        cdb = _CdbProject(string_thresholds=True)
+        self._run(cdb)
+        report_path = self._run_optical(cdb)
+        payload = json.loads(report_path.read_text(encoding="utf-8"))
+        written = payload["setter_result"]["written_properties"]
+        self.assertEqual(written["external_shade_radiation_to_lower"], "ii>150.0")
+        self.assertEqual(written["external_shade_radiation_to_raise"], "ii<150.0")
 
     def test_2e1_optical_probe_requires_threshold_setter_pass(self):
         cdb = _CdbProject()

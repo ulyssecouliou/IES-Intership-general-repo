@@ -18,7 +18,6 @@ from swiss_sia.reference_model.sia4010.normalized_external_inputs import (
     load_test2a_external_bindings,
 )
 
-
 ROOT = Path(__file__).resolve().parents[1]
 WORK_ROOT = ROOT / ".codex_tmp" / "normalized_external_inputs"
 
@@ -206,30 +205,21 @@ class NormalizedExternalInputTests(unittest.TestCase):
     ):
         weather_file = self.project / "authorized.epw"
         weather_file.write_text(
-            "\n".join(
-                ["HEADER"] * 8 + ["2021,1,1,1"] * weather_hours
-            )
-            + "\n",
+            "\n".join(["HEADER"] * 8 + ["2021,1,1,1"] * weather_hours) + "\n",
             encoding="utf-8",
         )
         bindings = {
             "iso52016_2017_chapter7_test_cell": self._iso_payload(),
-            "sia2028_dry_normal_zurich_kloten": self._weather_payload(
-                weather_file.name
-            ),
-            "sia2024_office_3_1_standard_profiles": (
-                self._profiles_payload()
-            ),
+            "sia2028_dry_normal_zurich_kloten": self._weather_payload(weather_file.name),
+            "sia2024_office_3_1_standard_profiles": (self._profiles_payload()),
         }
         if mutate_iso is not None:
             mutate_iso(bindings["iso52016_2017_chapter7_test_cell"])
         if mutate_profiles is not None:
-            mutate_profiles(
-                bindings["sia2024_office_3_1_standard_profiles"]
-            )
-        bindings["sia2028_dry_normal_zurich_kloten"]["weather_file"][
-            "sha256"
-        ] = _sha256(weather_file)
+            mutate_profiles(bindings["sia2024_office_3_1_standard_profiles"])
+        bindings["sia2028_dry_normal_zurich_kloten"]["weather_file"]["sha256"] = _sha256(
+            weather_file
+        )
 
         manifest_inputs = {}
         for input_id in TEST2A_EXTERNAL_INPUT_IDS:
@@ -259,9 +249,7 @@ class NormalizedExternalInputTests(unittest.TestCase):
                         "binding_artifact": {
                             "path": binding.name,
                             "sha256": _sha256(binding),
-                            "schema_id": EXTERNAL_INPUT_BINDING_SCHEMAS[
-                                input_id
-                            ],
+                            "schema_id": EXTERNAL_INPUT_BINDING_SCHEMAS[input_id],
                         },
                         "checks": [
                             {
@@ -322,9 +310,7 @@ class NormalizedExternalInputTests(unittest.TestCase):
             ),
         )
         self.assertEqual(len(bindings.evidence_sha256), 3)
-        self.assertFalse(
-            bindings.office_profiles.native_ve_materialization_ready
-        )
+        self.assertFalse(bindings.office_profiles.native_ve_materialization_ready)
 
     def test_explicit_native_ve_profile_graph_is_validated_and_exposed(self):
         readiness = self._write_fixture(
@@ -359,15 +345,11 @@ class NormalizedExternalInputTests(unittest.TestCase):
     def test_native_ve_profile_graph_requires_complete_365_day_calendar(self):
         def inject_incomplete_graph(payload):
             graph = self._ve_profile_graph()
-            graph["nodes"][-1]["data"] = [
-                [{"profile_ref": "lighting_weekly"}, 1, 364]
-            ]
+            graph["nodes"][-1]["data"] = [[{"profile_ref": "lighting_weekly"}, 1, 364]]
             payload["ve_profile_graph"] = graph
 
         readiness = self._write_fixture(mutate_profiles=inject_incomplete_graph)
-        with self.assertRaisesRegex(
-            ConfigurationError, "cover days 1 through 365"
-        ):
+        with self.assertRaisesRegex(ConfigurationError, "cover days 1 through 365"):
             load_test2a_external_bindings(readiness)
 
     def test_iso_geometry_must_close_exactly(self):
@@ -376,30 +358,22 @@ class NormalizedExternalInputTests(unittest.TestCase):
                 {"gap_m": 0.9}
             )
         )
-        with self.assertRaisesRegex(
-            ConfigurationError, "dimensions do not close"
-        ):
+        with self.assertRaisesRegex(ConfigurationError, "dimensions do not close"):
             load_test2a_external_bindings(readiness)
 
     def test_weather_file_must_have_8760_epw_records(self):
         readiness = self._write_fixture(weather_hours=8759)
-        with self.assertRaisesRegex(
-            ConfigurationError, "contains 8759 hourly records"
-        ):
+        with self.assertRaisesRegex(ConfigurationError, "contains 8759 hourly records"):
             load_test2a_external_bindings(readiness)
 
     def test_office_profile_set_must_be_exact(self):
         def remove_lighting(payload):
             payload["profiles"] = [
-                item
-                for item in payload["profiles"]
-                if item["key"] != "lighting_profile"
+                item for item in payload["profiles"] if item["key"] != "lighting_profile"
             ]
 
         readiness = self._write_fixture(mutate_profiles=remove_lighting)
-        with self.assertRaisesRegex(
-            ConfigurationError, "profile keys mismatch"
-        ):
+        with self.assertRaisesRegex(ConfigurationError, "profile keys mismatch"):
             load_test2a_external_bindings(readiness)
 
     def test_binding_change_after_evidence_validation_is_rejected(self):
@@ -409,21 +383,15 @@ class NormalizedExternalInputTests(unittest.TestCase):
             for item in readiness.evidence
             if item.input_id == "iso52016_2017_chapter7_test_cell"
         )
-        evidence.binding_artifact_path.write_text(
-            '{"changed": true}\n', encoding="utf-8"
-        )
+        evidence.binding_artifact_path.write_text('{"changed": true}\n', encoding="utf-8")
         with self.assertRaisesRegex(
             ConfigurationError, "changed after evidence validation"
         ):
             load_test2a_external_bindings(readiness)
 
     def test_wrong_case_readiness_is_rejected(self):
-        readiness = external_input_readiness(
-            self.project, "test_1", "600"
-        )
-        with self.assertRaisesRegex(
-            ConfigurationError, "test_2A/2A"
-        ):
+        readiness = external_input_readiness(self.project, "test_1", "600")
+        with self.assertRaisesRegex(ConfigurationError, "test_2A/2A"):
             load_test2a_external_bindings(readiness)
 
     #: A well-formed provisional declaration, as produced by
@@ -468,15 +436,11 @@ class NormalizedExternalInputTests(unittest.TestCase):
         )
         self.assertTrue(bindings.carries_provisional_values)
         self.assertEqual(
-            dict(bindings.provisional_fields)[
-                "iso52016_2017_chapter7_test_cell"
-            ],
+            dict(bindings.provisional_fields)["iso52016_2017_chapter7_test_cell"],
             ("surface_properties.inside_ir_emissivity",),
         )
         self.assertEqual(
-            dict(bindings.provisional_fields)[
-                "sia2028_dry_normal_zurich_kloten"
-            ],
+            dict(bindings.provisional_fields)["sia2028_dry_normal_zurich_kloten"],
             (),
         )
         self.assertTrue(bindings.to_dict()["carries_provisional_values"])
@@ -488,9 +452,7 @@ class NormalizedExternalInputTests(unittest.TestCase):
         self.assertFalse(bindings.carries_provisional_values)
         self.assertEqual(
             sorted(
-                input_id
-                for input_id, fields in bindings.provisional_fields
-                if fields
+                input_id for input_id, fields in bindings.provisional_fields if fields
             ),
             [],
         )
@@ -501,13 +463,9 @@ class NormalizedExternalInputTests(unittest.TestCase):
         for claim in (True, None):
             with self.subTest(compliance_claim_allowed=claim):
                 readiness = self._write_fixture(
-                    mutate_iso=self._avec_provisoire(
-                        compliance_claim_allowed=claim
-                    )
+                    mutate_iso=self._avec_provisoire(compliance_claim_allowed=claim)
                 )
-                with self.assertRaisesRegex(
-                    ConfigurationError, "never support a claim"
-                ):
+                with self.assertRaisesRegex(ConfigurationError, "never support a claim"):
                     load_test2a_external_bindings(readiness)
 
     def test_provisional_declaration_without_its_derivation_is_rejected(self):
@@ -525,13 +483,9 @@ class NormalizedExternalInputTests(unittest.TestCase):
         """Declaring a provisional field without a value makes nothing executable."""
 
         readiness = self._write_fixture(
-            mutate_iso=self._avec_provisoire(
-                declaration={"provisional_value": None}
-            )
+            mutate_iso=self._avec_provisoire(declaration={"provisional_value": None})
         )
-        with self.assertRaisesRegex(
-            ConfigurationError, "no provisional_value"
-        ):
+        with self.assertRaisesRegex(ConfigurationError, "no provisional_value"):
             load_test2a_external_bindings(readiness)
 
     def test_published_json_schema_ids_match_runtime_contract(self):

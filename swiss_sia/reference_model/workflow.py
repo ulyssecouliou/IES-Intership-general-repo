@@ -1,6 +1,5 @@
 """End-to-end reference-model generation workflow."""
 
-import logging
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -12,7 +11,7 @@ from .domain import GeometryModel, ModelSnapshot
 from .exceptions import ReferenceModelError
 from .gbxml_writer import GbxmlWriter
 from .geometry import ReferenceGeometryGenerator
-from .logging_config import LOGGER_NAME, configure_logging
+from .logging_config import configure_logging
 from .report_generator import ReportArtifacts, ReportGenerator
 from .results import AuditEvent, ValidationResult, ValidationStatus, worst_status
 from .validator import ReferenceModelValidator
@@ -66,7 +65,11 @@ class ReferenceModelWorkflow:
         return self.now().astimezone(timezone.utc).isoformat()
 
     def _audit(
-        self, stage: str, action: str, outcome: str, details: Optional[Dict[str, Any]] = None
+        self,
+        stage: str,
+        action: str,
+        outcome: str,
+        details: Optional[Dict[str, Any]] = None,
     ) -> None:
         """Append one ordered event to the in-memory audit trail."""
 
@@ -112,12 +115,14 @@ class ReferenceModelWorkflow:
                 "asset_provisioning_mode": self.parameters.value(
                     "asset_provisioning_mode"
                 ),
-                "asset_manifest": self.asset_manifest.to_dict()
-                if self.asset_manifest
-                else None,
-                "provisioning_receipt": self.provisioning_receipt.to_dict()
-                if self.provisioning_receipt
-                else None,
+                "asset_manifest": (
+                    self.asset_manifest.to_dict() if self.asset_manifest else None
+                ),
+                "provisioning_receipt": (
+                    self.provisioning_receipt.to_dict()
+                    if self.provisioning_receipt
+                    else None
+                ),
             },
         )
 
@@ -157,9 +162,7 @@ class ReferenceModelWorkflow:
         mode = (
             "DRY_RUN"
             if dry_run
-            else "VE_RESUME_AFTER_IMPORT"
-            if resume_after_import
-            else "VE_MUTATION"
+            else "VE_RESUME_AFTER_IMPORT" if resume_after_import else "VE_MUTATION"
         )
         try:
             self.asset_manifest = self._load_create_mode_manifest()
@@ -258,9 +261,7 @@ class ReferenceModelWorkflow:
                 )
 
             capabilities = self.gateway.check_capabilities()
-            self._audit(
-                "ve_api", "check required capabilities", "PASS", capabilities
-            )
+            self._audit("ve_api", "check required capabilities", "PASS", capabilities)
             expected_names = [space.name for space in geometry.spaces]
             if not resume_after_import:
                 self.gateway.assert_no_existing_generated_rooms(expected_names)
@@ -281,7 +282,9 @@ class ReferenceModelWorkflow:
                             control_id="VE-COMPAT-{:03d}".format(index),
                             category="VE Runtime Compatibility",
                             status=ValidationStatus.WARNING,
-                            message=str(warning.get("message", "VE compatibility warning")),
+                            message=str(
+                                warning.get("message", "VE compatibility warning")
+                            ),
                             evidence=warning,
                         )
                     )
@@ -343,9 +346,7 @@ class ReferenceModelWorkflow:
             self._audit("ve_validation", "validate imported rooms", "PASS")
 
             self.gateway.assign_constructions(geometry, self.parameters)
-            self._audit(
-                "ve_mutation", "assign and verify constructions/openings", "PASS"
-            )
+            self._audit("ve_mutation", "assign and verify constructions/openings", "PASS")
             self.gateway.rebuild_adjacencies()
             self._audit("ve_mutation", "rebuild adjacencies", "PASS")
             self.gateway.verify_construction_assignments(geometry, self.parameters)
@@ -363,9 +364,7 @@ class ReferenceModelWorkflow:
                         category="VE Runtime Compatibility",
                         status=ValidationStatus.WARNING,
                         message=str(
-                            warning.get(
-                                "message", "VE runtime compatibility workaround"
-                            )
+                            warning.get("message", "VE runtime compatibility workaround")
                         ),
                         object_id=str(warning.get("room_id", "")) or None,
                         evidence=warning,

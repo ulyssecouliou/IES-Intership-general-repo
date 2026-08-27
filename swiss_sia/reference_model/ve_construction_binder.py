@@ -110,7 +110,9 @@ class ConstructionBinder:
         attempts = []
         iso = self._iso_construction_class()
         if iso is not None:
-            attempts.append(("get_construction(id, construction_class)", (construction_id, iso)))
+            attempts.append(
+                ("get_construction(id, construction_class)", (construction_id, iso))
+            )
         attempts.append(("get_construction(id)", (construction_id,)))
 
         tried_labels = []

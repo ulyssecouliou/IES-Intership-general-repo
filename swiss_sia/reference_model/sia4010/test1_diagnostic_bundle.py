@@ -18,15 +18,12 @@ Test 1 specification prescribes by defining 1E as the diagnostic-test-2-E1
 shading, fed with the deployed-state whole-window properties from the frozen
 reference.
 
-Case 1E is still reported ``BLOCKED``, and for a reason worth stating precisely,
-because it is no longer "no generator exists". The device is settled; the
-DYNAMICS are not. The specification confirms the 150 W/m2 threshold and states
-neither the comparison operator, nor the release rule, nor the exact irradiance
-signal, and VE exposes separate lower and raise thresholds that cannot be shown
-equivalent to that rule from their names. Those reserves are carried through from
-the module that enumerated them rather than resolved by choice: 1E is the only
-pass/fail case of Test 1, so guessing the release rule would move a real
-verdict.
+Case 1E is still reported ``BLOCKED``, but its normative control semantics are
+now settled. A direct written decision from Prof. Gerhard Zweifel received on
+2026-08-26 confirms the exterior-plane total irradiance signal, closing at
+``>= 150 W/m2``, reopening below 150 W/m2, no hysteresis, and both IESVE
+threshold fields set to 150 W/m2. What remains is technical qualification of
+the optical mapping, VE assignment/read-back, APS bindings and scored run.
 
 The occupant heat gain was blocked here at first, on the grounds that 1.2 met
 becomes watts only through a body-area convention the specification omits. That
@@ -40,7 +37,6 @@ power and states none -- so nothing here may be presented as a result. Only 1E i
 judged, and only after a real VE run.
 """
 
-import copy
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union
 
@@ -54,7 +50,6 @@ from .mvp_bundle import (
     _write_json,
     build_case600_mvp_bundle,
 )
-
 
 #: The chain, in the order the specification reads it. Position matters: a
 #: bundle applies every link up to and including the requested case.
@@ -167,9 +162,7 @@ def _releve(reference: Dict[str, Any], bloc: str, cle: str) -> Any:
     return champ["valeur"]
 
 
-def load_diagnostics_reference(
-    repository_root: Union[str, Path]
-) -> Dict[str, Any]:
+def load_diagnostics_reference(repository_root: Union[str, Path]) -> Dict[str, Any]:
     """Load the frozen chain reference, or say exactly what is missing."""
 
     path = Path(repository_root) / DIAGNOSTICS_REFERENCE
@@ -216,9 +209,7 @@ def _gain(assets: Dict[str, Any], key: str) -> Dict[str, Any]:
     for gain in assets["gains"]:
         if str(gain.get("key")) == key:
             return gain
-    raise ConfigurationError(
-        "Case 600 asset manifest has no gain {!r}".format(key)
-    )
+    raise ConfigurationError("Case 600 asset manifest has no gain {!r}".format(key))
 
 
 def _air_exchange(assets: Dict[str, Any], key: str) -> Dict[str, Any]:
@@ -294,9 +285,7 @@ def _apply_new_window(
     u_value = _releve(reference, "vitrage", "u_vitrage_w_m2k")
 
     _set_parameter(config, "project_glazing_g_value", g_value, CHAIN_LOCATOR)
-    _set_parameter(
-        config, "project_visible_light_transmittance", visible, CHAIN_LOCATOR
-    )
+    _set_parameter(config, "project_visible_light_transmittance", visible, CHAIN_LOCATOR)
     _set_parameter(config, "project_window_u_w_m2k", u_value, CHAIN_LOCATOR)
 
     glazing = _construction(assets, "external_glazing")
@@ -350,16 +339,12 @@ def _apply_sia2024_usage(
     equipment = _releve(reference, "apports", "appareils_w_m2")
     lighting = _releve(reference, "apports", "eclairage_w_m2")
     density = _releve(reference, "apports", "personnes_m2_par_personne")
-    sensible_w_m2 = _releve(
-        reference, "apports", "personnes_gain_sensible_w_m2"
-    )
+    sensible_w_m2 = _releve(reference, "apports", "personnes_gain_sensible_w_m2")
     per_person = round(sensible_w_m2 * density, 6)
 
     _set_parameter(config, "equipment_gain_w_m2", equipment, CHAIN_LOCATOR)
     _set_parameter(config, "lighting_gain_w_m2", lighting, CHAIN_LOCATOR)
-    _set_parameter(
-        config, "occupancy_density_m2_person", density, CHAIN_LOCATOR
-    )
+    _set_parameter(config, "occupancy_density_m2_person", density, CHAIN_LOCATOR)
     _set_parameter(config, "people_gain_w_person", per_person, CHAIN_LOCATOR)
 
     for key, value in (
@@ -419,9 +404,7 @@ def _assert_same_device_as_test2a(reference: Dict[str, Any]) -> None:
     if "2 E1" not in verbatim.replace(" ", " "):
         raise ConfigurationError(
             "Case 1E no longer cites diagnostic test 2 E1, so the Test 2A "
-            "fabric-awning contract may not be reused for it: {!r}".format(
-                verbatim
-            )
+            "fabric-awning contract may not be reused for it: {!r}".format(verbatim)
         )
 
 
@@ -503,20 +486,8 @@ def _awning_official_inputs(reference: Dict[str, Any]) -> Dict[str, Any]:
 def _apply_fabric_awning(
     assets: Dict[str, Any], reference: Dict[str, Any]
 ) -> Dict[str, Any]:
-    """Link 1E: build the source-traced awning control, and keep its reserves.
-
-    The control contract is built here rather than blocked, because every value
-    it needs is now frozen. What remains unresolved is not the device but the
-    dynamics: the specification confirms the 150 W/m2 threshold and states
-    neither the comparison operator, nor the release rule, nor the exact
-    irradiance signal, and VE exposes separate lower and raise thresholds whose
-    dynamic equivalence cannot be inferred from their names.
-
-    Those reserves come from ``test2a_shading_control``, which enumerated them,
-    and they are carried through instead of being resolved by choice. Case 1E is
-    the only pass/fail case of Test 1, so guessing the release rule would move
-    a real verdict.
-    """
+    """Link 1E: build the authority-confirmed awning control and keep only
+    the remaining VE optical/runtime qualification reserves."""
 
     from .test2a_shading_control import (
         DYNAMIC_EQUIVALENCE_BLOCKERS,
@@ -524,26 +495,21 @@ def _apply_fabric_awning(
     )
 
     _assert_same_device_as_test2a(reference)
-    control = build_test2a_fabric_awning_control(
-        _awning_official_inputs(reference)
-    )
-    payload = (
-        control.to_dict() if hasattr(control, "to_dict") else dict(vars(control))
-    )
+    control = build_test2a_fabric_awning_control(_awning_official_inputs(reference))
+    payload = control.to_dict() if hasattr(control, "to_dict") else dict(vars(control))
     assets["metadata"]["diagnostic_fabric_awning_control"] = payload
     return {
         "id": BLOCKER_AWNING,
         "severity": "BLOCKER",
         "detail": (
             "The awning control contract for {} is built and source-traced: "
-            "threshold {} W/m2, deployed-state whole-window properties from the "
-            "official documentation. What blocks case 1E is the dynamics, not "
-            "the device: the specification states neither the comparison "
-            "operator, nor the release rule, nor the exact irradiance signal, "
-            "and VE's separate lower and raise thresholds cannot be shown "
-            "equivalent to it from their names alone. Unresolved reserves: {}."
-            .format(
+            "total exterior-plane irradiance, close at >= {} W/m2, reopen below "
+            "{} W/m2, no hysteresis, and both IESVE threshold fields at {} W/m2. "
+            "Prof. Gerhard Zweifel confirmed these semantics and the IESVE "
+            "mapping on 2026-08-26. Remaining technical reserves: {}.".format(
                 control.device,
+                control.threshold_w_m2,
+                control.threshold_w_m2,
                 control.threshold_w_m2,
                 ", ".join(DYNAMIC_EQUIVALENCE_BLOCKERS),
             )
@@ -589,11 +555,7 @@ def _bind_kloten_case_manifest_role(
             "Project case manifest does not declare the "
             "zurich_kloten_dry_weather_file role: {}".format(case_manifest_path)
         )
-    path = (
-        Path(kloten_weather_file)
-        if kloten_weather_file is not None
-        else None
-    )
+    path = Path(kloten_weather_file) if kloten_weather_file is not None else None
     if path is not None and path.is_file():
         role.update(
             {
@@ -720,9 +682,7 @@ def build_test1_diagnostic_bundle(
 
     _write_json(receipt.asset_manifest_path, assets)
     _write_json(receipt.config_path, config)
-    _bind_kloten_case_manifest_role(
-        receipt.case_manifest_path, kloten_weather_file
-    )
+    _bind_kloten_case_manifest_role(receipt.case_manifest_path, kloten_weather_file)
     load_asset_manifest(receipt.asset_manifest_path)
     load_configuration(receipt.config_path)
 
@@ -756,9 +716,7 @@ def build_test1_diagnostic_bundle(
         "chain_blocked": blockers,
         "reference": {
             "path": str(DIAGNOSTICS_REFERENCE).replace("\\", "/"),
-            "sha256": _checksum(
-                Path(repository_root) / DIAGNOSTICS_REFERENCE
-            ),
+            "sha256": _checksum(Path(repository_root) / DIAGNOSTICS_REFERENCE),
         },
         "guardrail": (
             "Preparation artifact. No VE object is created by this module, and "

@@ -17,7 +17,6 @@ from swiss_sia.reference_model.sia4010.test2a_opening_assignment_qualification i
     qualify_test2a_opening_assignment,
 )
 
-
 ROOT = Path(__file__).resolve().parents[1]
 WORK_ROOT = ROOT / ".codex_tmp" / "test2a_opening_assignment"
 
@@ -78,9 +77,7 @@ class _Gateway:
         self.candidate = _Construction("CANDIDATE")
         opening = _Opening(self.original)
         self.body = _Body(opening, break_restore=break_restore)
-        self.model = SimpleNamespace(
-            get_bodies=lambda _include: [self.body]
-        )
+        self.model = SimpleNamespace(get_bodies=lambda _include: [self.body])
 
     def _get_construction(self, identifier):
         if identifier != "CANDIDATE":
@@ -111,9 +108,7 @@ def _scenario():
 
 class Test2AOpeningAssignmentQualificationTests(unittest.TestCase):
     def setUp(self):
-        name = hashlib.sha256(
-            self._testMethodName.encode("utf-8")
-        ).hexdigest()[:12]
+        name = hashlib.sha256(self._testMethodName.encode("utf-8")).hexdigest()[:12]
         self.project_path = WORK_ROOT / name
         if self.project_path.exists():
             shutil.rmtree(self.project_path)
@@ -156,14 +151,17 @@ class Test2AOpeningAssignmentQualificationTests(unittest.TestCase):
         )
 
     def _run(self, gateway):
-        with mock.patch(
-            "swiss_sia.reference_model.sia4010."
-            "test2a_opening_assignment_qualification.ModelScenario.load",
-            return_value=_scenario(),
-        ), mock.patch(
-            "swiss_sia.reference_model.sia4010."
-            "test2a_opening_assignment_qualification.IesVeGateway",
-            return_value=gateway,
+        with (
+            mock.patch(
+                "swiss_sia.reference_model.sia4010."
+                "test2a_opening_assignment_qualification.ModelScenario.load",
+                return_value=_scenario(),
+            ),
+            mock.patch(
+                "swiss_sia.reference_model.sia4010."
+                "test2a_opening_assignment_qualification.IesVeGateway",
+                return_value=gateway,
+            ),
         ):
             return qualify_test2a_opening_assignment(object(), self.project)
 
@@ -177,22 +175,16 @@ class Test2AOpeningAssignmentQualificationTests(unittest.TestCase):
         self.assertTrue(payload["candidate_assignment_readback_verified"])
         self.assertTrue(payload["original_assignment_restored"])
         self.assertFalse(payload["opening_assignment_persisted"])
-        self.assertEqual(
-            gateway.body.opening.get_construction().id, "ORIGINAL"
-        )
+        self.assertEqual(gateway.body.opening.get_construction().id, "ORIGINAL")
         self.assertFalse(payload["compliance_claim_allowed"])
-        self.assertTrue(
-            report_path.with_suffix(report_path.suffix + ".sha256").is_file()
-        )
+        self.assertTrue(report_path.with_suffix(report_path.suffix + ".sha256").is_file())
 
     def test_non_combined_optical_probe_is_rejected_before_assignment(self):
         self._write_optical_report(combined=False)
         gateway = _Gateway(self.project_path)
         with self.assertRaisesRegex(ConfigurationError, "combined"):
             self._run(gateway)
-        self.assertEqual(
-            gateway.body.opening.get_construction().id, "ORIGINAL"
-        )
+        self.assertEqual(gateway.body.opening.get_construction().id, "ORIGINAL")
 
     def test_failed_restoration_is_fail_closed(self):
         self._write_optical_report()
@@ -212,4 +204,3 @@ class Test2AOpeningAssignmentQualificationTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-
