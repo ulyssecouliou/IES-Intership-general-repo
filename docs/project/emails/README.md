@@ -32,9 +32,12 @@ These are Outlook `.msg` files. Open them with:
 ## Publication and handling notice
 
 These files may contain personal information and internal correspondence.
-Their inclusion in the public project repository was explicitly authorized by
-the project owner on 27 August 2026 because they are required for continuity,
-normative traceability and follow-up with the SIA commission.
+Their inclusion in the project repository, including their future public
+availability if the repository is made public, was explicitly authorized by the
+project owner on 27 August 2026 because they are required for continuity,
+normative traceability and follow-up with the SIA commission. At the time of the
+final handover audit, the repository itself still returned HTTP 404 to anonymous
+requests and was therefore private or access-restricted.
 
 Future maintainers must treat the messages as project evidence: do not alter
 the originals, avoid copying them outside the project unnecessarily, and ask
