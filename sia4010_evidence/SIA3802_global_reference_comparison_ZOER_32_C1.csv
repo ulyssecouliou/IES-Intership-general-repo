@@ -1,0 +1,2 @@
+project_id,comparison_scope,project_value,reference_value,unit,comparison_result,reviewer,review_date,review_status,source_document,source_reference,notes
+VE_Project,complete_sia3802_project,,,kWh/m2,missing,,,,,,Provide the reviewed global project/reference result; component values alone cannot establish SIA 380/2 compliance.

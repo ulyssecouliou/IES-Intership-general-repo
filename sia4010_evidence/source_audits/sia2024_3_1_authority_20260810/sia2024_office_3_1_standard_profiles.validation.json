@@ -1,0 +1,46 @@
+{
+  "schema_version": "1.0",
+  "input_id": "sia2024_office_3_1_standard_profiles",
+  "source_sha256": "c8e801d24b98365226c076e028d6556b01f357baa5233b2ac57a2dd63149177e",
+  "status": "PASS",
+  "validated_by": "Controlled transcription review from the authority-supplied extract and direct calendar clarification",
+  "validation_method": "Visual row/column transcription, authority-column identification, arithmetic cross-check of the displayed 24 hourly bars, direct written calendar-decision normalization, JSON parse and normalized-binding loader checks",
+  "binding_artifact": {
+    "path": "sia2024_office_3_1_standard_profiles.binding.json",
+    "sha256": "d893996293460c5a7164d9986a31a6364abed81d68a6e89269baeacfaafef261",
+    "schema_id": "sia4010.sia2024_usage_profiles.v1"
+  },
+  "checks": [
+    {
+      "id": "SIA2024-3.1-SOURCE-IDENTITY",
+      "status": "PASS",
+      "detail": "The email identifies SIA 2024:2021 category 3.1 Einzel-/Gruppenbüro and explicitly states that the third-last value column contains the standard values."
+    },
+    {
+      "id": "SIA2024-3.1-SOURCE-INTEGRITY",
+      "status": "PASS",
+      "detail": "The normalized artifact is bound to authority extract image SHA-256 c8e801d24b98365226c076e028d6556b01f357baa5233b2ac57a2dd63149177e."
+    },
+    {
+      "id": "SIA2024-3.1-OCCUPANCY-PROFILE",
+      "status": "PASS",
+      "detail": "The 24 displayed occupancy bars transcribe to a daily sum of 7.2 equivalent full-load hours, matching the source row t_P,d=7.2 h."
+    },
+    {
+      "id": "SIA2024-3.1-EQUIPMENT-PROFILE",
+      "status": "PASS",
+      "detail": "The 24 displayed equipment bars transcribe to a daily sum of 11.1 equivalent full-load hours, matching the source row t_A,d=11.1 h."
+    },
+    {
+      "id": "SIA2024-3.1-STANDARD-VALUES",
+      "status": "PASS",
+      "detail": "People, equipment and lighting numerical values were transcribed exclusively from the authority-confirmed third-last value column."
+    },
+    {
+      "id": "SIA2024-3.1-AUTHORITY-CONFIRMED-CALENDAR",
+      "status": "PASS",
+      "detail": "Authority decision SIA4010_SIA2024_3_1_CALENDAR_20260826 confirms Monday-Friday use days, Saturday-Sunday rest days, 1 January on Saturday, no exceptions, a non-leap year, ordinal hour-ending labels and direct multiplication of hourly occupancy by 0.80."
+    }
+  ],
+  "claim_guardrail": "PASS validates the source identity, normalized transcription and authority-confirmed calendar semantics. It does not qualify native VE profile materialization, a generated model, a simulation result, a SIA 4010 test or an SIA attestation."
+}

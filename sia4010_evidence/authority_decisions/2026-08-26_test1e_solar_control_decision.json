@@ -1,0 +1,45 @@
+{
+  "schema_version": "1.0",
+  "decision_id": "SIA4010_TEST1E_SOLAR_CONTROL_20260826",
+  "received_date": "2026-08-26",
+  "authority": "Prof. Gerhard Zweifel",
+  "medium": "direct written email response",
+  "source_transcript": {
+    "path": "2026-08-26_test1e_solar_control_email.md",
+    "sha256": "158e7539247931c5b5ca21263d7406dc1830ca61359396a8ff4e731ef89cf553"
+  },
+  "scope": [
+    "SIA 4010 Test 1E",
+    "fabric-awning irradiance control",
+    "IESVE external-shade threshold mapping"
+  ],
+  "decision": {
+    "signal": "total_solar_irradiance_incident_on_exterior_glazing_plane",
+    "signal_plane": "exterior_glazing_plane",
+    "threshold_w_m2": 150.0,
+    "close_operator": ">=",
+    "reopen_operator": "<",
+    "hysteresis_required": false,
+    "iesve_external_shade_radiation_to_lower_w_m2": 150.0,
+    "iesve_external_shade_radiation_to_raise_w_m2": 150.0,
+    "iesve_mapping_confirmed_correct": true,
+    "subhourly_activation_during_hour_allowed": true,
+    "shading_state_reporting_required": false,
+    "transmitted_energy_reporting_interval": "hourly_sum"
+  },
+  "resolved_questions": [
+    "exact irradiance signal",
+    "threshold comparison operator",
+    "release rule",
+    "hysteresis",
+    "timestep interpretation",
+    "IESVE lower/raise threshold mapping"
+  ],
+  "remaining_technical_qualification": [
+    "combined-g optical mapping in VE",
+    "model assignment and read-back",
+    "APS result-variable binding",
+    "Test 1E simulation and official acceptance-band comparison"
+  ],
+  "claim_guardrail": "This authority decision resolves control semantics; it is not by itself a Test 1E result or SIA validation verdict."
+}

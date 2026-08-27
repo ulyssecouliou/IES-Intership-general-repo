@@ -1,0 +1,2458 @@
+{
+  "cases": {
+    "test_1/1A": {
+      "base_test_id": "1",
+      "capability": {
+        "apachesim_qualification_supported": true,
+        "aps_evaluation_scope": "HOURLY_DELIVERABLE_ONLY_NO_REFERENCE",
+        "aps_evaluation_supported": true,
+        "aps_full_evaluation_supported": false,
+        "base_test_id": "1",
+        "blocker_code": "VE_RUNTIME_QUALIFICATION_REQUIRED",
+        "blocker_detail": "Diagnostic case of the Test 1 to Test 2 transition. The chain and every parameter it adds are frozen in refs/reference-data/test-1.diagnostics.ref.json, read from the official PDFs, and test1_diagnostic_bundle applies the four links cumulatively from that frozen reference. Run it only in a fresh saved disposable project; the generator remains unverified until every VE setter, read-back and post-mutation check passes. The specification requires annual data sets with hourly heating and cooling power for these cases and states NO comparison criterion, so no reference band exists and none may be invented: they are deliverables, not judged cases.",
+        "case_id": "1A",
+        "generation_status": "RUNTIME_QUALIFICATION_READY",
+        "generator_id": "test1_diagnostic_chain_probe_v1",
+        "geometry_artifact_supported": true,
+        "mutation_supported": false,
+        "preparation_status": "PREPARATION_READY",
+        "qualified_template_simulation_supported": false,
+        "required_source_roles": [
+          "test_specification",
+          "evaluation_workbook"
+        ],
+        "runtime_discovery_supported": false,
+        "runtime_qualification_supported": true,
+        "source_bound_bundle_supported": false,
+        "variant": "test_1"
+      },
+      "case_id": "1A",
+      "geometry_artifact": null,
+      "model_evidence": {
+        "artifact_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST1_1A_DISPOSABLE\\reference_model_artifacts\\reports\\reference_model_report.json",
+        "artifact_sha256": "32303f2e2f647be24f0c0ace01a9abff3798605fb66ce52f32e1409e88e86570",
+        "project_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST1_1A_DISPOSABLE",
+        "qualification_artifact_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST1_1A_DISPOSABLE\\sia4010_artifacts\\diagnostics\\sia4010_test1_runtime_input_qualification_20260825_153054.json",
+        "qualification_artifact_sha256": "f83e2b2fab8db82289c3eb3c61207af230ab51386a38a7a2d335329954ddd01d",
+        "status": "VERIFIED",
+        "verification_basis": "TEST1_RUNTIME_QUALIFICATION_AND_APACHESIM_PREFLIGHT",
+        "workflow_status": "WARNING"
+      },
+      "preparation_artifacts": [],
+      "result_evidence": {
+        "acceptance_criterion_available": false,
+        "aps_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST1_1A_DISPOSABLE\\Vista\\SIA4010_test_1_1A_20260825_143148.aps",
+        "aps_sha256": "34b68b01d6a1f57b56f3cdecb134d7772c21eecf832680d2ed2d0f355b83d5e5",
+        "artifact_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST1_1A_DISPOSABLE\\sia4010_artifacts\\results\\SIA4010_test_1_1A_evaluation.json",
+        "artifact_sha256": "0e8560deeb97166fff3d1e58474be31a9975aba29acfd8027d99b820de7ace30",
+        "distribution_criterion_count": 0,
+        "observed_metric_count": 17520,
+        "project_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST1_1A_DISPOSABLE",
+        "required_output_scope_complete": true,
+        "simulation_link_status": "VERIFIED",
+        "status": "DIAGNOSTIC_DELIVERABLE_RECORDED_NO_CRITERION_NO_REFERENCE"
+      },
+      "simulation_evidence": {
+        "aps_evaluation_required": true,
+        "artifact_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST1_1A_DISPOSABLE\\sia4010_artifacts\\simulation\\SIA4010_test_1_1A_apachesim_qualification.json",
+        "artifact_sha256": "11abe319215baff73efd0bf2b23414fcdecf4062489010e1f786c052a8232796",
+        "compliance_claim_allowed": false,
+        "model_evidence_link_status": "VERIFIED",
+        "model_report_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST1_1A_DISPOSABLE\\reference_model_artifacts\\reports\\reference_model_report.json",
+        "model_report_sha256": "32303F2E2F647BE24F0C0ACE01A9ABFF3798605FB66CE52F32E1409E88E86570",
+        "project_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST1_1A_DISPOSABLE",
+        "results_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST1_1A_DISPOSABLE\\Vista\\SIA4010_test_1_1A_20260825_143148.aps",
+        "results_sha256": "34B68B01D6A1F57B56F3CDECB134D7772C21EECF832680D2ED2D0F355B83D5E5",
+        "results_size_bytes": 8612927,
+        "scenario_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST1_1A_DISPOSABLE\\sia_model_scenario.json",
+        "scenario_sha256": "4A766F395EC2CA6B3C0509D57CAFA15EEF784959073DD2ED13992295FD1AEAA3",
+        "status": "SIMULATION_EXECUTED_AWAITING_APS_QUALIFICATION"
+      },
+      "variant": "test_1"
+    },
+    "test_1/1B": {
+      "base_test_id": "1",
+      "capability": {
+        "apachesim_qualification_supported": true,
+        "aps_evaluation_scope": "HOURLY_DELIVERABLE_ONLY_NO_REFERENCE",
+        "aps_evaluation_supported": true,
+        "aps_full_evaluation_supported": false,
+        "base_test_id": "1",
+        "blocker_code": "VE_RUNTIME_QUALIFICATION_REQUIRED",
+        "blocker_detail": "Diagnostic case of the Test 1 to Test 2 transition. The chain and every parameter it adds are frozen in refs/reference-data/test-1.diagnostics.ref.json, read from the official PDFs, and test1_diagnostic_bundle applies the four links cumulatively from that frozen reference. Run it only in a fresh saved disposable project; the generator remains unverified until every VE setter, read-back and post-mutation check passes. The specification requires annual data sets with hourly heating and cooling power for these cases and states NO comparison criterion, so no reference band exists and none may be invented: they are deliverables, not judged cases.",
+        "case_id": "1B",
+        "generation_status": "RUNTIME_QUALIFICATION_READY",
+        "generator_id": "test1_diagnostic_chain_probe_v1",
+        "geometry_artifact_supported": true,
+        "mutation_supported": false,
+        "preparation_status": "PREPARATION_READY",
+        "qualified_template_simulation_supported": false,
+        "required_source_roles": [
+          "test_specification",
+          "evaluation_workbook"
+        ],
+        "runtime_discovery_supported": false,
+        "runtime_qualification_supported": true,
+        "source_bound_bundle_supported": false,
+        "variant": "test_1"
+      },
+      "case_id": "1B",
+      "geometry_artifact": null,
+      "model_evidence": {
+        "artifact_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST1_1B_DISPOSABLE\\reference_model_artifacts\\reports\\reference_model_report.json",
+        "artifact_sha256": "e7a50b431e88bf950a6ea694446d3873c03fd6585e7844acc43196b6755a3cd0",
+        "project_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST1_1B_DISPOSABLE",
+        "qualification_artifact_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST1_1B_DISPOSABLE\\sia4010_artifacts\\diagnostics\\sia4010_test1_runtime_input_qualification_20260825_153400.json",
+        "qualification_artifact_sha256": "413a699c268570a23b27028d540fa42344375e94086cd3c24027dddfa9394333",
+        "status": "VERIFIED",
+        "verification_basis": "TEST1_RUNTIME_QUALIFICATION_AND_APACHESIM_PREFLIGHT",
+        "workflow_status": "WARNING"
+      },
+      "preparation_artifacts": [],
+      "result_evidence": {
+        "acceptance_criterion_available": false,
+        "aps_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST1_1B_DISPOSABLE\\Vista\\SIA4010_test_1_1B_20260825_143436.aps",
+        "aps_sha256": "3b2de404c110b634f616b0baa15ae139d03fabcefb83100e68f7ca61201e7e3c",
+        "artifact_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST1_1B_DISPOSABLE\\sia4010_artifacts\\results\\SIA4010_test_1_1B_evaluation.json",
+        "artifact_sha256": "8619e592007ec48dbbc164ccc698cae51c91a620b864dbf5b4d9df9a3a5eb80f",
+        "distribution_criterion_count": 0,
+        "observed_metric_count": 17520,
+        "project_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST1_1B_DISPOSABLE",
+        "required_output_scope_complete": true,
+        "simulation_link_status": "VERIFIED",
+        "status": "DIAGNOSTIC_DELIVERABLE_RECORDED_NO_CRITERION_NO_REFERENCE"
+      },
+      "simulation_evidence": {
+        "aps_evaluation_required": true,
+        "artifact_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST1_1B_DISPOSABLE\\sia4010_artifacts\\simulation\\SIA4010_test_1_1B_apachesim_qualification.json",
+        "artifact_sha256": "9b87212f221e4cc8c8ae1174e83900ae233d5af3e29545d8aa30cedf0fb40218",
+        "compliance_claim_allowed": false,
+        "model_evidence_link_status": "VERIFIED",
+        "model_report_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST1_1B_DISPOSABLE\\reference_model_artifacts\\reports\\reference_model_report.json",
+        "model_report_sha256": "E7A50B431E88BF950A6EA694446D3873C03FD6585E7844ACC43196B6755A3CD0",
+        "project_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST1_1B_DISPOSABLE",
+        "results_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST1_1B_DISPOSABLE\\Vista\\SIA4010_test_1_1B_20260825_143436.aps",
+        "results_sha256": "3B2DE404C110B634F616B0BAA15AE139D03FABCEFB83100E68F7CA61201E7E3C",
+        "results_size_bytes": 8612927,
+        "scenario_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST1_1B_DISPOSABLE\\sia_model_scenario.json",
+        "scenario_sha256": "41A8CFFC740ED5833B42A07BFDE5F114A6B8711E598B041590E460AF3BFBD2CF",
+        "status": "SIMULATION_EXECUTED_AWAITING_APS_QUALIFICATION"
+      },
+      "variant": "test_1"
+    },
+    "test_1/1C": {
+      "base_test_id": "1",
+      "capability": {
+        "apachesim_qualification_supported": true,
+        "aps_evaluation_scope": "HOURLY_DELIVERABLE_ONLY_NO_REFERENCE",
+        "aps_evaluation_supported": true,
+        "aps_full_evaluation_supported": false,
+        "base_test_id": "1",
+        "blocker_code": "VE_RUNTIME_QUALIFICATION_REQUIRED",
+        "blocker_detail": "Diagnostic case of the Test 1 to Test 2 transition. The chain and every parameter it adds are frozen in refs/reference-data/test-1.diagnostics.ref.json, read from the official PDFs, and test1_diagnostic_bundle applies the four links cumulatively from that frozen reference. Run it only in a fresh saved disposable project; the generator remains unverified until every VE setter, read-back and post-mutation check passes. The specification requires annual data sets with hourly heating and cooling power for these cases and states NO comparison criterion, so no reference band exists and none may be invented: they are deliverables, not judged cases.",
+        "case_id": "1C",
+        "generation_status": "RUNTIME_QUALIFICATION_READY",
+        "generator_id": "test1_diagnostic_chain_probe_v1",
+        "geometry_artifact_supported": true,
+        "mutation_supported": false,
+        "preparation_status": "PREPARATION_READY",
+        "qualified_template_simulation_supported": false,
+        "required_source_roles": [
+          "test_specification",
+          "evaluation_workbook"
+        ],
+        "runtime_discovery_supported": false,
+        "runtime_qualification_supported": true,
+        "source_bound_bundle_supported": false,
+        "variant": "test_1"
+      },
+      "case_id": "1C",
+      "geometry_artifact": null,
+      "model_evidence": {
+        "artifact_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST1_1C_DISPOSABLE\\reference_model_artifacts\\reports\\reference_model_report.json",
+        "artifact_sha256": "430afbb78e635f1946ec2daada22d57116b678915fc520d140a021a2678ae4bb",
+        "project_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST1_1C_DISPOSABLE",
+        "qualification_artifact_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST1_1C_DISPOSABLE\\sia4010_artifacts\\diagnostics\\sia4010_test1_runtime_input_qualification_20260825_153640.json",
+        "qualification_artifact_sha256": "21f30299ca16317c175c40bacecc50c819c240236ad7664b0ca1fcdcfae95ea3",
+        "status": "VERIFIED",
+        "verification_basis": "TEST1_RUNTIME_QUALIFICATION_AND_APACHESIM_PREFLIGHT",
+        "workflow_status": "WARNING"
+      },
+      "preparation_artifacts": [],
+      "result_evidence": {
+        "acceptance_criterion_available": false,
+        "aps_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST1_1C_DISPOSABLE\\Vista\\SIA4010_test_1_1C_20260825_143833.aps",
+        "aps_sha256": "23ccaefb4fe81b8d5694203c30c66ce3509ce7f2abcafdc063d4b427aa109f5d",
+        "artifact_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST1_1C_DISPOSABLE\\sia4010_artifacts\\results\\SIA4010_test_1_1C_evaluation.json",
+        "artifact_sha256": "21d4360832d73b99a21f3fa7c0f07c5582e2946e4bab852d5145920de02ae43c",
+        "distribution_criterion_count": 0,
+        "observed_metric_count": 17520,
+        "project_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST1_1C_DISPOSABLE",
+        "required_output_scope_complete": true,
+        "simulation_link_status": "VERIFIED",
+        "status": "DIAGNOSTIC_DELIVERABLE_RECORDED_NO_CRITERION_NO_REFERENCE"
+      },
+      "simulation_evidence": {
+        "aps_evaluation_required": true,
+        "artifact_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST1_1C_DISPOSABLE\\sia4010_artifacts\\simulation\\SIA4010_test_1_1C_apachesim_qualification.json",
+        "artifact_sha256": "4739918bceb1a6c104dcc61dcaa686219bf5eaf6f61de0fcc91164550a9f0e03",
+        "compliance_claim_allowed": false,
+        "model_evidence_link_status": "VERIFIED",
+        "model_report_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST1_1C_DISPOSABLE\\reference_model_artifacts\\reports\\reference_model_report.json",
+        "model_report_sha256": "430AFBB78E635F1946EC2DAADA22D57116B678915FC520D140A021A2678AE4BB",
+        "project_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST1_1C_DISPOSABLE",
+        "results_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST1_1C_DISPOSABLE\\Vista\\SIA4010_test_1_1C_20260825_143833.aps",
+        "results_sha256": "23CCAEFB4FE81B8D5694203C30C66CE3509CE7F2ABCAFDC063D4B427AA109F5D",
+        "results_size_bytes": 8612927,
+        "scenario_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST1_1C_DISPOSABLE\\sia_model_scenario.json",
+        "scenario_sha256": "2B47E65DD7B30CB97BEAE3E367CA376CC296DFA5E300E7EE0C5811573151A921",
+        "status": "SIMULATION_EXECUTED_AWAITING_APS_QUALIFICATION"
+      },
+      "variant": "test_1"
+    },
+    "test_1/1D": {
+      "base_test_id": "1",
+      "capability": {
+        "apachesim_qualification_supported": true,
+        "aps_evaluation_scope": "HOURLY_DELIVERABLE_ONLY_NO_REFERENCE",
+        "aps_evaluation_supported": true,
+        "aps_full_evaluation_supported": false,
+        "base_test_id": "1",
+        "blocker_code": "VE_RUNTIME_QUALIFICATION_REQUIRED",
+        "blocker_detail": "Diagnostic case of the Test 1 to Test 2 transition. The chain and every parameter it adds are frozen in refs/reference-data/test-1.diagnostics.ref.json, read from the official PDFs, and test1_diagnostic_bundle applies the four links cumulatively from that frozen reference. Run it only in a fresh saved disposable project; the generator remains unverified until every VE setter, read-back and post-mutation check passes. The specification requires annual data sets with hourly heating and cooling power for these cases and states NO comparison criterion, so no reference band exists and none may be invented: they are deliverables, not judged cases.",
+        "case_id": "1D",
+        "generation_status": "RUNTIME_QUALIFICATION_READY",
+        "generator_id": "test1_diagnostic_chain_probe_v1",
+        "geometry_artifact_supported": true,
+        "mutation_supported": false,
+        "preparation_status": "PREPARATION_READY",
+        "qualified_template_simulation_supported": false,
+        "required_source_roles": [
+          "test_specification",
+          "evaluation_workbook"
+        ],
+        "runtime_discovery_supported": false,
+        "runtime_qualification_supported": true,
+        "source_bound_bundle_supported": false,
+        "variant": "test_1"
+      },
+      "case_id": "1D",
+      "geometry_artifact": null,
+      "model_evidence": {
+        "artifact_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST1_1D_DISPOSABLE\\reference_model_artifacts\\reports\\reference_model_report.json",
+        "artifact_sha256": "0867b5122053eb423950a6e438ee37a7d17e6e70e303da78ac393c353b6e9fc1",
+        "project_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST1_1D_DISPOSABLE",
+        "qualification_artifact_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST1_1D_DISPOSABLE\\sia4010_artifacts\\diagnostics\\sia4010_test1_runtime_input_qualification_20260825_153936.json",
+        "qualification_artifact_sha256": "3b26e38c164cac2201575c41b6669b5d1c747e2015b38199c82081bf254341d8",
+        "status": "VERIFIED",
+        "verification_basis": "TEST1_RUNTIME_QUALIFICATION_AND_APACHESIM_PREFLIGHT",
+        "workflow_status": "WARNING"
+      },
+      "preparation_artifacts": [],
+      "result_evidence": {
+        "acceptance_criterion_available": false,
+        "aps_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST1_1D_DISPOSABLE\\Vista\\SIA4010_test_1_1D_20260825_144001.aps",
+        "aps_sha256": "4a1529e820a3e12e3cdacf4a38e4e32d5f45f01ce7982dac0d4c6fd995f8f6ad",
+        "artifact_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST1_1D_DISPOSABLE\\sia4010_artifacts\\results\\SIA4010_test_1_1D_evaluation.json",
+        "artifact_sha256": "39e75099aefb6d5b6d82d74f6dcfb4e9595ba17fd3962df688c5a73ca94a8f4d",
+        "distribution_criterion_count": 0,
+        "observed_metric_count": 17520,
+        "project_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST1_1D_DISPOSABLE",
+        "required_output_scope_complete": true,
+        "simulation_link_status": "VERIFIED",
+        "status": "DIAGNOSTIC_DELIVERABLE_RECORDED_NO_CRITERION_NO_REFERENCE"
+      },
+      "simulation_evidence": {
+        "aps_evaluation_required": true,
+        "artifact_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST1_1D_DISPOSABLE\\sia4010_artifacts\\simulation\\SIA4010_test_1_1D_apachesim_qualification.json",
+        "artifact_sha256": "1a73dd67934ca95199ba615dd1c75fc1e95803b06dfe1853b90f83a1eec82385",
+        "compliance_claim_allowed": false,
+        "model_evidence_link_status": "VERIFIED",
+        "model_report_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST1_1D_DISPOSABLE\\reference_model_artifacts\\reports\\reference_model_report.json",
+        "model_report_sha256": "0867B5122053EB423950A6E438EE37A7D17E6E70E303DA78AC393C353B6E9FC1",
+        "project_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST1_1D_DISPOSABLE",
+        "results_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST1_1D_DISPOSABLE\\Vista\\SIA4010_test_1_1D_20260825_144001.aps",
+        "results_sha256": "4A1529E820A3E12E3CDACF4A38E4E32D5F45F01CE7982DAC0D4C6FD995F8F6AD",
+        "results_size_bytes": 8612927,
+        "scenario_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST1_1D_DISPOSABLE\\sia_model_scenario.json",
+        "scenario_sha256": "DA7DBE232E72DB8951A80C6E9705F6B519D7E22E1B3C88626FC92C06CEB8DE03",
+        "status": "SIMULATION_EXECUTED_AWAITING_APS_QUALIFICATION"
+      },
+      "variant": "test_1"
+    },
+    "test_1/1E": {
+      "base_test_id": "1",
+      "capability": {
+        "apachesim_qualification_supported": false,
+        "aps_evaluation_scope": "OFFICIAL_CRITERIA_IMPLEMENTED",
+        "aps_evaluation_supported": true,
+        "aps_full_evaluation_supported": true,
+        "base_test_id": "1",
+        "blocker_code": "VE_CASE_GENERATOR_NOT_IMPLEMENTED",
+        "blocker_detail": "Only Test 1 Case 600 currently has a verified guarded VE generator. The remaining Test 1 case-specific envelope, glazing, shading and free-floating settings still require source-bound generator rules.",
+        "case_id": "1E",
+        "generation_status": "NOT_IMPLEMENTED",
+        "generator_id": "source_traced_preparation_v1",
+        "geometry_artifact_supported": true,
+        "mutation_supported": false,
+        "preparation_status": "PREPARATION_READY",
+        "qualified_template_simulation_supported": true,
+        "required_source_roles": [
+          "test_specification",
+          "evaluation_workbook"
+        ],
+        "runtime_discovery_supported": false,
+        "runtime_qualification_supported": false,
+        "source_bound_bundle_supported": false,
+        "variant": "test_1"
+      },
+      "case_id": "1E",
+      "geometry_artifact": {
+        "path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\geometry\\SIA4010_test_1_1E.gbxml",
+        "sha256": "730c928850fe34c6477bcece966a65764cf89b0fb8868be9191c3a311708d049",
+        "status": "VERIFIED"
+      },
+      "model_evidence": {
+        "artifact_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST_1_1E_DISPOSABLE\\sia4010_artifacts\\templates\\template_model_evidence.json",
+        "artifact_sha256": "19c177a6f6dcf127b4841a6f1d87988ae61ffad002aeb456e94fe3bec8e88d7a",
+        "project_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST_1_1E_DISPOSABLE",
+        "status": "VERIFIED",
+        "workflow_status": "PASS"
+      },
+      "preparation_artifacts": [
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_1A_1E_preparation.json",
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_1B_1E_preparation.json",
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_2A_1E_preparation.json",
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_2B_1E_preparation.json",
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_3_1E_preparation.json",
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_4A_1E_preparation.json",
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_4B_1E_preparation.json"
+      ],
+      "result_evidence": {
+        "acceptance_criterion_available": true,
+        "aps_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST1_1E_EQUIVALENT_GLAZING_DISPOSABLE_V2\\Vista\\SIA4010_test_1_1E_20260826_224133.aps",
+        "aps_sha256": "9e20e99b6290fc5befebf2ddd93f07c8b6c370a1bf6e0494d90cbb2dc64a96a7",
+        "artifact_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST1_1E_EQUIVALENT_GLAZING_DISPOSABLE_V2\\sia4010_artifacts\\results\\SIA4010_test_1_1E_evaluation.json",
+        "artifact_sha256": "369518c2fe5ebdd51116561ee77a6b89f4e1e84e65921d85aa360f9fb3d2b5aa",
+        "distribution_criterion_count": 0,
+        "observed_metric_count": 28,
+        "project_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST1_1E_EQUIVALENT_GLAZING_DISPOSABLE_V2",
+        "required_output_scope_complete": true,
+        "simulation_link_status": "NOT_LINKED",
+        "status": "FAILED"
+      },
+      "simulation_evidence": {
+        "aps_evaluation_required": true,
+        "artifact_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST_1_1E_DISPOSABLE\\sia4010_artifacts\\simulation\\SIA4010_test_1_1E_template_apachesim.json",
+        "artifact_sha256": "e990de79be755837fe5cfd60d6517b7422ef39a5635c81b995c5cfddb6cb99e9",
+        "compliance_claim_allowed": false,
+        "model_evidence_link_status": "VERIFIED",
+        "model_report_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST_1_1E_DISPOSABLE\\sia4010_artifacts\\templates\\template_model_evidence.json",
+        "model_report_sha256": "19c177a6f6dcf127b4841a6f1d87988ae61ffad002aeb456e94fe3bec8e88d7a",
+        "project_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST_1_1E_DISPOSABLE",
+        "results_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST_1_1E_DISPOSABLE\\Vista\\SIA4010_test_1_1E_20260826_184917.aps",
+        "results_sha256": "6068cbe8ad668f40df17d89b7665cb6d0a2618ced0c230cb290961478a007707",
+        "results_size_bytes": 11010771,
+        "scenario_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST_1_1E_DISPOSABLE\\sia_model_scenario.json",
+        "scenario_sha256": "2eabda095d3334fec8994761af430c94d0d27d0cb341c8e552b630dfccac274b",
+        "status": "SIMULATION_EXECUTED_AWAITING_APS_QUALIFICATION",
+        "verification_basis": "QUALIFIED_EXACT_TEMPLATE"
+      },
+      "variant": "test_1"
+    },
+    "test_1/600": {
+      "base_test_id": "1",
+      "capability": {
+        "apachesim_qualification_supported": true,
+        "aps_evaluation_scope": "REFERENCE_OUTPUTS_IMPLEMENTED",
+        "aps_evaluation_supported": true,
+        "aps_full_evaluation_supported": true,
+        "base_test_id": "1",
+        "blocker_code": "",
+        "blocker_detail": "",
+        "case_id": "600",
+        "generation_status": "GUARDED_MUTATION_READY",
+        "generator_id": "case600_mvp_v1",
+        "geometry_artifact_supported": true,
+        "mutation_supported": true,
+        "preparation_status": "PREPARATION_READY",
+        "qualified_template_simulation_supported": false,
+        "required_source_roles": [
+          "test_specification",
+          "evaluation_workbook"
+        ],
+        "runtime_discovery_supported": false,
+        "runtime_qualification_supported": false,
+        "source_bound_bundle_supported": false,
+        "variant": "test_1"
+      },
+      "case_id": "600",
+      "geometry_artifact": {
+        "path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\geometry\\SIA4010_test_1_600.gbxml",
+        "sha256": "b0d6eb96474088c8cdaa1dc20036da4a422666f5926b0ced8cf157d2f6fafd3b",
+        "status": "VERIFIED"
+      },
+      "model_evidence": {
+        "artifact_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\test1_600\\reference_model_artifacts\\reports\\reference_model_report.json",
+        "artifact_sha256": "9fa32f2d35c4edfd0360690dbd3cf8b294e5fdaf78dd1ba25fddf7b18b1e9f17",
+        "project_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\test1_600",
+        "qualification_artifact_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\test1_600\\sia4010_artifacts\\diagnostics\\sia4010_test1_runtime_input_qualification_20260821_142350.json",
+        "qualification_artifact_sha256": "6ce2cd633cefccb1eeb559b69f615baeca528724b8f6f1988875e16e2cc03f34",
+        "status": "VERIFIED",
+        "verification_basis": "TEST1_RUNTIME_QUALIFICATION_AND_APACHESIM_PREFLIGHT",
+        "workflow_status": "WARNING"
+      },
+      "preparation_artifacts": [
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_1A_600_preparation.json",
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_1B_600_preparation.json",
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_2A_600_preparation.json",
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_2B_600_preparation.json",
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_3_600_preparation.json",
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_4A_600_preparation.json",
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_4B_600_preparation.json"
+      ],
+      "result_evidence": {
+        "acceptance_criterion_available": false,
+        "aps_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\test1_600\\Vista\\SIA4010_test_1_600_20260825_133217.aps",
+        "aps_sha256": "03c5ec5ad800b48fc6669d73d8363a8f82fc650aeaf16bb73d24333f1dc2b75a",
+        "artifact_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\test1_600\\sia4010_artifacts\\results\\SIA4010_test_1_600_evaluation.json",
+        "artifact_sha256": "cdf3c31715ae801e416c349e8e5438bf851f18282e6f9b7b222796d296363fb3",
+        "distribution_criterion_count": 0,
+        "observed_metric_count": 88,
+        "project_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\test1_600",
+        "required_output_scope_complete": true,
+        "simulation_link_status": "VERIFIED",
+        "status": "REFERENCE_RESULTS_RECORDED_NO_ACCEPTANCE_CRITERION"
+      },
+      "simulation_evidence": {
+        "aps_evaluation_required": true,
+        "artifact_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\test1_600\\sia4010_artifacts\\simulation\\SIA4010_test_1_600_apachesim_qualification.json",
+        "artifact_sha256": "312ce596452542766fbab579f58662e70e39bee3c14e69245c5773e9c0a96d91",
+        "compliance_claim_allowed": false,
+        "model_evidence_link_status": "VERIFIED",
+        "model_report_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\test1_600\\reference_model_artifacts\\reports\\reference_model_report.json",
+        "model_report_sha256": "9FA32F2D35C4EDFD0360690DBD3CF8B294E5FDAF78DD1BA25FDDF7B18B1E9F17",
+        "project_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\test1_600",
+        "results_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\test1_600\\Vista\\SIA4010_test_1_600_20260825_133217.aps",
+        "results_sha256": "03C5EC5AD800B48FC6669D73D8363A8F82FC650AEAF16BB73D24333F1DC2B75A",
+        "results_size_bytes": 8612896,
+        "scenario_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\test1_600\\sia_model_scenario.json",
+        "scenario_sha256": "2A9AD04EDBB3A19424F5F8FB7818B0D3DEE2F0BDF41E9AF653EB069E83E38147",
+        "status": "SIMULATION_EXECUTED_AWAITING_APS_QUALIFICATION"
+      },
+      "variant": "test_1"
+    },
+    "test_1/600FF": {
+      "base_test_id": "1",
+      "capability": {
+        "apachesim_qualification_supported": true,
+        "aps_evaluation_scope": "REFERENCE_OUTPUTS_IMPLEMENTED",
+        "aps_evaluation_supported": true,
+        "aps_full_evaluation_supported": true,
+        "base_test_id": "1",
+        "blocker_code": "VE_RUNTIME_QUALIFICATION_REQUIRED",
+        "blocker_detail": "A source-traced lightweight Test 1 bundle and guarded VE qualification path are implemented. Run it only in a fresh saved disposable project; the generator remains unverified until every VE setter/read-back and post-mutation check passes.",
+        "case_id": "600FF",
+        "generation_status": "RUNTIME_QUALIFICATION_READY",
+        "generator_id": "test1_lightweight_runtime_probe_v1",
+        "geometry_artifact_supported": true,
+        "mutation_supported": false,
+        "preparation_status": "PREPARATION_READY",
+        "qualified_template_simulation_supported": false,
+        "required_source_roles": [
+          "test_specification",
+          "evaluation_workbook"
+        ],
+        "runtime_discovery_supported": false,
+        "runtime_qualification_supported": true,
+        "source_bound_bundle_supported": false,
+        "variant": "test_1"
+      },
+      "case_id": "600FF",
+      "geometry_artifact": {
+        "path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\geometry\\SIA4010_test_1_600FF.gbxml",
+        "sha256": "b34af4d316e09462bbe21eeef8d5934b64d512fe60d45e0c90951700c3d5bae1",
+        "status": "VERIFIED"
+      },
+      "model_evidence": {
+        "artifact_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST1_600FF\\reference_model_artifacts\\reports\\reference_model_report.json",
+        "artifact_sha256": "3797ddba641c76180b12dd1326c3368c04ba6de74dbd36c4f08a527e218ed7ab",
+        "project_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST1_600FF",
+        "qualification_artifact_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST1_600FF\\sia4010_artifacts\\diagnostics\\sia4010_test1_runtime_input_qualification_20260812_151803.json",
+        "qualification_artifact_sha256": "965dfd33c6883a77c61a790933cec7056a25c7e61da7926b4833aaed03fc8147",
+        "status": "VERIFIED",
+        "verification_basis": "TEST1_RUNTIME_QUALIFICATION_AND_APACHESIM_PREFLIGHT",
+        "workflow_status": "WARNING"
+      },
+      "preparation_artifacts": [
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_1A_600FF_preparation.json",
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_1B_600FF_preparation.json",
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_2A_600FF_preparation.json",
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_2B_600FF_preparation.json",
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_3_600FF_preparation.json",
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_4A_600FF_preparation.json",
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_4B_600FF_preparation.json"
+      ],
+      "result_evidence": {
+        "acceptance_criterion_available": false,
+        "aps_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST1_600FF\\Vista\\SIA4010_test_1_600FF_20260812_141823.aps",
+        "aps_sha256": "bcbb9deb7b42a6702d6b288fabbca47981ede9dc5aaa522c32f65a41df34f813",
+        "artifact_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST1_600FF\\sia4010_artifacts\\results\\SIA4010_test_1_600FF_evaluation.json",
+        "artifact_sha256": "f7035ee6853ae3ce4d5fb5be018cd413335581efb163b57559968408ac6a4aac",
+        "distribution_criterion_count": 0,
+        "observed_metric_count": 39,
+        "project_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST1_600FF",
+        "required_output_scope_complete": true,
+        "simulation_link_status": "VERIFIED",
+        "status": "REFERENCE_RESULTS_RECORDED_NO_ACCEPTANCE_CRITERION"
+      },
+      "simulation_evidence": {
+        "aps_evaluation_required": true,
+        "artifact_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST1_600FF\\sia4010_artifacts\\simulation\\SIA4010_test_1_600FF_apachesim_qualification.json",
+        "artifact_sha256": "04883c6497c99429bdc06bdafa375d02a6d1d214cca3177d20b30adde506f71f",
+        "compliance_claim_allowed": false,
+        "model_evidence_link_status": "VERIFIED",
+        "model_report_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST1_600FF\\reference_model_artifacts\\reports\\reference_model_report.json",
+        "model_report_sha256": "3797DDBA641C76180B12DD1326C3368C04BA6DE74DBD36C4F08A527E218ED7AB",
+        "project_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST1_600FF",
+        "results_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST1_600FF\\Vista\\SIA4010_test_1_600FF_20260812_141823.aps",
+        "results_sha256": "BCBB9DEB7B42A6702D6B288FABBCA47981EDE9DC5AAA522C32F65A41DF34F813",
+        "results_size_bytes": 8612906,
+        "scenario_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST1_600FF\\sia_model_scenario.json",
+        "scenario_sha256": "B52B1232607108383FE6AA712C351D1AE2681741E76D9AC9BE8F325104A3BF9C",
+        "status": "SIMULATION_EXECUTED_AWAITING_APS_QUALIFICATION"
+      },
+      "variant": "test_1"
+    },
+    "test_1/640": {
+      "base_test_id": "1",
+      "capability": {
+        "apachesim_qualification_supported": true,
+        "aps_evaluation_scope": "REFERENCE_OUTPUTS_IMPLEMENTED",
+        "aps_evaluation_supported": true,
+        "aps_full_evaluation_supported": true,
+        "base_test_id": "1",
+        "blocker_code": "VE_RUNTIME_QUALIFICATION_REQUIRED",
+        "blocker_detail": "A source-traced lightweight Test 1 bundle and guarded VE qualification path are implemented. Run it only in a fresh saved disposable project; the generator remains unverified until every VE setter/read-back and post-mutation check passes.",
+        "case_id": "640",
+        "generation_status": "RUNTIME_QUALIFICATION_READY",
+        "generator_id": "test1_lightweight_runtime_probe_v1",
+        "geometry_artifact_supported": true,
+        "mutation_supported": false,
+        "preparation_status": "PREPARATION_READY",
+        "qualified_template_simulation_supported": false,
+        "required_source_roles": [
+          "test_specification",
+          "evaluation_workbook"
+        ],
+        "runtime_discovery_supported": false,
+        "runtime_qualification_supported": true,
+        "source_bound_bundle_supported": false,
+        "variant": "test_1"
+      },
+      "case_id": "640",
+      "geometry_artifact": {
+        "path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\geometry\\SIA4010_test_1_640.gbxml",
+        "sha256": "a2084feee9c1e91bf5da1ec1444731d83d7672012be57562cda462af11bde3c4",
+        "status": "VERIFIED"
+      },
+      "model_evidence": {
+        "artifact_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\Test_640_Test1\\reference_model_artifacts\\reports\\reference_model_report.json",
+        "artifact_sha256": "86165b58e5a51240b2aea3524818e3d1d7dcfc1d6581f394fe055f61a7ae7e45",
+        "project_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\Test_640_Test1",
+        "qualification_artifact_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\Test_640_Test1\\sia4010_artifacts\\diagnostics\\sia4010_test1_runtime_input_qualification_20260811_220251.json",
+        "qualification_artifact_sha256": "6d30cb06b1f5ffa7975ff2d4970816a510c5133b715ba8561935f4c5d1263f6a",
+        "status": "VERIFIED",
+        "verification_basis": "TEST1_RUNTIME_QUALIFICATION_AND_APACHESIM_PREFLIGHT",
+        "workflow_status": "WARNING"
+      },
+      "preparation_artifacts": [
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_1A_640_preparation.json",
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_1B_640_preparation.json",
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_2A_640_preparation.json",
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_2B_640_preparation.json",
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_3_640_preparation.json",
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_4A_640_preparation.json",
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_4B_640_preparation.json"
+      ],
+      "result_evidence": {
+        "acceptance_criterion_available": false,
+        "aps_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\Test_640_Test1\\Vista\\SIA4010_test_1_640_20260811_234852.aps",
+        "aps_sha256": "82629753568e33c341c6831417caad97d1f02de92a222c7e5b2b0b9ae43d8592",
+        "artifact_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\Test_640_Test1\\sia4010_artifacts\\results\\SIA4010_test_1_640_evaluation.json",
+        "artifact_sha256": "f6088c5462b640513a636d8c71f0f5887e3566e0f90e01108b926d0a84d68cad",
+        "distribution_criterion_count": 0,
+        "observed_metric_count": 88,
+        "project_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\Test_640_Test1",
+        "required_output_scope_complete": true,
+        "simulation_link_status": "VERIFIED",
+        "status": "REFERENCE_RESULTS_RECORDED_NO_ACCEPTANCE_CRITERION"
+      },
+      "simulation_evidence": {
+        "aps_evaluation_required": true,
+        "artifact_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\Test_640_Test1\\sia4010_artifacts\\simulation\\SIA4010_test_1_640_apachesim_qualification.json",
+        "artifact_sha256": "80d9fabaf1cc1539310babaf01b4159aff6e8cb5ad43f4d5c841bd1f7d4df898",
+        "compliance_claim_allowed": false,
+        "model_evidence_link_status": "VERIFIED",
+        "model_report_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\Test_640_Test1\\reference_model_artifacts\\reports\\reference_model_report.json",
+        "model_report_sha256": "86165B58E5A51240B2AEA3524818E3D1D7DCFC1D6581F394FE055F61A7AE7E45",
+        "project_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\Test_640_Test1",
+        "results_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\Test_640_Test1\\Vista\\SIA4010_test_1_640_20260811_234852.aps",
+        "results_sha256": "82629753568E33C341C6831417CAAD97D1F02DE92A222C7E5B2B0B9AE43D8592",
+        "results_size_bytes": 8612901,
+        "scenario_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\Test_640_Test1\\sia_model_scenario.json",
+        "scenario_sha256": "27F717912120A01DE99A195D08328B1886AC7ADDF3772884273760587550A9F1",
+        "status": "SIMULATION_EXECUTED_AWAITING_APS_QUALIFICATION"
+      },
+      "variant": "test_1"
+    },
+    "test_1/900": {
+      "base_test_id": "1",
+      "capability": {
+        "apachesim_qualification_supported": true,
+        "aps_evaluation_scope": "REFERENCE_OUTPUTS_IMPLEMENTED",
+        "aps_evaluation_supported": true,
+        "aps_full_evaluation_supported": true,
+        "base_test_id": "1",
+        "blocker_code": "VE_RUNTIME_QUALIFICATION_REQUIRED",
+        "blocker_detail": "A source-traced high-mass Test 1 bundle and guarded VE qualification path are implemented. Run it only in a fresh saved disposable project; the generator remains unverified until every VE setter/read-back and post-mutation check passes.",
+        "case_id": "900",
+        "generation_status": "RUNTIME_QUALIFICATION_READY",
+        "generator_id": "test1_heavyweight_runtime_probe_v1",
+        "geometry_artifact_supported": true,
+        "mutation_supported": false,
+        "preparation_status": "PREPARATION_READY",
+        "qualified_template_simulation_supported": false,
+        "required_source_roles": [
+          "test_specification",
+          "evaluation_workbook"
+        ],
+        "runtime_discovery_supported": false,
+        "runtime_qualification_supported": true,
+        "source_bound_bundle_supported": false,
+        "variant": "test_1"
+      },
+      "case_id": "900",
+      "geometry_artifact": {
+        "path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\geometry\\SIA4010_test_1_900.gbxml",
+        "sha256": "1fe43b5752a9b6d5108c294de4d83ace7f5f17ec2602baeb503d338f1390b8b3",
+        "status": "VERIFIED"
+      },
+      "model_evidence": {
+        "artifact_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST1_900_DISPOSABLE\\reference_model_artifacts\\reports\\reference_model_report.json",
+        "artifact_sha256": "6947eaec5c5c69f9e4c351e0a52d7e3df4c4fd89bd41fc4f796ff172b2049dc5",
+        "project_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST1_900_DISPOSABLE",
+        "qualification_artifact_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST1_900_DISPOSABLE\\sia4010_artifacts\\diagnostics\\sia4010_test1_runtime_input_qualification_20260825_143657.json",
+        "qualification_artifact_sha256": "a913411b323c632ddf34e972e0462f437ad450e4e9907529b3cb7271c0751db6",
+        "status": "VERIFIED",
+        "verification_basis": "TEST1_RUNTIME_QUALIFICATION_AND_APACHESIM_PREFLIGHT",
+        "workflow_status": "WARNING"
+      },
+      "preparation_artifacts": [
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_1A_900_preparation.json",
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_1B_900_preparation.json",
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_2A_900_preparation.json",
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_2B_900_preparation.json",
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_3_900_preparation.json",
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_4A_900_preparation.json",
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_4B_900_preparation.json"
+      ],
+      "result_evidence": {
+        "acceptance_criterion_available": false,
+        "aps_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST1_900_DISPOSABLE\\Vista\\SIA4010_test_1_900_20260825_134529.aps",
+        "aps_sha256": "dd579e22fd69ad3c392a6afa13a0f832019d05e3e83db94c92e9ea06153e7b7c",
+        "artifact_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST1_900_DISPOSABLE\\sia4010_artifacts\\results\\SIA4010_test_1_900_evaluation.json",
+        "artifact_sha256": "fc85ab202fa4a79057349b9d69e2fb2afefbe1973b459a0e38c3f3f6fa6bb909",
+        "distribution_criterion_count": 0,
+        "observed_metric_count": 88,
+        "project_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST1_900_DISPOSABLE",
+        "required_output_scope_complete": true,
+        "simulation_link_status": "VERIFIED",
+        "status": "REFERENCE_RESULTS_RECORDED_NO_ACCEPTANCE_CRITERION"
+      },
+      "simulation_evidence": {
+        "aps_evaluation_required": true,
+        "artifact_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST1_900_DISPOSABLE\\sia4010_artifacts\\simulation\\SIA4010_test_1_900_apachesim_qualification.json",
+        "artifact_sha256": "9fb16ea86b2d2546ee808ab96479a10b029b765be478f93bd682120b778c95f6",
+        "compliance_claim_allowed": false,
+        "model_evidence_link_status": "VERIFIED",
+        "model_report_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST1_900_DISPOSABLE\\reference_model_artifacts\\reports\\reference_model_report.json",
+        "model_report_sha256": "6947EAEC5C5C69F9E4C351E0A52D7E3DF4C4FD89BD41FC4F796FF172B2049DC5",
+        "project_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST1_900_DISPOSABLE",
+        "results_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST1_900_DISPOSABLE\\Vista\\SIA4010_test_1_900_20260825_134529.aps",
+        "results_sha256": "DD579E22FD69AD3C392A6AFA13A0F832019D05E3E83DB94C92E9EA06153E7B7C",
+        "results_size_bytes": 8612890,
+        "scenario_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST1_900_DISPOSABLE\\sia_model_scenario.json",
+        "scenario_sha256": "EB89CC26BB71250E92B4D1E7D44C5D5B63E6DDFF35CADB8B4450701F432B89CF",
+        "status": "SIMULATION_EXECUTED_AWAITING_APS_QUALIFICATION"
+      },
+      "variant": "test_1"
+    },
+    "test_1/900FF": {
+      "base_test_id": "1",
+      "capability": {
+        "apachesim_qualification_supported": true,
+        "aps_evaluation_scope": "REFERENCE_OUTPUTS_IMPLEMENTED",
+        "aps_evaluation_supported": true,
+        "aps_full_evaluation_supported": true,
+        "base_test_id": "1",
+        "blocker_code": "VE_RUNTIME_QUALIFICATION_REQUIRED",
+        "blocker_detail": "A source-traced high-mass Test 1 bundle and guarded VE qualification path are implemented. Run it only in a fresh saved disposable project; the generator remains unverified until every VE setter/read-back and post-mutation check passes.",
+        "case_id": "900FF",
+        "generation_status": "RUNTIME_QUALIFICATION_READY",
+        "generator_id": "test1_heavyweight_runtime_probe_v1",
+        "geometry_artifact_supported": true,
+        "mutation_supported": false,
+        "preparation_status": "PREPARATION_READY",
+        "qualified_template_simulation_supported": false,
+        "required_source_roles": [
+          "test_specification",
+          "evaluation_workbook"
+        ],
+        "runtime_discovery_supported": false,
+        "runtime_qualification_supported": true,
+        "source_bound_bundle_supported": false,
+        "variant": "test_1"
+      },
+      "case_id": "900FF",
+      "geometry_artifact": {
+        "path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\geometry\\SIA4010_test_1_900FF.gbxml",
+        "sha256": "7dedf905438eaaac5d1104ea9de0286eef8783bf6527410cf169ea2eea012f05",
+        "status": "VERIFIED"
+      },
+      "model_evidence": {
+        "artifact_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST1_900FF_DISPOSABLE\\reference_model_artifacts\\reports\\reference_model_report.json",
+        "artifact_sha256": "6b684750ab498c49bfcc6e3472fa73ef739d364935ea70e196d0f5e1ff1048ca",
+        "project_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST1_900FF_DISPOSABLE",
+        "qualification_artifact_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST1_900FF_DISPOSABLE\\sia4010_artifacts\\diagnostics\\sia4010_test1_runtime_input_qualification_20260825_145337.json",
+        "qualification_artifact_sha256": "7a51c7c2cecd3413c337b1d1b599286bc46efdeb0064d9e560e351b5daa925eb",
+        "status": "VERIFIED",
+        "verification_basis": "TEST1_RUNTIME_QUALIFICATION_AND_APACHESIM_PREFLIGHT",
+        "workflow_status": "WARNING"
+      },
+      "preparation_artifacts": [
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_1A_900FF_preparation.json",
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_1B_900FF_preparation.json",
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_2A_900FF_preparation.json",
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_2B_900FF_preparation.json",
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_3_900FF_preparation.json",
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_4A_900FF_preparation.json",
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_4B_900FF_preparation.json"
+      ],
+      "result_evidence": {
+        "acceptance_criterion_available": false,
+        "aps_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST1_900FF_DISPOSABLE\\Vista\\SIA4010_test_1_900FF_20260825_135339.aps",
+        "aps_sha256": "0e7a97491de294cb9a09f5f3e5bec69d77504a5328139e9c02778c8535e65bc7",
+        "artifact_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST1_900FF_DISPOSABLE\\sia4010_artifacts\\results\\SIA4010_test_1_900FF_evaluation.json",
+        "artifact_sha256": "a99bf617f1a3c8756d21ea28d6cedccff36be345b13e181a45de3a8b2a02eb04",
+        "distribution_criterion_count": 0,
+        "observed_metric_count": 39,
+        "project_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST1_900FF_DISPOSABLE",
+        "required_output_scope_complete": true,
+        "simulation_link_status": "VERIFIED",
+        "status": "REFERENCE_RESULTS_RECORDED_NO_ACCEPTANCE_CRITERION"
+      },
+      "simulation_evidence": {
+        "aps_evaluation_required": true,
+        "artifact_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST1_900FF_DISPOSABLE\\sia4010_artifacts\\simulation\\SIA4010_test_1_900FF_apachesim_qualification.json",
+        "artifact_sha256": "f3dfcb59e3eb288946dfcee4cd3591dcba3c4f9fe16fc285d38481e248f186fb",
+        "compliance_claim_allowed": false,
+        "model_evidence_link_status": "VERIFIED",
+        "model_report_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST1_900FF_DISPOSABLE\\reference_model_artifacts\\reports\\reference_model_report.json",
+        "model_report_sha256": "6B684750AB498C49BFCC6E3472FA73EF739D364935EA70E196D0F5E1FF1048CA",
+        "project_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST1_900FF_DISPOSABLE",
+        "results_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST1_900FF_DISPOSABLE\\Vista\\SIA4010_test_1_900FF_20260825_135339.aps",
+        "results_sha256": "0E7A97491DE294CB9A09F5F3E5BEC69D77504A5328139E9C02778C8535E65BC7",
+        "results_size_bytes": 8612890,
+        "scenario_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST1_900FF_DISPOSABLE\\sia_model_scenario.json",
+        "scenario_sha256": "7C83D78B0CBE497967835156A479DEBBAE28AFCB8490CEEE754AC54256270270",
+        "status": "SIMULATION_EXECUTED_AWAITING_APS_QUALIFICATION"
+      },
+      "variant": "test_1"
+    },
+    "test_1/940": {
+      "base_test_id": "1",
+      "capability": {
+        "apachesim_qualification_supported": true,
+        "aps_evaluation_scope": "REFERENCE_OUTPUTS_IMPLEMENTED",
+        "aps_evaluation_supported": true,
+        "aps_full_evaluation_supported": true,
+        "base_test_id": "1",
+        "blocker_code": "VE_RUNTIME_QUALIFICATION_REQUIRED",
+        "blocker_detail": "A source-traced high-mass Test 1 bundle and guarded VE qualification path are implemented. Run it only in a fresh saved disposable project; the generator remains unverified until every VE setter/read-back and post-mutation check passes.",
+        "case_id": "940",
+        "generation_status": "RUNTIME_QUALIFICATION_READY",
+        "generator_id": "test1_heavyweight_runtime_probe_v1",
+        "geometry_artifact_supported": true,
+        "mutation_supported": false,
+        "preparation_status": "PREPARATION_READY",
+        "qualified_template_simulation_supported": false,
+        "required_source_roles": [
+          "test_specification",
+          "evaluation_workbook"
+        ],
+        "runtime_discovery_supported": false,
+        "runtime_qualification_supported": true,
+        "source_bound_bundle_supported": false,
+        "variant": "test_1"
+      },
+      "case_id": "940",
+      "geometry_artifact": {
+        "path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\geometry\\SIA4010_test_1_940.gbxml",
+        "sha256": "e23faace23344a103bc5f7e97be3190e7184270015e02943c140d2bf2a8e7719",
+        "status": "VERIFIED"
+      },
+      "model_evidence": {
+        "artifact_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST1_940_DISPOSABLE\\reference_model_artifacts\\reports\\reference_model_report.json",
+        "artifact_sha256": "23ef52c5250156cd99405da69ba1d0b1216dbb12e04dbae46ba6a0772a728a97",
+        "project_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST1_940_DISPOSABLE",
+        "qualification_artifact_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST1_940_DISPOSABLE\\sia4010_artifacts\\diagnostics\\sia4010_test1_runtime_input_qualification_20260825_145016.json",
+        "qualification_artifact_sha256": "60403e0ff410a01d647ef4b18f5fb0606c0c30a69b1c44eba46b9def035e59af",
+        "status": "VERIFIED",
+        "verification_basis": "TEST1_RUNTIME_QUALIFICATION_AND_APACHESIM_PREFLIGHT",
+        "workflow_status": "WARNING"
+      },
+      "preparation_artifacts": [
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_1A_940_preparation.json",
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_1B_940_preparation.json",
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_2A_940_preparation.json",
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_2B_940_preparation.json",
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_3_940_preparation.json",
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_4A_940_preparation.json",
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_4B_940_preparation.json"
+      ],
+      "result_evidence": {
+        "acceptance_criterion_available": false,
+        "aps_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST1_940_DISPOSABLE\\Vista\\SIA4010_test_1_940_20260825_135116.aps",
+        "aps_sha256": "ba2a6fc38a3395d7c7a7fc8e5d94b30c208036edc95705c0cc25b2f9170ba512",
+        "artifact_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST1_940_DISPOSABLE\\sia4010_artifacts\\results\\SIA4010_test_1_940_evaluation.json",
+        "artifact_sha256": "6bc2ace50519881fed232578d0fd99750acc966193bbbddb8ecaf14f9fda0557",
+        "distribution_criterion_count": 0,
+        "observed_metric_count": 88,
+        "project_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST1_940_DISPOSABLE",
+        "required_output_scope_complete": true,
+        "simulation_link_status": "VERIFIED",
+        "status": "REFERENCE_RESULTS_RECORDED_NO_ACCEPTANCE_CRITERION"
+      },
+      "simulation_evidence": {
+        "aps_evaluation_required": true,
+        "artifact_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST1_940_DISPOSABLE\\sia4010_artifacts\\simulation\\SIA4010_test_1_940_apachesim_qualification.json",
+        "artifact_sha256": "63d7fb7a13cfbfb9051031c3c8df9a9cb64e352f9f2973f8b2ac7ff264bdd214",
+        "compliance_claim_allowed": false,
+        "model_evidence_link_status": "VERIFIED",
+        "model_report_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST1_940_DISPOSABLE\\reference_model_artifacts\\reports\\reference_model_report.json",
+        "model_report_sha256": "23EF52C5250156CD99405DA69BA1D0B1216DBB12E04DBAE46BA6A0772A728A97",
+        "project_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST1_940_DISPOSABLE",
+        "results_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST1_940_DISPOSABLE\\Vista\\SIA4010_test_1_940_20260825_135116.aps",
+        "results_sha256": "BA2A6FC38A3395D7C7A7FC8E5D94B30C208036EDC95705C0CC25B2F9170BA512",
+        "results_size_bytes": 8612890,
+        "scenario_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST1_940_DISPOSABLE\\sia_model_scenario.json",
+        "scenario_sha256": "75D2F7566FF235745E63BB0FB9FD14E0612CE2268C008C25874203A7190D8554",
+        "status": "SIMULATION_EXECUTED_AWAITING_APS_QUALIFICATION"
+      },
+      "variant": "test_1"
+    },
+    "test_2A/2A": {
+      "base_test_id": "2",
+      "capability": {
+        "apachesim_qualification_supported": false,
+        "aps_evaluation_scope": "OFFICIAL_CRITERIA_IMPLEMENTED",
+        "aps_evaluation_supported": true,
+        "aps_full_evaluation_supported": true,
+        "base_test_id": "2",
+        "blocker_code": "VE_SOLAR_CONTROL_BINDING_NOT_IMPLEMENTED",
+        "blocker_detail": "The official solar-protection inputs and dynamic SIA 387/4 control logic are parsed for validation but are not yet bound to a tested VE mutation strategy.",
+        "case_id": "2A",
+        "generation_status": "NOT_IMPLEMENTED",
+        "generator_id": "source_traced_preparation_v1",
+        "geometry_artifact_supported": true,
+        "mutation_supported": false,
+        "preparation_status": "PREPARATION_READY",
+        "qualified_template_simulation_supported": true,
+        "required_source_roles": [
+          "test_specification",
+          "evaluation_workbook"
+        ],
+        "runtime_discovery_supported": true,
+        "runtime_qualification_supported": false,
+        "source_bound_bundle_supported": true,
+        "variant": "test_2A"
+      },
+      "case_id": "2A",
+      "geometry_artifact": {
+        "path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\geometry\\SIA4010_test_2A_2A.gbxml",
+        "sha256": "d17effcf7facdfdd760a1fc1c460758331e6ca73f5703d01b39368cc1cc04849",
+        "status": "VERIFIED"
+      },
+      "model_evidence": {
+        "artifact_path": "",
+        "artifact_sha256": "",
+        "project_path": "",
+        "status": "MISSING"
+      },
+      "preparation_artifacts": [
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_1A_2A_preparation.json",
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_2A_2A_preparation.json",
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_4A_2A_preparation.json"
+      ],
+      "result_evidence": {
+        "aps_path": "",
+        "aps_sha256": "",
+        "artifact_path": "",
+        "artifact_sha256": "",
+        "project_path": "",
+        "simulation_link_status": "NOT_LINKED",
+        "status": "NOT_CHECKABLE"
+      },
+      "simulation_evidence": {
+        "aps_evaluation_required": true,
+        "artifact_path": "",
+        "artifact_sha256": "",
+        "compliance_claim_allowed": false,
+        "model_evidence_link_status": "NOT_LINKED",
+        "model_report_path": "",
+        "model_report_sha256": "",
+        "project_path": "",
+        "results_path": "",
+        "results_sha256": "",
+        "results_size_bytes": 0,
+        "scenario_path": "",
+        "scenario_sha256": "",
+        "status": "NOT_RUN"
+      },
+      "variant": "test_2A"
+    },
+    "test_2B/2B": {
+      "base_test_id": "2",
+      "capability": {
+        "apachesim_qualification_supported": false,
+        "aps_evaluation_scope": "OFFICIAL_CRITERIA_IMPLEMENTED",
+        "aps_evaluation_supported": true,
+        "aps_full_evaluation_supported": true,
+        "base_test_id": "2",
+        "blocker_code": "VE_SOLAR_CONTROL_BINDING_NOT_IMPLEMENTED",
+        "blocker_detail": "The official solar-protection inputs and dynamic SIA 387/4 control logic are parsed for validation but are not yet bound to a tested VE mutation strategy.",
+        "case_id": "2B",
+        "generation_status": "NOT_IMPLEMENTED",
+        "generator_id": "source_traced_preparation_v1",
+        "geometry_artifact_supported": true,
+        "mutation_supported": false,
+        "preparation_status": "PREPARATION_READY",
+        "qualified_template_simulation_supported": true,
+        "required_source_roles": [
+          "test_specification",
+          "evaluation_workbook"
+        ],
+        "runtime_discovery_supported": false,
+        "runtime_qualification_supported": false,
+        "source_bound_bundle_supported": false,
+        "variant": "test_2B"
+      },
+      "case_id": "2B",
+      "geometry_artifact": {
+        "path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\geometry\\SIA4010_test_2B_2B.gbxml",
+        "sha256": "764688d58f6099518c707fd990d143cc7be79fee397eeb301aedfcb283c29dc6",
+        "status": "VERIFIED"
+      },
+      "model_evidence": {
+        "artifact_path": "",
+        "artifact_sha256": "",
+        "project_path": "",
+        "status": "MISSING"
+      },
+      "preparation_artifacts": [
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_1B_2B_preparation.json",
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_2B_2B_preparation.json",
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_4B_2B_preparation.json"
+      ],
+      "result_evidence": {
+        "aps_path": "",
+        "aps_sha256": "",
+        "artifact_path": "",
+        "artifact_sha256": "",
+        "project_path": "",
+        "simulation_link_status": "NOT_LINKED",
+        "status": "NOT_CHECKABLE"
+      },
+      "simulation_evidence": {
+        "aps_evaluation_required": true,
+        "artifact_path": "",
+        "artifact_sha256": "",
+        "compliance_claim_allowed": false,
+        "model_evidence_link_status": "NOT_LINKED",
+        "model_report_path": "",
+        "model_report_sha256": "",
+        "project_path": "",
+        "results_path": "",
+        "results_sha256": "",
+        "results_size_bytes": 0,
+        "scenario_path": "",
+        "scenario_sha256": "",
+        "status": "NOT_RUN"
+      },
+      "variant": "test_2B"
+    },
+    "test_2C/2C": {
+      "base_test_id": "2",
+      "capability": {
+        "apachesim_qualification_supported": false,
+        "aps_evaluation_scope": "OFFICIAL_CRITERIA_IMPLEMENTED",
+        "aps_evaluation_supported": true,
+        "aps_full_evaluation_supported": true,
+        "base_test_id": "2",
+        "blocker_code": "VE_SOLAR_CONTROL_BINDING_NOT_IMPLEMENTED",
+        "blocker_detail": "The official solar-protection inputs and dynamic SIA 387/4 control logic are parsed for validation but are not yet bound to a tested VE mutation strategy.",
+        "case_id": "2C",
+        "generation_status": "NOT_IMPLEMENTED",
+        "generator_id": "source_traced_preparation_v1",
+        "geometry_artifact_supported": true,
+        "mutation_supported": false,
+        "preparation_status": "PREPARATION_READY",
+        "qualified_template_simulation_supported": true,
+        "required_source_roles": [
+          "test_specification",
+          "evaluation_workbook"
+        ],
+        "runtime_discovery_supported": false,
+        "runtime_qualification_supported": false,
+        "source_bound_bundle_supported": false,
+        "variant": "test_2C"
+      },
+      "case_id": "2C",
+      "geometry_artifact": {
+        "path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\geometry\\SIA4010_test_2C_2C.gbxml",
+        "sha256": "8ce31bd2e46d086762761f22733099a2d36cdd8e504aa70381c27f8d44c518c5",
+        "status": "VERIFIED"
+      },
+      "model_evidence": {
+        "artifact_path": "",
+        "artifact_sha256": "",
+        "project_path": "",
+        "status": "MISSING"
+      },
+      "preparation_artifacts": [
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_1B_2C_preparation.json",
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_2B_2C_preparation.json",
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_4B_2C_preparation.json"
+      ],
+      "result_evidence": {
+        "aps_path": "",
+        "aps_sha256": "",
+        "artifact_path": "",
+        "artifact_sha256": "",
+        "project_path": "",
+        "simulation_link_status": "NOT_LINKED",
+        "status": "NOT_CHECKABLE"
+      },
+      "simulation_evidence": {
+        "aps_evaluation_required": true,
+        "artifact_path": "",
+        "artifact_sha256": "",
+        "compliance_claim_allowed": false,
+        "model_evidence_link_status": "NOT_LINKED",
+        "model_report_path": "",
+        "model_report_sha256": "",
+        "project_path": "",
+        "results_path": "",
+        "results_sha256": "",
+        "results_size_bytes": 0,
+        "scenario_path": "",
+        "scenario_sha256": "",
+        "status": "NOT_RUN"
+      },
+      "variant": "test_2C"
+    },
+    "test_2D/2D": {
+      "base_test_id": "2",
+      "capability": {
+        "apachesim_qualification_supported": false,
+        "aps_evaluation_scope": "OFFICIAL_CRITERIA_IMPLEMENTED",
+        "aps_evaluation_supported": true,
+        "aps_full_evaluation_supported": true,
+        "base_test_id": "2",
+        "blocker_code": "VE_SOLAR_CONTROL_BINDING_NOT_IMPLEMENTED",
+        "blocker_detail": "The official solar-protection inputs and dynamic SIA 387/4 control logic are parsed for validation but are not yet bound to a tested VE mutation strategy.",
+        "case_id": "2D",
+        "generation_status": "NOT_IMPLEMENTED",
+        "generator_id": "source_traced_preparation_v1",
+        "geometry_artifact_supported": true,
+        "mutation_supported": false,
+        "preparation_status": "PREPARATION_READY",
+        "qualified_template_simulation_supported": true,
+        "required_source_roles": [
+          "test_specification",
+          "evaluation_workbook"
+        ],
+        "runtime_discovery_supported": false,
+        "runtime_qualification_supported": false,
+        "source_bound_bundle_supported": false,
+        "variant": "test_2D"
+      },
+      "case_id": "2D",
+      "geometry_artifact": {
+        "path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\geometry\\SIA4010_test_2D_2D.gbxml",
+        "sha256": "d1a20d3199a750958fe5f3f71adae388b670fef7edf3e5206cb74fa71c4eb32f",
+        "status": "VERIFIED"
+      },
+      "model_evidence": {
+        "artifact_path": "",
+        "artifact_sha256": "",
+        "project_path": "",
+        "status": "MISSING"
+      },
+      "preparation_artifacts": [
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_1B_2D_preparation.json",
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_2B_2D_preparation.json",
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_4B_2D_preparation.json"
+      ],
+      "result_evidence": {
+        "aps_path": "",
+        "aps_sha256": "",
+        "artifact_path": "",
+        "artifact_sha256": "",
+        "project_path": "",
+        "simulation_link_status": "NOT_LINKED",
+        "status": "NOT_CHECKABLE"
+      },
+      "simulation_evidence": {
+        "aps_evaluation_required": true,
+        "artifact_path": "",
+        "artifact_sha256": "",
+        "compliance_claim_allowed": false,
+        "model_evidence_link_status": "NOT_LINKED",
+        "model_report_path": "",
+        "model_report_sha256": "",
+        "project_path": "",
+        "results_path": "",
+        "results_sha256": "",
+        "results_size_bytes": 0,
+        "scenario_path": "",
+        "scenario_sha256": "",
+        "status": "NOT_RUN"
+      },
+      "variant": "test_2D"
+    },
+    "test_3A/3A": {
+      "base_test_id": "3",
+      "capability": {
+        "apachesim_qualification_supported": false,
+        "aps_evaluation_scope": "UNAVAILABLE",
+        "aps_evaluation_supported": false,
+        "aps_full_evaluation_supported": false,
+        "base_test_id": "3",
+        "blocker_code": "VE_LIGHTING_CONTROL_BINDING_NOT_IMPLEMENTED",
+        "blocker_detail": "The read-only VE lighting/template/sensor discovery probe is implemented for all twelve variants. When every delegated source is READY_FOR_BINDING, a checksum-traced Test 3 generator contract is also produced. Its controls are not yet bound to a tested VE mutation strategy.",
+        "case_id": "3A",
+        "generation_status": "NOT_IMPLEMENTED",
+        "generator_id": "source_traced_preparation_v1",
+        "geometry_artifact_supported": true,
+        "mutation_supported": false,
+        "preparation_status": "PREPARATION_READY",
+        "qualified_template_simulation_supported": false,
+        "required_source_roles": [
+          "test_specification",
+          "evaluation_workbook"
+        ],
+        "runtime_discovery_supported": true,
+        "runtime_qualification_supported": false,
+        "source_bound_bundle_supported": true,
+        "variant": "test_3A"
+      },
+      "case_id": "3A",
+      "geometry_artifact": {
+        "path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\geometry\\SIA4010_test_3A_3A.gbxml",
+        "sha256": "161eec3d896e0fa80a83b28c44189316cbc8cfd33395fd449e2b49b12f9b6b40",
+        "status": "VERIFIED"
+      },
+      "model_evidence": {
+        "artifact_path": "",
+        "artifact_sha256": "",
+        "project_path": "",
+        "status": "MISSING"
+      },
+      "preparation_artifacts": [
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_2A_3A_preparation.json",
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_2B_3A_preparation.json",
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_4A_3A_preparation.json",
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_4B_3A_preparation.json"
+      ],
+      "result_evidence": {
+        "aps_path": "",
+        "aps_sha256": "",
+        "artifact_path": "",
+        "artifact_sha256": "",
+        "project_path": "",
+        "simulation_link_status": "NOT_LINKED",
+        "status": "NOT_CHECKABLE"
+      },
+      "simulation_evidence": {
+        "aps_evaluation_required": true,
+        "artifact_path": "",
+        "artifact_sha256": "",
+        "compliance_claim_allowed": false,
+        "model_evidence_link_status": "NOT_LINKED",
+        "model_report_path": "",
+        "model_report_sha256": "",
+        "project_path": "",
+        "results_path": "",
+        "results_sha256": "",
+        "results_size_bytes": 0,
+        "scenario_path": "",
+        "scenario_sha256": "",
+        "status": "NOT_RUN"
+      },
+      "variant": "test_3A"
+    },
+    "test_3B/3B": {
+      "base_test_id": "3",
+      "capability": {
+        "apachesim_qualification_supported": false,
+        "aps_evaluation_scope": "UNAVAILABLE",
+        "aps_evaluation_supported": false,
+        "aps_full_evaluation_supported": false,
+        "base_test_id": "3",
+        "blocker_code": "VE_LIGHTING_CONTROL_BINDING_NOT_IMPLEMENTED",
+        "blocker_detail": "The read-only VE lighting/template/sensor discovery probe is implemented for all twelve variants. When every delegated source is READY_FOR_BINDING, a checksum-traced Test 3 generator contract is also produced. Its controls are not yet bound to a tested VE mutation strategy.",
+        "case_id": "3B",
+        "generation_status": "NOT_IMPLEMENTED",
+        "generator_id": "source_traced_preparation_v1",
+        "geometry_artifact_supported": true,
+        "mutation_supported": false,
+        "preparation_status": "PREPARATION_READY",
+        "qualified_template_simulation_supported": false,
+        "required_source_roles": [
+          "test_specification",
+          "evaluation_workbook"
+        ],
+        "runtime_discovery_supported": true,
+        "runtime_qualification_supported": false,
+        "source_bound_bundle_supported": true,
+        "variant": "test_3B"
+      },
+      "case_id": "3B",
+      "geometry_artifact": {
+        "path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\geometry\\SIA4010_test_3B_3B.gbxml",
+        "sha256": "754e71cd8b2f654182087c882cf4e092a76e3f51614e2e97b16958c108cf7f21",
+        "status": "VERIFIED"
+      },
+      "model_evidence": {
+        "artifact_path": "",
+        "artifact_sha256": "",
+        "project_path": "",
+        "status": "MISSING"
+      },
+      "preparation_artifacts": [
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_2A_3B_preparation.json",
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_2B_3B_preparation.json",
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_4A_3B_preparation.json",
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_4B_3B_preparation.json"
+      ],
+      "result_evidence": {
+        "aps_path": "",
+        "aps_sha256": "",
+        "artifact_path": "",
+        "artifact_sha256": "",
+        "project_path": "",
+        "simulation_link_status": "NOT_LINKED",
+        "status": "NOT_CHECKABLE"
+      },
+      "simulation_evidence": {
+        "aps_evaluation_required": true,
+        "artifact_path": "",
+        "artifact_sha256": "",
+        "compliance_claim_allowed": false,
+        "model_evidence_link_status": "NOT_LINKED",
+        "model_report_path": "",
+        "model_report_sha256": "",
+        "project_path": "",
+        "results_path": "",
+        "results_sha256": "",
+        "results_size_bytes": 0,
+        "scenario_path": "",
+        "scenario_sha256": "",
+        "status": "NOT_RUN"
+      },
+      "variant": "test_3B"
+    },
+    "test_3C/3C": {
+      "base_test_id": "3",
+      "capability": {
+        "apachesim_qualification_supported": false,
+        "aps_evaluation_scope": "UNAVAILABLE",
+        "aps_evaluation_supported": false,
+        "aps_full_evaluation_supported": false,
+        "base_test_id": "3",
+        "blocker_code": "VE_LIGHTING_CONTROL_BINDING_NOT_IMPLEMENTED",
+        "blocker_detail": "The read-only VE lighting/template/sensor discovery probe is implemented for all twelve variants. When every delegated source is READY_FOR_BINDING, a checksum-traced Test 3 generator contract is also produced. Its controls are not yet bound to a tested VE mutation strategy.",
+        "case_id": "3C",
+        "generation_status": "NOT_IMPLEMENTED",
+        "generator_id": "source_traced_preparation_v1",
+        "geometry_artifact_supported": true,
+        "mutation_supported": false,
+        "preparation_status": "PREPARATION_READY",
+        "qualified_template_simulation_supported": false,
+        "required_source_roles": [
+          "test_specification",
+          "evaluation_workbook"
+        ],
+        "runtime_discovery_supported": true,
+        "runtime_qualification_supported": false,
+        "source_bound_bundle_supported": true,
+        "variant": "test_3C"
+      },
+      "case_id": "3C",
+      "geometry_artifact": {
+        "path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\geometry\\SIA4010_test_3C_3C.gbxml",
+        "sha256": "eba9015f4a60ec59eaa22d164810ca0d4434f0e00b58e315e891f53915f02dbe",
+        "status": "VERIFIED"
+      },
+      "model_evidence": {
+        "artifact_path": "",
+        "artifact_sha256": "",
+        "project_path": "",
+        "status": "MISSING"
+      },
+      "preparation_artifacts": [
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_2A_3C_preparation.json",
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_2B_3C_preparation.json",
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_4A_3C_preparation.json",
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_4B_3C_preparation.json"
+      ],
+      "result_evidence": {
+        "aps_path": "",
+        "aps_sha256": "",
+        "artifact_path": "",
+        "artifact_sha256": "",
+        "project_path": "",
+        "simulation_link_status": "NOT_LINKED",
+        "status": "NOT_CHECKABLE"
+      },
+      "simulation_evidence": {
+        "aps_evaluation_required": true,
+        "artifact_path": "",
+        "artifact_sha256": "",
+        "compliance_claim_allowed": false,
+        "model_evidence_link_status": "NOT_LINKED",
+        "model_report_path": "",
+        "model_report_sha256": "",
+        "project_path": "",
+        "results_path": "",
+        "results_sha256": "",
+        "results_size_bytes": 0,
+        "scenario_path": "",
+        "scenario_sha256": "",
+        "status": "NOT_RUN"
+      },
+      "variant": "test_3C"
+    },
+    "test_3D/3D": {
+      "base_test_id": "3",
+      "capability": {
+        "apachesim_qualification_supported": false,
+        "aps_evaluation_scope": "UNAVAILABLE",
+        "aps_evaluation_supported": false,
+        "aps_full_evaluation_supported": false,
+        "base_test_id": "3",
+        "blocker_code": "VE_LIGHTING_CONTROL_BINDING_NOT_IMPLEMENTED",
+        "blocker_detail": "The read-only VE lighting/template/sensor discovery probe is implemented for all twelve variants. When every delegated source is READY_FOR_BINDING, a checksum-traced Test 3 generator contract is also produced. Its controls are not yet bound to a tested VE mutation strategy.",
+        "case_id": "3D",
+        "generation_status": "NOT_IMPLEMENTED",
+        "generator_id": "source_traced_preparation_v1",
+        "geometry_artifact_supported": true,
+        "mutation_supported": false,
+        "preparation_status": "PREPARATION_READY",
+        "qualified_template_simulation_supported": false,
+        "required_source_roles": [
+          "test_specification",
+          "evaluation_workbook"
+        ],
+        "runtime_discovery_supported": true,
+        "runtime_qualification_supported": false,
+        "source_bound_bundle_supported": true,
+        "variant": "test_3D"
+      },
+      "case_id": "3D",
+      "geometry_artifact": {
+        "path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\geometry\\SIA4010_test_3D_3D.gbxml",
+        "sha256": "6f6849682d152a16d79b7f99e7443d3ca529186b40f4a6aaeb610df302a010d3",
+        "status": "VERIFIED"
+      },
+      "model_evidence": {
+        "artifact_path": "",
+        "artifact_sha256": "",
+        "project_path": "",
+        "status": "MISSING"
+      },
+      "preparation_artifacts": [
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_2A_3D_preparation.json",
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_2B_3D_preparation.json",
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_4A_3D_preparation.json",
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_4B_3D_preparation.json"
+      ],
+      "result_evidence": {
+        "aps_path": "",
+        "aps_sha256": "",
+        "artifact_path": "",
+        "artifact_sha256": "",
+        "project_path": "",
+        "simulation_link_status": "NOT_LINKED",
+        "status": "NOT_CHECKABLE"
+      },
+      "simulation_evidence": {
+        "aps_evaluation_required": true,
+        "artifact_path": "",
+        "artifact_sha256": "",
+        "compliance_claim_allowed": false,
+        "model_evidence_link_status": "NOT_LINKED",
+        "model_report_path": "",
+        "model_report_sha256": "",
+        "project_path": "",
+        "results_path": "",
+        "results_sha256": "",
+        "results_size_bytes": 0,
+        "scenario_path": "",
+        "scenario_sha256": "",
+        "status": "NOT_RUN"
+      },
+      "variant": "test_3D"
+    },
+    "test_3E/3E": {
+      "base_test_id": "3",
+      "capability": {
+        "apachesim_qualification_supported": false,
+        "aps_evaluation_scope": "UNAVAILABLE",
+        "aps_evaluation_supported": false,
+        "aps_full_evaluation_supported": false,
+        "base_test_id": "3",
+        "blocker_code": "VE_LIGHTING_CONTROL_BINDING_NOT_IMPLEMENTED",
+        "blocker_detail": "The read-only VE lighting/template/sensor discovery probe is implemented for all twelve variants. When every delegated source is READY_FOR_BINDING, a checksum-traced Test 3 generator contract is also produced. Its controls are not yet bound to a tested VE mutation strategy.",
+        "case_id": "3E",
+        "generation_status": "NOT_IMPLEMENTED",
+        "generator_id": "source_traced_preparation_v1",
+        "geometry_artifact_supported": true,
+        "mutation_supported": false,
+        "preparation_status": "PREPARATION_READY",
+        "qualified_template_simulation_supported": false,
+        "required_source_roles": [
+          "test_specification",
+          "evaluation_workbook"
+        ],
+        "runtime_discovery_supported": true,
+        "runtime_qualification_supported": false,
+        "source_bound_bundle_supported": true,
+        "variant": "test_3E"
+      },
+      "case_id": "3E",
+      "geometry_artifact": {
+        "path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\geometry\\SIA4010_test_3E_3E.gbxml",
+        "sha256": "42aa6ee379e8a9783839dc420eeb6998f3c9ac8ad030a9d232bcb786f71104c2",
+        "status": "VERIFIED"
+      },
+      "model_evidence": {
+        "artifact_path": "",
+        "artifact_sha256": "",
+        "project_path": "",
+        "status": "MISSING"
+      },
+      "preparation_artifacts": [
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_2A_3E_preparation.json",
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_2B_3E_preparation.json",
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_4A_3E_preparation.json",
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_4B_3E_preparation.json"
+      ],
+      "result_evidence": {
+        "aps_path": "",
+        "aps_sha256": "",
+        "artifact_path": "",
+        "artifact_sha256": "",
+        "project_path": "",
+        "simulation_link_status": "NOT_LINKED",
+        "status": "NOT_CHECKABLE"
+      },
+      "simulation_evidence": {
+        "aps_evaluation_required": true,
+        "artifact_path": "",
+        "artifact_sha256": "",
+        "compliance_claim_allowed": false,
+        "model_evidence_link_status": "NOT_LINKED",
+        "model_report_path": "",
+        "model_report_sha256": "",
+        "project_path": "",
+        "results_path": "",
+        "results_sha256": "",
+        "results_size_bytes": 0,
+        "scenario_path": "",
+        "scenario_sha256": "",
+        "status": "NOT_RUN"
+      },
+      "variant": "test_3E"
+    },
+    "test_3F/3F": {
+      "base_test_id": "3",
+      "capability": {
+        "apachesim_qualification_supported": false,
+        "aps_evaluation_scope": "UNAVAILABLE",
+        "aps_evaluation_supported": false,
+        "aps_full_evaluation_supported": false,
+        "base_test_id": "3",
+        "blocker_code": "VE_LIGHTING_CONTROL_BINDING_NOT_IMPLEMENTED",
+        "blocker_detail": "The read-only VE lighting/template/sensor discovery probe is implemented for all twelve variants. When every delegated source is READY_FOR_BINDING, a checksum-traced Test 3 generator contract is also produced. Its controls are not yet bound to a tested VE mutation strategy.",
+        "case_id": "3F",
+        "generation_status": "NOT_IMPLEMENTED",
+        "generator_id": "source_traced_preparation_v1",
+        "geometry_artifact_supported": true,
+        "mutation_supported": false,
+        "preparation_status": "PREPARATION_READY",
+        "qualified_template_simulation_supported": false,
+        "required_source_roles": [
+          "test_specification",
+          "evaluation_workbook"
+        ],
+        "runtime_discovery_supported": true,
+        "runtime_qualification_supported": false,
+        "source_bound_bundle_supported": true,
+        "variant": "test_3F"
+      },
+      "case_id": "3F",
+      "geometry_artifact": {
+        "path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\geometry\\SIA4010_test_3F_3F.gbxml",
+        "sha256": "c0c09cc8dcfed7d460722efa958554753831ace430b8a6f3093a3fbf322e47bf",
+        "status": "VERIFIED"
+      },
+      "model_evidence": {
+        "artifact_path": "",
+        "artifact_sha256": "",
+        "project_path": "",
+        "status": "MISSING"
+      },
+      "preparation_artifacts": [
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_2A_3F_preparation.json",
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_2B_3F_preparation.json",
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_4A_3F_preparation.json",
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_4B_3F_preparation.json"
+      ],
+      "result_evidence": {
+        "aps_path": "",
+        "aps_sha256": "",
+        "artifact_path": "",
+        "artifact_sha256": "",
+        "project_path": "",
+        "simulation_link_status": "NOT_LINKED",
+        "status": "NOT_CHECKABLE"
+      },
+      "simulation_evidence": {
+        "aps_evaluation_required": true,
+        "artifact_path": "",
+        "artifact_sha256": "",
+        "compliance_claim_allowed": false,
+        "model_evidence_link_status": "NOT_LINKED",
+        "model_report_path": "",
+        "model_report_sha256": "",
+        "project_path": "",
+        "results_path": "",
+        "results_sha256": "",
+        "results_size_bytes": 0,
+        "scenario_path": "",
+        "scenario_sha256": "",
+        "status": "NOT_RUN"
+      },
+      "variant": "test_3F"
+    },
+    "test_3G/3G": {
+      "base_test_id": "3",
+      "capability": {
+        "apachesim_qualification_supported": false,
+        "aps_evaluation_scope": "UNAVAILABLE",
+        "aps_evaluation_supported": false,
+        "aps_full_evaluation_supported": false,
+        "base_test_id": "3",
+        "blocker_code": "VE_LIGHTING_CONTROL_BINDING_NOT_IMPLEMENTED",
+        "blocker_detail": "The read-only VE lighting/template/sensor discovery probe is implemented for all twelve variants. When every delegated source is READY_FOR_BINDING, a checksum-traced Test 3 generator contract is also produced. Its controls are not yet bound to a tested VE mutation strategy.",
+        "case_id": "3G",
+        "generation_status": "NOT_IMPLEMENTED",
+        "generator_id": "source_traced_preparation_v1",
+        "geometry_artifact_supported": true,
+        "mutation_supported": false,
+        "preparation_status": "PREPARATION_READY",
+        "qualified_template_simulation_supported": false,
+        "required_source_roles": [
+          "test_specification",
+          "evaluation_workbook"
+        ],
+        "runtime_discovery_supported": true,
+        "runtime_qualification_supported": false,
+        "source_bound_bundle_supported": true,
+        "variant": "test_3G"
+      },
+      "case_id": "3G",
+      "geometry_artifact": {
+        "path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\geometry\\SIA4010_test_3G_3G.gbxml",
+        "sha256": "2b11bfda6d08bfcd3f07d604bd53fe6629d884caef54d47a17be33a6f71eca75",
+        "status": "VERIFIED"
+      },
+      "model_evidence": {
+        "artifact_path": "",
+        "artifact_sha256": "",
+        "project_path": "",
+        "status": "MISSING"
+      },
+      "preparation_artifacts": [
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_2B_3G_preparation.json",
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_4B_3G_preparation.json"
+      ],
+      "result_evidence": {
+        "aps_path": "",
+        "aps_sha256": "",
+        "artifact_path": "",
+        "artifact_sha256": "",
+        "project_path": "",
+        "simulation_link_status": "NOT_LINKED",
+        "status": "NOT_CHECKABLE"
+      },
+      "simulation_evidence": {
+        "aps_evaluation_required": true,
+        "artifact_path": "",
+        "artifact_sha256": "",
+        "compliance_claim_allowed": false,
+        "model_evidence_link_status": "NOT_LINKED",
+        "model_report_path": "",
+        "model_report_sha256": "",
+        "project_path": "",
+        "results_path": "",
+        "results_sha256": "",
+        "results_size_bytes": 0,
+        "scenario_path": "",
+        "scenario_sha256": "",
+        "status": "NOT_RUN"
+      },
+      "variant": "test_3G"
+    },
+    "test_3H/3H": {
+      "base_test_id": "3",
+      "capability": {
+        "apachesim_qualification_supported": false,
+        "aps_evaluation_scope": "UNAVAILABLE",
+        "aps_evaluation_supported": false,
+        "aps_full_evaluation_supported": false,
+        "base_test_id": "3",
+        "blocker_code": "VE_LIGHTING_CONTROL_BINDING_NOT_IMPLEMENTED",
+        "blocker_detail": "The read-only VE lighting/template/sensor discovery probe is implemented for all twelve variants. When every delegated source is READY_FOR_BINDING, a checksum-traced Test 3 generator contract is also produced. Its controls are not yet bound to a tested VE mutation strategy.",
+        "case_id": "3H",
+        "generation_status": "NOT_IMPLEMENTED",
+        "generator_id": "source_traced_preparation_v1",
+        "geometry_artifact_supported": true,
+        "mutation_supported": false,
+        "preparation_status": "PREPARATION_READY",
+        "qualified_template_simulation_supported": false,
+        "required_source_roles": [
+          "test_specification",
+          "evaluation_workbook"
+        ],
+        "runtime_discovery_supported": true,
+        "runtime_qualification_supported": false,
+        "source_bound_bundle_supported": true,
+        "variant": "test_3H"
+      },
+      "case_id": "3H",
+      "geometry_artifact": {
+        "path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\geometry\\SIA4010_test_3H_3H.gbxml",
+        "sha256": "4457d4f6f781480a3f509f60c695b02fcc76a3a942e7d26f3e83227a8d282249",
+        "status": "VERIFIED"
+      },
+      "model_evidence": {
+        "artifact_path": "",
+        "artifact_sha256": "",
+        "project_path": "",
+        "status": "MISSING"
+      },
+      "preparation_artifacts": [
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_2B_3H_preparation.json",
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_4B_3H_preparation.json"
+      ],
+      "result_evidence": {
+        "aps_path": "",
+        "aps_sha256": "",
+        "artifact_path": "",
+        "artifact_sha256": "",
+        "project_path": "",
+        "simulation_link_status": "NOT_LINKED",
+        "status": "NOT_CHECKABLE"
+      },
+      "simulation_evidence": {
+        "aps_evaluation_required": true,
+        "artifact_path": "",
+        "artifact_sha256": "",
+        "compliance_claim_allowed": false,
+        "model_evidence_link_status": "NOT_LINKED",
+        "model_report_path": "",
+        "model_report_sha256": "",
+        "project_path": "",
+        "results_path": "",
+        "results_sha256": "",
+        "results_size_bytes": 0,
+        "scenario_path": "",
+        "scenario_sha256": "",
+        "status": "NOT_RUN"
+      },
+      "variant": "test_3H"
+    },
+    "test_3I/3I": {
+      "base_test_id": "3",
+      "capability": {
+        "apachesim_qualification_supported": false,
+        "aps_evaluation_scope": "UNAVAILABLE",
+        "aps_evaluation_supported": false,
+        "aps_full_evaluation_supported": false,
+        "base_test_id": "3",
+        "blocker_code": "VE_LIGHTING_CONTROL_BINDING_NOT_IMPLEMENTED",
+        "blocker_detail": "The read-only VE lighting/template/sensor discovery probe is implemented for all twelve variants. When every delegated source is READY_FOR_BINDING, a checksum-traced Test 3 generator contract is also produced. Its controls are not yet bound to a tested VE mutation strategy.",
+        "case_id": "3I",
+        "generation_status": "NOT_IMPLEMENTED",
+        "generator_id": "source_traced_preparation_v1",
+        "geometry_artifact_supported": true,
+        "mutation_supported": false,
+        "preparation_status": "PREPARATION_READY",
+        "qualified_template_simulation_supported": false,
+        "required_source_roles": [
+          "test_specification",
+          "evaluation_workbook"
+        ],
+        "runtime_discovery_supported": true,
+        "runtime_qualification_supported": false,
+        "source_bound_bundle_supported": true,
+        "variant": "test_3I"
+      },
+      "case_id": "3I",
+      "geometry_artifact": {
+        "path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\geometry\\SIA4010_test_3I_3I.gbxml",
+        "sha256": "8ec1c966af9e0423b7e602d0faa5d667042ce7ae8b2faff9534b73627c963861",
+        "status": "VERIFIED"
+      },
+      "model_evidence": {
+        "artifact_path": "",
+        "artifact_sha256": "",
+        "project_path": "",
+        "status": "MISSING"
+      },
+      "preparation_artifacts": [
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_2B_3I_preparation.json",
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_4B_3I_preparation.json"
+      ],
+      "result_evidence": {
+        "aps_path": "",
+        "aps_sha256": "",
+        "artifact_path": "",
+        "artifact_sha256": "",
+        "project_path": "",
+        "simulation_link_status": "NOT_LINKED",
+        "status": "NOT_CHECKABLE"
+      },
+      "simulation_evidence": {
+        "aps_evaluation_required": true,
+        "artifact_path": "",
+        "artifact_sha256": "",
+        "compliance_claim_allowed": false,
+        "model_evidence_link_status": "NOT_LINKED",
+        "model_report_path": "",
+        "model_report_sha256": "",
+        "project_path": "",
+        "results_path": "",
+        "results_sha256": "",
+        "results_size_bytes": 0,
+        "scenario_path": "",
+        "scenario_sha256": "",
+        "status": "NOT_RUN"
+      },
+      "variant": "test_3I"
+    },
+    "test_3J/3J": {
+      "base_test_id": "3",
+      "capability": {
+        "apachesim_qualification_supported": false,
+        "aps_evaluation_scope": "UNAVAILABLE",
+        "aps_evaluation_supported": false,
+        "aps_full_evaluation_supported": false,
+        "base_test_id": "3",
+        "blocker_code": "VE_LIGHTING_CONTROL_BINDING_NOT_IMPLEMENTED",
+        "blocker_detail": "The read-only VE lighting/template/sensor discovery probe is implemented for all twelve variants. When every delegated source is READY_FOR_BINDING, a checksum-traced Test 3 generator contract is also produced. Its controls are not yet bound to a tested VE mutation strategy.",
+        "case_id": "3J",
+        "generation_status": "NOT_IMPLEMENTED",
+        "generator_id": "source_traced_preparation_v1",
+        "geometry_artifact_supported": true,
+        "mutation_supported": false,
+        "preparation_status": "PREPARATION_READY",
+        "qualified_template_simulation_supported": false,
+        "required_source_roles": [
+          "test_specification",
+          "evaluation_workbook"
+        ],
+        "runtime_discovery_supported": true,
+        "runtime_qualification_supported": false,
+        "source_bound_bundle_supported": true,
+        "variant": "test_3J"
+      },
+      "case_id": "3J",
+      "geometry_artifact": {
+        "path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\geometry\\SIA4010_test_3J_3J.gbxml",
+        "sha256": "fec2779d844d1a0ad1518253982ce96b10b55dc578b75f54b6aa47ed40dba696",
+        "status": "VERIFIED"
+      },
+      "model_evidence": {
+        "artifact_path": "",
+        "artifact_sha256": "",
+        "project_path": "",
+        "status": "MISSING"
+      },
+      "preparation_artifacts": [
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_2B_3J_preparation.json",
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_4B_3J_preparation.json"
+      ],
+      "result_evidence": {
+        "aps_path": "",
+        "aps_sha256": "",
+        "artifact_path": "",
+        "artifact_sha256": "",
+        "project_path": "",
+        "simulation_link_status": "NOT_LINKED",
+        "status": "NOT_CHECKABLE"
+      },
+      "simulation_evidence": {
+        "aps_evaluation_required": true,
+        "artifact_path": "",
+        "artifact_sha256": "",
+        "compliance_claim_allowed": false,
+        "model_evidence_link_status": "NOT_LINKED",
+        "model_report_path": "",
+        "model_report_sha256": "",
+        "project_path": "",
+        "results_path": "",
+        "results_sha256": "",
+        "results_size_bytes": 0,
+        "scenario_path": "",
+        "scenario_sha256": "",
+        "status": "NOT_RUN"
+      },
+      "variant": "test_3J"
+    },
+    "test_3K/3K": {
+      "base_test_id": "3",
+      "capability": {
+        "apachesim_qualification_supported": false,
+        "aps_evaluation_scope": "UNAVAILABLE",
+        "aps_evaluation_supported": false,
+        "aps_full_evaluation_supported": false,
+        "base_test_id": "3",
+        "blocker_code": "VE_LIGHTING_CONTROL_BINDING_NOT_IMPLEMENTED",
+        "blocker_detail": "The read-only VE lighting/template/sensor discovery probe is implemented for all twelve variants. When every delegated source is READY_FOR_BINDING, a checksum-traced Test 3 generator contract is also produced. Its controls are not yet bound to a tested VE mutation strategy.",
+        "case_id": "3K",
+        "generation_status": "NOT_IMPLEMENTED",
+        "generator_id": "source_traced_preparation_v1",
+        "geometry_artifact_supported": true,
+        "mutation_supported": false,
+        "preparation_status": "PREPARATION_READY",
+        "qualified_template_simulation_supported": false,
+        "required_source_roles": [
+          "test_specification",
+          "evaluation_workbook"
+        ],
+        "runtime_discovery_supported": true,
+        "runtime_qualification_supported": false,
+        "source_bound_bundle_supported": true,
+        "variant": "test_3K"
+      },
+      "case_id": "3K",
+      "geometry_artifact": {
+        "path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\geometry\\SIA4010_test_3K_3K.gbxml",
+        "sha256": "e8eea19bece073650a6d2209c2201a97f37a90d58adc52001efda5f57ff09f08",
+        "status": "VERIFIED"
+      },
+      "model_evidence": {
+        "artifact_path": "",
+        "artifact_sha256": "",
+        "project_path": "",
+        "status": "MISSING"
+      },
+      "preparation_artifacts": [
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_2B_3K_preparation.json",
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_4B_3K_preparation.json"
+      ],
+      "result_evidence": {
+        "aps_path": "",
+        "aps_sha256": "",
+        "artifact_path": "",
+        "artifact_sha256": "",
+        "project_path": "",
+        "simulation_link_status": "NOT_LINKED",
+        "status": "NOT_CHECKABLE"
+      },
+      "simulation_evidence": {
+        "aps_evaluation_required": true,
+        "artifact_path": "",
+        "artifact_sha256": "",
+        "compliance_claim_allowed": false,
+        "model_evidence_link_status": "NOT_LINKED",
+        "model_report_path": "",
+        "model_report_sha256": "",
+        "project_path": "",
+        "results_path": "",
+        "results_sha256": "",
+        "results_size_bytes": 0,
+        "scenario_path": "",
+        "scenario_sha256": "",
+        "status": "NOT_RUN"
+      },
+      "variant": "test_3K"
+    },
+    "test_3L/3L": {
+      "base_test_id": "3",
+      "capability": {
+        "apachesim_qualification_supported": false,
+        "aps_evaluation_scope": "UNAVAILABLE",
+        "aps_evaluation_supported": false,
+        "aps_full_evaluation_supported": false,
+        "base_test_id": "3",
+        "blocker_code": "VE_LIGHTING_CONTROL_BINDING_NOT_IMPLEMENTED",
+        "blocker_detail": "The read-only VE lighting/template/sensor discovery probe is implemented for all twelve variants. When every delegated source is READY_FOR_BINDING, a checksum-traced Test 3 generator contract is also produced. Its controls are not yet bound to a tested VE mutation strategy.",
+        "case_id": "3L",
+        "generation_status": "NOT_IMPLEMENTED",
+        "generator_id": "source_traced_preparation_v1",
+        "geometry_artifact_supported": true,
+        "mutation_supported": false,
+        "preparation_status": "PREPARATION_READY",
+        "qualified_template_simulation_supported": false,
+        "required_source_roles": [
+          "test_specification",
+          "evaluation_workbook"
+        ],
+        "runtime_discovery_supported": true,
+        "runtime_qualification_supported": false,
+        "source_bound_bundle_supported": true,
+        "variant": "test_3L"
+      },
+      "case_id": "3L",
+      "geometry_artifact": {
+        "path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\geometry\\SIA4010_test_3L_3L.gbxml",
+        "sha256": "4d27926d1876a09e0cf1cc076ef25d25d50dd620739f418caad03fde82a50804",
+        "status": "VERIFIED"
+      },
+      "model_evidence": {
+        "artifact_path": "",
+        "artifact_sha256": "",
+        "project_path": "",
+        "status": "MISSING"
+      },
+      "preparation_artifacts": [
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_2B_3L_preparation.json",
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_4B_3L_preparation.json"
+      ],
+      "result_evidence": {
+        "aps_path": "",
+        "aps_sha256": "",
+        "artifact_path": "",
+        "artifact_sha256": "",
+        "project_path": "",
+        "simulation_link_status": "NOT_LINKED",
+        "status": "NOT_CHECKABLE"
+      },
+      "simulation_evidence": {
+        "aps_evaluation_required": true,
+        "artifact_path": "",
+        "artifact_sha256": "",
+        "compliance_claim_allowed": false,
+        "model_evidence_link_status": "NOT_LINKED",
+        "model_report_path": "",
+        "model_report_sha256": "",
+        "project_path": "",
+        "results_path": "",
+        "results_sha256": "",
+        "results_size_bytes": 0,
+        "scenario_path": "",
+        "scenario_sha256": "",
+        "status": "NOT_RUN"
+      },
+      "variant": "test_3L"
+    },
+    "test_4/4": {
+      "base_test_id": "4",
+      "capability": {
+        "apachesim_qualification_supported": false,
+        "aps_evaluation_scope": "UNAVAILABLE",
+        "aps_evaluation_supported": false,
+        "aps_full_evaluation_supported": false,
+        "base_test_id": "4",
+        "blocker_code": "VE_HVAC_TOPOLOGY_BINDING_NOT_IMPLEMENTED",
+        "blocker_detail": "The official single-zone all-air system topology and controls are not yet bound to a tested Apache Systems mutation strategy.",
+        "case_id": "4",
+        "generation_status": "NOT_IMPLEMENTED",
+        "generator_id": "source_traced_preparation_v1",
+        "geometry_artifact_supported": false,
+        "mutation_supported": false,
+        "preparation_status": "PREPARATION_READY",
+        "qualified_template_simulation_supported": false,
+        "required_source_roles": [
+          "test_specification",
+          "evaluation_workbook",
+          "example_building_documentation",
+          "example_building_ifc"
+        ],
+        "runtime_discovery_supported": true,
+        "runtime_qualification_supported": false,
+        "source_bound_bundle_supported": false,
+        "variant": "test_4"
+      },
+      "case_id": "4",
+      "geometry_artifact": null,
+      "model_evidence": {
+        "artifact_path": "",
+        "artifact_sha256": "",
+        "project_path": "",
+        "status": "MISSING"
+      },
+      "preparation_artifacts": [
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_3_4_preparation.json",
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_4A_4_preparation.json",
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_4B_4_preparation.json"
+      ],
+      "result_evidence": {
+        "aps_path": "",
+        "aps_sha256": "",
+        "artifact_path": "",
+        "artifact_sha256": "",
+        "project_path": "",
+        "simulation_link_status": "NOT_LINKED",
+        "status": "NOT_CHECKABLE"
+      },
+      "simulation_evidence": {
+        "aps_evaluation_required": true,
+        "artifact_path": "",
+        "artifact_sha256": "",
+        "compliance_claim_allowed": false,
+        "model_evidence_link_status": "NOT_LINKED",
+        "model_report_path": "",
+        "model_report_sha256": "",
+        "project_path": "",
+        "results_path": "",
+        "results_sha256": "",
+        "results_size_bytes": 0,
+        "scenario_path": "",
+        "scenario_sha256": "",
+        "status": "NOT_RUN"
+      },
+      "variant": "test_4"
+    },
+    "test_5A/5A": {
+      "base_test_id": "5",
+      "capability": {
+        "apachesim_qualification_supported": false,
+        "aps_evaluation_scope": "UNAVAILABLE",
+        "aps_evaluation_supported": false,
+        "aps_full_evaluation_supported": false,
+        "base_test_id": "5",
+        "blocker_code": "VE_MULTIZONE_HVAC_BINDING_NOT_IMPLEMENTED",
+        "blocker_detail": "The official multizone air-handling, recovery and humidification variants are not yet bound to a tested Apache Systems mutation strategy.",
+        "case_id": "5A",
+        "generation_status": "NOT_IMPLEMENTED",
+        "generator_id": "source_traced_preparation_v1",
+        "geometry_artifact_supported": false,
+        "mutation_supported": false,
+        "preparation_status": "PREPARATION_READY",
+        "qualified_template_simulation_supported": false,
+        "required_source_roles": [
+          "test_specification",
+          "evaluation_workbook",
+          "example_building_documentation",
+          "example_building_ifc"
+        ],
+        "runtime_discovery_supported": true,
+        "runtime_qualification_supported": false,
+        "source_bound_bundle_supported": false,
+        "variant": "test_5A"
+      },
+      "case_id": "5A",
+      "geometry_artifact": null,
+      "model_evidence": {
+        "artifact_path": "",
+        "artifact_sha256": "",
+        "project_path": "",
+        "status": "MISSING"
+      },
+      "preparation_artifacts": [
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_3_5A_preparation.json",
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_4A_5A_preparation.json",
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_4B_5A_preparation.json"
+      ],
+      "result_evidence": {
+        "aps_path": "",
+        "aps_sha256": "",
+        "artifact_path": "",
+        "artifact_sha256": "",
+        "project_path": "",
+        "simulation_link_status": "NOT_LINKED",
+        "status": "NOT_CHECKABLE"
+      },
+      "simulation_evidence": {
+        "aps_evaluation_required": true,
+        "artifact_path": "",
+        "artifact_sha256": "",
+        "compliance_claim_allowed": false,
+        "model_evidence_link_status": "NOT_LINKED",
+        "model_report_path": "",
+        "model_report_sha256": "",
+        "project_path": "",
+        "results_path": "",
+        "results_sha256": "",
+        "results_size_bytes": 0,
+        "scenario_path": "",
+        "scenario_sha256": "",
+        "status": "NOT_RUN"
+      },
+      "variant": "test_5A"
+    },
+    "test_5B/5B": {
+      "base_test_id": "5",
+      "capability": {
+        "apachesim_qualification_supported": false,
+        "aps_evaluation_scope": "UNAVAILABLE",
+        "aps_evaluation_supported": false,
+        "aps_full_evaluation_supported": false,
+        "base_test_id": "5",
+        "blocker_code": "VE_MULTIZONE_HVAC_BINDING_NOT_IMPLEMENTED",
+        "blocker_detail": "The official multizone air-handling, recovery and humidification variants are not yet bound to a tested Apache Systems mutation strategy.",
+        "case_id": "5B",
+        "generation_status": "NOT_IMPLEMENTED",
+        "generator_id": "source_traced_preparation_v1",
+        "geometry_artifact_supported": false,
+        "mutation_supported": false,
+        "preparation_status": "PREPARATION_READY",
+        "qualified_template_simulation_supported": false,
+        "required_source_roles": [
+          "test_specification",
+          "evaluation_workbook",
+          "example_building_documentation",
+          "example_building_ifc"
+        ],
+        "runtime_discovery_supported": true,
+        "runtime_qualification_supported": false,
+        "source_bound_bundle_supported": false,
+        "variant": "test_5B"
+      },
+      "case_id": "5B",
+      "geometry_artifact": null,
+      "model_evidence": {
+        "artifact_path": "",
+        "artifact_sha256": "",
+        "project_path": "",
+        "status": "MISSING"
+      },
+      "preparation_artifacts": [
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_3_5B_preparation.json",
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_4A_5B_preparation.json",
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_4B_5B_preparation.json"
+      ],
+      "result_evidence": {
+        "aps_path": "",
+        "aps_sha256": "",
+        "artifact_path": "",
+        "artifact_sha256": "",
+        "project_path": "",
+        "simulation_link_status": "NOT_LINKED",
+        "status": "NOT_CHECKABLE"
+      },
+      "simulation_evidence": {
+        "aps_evaluation_required": true,
+        "artifact_path": "",
+        "artifact_sha256": "",
+        "compliance_claim_allowed": false,
+        "model_evidence_link_status": "NOT_LINKED",
+        "model_report_path": "",
+        "model_report_sha256": "",
+        "project_path": "",
+        "results_path": "",
+        "results_sha256": "",
+        "results_size_bytes": 0,
+        "scenario_path": "",
+        "scenario_sha256": "",
+        "status": "NOT_RUN"
+      },
+      "variant": "test_5B"
+    },
+    "test_5C/5C": {
+      "base_test_id": "5",
+      "capability": {
+        "apachesim_qualification_supported": false,
+        "aps_evaluation_scope": "UNAVAILABLE",
+        "aps_evaluation_supported": false,
+        "aps_full_evaluation_supported": false,
+        "base_test_id": "5",
+        "blocker_code": "VE_MULTIZONE_HVAC_BINDING_NOT_IMPLEMENTED",
+        "blocker_detail": "The official multizone air-handling, recovery and humidification variants are not yet bound to a tested Apache Systems mutation strategy.",
+        "case_id": "5C",
+        "generation_status": "NOT_IMPLEMENTED",
+        "generator_id": "source_traced_preparation_v1",
+        "geometry_artifact_supported": false,
+        "mutation_supported": false,
+        "preparation_status": "PREPARATION_READY",
+        "qualified_template_simulation_supported": false,
+        "required_source_roles": [
+          "test_specification",
+          "evaluation_workbook",
+          "example_building_documentation",
+          "example_building_ifc"
+        ],
+        "runtime_discovery_supported": true,
+        "runtime_qualification_supported": false,
+        "source_bound_bundle_supported": false,
+        "variant": "test_5C"
+      },
+      "case_id": "5C",
+      "geometry_artifact": null,
+      "model_evidence": {
+        "artifact_path": "",
+        "artifact_sha256": "",
+        "project_path": "",
+        "status": "MISSING"
+      },
+      "preparation_artifacts": [
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_3_5C_preparation.json",
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_4A_5C_preparation.json",
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_4B_5C_preparation.json"
+      ],
+      "result_evidence": {
+        "aps_path": "",
+        "aps_sha256": "",
+        "artifact_path": "",
+        "artifact_sha256": "",
+        "project_path": "",
+        "simulation_link_status": "NOT_LINKED",
+        "status": "NOT_CHECKABLE"
+      },
+      "simulation_evidence": {
+        "aps_evaluation_required": true,
+        "artifact_path": "",
+        "artifact_sha256": "",
+        "compliance_claim_allowed": false,
+        "model_evidence_link_status": "NOT_LINKED",
+        "model_report_path": "",
+        "model_report_sha256": "",
+        "project_path": "",
+        "results_path": "",
+        "results_sha256": "",
+        "results_size_bytes": 0,
+        "scenario_path": "",
+        "scenario_sha256": "",
+        "status": "NOT_RUN"
+      },
+      "variant": "test_5C"
+    },
+    "test_5D/5D": {
+      "base_test_id": "5",
+      "capability": {
+        "apachesim_qualification_supported": false,
+        "aps_evaluation_scope": "UNAVAILABLE",
+        "aps_evaluation_supported": false,
+        "aps_full_evaluation_supported": false,
+        "base_test_id": "5",
+        "blocker_code": "VE_MULTIZONE_HVAC_BINDING_NOT_IMPLEMENTED",
+        "blocker_detail": "The official multizone air-handling, recovery and humidification variants are not yet bound to a tested Apache Systems mutation strategy.",
+        "case_id": "5D",
+        "generation_status": "NOT_IMPLEMENTED",
+        "generator_id": "source_traced_preparation_v1",
+        "geometry_artifact_supported": false,
+        "mutation_supported": false,
+        "preparation_status": "PREPARATION_READY",
+        "qualified_template_simulation_supported": false,
+        "required_source_roles": [
+          "test_specification",
+          "evaluation_workbook",
+          "example_building_documentation",
+          "example_building_ifc"
+        ],
+        "runtime_discovery_supported": true,
+        "runtime_qualification_supported": false,
+        "source_bound_bundle_supported": false,
+        "variant": "test_5D"
+      },
+      "case_id": "5D",
+      "geometry_artifact": null,
+      "model_evidence": {
+        "artifact_path": "",
+        "artifact_sha256": "",
+        "project_path": "",
+        "status": "MISSING"
+      },
+      "preparation_artifacts": [
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_3_5D_preparation.json",
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_4A_5D_preparation.json",
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_4B_5D_preparation.json"
+      ],
+      "result_evidence": {
+        "aps_path": "",
+        "aps_sha256": "",
+        "artifact_path": "",
+        "artifact_sha256": "",
+        "project_path": "",
+        "simulation_link_status": "NOT_LINKED",
+        "status": "NOT_CHECKABLE"
+      },
+      "simulation_evidence": {
+        "aps_evaluation_required": true,
+        "artifact_path": "",
+        "artifact_sha256": "",
+        "compliance_claim_allowed": false,
+        "model_evidence_link_status": "NOT_LINKED",
+        "model_report_path": "",
+        "model_report_sha256": "",
+        "project_path": "",
+        "results_path": "",
+        "results_sha256": "",
+        "results_size_bytes": 0,
+        "scenario_path": "",
+        "scenario_sha256": "",
+        "status": "NOT_RUN"
+      },
+      "variant": "test_5D"
+    },
+    "test_6/6": {
+      "base_test_id": "6",
+      "capability": {
+        "apachesim_qualification_supported": false,
+        "aps_evaluation_scope": "UNAVAILABLE",
+        "aps_evaluation_supported": false,
+        "aps_full_evaluation_supported": false,
+        "base_test_id": "6",
+        "blocker_code": "VE_VENTILATION_SEQUENCE_BINDING_NOT_IMPLEMENTED",
+        "blocker_detail": "The official staged ventilation, heat-recovery and overflow sequence is not yet bound to a tested VE mutation strategy.",
+        "case_id": "6",
+        "generation_status": "NOT_IMPLEMENTED",
+        "generator_id": "source_traced_preparation_v1",
+        "geometry_artifact_supported": false,
+        "mutation_supported": false,
+        "preparation_status": "PREPARATION_READY",
+        "qualified_template_simulation_supported": false,
+        "required_source_roles": [
+          "test_specification",
+          "evaluation_workbook",
+          "example_building_documentation",
+          "example_building_ifc"
+        ],
+        "runtime_discovery_supported": true,
+        "runtime_qualification_supported": false,
+        "source_bound_bundle_supported": false,
+        "variant": "test_6"
+      },
+      "case_id": "6",
+      "geometry_artifact": null,
+      "model_evidence": {
+        "artifact_path": "",
+        "artifact_sha256": "",
+        "project_path": "",
+        "status": "MISSING"
+      },
+      "preparation_artifacts": [
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_3_6_preparation.json",
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_4A_6_preparation.json",
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_4B_6_preparation.json"
+      ],
+      "result_evidence": {
+        "aps_path": "",
+        "aps_sha256": "",
+        "artifact_path": "",
+        "artifact_sha256": "",
+        "project_path": "",
+        "simulation_link_status": "NOT_LINKED",
+        "status": "NOT_CHECKABLE"
+      },
+      "simulation_evidence": {
+        "aps_evaluation_required": true,
+        "artifact_path": "",
+        "artifact_sha256": "",
+        "compliance_claim_allowed": false,
+        "model_evidence_link_status": "NOT_LINKED",
+        "model_report_path": "",
+        "model_report_sha256": "",
+        "project_path": "",
+        "results_path": "",
+        "results_sha256": "",
+        "results_size_bytes": 0,
+        "scenario_path": "",
+        "scenario_sha256": "",
+        "status": "NOT_RUN"
+      },
+      "variant": "test_6"
+    },
+    "test_7/7": {
+      "base_test_id": "7",
+      "capability": {
+        "apachesim_qualification_supported": false,
+        "aps_evaluation_scope": "UNAVAILABLE",
+        "aps_evaluation_supported": false,
+        "aps_full_evaluation_supported": false,
+        "base_test_id": "7",
+        "blocker_code": "VE_ENERGY_SYSTEM_BINDING_NOT_IMPLEMENTED",
+        "blocker_detail": "The official emission, distribution, storage and generation chain is not yet bound to a tested VE plant/energy-system mutation strategy.",
+        "case_id": "7",
+        "generation_status": "NOT_IMPLEMENTED",
+        "generator_id": "source_traced_preparation_v1",
+        "geometry_artifact_supported": false,
+        "mutation_supported": false,
+        "preparation_status": "PREPARATION_READY",
+        "qualified_template_simulation_supported": false,
+        "required_source_roles": [
+          "test_specification",
+          "evaluation_workbook",
+          "example_building_documentation",
+          "example_building_ifc",
+          "load_profile",
+          "reference_document"
+        ],
+        "runtime_discovery_supported": true,
+        "runtime_qualification_supported": false,
+        "source_bound_bundle_supported": false,
+        "variant": "test_7"
+      },
+      "case_id": "7",
+      "geometry_artifact": null,
+      "model_evidence": {
+        "artifact_path": "",
+        "artifact_sha256": "",
+        "project_path": "",
+        "status": "MISSING"
+      },
+      "preparation_artifacts": [
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_4A_7_preparation.json",
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_4B_7_preparation.json",
+        "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\ZOER_32_C1\\sia4010_artifacts\\model_builder\\SIA4010_5_7_preparation.json"
+      ],
+      "result_evidence": {
+        "aps_path": "",
+        "aps_sha256": "",
+        "artifact_path": "",
+        "artifact_sha256": "",
+        "project_path": "",
+        "simulation_link_status": "NOT_LINKED",
+        "status": "NOT_CHECKABLE"
+      },
+      "simulation_evidence": {
+        "aps_evaluation_required": true,
+        "artifact_path": "",
+        "artifact_sha256": "",
+        "compliance_claim_allowed": false,
+        "model_evidence_link_status": "NOT_LINKED",
+        "model_report_path": "",
+        "model_report_sha256": "",
+        "project_path": "",
+        "results_path": "",
+        "results_sha256": "",
+        "results_size_bytes": 0,
+        "scenario_path": "",
+        "scenario_sha256": "",
+        "status": "NOT_RUN"
+      },
+      "variant": "test_7"
+    }
+  },
+  "claim_guardrail": "The ledger coordinates source-traced technical evidence. Missing, unreadable or checksum-mismatched artifacts never satisfy a gate.",
+  "migrated_from_schema_version": "1.0",
+  "schema_version": "1.1",
+  "updated_at_utc": "2026-08-26T22:41:38.330387+00:00"
+}

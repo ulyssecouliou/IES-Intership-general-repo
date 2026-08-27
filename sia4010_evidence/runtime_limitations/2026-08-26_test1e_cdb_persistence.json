@@ -1,0 +1,52 @@
+{
+  "schema_version": "1.0",
+  "status": "VE2025_CDB_SET_PROPERTIES_NOT_PERSISTED",
+  "observed_date": "2026-08-26",
+  "scope": "SIA 4010 Test 1E external fabric-awning construction EXTW",
+  "installed_runtime": "IES Virtual Environment Python 3.12.3 / VE 2025",
+  "observations": [
+    {
+      "attempt": "VECdbConstruction.set_properties followed by VE project save",
+      "in_memory_readback": "PASS",
+      "reopened_readback": {
+        "external_shade_active": 0,
+        "external_shade_profile": "",
+        "external_shade_transmittance_0": 0.0,
+        "external_shade_radiation_to_lower": "ii>3000.0",
+        "external_shade_radiation_to_raise": "ii<3000.0"
+      },
+      "evidence_path": "C:/Users/ulysse.couliou/Documents/switzerland/SIA4010_TEST1_1E_TEMPLATE/sia4010_artifacts/diagnostics/sia4010_test1e_awning_20260826_131406_136394.json",
+      "evidence_sha256": "f7746d5173d4c5815b07f94426c2c0952907d4d6ea05b133b2e21de7cbab0c69"
+    },
+    {
+      "attempt": "set_properties plus explicit EXTW reassignment to both south windows followed by VE project save",
+      "in_memory_readback": "PASS",
+      "reopened_readback": {
+        "external_shade_active": 0,
+        "external_shade_profile": "",
+        "external_shade_transmittance_0": 0.0,
+        "external_shade_radiation_to_lower": "ii>3000.0",
+        "external_shade_radiation_to_raise": "ii<3000.0"
+      },
+      "evidence_path": "C:/Users/ulysse.couliou/Documents/switzerland/SIA4010_TEST1_1E_TEMPLATE/sia4010_artifacts/diagnostics/sia4010_test1e_awning_reassignment_20260826_133051_904435.json",
+      "evidence_sha256": "3cd391a7038368b2eed435e5f66a7c50613eb0f6f9053854c6b3a414963ba2d1"
+    }
+  ],
+  "api_surface": {
+    "source": "ve_adapter/ve_api_surface.json",
+    "VECdbDatabase_methods": [
+      "get_current_database",
+      "get_project_type_string",
+      "get_projects"
+    ],
+    "VECdbProject_save_method_exposed": false
+  },
+  "control_correction": {
+    "operation_profile": "OFF_OR_NONE",
+    "basis": "IESVE 2025 Shading Devices documentation states that discrete lower/raise conditions are evaluated while the operation profile is off or none; ON would hold the device lowered.",
+    "lower_condition": "ii>150.0",
+    "raise_condition": "ii<150.0"
+  },
+  "required_next_action": "Persist the external shade through the APcdb user interface or obtain an IES-supported programmatic persistence route, then perform close/reopen readback before APS simulation.",
+  "compliance_claim_allowed": false
+}

@@ -1,0 +1,72 @@
+{
+  "schema_id": "sia4010.shading_device_definition.v1",
+  "input_id": "sia_example_building_fabric_awning_detail",
+  "device": {
+    "category": "external fabric awning",
+    "product": "Soltis 92-2048-Alu",
+    "manufacturer": "SergeFerrari",
+    "peripheral_gap_m": 0.01,
+    "screen_layer_thickness_m": 0.0005,
+    "closure_irradiance_threshold_w_m2": 150.0,
+    "closure_signal_source_wording": "solar radiation on the outside",
+    "dynamic_semantics_status": "THRESHOLD_VALUE_CONFIRMED_SIGNAL_OPERATOR_RELEASE_PENDING"
+  },
+  "summer_en_iso_52022_3": {
+    "unshaded": {
+      "g_total": 0.545,
+      "convection_factor": 0.022,
+      "thermal_radiation_factor": 0.044,
+      "ventilation_factor": 0.0,
+      "secondary_internal_heat_transfer_factor": 0.066
+    },
+    "shaded": {
+      "g_total": 0.059,
+      "convection_factor": 0.006,
+      "thermal_radiation_factor": 0.013,
+      "ventilation_factor": 0.0,
+      "secondary_internal_heat_transfer_factor": 0.019
+    }
+  },
+  "reference_en_iso_52022_3": {
+    "unshaded": {"g_total": 0.542, "u_value_w_m2k": 0.646},
+    "shaded": {"g_total": 0.056, "u_value_w_m2k": 0.574}
+  },
+  "en_410_optical": {
+    "unshaded": {
+      "direct_solar_transmittance": 0.479,
+      "solar_reflectance_outside": 0.323,
+      "solar_reflectance_inside": 0.323,
+      "visible_transmittance": 0.742,
+      "visible_reflectance_outside": 0.145,
+      "visible_reflectance_inside": 0.145,
+      "uv_transmittance": 0.234
+    },
+    "shaded": {
+      "direct_solar_transmittance": 0.040,
+      "solar_reflectance_outside": 0.490,
+      "solar_reflectance_inside": 0.456,
+      "visible_transmittance": 0.058,
+      "visible_reflectance_outside": 0.496,
+      "visible_reflectance_inside": 0.395,
+      "uv_transmittance": 0.012
+    }
+  },
+  "iso_15099": {
+    "summer_g_total_unshaded": 0.545,
+    "summer_g_total_shaded": 0.059,
+    "winter_u_value_unshaded_w_m2k": 0.654,
+    "winter_u_value_shaded_w_m2k": 0.582
+  },
+  "sources": [
+    {
+      "path": "SIA_4010_geteilter_Link/Beispielgebäude/Dokumentation_Beispielgebäude_V5.pdf",
+      "sha256": "38d231786467b1a117c99f2cfe8d09dd03c921bb894378a061c2f6d9bc14c75d",
+      "locators": ["pages 8-9, Figure 14 and Table 3"]
+    },
+    {
+      "path": "SIA_4010_geteilter_Link/Test3/Spezifikation_Test3.pdf",
+      "locator": "page 2, Tests 3A-3F external fabric awning identity and 150 W/m2 threshold"
+    }
+  ],
+  "claim_guardrail": "This artifact qualifies device identity, mounting and optical states. It does not resolve threshold signal/operator/release semantics, prove a VE optical mapping, or establish a Test 3 pass."
+}

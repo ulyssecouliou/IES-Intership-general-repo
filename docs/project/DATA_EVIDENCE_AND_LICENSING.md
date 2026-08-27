@@ -27,8 +27,8 @@ rights decision. It is an engineering inventory, not legal advice.
 
 `docs/project/emails/` contains 60 Outlook messages (50,252,800 bytes at final
 audit). They include exchanges with the SIA validation authority and internal
-stakeholders. The project owner explicitly authorised their repository
-inclusion and future public availability for continuity.
+stakeholders. The project owner explicitly authorised their inclusion in this
+private IES handover repository for continuity.
 
 This does not remove privacy obligations. Preserve originals, do not edit or
 re-export casually, and re-evaluate public retention if repository ownership,
@@ -62,16 +62,27 @@ Deleting a file in a new commit does **not** remove it from earlier Git history.
 Do not rewrite shared history without owner approval, backups, collaborator
 coordination and new clone instructions.
 
+## Private internal datasets committed for handover
+
+The owner confirmed that the repository remains private and is shared only with
+authorised IES collaborators. The official SIA 4010 campaign folder, bounded VE
+validation dataset, controlled EN 16798 workbook, complete `sia4010_evidence/`
+tree, generated-weather derivations and canonical readiness artifact are
+therefore versioned. See `INTERNAL_DATASET_INVENTORY.md`.
+
+Their inclusion removes dependencies on the departing contributor's workstation.
+It does not create public redistribution rights or convert historical data into
+evidence for a new client.
+
 ## Files intentionally not committed
 
 The repository ignore policy excludes or should exclude:
 
-- active client model folders and APS results;
+- active/disposable VE project folders and APS results stored outside this repo;
 - generated reports and evidence packs unless explicitly selected as a release
   record;
 - local dependency/caching/test directories;
 - Microsoft Office lock files;
-- external workbooks whose redistribution rights are not established;
 - credentials and local AI/tool settings.
 
 Their absence is not an accidental loss when provenance, owner and retrieval

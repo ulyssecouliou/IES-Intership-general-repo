@@ -1,0 +1,6 @@
+evidence_family,required_filename_prefix,required_for_classes,expected_file_type,provided_file_name,source_authority,version_or_date,tests_covered,reviewer,review_status,notes
+official_test_specifications,SIA4010_official_test_specs_,1A;1B;2A;2B;3;4A;4B;5,PDF/DOCX,,,,,,,missing,
+official_evaluation_workbooks,SIA4010_official_evaluation_workbook_,1A;1B;2A;2B;3;4A;4B;5,XLSX,,,,,,,missing,
+candidate_results,SIA4010_candidate_results_,1A;1B;2A;2B;3;4A;4B;5,XLSX/CSV/PDF,,,,,,,missing,
+reference_comparisons,SIA4010_reference_comparison_,1A;1B;2A;2B;3;4A;4B;5,PDF/XLSX,,,,,,,missing,
+validation_class_confirmation,SIA4010_validation_class_confirmation_,1A;1B;2A;2B;3;4A;4B;5,PDF/DOCX/TXT,,,,,,,missing,

@@ -1,0 +1,248 @@
+{
+  "schema_version": "1.0",
+  "generated_at_utc": "2026-08-12T09-31-31Z",
+  "source_root": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\generated_weather",
+  "target": "C:\\Program Files\\IES\\Shared Content\\Weather",
+  "counts": {
+    "installed": 0,
+    "skipped": 23,
+    "conflicts": 0,
+    "total": 23
+  },
+  "dry_run": false,
+  "force": false,
+  "entries": [
+    {
+      "station": "BAS",
+      "label": "MeteoSwiss-transport-candidate",
+      "source_path": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\generated_weather\\BAS\\BAS_2035_RCP85_1in10-warmsummer_IESVE_CANDIDATE.epw",
+      "source_sha256": "eae7ba97c147da1836127509a7f15fa770f7380b88366e5186d3d72f2e91cc7c",
+      "source_size_bytes": 1290130,
+      "target_path": "C:\\Program Files\\IES\\Shared Content\\Weather\\CHE_BAS_2035_RCP85_1in10-warmsummer.epw",
+      "target_name": "CHE_BAS_2035_RCP85_1in10-warmsummer.epw",
+      "action": "SKIPPED_ALREADY_INSTALLED"
+    },
+    {
+      "station": "BAS",
+      "label": "MeteoSwiss-transport-candidate",
+      "source_path": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\generated_weather\\BAS\\BAS_2035_RCP85_DRY_IESVE_CANDIDATE.epw",
+      "source_sha256": "2015a4b1b025ae289dfc8fd89c975864279ec883de63d74be810664a3a0c4529",
+      "source_size_bytes": 1289851,
+      "target_path": "C:\\Program Files\\IES\\Shared Content\\Weather\\CHE_BAS_2035_RCP85_DRY.epw",
+      "target_name": "CHE_BAS_2035_RCP85_DRY.epw",
+      "action": "SKIPPED_ALREADY_INSTALLED"
+    },
+    {
+      "station": "BAS",
+      "label": "MeteoSwiss-transport-candidate",
+      "source_path": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\generated_weather\\BAS\\BAS_2060_RCP26_1in10-warmsummer_IESVE_CANDIDATE.epw",
+      "source_sha256": "0e442599ef7ead167c9d21b6b4e2a16ad67ad43a3f4ec04580073d262e6b83e5",
+      "source_size_bytes": 1290267,
+      "target_path": "C:\\Program Files\\IES\\Shared Content\\Weather\\CHE_BAS_2060_RCP26_1in10-warmsummer.epw",
+      "target_name": "CHE_BAS_2060_RCP26_1in10-warmsummer.epw",
+      "action": "SKIPPED_ALREADY_INSTALLED"
+    },
+    {
+      "station": "BAS",
+      "label": "MeteoSwiss-transport-candidate",
+      "source_path": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\generated_weather\\BAS\\BAS_2060_RCP26_DRY_IESVE_CANDIDATE.epw",
+      "source_sha256": "c94c0f328f504e61cac4c437e1080e8ff46a53bc0df9016df4c5acf327002f3f",
+      "source_size_bytes": 1289584,
+      "target_path": "C:\\Program Files\\IES\\Shared Content\\Weather\\CHE_BAS_2060_RCP26_DRY.epw",
+      "target_name": "CHE_BAS_2060_RCP26_DRY.epw",
+      "action": "SKIPPED_ALREADY_INSTALLED"
+    },
+    {
+      "station": "BAS",
+      "label": "MeteoSwiss-transport-candidate",
+      "source_path": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\generated_weather\\BAS\\BAS_2060_RCP85_1in10-warmsummer_IESVE_CANDIDATE.epw",
+      "source_sha256": "e3ccc650814436fdf1b637264bdb83a22d60485097e746d81327dc9bbe2e2dd0",
+      "source_size_bytes": 1290031,
+      "target_path": "C:\\Program Files\\IES\\Shared Content\\Weather\\CHE_BAS_2060_RCP85_1in10-warmsummer.epw",
+      "target_name": "CHE_BAS_2060_RCP85_1in10-warmsummer.epw",
+      "action": "SKIPPED_ALREADY_INSTALLED"
+    },
+    {
+      "station": "BAS",
+      "label": "MeteoSwiss-transport-candidate",
+      "source_path": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\generated_weather\\BAS\\BAS_2060_RCP85_DRY_IESVE_CANDIDATE.epw",
+      "source_sha256": "95f4acb966d89aec1dceef9cb4097bac33a05648fbaa6108101e5d59537c3dd1",
+      "source_size_bytes": 1289930,
+      "target_path": "C:\\Program Files\\IES\\Shared Content\\Weather\\CHE_BAS_2060_RCP85_DRY.epw",
+      "target_name": "CHE_BAS_2060_RCP85_DRY.epw",
+      "action": "SKIPPED_ALREADY_INSTALLED"
+    },
+    {
+      "station": "BKLI",
+      "label": "MeteoSwiss-transport-candidate",
+      "source_path": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\generated_weather\\BKLI\\BKLI_2035_RCP85_1in10-warmsummer_IESVE_CANDIDATE.epw",
+      "source_sha256": "8e6731e9fe4f7667184619282c74dd2643e8b932e13e05900fdfb5f794ba008c",
+      "source_size_bytes": 1290015,
+      "target_path": "C:\\Program Files\\IES\\Shared Content\\Weather\\CHE_BKLI_2035_RCP85_1in10-warmsummer.epw",
+      "target_name": "CHE_BKLI_2035_RCP85_1in10-warmsummer.epw",
+      "action": "SKIPPED_ALREADY_INSTALLED"
+    },
+    {
+      "station": "BKLI",
+      "label": "MeteoSwiss-transport-candidate",
+      "source_path": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\generated_weather\\BKLI\\BKLI_2035_RCP85_DRY_IESVE_CANDIDATE.epw",
+      "source_sha256": "8e6598f8f6e94c0ad105ec47bd061557075d51f73e75b46be573149a0822786e",
+      "source_size_bytes": 1289556,
+      "target_path": "C:\\Program Files\\IES\\Shared Content\\Weather\\CHE_BKLI_2035_RCP85_DRY.epw",
+      "target_name": "CHE_BKLI_2035_RCP85_DRY.epw",
+      "action": "SKIPPED_ALREADY_INSTALLED"
+    },
+    {
+      "station": "BKLI",
+      "label": "MeteoSwiss-transport-candidate",
+      "source_path": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\generated_weather\\BKLI\\BKLI_2060_RCP26_1in10-warmsummer_IESVE_CANDIDATE.epw",
+      "source_sha256": "a23a5481396b5b95f3805bfcd0635142ae07b3c65e65835a6b15ab897f7f9e9c",
+      "source_size_bytes": 1290323,
+      "target_path": "C:\\Program Files\\IES\\Shared Content\\Weather\\CHE_BKLI_2060_RCP26_1in10-warmsummer.epw",
+      "target_name": "CHE_BKLI_2060_RCP26_1in10-warmsummer.epw",
+      "action": "SKIPPED_ALREADY_INSTALLED"
+    },
+    {
+      "station": "BKLI",
+      "label": "MeteoSwiss-transport-candidate",
+      "source_path": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\generated_weather\\BKLI\\BKLI_2060_RCP26_DRY_IESVE_CANDIDATE.epw",
+      "source_sha256": "49ad132f5b3263b7ac5005a4125cdf2e712a32f2dc6aa68f42026ad0ba4f1cfd",
+      "source_size_bytes": 1290072,
+      "target_path": "C:\\Program Files\\IES\\Shared Content\\Weather\\CHE_BKLI_2060_RCP26_DRY.epw",
+      "target_name": "CHE_BKLI_2060_RCP26_DRY.epw",
+      "action": "SKIPPED_ALREADY_INSTALLED"
+    },
+    {
+      "station": "BKLI",
+      "label": "MeteoSwiss-transport-candidate",
+      "source_path": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\generated_weather\\BKLI\\BKLI_2060_RCP85_1in10-warmsummer_IESVE_CANDIDATE.epw",
+      "source_sha256": "310b771c9279f9caae10db3ce759012702b6f97c5d8320a014cc3f072ace1f5e",
+      "source_size_bytes": 1289186,
+      "target_path": "C:\\Program Files\\IES\\Shared Content\\Weather\\CHE_BKLI_2060_RCP85_1in10-warmsummer.epw",
+      "target_name": "CHE_BKLI_2060_RCP85_1in10-warmsummer.epw",
+      "action": "SKIPPED_ALREADY_INSTALLED"
+    },
+    {
+      "station": "BKLI",
+      "label": "MeteoSwiss-transport-candidate",
+      "source_path": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\generated_weather\\BKLI\\BKLI_2060_RCP85_DRY_IESVE_CANDIDATE.epw",
+      "source_sha256": "e8e5d3169131c4f75e8fcc38686f2245b8a041f3d02f108bcd77b602d4740d57",
+      "source_size_bytes": 1290134,
+      "target_path": "C:\\Program Files\\IES\\Shared Content\\Weather\\CHE_BKLI_2060_RCP85_DRY.epw",
+      "target_name": "CHE_BKLI_2060_RCP85_DRY.epw",
+      "action": "SKIPPED_ALREADY_INSTALLED"
+    },
+    {
+      "station": "GVE",
+      "label": "MeteoSwiss-transport-candidate",
+      "source_path": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\generated_weather\\GVE\\GVE_2035_RCP85_1in10-warmsummer_IESVE_CANDIDATE.epw",
+      "source_sha256": "28536074f99adee8b923b67500f0c38df4bd32303db34e050ef35b900d52191b",
+      "source_size_bytes": 1287008,
+      "target_path": "C:\\Program Files\\IES\\Shared Content\\Weather\\CHE_GVE_2035_RCP85_1in10-warmsummer.epw",
+      "target_name": "CHE_GVE_2035_RCP85_1in10-warmsummer.epw",
+      "action": "SKIPPED_ALREADY_INSTALLED"
+    },
+    {
+      "station": "GVE",
+      "label": "MeteoSwiss-transport-candidate",
+      "source_path": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\generated_weather\\GVE\\GVE_2060_RCP26_1in10-warmsummer_IESVE_CANDIDATE.epw",
+      "source_sha256": "7bca26874e145464bb6009a9fecfbf01fa4984de966eff075af5fdb6b52d0aba",
+      "source_size_bytes": 1287269,
+      "target_path": "C:\\Program Files\\IES\\Shared Content\\Weather\\CHE_GVE_2060_RCP26_1in10-warmsummer.epw",
+      "target_name": "CHE_GVE_2060_RCP26_1in10-warmsummer.epw",
+      "action": "SKIPPED_ALREADY_INSTALLED"
+    },
+    {
+      "station": "GVE",
+      "label": "MeteoSwiss-transport-candidate",
+      "source_path": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\generated_weather\\GVE\\GVE_2060_RCP85_1in10-warmsummer_IESVE_CANDIDATE.epw",
+      "source_sha256": "8faa291a4d6e3c131e5f2ad76a211f96191f3fcb872fffded76580d1bf29b0b8",
+      "source_size_bytes": 1287347,
+      "target_path": "C:\\Program Files\\IES\\Shared Content\\Weather\\CHE_GVE_2060_RCP85_1in10-warmsummer.epw",
+      "target_name": "CHE_GVE_2060_RCP85_1in10-warmsummer.epw",
+      "action": "SKIPPED_ALREADY_INSTALLED"
+    },
+    {
+      "station": "GVE",
+      "label": "MeteoSwiss-transport-candidate",
+      "source_path": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\generated_weather\\GVE\\GVE_2060_RCP85_DRY_IESVE_CANDIDATE.epw",
+      "source_sha256": "80fbe0089663dacb19b3eed296303c0e73dc83d3513b77895fcd01fa36c399c7",
+      "source_size_bytes": 1287034,
+      "target_path": "C:\\Program Files\\IES\\Shared Content\\Weather\\CHE_GVE_2060_RCP85_DRY.epw",
+      "target_name": "CHE_GVE_2060_RCP85_DRY.epw",
+      "action": "SKIPPED_ALREADY_INSTALLED"
+    },
+    {
+      "station": "KLO",
+      "label": "MeteoSwiss-transport-candidate",
+      "source_path": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\generated_weather\\KLO\\KLO_2035_RCP85_1in10-warmsummer_IESVE_CANDIDATE.epw",
+      "source_sha256": "79cfb1b2c1b064246c71fc5b75162bd4a8c7bd81023a0c9df9f8229e2c0dab8d",
+      "source_size_bytes": 1288542,
+      "target_path": "C:\\Program Files\\IES\\Shared Content\\Weather\\CHE_KLO_2035_RCP85_1in10-warmsummer.epw",
+      "target_name": "CHE_KLO_2035_RCP85_1in10-warmsummer.epw",
+      "action": "SKIPPED_ALREADY_INSTALLED"
+    },
+    {
+      "station": "KLO",
+      "label": "MeteoSwiss-transport-candidate",
+      "source_path": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\generated_weather\\KLO\\KLO_2035_RCP85_DRY_IESVE_CANDIDATE.epw",
+      "source_sha256": "695b9171c7e1938086b9f3a9fefe515b9ae4d8af57e5a28c621b75c448f02a7d",
+      "source_size_bytes": 1288377,
+      "target_path": "C:\\Program Files\\IES\\Shared Content\\Weather\\CHE_KLO_2035_RCP85_DRY.epw",
+      "target_name": "CHE_KLO_2035_RCP85_DRY.epw",
+      "action": "SKIPPED_ALREADY_INSTALLED"
+    },
+    {
+      "station": "KLO",
+      "label": "MeteoSwiss-transport-candidate",
+      "source_path": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\generated_weather\\KLO\\KLO_2060_RCP26_1in10-warmsummer_IESVE_CANDIDATE.epw",
+      "source_sha256": "a7e4f7b300c39155268002d26b6cbb33a64d8ccf1ab1b0cae74ce2fee514ff16",
+      "source_size_bytes": 1289086,
+      "target_path": "C:\\Program Files\\IES\\Shared Content\\Weather\\CHE_KLO_2060_RCP26_1in10-warmsummer.epw",
+      "target_name": "CHE_KLO_2060_RCP26_1in10-warmsummer.epw",
+      "action": "SKIPPED_ALREADY_INSTALLED"
+    },
+    {
+      "station": "KLO",
+      "label": "MeteoSwiss-transport-candidate",
+      "source_path": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\generated_weather\\KLO\\KLO_2060_RCP26_DRY_IESVE_CANDIDATE.epw",
+      "source_sha256": "a911cabd44caf101c730f2fb16cc9d33339a2ab8b6b2bbb86fc0f6367db687a6",
+      "source_size_bytes": 1288508,
+      "target_path": "C:\\Program Files\\IES\\Shared Content\\Weather\\CHE_KLO_2060_RCP26_DRY.epw",
+      "target_name": "CHE_KLO_2060_RCP26_DRY.epw",
+      "action": "SKIPPED_ALREADY_INSTALLED"
+    },
+    {
+      "station": "KLO",
+      "label": "MeteoSwiss-transport-candidate",
+      "source_path": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\generated_weather\\KLO\\KLO_2060_RCP85_1in10-warmsummer_IESVE_CANDIDATE.epw",
+      "source_sha256": "75ced8544152d122fc3093416df74500f138fa756f1624fc926d612f1f5117c4",
+      "source_size_bytes": 1288803,
+      "target_path": "C:\\Program Files\\IES\\Shared Content\\Weather\\CHE_KLO_2060_RCP85_1in10-warmsummer.epw",
+      "target_name": "CHE_KLO_2060_RCP85_1in10-warmsummer.epw",
+      "action": "SKIPPED_ALREADY_INSTALLED"
+    },
+    {
+      "station": "KLO",
+      "label": "MeteoSwiss-transport-candidate",
+      "source_path": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\generated_weather\\KLO\\KLO_2060_RCP85_DRY_IESVE_CANDIDATE.epw",
+      "source_sha256": "3deef57613428d1fb20d6bc726a0a7033d0427ffd3cc3f207647e941972a7e2d",
+      "source_size_bytes": 1288517,
+      "target_path": "C:\\Program Files\\IES\\Shared Content\\Weather\\CHE_KLO_2060_RCP85_DRY.epw",
+      "target_name": "CHE_KLO_2060_RCP85_DRY.epw",
+      "action": "SKIPPED_ALREADY_INSTALLED"
+    },
+    {
+      "station": "SMA",
+      "label": "SIA-official",
+      "source_path": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\generated_weather\\SMA\\SMA_2035_RCP85_DRY_SIA_OFFICIAL.epw",
+      "source_sha256": "e733a20fc887b2b5c0ab64cdf42e8c3e9143cbaa70cad3216b3f93793d24009f",
+      "source_size_bytes": 1153940,
+      "target_path": "C:\\Program Files\\IES\\Shared Content\\Weather\\CHE_SMA_2035_RCP85_DRY_SIA-official.epw",
+      "target_name": "CHE_SMA_2035_RCP85_DRY_SIA-official.epw",
+      "action": "SKIPPED_ALREADY_INSTALLED"
+    }
+  ],
+  "compliance_claim_allowed": false,
+  "note": "Every installed EPW remains a candidate; VE WeatherFileReader read-back is required before assignment. SIA-official files are byte-for-byte copies from the SIA distribution package."
+}

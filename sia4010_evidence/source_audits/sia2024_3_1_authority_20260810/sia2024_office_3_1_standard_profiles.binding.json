@@ -1,0 +1,87 @@
+{
+  "schema_id": "sia4010.sia2024_usage_profiles.v1",
+  "schema_version": "1.0",
+  "primary_source_sha256": "c8e801d24b98365226c076e028d6556b01f357baa5233b2ac57a2dd63149177e",
+  "source_locator": "Authority email from Prof. Gerhard Zweifel dated 2026-08-10, inline extract image006.png, SIA 2024:2021 category 3.1 Einzel-/Gruppenbüro; sender explicitly identifies the third-last value column as the standard-value column.",
+  "use_category": "SIA 2024:2021 3.1 Einzel-/Gruppenbüro",
+  "value_set": "standard values (third-last value column, confirmed by the authority email)",
+  "calendar_basis": "Authority decision SIA4010_SIA2024_3_1_CALENDAR_20260826: non-leap 365-day calendar; 1 January is Saturday; Monday-Friday use days; Saturday-Sunday rest days; no holidays or exception days; 261 use days follow from this mapping; source hours 1-24 are ordinal hour-ending intervals.",
+  "annual_simultaneity_method": "Authority decision SIA4010_SIA2024_3_1_CALENDAR_20260826: multiply each hourly occupancy value directly by 0.80. Reported annual full-load hours are retained as source values and are not recomputed.",
+  "profiles": [
+    {
+      "key": "occupancy_profile",
+      "profile_type": "freeform",
+      "reference": "SIA2024_3_1_OCC_SOURCE_24H",
+      "modulating": true,
+      "units": -1,
+      "data": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.2, 0.6, 1.0, 1.0, 0.8, 0.4, 0.6, 1.0, 0.8, 0.6, 0.2, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+      "source_locator": "image006.png, Personenprofil bars labelled 1-24; daily equivalent full-load hours shown as 7.2 h. Values are source-hour bins, not VE breakpoint times."
+    },
+    {
+      "key": "equipment_profile",
+      "profile_type": "freeform",
+      "reference": "SIA2024_3_1_EQUIP_SOURCE_24H",
+      "modulating": true,
+      "units": -1,
+      "data": [0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.6, 0.8, 1.0, 0.8, 0.4, 0.6, 1.0, 0.8, 0.6, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3],
+      "source_locator": "image006.png, Geräte und Prozessanlagen Lastprofil bars labelled 1-24; daily equivalent full-load hours shown as 11.1 h. Values are source-hour bins, not VE breakpoint times."
+    },
+    {
+      "key": "lighting_profile",
+      "profile_type": "freeform",
+      "reference": "SIA2024_3_1_LIGHT_SOURCE_24H",
+      "modulating": true,
+      "units": -1,
+      "data": [0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.6, 0.8, 1.0, 0.8, 0.4, 0.6, 1.0, 0.8, 0.6, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3],
+      "source_locator": "image006.png, Beleuchtung Lastprofil bars labelled 1-24. The extract reports 1400 annual lighting full-load hours after the stated lighting assumptions; values are source-hour bins, not VE breakpoint times."
+    }
+  ],
+  "standard_values": {
+    "people": {
+      "use_hours_per_day_h": 11.0,
+      "equivalent_full_load_hours_per_day_h": 7.2,
+      "rest_days_per_week_d": 2,
+      "use_days_per_year_d": 261,
+      "annual_simultaneity_factor": 0.8,
+      "annual_full_load_hours_h": 1500,
+      "net_floor_area_per_person_m2_person": 14.0,
+      "activity_met": 1.2,
+      "clothing_summer_clo": 0.5,
+      "clothing_winter_clo": 1.0,
+      "sensible_heat_gain_at_24c_w_m2": 4.9,
+      "moisture_generation_at_24c_g_h_m2": 6.1,
+      "other_moisture_sources_g_h_m2": 0.5
+    },
+    "equipment": {
+      "equivalent_full_load_hours_per_day_h": 11.1,
+      "electric_power_density_w_m2": 11.0,
+      "outside_use_time_fraction_percent": 30.0,
+      "heat_gain_density_w_m2": 11.0,
+      "annual_full_load_hours_h": 2910,
+      "annual_electricity_demand_kwh_m2": 32.0
+    },
+    "lighting": {
+      "maintained_illuminance_lx": 500.0,
+      "reference_illuminance_lx": 500.0,
+      "workplane_height_m": 0.75,
+      "room_index": 1.33,
+      "lamp_luminous_efficacy_lm_w": 70.0,
+      "room_utilization_factor": 0.71,
+      "glazing_area_factor": 0.29,
+      "use_hours_per_day_h": 11.0,
+      "presence_control_correction_factor": 1.0,
+      "electric_power_density_w_m2": 12.5,
+      "heat_gain_density_w_m2": 12.5,
+      "annual_full_load_hours_h": 1400,
+      "annual_electricity_demand_kwh_m2": 17.5
+    }
+  },
+  "source_integrity": {
+    "email_msg_sha256": "fb8a86c0c2590de801d7b107a8186d3cc4bef4144a8bfd9a3031f2ff29b56b68",
+    "extract_image_sha256": "c8e801d24b98365226c076e028d6556b01f357baa5233b2ac57a2dd63149177e",
+    "received_at": "2026-08-10T15:46:54+01:00",
+    "sender_role": "SIA validation technical contact"
+  },
+  "calendar_authority_decision": "../../../authority_decisions/2026-08-26_sia2024_3_1_calendar_decision.json",
+  "completion_guardrail": "The numerical values, 24 hour-ending source bins and annual calendar semantics are authority-confirmed. Native VE daily/weekly/yearly graph construction, assignment and read-back remain separate technical qualification steps."
+}

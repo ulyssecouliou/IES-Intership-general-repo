@@ -1,0 +1,921 @@
+{
+  "artifacts": {
+    "1A": {
+      "html": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\sia4010_evidence\\autonomy\\navigator\\sia4010_navigator_1a.html",
+      "json": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\sia4010_evidence\\autonomy\\navigator\\sia4010_navigator_1a.json"
+    },
+    "1B": {
+      "html": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\sia4010_evidence\\autonomy\\navigator\\sia4010_navigator_1b.html",
+      "json": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\sia4010_evidence\\autonomy\\navigator\\sia4010_navigator_1b.json"
+    },
+    "2A": {
+      "html": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\sia4010_evidence\\autonomy\\navigator\\sia4010_navigator_2a.html",
+      "json": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\sia4010_evidence\\autonomy\\navigator\\sia4010_navigator_2a.json"
+    },
+    "2B": {
+      "html": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\sia4010_evidence\\autonomy\\navigator\\sia4010_navigator_2b.html",
+      "json": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\sia4010_evidence\\autonomy\\navigator\\sia4010_navigator_2b.json"
+    },
+    "3": {
+      "html": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\sia4010_evidence\\autonomy\\navigator\\sia4010_navigator_3.html",
+      "json": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\sia4010_evidence\\autonomy\\navigator\\sia4010_navigator_3.json"
+    },
+    "4A": {
+      "html": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\sia4010_evidence\\autonomy\\navigator\\sia4010_navigator_4a.html",
+      "json": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\sia4010_evidence\\autonomy\\navigator\\sia4010_navigator_4a.json"
+    },
+    "4B": {
+      "html": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\sia4010_evidence\\autonomy\\navigator\\sia4010_navigator_4b.html",
+      "json": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\sia4010_evidence\\autonomy\\navigator\\sia4010_navigator_4b.json"
+    },
+    "5": {
+      "html": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\sia4010_evidence\\autonomy\\navigator\\sia4010_navigator_5.html",
+      "json": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\sia4010_evidence\\autonomy\\navigator\\sia4010_navigator_5.json"
+    }
+  },
+  "claim_guardrail": "Only a checksum-valid model, ApacheSim execution and linked APS evaluation satisfy a gate. The result remains a technical navigator, not an SIA attestation.",
+  "classes": {
+    "1A": {
+      "claim_guardrail": "The navigator verifies technical readiness and records evidence. Only the responsible SIA body can grant official SIA 4010 validation.",
+      "gates": [
+        {
+          "failed_variants": [],
+          "gate_id": "official_bundle",
+          "label": "Official SIA package",
+          "message": "The package manifest and file checksums are verified.",
+          "missing_variants": [],
+          "next_action": "Keep the immutable manifest with the validation evidence.",
+          "status": "PASS"
+        },
+        {
+          "failed_variants": [],
+          "gate_id": "model_cases",
+          "label": "VE reference cases",
+          "message": "One or more exact VE cases are absent or not verified.",
+          "missing_variants": [
+            "test_2A"
+          ],
+          "next_action": "Generate and validate: test_2A.",
+          "status": "BLOCKED"
+        },
+        {
+          "failed_variants": [],
+          "gate_id": "candidate_results",
+          "label": "VE/APS candidate results",
+          "message": "At least one variant has no traceable VE/APS result artifact.",
+          "missing_variants": [
+            "test_1",
+            "test_2A"
+          ],
+          "next_action": "Run APS and extract the official metrics for: test_1, test_2A.",
+          "status": "BLOCKED"
+        },
+        {
+          "failed_variants": [],
+          "gate_id": "official_comparison",
+          "label": "Official acceptance comparisons",
+          "message": "At least one mandatory comparison is missing or not checkable.",
+          "missing_variants": [
+            "test_1",
+            "test_2A"
+          ],
+          "next_action": "Complete annual and hourly-distribution comparisons for: test_1, test_2A.",
+          "status": "BLOCKED"
+        },
+        {
+          "failed_variants": [],
+          "gate_id": "official_attestation",
+          "label": "SIA/sub-commission attestation",
+          "message": "No official attestation is recorded.",
+          "missing_variants": [],
+          "next_action": "Submit the complete package to the responsible SIA body.",
+          "status": "BLOCKED"
+        }
+      ],
+      "overall_status": "MODEL_SETUP_REQUIRED",
+      "required_variants": [
+        "test_1",
+        "test_2A"
+      ],
+      "schema_version": "1.0",
+      "target_class": "1A",
+      "technical_status": "TECHNICAL_VALIDATION_INCOMPLETE"
+    },
+    "1B": {
+      "claim_guardrail": "The navigator verifies technical readiness and records evidence. Only the responsible SIA body can grant official SIA 4010 validation.",
+      "gates": [
+        {
+          "failed_variants": [],
+          "gate_id": "official_bundle",
+          "label": "Official SIA package",
+          "message": "The package manifest and file checksums are verified.",
+          "missing_variants": [],
+          "next_action": "Keep the immutable manifest with the validation evidence.",
+          "status": "PASS"
+        },
+        {
+          "failed_variants": [],
+          "gate_id": "model_cases",
+          "label": "VE reference cases",
+          "message": "One or more exact VE cases are absent or not verified.",
+          "missing_variants": [
+            "test_2B",
+            "test_2C",
+            "test_2D"
+          ],
+          "next_action": "Generate and validate: test_2B, test_2C, test_2D.",
+          "status": "BLOCKED"
+        },
+        {
+          "failed_variants": [],
+          "gate_id": "candidate_results",
+          "label": "VE/APS candidate results",
+          "message": "At least one variant has no traceable VE/APS result artifact.",
+          "missing_variants": [
+            "test_1",
+            "test_2B",
+            "test_2C",
+            "test_2D"
+          ],
+          "next_action": "Run APS and extract the official metrics for: test_1, test_2B, test_2C, test_2D.",
+          "status": "BLOCKED"
+        },
+        {
+          "failed_variants": [],
+          "gate_id": "official_comparison",
+          "label": "Official acceptance comparisons",
+          "message": "At least one mandatory comparison is missing or not checkable.",
+          "missing_variants": [
+            "test_1",
+            "test_2B",
+            "test_2C",
+            "test_2D"
+          ],
+          "next_action": "Complete annual and hourly-distribution comparisons for: test_1, test_2B, test_2C, test_2D.",
+          "status": "BLOCKED"
+        },
+        {
+          "failed_variants": [],
+          "gate_id": "official_attestation",
+          "label": "SIA/sub-commission attestation",
+          "message": "No official attestation is recorded.",
+          "missing_variants": [],
+          "next_action": "Submit the complete package to the responsible SIA body.",
+          "status": "BLOCKED"
+        }
+      ],
+      "overall_status": "MODEL_SETUP_REQUIRED",
+      "required_variants": [
+        "test_1",
+        "test_2B",
+        "test_2C",
+        "test_2D"
+      ],
+      "schema_version": "1.0",
+      "target_class": "1B",
+      "technical_status": "TECHNICAL_VALIDATION_INCOMPLETE"
+    },
+    "2A": {
+      "claim_guardrail": "The navigator verifies technical readiness and records evidence. Only the responsible SIA body can grant official SIA 4010 validation.",
+      "gates": [
+        {
+          "failed_variants": [],
+          "gate_id": "official_bundle",
+          "label": "Official SIA package",
+          "message": "The package manifest and file checksums are verified.",
+          "missing_variants": [],
+          "next_action": "Keep the immutable manifest with the validation evidence.",
+          "status": "PASS"
+        },
+        {
+          "failed_variants": [],
+          "gate_id": "model_cases",
+          "label": "VE reference cases",
+          "message": "One or more exact VE cases are absent or not verified.",
+          "missing_variants": [
+            "test_2A",
+            "test_3A",
+            "test_3B",
+            "test_3C",
+            "test_3D",
+            "test_3E",
+            "test_3F"
+          ],
+          "next_action": "Generate and validate: test_2A, test_3A, test_3B, test_3C, test_3D, test_3E, test_3F.",
+          "status": "BLOCKED"
+        },
+        {
+          "failed_variants": [],
+          "gate_id": "candidate_results",
+          "label": "VE/APS candidate results",
+          "message": "At least one variant has no traceable VE/APS result artifact.",
+          "missing_variants": [
+            "test_1",
+            "test_2A",
+            "test_3A",
+            "test_3B",
+            "test_3C",
+            "test_3D",
+            "test_3E",
+            "test_3F"
+          ],
+          "next_action": "Run APS and extract the official metrics for: test_1, test_2A, test_3A, test_3B, test_3C, test_3D, test_3E, test_3F.",
+          "status": "BLOCKED"
+        },
+        {
+          "failed_variants": [],
+          "gate_id": "official_comparison",
+          "label": "Official acceptance comparisons",
+          "message": "At least one mandatory comparison is missing or not checkable.",
+          "missing_variants": [
+            "test_1",
+            "test_2A",
+            "test_3A",
+            "test_3B",
+            "test_3C",
+            "test_3D",
+            "test_3E",
+            "test_3F"
+          ],
+          "next_action": "Complete annual and hourly-distribution comparisons for: test_1, test_2A, test_3A, test_3B, test_3C, test_3D, test_3E, test_3F.",
+          "status": "BLOCKED"
+        },
+        {
+          "failed_variants": [],
+          "gate_id": "official_attestation",
+          "label": "SIA/sub-commission attestation",
+          "message": "No official attestation is recorded.",
+          "missing_variants": [],
+          "next_action": "Submit the complete package to the responsible SIA body.",
+          "status": "BLOCKED"
+        }
+      ],
+      "overall_status": "MODEL_SETUP_REQUIRED",
+      "required_variants": [
+        "test_1",
+        "test_2A",
+        "test_3A",
+        "test_3B",
+        "test_3C",
+        "test_3D",
+        "test_3E",
+        "test_3F"
+      ],
+      "schema_version": "1.0",
+      "target_class": "2A",
+      "technical_status": "TECHNICAL_VALIDATION_INCOMPLETE"
+    },
+    "2B": {
+      "claim_guardrail": "The navigator verifies technical readiness and records evidence. Only the responsible SIA body can grant official SIA 4010 validation.",
+      "gates": [
+        {
+          "failed_variants": [],
+          "gate_id": "official_bundle",
+          "label": "Official SIA package",
+          "message": "The package manifest and file checksums are verified.",
+          "missing_variants": [],
+          "next_action": "Keep the immutable manifest with the validation evidence.",
+          "status": "PASS"
+        },
+        {
+          "failed_variants": [],
+          "gate_id": "model_cases",
+          "label": "VE reference cases",
+          "message": "One or more exact VE cases are absent or not verified.",
+          "missing_variants": [
+            "test_2B",
+            "test_2C",
+            "test_2D",
+            "test_3A",
+            "test_3B",
+            "test_3C",
+            "test_3D",
+            "test_3E",
+            "test_3F",
+            "test_3G",
+            "test_3H",
+            "test_3I",
+            "test_3J",
+            "test_3K",
+            "test_3L"
+          ],
+          "next_action": "Generate and validate: test_2B, test_2C, test_2D, test_3A, test_3B, test_3C, test_3D, test_3E, test_3F, test_3G, test_3H, test_3I, test_3J, test_3K, test_3L.",
+          "status": "BLOCKED"
+        },
+        {
+          "failed_variants": [],
+          "gate_id": "candidate_results",
+          "label": "VE/APS candidate results",
+          "message": "At least one variant has no traceable VE/APS result artifact.",
+          "missing_variants": [
+            "test_1",
+            "test_2B",
+            "test_2C",
+            "test_2D",
+            "test_3A",
+            "test_3B",
+            "test_3C",
+            "test_3D",
+            "test_3E",
+            "test_3F",
+            "test_3G",
+            "test_3H",
+            "test_3I",
+            "test_3J",
+            "test_3K",
+            "test_3L"
+          ],
+          "next_action": "Run APS and extract the official metrics for: test_1, test_2B, test_2C, test_2D, test_3A, test_3B, test_3C, test_3D, test_3E, test_3F, test_3G, test_3H, test_3I, test_3J, test_3K, test_3L.",
+          "status": "BLOCKED"
+        },
+        {
+          "failed_variants": [],
+          "gate_id": "official_comparison",
+          "label": "Official acceptance comparisons",
+          "message": "At least one mandatory comparison is missing or not checkable.",
+          "missing_variants": [
+            "test_1",
+            "test_2B",
+            "test_2C",
+            "test_2D",
+            "test_3A",
+            "test_3B",
+            "test_3C",
+            "test_3D",
+            "test_3E",
+            "test_3F",
+            "test_3G",
+            "test_3H",
+            "test_3I",
+            "test_3J",
+            "test_3K",
+            "test_3L"
+          ],
+          "next_action": "Complete annual and hourly-distribution comparisons for: test_1, test_2B, test_2C, test_2D, test_3A, test_3B, test_3C, test_3D, test_3E, test_3F, test_3G, test_3H, test_3I, test_3J, test_3K, test_3L.",
+          "status": "BLOCKED"
+        },
+        {
+          "failed_variants": [],
+          "gate_id": "official_attestation",
+          "label": "SIA/sub-commission attestation",
+          "message": "No official attestation is recorded.",
+          "missing_variants": [],
+          "next_action": "Submit the complete package to the responsible SIA body.",
+          "status": "BLOCKED"
+        }
+      ],
+      "overall_status": "MODEL_SETUP_REQUIRED",
+      "required_variants": [
+        "test_1",
+        "test_2B",
+        "test_2C",
+        "test_2D",
+        "test_3A",
+        "test_3B",
+        "test_3C",
+        "test_3D",
+        "test_3E",
+        "test_3F",
+        "test_3G",
+        "test_3H",
+        "test_3I",
+        "test_3J",
+        "test_3K",
+        "test_3L"
+      ],
+      "schema_version": "1.0",
+      "target_class": "2B",
+      "technical_status": "TECHNICAL_VALIDATION_INCOMPLETE"
+    },
+    "3": {
+      "claim_guardrail": "The navigator verifies technical readiness and records evidence. Only the responsible SIA body can grant official SIA 4010 validation.",
+      "gates": [
+        {
+          "failed_variants": [],
+          "gate_id": "official_bundle",
+          "label": "Official SIA package",
+          "message": "The package manifest and file checksums are verified.",
+          "missing_variants": [],
+          "next_action": "Keep the immutable manifest with the validation evidence.",
+          "status": "PASS"
+        },
+        {
+          "failed_variants": [],
+          "gate_id": "model_cases",
+          "label": "VE reference cases",
+          "message": "One or more exact VE cases are absent or not verified.",
+          "missing_variants": [
+            "test_4",
+            "test_5A",
+            "test_5B",
+            "test_5C",
+            "test_5D",
+            "test_6"
+          ],
+          "next_action": "Generate and validate: test_4, test_5A, test_5B, test_5C, test_5D, test_6.",
+          "status": "BLOCKED"
+        },
+        {
+          "failed_variants": [],
+          "gate_id": "candidate_results",
+          "label": "VE/APS candidate results",
+          "message": "At least one variant has no traceable VE/APS result artifact.",
+          "missing_variants": [
+            "test_1",
+            "test_4",
+            "test_5A",
+            "test_5B",
+            "test_5C",
+            "test_5D",
+            "test_6"
+          ],
+          "next_action": "Run APS and extract the official metrics for: test_1, test_4, test_5A, test_5B, test_5C, test_5D, test_6.",
+          "status": "BLOCKED"
+        },
+        {
+          "failed_variants": [],
+          "gate_id": "official_comparison",
+          "label": "Official acceptance comparisons",
+          "message": "At least one mandatory comparison is missing or not checkable.",
+          "missing_variants": [
+            "test_1",
+            "test_4",
+            "test_5A",
+            "test_5B",
+            "test_5C",
+            "test_5D",
+            "test_6"
+          ],
+          "next_action": "Complete annual and hourly-distribution comparisons for: test_1, test_4, test_5A, test_5B, test_5C, test_5D, test_6.",
+          "status": "BLOCKED"
+        },
+        {
+          "failed_variants": [],
+          "gate_id": "official_attestation",
+          "label": "SIA/sub-commission attestation",
+          "message": "No official attestation is recorded.",
+          "missing_variants": [],
+          "next_action": "Submit the complete package to the responsible SIA body.",
+          "status": "BLOCKED"
+        }
+      ],
+      "overall_status": "MODEL_SETUP_REQUIRED",
+      "required_variants": [
+        "test_1",
+        "test_4",
+        "test_5A",
+        "test_5B",
+        "test_5C",
+        "test_5D",
+        "test_6"
+      ],
+      "schema_version": "1.0",
+      "target_class": "3",
+      "technical_status": "TECHNICAL_VALIDATION_INCOMPLETE"
+    },
+    "4A": {
+      "claim_guardrail": "The navigator verifies technical readiness and records evidence. Only the responsible SIA body can grant official SIA 4010 validation.",
+      "gates": [
+        {
+          "failed_variants": [],
+          "gate_id": "official_bundle",
+          "label": "Official SIA package",
+          "message": "The package manifest and file checksums are verified.",
+          "missing_variants": [],
+          "next_action": "Keep the immutable manifest with the validation evidence.",
+          "status": "PASS"
+        },
+        {
+          "failed_variants": [],
+          "gate_id": "model_cases",
+          "label": "VE reference cases",
+          "message": "One or more exact VE cases are absent or not verified.",
+          "missing_variants": [
+            "test_2A",
+            "test_3A",
+            "test_3B",
+            "test_3C",
+            "test_3D",
+            "test_3E",
+            "test_3F",
+            "test_4",
+            "test_5A",
+            "test_5B",
+            "test_5C",
+            "test_5D",
+            "test_6",
+            "test_7"
+          ],
+          "next_action": "Generate and validate: test_2A, test_3A, test_3B, test_3C, test_3D, test_3E, test_3F, test_4, test_5A, test_5B, test_5C, test_5D, test_6, test_7.",
+          "status": "BLOCKED"
+        },
+        {
+          "failed_variants": [],
+          "gate_id": "candidate_results",
+          "label": "VE/APS candidate results",
+          "message": "At least one variant has no traceable VE/APS result artifact.",
+          "missing_variants": [
+            "test_1",
+            "test_2A",
+            "test_3A",
+            "test_3B",
+            "test_3C",
+            "test_3D",
+            "test_3E",
+            "test_3F",
+            "test_4",
+            "test_5A",
+            "test_5B",
+            "test_5C",
+            "test_5D",
+            "test_6",
+            "test_7"
+          ],
+          "next_action": "Run APS and extract the official metrics for: test_1, test_2A, test_3A, test_3B, test_3C, test_3D, test_3E, test_3F, test_4, test_5A, test_5B, test_5C, test_5D, test_6, test_7.",
+          "status": "BLOCKED"
+        },
+        {
+          "failed_variants": [],
+          "gate_id": "official_comparison",
+          "label": "Official acceptance comparisons",
+          "message": "At least one mandatory comparison is missing or not checkable.",
+          "missing_variants": [
+            "test_1",
+            "test_2A",
+            "test_3A",
+            "test_3B",
+            "test_3C",
+            "test_3D",
+            "test_3E",
+            "test_3F",
+            "test_4",
+            "test_5A",
+            "test_5B",
+            "test_5C",
+            "test_5D",
+            "test_6",
+            "test_7"
+          ],
+          "next_action": "Complete annual and hourly-distribution comparisons for: test_1, test_2A, test_3A, test_3B, test_3C, test_3D, test_3E, test_3F, test_4, test_5A, test_5B, test_5C, test_5D, test_6, test_7.",
+          "status": "BLOCKED"
+        },
+        {
+          "failed_variants": [],
+          "gate_id": "official_attestation",
+          "label": "SIA/sub-commission attestation",
+          "message": "No official attestation is recorded.",
+          "missing_variants": [],
+          "next_action": "Submit the complete package to the responsible SIA body.",
+          "status": "BLOCKED"
+        }
+      ],
+      "overall_status": "MODEL_SETUP_REQUIRED",
+      "required_variants": [
+        "test_1",
+        "test_2A",
+        "test_3A",
+        "test_3B",
+        "test_3C",
+        "test_3D",
+        "test_3E",
+        "test_3F",
+        "test_4",
+        "test_5A",
+        "test_5B",
+        "test_5C",
+        "test_5D",
+        "test_6",
+        "test_7"
+      ],
+      "schema_version": "1.0",
+      "target_class": "4A",
+      "technical_status": "TECHNICAL_VALIDATION_INCOMPLETE"
+    },
+    "4B": {
+      "claim_guardrail": "The navigator verifies technical readiness and records evidence. Only the responsible SIA body can grant official SIA 4010 validation.",
+      "gates": [
+        {
+          "failed_variants": [],
+          "gate_id": "official_bundle",
+          "label": "Official SIA package",
+          "message": "The package manifest and file checksums are verified.",
+          "missing_variants": [],
+          "next_action": "Keep the immutable manifest with the validation evidence.",
+          "status": "PASS"
+        },
+        {
+          "failed_variants": [],
+          "gate_id": "model_cases",
+          "label": "VE reference cases",
+          "message": "One or more exact VE cases are absent or not verified.",
+          "missing_variants": [
+            "test_2B",
+            "test_2C",
+            "test_2D",
+            "test_3A",
+            "test_3B",
+            "test_3C",
+            "test_3D",
+            "test_3E",
+            "test_3F",
+            "test_3G",
+            "test_3H",
+            "test_3I",
+            "test_3J",
+            "test_3K",
+            "test_3L",
+            "test_4",
+            "test_5A",
+            "test_5B",
+            "test_5C",
+            "test_5D",
+            "test_6",
+            "test_7"
+          ],
+          "next_action": "Generate and validate: test_2B, test_2C, test_2D, test_3A, test_3B, test_3C, test_3D, test_3E, test_3F, test_3G, test_3H, test_3I, test_3J, test_3K, test_3L, test_4, test_5A, test_5B, test_5C, test_5D, test_6, test_7.",
+          "status": "BLOCKED"
+        },
+        {
+          "failed_variants": [],
+          "gate_id": "candidate_results",
+          "label": "VE/APS candidate results",
+          "message": "At least one variant has no traceable VE/APS result artifact.",
+          "missing_variants": [
+            "test_1",
+            "test_2B",
+            "test_2C",
+            "test_2D",
+            "test_3A",
+            "test_3B",
+            "test_3C",
+            "test_3D",
+            "test_3E",
+            "test_3F",
+            "test_3G",
+            "test_3H",
+            "test_3I",
+            "test_3J",
+            "test_3K",
+            "test_3L",
+            "test_4",
+            "test_5A",
+            "test_5B",
+            "test_5C",
+            "test_5D",
+            "test_6",
+            "test_7"
+          ],
+          "next_action": "Run APS and extract the official metrics for: test_1, test_2B, test_2C, test_2D, test_3A, test_3B, test_3C, test_3D, test_3E, test_3F, test_3G, test_3H, test_3I, test_3J, test_3K, test_3L, test_4, test_5A, test_5B, test_5C, test_5D, test_6, test_7.",
+          "status": "BLOCKED"
+        },
+        {
+          "failed_variants": [],
+          "gate_id": "official_comparison",
+          "label": "Official acceptance comparisons",
+          "message": "At least one mandatory comparison is missing or not checkable.",
+          "missing_variants": [
+            "test_1",
+            "test_2B",
+            "test_2C",
+            "test_2D",
+            "test_3A",
+            "test_3B",
+            "test_3C",
+            "test_3D",
+            "test_3E",
+            "test_3F",
+            "test_3G",
+            "test_3H",
+            "test_3I",
+            "test_3J",
+            "test_3K",
+            "test_3L",
+            "test_4",
+            "test_5A",
+            "test_5B",
+            "test_5C",
+            "test_5D",
+            "test_6",
+            "test_7"
+          ],
+          "next_action": "Complete annual and hourly-distribution comparisons for: test_1, test_2B, test_2C, test_2D, test_3A, test_3B, test_3C, test_3D, test_3E, test_3F, test_3G, test_3H, test_3I, test_3J, test_3K, test_3L, test_4, test_5A, test_5B, test_5C, test_5D, test_6, test_7.",
+          "status": "BLOCKED"
+        },
+        {
+          "failed_variants": [],
+          "gate_id": "official_attestation",
+          "label": "SIA/sub-commission attestation",
+          "message": "No official attestation is recorded.",
+          "missing_variants": [],
+          "next_action": "Submit the complete package to the responsible SIA body.",
+          "status": "BLOCKED"
+        }
+      ],
+      "overall_status": "MODEL_SETUP_REQUIRED",
+      "required_variants": [
+        "test_1",
+        "test_2B",
+        "test_2C",
+        "test_2D",
+        "test_3A",
+        "test_3B",
+        "test_3C",
+        "test_3D",
+        "test_3E",
+        "test_3F",
+        "test_3G",
+        "test_3H",
+        "test_3I",
+        "test_3J",
+        "test_3K",
+        "test_3L",
+        "test_4",
+        "test_5A",
+        "test_5B",
+        "test_5C",
+        "test_5D",
+        "test_6",
+        "test_7"
+      ],
+      "schema_version": "1.0",
+      "target_class": "4B",
+      "technical_status": "TECHNICAL_VALIDATION_INCOMPLETE"
+    },
+    "5": {
+      "claim_guardrail": "The navigator verifies technical readiness and records evidence. Only the responsible SIA body can grant official SIA 4010 validation.",
+      "gates": [
+        {
+          "failed_variants": [],
+          "gate_id": "official_bundle",
+          "label": "Official SIA package",
+          "message": "The package manifest and file checksums are verified.",
+          "missing_variants": [],
+          "next_action": "Keep the immutable manifest with the validation evidence.",
+          "status": "PASS"
+        },
+        {
+          "failed_variants": [],
+          "gate_id": "model_cases",
+          "label": "VE reference cases",
+          "message": "One or more exact VE cases are absent or not verified.",
+          "missing_variants": [
+            "test_7"
+          ],
+          "next_action": "Generate and validate: test_7.",
+          "status": "BLOCKED"
+        },
+        {
+          "failed_variants": [],
+          "gate_id": "candidate_results",
+          "label": "VE/APS candidate results",
+          "message": "At least one variant has no traceable VE/APS result artifact.",
+          "missing_variants": [
+            "test_7"
+          ],
+          "next_action": "Run APS and extract the official metrics for: test_7.",
+          "status": "BLOCKED"
+        },
+        {
+          "failed_variants": [],
+          "gate_id": "official_comparison",
+          "label": "Official acceptance comparisons",
+          "message": "At least one mandatory comparison is missing or not checkable.",
+          "missing_variants": [
+            "test_7"
+          ],
+          "next_action": "Complete annual and hourly-distribution comparisons for: test_7.",
+          "status": "BLOCKED"
+        },
+        {
+          "failed_variants": [],
+          "gate_id": "official_attestation",
+          "label": "SIA/sub-commission attestation",
+          "message": "No official attestation is recorded.",
+          "missing_variants": [],
+          "next_action": "Submit the complete package to the responsible SIA body.",
+          "status": "BLOCKED"
+        }
+      ],
+      "overall_status": "MODEL_SETUP_REQUIRED",
+      "required_variants": [
+        "test_7"
+      ],
+      "schema_version": "1.0",
+      "target_class": "5",
+      "technical_status": "TECHNICAL_VALIDATION_INCOMPLETE"
+    }
+  },
+  "global_artifacts": {
+    "html": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\sia4010_evidence\\autonomy\\navigator\\sia4010_all_classes_navigator.html",
+    "json": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\sia4010_evidence\\autonomy\\navigator\\sia4010_all_classes_navigator.json"
+  },
+  "official_bundle": {
+    "manifest": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\SIA_4010_geteilter_Link\\official_manifest.json",
+    "root": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\SIA_4010_geteilter_Link",
+    "verified": true
+  },
+  "registry_path": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\sia4010_evidence\\autonomy\\sia4010_case_evidence.json",
+  "schema_version": "1.1",
+  "summary": {
+    "checksum_valid_apachesim_cases": 11,
+    "checksum_valid_model_cases": 11,
+    "exact_cases": 34,
+    "official_band_failures": 0,
+    "ready_for_official_review": 0,
+    "simulation_linked_aps_evaluations": 10,
+    "validation_classes": 8
+  },
+  "tests": {
+    "1": {
+      "checksum_valid_model_cases": 11,
+      "checksum_valid_simulation_cases": 11,
+      "exact_cases": 11,
+      "official_band_failures": 0,
+      "simulation_linked_result_cases": 10,
+      "software_capability": {
+        "guarded_mutation_cases": 1,
+        "guarded_simulation_cases": 10,
+        "qualified_aps_evaluation_cases": 11
+      },
+      "status": "APS_EVALUATIONS_PARTIAL"
+    },
+    "2": {
+      "checksum_valid_model_cases": 0,
+      "checksum_valid_simulation_cases": 0,
+      "exact_cases": 4,
+      "official_band_failures": 0,
+      "simulation_linked_result_cases": 0,
+      "software_capability": {
+        "guarded_mutation_cases": 0,
+        "guarded_simulation_cases": 0,
+        "qualified_aps_evaluation_cases": 4
+      },
+      "status": "NOT_STARTED"
+    },
+    "3": {
+      "checksum_valid_model_cases": 0,
+      "checksum_valid_simulation_cases": 0,
+      "exact_cases": 12,
+      "official_band_failures": 0,
+      "simulation_linked_result_cases": 0,
+      "software_capability": {
+        "guarded_mutation_cases": 0,
+        "guarded_simulation_cases": 0,
+        "qualified_aps_evaluation_cases": 0
+      },
+      "status": "NOT_STARTED"
+    },
+    "4": {
+      "checksum_valid_model_cases": 0,
+      "checksum_valid_simulation_cases": 0,
+      "exact_cases": 1,
+      "official_band_failures": 0,
+      "simulation_linked_result_cases": 0,
+      "software_capability": {
+        "guarded_mutation_cases": 0,
+        "guarded_simulation_cases": 0,
+        "qualified_aps_evaluation_cases": 0
+      },
+      "status": "NOT_STARTED"
+    },
+    "5": {
+      "checksum_valid_model_cases": 0,
+      "checksum_valid_simulation_cases": 0,
+      "exact_cases": 4,
+      "official_band_failures": 0,
+      "simulation_linked_result_cases": 0,
+      "software_capability": {
+        "guarded_mutation_cases": 0,
+        "guarded_simulation_cases": 0,
+        "qualified_aps_evaluation_cases": 0
+      },
+      "status": "NOT_STARTED"
+    },
+    "6": {
+      "checksum_valid_model_cases": 0,
+      "checksum_valid_simulation_cases": 0,
+      "exact_cases": 1,
+      "official_band_failures": 0,
+      "simulation_linked_result_cases": 0,
+      "software_capability": {
+        "guarded_mutation_cases": 0,
+        "guarded_simulation_cases": 0,
+        "qualified_aps_evaluation_cases": 0
+      },
+      "status": "NOT_STARTED"
+    },
+    "7": {
+      "checksum_valid_model_cases": 0,
+      "checksum_valid_simulation_cases": 0,
+      "exact_cases": 1,
+      "official_band_failures": 0,
+      "simulation_linked_result_cases": 0,
+      "software_capability": {
+        "guarded_mutation_cases": 0,
+        "guarded_simulation_cases": 0,
+        "qualified_aps_evaluation_cases": 0
+      },
+      "status": "NOT_STARTED"
+    }
+  }
+}

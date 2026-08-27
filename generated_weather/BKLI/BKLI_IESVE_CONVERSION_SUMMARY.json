@@ -1,0 +1,70 @@
+{
+  "schema_version": "1.0",
+  "status": "READY_FOR_IESVE_READ_ONLY_PROBE",
+  "station_code": "BKLI",
+  "input_directory": "C:\\Users\\ulysse.couliou\\Downloads\\klimaszenarien-raumklima-BKLI",
+  "output_directory": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\generated_weather\\BKLI",
+  "time_zone_hours_explicit_input": 1.0,
+  "station": {
+    "city": "Basel / Klingelbergstrasse",
+    "region": "BS",
+    "country": "CHE",
+    "source": "University of Basel",
+    "station_id": "BKLI",
+    "latitude_degrees": 47.561697,
+    "longitude_degrees": 7.580502,
+    "time_zone_hours": 1.0,
+    "elevation_m": 285.0
+  },
+  "metadata_source": {
+    "path": "C:\\Users\\ulysse.couliou\\Downloads\\klimaszenarien-raumklima-BKLI\\BKLI_Metadata.csv",
+    "sha256": "53A76C081A7E3941D7A7DA986659DE6F48D127078FD3803118DF87BAC8AD7CFB",
+    "station_row": {
+      "station": "Basel / Klingelbergstrasse",
+      "abbreviation": "BKLI",
+      "owner": "University of Basel",
+      "elevation_m": 285.0,
+      "latitude_degrees": 47.561697,
+      "longitude_degrees": 7.580502
+    }
+  },
+  "outputs": [
+    {
+      "source": "C:\\Users\\ulysse.couliou\\Downloads\\klimaszenarien-raumklima-BKLI\\BKLI_2035_RCP85_1in10-warmsummer.csv",
+      "epw": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\generated_weather\\BKLI\\BKLI_2035_RCP85_1in10-warmsummer_IESVE_CANDIDATE.epw",
+      "audit": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\generated_weather\\BKLI\\BKLI_2035_RCP85_1in10-warmsummer_IESVE_DERIVATION.json",
+      "status": "READY_FOR_IESVE_READ_ONLY_PROBE"
+    },
+    {
+      "source": "C:\\Users\\ulysse.couliou\\Downloads\\klimaszenarien-raumklima-BKLI\\BKLI_2035_RCP85_DRY.csv",
+      "epw": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\generated_weather\\BKLI\\BKLI_2035_RCP85_DRY_IESVE_CANDIDATE.epw",
+      "audit": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\generated_weather\\BKLI\\BKLI_2035_RCP85_DRY_IESVE_DERIVATION.json",
+      "status": "READY_FOR_IESVE_READ_ONLY_PROBE"
+    },
+    {
+      "source": "C:\\Users\\ulysse.couliou\\Downloads\\klimaszenarien-raumklima-BKLI\\BKLI_2060_RCP26_1in10-warmsummer.csv",
+      "epw": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\generated_weather\\BKLI\\BKLI_2060_RCP26_1in10-warmsummer_IESVE_CANDIDATE.epw",
+      "audit": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\generated_weather\\BKLI\\BKLI_2060_RCP26_1in10-warmsummer_IESVE_DERIVATION.json",
+      "status": "READY_FOR_IESVE_READ_ONLY_PROBE"
+    },
+    {
+      "source": "C:\\Users\\ulysse.couliou\\Downloads\\klimaszenarien-raumklima-BKLI\\BKLI_2060_RCP26_DRY.csv",
+      "epw": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\generated_weather\\BKLI\\BKLI_2060_RCP26_DRY_IESVE_CANDIDATE.epw",
+      "audit": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\generated_weather\\BKLI\\BKLI_2060_RCP26_DRY_IESVE_DERIVATION.json",
+      "status": "READY_FOR_IESVE_READ_ONLY_PROBE"
+    },
+    {
+      "source": "C:\\Users\\ulysse.couliou\\Downloads\\klimaszenarien-raumklima-BKLI\\BKLI_2060_RCP85_1in10-warmsummer.csv",
+      "epw": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\generated_weather\\BKLI\\BKLI_2060_RCP85_1in10-warmsummer_IESVE_CANDIDATE.epw",
+      "audit": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\generated_weather\\BKLI\\BKLI_2060_RCP85_1in10-warmsummer_IESVE_DERIVATION.json",
+      "status": "READY_FOR_IESVE_READ_ONLY_PROBE"
+    },
+    {
+      "source": "C:\\Users\\ulysse.couliou\\Downloads\\klimaszenarien-raumklima-BKLI\\BKLI_2060_RCP85_DRY.csv",
+      "epw": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\generated_weather\\BKLI\\BKLI_2060_RCP85_DRY_IESVE_CANDIDATE.epw",
+      "audit": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\generated_weather\\BKLI\\BKLI_2060_RCP85_DRY_IESVE_DERIVATION.json",
+      "status": "READY_FOR_IESVE_READ_ONLY_PROBE"
+    }
+  ],
+  "compliance_claim_allowed": false
+}

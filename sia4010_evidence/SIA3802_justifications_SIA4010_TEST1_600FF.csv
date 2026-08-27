@@ -1,0 +1,2 @@
+standard,domain,rule,construction_or_scope,model_value,limit_value,unit,decision_status,review_status,reviewer,review_date,source_document,source_reference,justification_summary,notes
+SIA 380/2:2022,DOMAIN,RULE,CONSTRUCTION_OR_SCOPE,MODEL_VALUE,LIMIT_VALUE,UNIT,pending,pending,REVIEWER_NAME,YYYY-MM-DD,SOURCE_DOCUMENT,SOURCE_REFERENCE,JUSTIFICATION_SUMMARY,"Use only a project-specific reviewed rationale supported by a controlled source."

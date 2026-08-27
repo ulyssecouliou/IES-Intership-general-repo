@@ -1,0 +1,217 @@
+{
+  "schema_version": "1.0",
+  "status": "TEST1_REFERENCE_CAMPAIGN_COMPLETE",
+  "case_count": 11,
+  "reference_case_count": 10,
+  "reference_results_complete_count": 10,
+  "next_case": {
+    "variant": "test_1",
+    "case_id": "1E",
+    "recommended_project_name": "SIA4010_TEST1_1E_TEMPLATE",
+    "stage": "QUALIFY_EXACT_1E_TEMPLATE",
+    "reference_results_complete": false,
+    "judged_results_complete": false,
+    "formal_compliance_verdict": "PENDING_QUALIFIED_1E_RESULT",
+    "next_action": {
+      "script": "Run_VE_SIA4010_Test1E_Prepare_Template.py",
+      "requires_fresh_project": true,
+      "project_path": "",
+      "instruction": "Open the completed exact case 1D project and use Save As to create a separate copy named SIA4010_TEST1_1E_TEMPLATE. Run the preparer in that copy. Then add and independently review only the prescribed 1E fabric awning before capture/binding."
+    }
+  },
+  "iso_status": "TEST1_ISO_REFERENCE_CAMPAIGN_COMPLETE",
+  "iso_case_count": 6,
+  "iso_reference_results_complete_count": 6,
+  "next_iso_case": null,
+  "diagnostic_status": "TEST1_DIAGNOSTIC_DELIVERABLES_COMPLETE",
+  "diagnostic_case_count": 4,
+  "diagnostic_deliverables_complete_count": 4,
+  "next_diagnostic_case": null,
+  "judged_case_count": 1,
+  "judged_results_complete_count": 0,
+  "judged_case": {
+    "variant": "test_1",
+    "case_id": "1E",
+    "recommended_project_name": "SIA4010_TEST1_1E_TEMPLATE",
+    "stage": "QUALIFY_EXACT_1E_TEMPLATE",
+    "reference_results_complete": false,
+    "judged_results_complete": false,
+    "formal_compliance_verdict": "PENDING_QUALIFIED_1E_RESULT",
+    "next_action": {
+      "script": "Run_VE_SIA4010_Test1E_Prepare_Template.py",
+      "requires_fresh_project": true,
+      "project_path": "",
+      "instruction": "Open the completed exact case 1D project and use Save As to create a separate copy named SIA4010_TEST1_1E_TEMPLATE. Run the preparer in that copy. Then add and independently review only the prescribed 1E fabric awning before capture/binding."
+    }
+  },
+  "formal_test1_status": "BLOCKED_DIAGNOSTIC_1E_VE_QUALIFICATION_REQUIRED",
+  "formal_test1_blocker": "Diagnostic case 1E is the only Test 1 case with a pass/fail criterion. Its fabric-awning control semantics and IESVE threshold mapping were confirmed by Prof. Gerhard Zweifel on 2026-08-26. The optical mapping, VE assignment/read-back, APS binding and scored simulation still require qualification.",
+  "cases": [
+    {
+      "variant": "test_1",
+      "case_id": "600",
+      "recommended_project_name": "SIA4010_TEST1_600",
+      "stage": "REFERENCE_RESULTS_COMPLETE",
+      "reference_results_complete": true,
+      "judged_results_complete": false,
+      "formal_compliance_verdict": "NOT_AVAILABLE_WITHOUT_ACCEPTANCE_CRITERION",
+      "next_action": {
+        "script": "",
+        "requires_fresh_project": false,
+        "project_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\test1_600",
+        "instruction": "No execution is required; preserve the checksummed evidence."
+      }
+    },
+    {
+      "variant": "test_1",
+      "case_id": "640",
+      "recommended_project_name": "SIA4010_TEST1_640",
+      "stage": "REFERENCE_RESULTS_COMPLETE",
+      "reference_results_complete": true,
+      "judged_results_complete": false,
+      "formal_compliance_verdict": "NOT_AVAILABLE_WITHOUT_ACCEPTANCE_CRITERION",
+      "next_action": {
+        "script": "",
+        "requires_fresh_project": false,
+        "project_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\Test_640_Test1",
+        "instruction": "No execution is required; preserve the checksummed evidence."
+      }
+    },
+    {
+      "variant": "test_1",
+      "case_id": "600FF",
+      "recommended_project_name": "SIA4010_TEST1_600FF",
+      "stage": "REFERENCE_RESULTS_COMPLETE",
+      "reference_results_complete": true,
+      "judged_results_complete": false,
+      "formal_compliance_verdict": "NOT_AVAILABLE_WITHOUT_ACCEPTANCE_CRITERION",
+      "next_action": {
+        "script": "",
+        "requires_fresh_project": false,
+        "project_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST1_600FF",
+        "instruction": "No execution is required; preserve the checksummed evidence."
+      }
+    },
+    {
+      "variant": "test_1",
+      "case_id": "900",
+      "recommended_project_name": "SIA4010_TEST1_900",
+      "stage": "REFERENCE_RESULTS_COMPLETE",
+      "reference_results_complete": true,
+      "judged_results_complete": false,
+      "formal_compliance_verdict": "NOT_AVAILABLE_WITHOUT_ACCEPTANCE_CRITERION",
+      "next_action": {
+        "script": "",
+        "requires_fresh_project": false,
+        "project_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST1_900_DISPOSABLE",
+        "instruction": "No execution is required; preserve the checksummed evidence."
+      }
+    },
+    {
+      "variant": "test_1",
+      "case_id": "940",
+      "recommended_project_name": "SIA4010_TEST1_940",
+      "stage": "REFERENCE_RESULTS_COMPLETE",
+      "reference_results_complete": true,
+      "judged_results_complete": false,
+      "formal_compliance_verdict": "NOT_AVAILABLE_WITHOUT_ACCEPTANCE_CRITERION",
+      "next_action": {
+        "script": "",
+        "requires_fresh_project": false,
+        "project_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST1_940_DISPOSABLE",
+        "instruction": "No execution is required; preserve the checksummed evidence."
+      }
+    },
+    {
+      "variant": "test_1",
+      "case_id": "900FF",
+      "recommended_project_name": "SIA4010_TEST1_900FF",
+      "stage": "REFERENCE_RESULTS_COMPLETE",
+      "reference_results_complete": true,
+      "judged_results_complete": false,
+      "formal_compliance_verdict": "NOT_AVAILABLE_WITHOUT_ACCEPTANCE_CRITERION",
+      "next_action": {
+        "script": "",
+        "requires_fresh_project": false,
+        "project_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST1_900FF_DISPOSABLE",
+        "instruction": "No execution is required; preserve the checksummed evidence."
+      }
+    },
+    {
+      "variant": "test_1",
+      "case_id": "1A",
+      "recommended_project_name": "SIA4010_TEST1_1A",
+      "stage": "REFERENCE_RESULTS_COMPLETE",
+      "reference_results_complete": true,
+      "judged_results_complete": false,
+      "formal_compliance_verdict": "NOT_AVAILABLE_WITHOUT_ACCEPTANCE_CRITERION",
+      "next_action": {
+        "script": "",
+        "requires_fresh_project": false,
+        "project_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST1_1A_DISPOSABLE",
+        "instruction": "No execution is required; preserve the checksummed evidence."
+      }
+    },
+    {
+      "variant": "test_1",
+      "case_id": "1B",
+      "recommended_project_name": "SIA4010_TEST1_1B",
+      "stage": "REFERENCE_RESULTS_COMPLETE",
+      "reference_results_complete": true,
+      "judged_results_complete": false,
+      "formal_compliance_verdict": "NOT_AVAILABLE_WITHOUT_ACCEPTANCE_CRITERION",
+      "next_action": {
+        "script": "",
+        "requires_fresh_project": false,
+        "project_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST1_1B_DISPOSABLE",
+        "instruction": "No execution is required; preserve the checksummed evidence."
+      }
+    },
+    {
+      "variant": "test_1",
+      "case_id": "1C",
+      "recommended_project_name": "SIA4010_TEST1_1C",
+      "stage": "REFERENCE_RESULTS_COMPLETE",
+      "reference_results_complete": true,
+      "judged_results_complete": false,
+      "formal_compliance_verdict": "NOT_AVAILABLE_WITHOUT_ACCEPTANCE_CRITERION",
+      "next_action": {
+        "script": "",
+        "requires_fresh_project": false,
+        "project_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST1_1C_DISPOSABLE",
+        "instruction": "No execution is required; preserve the checksummed evidence."
+      }
+    },
+    {
+      "variant": "test_1",
+      "case_id": "1D",
+      "recommended_project_name": "SIA4010_TEST1_1D",
+      "stage": "REFERENCE_RESULTS_COMPLETE",
+      "reference_results_complete": true,
+      "judged_results_complete": false,
+      "formal_compliance_verdict": "NOT_AVAILABLE_WITHOUT_ACCEPTANCE_CRITERION",
+      "next_action": {
+        "script": "",
+        "requires_fresh_project": false,
+        "project_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST1_1D_DISPOSABLE",
+        "instruction": "No execution is required; preserve the checksummed evidence."
+      }
+    },
+    {
+      "variant": "test_1",
+      "case_id": "1E",
+      "recommended_project_name": "SIA4010_TEST1_1E_TEMPLATE",
+      "stage": "QUALIFY_EXACT_1E_TEMPLATE",
+      "reference_results_complete": false,
+      "judged_results_complete": false,
+      "formal_compliance_verdict": "PENDING_QUALIFIED_1E_RESULT",
+      "next_action": {
+        "script": "Run_VE_SIA4010_Test1E_Prepare_Template.py",
+        "requires_fresh_project": true,
+        "project_path": "",
+        "instruction": "Open the completed exact case 1D project and use Save As to create a separate copy named SIA4010_TEST1_1E_TEMPLATE. Run the preparer in that copy. Then add and independently review only the prescribed 1E fabric awning before capture/binding."
+      }
+    }
+  ],
+  "claim_guardrail": "Complete reference-result evidence is not an SIA compliance verdict when the official source supplies no acceptance criterion."
+}

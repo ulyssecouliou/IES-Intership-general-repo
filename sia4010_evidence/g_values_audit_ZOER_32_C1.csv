@@ -1,0 +1,4 @@
+project_name,model_name,construction_id,window_count,total_area_m2,cdb_g_value,bs_en_410,building_regulations,bfrc,selected_sia_g_perp,selected_source,cdb_g_equals_en410,proof_status,shading_active,shading_fields_available,g_total_with_shading,g_total_method,source_document,source_page_or_sheet,reviewer,review_status,notes
+ZOER_32_C1,realbuilding,STD_EXTW,99,206.0,0.75,,,,,,,,,,,,,,,missing,
+ZOER_32_C1,realbuilding,STD_EXT2,27,51.42,0.75,,,,,,,,,,,,,,,missing,
+ZOER_32_C1,realbuilding,STD_EXT1,24,54.48,0.75,,,,,,,,,,,,,,,missing,

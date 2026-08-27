@@ -1,0 +1,87 @@
+{
+  "schema_id": "sia4010.control_trace.v1",
+  "input_id": "test6_stage_control_trace",
+  "controlled_system": {
+    "description": "SIA 4010 Test 6 three-stage kitchen exhaust and supply-air operation",
+    "operating_days": [
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday"
+    ],
+    "non_operating_days": [
+      "Sunday"
+    ],
+    "nominal_stage_airflow_m3_h": {
+      "0": 0.0,
+      "1": 2050.0,
+      "2": 4100.0,
+      "3": 6150.0
+    },
+    "normalized_control_signal": {
+      "0": 0.0,
+      "1": 0.3333333333333333,
+      "2": 0.6666666666666666,
+      "3": 1.0
+    }
+  },
+  "daily_trace": [
+    {
+      "start": "00:00",
+      "end": "07:00",
+      "stage": 0,
+      "airflow_m3_h": 0.0
+    },
+    {
+      "start": "07:00",
+      "end": "08:00",
+      "stage": 1,
+      "airflow_m3_h": 2050.0
+    },
+    {
+      "start": "08:00",
+      "end": "10:00",
+      "stage": 2,
+      "airflow_m3_h": 4100.0
+    },
+    {
+      "start": "10:00",
+      "end": "12:00",
+      "stage": 3,
+      "airflow_m3_h": 6150.0
+    },
+    {
+      "start": "12:00",
+      "end": "13:00",
+      "stage": 2,
+      "airflow_m3_h": 4100.0
+    },
+    {
+      "start": "13:00",
+      "end": "16:00",
+      "stage": 1,
+      "airflow_m3_h": 2050.0
+    },
+    {
+      "start": "16:00",
+      "end": "24:00",
+      "stage": 0,
+      "airflow_m3_h": 0.0
+    }
+  ],
+  "source": {
+    "path": "SIA_4010_geteilter_Link/Test6/Spezifikation_Test6.pdf",
+    "sha256": "0ed5d0f07cd4d5b1f0bea24985bb17ffbd904adea4f9913b11f600f7ebce19ca",
+    "locators": [
+      "page 3 - Betrieb der Kuechenabluftanlage graph",
+      "page 3 - three nominal airflow stages"
+    ]
+  },
+  "transcription": {
+    "method": "high-resolution visual read-back of the source graph with deterministic interval and stage checks",
+    "interval_convention": "left-closed, right-open intervals; 24:00 closes the operating day",
+    "claim_guardrail": "This artifact is a source-bound technical transcription. It does not prove that an IESVE HVAC system implements the trace or that Test 6 passes."
+  }
+}

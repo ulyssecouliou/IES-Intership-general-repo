@@ -1,0 +1,140 @@
+{
+  "findings": [
+    {
+      "capability_id": "PROJECT_ROOMS",
+      "detail": "attribute missing",
+      "evidence": {
+        "attribute": "rooms",
+        "kind": "attribute",
+        "required": true
+      },
+      "status": "FAIL"
+    },
+    {
+      "capability_id": "PROJECT_SAVE_PROFILES",
+      "detail": "callable",
+      "evidence": {
+        "attribute": "save_profiles",
+        "kind": "callable"
+      },
+      "status": "PASS"
+    },
+    {
+      "capability_id": "PROJECT_CREATE_PROFILE",
+      "detail": "callable",
+      "evidence": {
+        "attribute": "create_profile",
+        "kind": "callable"
+      },
+      "status": "PASS"
+    },
+    {
+      "capability_id": "PROJECT_CREATE_CASUAL_GAIN",
+      "detail": "callable",
+      "evidence": {
+        "attribute": "create_casual_gain",
+        "kind": "callable"
+      },
+      "status": "PASS"
+    },
+    {
+      "capability_id": "PROJECT_CREATE_AIR_EXCHANGE",
+      "detail": "callable",
+      "evidence": {
+        "attribute": "create_air_exchange",
+        "kind": "callable"
+      },
+      "status": "PASS"
+    },
+    {
+      "capability_id": "PROJECT_CREATE_APACHE_SYSTEM",
+      "detail": "callable",
+      "evidence": {
+        "attribute": "create_apache_system",
+        "kind": "callable"
+      },
+      "status": "PASS"
+    },
+    {
+      "capability_id": "PROJECT_CREATE_THERMAL_TEMPLATE",
+      "detail": "callable",
+      "evidence": {
+        "attribute": "create_thermal_template",
+        "kind": "callable"
+      },
+      "status": "PASS"
+    },
+    {
+      "capability_id": "CDB_UVALUE_TYPES",
+      "detail": "attribute missing",
+      "evidence": {
+        "attribute": "uvalue_types",
+        "kind": "attribute",
+        "required": true
+      },
+      "status": "FAIL"
+    },
+    {
+      "capability_id": "CDB_CREATE_MATERIAL",
+      "detail": "callable",
+      "evidence": {
+        "attribute": "create_material",
+        "kind": "callable"
+      },
+      "status": "PASS"
+    },
+    {
+      "capability_id": "CDB_CREATE_CONSTRUCTION",
+      "detail": "callable",
+      "evidence": {
+        "attribute": "create_construction",
+        "kind": "callable"
+      },
+      "status": "PASS"
+    },
+    {
+      "capability_id": "CDB_CONSTRUCTION_LOOKUP",
+      "detail": "Binder dispatched documented signatures without crashing.",
+      "evidence": {
+        "last_exception_repr": "ArgumentError('Python argument types in\\n    VECdbProject.get_construction(VECdbProject, str)\\ndid not match C++ signature:\\n    get_construction(class VECdbProject {lvalue}, class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> >, enum eConstructionClass)')",
+        "signatures_tried": [
+          "get_construction(id, construction_class)",
+          "get_construction(id)"
+        ]
+      },
+      "status": "PASS"
+    },
+    {
+      "capability_id": "IESVE_CONSTRUCTION_CLASS_ENUM",
+      "detail": "attribute present",
+      "evidence": {
+        "attribute": "construction_class",
+        "kind": "attribute"
+      },
+      "status": "PASS"
+    },
+    {
+      "capability_id": "IESVE_ELEMENT_CATEGORIES_ENUM",
+      "detail": "attribute present",
+      "evidence": {
+        "attribute": "element_categories",
+        "kind": "attribute"
+      },
+      "status": "PASS"
+    },
+    {
+      "capability_id": "IESVE_MATERIAL_CATEGORIES_ENUM",
+      "detail": "attribute present",
+      "evidence": {
+        "attribute": "material_categories",
+        "kind": "attribute"
+      },
+      "status": "PASS"
+    }
+  ],
+  "generated_at_utc": "2026-08-12T16:12:06+00:00",
+  "overall": "FAIL",
+  "project_id": "test1_600",
+  "schema_version": "1.0",
+  "status_reference": "READY_FOR_REAL_VE_QUALIFICATION when overall is PASS or WARNING; requires operator review before any mutation when FAIL"
+}

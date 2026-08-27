@@ -72,7 +72,8 @@ Do not use a client model or claim official pass from a diagnostic equivalent.
 
 ## Expected warnings and skips
 
-At final handover the configured full pytest suite passed with four skips.
+At final handover the configured full pytest suite passed with three optional
+skips and all private campaign datasets present.
 Openpyxl emitted non-blocking warnings about unsupported Data Validation
 extensions. Restricted Windows sandboxes may create false `PermissionError`
 failures for temporary folders; re-run with a normal accessible `%TEMP%`.

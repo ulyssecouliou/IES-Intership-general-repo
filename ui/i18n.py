@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
-"""User-facing strings for the SIA 4010 navigator, French by default.
+"""User-facing strings for the legacy SIA 4010 navigator, English by default.
 
 WHY A TABLE AND NOT LITERALS IN THE WIDGETS. Two reasons, and the second is
 the one that matters for this project.
 
-The obvious one: the tool serves Swiss practice, so it speaks French, but the
-rest of IES works in English. A literal in a widget makes that a rewrite.
+The obvious one: the tool serves Swiss practice in French and English, while
+English is the IES-wide default. A literal in a widget makes that a rewrite.
 
 The one that matters: **a verdict label is evidence.** "NON EVALUE" and
 "CONFORME" are not decorations -- they are what a reader will quote back at
@@ -31,11 +31,11 @@ from __future__ import print_function
 FRENCH = "fr"
 ENGLISH = "en"
 
-#: Languages this module can render. French leads because the tool is used
-#: against Swiss standards, in French-speaking practice.
+#: Languages this legacy module can render. Tuple order matches the historical
+#: string-table column order; it does not define the initial UI language.
 LANGUAGES = (FRENCH, ENGLISH)
 
-DEFAULT_LANGUAGE = FRENCH
+DEFAULT_LANGUAGE = ENGLISH
 
 #: Every user-facing string, keyed by a dotted path. Adding a key means adding
 #: BOTH languages -- `check_completeness` fails the build otherwise, so a

@@ -1,0 +1,32 @@
+{
+  "schema": "sia4010-source-correction-audit.v1",
+  "test_id": "7",
+  "received_date": "2026-08-10",
+  "source": "Corrected evaluation workbook supplied by the SIA contact",
+  "active_workbook": {
+    "path": "SIA_4010_geteilter_Link/Test7/Resultaterfassung Test7.xlsx",
+    "sha256": "24937d8f421daa74a7f957025bfeb17a42fe2dc807b1a301a6752f4c0e808958",
+    "size_bytes": 10881361
+  },
+  "superseded_workbook": {
+    "path": "sia4010_evidence/superseded_sources/Test7/Resultaterfassung Test7.pre-correction-20260810.xlsx",
+    "sha256": "5eb5b5ba594bd61a2f791a49429eb409c7b4303ad57d1656140dc9c4d0eee0ab",
+    "size_bytes": 10894247
+  },
+  "conditional_formatting": {
+    "worksheet": "Zusammenfassung",
+    "range": "F8:F12 F14:F18 F20",
+    "operator": "between",
+    "superseded_formulas": ["$L8", "$M8"],
+    "corrected_formulas": ["$N8", "$M8"],
+    "interpretation": "inclusive lower bound to upper bound"
+  },
+  "reference_band_regression": {
+    "old_band_count": 11,
+    "new_band_count": 11,
+    "numeric_bounds_identical": true,
+    "rebuild_tolerance": 0.000001
+  },
+  "result": "VERIFIED_CORRECTION_READY_FOR_TEST7_EVALUATION",
+  "limits": "This audit verifies source identity, formulas and extracted bands; it is not an SIA attestation of a candidate program."
+}

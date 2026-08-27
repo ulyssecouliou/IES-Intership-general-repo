@@ -1,0 +1,36 @@
+{
+  "schema_version": "1.0",
+  "input_id": "test6_stage_control_trace",
+  "source_sha256": "0ed5d0f07cd4d5b1f0bea24985bb17ffbd904adea4f9913b11f600f7ebce19ca",
+  "status": "PASS",
+  "validated_by": "OpenAI Codex visual transcription review with deterministic regression checks",
+  "validation_method": "High-resolution visual read-back of the Test 6 graph, interval continuity check, stage-to-airflow reconciliation and source checksum binding",
+  "checks": [
+    {
+      "id": "source_identity",
+      "status": "PASS",
+      "detail": "The transcription is pinned to the SHA-256 of the SIA-supplied Test 6 specification."
+    },
+    {
+      "id": "daily_trace_complete",
+      "status": "PASS",
+      "detail": "Seven contiguous intervals cover the complete 00:00-24:00 operating day without a gap or overlap."
+    },
+    {
+      "id": "stage_airflows_reconciled",
+      "status": "PASS",
+      "detail": "Stages 1, 2 and 3 reconcile to 2050, 4100 and 6150 m3/h respectively."
+    },
+    {
+      "id": "operating_days_transcribed",
+      "status": "PASS",
+      "detail": "The source identifies Monday through Saturday operation; Sunday is recorded as non-operating."
+    }
+  ],
+  "binding_artifact": {
+    "path": "test6_stage_control_trace.binding.json",
+    "sha256": "7f90c1e50b321328b5d41dec27471f6496f184995aed1179ad03a2d9452fac2d",
+    "schema_id": "sia4010.control_trace.v1"
+  },
+  "claim_guardrail": "PASS validates the source transcription only. It is not an IESVE setter qualification, simulated-result comparison, SIA Test 6 pass or SIA attestation."
+}

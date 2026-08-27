@@ -1,0 +1,89 @@
+{
+  "schema_version": "1.0",
+  "test_id": "1",
+  "status": "ANWENDERBERICHT_DRAFT_UNSIGNED",
+  "compliance_claim_allowed": false,
+  "signed": false,
+  "missing_for_signature": [
+    "Feststellungen: at least one observation, written by a named engineer. Declare and explain every deviation from the reference results here.",
+    "author: the person answering for these observations",
+    "report_date: the date the observations were made"
+  ],
+  "case_count": 7,
+  "cases_with_recorded_result": 3,
+  "cases": [
+    {
+      "variant": "test_1",
+      "case_id": "1E",
+      "model_status": "MISSING",
+      "simulation_status": "NOT_RUN",
+      "result_status": "NOT_CHECKABLE",
+      "aps_sha256": "",
+      "observed_metric_count": null,
+      "acceptance_criterion_available": null
+    },
+    {
+      "variant": "test_1",
+      "case_id": "600",
+      "model_status": "VERIFIED",
+      "simulation_status": "SIMULATION_EXECUTED_AWAITING_APS_QUALIFICATION",
+      "result_status": "REFERENCE_RESULTS_RECORDED_NO_ACCEPTANCE_CRITERION",
+      "aps_sha256": "060ef2e22954d60491ccc154d9f8bb2d776a4cc581f488546cd901784e3fb61e",
+      "observed_metric_count": 88,
+      "acceptance_criterion_available": false
+    },
+    {
+      "variant": "test_1",
+      "case_id": "600FF",
+      "model_status": "VERIFIED",
+      "simulation_status": "SIMULATION_EXECUTED_AWAITING_APS_QUALIFICATION",
+      "result_status": "REFERENCE_RESULTS_RECORDED_NO_ACCEPTANCE_CRITERION",
+      "aps_sha256": "bcbb9deb7b42a6702d6b288fabbca47981ede9dc5aaa522c32f65a41df34f813",
+      "observed_metric_count": 39,
+      "acceptance_criterion_available": false
+    },
+    {
+      "variant": "test_1",
+      "case_id": "640",
+      "model_status": "VERIFIED",
+      "simulation_status": "SIMULATION_EXECUTED_AWAITING_APS_QUALIFICATION",
+      "result_status": "REFERENCE_RESULTS_RECORDED_NO_ACCEPTANCE_CRITERION",
+      "aps_sha256": "82629753568e33c341c6831417caad97d1f02de92a222c7e5b2b0b9ae43d8592",
+      "observed_metric_count": 88,
+      "acceptance_criterion_available": false
+    },
+    {
+      "variant": "test_1",
+      "case_id": "900",
+      "model_status": "MISSING",
+      "simulation_status": "NOT_RUN",
+      "result_status": "NOT_CHECKABLE",
+      "aps_sha256": "",
+      "observed_metric_count": null,
+      "acceptance_criterion_available": null
+    },
+    {
+      "variant": "test_1",
+      "case_id": "900FF",
+      "model_status": "MISSING",
+      "simulation_status": "NOT_RUN",
+      "result_status": "NOT_CHECKABLE",
+      "aps_sha256": "",
+      "observed_metric_count": null,
+      "acceptance_criterion_available": null
+    },
+    {
+      "variant": "test_1",
+      "case_id": "940",
+      "model_status": "MISSING",
+      "simulation_status": "NOT_RUN",
+      "result_status": "NOT_CHECKABLE",
+      "aps_sha256": "",
+      "observed_metric_count": null,
+      "acceptance_criterion_available": null
+    }
+  ],
+  "ledger_path": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\sia4010_evidence\\autonomy\\sia4010_case_evidence.json",
+  "markdown_path": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\sia4010_evidence\\anwenderberichte\\Anwenderbericht_Test1.md",
+  "form_note": "Markdown is the reviewable source. Transcribe into the official SIA Anwenderbericht form before submission; the German section labels are reproduced verbatim to make that direct."
+}

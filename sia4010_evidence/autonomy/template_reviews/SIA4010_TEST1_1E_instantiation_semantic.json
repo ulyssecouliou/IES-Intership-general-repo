@@ -1,0 +1,17 @@
+{
+  "schema_version": "1.0",
+  "status": "DISPOSABLE_TEMPLATE_COPY_VERIFIED",
+  "variant": "test_1",
+  "case_id": "1E",
+  "template_id": "SIA4010_TEST1_1E_IES_SENSITIVITY_0P21_20260826",
+  "source_project": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST_1_1E_DISPOSABLE",
+  "disposable_project": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST_1_1E_DISPOSABLE",
+  "template_signature_sha256": "5ee58af7c5f0c824ed32202715e33488e9f334f2f41e58876969268ff2dd3638",
+  "signature_algorithm": "sha256-semantic-sqlite-v1",
+  "qualification_manifest": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\sia4010_evidence\\autonomy\\template_reviews\\SIA4010_TEST1_1E_qualification.json",
+  "created_at": "2026-08-26T13:52:01.027686+00:00",
+  "signature_normalized_at": "2026-08-26T19:47:15+01:00",
+  "normalization_evidence": "The active disposable project was recaptured after ApacheSim-generated ASD, OPT and input-DFA evidence changed. Project Content.db, MDL and all other stable model-input hashes remained identical to the IES-reviewed bracketed 0.21 capture.",
+  "next_action": "Verify the opened exact-case model, then run guarded ApacheSim and qualified APS evaluation.",
+  "claim_guardrail": "A verified template copy is not a passing result and does not grant SIA validation."
+}

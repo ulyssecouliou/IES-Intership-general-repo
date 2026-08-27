@@ -1,0 +1,70 @@
+{
+  "schema_version": "1.0",
+  "status": "READY_FOR_IESVE_READ_ONLY_PROBE",
+  "station_code": "BAS",
+  "input_directory": "C:\\Users\\ulysse.couliou\\Downloads\\klimaszenarien-raumklima-BAS",
+  "output_directory": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\generated_weather\\BAS",
+  "time_zone_hours_explicit_input": 1.0,
+  "station": {
+    "city": "Basel / Binningen",
+    "region": "BL",
+    "country": "CHE",
+    "source": "MeteoSwiss",
+    "station_id": "BAS",
+    "latitude_degrees": 47.541142,
+    "longitude_degrees": 7.583525,
+    "time_zone_hours": 1.0,
+    "elevation_m": 316.0
+  },
+  "metadata_source": {
+    "path": "C:\\Users\\ulysse.couliou\\Downloads\\klimaszenarien-raumklima-BAS\\BAS_Metadata.csv",
+    "sha256": "278204610930D82DEF24ADBC55753E261456002F2AFA5A3B0E8DC17306F820C2",
+    "station_row": {
+      "station": "Basel / Binningen",
+      "abbreviation": "BAS",
+      "owner": "MeteoSwiss",
+      "elevation_m": 316.0,
+      "latitude_degrees": 47.541142,
+      "longitude_degrees": 7.583525
+    }
+  },
+  "outputs": [
+    {
+      "source": "C:\\Users\\ulysse.couliou\\Downloads\\klimaszenarien-raumklima-BAS\\BAS_2035_RCP85_1in10-warmsummer.csv",
+      "epw": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\generated_weather\\BAS\\BAS_2035_RCP85_1in10-warmsummer_IESVE_CANDIDATE.epw",
+      "audit": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\generated_weather\\BAS\\BAS_2035_RCP85_1in10-warmsummer_IESVE_DERIVATION.json",
+      "status": "READY_FOR_IESVE_READ_ONLY_PROBE"
+    },
+    {
+      "source": "C:\\Users\\ulysse.couliou\\Downloads\\klimaszenarien-raumklima-BAS\\BAS_2035_RCP85_DRY.csv",
+      "epw": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\generated_weather\\BAS\\BAS_2035_RCP85_DRY_IESVE_CANDIDATE.epw",
+      "audit": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\generated_weather\\BAS\\BAS_2035_RCP85_DRY_IESVE_DERIVATION.json",
+      "status": "READY_FOR_IESVE_READ_ONLY_PROBE"
+    },
+    {
+      "source": "C:\\Users\\ulysse.couliou\\Downloads\\klimaszenarien-raumklima-BAS\\BAS_2060_RCP26_1in10-warmsummer.csv",
+      "epw": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\generated_weather\\BAS\\BAS_2060_RCP26_1in10-warmsummer_IESVE_CANDIDATE.epw",
+      "audit": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\generated_weather\\BAS\\BAS_2060_RCP26_1in10-warmsummer_IESVE_DERIVATION.json",
+      "status": "READY_FOR_IESVE_READ_ONLY_PROBE"
+    },
+    {
+      "source": "C:\\Users\\ulysse.couliou\\Downloads\\klimaszenarien-raumklima-BAS\\BAS_2060_RCP26_DRY.csv",
+      "epw": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\generated_weather\\BAS\\BAS_2060_RCP26_DRY_IESVE_CANDIDATE.epw",
+      "audit": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\generated_weather\\BAS\\BAS_2060_RCP26_DRY_IESVE_DERIVATION.json",
+      "status": "READY_FOR_IESVE_READ_ONLY_PROBE"
+    },
+    {
+      "source": "C:\\Users\\ulysse.couliou\\Downloads\\klimaszenarien-raumklima-BAS\\BAS_2060_RCP85_1in10-warmsummer.csv",
+      "epw": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\generated_weather\\BAS\\BAS_2060_RCP85_1in10-warmsummer_IESVE_CANDIDATE.epw",
+      "audit": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\generated_weather\\BAS\\BAS_2060_RCP85_1in10-warmsummer_IESVE_DERIVATION.json",
+      "status": "READY_FOR_IESVE_READ_ONLY_PROBE"
+    },
+    {
+      "source": "C:\\Users\\ulysse.couliou\\Downloads\\klimaszenarien-raumklima-BAS\\BAS_2060_RCP85_DRY.csv",
+      "epw": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\generated_weather\\BAS\\BAS_2060_RCP85_DRY_IESVE_CANDIDATE.epw",
+      "audit": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\generated_weather\\BAS\\BAS_2060_RCP85_DRY_IESVE_DERIVATION.json",
+      "status": "READY_FOR_IESVE_READ_ONLY_PROBE"
+    }
+  ],
+  "compliance_claim_allowed": false
+}

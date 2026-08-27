@@ -1,0 +1,4 @@
+room_id,thermal_template_id,sia2024_category,review_status,reviewer,source_document,source_reference,notes
+SP000000,,3.01,accepted,DEMO_EXAMPLE_NOT_A_REAL_REVIEW,DEMO_illustrative,SIA 2024:2021 Raumdatenblatt 3.01,ILLUSTRATIVE demo - Office to 3.01. If not matched, replace room_id with the exact VE room id.
+SP000002,,3.01,accepted,DEMO_EXAMPLE_NOT_A_REAL_REVIEW,DEMO_illustrative,SIA 2024:2021 Raumdatenblatt 3.01,ILLUSTRATIVE demo - Office to 3.01.
+SP000001,,12.03,accepted,DEMO_EXAMPLE_NOT_A_REAL_REVIEW,DEMO_illustrative,SIA 2024:2021 Raumdatenblatt 12.03,ILLUSTRATIVE demo - Corridor to 12.03 circulation.

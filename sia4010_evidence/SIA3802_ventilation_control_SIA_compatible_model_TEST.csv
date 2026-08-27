@@ -1,0 +1,2 @@
+project_id,system_type,control_class,airflow_band,specific_airflow_m3_h_m2,unit,review_status,reviewer,review_date,source_document,source_reference,notes
+SIA_compatible_model_TEST,multizone,demand_controlled,3_to_6,4.5,m3/(h.m2),pending,TO_BE_REVIEWED,2026-08-20,EXAMPLE_ASSUMPTION_replace_with_ventilation_design,SIA 380/2:2022 Table 4,"EXAMPLE ASSUMPTION: multizone system with CO2 demand-controlled ventilation, specific airflow ~4.5 m3/(h.m2) (band 3-6). Replace with the real ventilation design and set review_status=accepted only after a reviewer signs."

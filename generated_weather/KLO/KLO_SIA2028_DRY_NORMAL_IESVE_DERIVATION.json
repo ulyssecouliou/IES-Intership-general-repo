@@ -1,0 +1,111 @@
+{
+  "schema_version": "1.0",
+  "method": "swiss_sia.sia_dry_epw.v1",
+  "status": "READY_FOR_IESVE_READ_ONLY_PROBE",
+  "purpose": "IESVE transport candidate built from the SIA-supplied DRY normal dataset required by the SIA 4010 test specifications",
+  "compliance_claim_allowed": false,
+  "official_sia_weather_identity_confirmed": true,
+  "official_sia_weather_identity_basis": "Supplied directly by Prof. Gerhard Zweifel, responsible for the SIA 4010 validation, in answer to the request for the SIA 2028 DRY normal Zuerich Kloten dataset",
+  "source": {
+    "path": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\references\\standards\\sia2028\\KLO_dry.txt",
+    "sha256": "aa3f3853300ceb55293c418d75ebfa36ef74353693acbaf369703c65bd337ffd",
+    "provenance_record": "references/standards/sia2028/KLO_dry.provenance.json"
+  },
+  "weather": {
+    "path": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\generated_weather\\KLO\\KLO_SIA2028_DRY_NORMAL_IESVE_CANDIDATE.epw",
+    "sha256": "a6b5ef9164887f18a8952fb09cdf10d1a4b9b2dc8a20d758e6af8336b3813f23",
+    "format": "EPW",
+    "record_count": 8760,
+    "station": {
+      "station_code": "KLO",
+      "city": "Zuerich Kloten",
+      "region": "ZH",
+      "country": "CHE",
+      "latitude_degrees": 47.479611,
+      "longitude_degrees": 8.535961,
+      "time_zone_hours": 1.0,
+      "elevation_m": 426.0,
+      "source": "MeteoSwiss"
+    }
+  },
+  "supplied_rather_than_derived": {
+    "dew_point": "column dewpt, used directly",
+    "station_pressure": "column prestahs, hPa converted to Pa",
+    "horizontal_infrared": "column ir.horizontal, used directly"
+  },
+  "written_as_epw_missing": {
+    "total_sky_cover": "column nto000sw is NA on 7665 of 8760 hours; written as the EPW sentinel 99 rather than estimated. The supplied horizontal infrared is what the solver uses for sky longwave.",
+    "ground_albedo": "column bodenalbedo is supplied but its legend is unconfirmed; not written as the EPW albedo field",
+    "others": "EPW documented missing-value sentinels"
+  },
+  "parse": {
+    "header": [
+      "stn",
+      "time.yy",
+      "time.mm",
+      "time.dd",
+      "time.hh",
+      "tre200h0",
+      "prestahs",
+      "ure200h0",
+      "rre150h0",
+      "fkl010h0",
+      "fkl010h1",
+      "dkl010h0",
+      "tso100hs",
+      "nto000sw",
+      "gls",
+      "str.diffus",
+      "str.direkt",
+      "str.vert.E",
+      "str.vert.S",
+      "str.vert.W",
+      "str.vert.N",
+      "bodenalbedo",
+      "ir.horizontal",
+      "ir.vertikal.S",
+      "bodenemissivitaet",
+      "dewpt",
+      "enthalpy",
+      "mixratio",
+      "wetbulb"
+    ],
+    "station_codes": [
+      "KLO"
+    ],
+    "row_count": 8760,
+    "provisional_column_availability": {
+      "prestahs": {
+        "hours_present": 8760,
+        "hours_missing": 0,
+        "legend_status": "TO_VERIFY"
+      },
+      "ir.horizontal": {
+        "hours_present": 8760,
+        "hours_missing": 0,
+        "legend_status": "TO_VERIFY"
+      },
+      "nto000sw": {
+        "hours_present": 1095,
+        "hours_missing": 7665,
+        "legend_status": "TO_VERIFY"
+      }
+    }
+  },
+  "controls": {
+    "dew_point_vs_magnus_max_deviation_k": 0.538,
+    "dew_point_above_dry_bulb_rows": 0,
+    "diffuse_above_global_rows": 0
+  },
+  "supplied_benchmarks_not_used_as_input": {
+    "vertical_south_annual_kwh_m2": 868.8,
+    "note": "str.vert.S is retained as an aggregate only. Its legend is unconfirmed and it is not an EPW field; it is a supplied benchmark for investigating solar transport."
+  },
+  "warnings": [
+    "This is a transport conversion of an official dataset, not an official SIA-issued EPW.",
+    "Columns marked TO_VERIFY in the provenance record must not drive a regulatory result until the legend is confirmed in writing.",
+    "IESVE WeatherFileReader read-back is mandatory before assignment.",
+    "This is the SIA 4010 test climate. It is not the CH2018 RCP 8.5 '2035' application climate of clause 3.1.1."
+  ],
+  "model_or_weather_assignment_changed": false
+}

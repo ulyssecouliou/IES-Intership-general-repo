@@ -1,0 +1,42 @@
+{
+  "schema_version": "1.0",
+  "input_id": "test5_fan_curve_digitization",
+  "source_sha256": "804d7c921a889d09624e4a512097bd4749c3f9674c83311ea3e5165b956d123d",
+  "status": "PASS",
+  "validated_by": "Deterministic fan-map calibration and table cross-check",
+  "validation_method": "Checksum-bound embedded-image calibration; monotonicity checks for four speed curves; direct point-ID join to the measured table",
+  "binding_artifact": {
+    "path": "test5_fan_curve_digitization.binding.json",
+    "sha256": "f4fd83178a1c22dd1c1c55635ae69be3f016e407ba4c4c645c15337876d0e0c4",
+    "schema_id": "sia4010.fan_curves.v1"
+  },
+  "checks": [
+    {
+      "id": "TEST4-FAN-16-POINTS",
+      "status": "PASS",
+      "detail": "All graph points 1 through 16 are present."
+    },
+    {
+      "id": "TEST4-FAN-TABLE-JOIN",
+      "status": "PASS",
+      "detail": "Every point is joined to its measured speed and power row."
+    },
+    {
+      "id": "TEST4-FAN-CURVE-MONOTONICITY",
+      "status": "PASS",
+      "detail": "Flow rises and pressure falls on all four speed curves."
+    },
+    {
+      "id": "TEST4-FAN-NOMINAL-POINTS",
+      "status": "PASS",
+      "detail": "Supply and extract nominal text values remain separate."
+    },
+    {
+      "id": "TEST4-FAN-CLAIM-GUARDRAIL",
+      "status": "PASS",
+      "detail": "Interpolation and compliance claims remain disabled."
+    }
+  ],
+  "compliance_claim_allowed": false,
+  "claim_guardrail": "PASS validates the internal consistency and traceability of the provisional digitization only. Normative authorization remains UNCONFIRMED in the external-input manifest."
+}

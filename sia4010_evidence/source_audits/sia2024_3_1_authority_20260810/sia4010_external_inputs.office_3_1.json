@@ -1,0 +1,29 @@
+{
+  "schema_version": "1.0",
+  "purpose": "Checksum-bound authority evidence for the SIA 2024:2021 category 3.1 standard values supplied on 2026-08-10.",
+  "claim_guardrail": "READY_FOR_BINDING validates source provenance and normalized transcription only. Native VE calendar materialization remains separately guarded.",
+  "inputs": {
+    "sia2024_office_3_1_standard_profiles": {
+      "source_path": "SIA2024_2021_3_1_standard_values_authority_extract.png",
+      "source_sha256": "c8e801d24b98365226c076e028d6556b01f357baa5233b2ac57a2dd63149177e",
+      "provenance_status": "SIA_SUPPLIED",
+      "normative_authorization_status": "CONFIRMED",
+      "source_authority": "Prof. Gerhard Zweifel, SIA validation technical contact",
+      "license_reference": "Direct written provision to the validation candidate by email dated 2026-08-10; retained as controlled project evidence and not for redistribution",
+      "dataset_identity": "SIA 2024:2021 category 3.1 Einzel-/Gruppenbüro, standard values",
+      "machine_readable_format": "PNG authority extract plus checksum-bound normalized JSON",
+      "semantic_scope": [
+        "24 source-hour bins for people, equipment and lighting",
+        "people standard use, density, activity, clothing, heat and moisture values",
+        "equipment standard power, heat-gain and annual values",
+        "lighting standard illuminance, efficacy, control, power and annual values",
+        "2 rest days per week, 261 use days per year and people annual simultaneity factor 0.80"
+      ],
+      "technical_validation": {
+        "status": "PASS",
+        "report_path": "sia2024_office_3_1_standard_profiles.validation.json",
+        "report_sha256": "3e634b97dd9036808c0251f8b7f4171c786db9de0d6cf10f0e96e9a915164101"
+      }
+    }
+  }
+}

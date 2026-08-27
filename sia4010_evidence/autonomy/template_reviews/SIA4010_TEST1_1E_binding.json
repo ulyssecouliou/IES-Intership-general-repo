@@ -1,0 +1,14 @@
+{
+  "schema_version": "1.0",
+  "bindings": [
+    {
+      "template_id": "SIA4010_TEST1_1E_IES_SENSITIVITY_0P21_20260826",
+      "project_path": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST_1_1E_DISPOSABLE",
+      "qualification_manifest": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\sia4010_evidence\\autonomy\\template_reviews\\SIA4010_TEST1_1E_qualification.json",
+      "covered_cases": [
+        "test_1/1E"
+      ],
+      "status": "QUALIFIED"
+    }
+  ]
+}

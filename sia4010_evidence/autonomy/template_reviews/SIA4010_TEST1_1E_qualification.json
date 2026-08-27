@@ -1,0 +1,36 @@
+{
+  "schema_version": "1.0",
+  "status": "QUALIFIED",
+  "template_id": "SIA4010_TEST1_1E_IES_SENSITIVITY_0P21_20260826",
+  "reviewer": "IES multidisciplinary review team",
+  "reviewed_at": "2026-08-26T19:47:15+01:00",
+  "ve_version": "IESVE 2025",
+  "covered_cases": [
+    "test_1/1E"
+  ],
+  "template_signature_sha256": "5ee58af7c5f0c824ed32202715e33488e9f334f2f41e58876969268ff2dd3638",
+  "signature_algorithm": "sha256-semantic-sqlite-v1",
+  "candidate_manifest": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST_1_1E_DISPOSABLE\\sia4010_artifacts\\templates\\sia4010_template_candidate.json",
+  "evidence": [
+    "source_traced_case_bundle",
+    "ve_mutation_readback",
+    "qualified_weather",
+    "required_output_scope_review"
+  ],
+  "review_scope": {
+    "geometry": "One test cell with two source-identified south-facing windows, 6.0 m2 each.",
+    "base_case": "Diagnostic case 1E reviewed as case 1D plus the prescribed fabric awning.",
+    "construction_assignment": "Construction EXTW assigned to both source-identified windows.",
+    "solar_control": "Discrete external shade active; operation profile OFF/NONE; bracketed sensitivity transmittance 0.21 at 0/15/30/45/60/75 degrees and 0.00 at 90 degrees; lower condition ii>150.0; raise condition ii<150.0.",
+    "weather": "Zurich-Kloten SIA 2028 DRY Normal weather basis reviewed for the exact-case workflow.",
+    "outputs": "Annual hourly output scope required for guarded APS evaluation reviewed. APS execution and official comparison remain subsequent gates."
+  },
+  "review_basis": "IES-authorized bounded diagnostic sensitivity requested by the project operator on 2026-08-26. The 0.21 point is derived from the qualified unshaded 1D result and the prior 0.04 1E result; it is not an authority or manufacturer input. The 2026-08-26 19:47 recapture retained identical Project Content.db, MDL and other stable model-input hashes; only ApacheSim-generated ASD, OPT and input-DFA evidence changed after the preceding simulation.",
+  "qualification_scope": "MODEL_EXECUTION_INPUT_ONLY_BRACKETED_0P21_SENSITIVITY",
+  "authority_constraints": [
+    "The controlled source confirms normal-incidence shade transmittance 0.04; the applied 0.21 value is solely a bracketed numerical sensitivity.",
+    "IESVE 2025 exposes external-shade solar and visible reflectance as 0.10 but provides no supported Python setter for those fields.",
+    "Authority confirmation and APS equivalence remain required before any Test 1 acceptance claim."
+  ],
+  "claim_guardrail": "Template qualification establishes an IES-reviewed diagnostic execution input only. It is not an official SIA acceptance, certification or final Test 1 verdict."
+}

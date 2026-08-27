@@ -1,0 +1,25 @@
+test_id,status,reference_file,candidate_file,deviation,tolerance,reviewer,review_date,source_authority,source_reference,notes
+test_1,missing,,,,,,,,,Required by classes 1A to 4B.
+test_2A,missing,,,,,,,,,Reduced fabric-shading scope for classes 1A 2A and 4A.
+test_2B,missing,,,,,,,,,Lamellae solar-protection control variant 1 for classes 1B 2B and 4B.
+test_2C,missing,,,,,,,,,Lamellae solar-protection control variant 2 for classes 1B 2B and 4B.
+test_2D,missing,,,,,,,,,Lamellae solar-protection control variant 3 for classes 1B 2B and 4B.
+test_3A,missing,,,,,,,,,Lighting-control variant A.
+test_3B,missing,,,,,,,,,Lighting-control variant B.
+test_3C,missing,,,,,,,,,Lighting-control variant C.
+test_3D,missing,,,,,,,,,Lighting-control variant D.
+test_3E,missing,,,,,,,,,Lighting-control variant E.
+test_3F,missing,,,,,,,,,Lighting-control variant F.
+test_3G,missing,,,,,,,,,Full lighting/shading variant G for classes 2B and 4B.
+test_3H,missing,,,,,,,,,Full lighting/shading variant H for classes 2B and 4B.
+test_3I,missing,,,,,,,,,Full lighting/shading variant I for classes 2B and 4B.
+test_3J,missing,,,,,,,,,Full lighting/shading variant J for classes 2B and 4B.
+test_3K,missing,,,,,,,,,Full lighting/shading variant K for classes 2B and 4B.
+test_3L,missing,,,,,,,,,Full lighting/shading variant L for classes 2B and 4B.
+test_4,missing,,,,,,,,,Single-room all-air HVAC test.
+test_5A,missing,,,,,,,,,Multizone AHU variant A.
+test_5B,missing,,,,,,,,,Multizone AHU variant B.
+test_5C,missing,,,,,,,,,Multizone AHU variant C.
+test_5D,missing,,,,,,,,,Multizone AHU variant D.
+test_6,missing,,,,,,,,,Three-stage ventilation and overflow test.
+test_7,missing,,,,,,,,,Emission distribution storage generation and total-energy test.

@@ -1,0 +1,2 @@
+project_id,comparison_scope,comparison_metric,project_value,reference_value,unit,comparison_result,reviewer,review_date,review_status,source_document,source_reference,notes
+16866_Crete_School_Complex_2010_V3,complete_sia3802_project,global_energy_expenditure_index_sia380,,,kWh/m2,missing,,,,,,Provide the reviewed SIA 380 global energy expenditure index for the project and reference project; heating or cooling energy alone cannot establish SIA 380/2 compliance.

@@ -1,0 +1,63 @@
+{
+  "schema_version": "1.0",
+  "target_class": "5",
+  "required_variants": [
+    "test_7"
+  ],
+  "overall_status": "MODEL_SETUP_REQUIRED",
+  "technical_status": "TECHNICAL_VALIDATION_INCOMPLETE",
+  "gates": [
+    {
+      "gate_id": "official_bundle",
+      "label": "Official SIA package",
+      "status": "PASS",
+      "message": "The package manifest and file checksums are verified.",
+      "next_action": "Keep the immutable manifest with the validation evidence.",
+      "missing_variants": [],
+      "failed_variants": []
+    },
+    {
+      "gate_id": "model_cases",
+      "label": "VE reference cases",
+      "status": "BLOCKED",
+      "message": "One or more exact VE cases are absent or not verified.",
+      "next_action": "Generate and validate: test_7.",
+      "missing_variants": [
+        "test_7"
+      ],
+      "failed_variants": []
+    },
+    {
+      "gate_id": "candidate_results",
+      "label": "VE/APS candidate results",
+      "status": "BLOCKED",
+      "message": "At least one variant has no traceable VE/APS result artifact.",
+      "next_action": "Run APS and extract the official metrics for: test_7.",
+      "missing_variants": [
+        "test_7"
+      ],
+      "failed_variants": []
+    },
+    {
+      "gate_id": "official_comparison",
+      "label": "Official acceptance comparisons",
+      "status": "BLOCKED",
+      "message": "At least one mandatory comparison is missing or not checkable.",
+      "next_action": "Complete annual and hourly-distribution comparisons for: test_7.",
+      "missing_variants": [
+        "test_7"
+      ],
+      "failed_variants": []
+    },
+    {
+      "gate_id": "official_attestation",
+      "label": "SIA/sub-commission attestation",
+      "status": "BLOCKED",
+      "message": "No official attestation is recorded.",
+      "next_action": "Submit the complete package to the responsible SIA body.",
+      "missing_variants": [],
+      "failed_variants": []
+    }
+  ],
+  "claim_guardrail": "The navigator verifies technical readiness and records evidence. Only the responsible SIA body can grant official SIA 4010 validation."
+}

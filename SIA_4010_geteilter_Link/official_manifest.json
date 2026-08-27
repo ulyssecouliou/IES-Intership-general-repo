@@ -1,0 +1,488 @@
+{
+  "schema_version": "1.0",
+  "issued_by": "SIA (Swiss Society of Engineers and Architects)",
+  "source_url": "https://www.sia.ch/sia4010",
+  "files": [
+    {
+      "path": "Beispielgebäude/Dokumentation_Beispielgebäude_V5.pdf",
+      "role": "example_building_documentation",
+      "sha256": "38d231786467b1a117c99f2cfe8d09dd03c921bb894378a061c2f6d9bc14c75d",
+      "test_ids": [
+        "4",
+        "5",
+        "6",
+        "7"
+      ]
+    },
+    {
+      "path": "Beispielgebäude/IFC_Beispielebäude_201106_abstractBIM.ifc",
+      "role": "example_building_ifc",
+      "sha256": "03f1bfe985a7c92e2427efe503aa50561fe999ed0213a0347b084632aafc2b57",
+      "test_ids": [
+        "4",
+        "5",
+        "6",
+        "7"
+      ]
+    },
+    {
+      "path": "Beispielgebäude/SIA 4010-A-A-EW.dwg",
+      "role": "example_building_drawing",
+      "sha256": "eacb9cba02dfe26e846d42cacc564cb31803fc675762d9eacd4b55e0630209e8",
+      "test_ids": [
+        "4",
+        "5",
+        "6",
+        "7"
+      ]
+    },
+    {
+      "path": "Beispielgebäude/SIA 4010-A-A-N.dwg",
+      "role": "example_building_drawing",
+      "sha256": "6e5835319bcb6e30e556ee4a21874cd4e00e2ded4221925b638413eaa8ab136d",
+      "test_ids": [
+        "4",
+        "5",
+        "6",
+        "7"
+      ]
+    },
+    {
+      "path": "Beispielgebäude/SIA 4010-A-A-S.dwg",
+      "role": "example_building_drawing",
+      "sha256": "7176210ab912893b835094143ef5cf913a14c10592a3d2d17d84795aedcede8c",
+      "test_ids": [
+        "4",
+        "5",
+        "6",
+        "7"
+      ]
+    },
+    {
+      "path": "Beispielgebäude/SIA 4010-A-G-EG.dwg",
+      "role": "example_building_drawing",
+      "sha256": "1315d64d3146d9bec351222a6e042d928f55e399e40ad540e034cf44edefe951",
+      "test_ids": [
+        "4",
+        "5",
+        "6",
+        "7"
+      ]
+    },
+    {
+      "path": "Beispielgebäude/SIA 4010-A-G-O1.dwg",
+      "role": "example_building_drawing",
+      "sha256": "9181b01a338541969e9653ba1902391a39de14c9d7e3fb5f9112b1992d40aa0c",
+      "test_ids": [
+        "4",
+        "5",
+        "6",
+        "7"
+      ]
+    },
+    {
+      "path": "Beispielgebäude/SIA 4010-A-G-O2.dwg",
+      "role": "example_building_drawing",
+      "sha256": "08ee528a3bd5dc204407077dbcee3a890f9dbe4e03356514decf328b1397d52b",
+      "test_ids": [
+        "4",
+        "5",
+        "6",
+        "7"
+      ]
+    },
+    {
+      "path": "Beispielgebäude/SIA 4010-A-G-U1.dwg",
+      "role": "example_building_drawing",
+      "sha256": "9f1d592540c4abde86b2158519fb36d8d55637ff648065ecf7a1befb620bbf8b",
+      "test_ids": [
+        "4",
+        "5",
+        "6",
+        "7"
+      ]
+    },
+    {
+      "path": "Beispielgebäude/SIA 4010-A-S-L.dwg",
+      "role": "example_building_drawing",
+      "sha256": "8122c206a3e549575f5dbc5f3813f48047b51e9455876fcc247bddb49e7ad1f5",
+      "test_ids": [
+        "4",
+        "5",
+        "6",
+        "7"
+      ]
+    },
+    {
+      "path": "Beispielgebäude/SIA 4010-A-S-Q.dwg",
+      "role": "example_building_drawing",
+      "sha256": "ac2081a4b5c1cc5c847211711b95be0a3d34a6facaf18ecb28b5a71755de1000",
+      "test_ids": [
+        "4",
+        "5",
+        "6",
+        "7"
+      ]
+    },
+    {
+      "path": "Test1/Anwenderberichte/221111_Anwenderbericht_EXCEL-SIA_380_2_Test1.pdf",
+      "role": "reference_report",
+      "sha256": "c4416ffc4a193d6f437fc3624a9020dcea7fc16e2b0bbe24f820d9bdf0726cf5",
+      "test_ids": [
+        "1"
+      ]
+    },
+    {
+      "path": "Test1/Anwenderberichte/221112_Anwenderbericht_EnergyPlus_Test1.pdf",
+      "role": "reference_report",
+      "sha256": "fa5b7e7092e7df359736e429f8a4fa2782b942d4842b0aa5fc97a3d1a39e991c",
+      "test_ids": [
+        "1"
+      ]
+    },
+    {
+      "path": "Test1/Anwenderberichte/221117_Anwenderbericht_TAS_Test1.pdf",
+      "role": "reference_report",
+      "sha256": "2f0b2f933664d11db247a54e706b973a9ef6eeaf3235a7a3db3108e85a452fbc",
+      "test_ids": [
+        "1"
+      ]
+    },
+    {
+      "path": "Test1/Anwenderberichte/221128_Anwenderbericht_IDA-ICE-Test1.pdf",
+      "role": "reference_report",
+      "sha256": "f2071bd3b7675545e78eb08a066cdc48ebab3ebf9bca72e2477e63219d9beecb",
+      "test_ids": [
+        "1"
+      ]
+    },
+    {
+      "path": "Test1/Resultaterfassung_Test1.xlsx",
+      "role": "evaluation_workbook",
+      "sha256": "7f7d2bc829ea0bb21ae7c98b4f01b6216150476e9eb9893d286829ffffac6c4c",
+      "test_ids": [
+        "1"
+      ]
+    },
+    {
+      "path": "Test1/Spezifikation_Test1.pdf",
+      "role": "test_specification",
+      "sha256": "617cda59ff2cbbcae703331ade115c1725ef536fa68a02eee0b3f973d849ef1a",
+      "test_ids": [
+        "1"
+      ]
+    },
+    {
+      "path": "Test2/Anwenderberichte/221111_Anwenderbericht_EXCEL-Test2.pdf",
+      "role": "reference_report",
+      "sha256": "99b5bd9b0742b7a3302d5d9102355d6a073b4fc0b892e50abfdc4ad27171906d",
+      "test_ids": [
+        "2"
+      ]
+    },
+    {
+      "path": "Test2/Anwenderberichte/221113_Anwenderbericht_EnergyPlus-Test2.pdf",
+      "role": "reference_report",
+      "sha256": "f7e0ff53419aeb174c54fb7222529f4aedd7dc1b058373fb9dc41ec677508274",
+      "test_ids": [
+        "2"
+      ]
+    },
+    {
+      "path": "Test2/Anwenderberichte/221117_Anwenderbericht_TAS_Test2.pdf",
+      "role": "reference_report",
+      "sha256": "5cec06f8e35f001827ef9b7941d26fd3165918d87dc0ab8969a71ac6444ecf85",
+      "test_ids": [
+        "2"
+      ]
+    },
+    {
+      "path": "Test2/Anwenderberichte/221128_Anwenderbericht_IDA-ICE-Test2.pdf",
+      "role": "reference_report",
+      "sha256": "a080d857e7c042d146afba2a6b9178505aab7fbd0bbcd8448ca86a947c0bca9d",
+      "test_ids": [
+        "2"
+      ]
+    },
+    {
+      "path": "Test2/Resultaterfassung_Test2.xlsx",
+      "role": "evaluation_workbook",
+      "sha256": "0d34793b0a193e0fac52918a359ac50809046fe7bb56dbab4412ed42332d4d1e",
+      "test_ids": [
+        "2"
+      ]
+    },
+    {
+      "path": "Test2/Spezifikation_Test2.pdf",
+      "role": "test_specification",
+      "sha256": "3e89be97b4771d0b5a146baf7e53926bf528948f78159ede7afa8f01963e0608",
+      "test_ids": [
+        "2"
+      ]
+    },
+    {
+      "path": "Test3/Anwenderberichte/221112_Anwenderbericht_EnergyPlus-Test3.pdf",
+      "role": "reference_report",
+      "sha256": "672f3c0f7327d01c9d824485880d61f3ba074764d70870d4e421a19c4ee8e8a8",
+      "test_ids": [
+        "3"
+      ]
+    },
+    {
+      "path": "Test3/Anwenderberichte/221117_Anwenderbericht_TAS_Test3.pdf",
+      "role": "reference_report",
+      "sha256": "a8c27801c212ced4ea3b710409b21700526f96478cea33352e786a6992b444a5",
+      "test_ids": [
+        "3"
+      ]
+    },
+    {
+      "path": "Test3/Anwenderberichte/240524_Anwenderbericht_EXCEL-Test3.pdf",
+      "role": "reference_report",
+      "sha256": "d19eb09c0bc85927b56ae9505a378125102f9d28d6d9a130b9610bf265dee53b",
+      "test_ids": [
+        "3"
+      ]
+    },
+    {
+      "path": "Test3/Resultaterfassung_Test3.xlsx",
+      "role": "evaluation_workbook",
+      "sha256": "36410de9039680c1aaf277c118b66f5410029b910f7969cbb0756e70f1e5eee9",
+      "test_ids": [
+        "3"
+      ]
+    },
+    {
+      "path": "Test3/Spezifikation_Test3.pdf",
+      "role": "test_specification",
+      "sha256": "012bbfac77d636a2447d046712401cc482455a5c0550a443e3a9caf5ba7df3a3",
+      "test_ids": [
+        "3"
+      ]
+    },
+    {
+      "path": "Test4/Anwenderberichte/221111_Anwenderbericht_EXCEL-Test4.pdf",
+      "role": "reference_report",
+      "sha256": "ab555715fbf4604b8ea1d117fbd50bcdd0ad8817c43f7f25737067113b414929",
+      "test_ids": [
+        "4"
+      ]
+    },
+    {
+      "path": "Test4/Anwenderberichte/221113_Anwenderbericht_EnergyPlus-Test4.pdf",
+      "role": "reference_report",
+      "sha256": "d1d268bdeed665d592cba24e7e3c9cd1736e191acbbf2e3edbf1e86e9b6c9ed0",
+      "test_ids": [
+        "4"
+      ]
+    },
+    {
+      "path": "Test4/Anwenderberichte/221117_Anwenderbericht_TAS_Test4.pdf",
+      "role": "reference_report",
+      "sha256": "c518600af4c2ad42efb0e7fcda925b2ade16605d1ce014acb15bf3c4cb0f0557",
+      "test_ids": [
+        "4"
+      ]
+    },
+    {
+      "path": "Test4/Anwenderberichte/221118_Anwenderbericht_Test 4 IDA ICE.pdf",
+      "role": "reference_report",
+      "sha256": "c857e8f0a55f6bacd20dc4a0ca4a5960f187d0c64d4c63190b3cf949d0814c97",
+      "test_ids": [
+        "4"
+      ]
+    },
+    {
+      "path": "Test4/Resultaterfassung Test4.xlsx",
+      "role": "evaluation_workbook",
+      "sha256": "852eb8db451243ac37047e7b7a343bc7bed77213eb86bb76982b07ebf6f99bb4",
+      "test_ids": [
+        "4"
+      ]
+    },
+    {
+      "path": "Test4/Spezifikation_Test4.pdf",
+      "role": "test_specification",
+      "sha256": "6ffd140972388c09cd3a92f0d178c04248140239667931d13bdd5c78aa353775",
+      "test_ids": [
+        "4"
+      ]
+    },
+    {
+      "path": "Test5/Anwenderberichte/221111_Anwenderbericht_EXCEL-Test5.pdf",
+      "role": "reference_report",
+      "sha256": "cc7e5068c733b774dffb404f811d0a54cb099c52524b1917bd9c0158b3b3f8e0",
+      "test_ids": [
+        "5"
+      ]
+    },
+    {
+      "path": "Test5/Anwenderberichte/221113_Anwenderbericht_EnergyPlus-Test5.pdf",
+      "role": "reference_report",
+      "sha256": "440a234183d7cdbb0f319194bafcf8e70ba14589f5b7243cbb92a73c009d86e5",
+      "test_ids": [
+        "5"
+      ]
+    },
+    {
+      "path": "Test5/Anwenderberichte/221118_Anwenderbericht_Test 5 IDA ICE.pdf",
+      "role": "reference_report",
+      "sha256": "4db30c87f4354aafe1dc6b9f8c95b209cb1f36f4ade15856a285b4f031e5d515",
+      "test_ids": [
+        "5"
+      ]
+    },
+    {
+      "path": "Test5/Anwenderberichte/230515_Anwenderbericht_TAS_Test5.pdf",
+      "role": "reference_report",
+      "sha256": "5aec8c47e2bf2fb52fd0bf4bbd4e9a95f4bfeddd48ddb42a987374b5bfd49b01",
+      "test_ids": [
+        "5"
+      ]
+    },
+    {
+      "path": "Test5/Resultaterfassung_Test5.xlsx",
+      "role": "evaluation_workbook",
+      "sha256": "eafe0447e37eaf0bf962fe0f64d7edec8e3d07d3c7004f6672d305b15c4e24cc",
+      "test_ids": [
+        "5"
+      ]
+    },
+    {
+      "path": "Test5/Spezifikation_Test5.pdf",
+      "role": "test_specification",
+      "sha256": "804d7c921a889d09624e4a512097bd4749c3f9674c83311ea3e5165b956d123d",
+      "test_ids": [
+        "5"
+      ]
+    },
+    {
+      "path": "Test6/Anwenderberichte/221111_Anwenderbericht_EXCEL-Test6.pdf",
+      "role": "reference_report",
+      "sha256": "9118bc012f8f5a562b60c7d8b7eda354bad1fca91b08c9b45cbe60b5a87cabf2",
+      "test_ids": [
+        "6"
+      ]
+    },
+    {
+      "path": "Test6/Anwenderberichte/221113_Anwenderbericht_EnergyPlus-Test6.pdf",
+      "role": "reference_report",
+      "sha256": "812f9a2d870271db26d2c06d266386ced06bd97f9a22352d6e9dcd3e294f71d0",
+      "test_ids": [
+        "6"
+      ]
+    },
+    {
+      "path": "Test6/Anwenderberichte/221121_Anwenderbericht_Test 6 IDA ICE.pdf",
+      "role": "reference_report",
+      "sha256": "abdfb45f2d4b899e35e80e9bcac8fa2799b068f99bcacc910892ee3ece6ce706",
+      "test_ids": [
+        "6"
+      ]
+    },
+    {
+      "path": "Test6/Anwenderberichte/230516_Anwenderbericht_Tas_Test6.pdf",
+      "role": "reference_report",
+      "sha256": "6855d4d8ec782e3ad0535b1fe0548c7a0eddfacb9b6b65bf29582716666090cc",
+      "test_ids": [
+        "6"
+      ]
+    },
+    {
+      "path": "Test6/Resultaterfassung_Test6.xlsx",
+      "role": "evaluation_workbook",
+      "sha256": "5ccba439a9244fd0e1968f14aef3313fa25a7bfad56a4d4acb2aee0d17472c0e",
+      "test_ids": [
+        "6"
+      ]
+    },
+    {
+      "path": "Test6/Spezifikation_Test6.pdf",
+      "role": "test_specification",
+      "sha256": "0ed5d0f07cd4d5b1f0bea24985bb17ffbd904adea4f9913b11f600f7ebce19ca",
+      "test_ids": [
+        "6"
+      ]
+    },
+    {
+      "path": "Test7/Anwenderberichte/221111_Anwenderbericht_EXCEL-Test7.pdf",
+      "role": "reference_report",
+      "sha256": "33f3bcebd6acdb9712398c8869adb30279d59a9afabad258f5fee0e588fef7de",
+      "test_ids": [
+        "7"
+      ]
+    },
+    {
+      "path": "Test7/Anwenderberichte/221112_Anwenderbericht_EnergyPlus-Test7.pdf",
+      "role": "reference_report",
+      "sha256": "64cfb067fbe78b476129ad6dddad59519e81f2cab0415eba00e229de7260316d",
+      "test_ids": [
+        "7"
+      ]
+    },
+    {
+      "path": "Test7/Anwenderberichte/221118_Anwenderbericht_IDA-ICE-Test7.pdf",
+      "role": "reference_report",
+      "sha256": "7e277476a9473de0ec0fb06533c6d7d4ba16460d584d81f68980f7a85e330e71",
+      "test_ids": [
+        "7"
+      ]
+    },
+    {
+      "path": "Test7/Anwenderberichte/230525_Anwenderbericht_Tas_Test7.pdf",
+      "role": "reference_report",
+      "sha256": "4a7759d3de1e000d61855b6701cdf7b9c7e0cbe2d6a056a6ba60f6eeafb24153",
+      "test_ids": [
+        "7"
+      ]
+    },
+    {
+      "path": "Test7/datenblatt-asm605_201901_5bb_v1_de.pdf",
+      "role": "reference_document",
+      "sha256": "f9286a23afb82a37078b711d3c9175924d3717969ead6d295c374fed2b4231ae",
+      "test_ids": [
+        "7"
+      ]
+    },
+    {
+      "path": "Test7/Lastverläufe_220607.xlsx",
+      "role": "load_profile",
+      "sha256": "0a34cc9bdfb68b7c6acaf8f44bfe22dcd55b00dac392b5100fed4ca5208a53a1",
+      "test_ids": [
+        "7"
+      ]
+    },
+    {
+      "path": "Test7/PV_Layout.pdf",
+      "role": "reference_document",
+      "sha256": "198c91eff9a763398b19d46eb4c0318b0930fcb5342510b517707416b54af357",
+      "test_ids": [
+        "7"
+      ]
+    },
+    {
+      "path": "Test7/Resultaterfassung Test7.xlsx",
+      "role": "evaluation_workbook",
+      "sha256": "24937d8f421daa74a7f957025bfeb17a42fe2dc807b1a301a6752f4c0e808958",
+      "test_ids": [
+        "7"
+      ]
+    },
+    {
+      "path": "Test7/Schema.pdf",
+      "role": "reference_document",
+      "sha256": "ca89c225783b738019f4cd749caec334e43facff0d8077267356d5f5ca582cd6",
+      "test_ids": [
+        "7"
+      ]
+    },
+    {
+      "path": "Test7/Spezifikation_Test7.pdf",
+      "role": "test_specification",
+      "sha256": "84e986ac686b265ae3b42479888b847b8604b6adbade8bd794f5a84b2c91c421",
+      "test_ids": [
+        "7"
+      ]
+    }
+  ]
+}

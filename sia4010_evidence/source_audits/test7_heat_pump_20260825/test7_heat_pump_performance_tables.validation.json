@@ -1,0 +1,46 @@
+{
+  "schema_version": "1.0",
+  "input_id": "test7_heat_pump_performance_tables",
+  "source_sha256": "84e986ac686b265ae3b42479888b847b8604b6adbade8bd794f5a84b2c91c421",
+  "status": "PASS",
+  "validated_by": "OpenAI Codex dual-pass transcription review with deterministic regression checks",
+  "validation_method": "Visual read-back from high-resolution PDF rendering, second-pass row comparison, nominal-capacity reconciliation, duplicate bivalent-row reconciliation and JSON regression tests",
+  "checks": [
+    {
+      "id": "source_identity",
+      "status": "PASS",
+      "detail": "The transcription is pinned to the SHA-256 of the SIA-supplied Test 7 specification."
+    },
+    {
+      "id": "cooling_table_complete",
+      "status": "PASS",
+      "detail": "Four capacity/EER points, four inactive-mode powers, degradation, control, sound, GWP and water flow were transcribed."
+    },
+    {
+      "id": "heating_low_temperature_table_complete",
+      "status": "PASS",
+      "detail": "All temperature, bivalent and operation-limit capacity/COP rows plus inactive modes and auxiliaries were transcribed."
+    },
+    {
+      "id": "heating_medium_temperature_table_complete",
+      "status": "PASS",
+      "detail": "All temperature, bivalent and operation-limit capacity/COP rows plus inactive modes and auxiliaries were transcribed."
+    },
+    {
+      "id": "nominal_capacity_crosscheck",
+      "status": "PASS",
+      "detail": "Cooling 55.9 kW and heating 60.0 kW agree with the independent nominal-capacity statements above the source tables."
+    },
+    {
+      "id": "bivalent_duplicate_rows_crosscheck",
+      "status": "PASS",
+      "detail": "Each bivalent row duplicates the corresponding -7 C declared point exactly, as displayed in the source table."
+    }
+  ],
+  "binding_artifact": {
+    "path": "test7_heat_pump_performance_tables.binding.json",
+    "sha256": "6edc66205e8cecb1e494d97d5426836122473efc42b5464432d1e2e7e0d72dd6",
+    "schema_id": "sia4010.generator_performance_tables.v1"
+  },
+  "claim_guardrail": "PASS validates the source transcription only. It is not an IESVE setter qualification, simulated-result comparison, SIA Test 7 pass or SIA attestation."
+}

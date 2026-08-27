@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SIA 4010 navigator - class 3</title>
+  <style>
+    :root { color-scheme: light; --ink:#17202a; --muted:#5f6b76;
+      --pass:#197447; --pass-bg:#e9f7ef; --fail:#a32929; --fail-bg:#fff0f0;
+      --block:#8a5a00; --block-bg:#fff7e1; --line:#d9e0e6; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:#f4f6f8; color:var(--ink);
+      font:15px/1.5 "Segoe UI", Arial, sans-serif; }
+    main { max-width:960px; margin:0 auto; padding:36px 20px 60px; }
+    header { background:#17324d; color:white; border-radius:14px; padding:28px; }
+    h1 { margin:0 0 6px; font-size:30px; }
+    header p { margin:5px 0; color:#dce8f2; }
+    .summary { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin:18px 0; }
+    .summary div { background:white; border:1px solid var(--line);
+      border-radius:10px; padding:15px; }
+    .summary small { display:block; color:var(--muted); margin-bottom:4px; }
+    .gate { display:grid; grid-template-columns:44px 1fr; gap:14px; margin:12px 0;
+      padding:18px; border:1px solid var(--line); border-left-width:7px;
+      border-radius:10px; background:white; }
+    .gate.pass { border-left-color:var(--pass); }
+    .gate.fail { border-left-color:var(--fail); background:var(--fail-bg); }
+    .gate.blocked { border-left-color:var(--block); background:var(--block-bg); }
+    .step { width:34px; height:34px; display:grid; place-items:center;
+      border-radius:50%; background:#e7edf2; font-weight:700; }
+    .gate-head { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+    h2 { margin:0; font-size:19px; }
+    .gate-head span { font-weight:800; letter-spacing:.04em; }
+    .action { color:var(--muted); margin-bottom:0; }
+    footer { margin-top:20px; padding:16px; border-top:1px solid var(--line);
+      color:var(--muted); }
+    @media (max-width:640px) { .summary { grid-template-columns:1fr; } }
+  </style>
+</head>
+<body><main>
+  <header>
+    <h1>SIA 4010 validation navigator</h1>
+    <p>Target class: 3 - required variants: test_1, test_4, test_5A, test_5B, test_5C, test_5D, test_6</p>
+  </header>
+  <div class="summary">
+    <div><small>Overall status</small><strong>MODEL_SETUP_REQUIRED</strong></div>
+    <div><small>Technical status</small><strong>TECHNICAL_VALIDATION_INCOMPLETE</strong></div>
+  </div>
+  
+            <section class="gate pass">
+              <div class="step">1</div>
+              <div>
+                <div class="gate-head"><h2>Official SIA package</h2><span>PASS</span></div>
+                <p>The package manifest and file checksums are verified.</p>
+                <p class="action"><strong>Action:</strong> Keep the immutable manifest with the validation evidence.</p>
+              </div>
+            </section>
+            
+
+            <section class="gate blocked">
+              <div class="step">2</div>
+              <div>
+                <div class="gate-head"><h2>VE reference cases</h2><span>BLOCKED</span></div>
+                <p>One or more exact VE cases are absent or not verified.</p><p><strong>Variants:</strong> test_4, test_5A, test_5B, test_5C, test_5D, test_6</p>
+                <p class="action"><strong>Action:</strong> Generate and validate: test_4, test_5A, test_5B, test_5C, test_5D, test_6.</p>
+              </div>
+            </section>
+            
+
+            <section class="gate blocked">
+              <div class="step">3</div>
+              <div>
+                <div class="gate-head"><h2>VE/APS candidate results</h2><span>BLOCKED</span></div>
+                <p>At least one variant has no traceable VE/APS result artifact.</p><p><strong>Variants:</strong> test_1, test_4, test_5A, test_5B, test_5C, test_5D, test_6</p>
+                <p class="action"><strong>Action:</strong> Run APS and extract the official metrics for: test_1, test_4, test_5A, test_5B, test_5C, test_5D, test_6.</p>
+              </div>
+            </section>
+            
+
+            <section class="gate blocked">
+              <div class="step">4</div>
+              <div>
+                <div class="gate-head"><h2>Official acceptance comparisons</h2><span>BLOCKED</span></div>
+                <p>At least one mandatory comparison is missing or not checkable.</p><p><strong>Variants:</strong> test_1, test_4, test_5A, test_5B, test_5C, test_5D, test_6</p>
+                <p class="action"><strong>Action:</strong> Complete annual and hourly-distribution comparisons for: test_1, test_4, test_5A, test_5B, test_5C, test_5D, test_6.</p>
+              </div>
+            </section>
+            
+
+            <section class="gate blocked">
+              <div class="step">5</div>
+              <div>
+                <div class="gate-head"><h2>SIA/sub-commission attestation</h2><span>BLOCKED</span></div>
+                <p>No official attestation is recorded.</p>
+                <p class="action"><strong>Action:</strong> Submit the complete package to the responsible SIA body.</p>
+              </div>
+            </section>
+            
+  <footer>The navigator verifies technical readiness and records evidence. Only the responsible SIA body can grant official SIA 4010 validation.</footer>
+</main></body></html>

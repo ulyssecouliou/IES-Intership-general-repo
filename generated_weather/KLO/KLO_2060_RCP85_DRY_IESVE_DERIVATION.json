@@ -1,0 +1,96 @@
+{
+  "schema_version": "1.0",
+  "method": "swiss_sia.meteoswiss_csv_epw.v1",
+  "status": "READY_FOR_IESVE_READ_ONLY_PROBE",
+  "purpose": "IESVE transport candidate from MeteoSwiss hourly climate CSV",
+  "compliance_claim_allowed": false,
+  "official_sia_weather_identity_confirmed": false,
+  "source": {
+    "csv_path": "C:\\Users\\ulysse.couliou\\Downloads\\klimaszenarien-raumklima-KLO\\KLO_2060_RCP85_DRY.csv",
+    "csv_sha256": "805EB39A998036FE7D36EAFBA0E434D3D269DF0F9F1F7914A749C4FB448A2B69",
+    "metadata": {
+      "path": "C:\\Users\\ulysse.couliou\\Downloads\\klimaszenarien-raumklima-KLO\\KLO_Metadata.csv",
+      "sha256": "281492D59DB57F0709E11136EA2E28D7DD3119DCB846A4F11BC5716AB50E886C",
+      "station_row": {
+        "station": "Zürich / Kloten",
+        "abbreviation": "KLO",
+        "owner": "MeteoSwiss",
+        "elevation_m": 426.0,
+        "latitude_degrees": 47.479611,
+        "longitude_degrees": 8.535961
+      }
+    },
+    "license": "CC BY 4.0; attribution required by GVE_Metadata.csv"
+  },
+  "weather": {
+    "path": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\generated_weather\\KLO\\KLO_2060_RCP85_DRY_IESVE_CANDIDATE.epw",
+    "sha256": "3DEEF57613428D1FB20D6BC726A0A7033D0427FFD3CC3F207647E941972A7E2D",
+    "format": "EPW",
+    "record_count": 8760,
+    "location": {
+      "city": "Zürich / Kloten",
+      "region": "ZH",
+      "country": "CHE",
+      "source": "MeteoSwiss",
+      "station_id": "KLO",
+      "latitude_degrees": 47.479611,
+      "longitude_degrees": 8.535961,
+      "time_zone_hours": 1.0,
+      "elevation_m": 426.0
+    }
+  },
+  "field_mapping": {
+    "dry_bulb_c": "CSV tre200h0",
+    "relative_humidity_percent": "CSV ure200h0",
+    "wind_speed_m_s": "CSV fkl010h0",
+    "wind_direction_degrees": "CSV dkl010h0",
+    "global_horizontal": "CSV gls hourly mean -> hourly Wh/m2",
+    "diffuse_horizontal": "CSV str.diffus hourly mean -> hourly Wh/m2",
+    "direct_normal": "CSV str.direkt hourly mean -> hourly Wh/m2",
+    "total_sky_cover": "CSV skycover percent -> nearest tenth",
+    "opaque_sky_cover": "Total sky cover used as explicit proxy",
+    "dew_point": "Derived from dry bulb and RH using NOAA MADIS equations",
+    "horizontal_infrared": "Derived using EnergyPlus EPW equation",
+    "station_pressure": "Standard atmosphere derived from MeteoSwiss station elevation",
+    "unsupported_fields": "EPW documented missing-value sentinels"
+  },
+  "controls": {
+    "source_hour_count": {
+      "status": "PASS",
+      "expected": 8760,
+      "observed": 8760
+    },
+    "generated_hour_count": {
+      "status": "PASS",
+      "expected": 8760,
+      "observed": 8760
+    },
+    "epw_field_count": {
+      "status": "PASS",
+      "expected": 35,
+      "observed": [
+        35
+      ]
+    },
+    "direct_diffuse_radiation_present": {
+      "status": "PASS",
+      "expected": true,
+      "observed": true
+    },
+    "dew_point_not_above_dry_bulb": {
+      "status": "PASS",
+      "expected": true,
+      "observed": true
+    }
+  },
+  "warnings": [
+    "This is a transport conversion, not an official MeteoSwiss/SIA EPW.",
+    "The CSV contains no measured station pressure; standard elevation pressure is used.",
+    "Opaque sky cover is unavailable; total sky cover is used as a proxy.",
+    "Precipitation snow illuminance and ground temperatures are unavailable.",
+    "The source is a 365-day climate year; 2060 omits leap day by source design.",
+    "IESVE WeatherFileReader read-back is mandatory before assignment.",
+    "Regulatory suitability and scenario selection require reviewer confirmation."
+  ],
+  "model_or_weather_assignment_changed": false
+}

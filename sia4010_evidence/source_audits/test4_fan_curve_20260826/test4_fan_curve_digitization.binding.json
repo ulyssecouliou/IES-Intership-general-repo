@@ -1,0 +1,268 @@
+{
+  "schema_version": "1.0",
+  "input_id": "test4_fan_curve_digitization",
+  "status": "PROVISIONAL_DIGITIZATION_AWAITING_AUTHORITY_ACCEPTANCE",
+  "compliance_claim_allowed": false,
+  "source": {
+    "path": "SIA_4010_geteilter_Link/Test4/Spezifikation_Test4.pdf",
+    "sha256": "6ffd140972388c09cd3a92f0d178c04248140239667931d13bdd5c78aa353775",
+    "locator": "Spezifikation_Test4.pdf, page 2/3, Ventilatoren Kennfeld and Luftleistung 50 Hz",
+    "fan_map_embedded_image_sha256": "0a388f6c77ed40d17ccc456f10183e283cc6f0943ff3ecc429d34eb9a748cc8e",
+    "measured_table_embedded_image_sha256": "dea7b795ab46794b89a9e7a4842a68442b9840eea9fe1910d21003019d5d2f8d"
+  },
+  "calibration": {
+    "embedded_image_size_px": [
+      624,
+      624
+    ],
+    "x_axis": {
+      "quantity": "volume_flow_m3_h",
+      "origin_px": 47,
+      "origin_value": 0.0,
+      "reference_px": 529,
+      "reference_value": 3000.0
+    },
+    "y_axis": {
+      "quantity": "static_pressure_pa",
+      "origin_px": 583,
+      "origin_value": 0.0,
+      "reference_px": 63,
+      "reference_value": 1200.0
+    },
+    "rounding": {
+      "volume_flow_m3_h": 10.0,
+      "static_pressure_pa": 5.0
+    },
+    "estimated_digitization_uncertainty": {
+      "volume_flow_m3_h": 25.0,
+      "static_pressure_pa": 10.0
+    }
+  },
+  "digitized_points": [
+    {
+      "point_id": 1,
+      "pixel_center": [
+        551,
+        583
+      ],
+      "volume_flow_m3_h": 3140,
+      "static_pressure_pa": 0,
+      "speed_rpm": 3450,
+      "electrical_power_w": 581,
+      "current_a": 2.58,
+      "sound_power_dba": 77
+    },
+    {
+      "point_id": 2,
+      "pixel_center": [
+        465,
+        409
+      ],
+      "volume_flow_m3_h": 2600,
+      "static_pressure_pa": 400,
+      "speed_rpm": 3450,
+      "electrical_power_w": 673,
+      "current_a": 2.98,
+      "sound_power_dba": 74
+    },
+    {
+      "point_id": 3,
+      "pixel_center": [
+        389,
+        258
+      ],
+      "volume_flow_m3_h": 2130,
+      "static_pressure_pa": 750,
+      "speed_rpm": 3450,
+      "electrical_power_w": 750,
+      "current_a": 3.3,
+      "sound_power_dba": 71
+    },
+    {
+      "point_id": 4,
+      "pixel_center": [
+        249,
+        128
+      ],
+      "volume_flow_m3_h": 1260,
+      "static_pressure_pa": 1050,
+      "speed_rpm": 3450,
+      "electrical_power_w": 691,
+      "current_a": 3.07,
+      "sound_power_dba": 79
+    },
+    {
+      "point_id": 5,
+      "pixel_center": [
+        469,
+        583
+      ],
+      "volume_flow_m3_h": 2630,
+      "static_pressure_pa": 0,
+      "speed_rpm": 3000,
+      "electrical_power_w": 349,
+      "current_a": 1.55,
+      "sound_power_dba": 73
+    },
+    {
+      "point_id": 6,
+      "pixel_center": [
+        412,
+        452
+      ],
+      "volume_flow_m3_h": 2270,
+      "static_pressure_pa": 300,
+      "speed_rpm": 3000,
+      "electrical_power_w": 446,
+      "current_a": 1.97,
+      "sound_power_dba": 71
+    },
+    {
+      "point_id": 7,
+      "pixel_center": [
+        344,
+        340
+      ],
+      "volume_flow_m3_h": 1850,
+      "static_pressure_pa": 560,
+      "speed_rpm": 3000,
+      "electrical_power_w": 486,
+      "current_a": 2.16,
+      "sound_power_dba": 68
+    },
+    {
+      "point_id": 8,
+      "pixel_center": [
+        226,
+        252
+      ],
+      "volume_flow_m3_h": 1110,
+      "static_pressure_pa": 765,
+      "speed_rpm": 3000,
+      "electrical_power_w": 432,
+      "current_a": 1.92,
+      "sound_power_dba": 75
+    },
+    {
+      "point_id": 9,
+      "pixel_center": [
+        400,
+        583
+      ],
+      "volume_flow_m3_h": 2200,
+      "static_pressure_pa": 0,
+      "speed_rpm": 2500,
+      "electrical_power_w": 202,
+      "current_a": 0.9,
+      "sound_power_dba": 68
+    },
+    {
+      "point_id": 10,
+      "pixel_center": [
+        352,
+        492
+      ],
+      "volume_flow_m3_h": 1900,
+      "static_pressure_pa": 210,
+      "speed_rpm": 2500,
+      "electrical_power_w": 258,
+      "current_a": 1.14,
+      "sound_power_dba": 66
+    },
+    {
+      "point_id": 11,
+      "pixel_center": [
+        297,
+        414
+      ],
+      "volume_flow_m3_h": 1560,
+      "static_pressure_pa": 390,
+      "speed_rpm": 2500,
+      "electrical_power_w": 281,
+      "current_a": 1.25,
+      "sound_power_dba": 63
+    },
+    {
+      "point_id": 12,
+      "pixel_center": [
+        192,
+        353
+      ],
+      "volume_flow_m3_h": 900,
+      "static_pressure_pa": 530,
+      "speed_rpm": 2500,
+      "electrical_power_w": 250,
+      "current_a": 1.11,
+      "sound_power_dba": 70
+    },
+    {
+      "point_id": 13,
+      "pixel_center": [
+        330,
+        583
+      ],
+      "volume_flow_m3_h": 1760,
+      "static_pressure_pa": 0,
+      "speed_rpm": 2000,
+      "electrical_power_w": 103,
+      "current_a": 0.46,
+      "sound_power_dba": 63
+    },
+    {
+      "point_id": 14,
+      "pixel_center": [
+        297,
+        526
+      ],
+      "volume_flow_m3_h": 1560,
+      "static_pressure_pa": 130,
+      "speed_rpm": 2000,
+      "electrical_power_w": 132,
+      "current_a": 0.59,
+      "sound_power_dba": 60
+    },
+    {
+      "point_id": 15,
+      "pixel_center": [
+        249,
+        474
+      ],
+      "volume_flow_m3_h": 1260,
+      "static_pressure_pa": 250,
+      "speed_rpm": 2000,
+      "electrical_power_w": 144,
+      "current_a": 0.64,
+      "sound_power_dba": 57
+    },
+    {
+      "point_id": 16,
+      "pixel_center": [
+        160,
+        435
+      ],
+      "volume_flow_m3_h": 700,
+      "static_pressure_pa": 340,
+      "speed_rpm": 2000,
+      "electrical_power_w": 128,
+      "current_a": 0.57,
+      "sound_power_dba": 64
+    }
+  ],
+  "nominal_operating_points_from_page_text": {
+    "supply": {
+      "volume_flow_m3_h": 1700,
+      "static_pressure_pa": 500,
+      "electrical_power_w": 407,
+      "speed_rpm": 2790
+    },
+    "extract": {
+      "volume_flow_m3_h": 1700,
+      "static_pressure_pa": 400,
+      "electrical_power_w": 331,
+      "speed_rpm": 2730
+    }
+  },
+  "interpolation_authorized": false,
+  "authority_question": "May the page-2 fan-map graph be digitized for validation, and what interpolation method and numerical tolerance are accepted?",
+  "claim_guardrail": "The table values are direct transcriptions and the flow/pressure coordinates are graphical digitizations with declared uncertainty. No interpolated fan model or SIA verdict is authorized until the validation authority accepts this method."
+}

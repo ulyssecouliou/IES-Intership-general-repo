@@ -1,0 +1,46 @@
+{
+  "schema_version": "1.0",
+  "input_id": "sia_example_building_fabric_awning_detail",
+  "source_sha256": "38d231786467b1a117c99f2cfe8d09dd03c921bb894378a061c2f6d9bc14c75d",
+  "status": "PASS",
+  "validated_by": "OpenAI Codex dual-source transcription review with deterministic regression checks",
+  "validation_method": "High-resolution PDF visual read-back of example-building pages 8-9, second-pass comparison of every optical row, and identity/threshold cross-check against Test 3 specification page 2",
+  "checks": [
+    {
+      "id": "source_identity",
+      "status": "PASS",
+      "detail": "Primary source is pinned to the exact SIA example-building documentation SHA-256."
+    },
+    {
+      "id": "device_identity_crosscheck",
+      "status": "PASS",
+      "detail": "Soltis 92-2048-Alu by SergeFerrari is named in both source documents."
+    },
+    {
+      "id": "mounting_detail_complete",
+      "status": "PASS",
+      "detail": "One-centimetre gaps on top, sides and bottom and 0.5 mm screen thickness are recorded."
+    },
+    {
+      "id": "summer_energy_balance",
+      "status": "PASS",
+      "detail": "For both states, g_total equals direct solar transmittance plus secondary internal heat transfer: 0.545=0.479+0.066 and 0.059=0.040+0.019."
+    },
+    {
+      "id": "secondary_heat_balance",
+      "status": "PASS",
+      "detail": "Secondary transfer equals convection plus thermal radiation plus ventilation for both states."
+    },
+    {
+      "id": "dynamic_semantics_guardrail",
+      "status": "PASS",
+      "detail": "The 150 W/m2 value is retained while unresolved signal, operator and release semantics remain explicitly unqualified."
+    }
+  ],
+  "binding_artifact": {
+    "path": "sia_example_building_fabric_awning_detail.binding.json",
+    "sha256": "811f9ed4e5d99091b9fc4b3b74030dbd5edb5f6c34b0d60f27e36027d900da56",
+    "schema_id": "sia4010.shading_device_definition.v1"
+  },
+  "claim_guardrail": "PASS validates the source transcription only. It is not a VE setter qualification, optical-equivalence result, Test 3 pass or SIA attestation."
+}

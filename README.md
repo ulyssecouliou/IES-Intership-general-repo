@@ -8,6 +8,9 @@
 > **Incoming maintainers:** continue with
 > [`docs/project/NEW_MAINTAINER_START_HERE.md`](docs/project/NEW_MAINTAINER_START_HERE.md)
 > and [`docs/project/AI_USAGE_AND_GOVERNANCE.md`](docs/project/AI_USAGE_AND_GOVERNANCE.md).
+> English-default behaviour and the private handover datasets are documented in
+> [`docs/project/ENGLISH_DEFAULT_AND_LANGUAGE_SUPPORT.md`](docs/project/ENGLISH_DEFAULT_AND_LANGUAGE_SUPPORT.md)
+> and [`docs/project/INTERNAL_DATASET_INVENTORY.md`](docs/project/INTERNAL_DATASET_INVENTORY.md).
 
 ## Unified VEScripts hub
 

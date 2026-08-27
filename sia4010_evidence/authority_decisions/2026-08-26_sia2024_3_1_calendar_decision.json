@@ -1,0 +1,37 @@
+{
+  "schema_version": "1.0",
+  "decision_id": "SIA4010_SIA2024_3_1_CALENDAR_20260826",
+  "received_date": "2026-08-26",
+  "authority": "Prof. Gerhard Zweifel",
+  "medium": "direct written email response",
+  "source_transcript": {
+    "path": "2026-08-26_sia2024_3_1_calendar_email.md",
+    "sha256": "46d0a98b91a2150f0dfe42629bacbca4d78bdb7682e94476c8d00351b29a13af"
+  },
+  "scope": [
+    "SIA 4010 Test 2A",
+    "SIA 4010 Test 1 diagnostic category 3.1 profile",
+    "SIA 2024:2021 category 3.1 annual calendar"
+  ],
+  "decision": {
+    "calendar_days": 365,
+    "calendar_hours": 8760,
+    "leap_year": false,
+    "january_1_weekday": "Saturday",
+    "use_weekdays": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+    "rest_weekdays": ["Saturday", "Sunday"],
+    "public_holidays": [],
+    "other_exception_days": [],
+    "use_days_per_year": 261,
+    "hour_label_convention": "ordinal_hour_ending",
+    "hour_1_interval": "after_00:00_through_01:00",
+    "annual_occupancy_simultaneity_factor": 0.8,
+    "annual_occupancy_simultaneity_application": "direct_multiplier_to_hourly_occupancy_values"
+  },
+  "remaining_technical_qualification": [
+    "native VE daily/weekly/yearly profile materialization",
+    "profile assignment and read-back",
+    "simulation output qualification"
+  ],
+  "claim_guardrail": "This authority decision resolves calendar semantics; it is not by itself a VE profile qualification or SIA validation verdict."
+}

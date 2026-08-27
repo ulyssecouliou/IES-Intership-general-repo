@@ -1,0 +1,96 @@
+{
+  "schema_version": "1.0",
+  "method": "swiss_sia.meteoswiss_csv_epw.v1",
+  "status": "READY_FOR_IESVE_READ_ONLY_PROBE",
+  "purpose": "IESVE transport candidate from MeteoSwiss hourly climate CSV",
+  "compliance_claim_allowed": false,
+  "official_sia_weather_identity_confirmed": false,
+  "source": {
+    "csv_path": "C:\\Users\\ulysse.couliou\\Downloads\\klimaszenarien-raumklima-BAS\\BAS_2060_RCP85_DRY.csv",
+    "csv_sha256": "8B24F77DDC997A44506C13FCD8E0DA423F0B185AF77B3CC2FE7A6ADF18660420",
+    "metadata": {
+      "path": "C:\\Users\\ulysse.couliou\\Downloads\\klimaszenarien-raumklima-BAS\\BAS_Metadata.csv",
+      "sha256": "278204610930D82DEF24ADBC55753E261456002F2AFA5A3B0E8DC17306F820C2",
+      "station_row": {
+        "station": "Basel / Binningen",
+        "abbreviation": "BAS",
+        "owner": "MeteoSwiss",
+        "elevation_m": 316.0,
+        "latitude_degrees": 47.541142,
+        "longitude_degrees": 7.583525
+      }
+    },
+    "license": "CC BY 4.0; attribution required by GVE_Metadata.csv"
+  },
+  "weather": {
+    "path": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\generated_weather\\BAS\\BAS_2060_RCP85_DRY_IESVE_CANDIDATE.epw",
+    "sha256": "95F4ACB966D89AEC1DCEEF9CB4097BAC33A05648FBAA6108101E5D59537C3DD1",
+    "format": "EPW",
+    "record_count": 8760,
+    "location": {
+      "city": "Basel / Binningen",
+      "region": "BL",
+      "country": "CHE",
+      "source": "MeteoSwiss",
+      "station_id": "BAS",
+      "latitude_degrees": 47.541142,
+      "longitude_degrees": 7.583525,
+      "time_zone_hours": 1.0,
+      "elevation_m": 316.0
+    }
+  },
+  "field_mapping": {
+    "dry_bulb_c": "CSV tre200h0",
+    "relative_humidity_percent": "CSV ure200h0",
+    "wind_speed_m_s": "CSV fkl010h0",
+    "wind_direction_degrees": "CSV dkl010h0",
+    "global_horizontal": "CSV gls hourly mean -> hourly Wh/m2",
+    "diffuse_horizontal": "CSV str.diffus hourly mean -> hourly Wh/m2",
+    "direct_normal": "CSV str.direkt hourly mean -> hourly Wh/m2",
+    "total_sky_cover": "CSV skycover percent -> nearest tenth",
+    "opaque_sky_cover": "Total sky cover used as explicit proxy",
+    "dew_point": "Derived from dry bulb and RH using NOAA MADIS equations",
+    "horizontal_infrared": "Derived using EnergyPlus EPW equation",
+    "station_pressure": "Standard atmosphere derived from MeteoSwiss station elevation",
+    "unsupported_fields": "EPW documented missing-value sentinels"
+  },
+  "controls": {
+    "source_hour_count": {
+      "status": "PASS",
+      "expected": 8760,
+      "observed": 8760
+    },
+    "generated_hour_count": {
+      "status": "PASS",
+      "expected": 8760,
+      "observed": 8760
+    },
+    "epw_field_count": {
+      "status": "PASS",
+      "expected": 35,
+      "observed": [
+        35
+      ]
+    },
+    "direct_diffuse_radiation_present": {
+      "status": "PASS",
+      "expected": true,
+      "observed": true
+    },
+    "dew_point_not_above_dry_bulb": {
+      "status": "PASS",
+      "expected": true,
+      "observed": true
+    }
+  },
+  "warnings": [
+    "This is a transport conversion, not an official MeteoSwiss/SIA EPW.",
+    "The CSV contains no measured station pressure; standard elevation pressure is used.",
+    "Opaque sky cover is unavailable; total sky cover is used as a proxy.",
+    "Precipitation snow illuminance and ground temperatures are unavailable.",
+    "The source is a 365-day climate year; 2060 omits leap day by source design.",
+    "IESVE WeatherFileReader read-back is mandatory before assignment.",
+    "Regulatory suitability and scenario selection require reviewer confirmation."
+  ],
+  "model_or_weather_assignment_changed": false
+}

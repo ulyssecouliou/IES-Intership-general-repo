@@ -1,0 +1,70 @@
+{
+  "schema_version": "1.0",
+  "status": "READY_FOR_IESVE_READ_ONLY_PROBE",
+  "station_code": "KLO",
+  "input_directory": "C:\\Users\\ulysse.couliou\\Downloads\\klimaszenarien-raumklima-KLO",
+  "output_directory": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\generated_weather\\KLO",
+  "time_zone_hours_explicit_input": 1.0,
+  "station": {
+    "city": "Zürich / Kloten",
+    "region": "ZH",
+    "country": "CHE",
+    "source": "MeteoSwiss",
+    "station_id": "KLO",
+    "latitude_degrees": 47.479611,
+    "longitude_degrees": 8.535961,
+    "time_zone_hours": 1.0,
+    "elevation_m": 426.0
+  },
+  "metadata_source": {
+    "path": "C:\\Users\\ulysse.couliou\\Downloads\\klimaszenarien-raumklima-KLO\\KLO_Metadata.csv",
+    "sha256": "281492D59DB57F0709E11136EA2E28D7DD3119DCB846A4F11BC5716AB50E886C",
+    "station_row": {
+      "station": "Zürich / Kloten",
+      "abbreviation": "KLO",
+      "owner": "MeteoSwiss",
+      "elevation_m": 426.0,
+      "latitude_degrees": 47.479611,
+      "longitude_degrees": 8.535961
+    }
+  },
+  "outputs": [
+    {
+      "source": "C:\\Users\\ulysse.couliou\\Downloads\\klimaszenarien-raumklima-KLO\\KLO_2035_RCP85_1in10-warmsummer.csv",
+      "epw": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\generated_weather\\KLO\\KLO_2035_RCP85_1in10-warmsummer_IESVE_CANDIDATE.epw",
+      "audit": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\generated_weather\\KLO\\KLO_2035_RCP85_1in10-warmsummer_IESVE_DERIVATION.json",
+      "status": "READY_FOR_IESVE_READ_ONLY_PROBE"
+    },
+    {
+      "source": "C:\\Users\\ulysse.couliou\\Downloads\\klimaszenarien-raumklima-KLO\\KLO_2035_RCP85_DRY.csv",
+      "epw": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\generated_weather\\KLO\\KLO_2035_RCP85_DRY_IESVE_CANDIDATE.epw",
+      "audit": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\generated_weather\\KLO\\KLO_2035_RCP85_DRY_IESVE_DERIVATION.json",
+      "status": "READY_FOR_IESVE_READ_ONLY_PROBE"
+    },
+    {
+      "source": "C:\\Users\\ulysse.couliou\\Downloads\\klimaszenarien-raumklima-KLO\\KLO_2060_RCP26_1in10-warmsummer.csv",
+      "epw": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\generated_weather\\KLO\\KLO_2060_RCP26_1in10-warmsummer_IESVE_CANDIDATE.epw",
+      "audit": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\generated_weather\\KLO\\KLO_2060_RCP26_1in10-warmsummer_IESVE_DERIVATION.json",
+      "status": "READY_FOR_IESVE_READ_ONLY_PROBE"
+    },
+    {
+      "source": "C:\\Users\\ulysse.couliou\\Downloads\\klimaszenarien-raumklima-KLO\\KLO_2060_RCP26_DRY.csv",
+      "epw": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\generated_weather\\KLO\\KLO_2060_RCP26_DRY_IESVE_CANDIDATE.epw",
+      "audit": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\generated_weather\\KLO\\KLO_2060_RCP26_DRY_IESVE_DERIVATION.json",
+      "status": "READY_FOR_IESVE_READ_ONLY_PROBE"
+    },
+    {
+      "source": "C:\\Users\\ulysse.couliou\\Downloads\\klimaszenarien-raumklima-KLO\\KLO_2060_RCP85_1in10-warmsummer.csv",
+      "epw": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\generated_weather\\KLO\\KLO_2060_RCP85_1in10-warmsummer_IESVE_CANDIDATE.epw",
+      "audit": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\generated_weather\\KLO\\KLO_2060_RCP85_1in10-warmsummer_IESVE_DERIVATION.json",
+      "status": "READY_FOR_IESVE_READ_ONLY_PROBE"
+    },
+    {
+      "source": "C:\\Users\\ulysse.couliou\\Downloads\\klimaszenarien-raumklima-KLO\\KLO_2060_RCP85_DRY.csv",
+      "epw": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\generated_weather\\KLO\\KLO_2060_RCP85_DRY_IESVE_CANDIDATE.epw",
+      "audit": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\generated_weather\\KLO\\KLO_2060_RCP85_DRY_IESVE_DERIVATION.json",
+      "status": "READY_FOR_IESVE_READ_ONLY_PROBE"
+    }
+  ],
+  "compliance_claim_allowed": false
+}

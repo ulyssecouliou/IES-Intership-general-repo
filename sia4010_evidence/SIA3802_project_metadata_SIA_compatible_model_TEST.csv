@@ -1,0 +1,2 @@
+project_id,building_status,weather_basis,weather_file,location,altitude_m,review_status,reviewer,review_date,source_document,source_reference,notes
+SIA_compatible_model_TEST,NEW_BUILDING,CH2018 RCP8.5 2060 DRY,CHE_GVE_2060_RCP85_DRY.epw,Geneve,375,accepted,DEMO_EXAMPLE_NOT_A_REAL_REVIEW,2026-08-19,DEMO_illustrative,SIA 380/2:2022,ILLUSTRATIVE demo values on a TEST model. weather_file matches the active VE project weather (CHE_GVE_2060_RCP85_DRY); match is now on the file stem so .epw/.fwt are equivalent.

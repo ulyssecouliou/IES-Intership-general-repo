@@ -8,7 +8,9 @@ is a technical delivery receipt, not an official SIA validation certificate.
 - Canonical branch: `main`.
 - Repository: <https://github.com/ulyssecouliou/IES-Intership-general-repo>.
 - Clone URL: `https://github.com/ulyssecouliou/IES-Intership-general-repo.git`.
-- Handover tag: `handover-2026-08-28` (created and pushed by the final workflow).
+- Canonical complete handover tag: `handover-2026-08-28-complete` (created and
+  pushed by the final workflow).
+- Earlier source/document-only checkpoint: `handover-2026-08-28` (preserved).
 - Repository visibility at audit time: private/access restricted. The same URL
   may be shared with authorised collaborators after they are granted access.
 
@@ -20,7 +22,7 @@ documents and decided whether publication requires a clean-history export.
 
 | Gate | Result |
 |---|---|
-| Full configured Pytest suite | PASS; four environment/optional skips |
+| Full configured Pytest suite | PASS with private datasets present; three optional skips |
 | Black check | PASS; 406 files unchanged |
 | Flake8 | PASS |
 | Strict MyPy gate | PASS; 16 source files |
@@ -34,6 +36,11 @@ Pytest emitted three known `openpyxl` warnings about an unsupported data
 validation extension. The four Sphinx builds each emitted four warnings because
 the API documentation still names two retired `scripts.legacy` modules. Neither
 warning class prevented generation or changed compliance calculations.
+
+The final suite was executed outside the filesystem sandbox with the normal
+Windows temporary directory. This is required because the sandbox denies some
+temporary-file operations. The official Test 1–7 workbooks were present and the
+previously skipped source-dependent paths were exercised.
 
 ## Release-validator warnings retained openly
 

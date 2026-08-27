@@ -1,0 +1,886 @@
+{
+  "artifacts": {
+    "html": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\sia4010_evidence\\autonomy\\campaign\\sia4010_validation_campaign.html",
+    "json": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\sia4010_evidence\\autonomy\\campaign\\sia4010_validation_campaign.json"
+  },
+  "cases": {
+    "test_1/1A": {
+      "base_test_id": "1",
+      "case_id": "1A",
+      "complete": false,
+      "instruction": "Open a fresh saved disposable project named for this exact case and run Fast Start.",
+      "launcher": "Run_VE_SIA4010_Test1_Fast_Start.py",
+      "model_valid": false,
+      "next_action_code": "RUN_TEST1_FAST_START",
+      "result_valid": false,
+      "simulation_valid": false,
+      "variant": "test_1"
+    },
+    "test_1/1B": {
+      "base_test_id": "1",
+      "case_id": "1B",
+      "complete": false,
+      "instruction": "Open a fresh saved disposable project named for this exact case and run Fast Start.",
+      "launcher": "Run_VE_SIA4010_Test1_Fast_Start.py",
+      "model_valid": false,
+      "next_action_code": "RUN_TEST1_FAST_START",
+      "result_valid": false,
+      "simulation_valid": false,
+      "variant": "test_1"
+    },
+    "test_1/1C": {
+      "base_test_id": "1",
+      "case_id": "1C",
+      "complete": false,
+      "instruction": "Open a fresh saved disposable project named for this exact case and run Fast Start.",
+      "launcher": "Run_VE_SIA4010_Test1_Fast_Start.py",
+      "model_valid": false,
+      "next_action_code": "RUN_TEST1_FAST_START",
+      "result_valid": false,
+      "simulation_valid": false,
+      "variant": "test_1"
+    },
+    "test_1/1D": {
+      "base_test_id": "1",
+      "case_id": "1D",
+      "complete": false,
+      "instruction": "Open a fresh saved disposable project named for this exact case and run Fast Start.",
+      "launcher": "Run_VE_SIA4010_Test1_Fast_Start.py",
+      "model_valid": false,
+      "next_action_code": "RUN_TEST1_FAST_START",
+      "result_valid": false,
+      "simulation_valid": false,
+      "variant": "test_1"
+    },
+    "test_1/1E": {
+      "base_test_id": "1",
+      "case_id": "1E",
+      "complete": false,
+      "instruction": "Capture the exact 1E model, complete independent review, bind it, create a disposable copy, then run Verify Template Model.",
+      "launcher": "Run_VE_SIA4010_Capture_Active_Template.py",
+      "model_valid": false,
+      "next_action_code": "BIND_TEST1E_QUALIFIED_TEMPLATE",
+      "result_valid": false,
+      "simulation_valid": false,
+      "variant": "test_1"
+    },
+    "test_1/600": {
+      "base_test_id": "1",
+      "case_id": "600",
+      "complete": false,
+      "instruction": "Open the existing case 600 project, reconcile the floor insulation, then run Fast Start.",
+      "launcher": "Run_VE_SIA4010_Test1_Reconcile_Floor_Insulation.py",
+      "model_valid": false,
+      "next_action_code": "RECONCILE_TEST1_600",
+      "result_valid": false,
+      "simulation_valid": false,
+      "variant": "test_1"
+    },
+    "test_1/600FF": {
+      "base_test_id": "1",
+      "case_id": "600FF",
+      "complete": true,
+      "instruction": "Case complete; preserve its checksummed evidence.",
+      "launcher": "",
+      "model_valid": true,
+      "next_action_code": "PRESERVE_EVIDENCE",
+      "result_valid": true,
+      "simulation_valid": true,
+      "variant": "test_1"
+    },
+    "test_1/640": {
+      "base_test_id": "1",
+      "case_id": "640",
+      "complete": true,
+      "instruction": "Case complete; preserve its checksummed evidence.",
+      "launcher": "",
+      "model_valid": true,
+      "next_action_code": "PRESERVE_EVIDENCE",
+      "result_valid": true,
+      "simulation_valid": true,
+      "variant": "test_1"
+    },
+    "test_1/900": {
+      "base_test_id": "1",
+      "case_id": "900",
+      "complete": false,
+      "instruction": "Open a fresh saved disposable project named for this exact case and run Fast Start.",
+      "launcher": "Run_VE_SIA4010_Test1_Fast_Start.py",
+      "model_valid": false,
+      "next_action_code": "RUN_TEST1_FAST_START",
+      "result_valid": false,
+      "simulation_valid": false,
+      "variant": "test_1"
+    },
+    "test_1/900FF": {
+      "base_test_id": "1",
+      "case_id": "900FF",
+      "complete": false,
+      "instruction": "Open a fresh saved disposable project named for this exact case and run Fast Start.",
+      "launcher": "Run_VE_SIA4010_Test1_Fast_Start.py",
+      "model_valid": false,
+      "next_action_code": "RUN_TEST1_FAST_START",
+      "result_valid": false,
+      "simulation_valid": false,
+      "variant": "test_1"
+    },
+    "test_1/940": {
+      "base_test_id": "1",
+      "case_id": "940",
+      "complete": false,
+      "instruction": "Open a fresh saved disposable project named for this exact case and run Fast Start.",
+      "launcher": "Run_VE_SIA4010_Test1_Fast_Start.py",
+      "model_valid": false,
+      "next_action_code": "RUN_TEST1_FAST_START",
+      "result_valid": false,
+      "simulation_valid": false,
+      "variant": "test_1"
+    },
+    "test_2A/2A": {
+      "base_test_id": "2",
+      "case_id": "2A",
+      "complete": false,
+      "instruction": "Qualify the Test 2A setters in a disposable project, then bind an independently reviewed exact-case template.",
+      "launcher": "Run_VE_SIA4010_Test2A_Qualification_One_Click.py",
+      "model_valid": false,
+      "next_action_code": "QUALIFY_OR_BIND_TEST2A_TEMPLATE",
+      "result_valid": false,
+      "simulation_valid": false,
+      "variant": "test_2A"
+    },
+    "test_2B/2B": {
+      "base_test_id": "2",
+      "case_id": "2B",
+      "complete": false,
+      "instruction": "Build or open the exact official case, capture it, complete independent review, then bind the qualified template.",
+      "launcher": "Run_VE_SIA4010_Capture_Active_Template.py",
+      "model_valid": false,
+      "next_action_code": "BIND_QUALIFIED_TEMPLATE",
+      "result_valid": false,
+      "simulation_valid": false,
+      "variant": "test_2B"
+    },
+    "test_2C/2C": {
+      "base_test_id": "2",
+      "case_id": "2C",
+      "complete": false,
+      "instruction": "Build or open the exact official case, capture it, complete independent review, then bind the qualified template.",
+      "launcher": "Run_VE_SIA4010_Capture_Active_Template.py",
+      "model_valid": false,
+      "next_action_code": "BIND_QUALIFIED_TEMPLATE",
+      "result_valid": false,
+      "simulation_valid": false,
+      "variant": "test_2C"
+    },
+    "test_2D/2D": {
+      "base_test_id": "2",
+      "case_id": "2D",
+      "complete": false,
+      "instruction": "Build or open the exact official case, capture it, complete independent review, then bind the qualified template.",
+      "launcher": "Run_VE_SIA4010_Capture_Active_Template.py",
+      "model_valid": false,
+      "next_action_code": "BIND_QUALIFIED_TEMPLATE",
+      "result_valid": false,
+      "simulation_valid": false,
+      "variant": "test_2D"
+    },
+    "test_3A/3A": {
+      "base_test_id": "3",
+      "case_id": "3A",
+      "complete": false,
+      "instruction": "Build or open the exact official case, capture it, complete independent review, then bind the qualified template.",
+      "launcher": "Run_VE_SIA4010_Capture_Active_Template.py",
+      "model_valid": false,
+      "next_action_code": "BIND_QUALIFIED_TEMPLATE",
+      "result_valid": false,
+      "simulation_valid": false,
+      "variant": "test_3A"
+    },
+    "test_3B/3B": {
+      "base_test_id": "3",
+      "case_id": "3B",
+      "complete": false,
+      "instruction": "Build or open the exact official case, capture it, complete independent review, then bind the qualified template.",
+      "launcher": "Run_VE_SIA4010_Capture_Active_Template.py",
+      "model_valid": false,
+      "next_action_code": "BIND_QUALIFIED_TEMPLATE",
+      "result_valid": false,
+      "simulation_valid": false,
+      "variant": "test_3B"
+    },
+    "test_3C/3C": {
+      "base_test_id": "3",
+      "case_id": "3C",
+      "complete": false,
+      "instruction": "Build or open the exact official case, capture it, complete independent review, then bind the qualified template.",
+      "launcher": "Run_VE_SIA4010_Capture_Active_Template.py",
+      "model_valid": false,
+      "next_action_code": "BIND_QUALIFIED_TEMPLATE",
+      "result_valid": false,
+      "simulation_valid": false,
+      "variant": "test_3C"
+    },
+    "test_3D/3D": {
+      "base_test_id": "3",
+      "case_id": "3D",
+      "complete": false,
+      "instruction": "Build or open the exact official case, capture it, complete independent review, then bind the qualified template.",
+      "launcher": "Run_VE_SIA4010_Capture_Active_Template.py",
+      "model_valid": false,
+      "next_action_code": "BIND_QUALIFIED_TEMPLATE",
+      "result_valid": false,
+      "simulation_valid": false,
+      "variant": "test_3D"
+    },
+    "test_3E/3E": {
+      "base_test_id": "3",
+      "case_id": "3E",
+      "complete": false,
+      "instruction": "Build or open the exact official case, capture it, complete independent review, then bind the qualified template.",
+      "launcher": "Run_VE_SIA4010_Capture_Active_Template.py",
+      "model_valid": false,
+      "next_action_code": "BIND_QUALIFIED_TEMPLATE",
+      "result_valid": false,
+      "simulation_valid": false,
+      "variant": "test_3E"
+    },
+    "test_3F/3F": {
+      "base_test_id": "3",
+      "case_id": "3F",
+      "complete": false,
+      "instruction": "Build or open the exact official case, capture it, complete independent review, then bind the qualified template.",
+      "launcher": "Run_VE_SIA4010_Capture_Active_Template.py",
+      "model_valid": false,
+      "next_action_code": "BIND_QUALIFIED_TEMPLATE",
+      "result_valid": false,
+      "simulation_valid": false,
+      "variant": "test_3F"
+    },
+    "test_3G/3G": {
+      "base_test_id": "3",
+      "case_id": "3G",
+      "complete": false,
+      "instruction": "Build or open the exact official case, capture it, complete independent review, then bind the qualified template.",
+      "launcher": "Run_VE_SIA4010_Capture_Active_Template.py",
+      "model_valid": false,
+      "next_action_code": "BIND_QUALIFIED_TEMPLATE",
+      "result_valid": false,
+      "simulation_valid": false,
+      "variant": "test_3G"
+    },
+    "test_3H/3H": {
+      "base_test_id": "3",
+      "case_id": "3H",
+      "complete": false,
+      "instruction": "Build or open the exact official case, capture it, complete independent review, then bind the qualified template.",
+      "launcher": "Run_VE_SIA4010_Capture_Active_Template.py",
+      "model_valid": false,
+      "next_action_code": "BIND_QUALIFIED_TEMPLATE",
+      "result_valid": false,
+      "simulation_valid": false,
+      "variant": "test_3H"
+    },
+    "test_3I/3I": {
+      "base_test_id": "3",
+      "case_id": "3I",
+      "complete": false,
+      "instruction": "Build or open the exact official case, capture it, complete independent review, then bind the qualified template.",
+      "launcher": "Run_VE_SIA4010_Capture_Active_Template.py",
+      "model_valid": false,
+      "next_action_code": "BIND_QUALIFIED_TEMPLATE",
+      "result_valid": false,
+      "simulation_valid": false,
+      "variant": "test_3I"
+    },
+    "test_3J/3J": {
+      "base_test_id": "3",
+      "case_id": "3J",
+      "complete": false,
+      "instruction": "Build or open the exact official case, capture it, complete independent review, then bind the qualified template.",
+      "launcher": "Run_VE_SIA4010_Capture_Active_Template.py",
+      "model_valid": false,
+      "next_action_code": "BIND_QUALIFIED_TEMPLATE",
+      "result_valid": false,
+      "simulation_valid": false,
+      "variant": "test_3J"
+    },
+    "test_3K/3K": {
+      "base_test_id": "3",
+      "case_id": "3K",
+      "complete": false,
+      "instruction": "Build or open the exact official case, capture it, complete independent review, then bind the qualified template.",
+      "launcher": "Run_VE_SIA4010_Capture_Active_Template.py",
+      "model_valid": false,
+      "next_action_code": "BIND_QUALIFIED_TEMPLATE",
+      "result_valid": false,
+      "simulation_valid": false,
+      "variant": "test_3K"
+    },
+    "test_3L/3L": {
+      "base_test_id": "3",
+      "case_id": "3L",
+      "complete": false,
+      "instruction": "Build or open the exact official case, capture it, complete independent review, then bind the qualified template.",
+      "launcher": "Run_VE_SIA4010_Capture_Active_Template.py",
+      "model_valid": false,
+      "next_action_code": "BIND_QUALIFIED_TEMPLATE",
+      "result_valid": false,
+      "simulation_valid": false,
+      "variant": "test_3L"
+    },
+    "test_4/4": {
+      "base_test_id": "4",
+      "case_id": "4",
+      "complete": false,
+      "instruction": "Build or open the exact official case, capture it, complete independent review, then bind the qualified template.",
+      "launcher": "Run_VE_SIA4010_Capture_Active_Template.py",
+      "model_valid": false,
+      "next_action_code": "BIND_QUALIFIED_TEMPLATE",
+      "result_valid": false,
+      "simulation_valid": false,
+      "variant": "test_4"
+    },
+    "test_5A/5A": {
+      "base_test_id": "5",
+      "case_id": "5A",
+      "complete": false,
+      "instruction": "Build or open the exact official case, capture it, complete independent review, then bind the qualified template.",
+      "launcher": "Run_VE_SIA4010_Capture_Active_Template.py",
+      "model_valid": false,
+      "next_action_code": "BIND_QUALIFIED_TEMPLATE",
+      "result_valid": false,
+      "simulation_valid": false,
+      "variant": "test_5A"
+    },
+    "test_5B/5B": {
+      "base_test_id": "5",
+      "case_id": "5B",
+      "complete": false,
+      "instruction": "Build or open the exact official case, capture it, complete independent review, then bind the qualified template.",
+      "launcher": "Run_VE_SIA4010_Capture_Active_Template.py",
+      "model_valid": false,
+      "next_action_code": "BIND_QUALIFIED_TEMPLATE",
+      "result_valid": false,
+      "simulation_valid": false,
+      "variant": "test_5B"
+    },
+    "test_5C/5C": {
+      "base_test_id": "5",
+      "case_id": "5C",
+      "complete": false,
+      "instruction": "Build or open the exact official case, capture it, complete independent review, then bind the qualified template.",
+      "launcher": "Run_VE_SIA4010_Capture_Active_Template.py",
+      "model_valid": false,
+      "next_action_code": "BIND_QUALIFIED_TEMPLATE",
+      "result_valid": false,
+      "simulation_valid": false,
+      "variant": "test_5C"
+    },
+    "test_5D/5D": {
+      "base_test_id": "5",
+      "case_id": "5D",
+      "complete": false,
+      "instruction": "Build or open the exact official case, capture it, complete independent review, then bind the qualified template.",
+      "launcher": "Run_VE_SIA4010_Capture_Active_Template.py",
+      "model_valid": false,
+      "next_action_code": "BIND_QUALIFIED_TEMPLATE",
+      "result_valid": false,
+      "simulation_valid": false,
+      "variant": "test_5D"
+    },
+    "test_6/6": {
+      "base_test_id": "6",
+      "case_id": "6",
+      "complete": false,
+      "instruction": "Build or open the exact official case, capture it, complete independent review, then bind the qualified template.",
+      "launcher": "Run_VE_SIA4010_Capture_Active_Template.py",
+      "model_valid": false,
+      "next_action_code": "BIND_QUALIFIED_TEMPLATE",
+      "result_valid": false,
+      "simulation_valid": false,
+      "variant": "test_6"
+    },
+    "test_7/7": {
+      "base_test_id": "7",
+      "case_id": "7",
+      "complete": false,
+      "instruction": "Build or open the exact official case, capture it, complete independent review, then bind the qualified template.",
+      "launcher": "Run_VE_SIA4010_Capture_Active_Template.py",
+      "model_valid": false,
+      "next_action_code": "BIND_QUALIFIED_TEMPLATE",
+      "result_valid": false,
+      "simulation_valid": false,
+      "variant": "test_7"
+    }
+  },
+  "claim_guardrail": "The campaign optimizes technical evidence collection. Only the responsible SIA body can grant official validation.",
+  "classes": {
+    "1A": {
+      "complete_case_count": 2,
+      "exact_case_count": 12,
+      "official_attestation_required": true,
+      "pending_cases": [
+        "test_1/600",
+        "test_1/900",
+        "test_1/940",
+        "test_1/900FF",
+        "test_1/1A",
+        "test_1/1B",
+        "test_1/1C",
+        "test_1/1D",
+        "test_1/1E",
+        "test_2A/2A"
+      ],
+      "required_variants": [
+        "test_1",
+        "test_2A"
+      ],
+      "status": "INCOMPLETE"
+    },
+    "1B": {
+      "complete_case_count": 2,
+      "exact_case_count": 14,
+      "official_attestation_required": true,
+      "pending_cases": [
+        "test_1/600",
+        "test_1/900",
+        "test_1/940",
+        "test_1/900FF",
+        "test_1/1A",
+        "test_1/1B",
+        "test_1/1C",
+        "test_1/1D",
+        "test_1/1E",
+        "test_2B/2B",
+        "test_2C/2C",
+        "test_2D/2D"
+      ],
+      "required_variants": [
+        "test_1",
+        "test_2B",
+        "test_2C",
+        "test_2D"
+      ],
+      "status": "INCOMPLETE"
+    },
+    "2A": {
+      "complete_case_count": 2,
+      "exact_case_count": 18,
+      "official_attestation_required": true,
+      "pending_cases": [
+        "test_1/600",
+        "test_1/900",
+        "test_1/940",
+        "test_1/900FF",
+        "test_1/1A",
+        "test_1/1B",
+        "test_1/1C",
+        "test_1/1D",
+        "test_1/1E",
+        "test_2A/2A",
+        "test_3A/3A",
+        "test_3B/3B",
+        "test_3C/3C",
+        "test_3D/3D",
+        "test_3E/3E",
+        "test_3F/3F"
+      ],
+      "required_variants": [
+        "test_1",
+        "test_2A",
+        "test_3A",
+        "test_3B",
+        "test_3C",
+        "test_3D",
+        "test_3E",
+        "test_3F"
+      ],
+      "status": "INCOMPLETE"
+    },
+    "2B": {
+      "complete_case_count": 2,
+      "exact_case_count": 26,
+      "official_attestation_required": true,
+      "pending_cases": [
+        "test_1/600",
+        "test_1/900",
+        "test_1/940",
+        "test_1/900FF",
+        "test_1/1A",
+        "test_1/1B",
+        "test_1/1C",
+        "test_1/1D",
+        "test_1/1E",
+        "test_2B/2B",
+        "test_2C/2C",
+        "test_2D/2D",
+        "test_3A/3A",
+        "test_3B/3B",
+        "test_3C/3C",
+        "test_3D/3D",
+        "test_3E/3E",
+        "test_3F/3F",
+        "test_3G/3G",
+        "test_3H/3H",
+        "test_3I/3I",
+        "test_3J/3J",
+        "test_3K/3K",
+        "test_3L/3L"
+      ],
+      "required_variants": [
+        "test_1",
+        "test_2B",
+        "test_2C",
+        "test_2D",
+        "test_3A",
+        "test_3B",
+        "test_3C",
+        "test_3D",
+        "test_3E",
+        "test_3F",
+        "test_3G",
+        "test_3H",
+        "test_3I",
+        "test_3J",
+        "test_3K",
+        "test_3L"
+      ],
+      "status": "INCOMPLETE"
+    },
+    "3": {
+      "complete_case_count": 2,
+      "exact_case_count": 17,
+      "official_attestation_required": true,
+      "pending_cases": [
+        "test_1/600",
+        "test_1/900",
+        "test_1/940",
+        "test_1/900FF",
+        "test_1/1A",
+        "test_1/1B",
+        "test_1/1C",
+        "test_1/1D",
+        "test_1/1E",
+        "test_4/4",
+        "test_5A/5A",
+        "test_5B/5B",
+        "test_5C/5C",
+        "test_5D/5D",
+        "test_6/6"
+      ],
+      "required_variants": [
+        "test_1",
+        "test_4",
+        "test_5A",
+        "test_5B",
+        "test_5C",
+        "test_5D",
+        "test_6"
+      ],
+      "status": "INCOMPLETE"
+    },
+    "4A": {
+      "complete_case_count": 2,
+      "exact_case_count": 25,
+      "official_attestation_required": true,
+      "pending_cases": [
+        "test_1/600",
+        "test_1/900",
+        "test_1/940",
+        "test_1/900FF",
+        "test_1/1A",
+        "test_1/1B",
+        "test_1/1C",
+        "test_1/1D",
+        "test_1/1E",
+        "test_2A/2A",
+        "test_3A/3A",
+        "test_3B/3B",
+        "test_3C/3C",
+        "test_3D/3D",
+        "test_3E/3E",
+        "test_3F/3F",
+        "test_4/4",
+        "test_5A/5A",
+        "test_5B/5B",
+        "test_5C/5C",
+        "test_5D/5D",
+        "test_6/6",
+        "test_7/7"
+      ],
+      "required_variants": [
+        "test_1",
+        "test_2A",
+        "test_3A",
+        "test_3B",
+        "test_3C",
+        "test_3D",
+        "test_3E",
+        "test_3F",
+        "test_4",
+        "test_5A",
+        "test_5B",
+        "test_5C",
+        "test_5D",
+        "test_6",
+        "test_7"
+      ],
+      "status": "INCOMPLETE"
+    },
+    "4B": {
+      "complete_case_count": 2,
+      "exact_case_count": 33,
+      "official_attestation_required": true,
+      "pending_cases": [
+        "test_1/600",
+        "test_1/900",
+        "test_1/940",
+        "test_1/900FF",
+        "test_1/1A",
+        "test_1/1B",
+        "test_1/1C",
+        "test_1/1D",
+        "test_1/1E",
+        "test_2B/2B",
+        "test_2C/2C",
+        "test_2D/2D",
+        "test_3A/3A",
+        "test_3B/3B",
+        "test_3C/3C",
+        "test_3D/3D",
+        "test_3E/3E",
+        "test_3F/3F",
+        "test_3G/3G",
+        "test_3H/3H",
+        "test_3I/3I",
+        "test_3J/3J",
+        "test_3K/3K",
+        "test_3L/3L",
+        "test_4/4",
+        "test_5A/5A",
+        "test_5B/5B",
+        "test_5C/5C",
+        "test_5D/5D",
+        "test_6/6",
+        "test_7/7"
+      ],
+      "required_variants": [
+        "test_1",
+        "test_2B",
+        "test_2C",
+        "test_2D",
+        "test_3A",
+        "test_3B",
+        "test_3C",
+        "test_3D",
+        "test_3E",
+        "test_3F",
+        "test_3G",
+        "test_3H",
+        "test_3I",
+        "test_3J",
+        "test_3K",
+        "test_3L",
+        "test_4",
+        "test_5A",
+        "test_5B",
+        "test_5C",
+        "test_5D",
+        "test_6",
+        "test_7"
+      ],
+      "status": "INCOMPLETE"
+    },
+    "5": {
+      "complete_case_count": 0,
+      "exact_case_count": 1,
+      "official_attestation_required": true,
+      "pending_cases": [
+        "test_7/7"
+      ],
+      "required_variants": [
+        "test_7"
+      ],
+      "status": "INCOMPLETE"
+    }
+  },
+  "generated_at_utc": "2026-08-21T11:57:56.832313+00:00",
+  "next_action": {
+    "action_code": "RECONCILE_TEST1_600",
+    "case_key": "test_1/600",
+    "instruction": "Open the existing case 600 project, reconcile the floor insulation, then run Fast Start.",
+    "launcher": "Run_VE_SIA4010_Test1_Reconcile_Floor_Insulation.py",
+    "phase_id": "P0"
+  },
+  "phases": [
+    {
+      "complete_case_count": 2,
+      "exact_case_count": 11,
+      "label": "Common thermal-model foundation",
+      "pending_cases": [
+        "test_1/600",
+        "test_1/900",
+        "test_1/940",
+        "test_1/900FF",
+        "test_1/1A",
+        "test_1/1B",
+        "test_1/1C",
+        "test_1/1D",
+        "test_1/1E"
+      ],
+      "phase_id": "P0",
+      "rationale": "Test 1 is shared by every class except class 5; run it once first.",
+      "status": "IN_PROGRESS",
+      "unlocks": [],
+      "variants": [
+        "test_1"
+      ]
+    },
+    {
+      "complete_case_count": 0,
+      "exact_case_count": 1,
+      "label": "Fast A solar branch",
+      "pending_cases": [
+        "test_2A/2A"
+      ],
+      "phase_id": "P1",
+      "rationale": "The single fabric-awning case is the shortest first class unlock.",
+      "status": "NOT_STARTED",
+      "unlocks": [
+        "1A"
+      ],
+      "variants": [
+        "test_2A"
+      ]
+    },
+    {
+      "complete_case_count": 0,
+      "exact_case_count": 3,
+      "label": "B solar branch",
+      "pending_cases": [
+        "test_2B/2B",
+        "test_2C/2C",
+        "test_2D/2D"
+      ],
+      "phase_id": "P2",
+      "rationale": "The three slat-control cases reuse one controlled template family.",
+      "status": "NOT_STARTED",
+      "unlocks": [
+        "1B"
+      ],
+      "variants": [
+        "test_2B",
+        "test_2C",
+        "test_2D"
+      ]
+    },
+    {
+      "complete_case_count": 0,
+      "exact_case_count": 6,
+      "label": "A lighting branch",
+      "pending_cases": [
+        "test_3A/3A",
+        "test_3B/3B",
+        "test_3C/3C",
+        "test_3D/3D",
+        "test_3E/3E",
+        "test_3F/3F"
+      ],
+      "phase_id": "P3",
+      "rationale": "Six lighting variants build directly on the completed A branch.",
+      "status": "NOT_STARTED",
+      "unlocks": [
+        "2A"
+      ],
+      "variants": [
+        "test_3A",
+        "test_3B",
+        "test_3C",
+        "test_3D",
+        "test_3E",
+        "test_3F"
+      ]
+    },
+    {
+      "complete_case_count": 0,
+      "exact_case_count": 6,
+      "label": "B lighting extension",
+      "pending_cases": [
+        "test_3G/3G",
+        "test_3H/3H",
+        "test_3I/3I",
+        "test_3J/3J",
+        "test_3K/3K",
+        "test_3L/3L"
+      ],
+      "phase_id": "P4",
+      "rationale": "The remaining lighting variants complete the wider B scope.",
+      "status": "NOT_STARTED",
+      "unlocks": [
+        "2B"
+      ],
+      "variants": [
+        "test_3G",
+        "test_3H",
+        "test_3I",
+        "test_3J",
+        "test_3K",
+        "test_3L"
+      ]
+    },
+    {
+      "complete_case_count": 0,
+      "exact_case_count": 6,
+      "label": "HVAC and ventilation branch",
+      "pending_cases": [
+        "test_4/4",
+        "test_5A/5A",
+        "test_5B/5B",
+        "test_5C/5C",
+        "test_5D/5D",
+        "test_6/6"
+      ],
+      "phase_id": "P5",
+      "rationale": "One reviewed example-building template family can serve these cases.",
+      "status": "NOT_STARTED",
+      "unlocks": [
+        "3"
+      ],
+      "variants": [
+        "test_4",
+        "test_5A",
+        "test_5B",
+        "test_5C",
+        "test_5D",
+        "test_6"
+      ]
+    },
+    {
+      "complete_case_count": 0,
+      "exact_case_count": 1,
+      "label": "Generation and final integration",
+      "pending_cases": [
+        "test_7/7"
+      ],
+      "phase_id": "P6",
+      "rationale": "Test 7 closes class 5 alone and completes classes 4A/4B after prior phases.",
+      "status": "NOT_STARTED",
+      "unlocks": [
+        "5",
+        "4A",
+        "4B"
+      ],
+      "variants": [
+        "test_7"
+      ]
+    }
+  ],
+  "registry_updated_at_utc": "2026-08-13T15:32:16.139604+00:00",
+  "schema_version": "1.0",
+  "summary": {
+    "complete_exact_cases": 2,
+    "exact_cases": 34,
+    "technically_complete_classes": 0,
+    "validation_classes": 8
+  }
+}

@@ -1,0 +1,100 @@
+{
+  "schema_id": "sia4010.generator_performance_tables.v1",
+  "input_id": "test7_heat_pump_performance_tables",
+  "equipment": {
+    "manufacturer": "Climaveneta",
+    "model": "NX-W-Y /H 0182",
+    "type": "reversible water-to-water heat pump",
+    "compressor": "two-stage scroll",
+    "rated_cooling_capacity_kw": 55.9,
+    "rated_heating_capacity_kw": 60.0
+  },
+  "cooling_low_temperature_application": {
+    "rated_capacity_kw": 55.9,
+    "seasonal_space_cooling_efficiency_percent": 208.0,
+    "degradation_coefficient": 0.9,
+    "capacity_control": "staged",
+    "declared_points": [
+      {"outdoor_temperature_c": 35.0, "capacity_kw": 55.9, "eer": 4.96},
+      {"outdoor_temperature_c": 30.0, "capacity_kw": 41.2, "eer": 5.76},
+      {"outdoor_temperature_c": 25.0, "capacity_kw": 33.8, "eer": 6.67},
+      {"outdoor_temperature_c": 20.0, "capacity_kw": 35.9, "eer": 7.17}
+    ],
+    "inactive_mode_power_kw": {
+      "off": 0.0,
+      "thermostat_off": 0.476,
+      "crankcase_heater": 0.140,
+      "standby": 0.023
+    },
+    "sound_power_level_indoor_db_a": 74.0,
+    "refrigerant_gwp_kg_co2eq": 2088.0,
+    "outdoor_heat_exchanger_water_flow_m3_h": 11.0
+  },
+  "heating_low_temperature_application": {
+    "rated_heat_output_at_design_kw": 76.0,
+    "seasonal_space_heating_efficiency_percent": 227.0,
+    "seasonal_class": "A+++",
+    "bivalent_temperature_c": -7.0,
+    "degradation_coefficient": 0.9,
+    "capacity_control": "variable",
+    "declared_points": [
+      {"outdoor_temperature_c": -7.0, "capacity_kw": 66.8, "cop": 5.79},
+      {"outdoor_temperature_c": 2.0, "capacity_kw": 40.7, "cop": 6.04},
+      {"outdoor_temperature_c": 7.0, "capacity_kw": 36.1, "cop": 6.32},
+      {"outdoor_temperature_c": 12.0, "capacity_kw": 36.6, "cop": 6.67},
+      {"condition": "bivalent_temperature", "capacity_kw": 66.8, "cop": 5.79},
+      {"condition": "operation_limit_temperature", "capacity_kw": 65.5, "cop": 5.66}
+    ],
+    "heating_water_temperature_operating_limit_c": 60.0,
+    "inactive_mode_power_kw": {
+      "off": 0.0,
+      "thermostat_off": 0.943,
+      "standby": 0.023,
+      "crankcase_heater": 0.140
+    },
+    "supplementary_heater_nominal_capacity_kw": 9.02,
+    "sound_power_level_indoor_db_a": 75.0,
+    "annual_electricity_consumption_kwh": 26600.0,
+    "outdoor_heat_exchanger_water_flow_m3_h": 16.0
+  },
+  "heating_medium_temperature_application": {
+    "rated_heat_output_at_design_kw": 68.0,
+    "seasonal_space_heating_efficiency_percent": 181.0,
+    "seasonal_class": "A+++",
+    "bivalent_temperature_c": -7.0,
+    "degradation_coefficient": 0.9,
+    "capacity_control": "variable",
+    "declared_points": [
+      {"outdoor_temperature_c": -7.0, "capacity_kw": 60.0, "cop": 3.82},
+      {"outdoor_temperature_c": 2.0, "capacity_kw": 36.5, "cop": 4.83},
+      {"outdoor_temperature_c": 7.0, "capacity_kw": 33.9, "cop": 5.54},
+      {"outdoor_temperature_c": 12.0, "capacity_kw": 34.9, "cop": 6.33},
+      {"condition": "bivalent_temperature", "capacity_kw": 60.0, "cop": 3.82},
+      {"condition": "operation_limit_temperature", "capacity_kw": 59.1, "cop": 3.52}
+    ],
+    "heating_water_temperature_operating_limit_c": 60.0,
+    "inactive_mode_power_kw": {
+      "off": 0.0,
+      "thermostat_off": 0.502,
+      "standby": 0.023,
+      "crankcase_heater": 0.140
+    },
+    "supplementary_heater_nominal_capacity_kw": 8.72,
+    "sound_power_level_indoor_db_a": 75.0,
+    "annual_electricity_consumption_kwh": 29609.0,
+    "outdoor_heat_exchanger_water_flow_m3_h": 13.0
+  },
+  "source": {
+    "path": "SIA_4010_geteilter_Link/Test7/Spezifikation_Test7.pdf",
+    "sha256": "84e986ac686b265ae3b42479888b847b8604b6adbade8bd794f5a84b2c91c421",
+    "locators": [
+      "page 2 - cooling performance table",
+      "page 3 - low- and medium-temperature heating performance tables"
+    ]
+  },
+  "transcription": {
+    "method": "independent visual read-back from 3.5x PDF rendering plus cross-check against page 2 nominal capacities and internal duplicate bivalent rows",
+    "numeric_format": "decimal point; SI units retained",
+    "claim_guardrail": "This artifact is a source-bound technical transcription. It does not prove that an IESVE plant object reproduces the declared performance or that Test 7 passes."
+  }
+}

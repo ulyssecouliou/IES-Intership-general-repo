@@ -1,0 +1,2 @@
+project_id,building_status,weather_basis,weather_file,location,altitude_m,review_status,reviewer,review_date,source_document,source_reference,notes
+ZOER_32_C1_TEST,,,,,,pending,,,,,Complete only from reviewed client or project evidence; do not infer values from the VE filename.

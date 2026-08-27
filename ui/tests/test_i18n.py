@@ -43,10 +43,10 @@ def test_every_key_exists_in_both_languages():
     assert report["checked"] > 0
 
 
-def test_french_is_the_default():
-    """The tool serves Swiss practice. English exists, it does not lead."""
-    assert i18n.DEFAULT_LANGUAGE == i18n.FRENCH
-    assert i18n.LANGUAGES[0] == i18n.FRENCH
+def test_english_is_the_default():
+    """Every user interface starts in English unless explicitly overridden."""
+    assert i18n.DEFAULT_LANGUAGE == i18n.ENGLISH
+    assert i18n.language() == i18n.ENGLISH
 
 
 def test_no_string_is_identical_across_languages_by_accident():

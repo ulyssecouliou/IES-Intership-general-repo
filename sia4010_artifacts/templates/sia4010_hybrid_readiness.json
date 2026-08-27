@@ -1,0 +1,316 @@
+{
+  "schema_version": "1.0",
+  "generated_at": "2026-08-11T15:13:40.529773+00:00",
+  "status": "HYBRID_EXECUTION_BLOCKED",
+  "requirements": "config/sia4010_template_requirements.json",
+  "bindings": "sia4010_template_bindings.json",
+  "summary": {
+    "exact_cases": 30,
+    "direct_cases": 6,
+    "qualified_template_cases": 0,
+    "blocked_template_cases": 23
+  },
+  "cases": [
+    {
+      "variant": "test_1",
+      "case_id": "600",
+      "base_test_id": "1",
+      "route": "DIRECT_VESCRIPT",
+      "status": "READY_FOR_GUARDED_MUTATION",
+      "template_id": "",
+      "blocker_code": "",
+      "detail": "case600_mvp_v1"
+    },
+    {
+      "variant": "test_1",
+      "case_id": "640",
+      "base_test_id": "1",
+      "route": "DIRECT_VESCRIPT",
+      "status": "READY_FOR_REAL_VE_QUALIFICATION",
+      "template_id": "",
+      "blocker_code": "VE_RUNTIME_QUALIFICATION_REQUIRED",
+      "detail": "A source-traced lightweight Test 1 bundle and guarded VE qualification path are implemented. Run it only in a fresh saved disposable project; the generator remains unverified until every VE setter/read-back and post-mutation check passes."
+    },
+    {
+      "variant": "test_1",
+      "case_id": "600FF",
+      "base_test_id": "1",
+      "route": "DIRECT_VESCRIPT",
+      "status": "READY_FOR_REAL_VE_QUALIFICATION",
+      "template_id": "",
+      "blocker_code": "VE_RUNTIME_QUALIFICATION_REQUIRED",
+      "detail": "A source-traced lightweight Test 1 bundle and guarded VE qualification path are implemented. Run it only in a fresh saved disposable project; the generator remains unverified until every VE setter/read-back and post-mutation check passes."
+    },
+    {
+      "variant": "test_1",
+      "case_id": "900",
+      "base_test_id": "1",
+      "route": "DIRECT_VESCRIPT",
+      "status": "READY_FOR_REAL_VE_QUALIFICATION",
+      "template_id": "",
+      "blocker_code": "VE_RUNTIME_QUALIFICATION_REQUIRED",
+      "detail": "A source-traced high-mass Test 1 bundle and guarded VE qualification path are implemented. Run it only in a fresh saved disposable project; the generator remains unverified until every VE setter/read-back and post-mutation check passes."
+    },
+    {
+      "variant": "test_1",
+      "case_id": "940",
+      "base_test_id": "1",
+      "route": "DIRECT_VESCRIPT",
+      "status": "READY_FOR_REAL_VE_QUALIFICATION",
+      "template_id": "",
+      "blocker_code": "VE_RUNTIME_QUALIFICATION_REQUIRED",
+      "detail": "A source-traced high-mass Test 1 bundle and guarded VE qualification path are implemented. Run it only in a fresh saved disposable project; the generator remains unverified until every VE setter/read-back and post-mutation check passes."
+    },
+    {
+      "variant": "test_1",
+      "case_id": "900FF",
+      "base_test_id": "1",
+      "route": "DIRECT_VESCRIPT",
+      "status": "READY_FOR_REAL_VE_QUALIFICATION",
+      "template_id": "",
+      "blocker_code": "VE_RUNTIME_QUALIFICATION_REQUIRED",
+      "detail": "A source-traced high-mass Test 1 bundle and guarded VE qualification path are implemented. Run it only in a fresh saved disposable project; the generator remains unverified until every VE setter/read-back and post-mutation check passes."
+    },
+    {
+      "variant": "test_1",
+      "case_id": "1E",
+      "base_test_id": "1",
+      "route": "DIAGNOSTIC_ONLY",
+      "status": "SOURCE_PREPARATION_ONLY",
+      "template_id": "",
+      "blocker_code": "VE_CASE_GENERATOR_NOT_IMPLEMENTED",
+      "detail": "Case 1E is diagnostic and is not one of the six ISO Test 1 cases."
+    },
+    {
+      "variant": "test_2A",
+      "case_id": "2A",
+      "base_test_id": "2",
+      "route": "QUALIFIED_VE_TEMPLATE",
+      "status": "BLOCKED_TEMPLATE_REQUIRED",
+      "template_id": "",
+      "blocker_code": "VE_SOLAR_CONTROL_BINDING_NOT_IMPLEMENTED",
+      "detail": "NO_QUALIFIED_TEMPLATE_BINDING"
+    },
+    {
+      "variant": "test_2B",
+      "case_id": "2B",
+      "base_test_id": "2",
+      "route": "QUALIFIED_VE_TEMPLATE",
+      "status": "BLOCKED_TEMPLATE_REQUIRED",
+      "template_id": "",
+      "blocker_code": "VE_SOLAR_CONTROL_BINDING_NOT_IMPLEMENTED",
+      "detail": "NO_QUALIFIED_TEMPLATE_BINDING"
+    },
+    {
+      "variant": "test_2C",
+      "case_id": "2C",
+      "base_test_id": "2",
+      "route": "QUALIFIED_VE_TEMPLATE",
+      "status": "BLOCKED_TEMPLATE_REQUIRED",
+      "template_id": "",
+      "blocker_code": "VE_SOLAR_CONTROL_BINDING_NOT_IMPLEMENTED",
+      "detail": "NO_QUALIFIED_TEMPLATE_BINDING"
+    },
+    {
+      "variant": "test_2D",
+      "case_id": "2D",
+      "base_test_id": "2",
+      "route": "QUALIFIED_VE_TEMPLATE",
+      "status": "BLOCKED_TEMPLATE_REQUIRED",
+      "template_id": "",
+      "blocker_code": "VE_SOLAR_CONTROL_BINDING_NOT_IMPLEMENTED",
+      "detail": "NO_QUALIFIED_TEMPLATE_BINDING"
+    },
+    {
+      "variant": "test_3A",
+      "case_id": "3A",
+      "base_test_id": "3",
+      "route": "QUALIFIED_VE_TEMPLATE",
+      "status": "BLOCKED_TEMPLATE_REQUIRED",
+      "template_id": "",
+      "blocker_code": "VE_LIGHTING_CONTROL_BINDING_NOT_IMPLEMENTED",
+      "detail": "NO_QUALIFIED_TEMPLATE_BINDING"
+    },
+    {
+      "variant": "test_3B",
+      "case_id": "3B",
+      "base_test_id": "3",
+      "route": "QUALIFIED_VE_TEMPLATE",
+      "status": "BLOCKED_TEMPLATE_REQUIRED",
+      "template_id": "",
+      "blocker_code": "VE_LIGHTING_CONTROL_BINDING_NOT_IMPLEMENTED",
+      "detail": "NO_QUALIFIED_TEMPLATE_BINDING"
+    },
+    {
+      "variant": "test_3C",
+      "case_id": "3C",
+      "base_test_id": "3",
+      "route": "QUALIFIED_VE_TEMPLATE",
+      "status": "BLOCKED_TEMPLATE_REQUIRED",
+      "template_id": "",
+      "blocker_code": "VE_LIGHTING_CONTROL_BINDING_NOT_IMPLEMENTED",
+      "detail": "NO_QUALIFIED_TEMPLATE_BINDING"
+    },
+    {
+      "variant": "test_3D",
+      "case_id": "3D",
+      "base_test_id": "3",
+      "route": "QUALIFIED_VE_TEMPLATE",
+      "status": "BLOCKED_TEMPLATE_REQUIRED",
+      "template_id": "",
+      "blocker_code": "VE_LIGHTING_CONTROL_BINDING_NOT_IMPLEMENTED",
+      "detail": "NO_QUALIFIED_TEMPLATE_BINDING"
+    },
+    {
+      "variant": "test_3E",
+      "case_id": "3E",
+      "base_test_id": "3",
+      "route": "QUALIFIED_VE_TEMPLATE",
+      "status": "BLOCKED_TEMPLATE_REQUIRED",
+      "template_id": "",
+      "blocker_code": "VE_LIGHTING_CONTROL_BINDING_NOT_IMPLEMENTED",
+      "detail": "NO_QUALIFIED_TEMPLATE_BINDING"
+    },
+    {
+      "variant": "test_3F",
+      "case_id": "3F",
+      "base_test_id": "3",
+      "route": "QUALIFIED_VE_TEMPLATE",
+      "status": "BLOCKED_TEMPLATE_REQUIRED",
+      "template_id": "",
+      "blocker_code": "VE_LIGHTING_CONTROL_BINDING_NOT_IMPLEMENTED",
+      "detail": "NO_QUALIFIED_TEMPLATE_BINDING"
+    },
+    {
+      "variant": "test_3G",
+      "case_id": "3G",
+      "base_test_id": "3",
+      "route": "QUALIFIED_VE_TEMPLATE",
+      "status": "BLOCKED_TEMPLATE_REQUIRED",
+      "template_id": "",
+      "blocker_code": "VE_LIGHTING_CONTROL_BINDING_NOT_IMPLEMENTED",
+      "detail": "NO_QUALIFIED_TEMPLATE_BINDING"
+    },
+    {
+      "variant": "test_3H",
+      "case_id": "3H",
+      "base_test_id": "3",
+      "route": "QUALIFIED_VE_TEMPLATE",
+      "status": "BLOCKED_TEMPLATE_REQUIRED",
+      "template_id": "",
+      "blocker_code": "VE_LIGHTING_CONTROL_BINDING_NOT_IMPLEMENTED",
+      "detail": "NO_QUALIFIED_TEMPLATE_BINDING"
+    },
+    {
+      "variant": "test_3I",
+      "case_id": "3I",
+      "base_test_id": "3",
+      "route": "QUALIFIED_VE_TEMPLATE",
+      "status": "BLOCKED_TEMPLATE_REQUIRED",
+      "template_id": "",
+      "blocker_code": "VE_LIGHTING_CONTROL_BINDING_NOT_IMPLEMENTED",
+      "detail": "NO_QUALIFIED_TEMPLATE_BINDING"
+    },
+    {
+      "variant": "test_3J",
+      "case_id": "3J",
+      "base_test_id": "3",
+      "route": "QUALIFIED_VE_TEMPLATE",
+      "status": "BLOCKED_TEMPLATE_REQUIRED",
+      "template_id": "",
+      "blocker_code": "VE_LIGHTING_CONTROL_BINDING_NOT_IMPLEMENTED",
+      "detail": "NO_QUALIFIED_TEMPLATE_BINDING"
+    },
+    {
+      "variant": "test_3K",
+      "case_id": "3K",
+      "base_test_id": "3",
+      "route": "QUALIFIED_VE_TEMPLATE",
+      "status": "BLOCKED_TEMPLATE_REQUIRED",
+      "template_id": "",
+      "blocker_code": "VE_LIGHTING_CONTROL_BINDING_NOT_IMPLEMENTED",
+      "detail": "NO_QUALIFIED_TEMPLATE_BINDING"
+    },
+    {
+      "variant": "test_3L",
+      "case_id": "3L",
+      "base_test_id": "3",
+      "route": "QUALIFIED_VE_TEMPLATE",
+      "status": "BLOCKED_TEMPLATE_REQUIRED",
+      "template_id": "",
+      "blocker_code": "VE_LIGHTING_CONTROL_BINDING_NOT_IMPLEMENTED",
+      "detail": "NO_QUALIFIED_TEMPLATE_BINDING"
+    },
+    {
+      "variant": "test_4",
+      "case_id": "4",
+      "base_test_id": "4",
+      "route": "QUALIFIED_VE_TEMPLATE",
+      "status": "BLOCKED_TEMPLATE_REQUIRED",
+      "template_id": "",
+      "blocker_code": "VE_HVAC_TOPOLOGY_BINDING_NOT_IMPLEMENTED",
+      "detail": "NO_QUALIFIED_TEMPLATE_BINDING"
+    },
+    {
+      "variant": "test_5A",
+      "case_id": "5A",
+      "base_test_id": "5",
+      "route": "QUALIFIED_VE_TEMPLATE",
+      "status": "BLOCKED_TEMPLATE_REQUIRED",
+      "template_id": "",
+      "blocker_code": "VE_MULTIZONE_HVAC_BINDING_NOT_IMPLEMENTED",
+      "detail": "NO_QUALIFIED_TEMPLATE_BINDING"
+    },
+    {
+      "variant": "test_5B",
+      "case_id": "5B",
+      "base_test_id": "5",
+      "route": "QUALIFIED_VE_TEMPLATE",
+      "status": "BLOCKED_TEMPLATE_REQUIRED",
+      "template_id": "",
+      "blocker_code": "VE_MULTIZONE_HVAC_BINDING_NOT_IMPLEMENTED",
+      "detail": "NO_QUALIFIED_TEMPLATE_BINDING"
+    },
+    {
+      "variant": "test_5C",
+      "case_id": "5C",
+      "base_test_id": "5",
+      "route": "QUALIFIED_VE_TEMPLATE",
+      "status": "BLOCKED_TEMPLATE_REQUIRED",
+      "template_id": "",
+      "blocker_code": "VE_MULTIZONE_HVAC_BINDING_NOT_IMPLEMENTED",
+      "detail": "NO_QUALIFIED_TEMPLATE_BINDING"
+    },
+    {
+      "variant": "test_5D",
+      "case_id": "5D",
+      "base_test_id": "5",
+      "route": "QUALIFIED_VE_TEMPLATE",
+      "status": "BLOCKED_TEMPLATE_REQUIRED",
+      "template_id": "",
+      "blocker_code": "VE_MULTIZONE_HVAC_BINDING_NOT_IMPLEMENTED",
+      "detail": "NO_QUALIFIED_TEMPLATE_BINDING"
+    },
+    {
+      "variant": "test_6",
+      "case_id": "6",
+      "base_test_id": "6",
+      "route": "QUALIFIED_VE_TEMPLATE",
+      "status": "BLOCKED_TEMPLATE_REQUIRED",
+      "template_id": "",
+      "blocker_code": "VE_VENTILATION_SEQUENCE_BINDING_NOT_IMPLEMENTED",
+      "detail": "NO_QUALIFIED_TEMPLATE_BINDING"
+    },
+    {
+      "variant": "test_7",
+      "case_id": "7",
+      "base_test_id": "7",
+      "route": "QUALIFIED_VE_TEMPLATE",
+      "status": "BLOCKED_TEMPLATE_REQUIRED",
+      "template_id": "",
+      "blocker_code": "VE_ENERGY_SYSTEM_BINDING_NOT_IMPLEMENTED",
+      "detail": "NO_QUALIFIED_TEMPLATE_BINDING"
+    }
+  ],
+  "claim_guardrail": "Readiness proves only that an execution route is available. Official APS comparison and SIA review remain separate gates."
+}

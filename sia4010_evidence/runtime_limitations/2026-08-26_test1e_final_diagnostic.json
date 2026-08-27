@@ -1,0 +1,45 @@
+{
+  "schema_version": "1.0",
+  "status": "TEST1E_FAILED_WITH_ENGINE_AND_INPUT_BLOCKERS",
+  "recorded_at": "2026-08-26T19:55:00+01:00",
+  "case": "test_1/1E",
+  "formal_test1_status": "NOT_PASSED",
+  "latest_qualified_aps": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST_1_1E_DISPOSABLE\\Vista\\SIA4010_test_1_1E_20260826_184917.aps",
+  "latest_evaluation": "C:\\Users\\ulysse.couliou\\Documents\\switzerland\\SIA4010_TEST_1_1E_DISPOSABLE\\sia4010_artifacts\\results\\SIA4010_test_1_1E_evaluation.json",
+  "verified_findings": {
+    "required_output_scope_complete": true,
+    "observed_metric_count": 28,
+    "main_annual_and_peak_indicators_within_official_bands_at_sensitivity_0p21": 4,
+    "monthly_heating_indicators_outside_official_bands_at_sensitivity_0p21": 8,
+    "opaque_envelope_layer_build_qualified": true,
+    "furniture_mass_factor": 2.0710644309317603,
+    "furniture_mass_factor_matches_project_mapping": true,
+    "surface_convective_results_w_m2k": {
+      "external_all_surfaces": 19.02458953857422,
+      "internal_wall": 2.0873656272888184,
+      "internal_roof": 4.591312408447266,
+      "internal_ground_floor": 0.2905043363571167
+    },
+    "prescribed_surface_convective_targets_w_m2k": {
+      "external_all_surfaces": 20.0,
+      "internal_wall": 2.5,
+      "internal_roof": 5.0,
+      "internal_ground_floor": 0.7
+    },
+    "radiative_surface_series_available_in_aps": false,
+    "installed_exact_planitherm_xn_4_14_4_14_4_candidate_found": false
+  },
+  "controlled_diagnostics": {
+    "shade_transmittance_0p21": "Bounded sensitivity only; derived from prior results and not an SIA or manufacturer source input.",
+    "surface_layer_setter": "The prior 640 A/B wrote 20.0/2.5/5.0/0.7 without changing U-factors, but produced the same APS surface coefficients observed with the current model. The setter therefore did not prove control of ApacheSim film coefficients.",
+    "cdb_catalog": "One lexical Planitherm Ultra N candidate was found, but it has three layers and incompatible U, SHGC and visible-transmittance values. It is not the prescribed Planitherm XN product."
+  },
+  "external_clarifications_required": [
+    "IES solver team: supported method to impose and verify the ISO fixed convective and radiative surface-film coefficients in ApacheSim.",
+    "SIA validation authority: whether equivalent whole-window U/g/visible performance is acceptable or the exact manufacturer 4/14/4/14/4 layer build is mandatory.",
+    "SIA validation authority or manufacturer source: complete thermal and optical layer data for SGG Planitherm XN 4/14/4/14/4 if the exact build is mandatory.",
+    "SIA validation authority: confirmation that every monthly band, in addition to annual energy and peak-load bands, is a mandatory Test 1E acceptance gate."
+  ],
+  "required_project_restoration": "Restore the authority/source transmittance 0.04 before preserving a formal Test 1E candidate. The current 0.21 state is diagnostic only.",
+  "claim_guardrail": "The software records a failed technical comparison and unresolved implementation bindings. It does not issue an SIA validation, accreditation or certification claim."
+}

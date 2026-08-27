@@ -1,0 +1,2 @@
+project_id,building_status,weather_basis,weather_file,location,altitude_m,review_status,reviewer,review_date,source_document,source_reference,notes
+ZOER_32_C2,NEW_BUILDING_OR_EXISTING_BUILDING,SIA_2028_DRY_OR_REVIEWED_BASIS,WEATHER_FILE_NAME,PROJECT_LOCATION,ALTITUDE_METRES,pending,REVIEWER_NAME,YYYY-MM-DD,PROJECT_BRIEF_OR_CONTROLLED_SOURCE,CLAUSE_OR_APPROVAL_REFERENCE,The project_id must match the active VE project folder; accepted metadata controls the 100/400-hour dynamic comfort threshold.

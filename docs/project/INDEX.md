@@ -13,8 +13,10 @@
 | `TRANSMISSION_CHECKLIST_2026-08-28.md` | **Checklist de remise IES : automatisé, propriétaire, VE, SIA et données restreintes** |
 | `NEW_MAINTAINER_START_HERE.md` | **Parcours d'accueil : premières 30 minutes, environnement, commandes et responsabilités** |
 | `AI_USAGE_AND_GOVERNANCE.md` | **Usage réel de Codex/Claude, absence d'IA au runtime, limites et supervision humaine** |
+| `ENGLISH_DEFAULT_AND_LANGUAGE_SUPPORT.md` | **Contrat anglais par défaut, quatre langues maintenues et contrôles VE** |
 | `ARCHITECTURE_AND_RUNTIME_GUIDE.md` | **Architecture maintenue, flux client/SIA 4010 et règles d'extension** |
 | `DATA_EVIDENCE_AND_LICENSING.md` | **Inventaire des données, preuves, e-mails, confidentialité et blocages de publication** |
+| `INTERNAL_DATASET_INVENTORY.md` | **Jeux de données privés désormais versionnés et exclusions régénérables** |
 | `TESTING_RELEASE_AND_OPERATIONS.md` | **Tests, documentation, paquet ZIP, smoke test VE, release et rollback** |
 | `GITHUB_AND_OWNERSHIP_TRANSFER.md` | **Liens, accès, transfert IES, Actions, protection de main et visibilité** |
 | `../../CLAUDE.md` | Doctrine non négociable (chargée à chaque session) |

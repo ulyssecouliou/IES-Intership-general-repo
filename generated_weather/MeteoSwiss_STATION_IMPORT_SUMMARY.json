@@ -1,0 +1,25 @@
+{
+  "schema_version": "1.0",
+  "status": "PARTIAL",
+  "station_count": 3,
+  "stations": [
+    "KLO",
+    "BAS",
+    "BKLI"
+  ],
+  "failed_archives": [
+    {
+      "archive": "C:\\Users\\ulysse.couliou\\Downloads\\klimaszenarien-raumklima-REH.zip",
+      "status": "FAILED",
+      "error": "ConfigurationError: Invalid skycover at client CSV line 2"
+    }
+  ],
+  "output_directory": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\generated_weather",
+  "time_zone_hours_explicit_input": 1.0,
+  "per_station_summaries": [
+    "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\generated_weather\\KLO\\KLO_IESVE_CONVERSION_SUMMARY.json",
+    "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\generated_weather\\BAS\\BAS_IESVE_CONVERSION_SUMMARY.json",
+    "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\generated_weather\\BKLI\\BKLI_IESVE_CONVERSION_SUMMARY.json"
+  ],
+  "compliance_claim_allowed": false
+}

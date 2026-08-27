@@ -1,0 +1,57 @@
+{
+  "schema_version": "1.0",
+  "status": "READY_FOR_IESVE_READ_ONLY_PROBE",
+  "input_directory": "C:\\Users\\ulysse.couliou\\Downloads\\klimaszenarien-raumklima-GVE",
+  "output_directory": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\generated_weather\\GVE",
+  "time_zone_hours_explicit_input": 1.0,
+  "station": {
+    "city": "Genève / Cointrin",
+    "region": "GE",
+    "country": "CHE",
+    "source": "MeteoSwiss",
+    "station_id": "GVE",
+    "latitude_degrees": 46.247519,
+    "longitude_degrees": 6.127742,
+    "time_zone_hours": 1.0,
+    "elevation_m": 411.0
+  },
+  "outputs": [
+    {
+      "source": "C:\\Users\\ulysse.couliou\\Downloads\\klimaszenarien-raumklima-GVE\\GVE_2035_RCP85_1in10-warmsummer.csv",
+      "epw": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\generated_weather\\GVE\\GVE_2035_RCP85_1in10-warmsummer_IESVE_CANDIDATE.epw",
+      "audit": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\generated_weather\\GVE\\GVE_2035_RCP85_1in10-warmsummer_IESVE_DERIVATION.json",
+      "status": "READY_FOR_IESVE_READ_ONLY_PROBE"
+    },
+    {
+      "source": "C:\\Users\\ulysse.couliou\\Downloads\\klimaszenarien-raumklima-GVE\\GVE_2035_RCP85_DRY.csv",
+      "epw": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\generated_weather\\GVE\\GVE_2035_RCP85_DRY_IESVE_CANDIDATE.epw",
+      "audit": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\generated_weather\\GVE\\GVE_2035_RCP85_DRY_IESVE_DERIVATION.json",
+      "status": "READY_FOR_IESVE_READ_ONLY_PROBE"
+    },
+    {
+      "source": "C:\\Users\\ulysse.couliou\\Downloads\\klimaszenarien-raumklima-GVE\\GVE_2060_RCP26_1in10-warmsummer.csv",
+      "epw": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\generated_weather\\GVE\\GVE_2060_RCP26_1in10-warmsummer_IESVE_CANDIDATE.epw",
+      "audit": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\generated_weather\\GVE\\GVE_2060_RCP26_1in10-warmsummer_IESVE_DERIVATION.json",
+      "status": "READY_FOR_IESVE_READ_ONLY_PROBE"
+    },
+    {
+      "source": "C:\\Users\\ulysse.couliou\\Downloads\\klimaszenarien-raumklima-GVE\\GVE_2060_RCP26_DRY.csv",
+      "epw": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\generated_weather\\GVE\\GVE_2060_RCP26_DRY_IESVE_CANDIDATE.epw",
+      "audit": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\generated_weather\\GVE\\GVE_2060_RCP26_DRY_IESVE_DERIVATION.json",
+      "status": "READY_FOR_IESVE_READ_ONLY_PROBE"
+    },
+    {
+      "source": "C:\\Users\\ulysse.couliou\\Downloads\\klimaszenarien-raumklima-GVE\\GVE_2060_RCP85_1in10-warmsummer.csv",
+      "epw": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\generated_weather\\GVE\\GVE_2060_RCP85_1in10-warmsummer_IESVE_CANDIDATE.epw",
+      "audit": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\generated_weather\\GVE\\GVE_2060_RCP85_1in10-warmsummer_IESVE_DERIVATION.json",
+      "status": "READY_FOR_IESVE_READ_ONLY_PROBE"
+    },
+    {
+      "source": "C:\\Users\\ulysse.couliou\\Downloads\\klimaszenarien-raumklima-GVE\\GVE_2060_RCP85_DRY.csv",
+      "epw": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\generated_weather\\GVE\\GVE_2060_RCP85_DRY_IESVE_CANDIDATE.epw",
+      "audit": "C:\\Users\\ulysse.couliou\\Documents\\IES Internship\\IES-Intership-general-repo\\generated_weather\\GVE\\GVE_2060_RCP85_DRY_IESVE_DERIVATION.json",
+      "status": "READY_FOR_IESVE_READ_ONLY_PROBE"
+    }
+  ],
+  "compliance_claim_allowed": false
+}
