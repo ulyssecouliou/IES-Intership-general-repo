@@ -3,6 +3,12 @@
 This folder contains project-management, compliance traceability and handoff
 documents that are separate from the generated Sphinx documentation.
 
+Start with `HANDOVER_2026-08-28.md`, then use
+`NEW_MAINTAINER_START_HERE.md` and `TRANSMISSION_CHECKLIST_2026-08-28.md`.
+The canonical thematic handover guides cover AI governance, architecture,
+data/licensing, testing/operations and GitHub ownership. `INDEX.md` separates
+these living documents from historical snapshots.
+
 ## Folders
 
 - `hqe/`: HQE background notes kept outside the production checker package.

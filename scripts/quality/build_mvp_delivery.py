@@ -31,6 +31,15 @@ INCLUDED_DIRECTORIES = (
     "config",
 )
 INCLUDED_DOCS = (
+    "docs/project/HANDOVER_2026-08-28.md",
+    "docs/project/FINAL_TRANSMISSION_RECEIPT_2026-08-28.md",
+    "docs/project/TRANSMISSION_CHECKLIST_2026-08-28.md",
+    "docs/project/NEW_MAINTAINER_START_HERE.md",
+    "docs/project/AI_USAGE_AND_GOVERNANCE.md",
+    "docs/project/ARCHITECTURE_AND_RUNTIME_GUIDE.md",
+    "docs/project/DATA_EVIDENCE_AND_LICENSING.md",
+    "docs/project/TESTING_RELEASE_AND_OPERATIONS.md",
+    "docs/project/GITHUB_AND_OWNERSHIP_TRANSFER.md",
     "docs/user/WORKFLOW_CLIENT_SIA3802_FR.md",
     "docs/project/CLIENT_RUN_GUIDE.md",
     "docs/project/RELEASE_ACCEPTANCE_CHECKLIST.md",
@@ -49,7 +58,14 @@ def _files() -> Iterable[Path]:
             roots.extend(path for path in candidate.rglob("*") if path.is_file())
     roots.extend(ROOT.glob("Run_VE_*.py"))
     roots.extend(ROOT / path for path in INCLUDED_DOCS)
-    for name in ("README.md", "requirements.txt", "LICENSE", "main.py"):
+    for name in (
+        "README.md",
+        "CONTRIBUTING.md",
+        "SECURITY.md",
+        "requirements.txt",
+        "LICENSE",
+        "main.py",
+    ):
         roots.append(ROOT / name)
     unique = sorted({path.resolve() for path in roots if path.is_file()})
     for path in unique:

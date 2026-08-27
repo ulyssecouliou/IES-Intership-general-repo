@@ -9,6 +9,14 @@
 | Document | Rôle |
 |---|---|
 | `HANDOVER_2026-08-28.md` | **Passation finale : état vérifié, commandes, limites et prochaines actions** |
+| `FINAL_TRANSMISSION_RECEIPT_2026-08-28.md` | **Reçu final : contrôles exécutés, avertissements conservés et livrables générés** |
+| `TRANSMISSION_CHECKLIST_2026-08-28.md` | **Checklist de remise IES : automatisé, propriétaire, VE, SIA et données restreintes** |
+| `NEW_MAINTAINER_START_HERE.md` | **Parcours d'accueil : premières 30 minutes, environnement, commandes et responsabilités** |
+| `AI_USAGE_AND_GOVERNANCE.md` | **Usage réel de Codex/Claude, absence d'IA au runtime, limites et supervision humaine** |
+| `ARCHITECTURE_AND_RUNTIME_GUIDE.md` | **Architecture maintenue, flux client/SIA 4010 et règles d'extension** |
+| `DATA_EVIDENCE_AND_LICENSING.md` | **Inventaire des données, preuves, e-mails, confidentialité et blocages de publication** |
+| `TESTING_RELEASE_AND_OPERATIONS.md` | **Tests, documentation, paquet ZIP, smoke test VE, release et rollback** |
+| `GITHUB_AND_OWNERSHIP_TRANSFER.md` | **Liens, accès, transfert IES, Actions, protection de main et visibilité** |
 | `../../CLAUDE.md` | Doctrine non négociable (chargée à chaque session) |
 | `../CLAUDE_REFERENCE.md` | Layout réel, workflow, conventions (corrigé 2026-08-16) |
 | `../ADR-001-architecture-MSP.md` | Décision d'architecture (mono-processus VE, Tkinter, cas générés par script) |

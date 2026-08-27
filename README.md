@@ -4,6 +4,10 @@
 > [`docs/project/HANDOVER_2026-08-28.md`](docs/project/HANDOVER_2026-08-28.md)
 > for the verified delivery state, reproducible checks, known SIA 4010
 > blockers and next actions.
+>
+> **Incoming maintainers:** continue with
+> [`docs/project/NEW_MAINTAINER_START_HERE.md`](docs/project/NEW_MAINTAINER_START_HERE.md)
+> and [`docs/project/AI_USAGE_AND_GOVERNANCE.md`](docs/project/AI_USAGE_AND_GOVERNANCE.md).
 
 ## Unified VEScripts hub
 

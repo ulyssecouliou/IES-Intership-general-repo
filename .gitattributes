@@ -1,2 +1,6 @@
 # Outlook project correspondence is versioned as immutable binary evidence.
 *.msg binary
+
+# This authority-supplied climate source is checksum-bound byte-for-byte.
+# Never let Git for Windows rewrite LF to CRLF in the working tree.
+references/standards/sia2028/KLO_dry.txt binary
