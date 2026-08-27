@@ -251,10 +251,6 @@ tmp_*/
 ~$*
 **/~$*
 
-# Raw project correspondence may contain personal/internal information. Keep
-# the Markdown index, but never publish Outlook messages on a public branch.
-docs/project/emails/*.msg
-
 # Controlled external workbook retained locally with its provenance record;
 # redistribution rights are not established for the binary workbook.
 references/standards/en16798/*.xlsm

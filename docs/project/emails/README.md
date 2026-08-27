@@ -29,8 +29,14 @@ These are Outlook `.msg` files. Open them with:
 - Microsoft Outlook (double-click)
 - Any `.msg` viewer (e.g. Free Opener, MSG Viewer for web)
 
-## Note
+## Publication and handling notice
 
 These files may contain personal information and internal correspondence.
-They are kept in the repository for project traceability but should not
-be shared externally or committed to a public branch.
+Their inclusion in the public project repository was explicitly authorized by
+the project owner on 27 August 2026 because they are required for continuity,
+normative traceability and follow-up with the SIA commission.
+
+Future maintainers must treat the messages as project evidence: do not alter
+the originals, avoid copying them outside the project unnecessarily, and ask
+the IES project owner to review continued public availability if the repository
+ownership, access policy or applicable privacy requirements change.
