@@ -8,8 +8,10 @@ is a technical delivery receipt, not an official SIA validation certificate.
 - Canonical branch: `main`.
 - Repository: <https://github.com/ulyssecouliou/IES-Intership-general-repo>.
 - Clone URL: `https://github.com/ulyssecouliou/IES-Intership-general-repo.git`.
-- Canonical complete handover tag: `handover-2026-08-28-complete` (created and
-  pushed by the final workflow).
+- Canonical complete handover tag: `handover-2026-08-28-complete-v2` (created
+  and pushed after the private VE project snapshots were added).
+- Pre-snapshot private-data checkpoint: `handover-2026-08-28-complete`
+  (preserved).
 - Earlier source/document-only checkpoint: `handover-2026-08-28` (preserved).
 - Repository visibility at audit time: private/access restricted. The same URL
   may be shared with authorised collaborators after they are granted access.
@@ -17,6 +19,11 @@ is a technical delivery receipt, not an official SIA validation certificate.
 Do not make the repository public until IES has decided the software licence,
 reviewed the 60 Outlook messages, reviewed the tracked SIA/ISO/third-party
 documents and decided whether publication requires a clean-history export.
+
+Ten SHA-256-bound VE project snapshots are tracked under
+`handover/ve_projects/`. They remove the final dependency on the departing
+contributor's `Documents\switzerland` folder while retaining their diagnostic,
+disposable or client-test status.
 
 ## Automated verification
 

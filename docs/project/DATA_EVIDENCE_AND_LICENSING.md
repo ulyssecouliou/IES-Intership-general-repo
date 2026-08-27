@@ -78,7 +78,8 @@ evidence for a new client.
 
 The repository ignore policy excludes or should exclude:
 
-- active/disposable VE project folders and APS results stored outside this repo;
+- future live VE project folders and APS results that have not yet been selected
+  for a dated private snapshot;
 - generated reports and evidence packs unless explicitly selected as a release
   record;
 - local dependency/caching/test directories;
@@ -88,6 +89,11 @@ The repository ignore policy excludes or should exclude:
 Their absence is not an accidental loss when provenance, owner and retrieval
 instructions are recorded. A handover must never copy a licensed source merely
 to make a package appear complete.
+
+The final private handover is an explicit exception for the ten bounded project
+snapshots under `handover/ve_projects/`. Their checksums and handling rules are
+versioned with the archives. This exception does not authorise public release or
+automatic reuse as evidence for another client or validation case.
 
 ## Evidence hierarchy
 

@@ -31,6 +31,15 @@ The historical `ui/i18n.py` navigator contains only English and French because
 that package is no longer the maintained client product. Its initial language is
 nevertheless English, so no repository UI now starts in French implicitly.
 
+## Documentation entry point
+
+The default documentation route is also English: `README.md`,
+`FINAL_TRANSMISSION_RECEIPT_2026-08-28.md`,
+`NEW_MAINTAINER_START_HERE.md`, `AI_USAGE_AND_GOVERNANCE.md` and the maintained
+technical guides. Dated French handover notes and normative sources in French or
+German remain available as historical or authoritative evidence, but they are
+not the default starting path.
+
 ## Runtime checks for the incoming maintainer
 
 On a clean disposable VE project:

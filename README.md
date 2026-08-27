@@ -1,9 +1,11 @@
 # Swiss SIA Compliance Checker
 
-> **Project handover:** start with
-> [`docs/project/HANDOVER_2026-08-28.md`](docs/project/HANDOVER_2026-08-28.md)
+> **Project handover:** start with the English
+> [`final transmission receipt`](docs/project/FINAL_TRANSMISSION_RECEIPT_2026-08-28.md)
 > for the verified delivery state, reproducible checks, known SIA 4010
-> blockers and next actions.
+> blockers and next actions. The detailed dated French handover remains in
+> [`HANDOVER_2026-08-28.md`](docs/project/HANDOVER_2026-08-28.md) for historical
+> continuity.
 >
 > **Incoming maintainers:** continue with
 > [`docs/project/NEW_MAINTAINER_START_HERE.md`](docs/project/NEW_MAINTAINER_START_HERE.md)
@@ -11,6 +13,8 @@
 > English-default behaviour and the private handover datasets are documented in
 > [`docs/project/ENGLISH_DEFAULT_AND_LANGUAGE_SUPPORT.md`](docs/project/ENGLISH_DEFAULT_AND_LANGUAGE_SUPPORT.md)
 > and [`docs/project/INTERNAL_DATASET_INVENTORY.md`](docs/project/INTERNAL_DATASET_INVENTORY.md).
+> Reproducible VE project snapshots are under
+> [`handover/ve_projects/`](handover/ve_projects/README.md).
 
 ## Unified VEScripts hub
 

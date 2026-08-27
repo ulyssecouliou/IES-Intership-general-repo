@@ -1,7 +1,9 @@
 # New maintainer: start here
 
 This is the shortest safe route from a new workstation to useful project work.
-The dated final truth remains `HANDOVER_2026-08-28.md`.
+The canonical English delivery truth is
+`FINAL_TRANSMISSION_RECEIPT_2026-08-28.md`. A detailed French handover is kept
+as dated historical context in `HANDOVER_2026-08-28.md`.
 
 ## First 30 minutes
 
@@ -9,7 +11,7 @@ The dated final truth remains `HANDOVER_2026-08-28.md`.
 2. Clone `https://github.com/ulyssecouliou/IES-Intership-general-repo.git`.
 3. Check out `main`; it is the canonical/default branch.
 4. Read, in order:
-   - `HANDOVER_2026-08-28.md`;
+   - `FINAL_TRANSMISSION_RECEIPT_2026-08-28.md`;
    - this guide;
    - `AI_USAGE_AND_GOVERNANCE.md`;
    - `../../CLAUDE.md` and `../CLAUDE_REFERENCE.md`;
@@ -17,6 +19,8 @@ The dated final truth remains `HANDOVER_2026-08-28.md`.
    - `DATA_EVIDENCE_AND_LICENSING.md`;
    - `TESTING_RELEASE_AND_OPERATIONS.md`.
 5. Run `git status --short --branch` and do not start from a dirty tree.
+6. If VE campaign reproduction is required, verify and extract the appropriate
+   archive from `../../handover/ve_projects/`; never edit the tracked archive.
 
 ## Workstation prerequisites
 

@@ -15,6 +15,7 @@ new maintainer does not depend on Ulysse's workstation.
 | `generated_weather/` | 55 files / 29.94 MB | EPW candidates and derivation receipts | Derived; retain audit JSON |
 | `references/standards/en16798/` controlled workbook | 1 workbook / 3.12 MB | EN 16798 validation reference | Private/internal use with provenance |
 | `sia4010_artifacts/templates/` | 1 small JSON | Canonical hybrid-readiness record | Technical handover evidence |
+| `handover/ve_projects/` | 10 ZIP snapshots / 39.63 MB | Last client test model and disposable SIA 4010 projects, including APS evidence | Private reproducibility snapshots; verify SHA-256 before extraction |
 
 Sizes are informational audit values; Git object hashes are the canonical
 integrity mechanism after commit.
@@ -24,7 +25,7 @@ integrity mechanism after commit.
 - Python/tool caches, temporary directories and Office lock files;
 - repetitive generated reports and logs under `reports/`;
 - transient outputs under `outputs/`, including delivery ZIPs and Git bundles;
-- disposable VE project folders and APS files that live outside this repository;
+- future live VE working folders and new APS files not yet selected for a dated snapshot;
 - local Codex/Claude settings and credentials.
 
 Those exclusions prevent workstation noise and recursive archives. Rebuildable

@@ -18,6 +18,8 @@ and incoming maintainer.
 - [x] Testing/release/operations are documented.
 - [x] GitHub ownership/publication steps are documented.
 - [x] Sixty Outlook messages are versioned for continuity.
+- [x] Ten VE/client-test and SIA 4010 disposable-project snapshots are versioned
+  with SHA-256 checksums for workstation-independent continuation.
 - [x] Temporary/dependency/Office-lock files are ignored.
 - [x] Full configured Python suite passed with private datasets present (three
   optional skips).
@@ -32,8 +34,8 @@ and incoming maintainer.
   eight non-blocking warnings were retained in the final receipt.
 - [x] Final bounded MVP ZIP built under `outputs/release/`; its SHA-256 sidecar
   is generated after the final commit.
-- [x] Annotated Git handover tag `handover-2026-08-28-complete` is created and
-  pushed by the final workflow; the earlier checkpoint tag is preserved.
+- [x] Annotated Git handover tag `handover-2026-08-28-complete-v2` is created and
+  pushed by the final workflow; earlier checkpoint tags are preserved.
 - [x] Final `main` SHA is the commit referenced by that annotated tag.
 
 See `FINAL_TRANSMISSION_RECEIPT_2026-08-28.md` for the exact results and limits.
