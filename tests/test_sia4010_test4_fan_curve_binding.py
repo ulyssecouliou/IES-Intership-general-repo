@@ -10,12 +10,18 @@ MODULE = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(MODULE)
 
 
-def test_digitization_is_complete_monotonic_and_fail_closed():
+def test_digitization_is_complete_monotonic_and_candidate_scoped():
     payload = MODULE.build_payload()
     MODULE.validate(payload)
-    assert payload["status"] == ("PROVISIONAL_DIGITIZATION_AWAITING_AUTHORITY_ACCEPTANCE")
+    assert payload["status"] == (
+        "SOURCE_TRACE_VERIFIED_CANDIDATE_APPROXIMATION_REQUIRED"
+    )
     assert payload["compliance_claim_allowed"] is False
-    assert payload["interpolation_authorized"] is False
+    assert payload["interpolation_authorized"] is True
+    assert payload["candidate_specific_approximation_authorized"] is True
+    assert payload["authority_decision"]["decision_id"] == (
+        "SIA4010_REMAINING_CLARIFICATIONS_20260828"
+    )
     assert len(payload["digitized_points"]) == 16
 
 

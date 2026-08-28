@@ -1,0 +1,32 @@
+{
+  "schema_version": "1.0",
+  "input_id": "sia_authority_test7_pv_precedence",
+  "source_sha256": "15b6892f5f26d7500b7f376cda4a2b9d588e8351a7d73fd086b8c9566a560875",
+  "status": "PASS",
+  "validated_by": "Deterministic authority-response transcription",
+  "validation_method": "Checksum-bound direct transcription of the written decision, with roof module-count and installed-power arithmetic checks",
+  "binding_artifact": {
+    "path": "sia_authority_test7_pv_precedence.binding.json",
+    "sha256": "a3425533eb8f0b06b1b5cc7eb3375dca5068d08f0a28f183f6adb9f53910974e",
+    "schema_id": "sia4010.authority_decision.v1"
+  },
+  "checks": [
+    {
+      "id": "TEST7-PV-SOURCE-CHECKSUM",
+      "status": "PASS",
+      "detail": "The decision is bound to the retained 2026-08-28 email."
+    },
+    {
+      "id": "TEST7-PV-PRECEDENCE",
+      "status": "PASS",
+      "detail": "62.62 kWp supersedes the erroneous 60.6 kWp text."
+    },
+    {
+      "id": "TEST7-PV-ROOF-SPLIT",
+      "status": "PASS",
+      "detail": "75 + 75 = 150 modules and 22.5 + 22.5 = 45.0 kWp."
+    }
+  ],
+  "compliance_claim_allowed": false,
+  "claim_guardrail": "PASS validates this written PV decision only. It does not qualify the VE PV model, APS results or SIA Test 7."
+}

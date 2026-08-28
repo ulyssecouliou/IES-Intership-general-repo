@@ -18,6 +18,8 @@
 > The latest authority decisions and newly supplied SIA 2024 workbook are
 > summarized in
 > [`docs/project/AUTHORITY_RESPONSE_2026-08-28.md`](docs/project/AUTHORITY_RESPONSE_2026-08-28.md).
+> The resulting executable status and next actions for Tests 1–7 are in
+> [`docs/project/SIA4010_TESTS_1_7_STATUS_2026-08-28.md`](docs/project/SIA4010_TESTS_1_7_STATUS_2026-08-28.md).
 
 ## Unified VEScripts hub
 

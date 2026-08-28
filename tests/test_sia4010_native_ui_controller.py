@@ -429,10 +429,18 @@ class NativeModelBuilderControllerTests(unittest.TestCase):
             self.assertEqual(
                 ids,
                 [
+                    "en16798_5_1_annex_d_rotary_recovery_model",
                     "iso52016_2017_chapter7_test_cell",
+                    "sia2024_auditorium_target_profiles",
+                    "sia2024_example_building_standard_profiles",
+                    "sia2024_kitchen_6_4_standard_profiles",
                     "sia2024_office_3_1_standard_profiles",
+                    "sia2024_restaurant_6_2_standard_profiles",
                     "sia2028_dry_normal_zurich_kloten",
+                    "sia_authority_test7_pv_precedence",
                     "sia_example_building_fabric_awning_detail",
+                    "test4_fan_curve_digitization",
+                    "test5_fan_curve_digitization",
                     "test6_stage_control_trace",
                     "test7_heat_pump_performance_tables",
                 ],
@@ -506,7 +514,7 @@ class NativeModelBuilderControllerTests(unittest.TestCase):
             self.assertIn(
                 "sia2024_auditorium_target_profiles", readiness.blocked_input_ids
             )
-            self.assertIn("test4_fan_curve_digitization", readiness.blocked_input_ids)
+            self.assertIn("test4_fan_curve_digitization", readiness.ready_input_ids)
         finally:
             if project.exists():
                 shutil.rmtree(project)
@@ -522,7 +530,7 @@ class NativeModelBuilderControllerTests(unittest.TestCase):
             )
             self.assertTrue(installed)
             payload = json.loads(path.read_text(encoding="utf-8"))
-            record = payload["inputs"]["sia_authority_test7_pv_precedence"]
+            record = payload["inputs"]["sia3874_2017_table9_controls"]
             self.assertIsNone(record["source_path"])
             self.assertIsNone(record["technical_validation"]["report_path"])
 
@@ -538,7 +546,7 @@ class NativeModelBuilderControllerTests(unittest.TestCase):
             )
             self.assertFalse(installed_again)
             repaired = json.loads(path.read_text(encoding="utf-8"))["inputs"]
-            repaired = repaired["sia_authority_test7_pv_precedence"]
+            repaired = repaired["sia3874_2017_table9_controls"]
             self.assertIsNone(repaired["source_path"])
             self.assertIsNone(repaired["technical_validation"]["report_path"])
         finally:

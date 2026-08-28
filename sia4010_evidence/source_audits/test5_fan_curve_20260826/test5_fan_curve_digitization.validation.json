@@ -7,7 +7,7 @@
   "validation_method": "Checksum-bound embedded-image calibration; monotonicity checks for four speed curves; direct point-ID join to the measured table",
   "binding_artifact": {
     "path": "test5_fan_curve_digitization.binding.json",
-    "sha256": "f4fd83178a1c22dd1c1c55635ae69be3f016e407ba4c4c645c15337876d0e0c4",
+    "sha256": "73eb8397b583829c669c72ee42fcdf9af8296538b580be150be28af77be7fc26",
     "schema_id": "sia4010.fan_curves.v1"
   },
   "checks": [
@@ -34,9 +34,9 @@
     {
       "id": "TEST4-FAN-CLAIM-GUARDRAIL",
       "status": "PASS",
-      "detail": "Interpolation and compliance claims remain disabled."
+      "detail": "A candidate-specific approximation is authorized, while the selected formula, tolerance and compliance result remain outside this source-transcription PASS."
     }
   ],
   "compliance_claim_allowed": false,
-  "claim_guardrail": "PASS validates the internal consistency and traceability of the provisional digitization only. Normative authorization remains UNCONFIRMED in the external-input manifest."
+  "claim_guardrail": "PASS validates the internal consistency and traceability of the source digitization only. The 2026-08-28 authority response allows a candidate-specific approximation but does not qualify its IESVE implementation or any compliance result."
 }

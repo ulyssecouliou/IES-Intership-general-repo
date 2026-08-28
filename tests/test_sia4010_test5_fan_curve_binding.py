@@ -14,11 +14,12 @@ MODULE = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(MODULE)
 
 
-def test_test5_reuses_the_checksum_identical_fan_map_fail_closed():
+def test_test5_reuses_the_checksum_identical_fan_map_with_candidate_scope():
     payload = MODULE.build_test5_payload()
     assert payload["input_id"] == "test5_fan_curve_digitization"
     assert payload["compliance_claim_allowed"] is False
-    assert payload["interpolation_authorized"] is False
+    assert payload["interpolation_authorized"] is True
+    assert payload["candidate_specific_approximation_authorized"] is True
     assert len(payload["digitized_points"]) == 16
     assert payload["source"]["fan_map_embedded_image_sha256"] == (
         "0a388f6c77ed40d17ccc456f10183e283cc6f0943ff3ecc429d34eb9a748cc8e"

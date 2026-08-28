@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "purpose": "Manifeste préparé pour le cas test_2A/2A. Chaque champ vérifiable est rempli et recalculé ; l'autorisation normative reste UNCONFIRMED pour les trois entrées et doit être tranchée par une personne.",
+  "purpose": "Repository-prepared SIA 4010 external-input manifest. It includes checksum-bound human authorizations through 2026-08-28. Workbook records remain PENDING until cell-level validation and normalized bindings exist; no entry implies a SIA compliance verdict.",
   "claim_guardrail": "Do not set normative_authorization_status to CONFIRMED without documentary evidence. READY_FOR_BINDING authorizes technical implementation only; it is not an SIA attestation.",
   "inputs": {
     "iso52016_2017_chapter7_test_cell": {
@@ -145,28 +145,35 @@
       }
     },
     "sia2024_auditorium_target_profiles": {
-      "source_path": null,
-      "source_sha256": null,
-      "provenance_status": "MISSING",
-      "normative_authorization_status": "UNCONFIRMED",
-      "source_authority": "",
-      "license_reference": "",
-      "dataset_identity": "SIA 2024:2021 Hörsaal target profiles",
-      "machine_readable_format": "",
-      "semantic_scope": [],
+      "source_path": "../sia4010_evidence/source_audits/sia2024_required_use_types_20260828/SIA 2024_Nutzungsdaten_SIA 4010.xlsx",
+      "source_sha256": "f8fa52198cb9b23d8663154ca73c35b6612fcc89ec43a8db307c1710b4ab220a",
+      "provenance_status": "SIA_SUPPLIED",
+      "normative_authorization_status": "CONFIRMED",
+      "source_authority": "SIA, supplied by Prof. Gerhard Zweifel",
+      "license_reference": "Authority-supplied controlled workbook for this validation campaign; internal traceability use only",
+      "dataset_identity": "SIA 2024 auditorium target-use data supplied for Test 4",
+      "machine_readable_format": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "semantic_scope": [
+        "Test 4 auditorium target schedules",
+        "densities, gains, simultaneity factors and use parameters"
+      ],
       "technical_validation": {
         "status": "PENDING",
         "report_path": null,
-        "report_sha256": null
-      }
+        "report_sha256": null,
+        "reason": "Source custody and authorization are verified, but sheet names, cells, formulas, values and rendered layout have not yet completed controlled cell-level validation and no normalized binding exists."
+      },
+      "normative_authorization_basis": "Supplied directly by Prof. Gerhard Zweifel on 2026-08-28 for the requested SIA 4010 validation use types.",
+      "normative_authorization_scope": "Internal use for this SIA 4010 validation campaign; no redistribution or broader normative claim.",
+      "normative_authorization_recorded_on": "2026-08-28"
     },
     "test4_fan_curve_digitization": {
       "source_path": "../SIA_4010_geteilter_Link/Test4/Spezifikation_Test4.pdf",
       "source_sha256": "6ffd140972388c09cd3a92f0d178c04248140239667931d13bdd5c78aa353775",
       "provenance_status": "SIA_SUPPLIED",
-      "normative_authorization_status": "UNCONFIRMED",
+      "normative_authorization_status": "CONFIRMED",
       "source_authority": "SIA 4010 validation package supplied to the candidate",
-      "license_reference": "SIA 4010 Test 4 specification supplied for this validation campaign; graphical digitization remains subject to written acceptance",
+      "license_reference": "SIA 4010 test specification supplied for this validation; candidate-specific fan approximation authorized by written authority response dated 2026-08-28",
       "dataset_identity": "SIA 4010 Test 4 page-2 fan map and measured 50 Hz operating-point table",
       "machine_readable_format": "application/pdf plus checksum-bound provisional JSON digitization",
       "semantic_scope": [
@@ -178,32 +185,42 @@
       "technical_validation": {
         "status": "PASS",
         "report_path": "../sia4010_evidence/source_audits/test4_fan_curve_20260826/test4_fan_curve_digitization.validation.json",
-        "report_sha256": "a6379f7931a61c2213e973330b352c59272b5751a38f2bbcd388a7d994d3e064"
-      }
+        "report_sha256": "dc0c0ebbc817f29be83e8f1f073781bb1edb7efdc5394044c8ab8a5d0fb8c650"
+      },
+      "normative_authorization_basis": "Prof. Gerhard Zweifel confirmed on 2026-08-28 that no single numeric curve, interpolation method or tolerance is prescribed and that candidate-specific tool approximations are expected.",
+      "normative_authorization_scope": "Use the checksum-bound source digitization to develop, document and validate an IESVE-specific approximation. Do not call the selected approximation SIA-prescribed.",
+      "normative_authorization_recorded_on": "2026-08-28"
     },
     "sia2024_example_building_standard_profiles": {
-      "source_path": null,
-      "source_sha256": null,
-      "provenance_status": "MISSING",
-      "normative_authorization_status": "UNCONFIRMED",
-      "source_authority": "",
-      "license_reference": "",
-      "dataset_identity": "SIA 2024:2021 example-building standard profiles",
-      "machine_readable_format": "",
-      "semantic_scope": [],
+      "source_path": "../sia4010_evidence/source_audits/sia2024_required_use_types_20260828/SIA 2024_Nutzungsdaten_SIA 4010.xlsx",
+      "source_sha256": "f8fa52198cb9b23d8663154ca73c35b6612fcc89ec43a8db307c1710b4ab220a",
+      "provenance_status": "SIA_SUPPLIED",
+      "normative_authorization_status": "CONFIRMED",
+      "source_authority": "SIA, supplied by Prof. Gerhard Zweifel",
+      "license_reference": "Authority-supplied controlled workbook for this validation campaign; internal traceability use only",
+      "dataset_identity": "SIA 2024 example-building standard-use data supplied for Test 5",
+      "machine_readable_format": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "semantic_scope": [
+        "Test 5 room-by-room standard use data",
+        "schedules, densities, gains and simultaneity factors"
+      ],
       "technical_validation": {
         "status": "PENDING",
         "report_path": null,
-        "report_sha256": null
-      }
+        "report_sha256": null,
+        "reason": "Source custody and authorization are verified, but sheet names, cells, formulas, values and rendered layout have not yet completed controlled cell-level validation and no normalized binding exists."
+      },
+      "normative_authorization_basis": "Supplied directly by Prof. Gerhard Zweifel on 2026-08-28 for the requested SIA 4010 validation use types.",
+      "normative_authorization_scope": "Internal use for this SIA 4010 validation campaign; no redistribution or broader normative claim.",
+      "normative_authorization_recorded_on": "2026-08-28"
     },
     "en16798_5_1_annex_d_rotary_recovery_model": {
       "source_path": "../references/standards/en16798/Demo_EN_16798-5-1_2021-06-09.xlsm",
       "source_sha256": "73e7c74c54b87c0d4f16e6a7e1b4958fc6e57cf277c8c7c4287aabf7d3ea385a",
       "provenance_status": "PUBLIC_OFFICIAL_TOOL",
-      "normative_authorization_status": "UNCONFIRMED",
+      "normative_authorization_status": "CONFIRMED",
       "source_authority": "EPB Center; Gerhard Zweifel (EPB Center expert)",
-      "license_reference": "Freely downloadable EPB Center demonstration workbook; no explicit reuse licence identified; internal technical evaluation only pending confirmation",
+      "license_reference": "EPB Center demonstration workbook explicitly authorized by the SIA validation authority on 2026-08-28 for this campaign",
       "dataset_identity": "EPB Center Demo EN 16798-5-1, updated 2021-06-09",
       "machine_readable_format": "application/vnd.ms-excel.sheet.macroEnabled.12",
       "semantic_scope": [
@@ -215,15 +232,18 @@
         "status": "PENDING",
         "report_path": null,
         "report_sha256": null
-      }
+      },
+      "normative_authorization_basis": "Prof. Gerhard Zweifel confirmed on 2026-08-28 that the existing EPB Center workbook may be used.",
+      "normative_authorization_scope": "Internal Test 5 Annex D implementation and traceability. The newer EPB Center workbook must be retrieved and compared before any source rebinding.",
+      "normative_authorization_recorded_on": "2026-08-28"
     },
     "test5_fan_curve_digitization": {
       "source_path": "../SIA_4010_geteilter_Link/Test5/Spezifikation_Test5.pdf",
       "source_sha256": "804d7c921a889d09624e4a512097bd4749c3f9674c83311ea3e5165b956d123d",
       "provenance_status": "SIA_SUPPLIED",
-      "normative_authorization_status": "UNCONFIRMED",
+      "normative_authorization_status": "CONFIRMED",
       "source_authority": "SIA 4010 validation package supplied to the candidate",
-      "license_reference": "SIA 4010 Test 5 specification supplied for this validation campaign; graphical digitization remains subject to written acceptance",
+      "license_reference": "SIA 4010 test specification supplied for this validation; candidate-specific fan approximation authorized by written authority response dated 2026-08-28",
       "dataset_identity": "SIA 4010 Test 5 page-2 fan map, page-3 measured table and system nominal points",
       "machine_readable_format": "application/pdf plus checksum-bound provisional JSON digitization",
       "semantic_scope": [
@@ -235,40 +255,55 @@
       "technical_validation": {
         "status": "PASS",
         "report_path": "../sia4010_evidence/source_audits/test5_fan_curve_20260826/test5_fan_curve_digitization.validation.json",
-        "report_sha256": "a02c2cf867a65327bd003532c362a1f045e959672a6db0e37093aae51f67f93b"
-      }
+        "report_sha256": "bfa1c826c8cecd22d58fb545ab401b457bd3b1cf9c3b7f38f834c557f6247f47"
+      },
+      "normative_authorization_basis": "Prof. Gerhard Zweifel confirmed on 2026-08-28 that no single numeric curve, interpolation method or tolerance is prescribed and that candidate-specific tool approximations are expected.",
+      "normative_authorization_scope": "Use the checksum-bound source digitization to develop, document and validate an IESVE-specific approximation. Do not call the selected approximation SIA-prescribed.",
+      "normative_authorization_recorded_on": "2026-08-28"
     },
     "sia2024_restaurant_6_2_standard_profiles": {
-      "source_path": null,
-      "source_sha256": null,
-      "provenance_status": "MISSING",
-      "normative_authorization_status": "UNCONFIRMED",
-      "source_authority": "",
-      "license_reference": "",
-      "dataset_identity": "SIA 2024:2021 category 6.2 standard profiles",
-      "machine_readable_format": "",
-      "semantic_scope": [],
+      "source_path": "../sia4010_evidence/source_audits/sia2024_required_use_types_20260828/SIA 2024_Nutzungsdaten_SIA 4010.xlsx",
+      "source_sha256": "f8fa52198cb9b23d8663154ca73c35b6612fcc89ec43a8db307c1710b4ab220a",
+      "provenance_status": "SIA_SUPPLIED",
+      "normative_authorization_status": "CONFIRMED",
+      "source_authority": "SIA, supplied by Prof. Gerhard Zweifel",
+      "license_reference": "Authority-supplied controlled workbook for this validation campaign; internal traceability use only",
+      "dataset_identity": "SIA 2024 category 6.2 Selbstbedienungsrestaurant standard-use data",
+      "machine_readable_format": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "semantic_scope": [
+        "Test 6 category 6.2 standard schedules and use parameters"
+      ],
       "technical_validation": {
         "status": "PENDING",
         "report_path": null,
-        "report_sha256": null
-      }
+        "report_sha256": null,
+        "reason": "Source custody and authorization are verified, but sheet names, cells, formulas, values and rendered layout have not yet completed controlled cell-level validation and no normalized binding exists."
+      },
+      "normative_authorization_basis": "Supplied directly by Prof. Gerhard Zweifel on 2026-08-28 for the requested SIA 4010 validation use types.",
+      "normative_authorization_scope": "Internal use for this SIA 4010 validation campaign; no redistribution or broader normative claim.",
+      "normative_authorization_recorded_on": "2026-08-28"
     },
     "sia2024_kitchen_6_4_standard_profiles": {
-      "source_path": null,
-      "source_sha256": null,
-      "provenance_status": "MISSING",
-      "normative_authorization_status": "UNCONFIRMED",
-      "source_authority": "",
-      "license_reference": "",
-      "dataset_identity": "SIA 2024:2021 category 6.4 standard profiles",
-      "machine_readable_format": "",
-      "semantic_scope": [],
+      "source_path": "../sia4010_evidence/source_audits/sia2024_required_use_types_20260828/SIA 2024_Nutzungsdaten_SIA 4010.xlsx",
+      "source_sha256": "f8fa52198cb9b23d8663154ca73c35b6612fcc89ec43a8db307c1710b4ab220a",
+      "provenance_status": "SIA_SUPPLIED",
+      "normative_authorization_status": "CONFIRMED",
+      "source_authority": "SIA, supplied by Prof. Gerhard Zweifel",
+      "license_reference": "Authority-supplied controlled workbook for this validation campaign; internal traceability use only",
+      "dataset_identity": "SIA 2024 category 6.4 Küche zu Selbstbedienungsrestaurant standard-use data",
+      "machine_readable_format": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "semantic_scope": [
+        "Test 6 category 6.4 standard schedules and use parameters"
+      ],
       "technical_validation": {
         "status": "PENDING",
         "report_path": null,
-        "report_sha256": null
-      }
+        "report_sha256": null,
+        "reason": "Source custody and authorization are verified, but sheet names, cells, formulas, values and rendered layout have not yet completed controlled cell-level validation and no normalized binding exists."
+      },
+      "normative_authorization_basis": "Supplied directly by Prof. Gerhard Zweifel on 2026-08-28 for the requested SIA 4010 validation use types.",
+      "normative_authorization_scope": "Internal use for this SIA 4010 validation campaign; no redistribution or broader normative claim.",
+      "normative_authorization_recorded_on": "2026-08-28"
     },
     "test6_stage_control_trace": {
       "source_path": "../SIA_4010_geteilter_Link/Test6/Spezifikation_Test6.pdf",
@@ -313,20 +348,28 @@
       }
     },
     "sia_authority_test7_pv_precedence": {
-      "source_path": null,
-      "source_sha256": null,
-      "provenance_status": "MISSING",
-      "normative_authorization_status": "UNCONFIRMED",
-      "source_authority": "",
-      "license_reference": "",
-      "dataset_identity": "SIA clarification for Test 7 PV totals and allocation",
-      "machine_readable_format": "",
-      "semantic_scope": [],
+      "source_path": "../sia4010_evidence/authority_decisions/2026-08-28_remaining_sia4010_clarifications_email.txt",
+      "source_sha256": "15b6892f5f26d7500b7f376cda4a2b9d588e8351a7d73fd086b8c9566a560875",
+      "provenance_status": "SIA_SUPPLIED",
+      "normative_authorization_status": "CONFIRMED",
+      "source_authority": "Prof. Gerhard Zweifel, SIA 4010 validation authority",
+      "license_reference": "Direct written authority decision; internal traceability",
+      "dataset_identity": "SIA 4010 Test 7 PV precedence and roof split decision",
+      "machine_readable_format": "text/plain plus normalized JSON authority decision",
+      "semantic_scope": [
+        "authoritative installed PV total 62.62 kWp",
+        "superseded specification value 60.6 kWp",
+        "310 W current module power",
+        "roof split: 75 modules and 22.5 kWp east and west"
+      ],
       "technical_validation": {
-        "status": "PENDING",
-        "report_path": null,
-        "report_sha256": null
-      }
+        "status": "PASS",
+        "report_path": "../sia4010_evidence/source_audits/test7_pv_authority_20260828/sia_authority_test7_pv_precedence.validation.json",
+        "report_sha256": "8c64733a57c1ff504a6aa7bf8ef2bcb99a308341dd023111161e0d9a4129264a"
+      },
+      "normative_authorization_basis": "Direct written decision from Prof. Gerhard Zweifel received 2026-08-28.",
+      "normative_authorization_scope": "Test 7 PV total precedence, current module power and roof east/west allocation only.",
+      "normative_authorization_recorded_on": "2026-08-28"
     }
   }
 }

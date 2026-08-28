@@ -1,4 +1,12 @@
-"""Build the provisional, source-traced SIA 4010 Test 4 fan-map binding."""
+"""Build the source-traced SIA 4010 Test 4 fan-map binding.
+
+The SIA validation authority confirmed on 2026-08-28 that no universal
+numeric curve, interpolation method or tolerance is prescribed for Tests 4
+and 5. Candidate tools are expected to use and document a tool-compatible
+part-load approximation. This builder therefore qualifies the source
+digitization while keeping the eventual IESVE approximation and compliance
+result explicitly out of scope.
+"""
 
 import hashlib
 import json
@@ -144,7 +152,7 @@ def build_payload(
     return {
         "schema_version": "1.0",
         "input_id": input_id,
-        "status": "PROVISIONAL_DIGITIZATION_AWAITING_AUTHORITY_ACCEPTANCE",
+        "status": "SOURCE_TRACE_VERIFIED_CANDIDATE_APPROXIMATION_REQUIRED",
         "compliance_claim_allowed": False,
         "source": {
             "path": str(source.relative_to(ROOT)).replace("\\", "/"),
@@ -170,16 +178,29 @@ def build_payload(
                 "speed_rpm": 2730,
             },
         },
-        "interpolation_authorized": False,
-        "authority_question": (
-            "May the page-2 fan-map graph be digitized for validation, and "
-            "what interpolation method and numerical tolerance are accepted?"
-        ),
+        "candidate_specific_approximation_authorized": True,
+        "interpolation_authorized": True,
+        "authority_decision": {
+            "decision_id": "SIA4010_REMAINING_CLARIFICATIONS_20260828",
+            "issued_by": "Prof. Gerhard Zweifel",
+            "issued_date": "2026-08-28",
+            "source": (
+                "sia4010_evidence/authority_decisions/"
+                "2026-08-28_remaining_sia4010_clarifications_email.txt"
+            ),
+            "interpretation": (
+                "No single numeric curve, interpolation method or tolerance "
+                "is prescribed. The candidate must select, document and "
+                "validate an approximation compatible with its tool."
+            ),
+        },
         "claim_guardrail": (
             "The table values are direct transcriptions and the flow/pressure "
             "coordinates are graphical digitizations with declared uncertainty. "
-            "No interpolated fan model or SIA verdict is authorized until the "
-            "validation authority accepts this method."
+            "The authority permits a candidate-specific approximation but "
+            "does not prescribe its formula or tolerance. This artifact does "
+            "not select or validate the IESVE approximation and does not "
+            "establish a SIA verdict."
         ),
     }
 
@@ -203,8 +224,10 @@ def validate(payload):
             raise ValueError(
                 "Non-monotonic digitized pressure curve at {} rpm".format(speed)
             )
-    if payload["interpolation_authorized"] is not False:
-        raise ValueError("Provisional Test 4 digitization cannot authorize interpolation")
+    if payload["interpolation_authorized"] is not True:
+        raise ValueError("The 2026-08-28 authority decision permits a candidate approximation")
+    if payload["candidate_specific_approximation_authorized"] is not True:
+        raise ValueError("The fan binding must preserve the candidate-specific scope")
 
 
 def main():
@@ -264,14 +287,19 @@ def write_evidence(payload, output):
             {
                 "id": "TEST4-FAN-CLAIM-GUARDRAIL",
                 "status": "PASS",
-                "detail": "Interpolation and compliance claims remain disabled.",
+                "detail": (
+                    "A candidate-specific approximation is authorized, while "
+                    "the selected formula, tolerance and compliance result "
+                    "remain outside this source-transcription PASS."
+                ),
             },
         ],
         "compliance_claim_allowed": False,
         "claim_guardrail": (
             "PASS validates the internal consistency and traceability of the "
-            "provisional digitization only. Normative authorization remains "
-            "UNCONFIRMED in the external-input manifest."
+            "source digitization only. The 2026-08-28 authority response "
+            "allows a candidate-specific approximation but does not qualify "
+            "its IESVE implementation or any compliance result."
         ),
     }
     report = output / "{}.validation.json".format(stem)

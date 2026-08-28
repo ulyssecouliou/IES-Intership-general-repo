@@ -1,0 +1,71 @@
+{
+  "schema_id": "sia4010.authority_decision.v1",
+  "schema_version": "1.0",
+  "primary_source_sha256": "15b6892f5f26d7500b7f376cda4a2b9d588e8351a7d73fd086b8c9566a560875",
+  "source_locator": "Email reply received 2026-08-28, answer to Test 7 PV questions",
+  "decision_id": "SIA4010_TEST7_PV_20260828",
+  "issued_by": "Prof. Gerhard Zweifel",
+  "issued_date": "2026-08-28",
+  "document_reference": "SIA 4010 Test 7 specification and PV layout clarification",
+  "question": "Which PV total takes precedence, and how is the 150-module roof array divided between east and west?",
+  "decision": "Use 62.62 kWp as the authoritative total. The 60.6 kWp text is an error. Use 310 W modules and split the 150-module, 45.0 kWp roof equally: 75 modules and 22.5 kWp east, and the same west.",
+  "applicable_cases": [
+    "test_7/7"
+  ],
+  "resolved_parameters": [
+    {
+      "id": "pv_authoritative_total_kwp",
+      "value": 62.62,
+      "unit": "kWp",
+      "source_locator": "Email reply received 2026-08-28, answer to Test 7 PV questions"
+    },
+    {
+      "id": "pv_superseded_specification_total_kwp",
+      "value": 60.6,
+      "unit": "kWp",
+      "source_locator": "Email reply received 2026-08-28, answer to Test 7 PV questions"
+    },
+    {
+      "id": "pv_module_power_w",
+      "value": 310,
+      "unit": "W",
+      "source_locator": "Email reply received 2026-08-28, answer to Test 7 PV questions"
+    },
+    {
+      "id": "pv_roof_total_modules",
+      "value": 150,
+      "unit": "module",
+      "source_locator": "Email reply received 2026-08-28, answer to Test 7 PV questions"
+    },
+    {
+      "id": "pv_roof_total_kwp",
+      "value": 45.0,
+      "unit": "kWp",
+      "source_locator": "Email reply received 2026-08-28, answer to Test 7 PV questions"
+    },
+    {
+      "id": "pv_roof_east_modules",
+      "value": 75,
+      "unit": "module",
+      "source_locator": "Email reply received 2026-08-28, answer to Test 7 PV questions"
+    },
+    {
+      "id": "pv_roof_west_modules",
+      "value": 75,
+      "unit": "module",
+      "source_locator": "Email reply received 2026-08-28, answer to Test 7 PV questions"
+    },
+    {
+      "id": "pv_roof_east_kwp",
+      "value": 22.5,
+      "unit": "kWp",
+      "source_locator": "Email reply received 2026-08-28, answer to Test 7 PV questions"
+    },
+    {
+      "id": "pv_roof_west_kwp",
+      "value": 22.5,
+      "unit": "kWp",
+      "source_locator": "Email reply received 2026-08-28, answer to Test 7 PV questions"
+    }
+  ]
+}

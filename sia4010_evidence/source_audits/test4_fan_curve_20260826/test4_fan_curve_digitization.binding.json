@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
   "input_id": "test4_fan_curve_digitization",
-  "status": "PROVISIONAL_DIGITIZATION_AWAITING_AUTHORITY_ACCEPTANCE",
+  "status": "SOURCE_TRACE_VERIFIED_CANDIDATE_APPROXIMATION_REQUIRED",
   "compliance_claim_allowed": false,
   "source": {
     "path": "SIA_4010_geteilter_Link/Test4/Spezifikation_Test4.pdf",
@@ -262,7 +262,14 @@
       "speed_rpm": 2730
     }
   },
-  "interpolation_authorized": false,
-  "authority_question": "May the page-2 fan-map graph be digitized for validation, and what interpolation method and numerical tolerance are accepted?",
-  "claim_guardrail": "The table values are direct transcriptions and the flow/pressure coordinates are graphical digitizations with declared uncertainty. No interpolated fan model or SIA verdict is authorized until the validation authority accepts this method."
+  "candidate_specific_approximation_authorized": true,
+  "interpolation_authorized": true,
+  "authority_decision": {
+    "decision_id": "SIA4010_REMAINING_CLARIFICATIONS_20260828",
+    "issued_by": "Prof. Gerhard Zweifel",
+    "issued_date": "2026-08-28",
+    "source": "sia4010_evidence/authority_decisions/2026-08-28_remaining_sia4010_clarifications_email.txt",
+    "interpretation": "No single numeric curve, interpolation method or tolerance is prescribed. The candidate must select, document and validate an approximation compatible with its tool."
+  },
+  "claim_guardrail": "The table values are direct transcriptions and the flow/pressure coordinates are graphical digitizations with declared uncertainty. The authority permits a candidate-specific approximation but does not prescribe its formula or tolerance. This artifact does not select or validate the IESVE approximation and does not establish a SIA verdict."
 }

@@ -25,6 +25,12 @@ so it comes out as `PENDING` with the reason, not as `PASS`.
 
 USAGE. The file produced is a template: the operator copies it into their VE
 project as `sia4010_external_inputs.json`, after resolving the authorisation.
+
+HANDOVER NOTE (2026-08-28). After regenerating the base manifest with this
+legacy builder, run `apply_sia4010_authority_response_20260828.py` to restore
+the later checksum-bound source authorizations and Test 7 PV decision. The
+addendum script deliberately keeps the newly supplied workbook technically
+PENDING until its cells are independently validated.
 """
 
 from __future__ import print_function
