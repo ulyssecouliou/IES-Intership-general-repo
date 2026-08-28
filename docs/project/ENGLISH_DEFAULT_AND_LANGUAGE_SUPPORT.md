@@ -36,9 +36,15 @@ nevertheless English, so no repository UI now starts in French implicitly.
 The default documentation route is also English: `README.md`,
 `FINAL_TRANSMISSION_RECEIPT_2026-08-28.md`,
 `NEW_MAINTAINER_START_HERE.md`, `AI_USAGE_AND_GOVERNANCE.md` and the maintained
-technical guides. Dated French handover notes and normative sources in French or
-German remain available as historical or authoritative evidence, but they are
-not the default starting path.
+technical guides. `docs/project/INDEX.md` is the canonical English documentation
+map. The current authority addendum and the actionable Test 1–7 status are also
+maintained in English.
+
+Dated French handover notes and normative sources in French or German remain
+available as historical or authoritative evidence. They are explicitly labelled
+as such, are not the default starting path and must not override the later
+English status records. Source quotations are not translated when translation
+could alter their evidential meaning.
 
 ## Runtime checks for the incoming maintainer
 

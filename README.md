@@ -251,25 +251,28 @@ The minimum saleable product should add:
 - PV evidence and energy balance support.
 - Import/comparison support for official SIA 4010 evaluation workbooks.
 
-## Navigateur de validation SIA 4010
+## SIA 4010 validation navigator
 
-> Verifie 2026-08-16 -- voir `docs/project/AUDIT_COMPLET_2026-08-16.md`.
-> L'outil client de production vit **entierement dans `swiss_sia/`**. Le triptyque
-> `engine/`+`ve_adapter/`+`ui/` ci-dessous n'est PAS le runtime client.
+> Verified on 16 August 2026; see
+> `docs/project/AUDIT_COMPLET_2026-08-16.md` for the dated audit evidence.
+> The production client application lives **entirely in `swiss_sia/`**. The
+> `engine/` + `ve_adapter/` + `ui/` toolchain described below is not the client
+> runtime.
 
-| Couche | Role | Statut |
+| Layer | Role | Status |
 |---|---|---|
-| `swiss_sia/` | extraction VE, interface client, regles SIA 380/2 & 4010, rapports Excel + PDF dans le dossier du modele, evidence | **PRODUCTION** |
-| `swiss_sia/reference_model/ve_api.py`, `data_extractor.py` | seul acces `iesve` de production | production |
-| `refs/reference-data/` | valeurs de reference figees, recalculees et confrontees | donnees |
-| `engine/` + `ve_adapter/` | recompute SIA 4010 independant + build des references (`scripts/build_*.py`) | outillage, hors runtime client |
-| `ui/` | UI/exports Tkinter herites ; seuls `ui/design.py`+`ui/tk_theme.py` (styles) servent encore | herite |
-| `traceability/` | matrices clause -> code -> test (etat de signature par test) | tracabilite |
+| `swiss_sia/` | VE extraction, client interface, SIA 380/2 and SIA 4010 rules, Excel/PDF reports and evidence handling | **PRODUCTION** |
+| `swiss_sia/reference_model/ve_api.py`, `data_extractor.py` | maintained production access boundary for `iesve` | production |
+| `refs/reference-data/` | frozen, independently recomputed and compared reference values | data |
+| `engine/` + `ve_adapter/` | independent SIA 4010 recomputation and reference-build tooling (`scripts/build_*.py`) | tooling, outside the client runtime |
+| `ui/` | inherited Tkinter UI/export package; only `ui/design.py` and `ui/tk_theme.py` remain shared for styling | inherited |
+| `traceability/` | clause-to-code-to-test matrices and per-test review state | traceability |
 
-Lancer le controle d installation, hors VE :
+Run the installation preflight outside VE:
 
 ```
 python scripts/run_test1_dans_ve.py --preflight
 ```
 
-Dans VE, le meme fichier au bouton Run lance la sonde d introspection.
+Inside VE, running the same file from the Scripts window starts the runtime
+introspection probe.
