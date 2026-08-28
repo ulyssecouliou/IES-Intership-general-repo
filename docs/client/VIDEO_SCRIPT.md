@@ -1,588 +1,663 @@
 # Script vidéo client — Évaluation SIA 380/2 dans IESVE
 
-**État du document :** aligné sur le produit au 28 août 2026
+**État du document :** vérifié par rapport au produit au 28 août 2026
 
-**Format conseillé :** capture d’écran IESVE + voix off en français
+**Voix off :** français
 
-**Durée cible :** 10 à 12 minutes
+**Interface filmée :** anglais par défaut, avec démonstration du changement de langue
 
-**Interface montrée :** anglais par défaut, avec démonstration du changement de langue
+**Durée cible :** 12 à 15 minutes
 
-**Lanceur client :** `Run_VE_Swiss_Compliance.py`
+**Lanceur client unique :** `Run_VE_Swiss_Compliance.py`
 
 > [!IMPORTANT]
-> L’outil produit une **évaluation technique SIA 380/2** fondée sur le modèle VE,
-> les résultats APS et les preuves acceptées. Il ne délivre ni certificat officiel
-> SIA, ni validation cantonale, ni attestation SIA 4010.
+> Le produit réalise une **évaluation technique SIA 380/2** du projet VE actif.
+> Il ne délivre ni certificat officiel SIA, ni décision cantonale, ni validation
+> SIA 4010 du logiciel.
 
-## 1. Ce que la démonstration doit prouver
+## 1. Message que la vidéo doit faire comprendre
 
-La vidéo doit montrer quatre choses distinctes :
+À la fin de la vidéo, le client doit avoir compris que l’outil :
 
-1. l’extraction en lecture seule des données disponibles dans le projet VE et le
-   fichier APS ;
-2. la saisie du contexte client et des déclarations propres au projet ;
-3. la collecte contrôlée des preuves que VE ne peut pas établir seul ;
-4. la génération d’un PDF et d’un classeur Excel avec une décision fail-closed.
+1. lit le modèle VE ouvert et les résultats ApacheSim disponibles ;
+2. automatise les contrôles que l’API permet d’établir ;
+3. demande des preuves pour les informations que VE ne peut pas prouver seul ;
+4. conserve le nom du reviewer, la date et la source de chaque preuve ;
+5. produit un PDF de synthèse et un classeur Excel d’audit ;
+6. affiche `NOT_DETERMINED` lorsqu’une information décisive manque, au lieu de
+   transformer l’inconnu en conformité ;
+7. n’apporte aucune modification silencieuse au modèle VE.
 
-Les termes suivants ne doivent pas être confondus :
+Les termes ci-dessous doivent être expliqués clairement :
 
-| Terme affiché | Signification |
+| Terme | Signification à donner au client |
 |---|---|
-| `accepted` | Une ligne de preuve est complète et un reviewer réel en assume la responsabilité. |
-| `COMPLIANT` | Le moteur a pu conclure techniquement dans le périmètre SIA 380/2 implémenté. |
-| `NOT_COMPLIANT` | Au moins une non-conformité déterminée ou une comparaison contradictoire a été trouvée. |
-| `NOT_DETERMINED` | Une preuve ou une donnée décisive manque ; l’inconnu n’est jamais transformé en réussite. |
-| Validation SIA 4010 | Qualification du logiciel par des cas de test officiels ; elle ne juge pas un bâtiment client. |
-| Certification officielle | Décision d’une autorité ou d’un organisme compétent ; elle n’est pas fournie par ce logiciel. |
+| `pending` | La preuve est préparée mais n’a pas encore été acceptée. |
+| `accepted` | Une personne identifiée a vérifié la ligne, sa source et son périmètre, puis en assume la responsabilité. |
+| `COMPLIANT` | Les portes de décision implémentées sont fermées favorablement dans le périmètre documenté. Des réserves non décisives peuvent rester visibles. |
+| `NOT_COMPLIANT` | Une exigence déterminée ou la comparaison globale a échoué. |
+| `NOT_DETERMINED` | Une donnée ou une preuve nécessaire manque encore. Ce statut n’affirme pas que le bâtiment est non conforme. |
+| SIA 4010 | Campagne de qualification du logiciel par cas de test ; elle ne constitue pas le rapport d’un bâtiment client. |
+| Certification officielle | Décision d’une autorité compétente ; elle reste extérieure à l’outil. |
 
-## 2. Préparation avant l’enregistrement
+## 2. Narration recommandée : deux passages, pas un faux résultat vert
 
-Utiliser un projet synthétique dédié à la démonstration, jamais un projet client
-confidentiel. Le projet doit être enregistré et avoir été simulé avec ApacheSim.
+La meilleure démonstration montre le fonctionnement réel du produit en deux
+passages :
 
-- [ ] Ouvrir le bon dossier VE et vérifier son nom exact.
-- [ ] Vérifier qu’un APS récent correspond aux entrées actuelles du modèle.
-- [ ] Préparer les documents sources réellement revus.
-- [ ] Faire signer ou accepter les preuves par la personne qui les a effectivement contrôlées.
-- [ ] Compléter les sept onglets pertinents de **Project Evidence**.
-- [ ] Vérifier que la comparaison globale projet/référence provient d’un vrai calcul.
-- [ ] Préparer une vue propre dans Model Viewer.
-- [ ] Désactiver les notifications Windows.
-- [ ] Fermer les anciens PDF et classeurs pour éviter de montrer un rapport périmé.
+1. **Premier passage :** générer le rapport avec les données disponibles. Montrer
+   que le résultat reste `NOT_DETERMINED` lorsque les preuves sont incomplètes.
+2. **Revue :** ouvrir **Project Evidence**, compléter uniquement les preuves
+   réelles, et expliquer quelles corrections doivent être réalisées dans VE.
+3. **Deuxième passage :** après correction du modèle, nouvelle simulation et
+   acceptation des preuves, régénérer les rapports et montrer le nouveau verdict.
 
-> [!WARNING]
-> Les textes `DEMO`, `EXAMPLE`, `ILLUSTRATIVE`, `PLACEHOLDER` et
-> `NOT_A_REAL_REVIEW` sont volontairement rejetés comme provenance de revue dans
-> les métadonnées et la comparaison globale. Les fichiers d’exemple du dépôt
-> servent de gabarits : ils ne doivent pas être présentés comme preuves acceptées.
-> Cette règle vise les **preuves**, pas la référence descriptive du rapport client.
+Si le calcul de référence ou une autre preuve décisive n’est pas terminé, ne pas
+filmer un statut `COMPLIANT` artificiel. Le comportement fail-closed est une
+fonction du produit à montrer, pas un défaut à dissimuler.
 
-## 3. Fiche de saisie de la démonstration
+## 3. Préparation avant l’enregistrement
 
-Les valeurs ci-dessous peuvent être utilisées dans le **contexte du rapport**.
-Elles ne remplacent aucune preuve technique.
+### 3.1 Projet à utiliser
 
-| Champ de l’interface principale | Valeur de démonstration conseillée |
+Utiliser une copie synthétique sans données client confidentielles. Idéalement,
+enregistrer une copie propre sous un nom neutre comme `SIA3802_CLIENT_DEMO`.
+Si la vidéo utilise le projet actuel, conserver son nom exact :
+`SIA_compatible_model_TEST_before_heating_fix`.
+
+Le nom du dossier actif est important : il détermine l’identifiant du projet et
+les fichiers de preuves chargés dans `sia4010_evidence/`.
+
+### 3.2 État technique nécessaire
+
+- [ ] Le projet VE est enregistré, et non ouvert depuis une copie temporaire.
+- [ ] Les pièces thermiques, constructions, fenêtres et systèmes sont visibles.
+- [ ] ApacheSim a été relancé après la dernière modification du modèle.
+- [ ] Le fichier APS retenu correspond bien aux entrées actuelles.
+- [ ] La vue Model Viewer est propre et correctement cadrée.
+- [ ] Les documents sources utilisés dans la démonstration existent réellement.
+- [ ] La personne déclarée comme reviewer a réellement effectué la revue.
+- [ ] Les anciens PDF et classeurs sont fermés.
+- [ ] Les notifications Windows et les données personnelles sont masquées.
+- [ ] Le dossier `SIA Compliance Reports` est accessible en écriture.
+
+### 3.3 Valeurs observées dans le premier rapport du modèle actuel
+
+Ces valeurs servent à commenter le premier passage ; elles ne doivent pas être
+présentées comme une configuration générique applicable à tous les clients.
+
+| Élément | Valeur observée |
 |---|---|
-| Client name | `IES — Internal presentation` |
-| Project name | Le nom exact du dossier VE actif, par exemple `SIA_compatible_model_TEST` |
-| Project address | `Synthetic assessment model — no client address` |
-| Contact details | Nom ou équipe IES qui présente l’outil |
+| Projet | `SIA_compatible_model_TEST_before_heating_fix` |
+| Météo active | `CHE_GVE_2060_RCP85_DRY.epw` |
+| Pièces | 3 |
+| Surface analysée | 50 m² |
+| Volume analysé | 140 m³ |
+| Système | `SYST0000` |
+| Débit spécifique observé | 7.25 m³/(h·m²) |
+| Protection solaire déclarée | `NO` |
+| Fenêtres ouvrables déclarées | `YES` |
+| Refroidissement mécanique | `TO_CONFIRM` |
+| Premier verdict | `NOT_DETERMINED` |
+
+Le premier rapport conclut déjà favorablement sur l’enveloppe, les ouvertures,
+les gains, les consignes et le HVAC dans le périmètre automatisé. Il reste
+indéterminé principalement à cause de la comparaison globale, de la commande de
+ventilation et de la provenance climatique.
+
+### 3.4 Contexte professionnel à saisir dans l’interface
+
+| Champ | Valeur recommandée pour la vidéo interne |
+|---|---|
+| Client name | `IES — Internal product demonstration` |
+| Project name | Nom exact du dossier VE actif |
+| Project address | `Synthetic assessment model — no client address` si le modèle est réellement synthétique |
+| Contact details | Équipe ou personne IES qui présente le produit |
 | Report reference | `SIA3802-DEMO-2026-08-28` |
 | Prepared by | Nom réel du présentateur |
-| Report language | `English` au lancement ; montrer ensuite le passage vers `Français` |
-| Solar shading | `YES`, `NO` ou `TO_CONFIRM` selon le modèle actif et ses preuves |
-| Operable windows | `YES`, `NO` ou `TO_CONFIRM` selon le modèle actif et ses preuves |
-| Mechanical cooling | `YES`, `NO` ou `TO_CONFIRM` selon le modèle actif et ses preuves |
-| Strategy notes | Résumé factuel de la stratégie et référence au document de conception |
-| Client logo | Facultatif ; uniquement un fichier autorisé |
-| Model Viewer image | Capture automatique, ou image choisie manuellement si la capture échoue |
-
-Ne jamais choisir `YES` ou `NO` uniquement pour obtenir une couleur verte. Si la
-stratégie n’est pas démontrée, sélectionner `TO_CONFIRM` : le rapport doit alors
-rester prudent.
-
-### État actuel des exemples `SIA_compatible_model_TEST`
-
-Les CSV suivis dans le dépôt ne constituent pas, en l’état, un dossier accepté :
-
-- les métadonnées et la comparaison `280/320` indiquent explicitement qu’elles
-  sont illustratives ; le moteur les rejette comme provenance de revue ;
-- la ventilation est `pending` et utilise l’ancienne valeur libre
-  `demand_controlled`, qui n’est pas une classe acceptée par le formulaire actuel ;
-- le générateur de froid est une hypothèse `pending` ;
-- l’éclairage contient encore des marqueurs à compléter ;
-- la puissance électrique contient encore des marqueurs à compléter.
-
-Pour filmer un statut `COMPLIANT`, ces exemples doivent être remplacés dans le
-dossier **du modèle actif** par des valeurs réellement calculées et revues. Il ne
-suffit pas de changer `pending` en `accepted` : l’éditeur recalculera l’acceptation
-et remettra une ligne invalide à `pending`.
-
----
+| Report language | `English`, puis passage momentané à `Français` |
+| Solar shading | Valeur réellement applicable au modèle |
+| Operable windows | Valeur réellement applicable au modèle |
+| Mechanical cooling | `TO_CONFIRM` tant que la présence et le périmètre du froid ne sont pas prouvés |
+| Strategy notes | Description factuelle avec référence au document de conception |
 
 ## 4. Script parlé, écran par écran
 
-### Séquence 1 — Introduction (30 secondes)
+### Séquence 0 — Titre et promesse (15 secondes)
 
-> **ÉCRAN :** titre de la démonstration, puis IESVE.
+> **ÉCRAN :** titre « SIA 380/2 engineering assessment in IESVE », logo IES,
+> puis transition vers IESVE.
 
-Bonjour. Cette démonstration présente l’outil d’évaluation technique SIA 380/2
-intégré à IESVE. Il analyse un projet VE actif, exploite les résultats ApacheSim,
-recueille les preuves qui ne sont pas disponibles dans l’API et produit un rapport
-PDF ainsi qu’un classeur Excel traçables.
+> **VOIX OFF :**
+> « Cette démonstration présente l’outil IES d’évaluation technique SIA 380/2.
+> À partir du projet IESVE actif, de ses résultats ApacheSim et des preuves revues
+> par l’équipe projet, il produit un rapport client lisible et un classeur d’audit
+> détaillé. »
 
-L’outil applique une logique fail-closed : une donnée manquante produit
-`NOT_DETERMINED`, jamais un faux résultat conforme. Le rapport reste une évaluation
-d’ingénierie et non une certification officielle SIA.
+### Séquence 1 — Expliquer la portée et la sécurité (30 secondes)
 
-### Séquence 2 — Ouvrir et contrôler le modèle (45 secondes)
+> **ÉCRAN :** IESVE ouvert sur le modèle.
 
-> **ACTION :** ouvrir le projet synthétique enregistré et afficher Model Viewer.
+> **VOIX OFF :**
+> « L’outil ne délivre pas une certification officielle. Il fournit une
+> évaluation d’ingénierie traçable. Sa logique est fail-closed : lorsqu’une donnée
+> décisive manque, le résultat est `NOT_DETERMINED`, jamais un faux résultat
+> conforme. Le script client fonctionne en lecture seule et ne modifie pas le
+> modèle VE. »
 
-Le contrôle porte toujours sur le projet VE actuellement ouvert. Avant de lancer
-l’outil, je vérifie le nom du dossier, la géométrie, les pièces thermiques, les
-constructions, les systèmes et la présence de résultats APS cohérents avec le
-modèle actuel.
+### Séquence 2 — Vérifier le projet avant le lancement (45 secondes)
 
-Le script client ne modifie pas le modèle. Il lit les données disponibles et
-signale explicitement ce qu’il ne peut pas établir.
+> **ACTION :** montrer le nom du projet, Model Viewer, les trois pièces, puis le
+> dossier Vista contenant un APS récent.
+
+> **VOIX OFF :**
+> « Le contrôle porte toujours sur le projet VE actuellement ouvert. Je vérifie
+> son nom, les pièces thermiques, l’enveloppe, les ouvertures, les systèmes et la
+> présence d’un APS cohérent avec la dernière version du modèle. Si une entrée VE
+> a changé depuis la simulation, je relance ApacheSim avant de générer le
+> rapport. »
+
+> **À MONTRER :** le projet est enregistré ; ne pas ouvrir ou modifier de scripts
+> internes SIA 4010 pendant la démonstration client.
 
 ### Séquence 3 — Lancer l’interface client (30 secondes)
 
-> **ACTION :** ouvrir Python Scripts Navigator et exécuter
+> **ACTION :** dans Python Scripts Navigator, exécuter
 > `Run_VE_Swiss_Compliance.py`.
 
-Ce lanceur génère le rapport client SIA 380/2. Les travaux internes de validation
-SIA 4010 sont volontairement absents du livrable bâtiment, car ils qualifient le
-logiciel et non le projet client.
+> **VOIX OFF :**
+> « Voici le lanceur client unique. Il génère uniquement l’évaluation bâtiment
+> SIA 380/2. Les scripts SIA 4010 du dépôt servent à la qualification interne du
+> moteur et ne font pas partie de ce parcours client. »
 
-L’en-tête de l’interface affiche le projet actif, le fichier météo détecté et le
-dossier de sortie du rapport.
+> **À MONTRER :** dans le bandeau supérieur, le projet actif, la météo détectée
+> et le dossier de sortie.
 
-### Séquence 4 — Compléter le contexte du rapport (60 secondes)
+### Séquence 4 — Présenter l’interface (30 secondes)
 
-> **ÉCRAN :** section **01 — Project details**.
+> **ÉCRAN :** vue complète de la fenêtre.
 
-À gauche se trouve le formulaire ; à droite, le panneau de résultats. Je renseigne
-le client, le nom du projet, l’adresse ou la description du site, le contact, la
-référence du rapport et la personne qui l’a préparé.
+> **VOIX OFF :**
+> « À gauche se trouvent les informations et les actions de l’évaluation. À
+> droite se trouve le résultat du dernier calcul : verdict, compteurs, domaines
+> et accès direct aux livrables. Avant la première génération, ce panneau indique
+> simplement que l’évaluation n’a pas encore été lancée. »
 
-Seuls le nom du client et le nom du projet sont techniquement obligatoires pour
-lancer la génération, mais les autres champs sont nécessaires pour un livrable
-professionnel et traçable.
+### Séquence 5 — Compléter Project details et changer de langue (60 secondes)
 
-L’anglais est la langue par défaut. L’interface et le rapport peuvent basculer en
-anglais, allemand, français ou italien. Le changement est immédiat ; ici je passe
-en français, puis je reviens en anglais pour générer le rapport client par défaut.
+> **ACTION :** remplir `Client name`, `Project name`, adresse, contact,
+> `Report reference` et `Prepared by`. Passer de `English` à `Français`, puis
+> revenir à `English`.
 
-Le fichier météo affiché est lu depuis VE. Cette détection est un fait technique,
-pas une approbation de la base climatique.
+> **VOIX OFF :**
+> « Ces champs identifient le livrable. Le nom du client et le nom du projet sont
+> nécessaires pour générer le rapport ; les autres champs assurent une remise
+> professionnelle et traçable. L’anglais est la langue par défaut. L’interface
+> et les rapports existent également en allemand, français et italien. Le
+> changement de langue est immédiat. »
 
-### Séquence 5 — Déclarer la stratégie du bâtiment (60 secondes)
+> **À EXPLIQUER :** le fichier météo est en lecture seule dans cette fenêtre. Le
+> fait de le détecter ne prouve pas qu’il convient à la localisation ou au calcul.
 
-> **ÉCRAN :** section **02 — Model & strategy**.
+### Séquence 6 — Déclarer Model & strategy (60 secondes)
 
-Ces trois déclarations décrivent le projet réel : protection solaire, fenêtres
-ouvrables et refroidissement mécanique. Elles orientent les contrôles applicables,
-mais elles ne remplacent pas les données du modèle ni les documents de conception.
+> **ACTION :** montrer les trois choix `Solar shading`, `Operable windows` et
+> `Mechanical cooling`, puis `Strategy notes`.
 
-Je choisis une réponse seulement lorsqu’elle est démontrée. Sinon, je laisse
-`TO_CONFIRM`. Dans les notes, j’indique le périmètre, le mode de commande et la
-référence de la preuve correspondante.
+> **VOIX OFF :**
+> « Ces déclarations décrivent la stratégie réelle du bâtiment et déterminent
+> certains contrôles applicables. Elles ne remplacent ni le modèle ni les
+> documents de conception. Je choisis `YES` ou `NO` seulement lorsqu’une preuve
+> existe ; sinon je conserve `TO_CONFIRM`. Les notes indiquent le périmètre et la
+> source de la stratégie. »
 
-Je peux ajouter un logo client autorisé. Je lance ensuite la capture de Model
-Viewer. IESVE passe brièvement au premier plan pour la capture, puis l’interface
-revient automatiquement au premier plan. Une sélection manuelle reste disponible
-en secours.
+> **À NE PAS FAIRE :** choisir une réponse uniquement pour obtenir une couleur
+> verte.
 
-### Séquence 6 — Ouvrir Project Evidence (2 à 3 minutes)
+### Séquence 7 — Logo et capture Model Viewer (45 secondes)
 
-> **ACTION :** cliquer sur **Project Evidence**.
+> **ACTION :** choisir éventuellement un logo autorisé, cadrer Model Viewer puis
+> cliquer sur `Capture Model Viewer`.
 
-Ce bouton ouvre l’éditeur de preuves du projet. Il ne s’agit pas du wizard unique
-historique : l’éditeur actuel contient sept onglets et enregistre des CSV locaux au
-projet dans `sia4010_evidence/`.
+> **VOIX OFF :**
+> « Le logo est facultatif. La capture Model Viewer documente le modèle évalué.
+> IESVE passe brièvement au premier plan pour effectuer la capture, puis
+> l’interface revient automatiquement au premier plan. Si la capture automatique
+> n’est pas disponible, je peux sélectionner une image manuellement. »
 
-1. **Project and climate** : statut du bâtiment, climat, reviewer, hypothèses,
-   ventilation, éclairage et sorties de systèmes.
-2. **SIA 2024 usage mapping** : correspondance de chaque pièce ou template VE avec
-   sa catégorie d’usage SIA 2024.
-3. **Global comparison** : comparaison décisive de l’indice énergétique global du
-   projet avec celui du projet de référence.
-4. **Ventilation control** : type de système, classe de commande et bande de débit.
-5. **Cooling generator** : classe, puissance et EER ou SEER du générateur, si le
-   refroidissement existe.
-6. **Lighting control** : correspondance entre pièce ou template et type de
-   commande SIA 387/4.
-7. **Electrical power** : puissance électrique de dimensionnement selon le statut
-   du bâtiment et la nécessité du refroidissement.
+### Séquence 8 — Générer le premier rapport (45 secondes)
 
-Une ligne demandée comme `accepted` mais incomplète est automatiquement ramenée à
-`pending`. L’éditeur ne modifie aucun objet VE. À la fermeture, l’interface client
-revient au premier plan.
+> **ACTION :** cliquer sur `Generate compliance report` avant de compléter les
+> preuves manquantes.
 
-> **À DIRE PENDANT LA DÉMO :** « Je n’entre pas une valeur parce qu’elle semble
-> plausible. Je saisis la valeur du calcul, du modèle ou de la fiche technique, et
-> j’indique toujours qui l’a revue et dans quel document elle se trouve. »
+> **VOIX OFF :**
+> « Je lance maintenant une première évaluation. Le logiciel enregistre le
+> contexte du rapport, lit VE et l’APS, charge les preuves déjà présentes, exécute
+> les contrôles puis génère un PDF et un classeur Excel horodatés. Il ne relance
+> pas silencieusement ApacheSim et ne change aucune entrée du modèle. »
 
-### Séquence 7 — Générer l’évaluation (45 secondes)
+> **À MONTRER :** Excel s’ouvre d’abord, puis le PDF. Revenir ensuite à
+> l’interface, où les boutons permettent d’ouvrir le PDF, Excel ou leur dossier
+> exact.
 
-> **ACTION :** cliquer sur **Generate compliance report**.
+### Séquence 9 — Expliquer le premier verdict (90 secondes)
 
-L’outil enregistre le contexte du rapport dans le dossier du projet, extrait les
-données VE, sélectionne les résultats APS, charge les preuves acceptées, exécute
-les contrôles et génère deux livrables horodatés : un PDF et un classeur Excel.
+> **ÉCRAN :** panneau de résultat, puis page de synthèse du PDF.
 
-Le temps dépend du modèle. L’outil ne relance pas silencieusement une simulation et
-ne modifie pas les entrées VE. Si les entrées ont changé depuis le dernier APS, il
-faut d’abord relancer ApacheSim.
+> **VOIX OFF :**
+> « Le premier résultat est `NOT_DETERMINED`. Cela ne signifie pas que le bâtiment
+> a échoué. Cela signifie que le dossier ne permet pas encore une conclusion
+> complète. Ici, l’enveloppe, les ouvertures, les gains, les consignes et le HVAC
+> sont déjà évalués conformes dans le périmètre automatisé. La ventilation et le
+> confort dynamique restent indéterminés, et la comparaison globale du projet
+> avec sa référence n’a pas encore été fournie. »
 
-Les deux livrables de l’exécution courante s’ouvrent automatiquement. Les boutons à
-droite permettent aussi de rouvrir le PDF, le classeur ou leur dossier exact.
+> **À MONTRER DANS LE PDF :**
 
-### Séquence 8 — Lire la décision dans l’interface (60 secondes)
-
-> **ÉCRAN :** panneau **03 — Assessment result**.
-
-Le bandeau indique `COMPLIANT`, `NOT_COMPLIANT` ou `NOT_DETERMINED`. Les compteurs
-distinguent les constats bloquants des constats consultatifs. Les cartes présentent
-ensuite le statut de chaque domaine.
-
-`COMPLIANT` signifie que la comparaison globale revue est favorable et qu’aucune
-porte autonome ou non-conformité déterminée ne bloque la conclusion. Des réserves
-techniques peuvent rester visibles ; elles ne sont jamais masquées.
-
-`NOT_DETERMINED` signifie généralement que la comparaison globale, la preuve de
-ventilation, le contrôle de protection solaire, la puissance électrique ou une
-autre donnée décisive n’est pas suffisamment documentée.
-
-### Séquence 9 — Présenter les rapports (2 minutes)
-
-> **ACTION :** montrer d’abord le PDF, puis Excel.
-
-Le contenu et le nombre de pages sont dynamiques. Ils dépendent du modèle, des
-preuves et du nombre de constats ; il ne faut donc pas annoncer un nombre fixe de
-pages ou de findings.
-
-Dans le PDF, je montre :
-
-- la couverture IES et l’identification du projet ;
-- le résumé exécutif et la décision ;
-- la comparaison globale projet/référence ;
+- le verdict général ;
 - les statuts par domaine ;
-- les constats avec valeur observée, référence, effet et action requise ;
-- les réserves, limites d’automatisation et éléments de gouvernance ;
-- la mention juridique indiquant qu’il s’agit d’une évaluation technique.
-
-Dans Excel, je montre :
-
-- la couverture et le sommaire ;
-- les feuilles de données extraites ;
-- les contrôles détaillés et leurs sources ;
-- les constats et les preuves utilisées ;
-- la traçabilité qui permet à un reviewer de reproduire la conclusion.
-
-Le rapport doit être lu avec ses sources. Une couleur verte seule ne remplace pas
-la revue du dossier.
-
-### Séquence 10 — Conclusion (30 secondes)
-
-À partir d’un projet VE simulé et d’un dossier de preuves revu, l’outil transforme
-des données dispersées en une évaluation SIA 380/2 structurée, traçable et
-multilingue. Il automatise ce qui est exposé par VE, demande explicitement ce qui
-nécessite une responsabilité humaine et refuse de conclure lorsque l’information
-est insuffisante.
-
-Le résultat aide l’ingénieur à préparer et contrôler le dossier ; la décision
-officielle reste du ressort de l’autorité compétente.
-
----
-
-## 5. Guide exact de tous les champs
-
-### 5.1 Interface principale
-
-| Champ | Contenu attendu | Effet |
-|---|---|---|
-| `client_name` | Nom réel du client ou de l’entité de démonstration | Obligatoire pour générer |
-| `project_name` | Nom exact et stable du projet | Obligatoire ; ne change pas le dossier VE actif |
-| `project_address` | Adresse officielle ou description explicite du modèle synthétique | Identification du rapport |
-| `client_contact` | Contact responsable du dossier | Traçabilité client |
-| `report_reference` | Référence documentaire unique | Traçabilité et versionnage |
-| `prepared_by` | Auteur réel du rapport | Ne remplace pas le reviewer des preuves |
-| `language` | `en`, `de`, `fr` ou `it` via la liste | Anglais par défaut |
-| `weather_file` | Lecture seule depuis VE | Fait technique, pas validation climatique |
-| `solar_shading` | `YES`, `NO` ou `TO_CONFIRM` | Active le contexte de protection solaire |
-| `window_operability` | `YES`, `NO` ou `TO_CONFIRM` | Contexte du confort dynamique |
-| `mechanical_cooling` | `YES`, `NO` ou `TO_CONFIRM` | Contexte des contrôles de froid |
-| `building_strategy_notes` | Description factuelle, périmètre et source | Visible dans le rapport |
-| `client_logo_path` | PNG/JPG autorisé | Facultatif |
-| `model_viewer_image_path` | Capture automatique ou PNG/JPG choisi | Facultatif mais recommandé |
-
-### 5.2 Project Evidence — onglet Project and climate
-
-Le `project_id` est lié au dossier actif. Pour une preuve acceptable, tous les
-champs obligatoires ci-dessous doivent être remplis avec des informations réelles.
-
-| Champ | Valeur ou contenu attendu |
-|---|---|
-| `project_id` | Nom exact du dossier VE actif ; ne pas le modifier. |
-| `building_status` | `NEW_BUILDING` ou `EXISTING_BUILDING`, d’après le mandat ou le permis. |
-| `weather_basis` | Nom officiel de la base climatique approuvée. |
-| `weather_file` | Nom exact du fichier que le reviewer déclare correct ; il doit correspondre au fichier VE détecté. |
-| `location` | Commune, coordonnées ou station approuvée ; ne jamais l’inférer du nom du fichier. |
-| `altitude_m` | Altitude numérique du projet en mètres. |
-| `weather_source_authority` | Organisme ou publication qui fournit le jeu climatique. |
-| `weather_use_case` | `SIA3802_COOLING_NEED`, `SIA180_SUMMER_COMFORT`, `HVAC_SIZING` ou `MULTIPLE_REVIEWED_USES`. |
-| `weather_scenario_period` | Scénario et période exacts, par exemple présent, 2035 ou 2060 avec le scénario climatique applicable. |
-| `location_source` | Adresse officielle, plan, coordonnées ou station approuvée. |
-| `altitude_source` | Relevé, géodonnées officielles ou document de projet. |
-| `review_status` | `pending` pendant la préparation ; `accepted` uniquement après revue complète. |
-| `reviewer` | Nom et prénom de la personne qui assume la revue. |
-| `reviewer_role` | Fonction dans la revue technique. |
-| `reviewer_organisation` | Organisation au nom de laquelle la preuve est acceptée. |
-| `reviewer_competence_basis` | Expérience, mandat ou qualification pertinente. |
-| `reviewer_acceptance_scope` | Liste précise des données, hypothèses et parties du projet acceptées. |
-| `review_date` | Date réelle au format `YYYY-MM-DD`. |
-| `source_document` | Nom du document effectivement contrôlé. |
-| `source_reference` | Clause, page, feuille ou identifiant d’approbation ; facultatif mais recommandé. |
-| `notes` | Informations utiles sans marqueur de gabarit ou affirmation non prouvée. |
-| `assumptions_status` | `NO_UNRESOLVED_ASSUMPTIONS`, `OPEN_ASSUMPTIONS` ou `UNDER_REVIEW`. Le dernier bloque l’acceptation. |
-| `assumptions_register` | Nom, version et emplacement du registre des hypothèses, même si aucune hypothèse ne reste ouverte. |
-| `report_use_acknowledgement` | Exactement `ENGINEERING_ASSESSMENT_ONLY`. |
-| `ventilation_strategy` | `NATURAL_ONLY`, `MECHANICAL_PRESENT`, `MECHANICAL_EXPECTED` ou `UNDER_REVIEW`. |
-| `ventilation_justification` | Pourquoi cette stratégie correspond au projet et comment elle est modélisée. |
-| `ventilation_flow_source` | Calcul ou document d’origine des débits ; obligatoire pour une ventilation mécanique présente ou attendue. |
-| `ventilation_scope` | Systèmes, zones et modes naturels/mécaniques couverts. |
-| `lighting_scope` | `IN_SCOPE`, `OUT_OF_SCOPE` ou `UNDER_REVIEW`. |
-| `lighting_power_source` | Source des puissances d’éclairage ; obligatoire si `IN_SCOPE`. |
-| `lighting_scope_justification` | Frontière et justification ; obligatoire si `OUT_OF_SCOPE`. |
-| `system_power_source` | Calcul ou documentation des ventilateurs, pompes, auxiliaires et batteries ; obligatoire si les sorties APS sont requises. |
-| `aps_outputs_required` | `YES`, `NO` ou `UNDER_REVIEW`. |
-| `aps_outputs_justification` | Justification obligatoire si `aps_outputs_required=NO`. |
-
-Conditions supplémentaires :
-
-- aucune valeur `UNDER_REVIEW` n’est compatible avec une acceptation finale ;
-- `OPEN_ASSUMPTIONS` peut être enregistré, mais les hypothèses restent des
-  réserves visibles ; pour un dossier entièrement fermé, utiliser
-  `NO_UNRESOLVED_ASSUMPTIONS` seulement si c’est vrai ;
-- l’acceptation juridique doit rester `ENGINEERING_ASSESSMENT_ONLY` ;
-- le nom du reviewer, la date et la source ne doivent jamais être fictifs.
-
-### 5.3 Onglet SIA 2024 usage mapping
-
-Créer une ligne par pièce ou par template thermique. Utiliser `room_id` **ou**
-`thermal_template_id`; au moins l’un des deux doit être renseigné.
-
-| Champ | Contenu attendu |
-|---|---|
-| `room_id` | Identifiant VE exact de la pièce, si la ligne vise une pièce. |
-| `thermal_template_id` | Identifiant exact du template, si la ligne couvre toutes ses pièces. |
-| `sia2024_category` | Catégorie SIA 2024 revue, par exemple `3.01` uniquement si la source l’établit. |
-| `review_status` | `accepted` après contrôle. |
-| `reviewer` | Reviewer réel. |
-| `source_document` | Données d’utilisation SIA 2024 ou document de programmation contrôlé. |
-| `source_reference` | Catégorie, feuille, page ou cellule. |
-| `notes` | Explication de la correspondance et des éventuelles exceptions. |
-
-L’objectif est de couvrir toutes les pièces analysées sans doublon contradictoire.
-
-### 5.4 Onglet Global comparison — porte décisive
-
-Cette ligne ne peut pas être inventée à partir des checks élémentaires. Elle doit
-venir du calcul complet du projet et de son projet de référence, avec la même
-métrique et la même unité.
-
-| Champ | Valeur attendue |
-|---|---|
-| `project_id` | Projet actif. |
-| `comparison_scope` | Exactement `complete_sia3802_project`. |
-| `comparison_metric` | Exactement `global_energy_expenditure_index_sia380`. |
-| `project_value` | Valeur numérique issue du calcul du projet. |
-| `reference_value` | Valeur numérique issue du calcul du projet de référence. |
-| `unit` | Unité commune réelle, par exemple `MJ/m2a` ou `kWh/m2a`; ne pas convertir implicitement. |
-| `comparison_result` | `pass` uniquement si `project_value <= reference_value`; sinon `fail`. |
-| `reviewer` | Reviewer du calcul. |
-| `review_date` | Date réelle de revue. |
-| `review_status` | `accepted` seulement après contrôle des deux valeurs et du périmètre. |
-| `source_document` | Nom/version du calcul signé ou contrôlé. |
-| `source_reference` | Feuille, cellule, clause ou identifiant du calcul. |
-| `notes` | Méthode, hypothèses communes et périmètre. |
-
-Une ligne marquée `accepted` avec `project_value > reference_value` produit une
-non-conformité déterminée. Une ligne avec une provenance de démonstration est
-refusée.
-
-### 5.5 Onglet Ventilation control
-
-Créer une ligne par système ou périmètre de commande.
-
-| Champ | Contenu attendu |
-|---|---|
-| `project_id` | Projet actif. |
-| `system_id` | Identifiant ou nom exact du système Apache. |
-| `room_or_zone` | Zone ou groupe de pièces couvert. |
-| `system_type` | `monozone` ou `multizone`. |
-| `control_class` | `one_speed_time_schedule`, `two_speeds_time_schedule`, `two_speeds_occupancy`, `variable_occupancy` ou `variable_gas_sensor`. |
-| `airflow_band` | `LE_3`, `3_TO_6` ou `GT_6`. |
-| `specific_airflow_m3_h_m2` | Débit spécifique calculé en m³/(h·m²). |
-| `unit` | `m3/(h.m2)`. |
-| `air_flow_control` | Description du contrôle de débit réellement installé/modélisé. |
-| `fan_control` | Commande du ventilateur. |
-| `demand_sensor` | Capteur ou signal de demande ; laisser factuel. |
-| `control_scope` | `system`, `zone` ou `room`. |
-| `minimum_airflow_percent` | Minimum réel de débit, si applicable. |
-| `time_schedule` | Profil ou horaire VE exact. |
-| `review_status` | `accepted` après vérification. |
-| `reviewer`, `review_date` | Responsable et date réels. |
-| `source_document`, `source_reference` | Schéma de principe, séquence de commande ou note de calcul. |
-| `notes` | Limites et correspondance avec VE. |
-
-La bande déclarée doit être cohérente avec le débit numérique. La valeur libre
-`demand_controlled` n’est pas une classe valide : choisir l’une des cinq classes
-exactes proposées par l’interface.
-
-### 5.6 Onglet Cooling generator
-
-À remplir uniquement si un générateur de froid fait partie du projet évalué.
-
-| Champ | Contenu attendu |
-|---|---|
-| `project_id` | Projet actif. |
-| `generator_class` | `air_cooled` ou `water_cooled`. |
-| `capacity_kw` | Puissance nominale numérique en kW. |
-| `nominal_eer` | EER nominal W/W, si disponible. |
-| `seer` | SEER déclaré selon sa source, si disponible. |
-| `unit` | `EER/SEER=W/W;kW`. |
-| `review_status` | `accepted` après comparaison avec la bande applicable. |
-| `reviewer`, `review_date` | Responsable et date réels. |
-| `source_document`, `source_reference` | Fiche fabricant et référence précise. |
-| `notes` | Conditions nominales, norme de déclaration et limites. |
-
-Au moins `nominal_eer` ou `seer` doit être numérique. Si le bâtiment ne comporte
-aucun refroidissement, ne pas fabriquer de générateur : déclarer la stratégie
-`NO`, compléter correctement la puissance électrique et laisser ce volet non
-applicable selon les faits du modèle.
-
-### 5.7 Onglet Lighting control
-
-Créer une ligne par pièce ou template couvert.
-
-| Champ | Contenu attendu |
-|---|---|
-| `room_id` / `thermal_template_id` | Au moins un identifiant VE exact. |
-| `sia3874_control_type` | Type de commande SIA 387/4 confirmé par la source. |
-| `daylight_control` | Profil, gradation, capteur ou description de la commande lumière du jour. |
-| `review_status` | `accepted` après revue. |
-| `reviewer` | Reviewer réel. |
-| `source_document`, `source_reference` | Étude d’éclairage, fiche de commande ou clause. |
-| `notes` | Correspondance entre la source et la pièce/template VE. |
-
-### 5.8 Onglet Electrical power
-
-La puissance attendue est une puissance de dimensionnement par surface nette
-conditionnée. Elle ne doit pas être remplacée par un pic annuel APS sans
-justification méthodologique.
-
-| Champ | Contenu attendu |
-|---|---|
-| `project_id` | Projet actif. |
-| `building_status` | `NEW_BUILDING` ou `EXISTING_BUILDING`. |
-| `required_electrical_power_w_m2` | Valeur numérique non négative en W/m², issue du calcul de dimensionnement. |
-| `conditioned_area_m2` | Surface nette conditionnée utilisée au dénominateur. |
-| `cooling_present` | `YES` ou `NO`. |
-| `cooling_category` | `necessary`, `desirable` ou `none`. |
-| `unit` | `W/m2`. |
-| `review_status` | `accepted` après contrôle du calcul et de la catégorie. |
-| `reviewer`, `review_date` | Responsable et date réels. |
-| `source_document`, `source_reference` | Note de dimensionnement et référence. |
-| `notes` | Périmètre des ventilateurs, pompes, auxiliaires, batteries et simultanéité. |
-
-Le contrôle utilise le seuil applicable au statut du bâtiment et tient compte de
-la catégorie de nécessité du refroidissement. Une puissance absente, une unité
-ambiguë ou une catégorie inconnue maintient la conclusion à `NOT_DETERMINED`.
-
-### 5.9 Preuves complémentaires non exposées dans les sept onglets
-
-Certaines preuves restent des CSV contrôlés. Copier le gabarit correspondant dans
-le dossier `sia4010_evidence/` **du projet VE actif**, le renommer avec le label
-exact du projet, puis remplacer chaque marqueur par une donnée revue.
-
-#### Protection solaire active
-
-Fichier : `glazing_solar_protection_<project>.csv`
-
-Gabarit : `docs/project/templates/glazing_solar_protection_TEMPLATE.csv`
-
-Renseigner au minimum le projet/modèle, la construction ou façade, le nombre de
-fenêtres couvertes, le type de protection, la catégorie, la stratégie et les
-seuils de commande, le `g_total_with_shading`, le document source, sa référence,
-le reviewer et `review_status=accepted`. Le nombre de fenêtres doit être cohérent
-avec les ouvertures externes détectées. Une protection active sans type ou commande
-documentée maintient la décision à `NOT_DETERMINED`.
-
-#### Récupération de chaleur de la CTA
-
-Fichier : `SIA3802_ahu_heat_recovery_<project>.csv`
-
-Gabarit : `docs/project/templates/SIA3802_ahu_heat_recovery_TEMPLATE.csv`
-
-Renseigner `project_id`, `leakage_class`, `heat_recovery_type`,
-`heat_recovery_temperature_efficiency`, les pertes de charge et le SFP lorsqu’ils
-sont disponibles, l’unité, le reviewer, la date et la fiche technique source.
-
-#### Ponts thermiques
-
-Fichier : `SIA3802_thermal_bridges_<project>.csv`
-
-Gabarit : `docs/project/templates/SIA3802_thermal_bridges_TEMPLATE.csv`
-
-Renseigner `project_id`, `assessment_method` et soit
-`total_psi_chi_w_per_k`, soit `schedule_reference`, puis l’unité, le reviewer, la
-date et le calcul source. Une valeur zéro n’est recevable que si elle est
-explicitement justifiée et revue.
-
----
-
-## 6. Wizard de gouvernance séparé
-
-`Run_VE_Swiss_Compliance_Evidence_Wizard.py` ouvre un wizard distinct. Il reprend
-les champs de l’onglet **Project and climate**, affiche en lecture seule les faits
-détectés et demande une confirmation explicite du reviewer.
-
-Pour qu’il écrive `accepted` :
-
-1. sélectionner `accepted` ;
-2. remplir tous les champs obligatoires et toutes les obligations conditionnelles ;
-3. éliminer les valeurs `UNDER_REVIEW` ;
-4. accepter `ENGINEERING_ASSESSMENT_ONLY` ;
-5. cocher la confirmation de responsabilité ;
-6. cliquer sur **Validate**, puis **Save evidence**.
-
-Le wizard écrit un CSV et un audit JSON. Il ne modifie pas VE et ne donne pas à
-lui seul un verdict `COMPLIANT`.
-
----
-
-## 7. Ce qui doit être vrai pour afficher COMPLIANT
-
-Remplir des champs ne suffit pas. À l’exécution courante, le moteur exige :
-
-1. au moins une pièce analysée ;
-2. aucun finding déterminé de sévérité bloquante ;
-3. une comparaison globale acceptée avec `project_value <= reference_value` ;
-4. aucune contradiction entre la comparaison et son statut ;
-5. une preuve de ventilation complète lorsque la ventilation s’applique ;
-6. un contrôle de protection solaire documenté lorsqu’une protection active est présente ;
-7. une puissance électrique évaluée et non bloquante ;
-8. des entrées VE et un APS cohérents avec le dossier de preuves.
-
-Les autres manques restent visibles comme réserves. Le rapport peut donc afficher
-`COMPLIANT` avec réserves, mais jamais masquer une porte autonome incomplète ou une
-non-conformité déterminée.
-
-### Ordre recommandé pour obtenir une démonstration honnête
-
-1. corriger le modèle et relancer ApacheSim si nécessaire ;
-2. compléter **Project and climate** avec le reviewer réel ;
-3. couvrir toutes les pièces dans **SIA 2024 usage mapping** ;
-4. renseigner les commandes de ventilation et de protection solaire applicables ;
-5. compléter refroidissement, éclairage et puissance électrique selon le périmètre ;
-6. calculer puis faire revoir la comparaison globale projet/référence ;
-7. relancer `Run_VE_Swiss_Compliance.py` ;
-8. lire les éventuels constats restants et les corriger à partir de leur action requise ;
-9. régénérer le PDF et Excel après toute modification du modèle ou des preuves.
-
-### Contrôle final avant la vidéo
-
-- [ ] Aucun champ de preuve ne contient un nom fictif ou un marqueur de gabarit.
-- [ ] Le reviewer a réellement accepté le périmètre indiqué.
-- [ ] Les fichiers sources existent et leurs références sont vérifiables.
-- [ ] Les valeurs projet et référence utilisent la même métrique et la même unité.
-- [ ] Le statut de chaque stratégie correspond au modèle actif.
-- [ ] L’APS a été régénéré après la dernière modification du modèle.
-- [ ] Le rapport affiché porte l’horodatage de l’exécution filmée.
-- [ ] La conclusion orale dit « évaluation technique », jamais « certification officielle ».
+- l’action prioritaire demandant la comparaison globale ;
+- les éléments manquants avec leur responsable et leur preuve attendue ;
+- la formulation juridique de l’évaluation technique.
+
+### Séquence 10 — Ouvrir Project Evidence (3 à 4 minutes)
+
+> **ACTION :** revenir à l’interface et cliquer sur `Project Evidence`.
+
+> **VOIX OFF D’INTRODUCTION :**
+> « VE ne contient pas toutes les informations nécessaires à une revue SIA. Cet
+> éditeur enregistre donc les preuves externes dans le dossier du projet. Les
+> valeurs préremplies sont des faits détectés ou des propositions à confirmer ;
+> elles ne sont jamais acceptées automatiquement. »
+
+Avant de détailler les onglets, montrer les commandes communes :
+
+- `Previous` et `Next` changent de ligne dans l’onglet actif ;
+- `Add` crée une nouvelle ligne et `Delete` retire la ligne affichée ;
+- le compteur indique la ligne courante et le nombre total de lignes ;
+- `Save` enregistre **l’onglet actif uniquement** ; il faut donc enregistrer
+  séparément chaque onglet modifié ;
+- `Return to report` ferme l’éditeur et rend le premier plan à l’interface client.
+
+Montrer les sept onglets dans l’ordre :
+
+#### 10.1 Project and climate
+
+> « Cet onglet documente le statut neuf ou existant, la base climatique, la
+> localisation et l’altitude, les sources, le reviewer, le registre des
+> hypothèses et la portée juridique. Il déclare aussi les périmètres de
+> ventilation, d’éclairage et des sorties APS. Le fichier météo doit correspondre
+> au fichier actif, mais sa pertinence reste approuvée par le spécialiste énergie. »
+
+Points à montrer :
+
+- `project_id` correspond au dossier VE actif ;
+- `review_status` reste `pending` pendant la préparation ;
+- `reviewer` est une personne, pas seulement le nom d’une société ;
+- `report_use_acknowledgement` doit être
+  `ENGINEERING_ASSESSMENT_ONLY` ;
+- les valeurs `UNDER_REVIEW` bloquent l’acceptation ;
+- le reviewer doit confirmer explicitement sa responsabilité.
+
+#### 10.2 SIA 2024 use mapping
+
+> « Chaque pièce ou template est associé à sa véritable catégorie SIA 2024. La
+> catégorie vient du programme des locaux et de la source contrôlée ; elle n’est
+> pas devinée à partir du nom de la pièce. »
+
+Pour le modèle actuel, montrer les trois identifiants `SP000000`, `SP000001` et
+`SP000002`. Si la revue définit réellement les deux bureaux en `3.01` et le
+corridor en `12.03`, saisir ces valeurs avec leur source. Si le modèle conserve
+un template de classe `4.01`, expliquer que cette contradiction doit être
+corrigée ou justifiée avant acceptation.
+
+#### 10.3 Global comparison
+
+> « Cette comparaison est la porte décisive. Elle utilise le même indice global
+> et la même unité pour le projet et le projet de référence. `pass` n’est valable
+> que lorsque la valeur projet est inférieure ou égale à la référence. Ces deux
+> nombres doivent venir d’un calcul revu ; ils ne sont pas déduits des couleurs
+> des contrôles élémentaires. »
+
+Afficher les valeurs fixes :
+
+- `comparison_scope = complete_sia3802_project` ;
+- `comparison_metric = global_energy_expenditure_index_sia380`.
+
+Ne pas inventer `project_value` ou `reference_value` pour la vidéo.
+
+#### 10.4 Ventilation control
+
+> « Une ligne documente chaque système ou zone : type mono ou multizone, classe
+> de commande, bande de débit, capteurs, plage de variation et périmètre de
+> commande. Les valeurs doivent correspondre au système réel. »
+
+Pour le modèle actuel, montrer :
+
+- système `SYST0000` ;
+- débit spécifique `7.25 m3/(h.m2)` ;
+- bande `GT_6` ;
+- trois pièces couvertes.
+
+Expliquer que `one_speed_time_schedule` ne suffit pas si le système est réellement
+`multizone` dans la bande `GT_6`. La limite exige alors une commande à vitesse
+variable par capteur de qualité d’air/gaz par zone. Il faut modifier ou prouver la
+commande réelle ; il ne faut pas simplement sélectionner `variable_gas_sensor`.
+
+#### 10.5 Cooling generator
+
+> « Si le refroidissement mécanique existe, la classe air ou eau, la puissance et
+> l’EER ou le SEER proviennent de la fiche fabricant approuvée. Le programme
+> sélectionne ensuite la bande de puissance applicable. Une efficacité générique
+> lue dans VE ne suffit pas à prouver la classe normative. »
+
+Pour le modèle actuel, la valeur observée `2.5` et la puissance absente ne doivent
+pas être présentées comme une preuve acceptée.
+
+#### 10.6 Lighting control
+
+> « Le logiciel peut détecter des gains ou une gradation, mais la classe de
+> commande SIA 387/4 reste une correspondance revue. Chaque ligne doit couvrir
+> une pièce ou un template et citer l’étude d’éclairage ou la source de contrôle. »
+
+Préciser que `daylight_control = ON` ne suffit pas, à lui seul, à déterminer la
+classe SIA 387/4.
+
+#### 10.7 Electrical power
+
+> « La puissance requise est une puissance de dimensionnement en W par mètre
+> carré de surface nette conditionnée. Elle inclut le périmètre applicable des
+> ventilateurs, pompes, auxiliaires et du froid, avec le facteur de simultanéité.
+> Elle ne doit pas être remplacée sans justification par un pic APS annuel. »
+
+Pour le modèle actuel, montrer `conditioned_area_m2 = 50` et expliquer que la
+puissance réelle, le statut du bâtiment et la catégorie de nécessité du froid
+doivent venir du calcul et du reviewer.
+
+> **PHRASE CLÉ À DIRE :**
+> « Je ne saisis pas une valeur parce qu’elle semble plausible. Je saisis la
+> valeur du modèle, du calcul ou de la fiche technique, puis j’indique qui l’a
+> vérifiée et où elle peut être retrouvée. »
+
+Sur un onglet représentatif, cliquer sur `Save` et montrer le message indiquant
+le nombre de lignes enregistrées et acceptées. Expliquer qu’une ligne demandée
+comme `accepted` mais incomplète est automatiquement enregistrée `pending` : le
+formulaire ne permet pas de contourner les exigences de preuve.
+
+À la fermeture de l’éditeur, montrer que l’interface principale revient au
+premier plan.
+
+> [!NOTE]
+> `Run_VE_Swiss_Compliance_Evidence_Wizard.py` est un assistant séparé consacré
+> aux métadonnées et à la gouvernance. Le parcours client normal utilise le bouton
+> `Project Evidence`, qui donne accès aux sept familles. Ne montrer le launcher
+> séparé que si la vidéo doit spécifiquement illustrer la confirmation formelle du
+> reviewer ; il ne remplace pas les six autres onglets.
+
+### Séquence 11 — Expliquer ce qui doit être corrigé hors du wizard (60 secondes)
+
+> **ÉCRAN :** `Action Dashboard` ou `Input Request` dans Excel.
+
+> **VOIX OFF :**
+> « L’éditeur de preuves ne transforme pas le modèle. Si le contrôle de
+> ventilation, le générateur, l’éclairage, la météo ou une autre entrée sont
+> incorrects, ils doivent être corrigés dans VE puis simulés à nouveau. Les
+> puissances de dimensionnement et la comparaison globale doivent être calculées
+> dans leurs workflows dédiés. Le rapport indique pour chaque point l’action, la
+> preuve attendue et le responsable. »
+
+Préciser que les valeurs de vitrage `g = 0.50` et `tau_v = 0.70` sont des entrées
+du projet de référence. Il ne faut pas modifier le vitrage du client uniquement
+pour faire disparaître une alerte de diagnostic ; l’effet doit être évalué dans
+la comparaison globale.
+
+### Séquence 12 — Régénérer après correction et revue (45 secondes)
+
+> **ACTION :** après les vraies corrections, la nouvelle simulation et
+> l’acceptation des preuves, cliquer à nouveau sur `Generate compliance report`.
+
+> **VOIX OFF :**
+> « Après toute modification de VE, je relance ApacheSim. Après toute modification
+> des preuves, je régénère le rapport. Les livrables sont horodatés : la vidéo doit
+> toujours montrer ceux de l’exécution courante. »
+
+Si le verdict final est `COMPLIANT`, dire :
+
+> « Le dossier satisfait les portes de décision implémentées dans le périmètre
+> revu. Les éventuelles réserves restent visibles dans le rapport. Il s’agit
+> toujours d’une évaluation technique et non d’une certification officielle. »
+
+Si le verdict reste `NOT_DETERMINED`, dire :
+
+> « Le moteur a terminé son analyse, mais une ou plusieurs preuves décisives
+> restent ouvertes. Le rapport fournit la liste exacte des actions nécessaires
+> pour continuer. »
+
+### Séquence 13 — Présenter le PDF (75 secondes)
+
+> **ACTION :** parcourir les pages sans annoncer un nombre fixe de pages.
+
+Montrer :
+
+1. la couverture IES, le projet, la météo et les déclarations principales ;
+2. le résumé exécutif et le verdict ;
+3. les domaines Envelope, Openings, Ventilation, Gains, Setpoints, HVAC et Dynamic ;
+4. la comparaison globale projet/référence ;
+5. les constats détaillés et leurs actions ;
+6. les limites de méthode et les réserves ;
+7. la gouvernance : climat, stratégie, sources, hypothèses et reviewer ;
+8. la mention juridique finale.
+
+> **VOIX OFF :**
+> « Le PDF est conçu pour la décision et la communication. Il montre ce qui est
+> établi, ce qui manque, l’impact sur le verdict et l’action attendue. Le contenu
+> est dynamique et dépend du modèle et des preuves de l’exécution. »
+
+### Séquence 14 — Présenter Excel (75 secondes)
+
+> **ACTION :** montrer les feuilles suivantes :
+
+- `COVER` et `INDEX` ;
+- `CLIENT SUMMARY` ;
+- `ACTION DASHBOARD` ;
+- `REVIEW GOVERNANCE` ;
+- `INPUT REQUEST` ;
+- `REFERENCE PROJECT` ;
+- `DATA QUALITY` et `ROOMS` ;
+- les feuilles techniques utiles au cas analysé.
+
+> **VOIX OFF :**
+> « Excel constitue la piste d’audit. Il contient les données extraites, les
+> sources, les règles, les constats et les actions. Un reviewer peut ainsi
+> comprendre comment la conclusion a été construite et retrouver la preuve
+> utilisée. Une couleur seule ne remplace jamais cette traçabilité. »
+
+### Séquence 15 — Conclusion (30 secondes)
+
+> **VOIX OFF :**
+> « L’outil transforme un projet VE simulé et un dossier de preuves revu en une
+> évaluation SIA 380/2 structurée, traçable et multilingue. Il automatise les faits
+> accessibles dans VE, demande explicitement les informations qui nécessitent une
+> responsabilité humaine et refuse de conclure lorsque le dossier est
+> insuffisant. Il aide l’ingénieur et le reviewer ; la décision officielle reste
+> du ressort de l’autorité compétente. »
+
+## 5. Ce qu’il ne faut pas montrer ou affirmer
+
+- Ne pas dire « le logiciel certifie le bâtiment ».
+- Ne pas dire « `accepted` signifie conforme » : `accepted` signifie seulement
+  que la preuve a été revue.
+- Ne pas remplir un reviewer avec `IES` sans nom de personne.
+- Ne pas utiliser `DEMO`, `EXAMPLE`, `ILLUSTRATIVE`, `PLACEHOLDER` ou
+  `NOT_A_REAL_REVIEW` comme provenance d’une preuve acceptée.
+- Ne pas saisir `pass` dans la comparaison globale sans les deux valeurs calculées.
+- Ne pas sélectionner une meilleure classe de ventilation que celle réellement
+  installée ou modélisée.
+- Ne pas accepter `SEER = 2.5` comme conforme sans classe, puissance et source.
+- Ne pas déduire une catégorie SIA 2024 uniquement du nom `Office` ou `Corridor`.
+- Ne pas déduire une classe SIA 387/4 uniquement de `daylight_control = ON`.
+- Ne pas présenter un APS antérieur à la dernière modification du modèle.
+- Ne pas montrer les scripts expérimentaux ou la campagne interne SIA 4010 dans
+  le parcours client.
+- Ne pas promettre un nombre fixe de pages, de feuilles ou de constats.
+
+## 6. Référence rapide des sept onglets Project Evidence
+
+Cette section sert de pense-bête au présentateur. Elle ne doit pas être lue en
+entier pendant la vidéo.
+
+### 6.1 Project and climate
+
+Champs obligatoires ou conditionnels à expliquer :
+
+- identité : `project_id`, `building_status` ;
+- climat : `weather_basis`, `weather_file`, `location`, `altitude_m`,
+  `weather_source_authority`, `weather_use_case`, `weather_scenario_period`,
+  `location_source`, `altitude_source` ;
+- revue : `review_status`, `reviewer`, `reviewer_role`,
+  `reviewer_organisation`, `reviewer_competence_basis`,
+  `reviewer_acceptance_scope`, `review_date`, `source_document`,
+  `source_reference`, `notes` ;
+- hypothèses : `assumptions_status`, `assumptions_register` ;
+- portée juridique : `report_use_acknowledgement` avec la valeur exacte
+  `ENGINEERING_ASSESSMENT_ONLY` ;
+- ventilation : `ventilation_strategy`, `ventilation_justification`,
+  `ventilation_flow_source`, `ventilation_scope` ;
+- éclairage : `lighting_scope`, `lighting_power_source`,
+  `lighting_scope_justification` ;
+- sorties systèmes : `system_power_source`, `aps_outputs_required`,
+  `aps_outputs_justification`.
+
+Règles essentielles :
+
+- `MECHANICAL_PRESENT` ou `MECHANICAL_EXPECTED` exige une source de débit ;
+- `IN_SCOPE` pour l’éclairage exige une source de puissance ;
+- `OUT_OF_SCOPE` exige une justification ;
+- `aps_outputs_required = YES` exige une source de puissance système ;
+- `aps_outputs_required = NO` exige une justification ;
+- `UNDER_REVIEW` n’est pas une acceptation finale ;
+- `OPEN_ASSUMPTIONS` reste une réserve visible.
+
+### 6.2 SIA 2024 use mapping
+
+Une ligne doit comporter :
+
+- `room_id` ou `thermal_template_id` ;
+- `sia2024_category` ;
+- `review_status`, `reviewer` ;
+- `source_document`, `source_reference`, `notes`.
+
+Toutes les pièces analysées doivent être couvertes, sans doublon contradictoire.
+
+### 6.3 Global comparison
+
+Valeurs fixes :
+
+- `comparison_scope = complete_sia3802_project` ;
+- `comparison_metric = global_energy_expenditure_index_sia380`.
+
+Valeurs issues du calcul : `project_value`, `reference_value`, `unit` et
+`comparison_result`. Pour être acceptée, la ligne doit avoir un reviewer, une
+date, une source et `project_value <= reference_value` lorsque le résultat est
+`pass`.
+
+### 6.4 Ventilation control
+
+Une ligne documente : `system_id`, `room_or_zone`, `system_type`,
+`control_class`, `airflow_band`, `specific_airflow_m3_h_m2`, la commande de
+débit et du ventilateur, le capteur, le périmètre, le minimum, le profil, le
+reviewer, la date et la source.
+
+Classes proposées :
+
+- `one_speed_time_schedule` ;
+- `two_speeds_time_schedule` ;
+- `two_speeds_occupancy` ;
+- `variable_occupancy` ;
+- `variable_gas_sensor`.
+
+Bandes proposées : `LE_3`, `3_TO_6`, `GT_6`.
+
+### 6.5 Cooling generator
+
+Documenter : `generator_class`, `capacity_kw`, `nominal_eer` et/ou `seer`,
+`unit`, reviewer, date et fiche fabricant. La classe est `air_cooled` ou
+`water_cooled`. Au moins un EER ou SEER doit être numérique.
+
+### 6.6 Lighting control
+
+Documenter : `room_id` ou `thermal_template_id`, `sia3874_control_type`,
+`daylight_control`, reviewer et source. Le type SIA 387/4 doit venir d’une source
+contrôlée.
+
+### 6.7 Electrical power
+
+Documenter : `building_status`, `required_electrical_power_w_m2`,
+`conditioned_area_m2`, `cooling_present`, `cooling_category`, `unit`, reviewer,
+date et note de dimensionnement.
+
+La puissance doit être une valeur non négative en `W/m2`. La catégorie de froid
+est `necessary`, `desirable` ou `none`.
+
+## 7. Preuves complémentaires hors des sept onglets
+
+Ne les montrer que si elles s’appliquent au projet filmé :
+
+- protection solaire active :
+  `glazing_solar_protection_<project>.csv` ;
+- récupération de chaleur et CTA :
+  `SIA3802_ahu_heat_recovery_<project>.csv` ;
+- ponts thermiques :
+  `SIA3802_thermal_bridges_<project>.csv` ;
+- justifications revues :
+  `SIA3802_justifications_<project>.csv` ou fichier conforme au gabarit.
+
+Ces preuves sont stockées dans `sia4010_evidence/` sous le dossier du projet
+actif. Elles nécessitent également un reviewer et une source. Elles ne doivent
+pas être copiées depuis un autre projet sans revue.
+
+## 8. Conditions à expliquer pour un verdict COMPLIANT
+
+Le présentateur doit être capable d’expliquer qu’un affichage `COMPLIANT` exige
+notamment :
+
+1. un modèle contenant au moins une pièce analysable ;
+2. aucun constat déterminé bloquant ;
+3. une comparaison globale acceptée et favorable ;
+4. une preuve de ventilation complète lorsque la ventilation mécanique
+   s’applique ;
+5. une preuve de protection solaire lorsque la protection est active ;
+6. une puissance électrique évaluée et non bloquante ;
+7. un modèle, un APS et des preuves cohérents entre eux ;
+8. l’acceptation juridique indiquant que le rapport reste une évaluation
+   d’ingénierie.
+
+Le rapport peut afficher `COMPLIANT` avec des réserves techniques visibles. Il ne
+doit jamais être décrit comme « parfaitement certifié ».
+
+## 9. Checklist juste avant d’appuyer sur Enregistrer
+
+- [ ] Le projet filmé est synthétique ou autorisé.
+- [ ] Le nom du dossier VE et le `project_id` correspondent.
+- [ ] Le modèle a été sauvegardé.
+- [ ] L’APS est postérieur à la dernière modification du modèle.
+- [ ] Les déclarations YES/NO/TO_CONFIRM sont factuelles.
+- [ ] La météo détectée est visible, mais son approbation n’est pas présumée.
+- [ ] Chaque preuve acceptée a un reviewer réel et une source retrouvable.
+- [ ] Aucun marqueur de gabarit ne subsiste dans les preuves montrées.
+- [ ] La comparaison globale utilise la même métrique et la même unité.
+- [ ] Les deux livrables montrés portent l’horodatage de l’exécution filmée.
+- [ ] Le PDF et Excel s’ouvrent correctement.
+- [ ] Les quatre langues peuvent être sélectionnées.
+- [ ] L’interface revient au premier plan après Model Viewer et Project Evidence.
+- [ ] La conclusion orale utilise « évaluation technique », jamais
+  « certification officielle ».
+
+## 10. Version courte de la conclusion commerciale
+
+> « IESVE extrait automatiquement les informations techniques disponibles,
+> identifie ce qui doit encore être confirmé par l’équipe projet et conserve une
+> piste d’audit complète. Le client obtient un résumé lisible pour la décision et
+> un classeur détaillé pour la revue. Lorsqu’une preuve manque, l’outil le dit
+> explicitement : il privilégie une conclusion défendable plutôt qu’un faux
+> résultat vert. »
