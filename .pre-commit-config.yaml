@@ -15,21 +15,21 @@ repos:
     hooks:
       - id: black
         args: ["--line-length=90"]
-        files: ^(core|engine|schemas|swiss_sia|ui|scripts|tests|ve_adapter|examples)/.*\.py$
+        files: ^(engine|schemas|swiss_sia|ui|scripts|tests|ve_adapter)/.*\.py$
 
   - repo: https://github.com/PyCQA/flake8
     rev: 7.3.0
     hooks:
       - id: flake8
         args: ["--config=.flake8"]
-        files: ^(core|engine|schemas|swiss_sia|ui|scripts|tests|ve_adapter|examples)/.*\.py$
+        files: ^(engine|schemas|swiss_sia|ui|scripts|tests|ve_adapter)/.*\.py$
 
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: v2.3.0
     hooks:
       - id: mypy
         args: ["--strict", "--show-error-codes"]
-        files: ^(core|schemas)/.*\.py$
+        files: ^(schemas)/.*\.py$
         additional_dependencies:
           - pydantic>=2.5.0
 
@@ -42,9 +42,9 @@ repos:
     rev: v4.5.0
     hooks:
       - id: trailing-whitespace
-        files: ^(core|engine|schemas|swiss_sia|ui|scripts|tests|ve_adapter|examples)/
+        files: ^(engine|schemas|swiss_sia|ui|scripts|tests|ve_adapter)/
       - id: end-of-file-fixer
-        files: ^(core|engine|schemas|swiss_sia|ui|scripts|tests|ve_adapter|examples)/
+        files: ^(engine|schemas|swiss_sia|ui|scripts|tests|ve_adapter)/
       - id: check-yaml
       - id: check-toml
       # Les classeurs SIA officiels pèsent jusqu'à 30 Mo et n'ont rien à faire

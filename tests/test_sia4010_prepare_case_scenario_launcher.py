@@ -16,13 +16,14 @@ import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+PROBES = ROOT / "scripts" / "probes"
 LAUNCHER = ROOT / "Run_VE_SIA4010_Prepare_Case_Scenario.py"
-TEST4_LAUNCHER = ROOT / "Run_VE_SIA4010_Test4_Prepare.py"
-TEST7_LAUNCHER = ROOT / "Run_VE_SIA4010_Test7_Prepare.py"
-TEST7_ONE_CLICK = ROOT / "Run_VE_SIA4010_Test7_Prepare_And_Probe.py"
-TEST3A_ONE_CLICK = ROOT / "Run_VE_SIA4010_Test3A_Prepare_And_Probe.py"
-TEST5A_ONE_CLICK = ROOT / "Run_VE_SIA4010_Test5A_Prepare_And_Probe.py"
-TEST6_ONE_CLICK = ROOT / "Run_VE_SIA4010_Test6_Prepare_And_Probe.py"
+TEST4_LAUNCHER = PROBES / "Run_VE_SIA4010_Test4_Prepare.py"
+TEST7_LAUNCHER = PROBES / "Run_VE_SIA4010_Test7_Prepare.py"
+TEST7_ONE_CLICK = PROBES / "Run_VE_SIA4010_Test7_Prepare_And_Probe.py"
+TEST3A_ONE_CLICK = PROBES / "Run_VE_SIA4010_Test3A_Prepare_And_Probe.py"
+TEST5A_ONE_CLICK = PROBES / "Run_VE_SIA4010_Test5A_Prepare_And_Probe.py"
+TEST6_ONE_CLICK = PROBES / "Run_VE_SIA4010_Test6_Prepare_And_Probe.py"
 
 
 def _load_launcher():

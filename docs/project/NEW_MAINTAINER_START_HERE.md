@@ -43,9 +43,9 @@ From the repository root, outside IESVE:
 ```powershell
 python -m pip install -r scripts/quality/requirements.txt
 python -m pytest -q
-python -m black --check --line-length 90 core engine schemas swiss_sia ui scripts tests ve_adapter
-python -m flake8 swiss_sia ui scripts core schemas engine ve_adapter tests --jobs 1 --config .flake8
-python -m mypy --strict --show-error-codes core schemas
+python -m black --check --line-length 90 engine schemas swiss_sia ui scripts tests ve_adapter
+python -m flake8 swiss_sia ui scripts schemas engine ve_adapter tests --jobs 1 --config .flake8
+python -m mypy --strict --show-error-codes schemas
 python -m mypy --strict --show-error-codes --exclude '^$' swiss_sia/assessment_governance.py swiss_sia/client_report_context.py swiss_sia/project_evidence_translations.py swiss_sia/value_integrity.py
 python scripts/quality/validate_release.py
 ```
@@ -99,8 +99,7 @@ classifying them.
 | Automated tests | `tests/`, `engine/tests/`, `ve_adapter/tests/`, `ui/tests/` |
 | Canonical handover/docs | `docs/project/` and `docs/user/` |
 
-`core/` is retained historical/dead architecture unless a specific task proves
-otherwise. Do not build new production functionality there.
+`core/` was removed (confirmed dead code, August 2026 audit). Do not recreate it.
 
 ## Mandatory engineering rules
 

@@ -84,8 +84,9 @@ Prepare_SIA4010_Evidence_Folder.py
 
 The end user does not need PowerShell or command-line access.
 
-French end-user instructions, including the exact evidence to request and the
-responsible discipline, are in `docs/user/WORKFLOW_CLIENT_SIA3802_FR.md`.
+End-user instructions, including the exact evidence to request and the
+responsible discipline, are in `docs/user/WORKFLOW_CLIENT_SIA3802_EN.md`
+(English) and `docs/user/WORKFLOW_CLIENT_SIA3802_FR.md` (French).
 
 ## What The Tool Does
 

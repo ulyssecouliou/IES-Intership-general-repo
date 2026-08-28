@@ -5,7 +5,6 @@ description = "Validation de la conformité IESVE aux classes SIA 4010 (1A à 5)
 authors = ["IES — Integrated Environmental Solutions"]
 readme = "README.md"
 packages = [
-    { include = "core" },
     { include = "schemas" },
     { include = "swiss_sia" },
 ]
@@ -44,18 +43,16 @@ show_error_codes = true
 # jamais été typé. Le soumettre à --strict d'un coup produirait des centaines
 # d'erreurs et rendrait mypy inutilisable. Les nouveaux paquets, eux, sont
 # stricts dès le premier jour.
-exclude = ["^swiss_sia/", "^tests/", "^examples/", "^scripts/", "^tmp/"]
+exclude = ["^swiss_sia/", "^tests/", "^scripts/", "^tmp/"]
 
 [[tool.mypy.overrides]]
 module = ["iesve", "iesve.*"]
 ignore_missing_imports = true
 
-# `exclude` ne suffit pas : mypy SUIT les imports, et `checker_factory` importe
-# les checkers de `swiss_sia`. Sans ce `follow_imports = "skip"`, un contrôle de
-# `core/` remonte 41 erreurs de l'existant non typé et devient inexploitable.
-# Vérifié le 2026-08-06 : avec cette règle, `mypy --strict core schemas` sort
-# à zéro erreur, et les erreurs de `swiss_sia` restent visibles quand on cible
-# explicitement ce paquet.
+# `swiss_sia` est un existant volumineux qui n'a jamais été typé. Le soumettre
+# à --strict d'un coup produirait des centaines d'erreurs. On saute ses imports
+# et on ignore ses erreurs sauf pour les modules inscrits dans le lot strict
+# ci-dessous.
 [[tool.mypy.overrides]]
 module = ["swiss_sia.*"]
 follow_imports = "skip"

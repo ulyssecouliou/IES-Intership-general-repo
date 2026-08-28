@@ -280,7 +280,7 @@ class Test1CampaignTests(unittest.TestCase):
         self.assertEqual(report["next_case"]["case_id"], TEST1_JUDGED_CASES[0])
         self.assertEqual(
             report["next_case"]["next_action"]["script"],
-            "Run_VE_SIA4010_Test1E_Prepare_Template.py",
+            "scripts/probes/Run_VE_SIA4010_Test1E_Prepare_Template.py",
         )
 
 

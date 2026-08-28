@@ -22,22 +22,25 @@ import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+PROBES = ROOT / "scripts" / "probes"
 
 #: Launchers an operator can press directly in the VE Python navigator.
+#: Paths are (directory, filename) pairs; the first group lives at the repo
+#: root, the second under scripts/probes/.
 OPERATOR_FACING_LAUNCHERS = (
-    "Run_VE_SIA4010_Test1_Fast_Start.py",
-    "Run_VE_SIA4010_Test1_Active_Case_One_Click.py",
-    "Run_VE_SIA4010_Test1_Qualify_Runtime_Inputs.py",
-    "Run_VE_SIA4010_Simulate_Active_Case.py",
-    "Run_VE_SIA4010_Capture_Active_Template.py",
-    "Run_VE_SIA4010_Verify_Template_Model.py",
-    "Run_VE_SIA4010_Test1E_Optical_Readback.py",
-    "Run_VE_SIA4010_Test1E_Apply_Provisional_Angular_Diagnostic.py",
-    "Run_VE_SIA4010_Test1E_Apply_Bracketed_Sensitivity.py",
-    "Run_VE_SIA4010_Test1E_Envelope_Readback.py",
+    (ROOT, "Run_VE_SIA4010_Test1_Fast_Start.py"),
+    (ROOT, "Run_VE_SIA4010_Test1_Active_Case_One_Click.py"),
+    (ROOT, "Run_VE_SIA4010_Test1_Qualify_Runtime_Inputs.py"),
+    (ROOT, "Run_VE_SIA4010_Simulate_Active_Case.py"),
+    (ROOT, "Run_VE_SIA4010_Capture_Active_Template.py"),
+    (PROBES, "Run_VE_SIA4010_Verify_Template_Model.py"),
+    (PROBES, "Run_VE_SIA4010_Test1E_Optical_Readback.py"),
+    (PROBES, "Run_VE_SIA4010_Test1E_Apply_Provisional_Angular_Diagnostic.py"),
+    (PROBES, "Run_VE_SIA4010_Test1E_Apply_Bracketed_Sensitivity.py"),
+    (PROBES, "Run_VE_SIA4010_Test1E_Envelope_Readback.py"),
     # Not a Test 1 launcher, but it rebuilds project-local inputs from this
     # package for Tests 2A/3/4-7, so it carries the identical hazard.
-    "Run_VE_SIA4010_Prepare_Case_Scenario.py",
+    (ROOT, "Run_VE_SIA4010_Prepare_Case_Scenario.py"),
 )
 
 PACKAGE = "swiss_sia.reference_model"
@@ -132,8 +135,8 @@ class LauncherModulePurgeTests(unittest.TestCase):
 
     def test_every_operator_facing_launcher_purges_cached_package(self) -> None:
         missing = []
-        for name in OPERATOR_FACING_LAUNCHERS:
-            path = ROOT / name
+        for directory, name in OPERATOR_FACING_LAUNCHERS:
+            path = directory / name
             if not path.is_file():
                 self.skipTest("Launcher missing: {}".format(name))
             if not _purges_reference_model_package(path.read_text(encoding="utf-8")):

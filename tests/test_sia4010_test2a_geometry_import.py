@@ -5,7 +5,7 @@ import shutil
 from pathlib import Path
 from types import SimpleNamespace
 
-import Run_VE_SIA4010_Test2A_Import_Geometry as launcher
+import scripts.probes.Run_VE_SIA4010_Test2A_Import_Geometry as launcher
 
 ROOT = Path(__file__).resolve().parents[1]
 

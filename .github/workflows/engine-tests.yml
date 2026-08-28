@@ -47,16 +47,16 @@ jobs:
       - name: Verifier le formatage Python
         run: >-
           black --check --line-length 90
-          core engine schemas swiss_sia ui scripts tests ve_adapter
+          engine schemas swiss_sia ui scripts tests ve_adapter
 
       - name: Verifier les erreurs statiques Python
         run: >-
-          flake8 swiss_sia ui scripts core schemas engine ve_adapter tests
+          flake8 swiss_sia ui scripts schemas engine ve_adapter tests
           --jobs 1 --config .flake8
 
       - name: Verifier le typage strict et progressif
         run: |
-          mypy --strict --show-error-codes core schemas
+          mypy --strict --show-error-codes schemas
           mypy --strict --show-error-codes --exclude '^$' \
             swiss_sia/assessment_governance.py \
             swiss_sia/client_report_context.py \

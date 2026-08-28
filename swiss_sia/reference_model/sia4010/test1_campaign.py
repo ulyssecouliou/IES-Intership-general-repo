@@ -156,10 +156,10 @@ def _next_action(stage: str, record: Mapping[str, Any]) -> Dict[str, Any]:
         }
     if stage == "QUALIFY_TEMPLATE_AND_SIMULATE":
         return {
-            "script": "Run_VE_SIA4010_Verify_Template_Model.py",
+            "script": "scripts/probes/Run_VE_SIA4010_Verify_Template_Model.py",
             "requires_fresh_project": False,
             "project_path": existing_project,
-            "follow_up_script": "Run_VE_SIA4010_Simulate_Qualified_Template.py",
+            "follow_up_script": "scripts/probes/Run_VE_SIA4010_Simulate_Qualified_Template.py",
             "instruction": (
                 "Open the disposable exact-case 1E template copy, verify its "
                 "checksum-bound model evidence, then run the qualified-template "
@@ -168,7 +168,7 @@ def _next_action(stage: str, record: Mapping[str, Any]) -> Dict[str, Any]:
         }
     if stage == "QUALIFY_EXACT_1E_TEMPLATE":
         return {
-            "script": "Run_VE_SIA4010_Test1E_Prepare_Template.py",
+            "script": "scripts/probes/Run_VE_SIA4010_Test1E_Prepare_Template.py",
             "requires_fresh_project": True,
             "project_path": "",
             "instruction": (

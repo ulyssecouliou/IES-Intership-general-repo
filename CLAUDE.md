@@ -2,7 +2,7 @@
 
 Mission: IESVE/VEScripts SIA 380/2 readiness + SIA 4010 validation. Evidence, not certification. Full reference: `docs/CLAUDE_REFERENCE.md` (layout, workflow, commands, conventions, data-handling detail).
 
-Current Codex handoff (read when resuming this project): `docs/project/CODEX_TO_CLAUDE_HANDOFF.md`. Copy-ready continuation prompt: `docs/project/CLAUDE_CONTINUATION_PROMPT.md`.
+Current Codex handoff (read when resuming this project): `docs/project/CODEX_TO_CLAUDE_HANDOFF.md`. Copy-ready continuation prompt: `docs/project/archive/CLAUDE_CONTINUATION_PROMPT.md`.
 
 ## Absolute rules
 - Never invent/infer/default any regulatory, physical, climatic, occupancy, HVAC, glazing, construction value/tolerance, or unverified API member/signature. Truth = published SIA/ASHRAE140/EN sources only.

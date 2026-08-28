@@ -245,11 +245,11 @@ def _next_action(
         )
     if not simulation_valid:
         if variant == "test_1" and case_id == "1E":
-            launcher = "Run_VE_SIA4010_Simulate_Qualified_Template.py"
+            launcher = "scripts/probes/Run_VE_SIA4010_Simulate_Qualified_Template.py"
         elif capability.base_test_id == "1":
             launcher = "Run_VE_SIA4010_Simulate_Active_Case.py"
         elif capability.base_test_id == "2":
-            launcher = "Run_VE_SIA4010_Simulate_Qualified_Template.py"
+            launcher = "scripts/probes/Run_VE_SIA4010_Simulate_Qualified_Template.py"
         else:
             launcher = "Run_VE_SIA4010_Tests4_7_Runtime_Capability_Probe.py"
         return (

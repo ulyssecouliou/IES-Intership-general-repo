@@ -27,27 +27,23 @@
 
 The production client application lives entirely in `swiss_sia/`.
 `engine/` and `ve_adapter/` are independent reference-build and recomputation
-tooling. Most of `ui/` is inherited; only the documented style modules remain
-shared. `core/` is retained historical architecture and is not the location for
-new production work.
+tooling. `ui/` provides inherited style modules (`design.py`, `tk_theme.py`);
+legacy export duplicates were removed. `core/` was deleted (confirmed dead,
+August 2026 audit).
 
 ## Maintained thematic guides
 
-- `SWISS_REFERENCE_MODEL_ARCHITECTURE.md` and
-  `SIA4010_TESTS_AND_CLASSES_IMPLEMENTATION.md`: reference-model architecture
-  and validation-class mapping.
-- `GLAZING_EVIDENCE_GUIDE.md`, `MODEL_REMEDIATION_PLAYBOOK.md` and
-  `SIA3802_CLIENT_TEMPLATE_REMEDIATION_EN.md`: model, glazing and template
-  remediation.
-- `VE_MODEL_INPUT_REQUIREMENTS_SIA3802_SIA4010.md` and
-  `SIA4010_PHASE_B_VE_EXTRACTION_CONTRACT.md`: VE input and output contracts.
-- `SIA4010_PDF_PREVALIDATION_STRATEGY.md` and
-  `SIA4010_OFFICIAL_PACKAGE_ACQUISITION_CHECKLIST.md`: SIA 4010 evidence and
-  official-package handling.
-- `MANAGER_REFERENCE_INTEGRATION.md`, `MANAGER_MULTILINGUAL_BRIEF.md` and
-  `RELEASE_ACCEPTANCE_CHECKLIST.md`: management and release review.
+- `GUIDE_MODIFICATIONS_VE.md` / `GUIDE_MODIFICATIONS_VE_EN.md`: VE model
+  modifications to achieve SIA 380/2 compliance.
+- `GUIDE_COMPARAISON_GLOBALE_SIA3802.md` / `GUIDE_GLOBAL_COMPARISON_SIA3802_EN.md`:
+  the decisive SIA 380/2 global-comparison gate.
+- `SIA3802_CLIENT_TEMPLATE_REMEDIATION_EN.md`: client template remediation.
+- `SIA_MODEL_BUILDER_GUIDE.md` / `SIA_MODEL_BUILDER_GUIDE_EN.md`: SIA-compatible
+  model creation.
+- `RELEASE_ACCEPTANCE_CHECKLIST.md`: release review checklist.
 - `REVIEW_GOVERNANCE_SIA.md`: reviewer identity, evidence ownership and legal
   claim boundary.
+- `SIA_WIZARD_VALUES_DIRECTION_DEMO.md`: wizard-values direction demonstration.
 
 ## Historical and source-language records
 
@@ -59,11 +55,10 @@ are not the current delivery truth:
 - `AUDIT_COMPLET_2026-08-16.md`: dated French audit;
 - `SIA_CORRESPONDANCE_ZWEIFEL_2026-08-12.md`: correspondence record containing
   source-language material;
-- `TONIGHT_SIA4010_EXECUTION_RUNBOOK_FR.md`: dated French execution runbook;
-- `MVP_COMPLETION_MATRIX.md`, `MVP_MANAGER_HANDOFF.md`,
-  `MVP_RUSH_RUNBOOK_2026-08-13.md`, `HYBRID_EXECUTION_STATUS_20260811.md`,
-  `SIA_COMPLIANCE_EXECUTION_TRACKER.md` and other dated status snapshots.
+- `MVP_COMPLETION_MATRIX.md`: dated completion matrix (snapshot).
 
-French or German normative quotations are preserved when they are evidence.
-They must not be silently translated and treated as authoritative replacements.
-For current work, always follow the canonical English documents listed first.
+Older dated snapshots, one-time runbooks and obsolete documents have been moved
+to `archive/`. French or German normative quotations are preserved when they
+are evidence. They must not be silently translated and treated as authoritative
+replacements. For current work, always follow the canonical English documents
+listed first.
