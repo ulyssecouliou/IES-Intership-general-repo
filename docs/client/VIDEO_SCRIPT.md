@@ -10,6 +10,10 @@
 
 **Lanceur client unique :** `Run_VE_Swiss_Compliance.py`
 
+**Version téléprompteur mot pour mot :**
+[`VIDEO_SCRIPT_VERBATIM_FR.md`](VIDEO_SCRIPT_VERBATIM_FR.md) — version exhaustive,
+prévue pour environ 17 à 20 minutes de narration.
+
 > [!IMPORTANT]
 > Le produit réalise une **évaluation technique SIA 380/2** du projet VE actif.
 > Il ne délivre ni certificat officiel SIA, ni décision cantonale, ni validation
