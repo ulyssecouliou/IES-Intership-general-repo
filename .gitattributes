@@ -1,6 +1,5 @@
 # Outlook project correspondence is versioned as immutable binary evidence.
 *.msg binary
-
 # Private handover evidence and engineering source formats must remain
 # byte-for-byte stable across Windows checkouts.
 *.dwg binary
@@ -12,9 +11,8 @@
 *.xls binary
 *.xlsm binary
 *.xlsx binary
-*.zip binary
+*.zip filter=lfs diff=lfs merge=lfs -text
 *.epw binary
-
 # Controlled campaign folders are immutable evidence. This also protects JSON,
 # CSV and Markdown checksum bindings from Git for Windows newline conversion.
 SIA_4010_geteilter_Link/** binary
@@ -22,11 +20,9 @@ SIA_4010_geteilter_Link/** binary
 generated_weather/** binary
 sia4010_artifacts/** binary
 sia4010_evidence/** binary
-
 # This authority-supplied climate source is checksum-bound byte-for-byte.
 # Never let Git for Windows rewrite LF to CRLF in the working tree.
 references/standards/sia2028/KLO_dry.txt binary
-
 # Keep client-delivery text deterministic on every platform so its integrity
 # manifest can be verified after checkout. Binary training and brand assets are
 # byte-preserved; the large video is stored through Git LFS.
@@ -40,3 +36,4 @@ client_delivery/**/*.png binary
 client_delivery/**/*.docx binary
 client_delivery/**/*.pptx binary
 client_delivery/**/*.mp4 filter=lfs diff=lfs merge=lfs -text
+*.mp4 filter=lfs diff=lfs merge=lfs -text
