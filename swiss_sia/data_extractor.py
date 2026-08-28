@@ -15,7 +15,7 @@ from .config import SIA_COMPLIANCE_VALUE_PROVENANCE
 logger = logging.getLogger(__name__)
 
 NOT_CHECKABLE = "NOT_CHECKABLE"
-VE_MEMBER_ABSENT_NOTE = "[TO VERIFY] membre VE absent"
+VE_MEMBER_ABSENT_NOTE = "[TO VERIFY] VE member absent"
 G_TOTAL_VE_MEMBER_PLACEHOLDER = "G_TOTAL_VE_MEMBER_TO_VERIFY"
 
 # Documentation cross-check used by the extraction boundary.  PDF page numbers
@@ -1298,7 +1298,7 @@ class VEDataExtractor:
             "FRAME_FRACTION_VE_MEMBER_TO_VERIFY",
             "VECdbConstruction.get_properties().frame_percent",
         )
-        # [TO VERIFY] membre VE absent: no documented direct glazing-plus-shading g_total read-back.
+        # [TO VERIFY] VE member absent: no documented direct glazing-plus-shading g_total read-back.
         g_total_missing = _missing_member_audit(
             G_TOTAL_VE_MEMBER_PLACEHOLDER,
             "VECdbConstruction.g_total",
@@ -2046,7 +2046,7 @@ class VEDataExtractor:
     @classmethod
     def _extract_g_total_audit(cls, *mappings: Any) -> Dict[str, Any]:
         """Return fail-closed evidence because no direct g_total member is documented."""
-        # [TO VERIFY] membre VE absent in VEScript User Guide 2023 section 6.1.28
+        # [TO VERIFY] VE member absent in VEScript User Guide 2023 section 6.1.28
         # and ve_adapter/ve_api_surface.json.  Do not consume similarly named keys.
         return _missing_member_audit(
             G_TOTAL_VE_MEMBER_PLACEHOLDER,
