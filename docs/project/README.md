@@ -9,10 +9,6 @@ The canonical thematic handover guides cover AI governance, architecture,
 data/licensing, testing/operations and GitHub ownership. `INDEX.md` separates
 these living documents from historical snapshots.
 
-## Folders
-
-- `hqe/`: HQE background notes kept outside the production checker package.
-
 ## Manager Brief
 
 - `MANAGER_MULTILINGUAL_BRIEF.md`: pointer to the latest multilingual
