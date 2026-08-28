@@ -15,6 +15,9 @@
 > and [`docs/project/INTERNAL_DATASET_INVENTORY.md`](docs/project/INTERNAL_DATASET_INVENTORY.md).
 > Reproducible VE project snapshots are under
 > [`handover/ve_projects/`](handover/ve_projects/README.md).
+> The latest authority decisions and newly supplied SIA 2024 workbook are
+> summarized in
+> [`docs/project/AUTHORITY_RESPONSE_2026-08-28.md`](docs/project/AUTHORITY_RESPONSE_2026-08-28.md).
 
 ## Unified VEScripts hub
 

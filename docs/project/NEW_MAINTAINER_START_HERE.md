@@ -12,6 +12,7 @@ as dated historical context in `HANDOVER_2026-08-28.md`.
 3. Check out `main`; it is the canonical/default branch.
 4. Read, in order:
    - `FINAL_TRANSMISSION_RECEIPT_2026-08-28.md`;
+   - `AUTHORITY_RESPONSE_2026-08-28.md`;
    - this guide;
    - `AI_USAGE_AND_GOVERNANCE.md`;
    - `../../CLAUDE.md` and `../CLAUDE_REFERENCE.md`;
@@ -121,6 +122,16 @@ otherwise. Do not build new production functionality there.
 | Client evidence truth | Named project reviewer/client design team |
 | Repository visibility, licence and personal data | IES repository owner, legal and data governance |
 | Release approval | IES manager/maintainer, not an AI assistant |
+
+## Authority addendum received after the baseline handover
+
+Read `AUTHORITY_RESPONSE_2026-08-28.md` before continuing Tests 3–7. It records
+the controlled SIA 2024 workbook, the Test 3 edition interpretation, the
+candidate-specific fan-curve policy, authorization of the EPB Annex D workbook,
+the confirmed Test 6 categories and the corrected Test 7 PV total/split.
+
+Do not mark these tests PASS from the e-mail alone. The workbook still requires
+cell-level audit, controlled extraction, VE binding and simulation qualification.
 
 ## Definition of a safe contribution
 

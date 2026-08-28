@@ -1,0 +1,25 @@
+{
+  "schema_version": "1.0",
+  "received_date": "2026-08-28",
+  "source_authority": "Prof. Gerhard Zweifel",
+  "source_medium": "email attachment",
+  "filename": "SIA 2024_Nutzungsdaten_SIA 4010.xlsx",
+  "sha256": "f8fa52198cb9b23d8663154ca73c35b6612fcc89ec43a8db307c1710b4ab220a",
+  "size_bytes": 24164,
+  "declared_scope": [
+    "Test 4 Hoersaal use data",
+    "Test 5 required room-use data",
+    "Test 6 categories 6.2 and 6.4 use data"
+  ],
+  "authority_status": "SUPPLIED_FOR_THIS_VALIDATION_CAMPAIGN",
+  "technical_validation_status": "SOURCE_RECEIVED_AWAITING_CELL_LEVEL_VALIDATION",
+  "runtime_binding_status": "NOT_BOUND",
+  "verification_required": [
+    "workbook structure and sheet inventory",
+    "cell values, formulas, units and named ranges",
+    "visual rendering",
+    "mapping to the exact SIA 4010 case inputs",
+    "independent review before any PASS claim"
+  ],
+  "claim_guardrail": "Presence and checksum establish source custody only; they do not establish technical correctness or a SIA 4010 verdict."
+}

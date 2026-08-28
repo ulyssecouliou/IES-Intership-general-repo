@@ -1,0 +1,84 @@
+{
+  "schema_version": "1.0",
+  "decision_id": "SIA4010_REMAINING_CLARIFICATIONS_20260828",
+  "received_date": "2026-08-28",
+  "authority": "Prof. Gerhard Zweifel",
+  "medium": "direct written email response with workbook attachment",
+  "source_transcript": {
+    "path": "2026-08-28_remaining_sia4010_clarifications_email.txt",
+    "sha256": "15b6892f5f26d7500b7f376cda4a2b9d588e8351a7d73fd086b8c9566a560875"
+  },
+  "source_attachment": {
+    "path": "../source_audits/sia2024_required_use_types_20260828/SIA 2024_Nutzungsdaten_SIA 4010.xlsx",
+    "original_filename": "SIA 2024_Nutzungsdaten_SIA 4010.xlsx",
+    "sha256": "f8fa52198cb9b23d8663154ca73c35b6612fcc89ec43a8db307c1710b4ab220a",
+    "size_bytes": 24164,
+    "authority_status": "SUPPLIED_FOR_THIS_VALIDATION_CAMPAIGN",
+    "technical_validation_status": "SOURCE_RECEIVED_AWAITING_CELL_LEVEL_VALIDATION"
+  },
+  "decisions": {
+    "sia2024_required_use_data": {
+      "status": "SOURCE_SUPPLIED",
+      "scope": "all use types requested for Tests 4, 5 and 6",
+      "edition_note": "SIA 2024 changed after SIA 4010 implementation and the specified 2021 source is no longer generally available",
+      "authority_instruction": "use the attached data in the same format as the previously supplied Test 1 single-office data"
+    },
+    "test3_sia387_4": {
+      "status": "EDITION_INTERPRETATION_RESOLVED",
+      "chapter": "3.4 hourly calculation method",
+      "edition_difference": "only the final paragraph of 3.4.4.3 changes direkt-indirekt to indirekt",
+      "control_functions_changed": false,
+      "control_function_source": "SIA 387/4 Table 10",
+      "additional_candidate_information_available": false,
+      "calculight_authorized_as_hourly_method_authority": false
+    },
+    "tests4_5_fan_curves": {
+      "status": "CANDIDATE_SPECIFIC_APPROXIMATION_EXPECTED",
+      "official_numeric_curve_supplied": false,
+      "prescribed_interpolation_method": null,
+      "official_numeric_tolerance": null,
+      "reason": "tools use different fan part-load models and may require different approximation approaches; this contributes materially to reference-result differences"
+    },
+    "test5_en16798_5_1_annex_d": {
+      "status": "EPB_CENTER_WORKBOOK_AUTHORIZED",
+      "previous_workbook_authorized": true,
+      "new_version_url_provided": "https://epb.center/document/demo-en-16798-5-1/",
+      "new_version_retrieval_status": "PENDING",
+      "additional_note": "the newer workbook also contains a fan-curve approximation example"
+    },
+    "test6_categories": {
+      "status": "CONFIRMED",
+      "category_6_2": "Selbstbedienungsrestaurant",
+      "category_6_4": "Küche zu Selbstbedienungsrestaurant",
+      "example_building_numbering_review": "AUTHORITY_CHECK_PENDING"
+    },
+    "test7_photovoltaics": {
+      "status": "PRECEDENCE_AND_ROOF_SPLIT_CONFIRMED",
+      "authoritative_total_kwp": 62.62,
+      "superseded_specification_total_kwp": 60.6,
+      "specification_value_is_error": true,
+      "current_module_power_w": 310,
+      "former_module_power_w": 300,
+      "roof_total_modules": 150,
+      "roof_total_kwp": 45.0,
+      "roof_east_share": 0.5,
+      "roof_west_share": 0.5,
+      "roof_east_modules": 75,
+      "roof_west_modules": 75,
+      "roof_east_kwp": 22.5,
+      "roof_west_kwp": 22.5,
+      "specification_correction_pending": true
+    }
+  },
+  "remaining_qualification": [
+    "cell-level workbook structure, formulas, values and rendered-layout validation",
+    "controlled extraction and VE binding of every required SIA 2024 profile",
+    "licensed SIA 387/4 Table 10 implementation and runtime qualification",
+    "retrieval, checksum and formula binding of the latest EPB Center workbook",
+    "documented candidate fan-curve approximation and result sensitivity evaluation",
+    "Test 6 example-building numbering clarification",
+    "official SIA 4010 package revision and FAQ or clarification-log confirmation",
+    "exact VE models, simulations, APS extraction and official acceptance comparisons"
+  ],
+  "claim_guardrail": "These written decisions resolve source meaning and selected precedence questions. They do not by themselves qualify a VE implementation, establish an APS result or constitute an official SIA PASS."
+}

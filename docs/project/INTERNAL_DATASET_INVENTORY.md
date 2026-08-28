@@ -1,6 +1,6 @@
 # Private IES dataset inventory
 
-Status date: 27 August 2026
+Status date: 28 August 2026
 
 The repository is a private handover archive available only to authorised IES
 collaborators. The following internal datasets are intentionally versioned so a
@@ -11,7 +11,8 @@ new maintainer does not depend on Ulysse's workstation.
 | `docs/project/emails/` | 60 messages / 50.25 MB | Authority and internal correspondence | Private IES evidence |
 | `SIA_4010_geteilter_Link/` | 57 files / 117.61 MB | Test 1–7 specifications, result workbooks and example building | Licensed/internal campaign source |
 | `VE - Validation for Swiss Building Regs/` | 10 files / 50.78 MB | Bounded prior validation models/results | Internal validation dataset |
-| `sia4010_evidence/` | 194 files / 15.35 MB | Source audits, authority decisions, runtime limitations and campaign evidence | Preserve provenance and status |
+| `sia4010_evidence/` | 199 files / 15.38 MB | Source audits, authority decisions, runtime limitations and campaign evidence | Preserve provenance and status |
+| SIA 2024 required-use workbook | 1 workbook / 23.60 KB | Authority-supplied use data for Tests 4–6 | Source custody verified; cell-level validation pending |
 | `generated_weather/` | 55 files / 29.94 MB | EPW candidates and derivation receipts | Derived; retain audit JSON |
 | `references/standards/en16798/` controlled workbook | 1 workbook / 3.12 MB | EN 16798 validation reference | Private/internal use with provenance |
 | `sia4010_artifacts/templates/` | 1 small JSON | Canonical hybrid-readiness record | Technical handover evidence |

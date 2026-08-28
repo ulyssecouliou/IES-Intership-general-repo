@@ -1,0 +1,83 @@
+Dear Ulysse 
+
+Here again my answers: 
+
+I have now recorded the following points in the controlled project evidence: 
+- total solar irradiance incident on the exterior glazing plane; 
+- closing at or above 150 W/m² and reopening below 150 W/m²; 
+- no hysteresis; 
+- both relevant IESVE threshold fields set to 150 W/m²; 
+- Monday-to-Friday use days and Saturday/Sunday rest days; 
+- 1 January assigned to Saturday; 
+- no public holidays or other exceptions; 
+- a non-leap 365-day calendar; 
+- ordinal, hour-ending source values; 
+- direct application of the 0.80 simultaneity factor to the hourly occupancy values. 
+
+These clarifications are very valuable not only for my current implementation, but also for the documentation and handover of the project. They will prevent future colleagues who continue or maintain this work from having to interpret the same points again. 
+To avoid sending further separate messages, I have consolidated below only the questions that remain unresolved. There is no need to repeat any of your previous answers. 
+	good! 
+
+1. Applicable validation package and supporting data 
+Could you please confirm the latest applicable revision of the SIA 4010 test package and whether a current FAQ or controlled clarification log exists? 
+The SIA 2024 documentation also refers to the formerly available “SIA 2024 Raumdatenblätter” Excel workbook. The documented energytools.ch download is no longer available. 
+Could SIA provide or identify the controlled machine-readable dataset that should be used for this validation campaign? 
+The remaining required SIA 2024 datasets are: 
+- the Hörsaal target-value profiles for Test 4; 
+- the standard-value room profiles for rooms 100, 102 and 200–205 in Test 5; 
+- the standard-value profiles for categories 6.2 Selbstbedienungsrestaurant and 6.4 Küche zu Selbstbedienungsrestaurant in Test 6. 
+For implementation, we need the applicable 24-hour people, equipment, lighting and process profiles, densities and gains, annual simultaneity factors, and the use/rest-day rules. 
+I found the public ETH Zurich HIVE SIA 2024 dataset, but its generator describes some schedules as being “inspired by SIA 2024”, and some category 6.2/6.4 values differ from the later official SIA harmonisation report. I will therefore not use it as a normative source unless you explicitly confirm that it is acceptable after reconciliation. 
+	unfortunately the SIA 2024 did not remain stable since the implementation of SIA 4010. Therefore the edition is given. But inclrasingly this does not help any more when the 2021 version is no longer available! 
+I therefore attach the use data for all needed use types (same format as already sent for the test 1 single office data) 
+
+2. Test 3 – governing SIA 387/4 edition and control functions 
+Spezifikation_Test3.pdf cites SIA 387/4:2017. However, the official SIA register updated on 10 February 2026 describes validation class 2A using SIA 387/4:2023, section 3.4. 
+Which edition should govern this validation campaign? 
+	In the relevant chapter 3.4 of SIA 387/4 (hourly calculation method) there is no difference between the editions except one little change, which may ot may not be of importance for you (since you may have a different room model): in the last paragraph of 3.4.4.3 the reference “direkt-indirekt” was changed to “indirekt”. This was due to the SIA 4010 tests.
+The control functions have not changed. 
+
+Could you also identify or provide the exact control-function mapping for types 1–6 used in Tests 3A–3F, including the relevant thresholds, time dependence, state memory or hysteresis, and the hourly evaluation convention? 
+	See SIA 387/4, table 10. No further information has been provided to any candidate. . 
+
+The current official CalcuLight workbook and the open-access methodology paper are available to us, but I will only treat them as implementation authorities if you confirm that this is acceptable. 
+	-> I don’t’ know the CalcuLight workbook, but I doubt it has any hourly calculation method implemented. 
+
+3. Tests 4 and 5 – fan characteristic curves 
+The applicable fan characteristics are currently available only as graphs in the test specifications. 
+Is numerical digitisation of these graphs acceptable for the validation? 
+If yes, could you please confirm the required interpolation method and acceptable numerical tolerance? If not, could the original numerical curve data be supplied? 
+	It was by intention that no further information was given to the candidates on this. The tools may (and do!) have different models (equations) for the fan part load characteristics implemented, and these may require different approximation approaches.
+The differences in the reference results at least partly origin from that and are considerable. 
+
+4. Test 5 – EN 16798-5-1 Annex D 
+The EPB Center workbook Demo_EN_16798-5-1_2021-06-09.xlsm contains the rotary heat-recovery variables, coefficients and Annex D calculation references. 
+May this workbook be used as the authoritative implementation reference for the EN 16798-5-1 Annex D rotary heat-recovery part-load calculation in Tests 5A–5D? 
+	Yes. 
+	Note that there is a new version available: https://epb.center/document/demo-en-16798-5-1/ (btw. this contains also a fan curve approximation example) 
+
+If not, could you please identify the exact controlled equations and coefficients that should govern the implementation? 
+
+5. Test 6 – category identification 
+Could you please confirm that categories 6.2 Selbstbedienungsrestaurant and 6.4 Küche zu Selbstbedienungsrestaurant are the authoritative SIA 2024:2021 category identifiers for Test 6? 
+	Correct, see attachment. 
+Some example-building material appears to use different 6.x numbering, so I do not want to infer an edition-dependent mapping. 
+	I will check. 
+
+6. Test 7 – photovoltaic definition 
+The supplied documents appear to give two different installed PV totals: 
+- 60.6 kWp in Spezifikation_Test7.pdf; 
+- 62.62 kWp when deriving the total from PV_Layout.pdf. 
+Which value and document should take precedence? 
+	The second is correct; this is a mistake in the spec, I will correct. The calculation was first done with 300 W/panel, now it is 310. 
+Could you also confirm how the 150 roof modules / 45.0 kWp should be allocated between the east- and west-facing roof planes, or provide the authoritative module count and installed peak power for each orientation? 
+	50/50%. The layout shows pairs of rows, where one row is tilted west, the other east. A usual setup at least here in the country on flat roofs. 
+
+Once these remaining points are confirmed, I will be able to freeze the controlled input datasets and continue the VE implementations without introducing candidate assumptions. 
+
+Thank you again for your time and your very valuable assistance. Your clarifications are making a substantial difference to the quality, traceability and future maintainability of this validation work. 
+
+Hope this serves again. 
+
+Kind regards 
+Gerhard 

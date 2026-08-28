@@ -3,6 +3,18 @@
 This receipt records the last reproducible checks performed before handover. It
 is a technical delivery receipt, not an official SIA validation certificate.
 
+## Post-baseline authority addendum
+
+A further written response from Prof. Gerhard Zweifel and a controlled SIA 2024
+use-data workbook were received on 28 August 2026. The response resolves source
+questions for Tests 3–7 but does not establish any test PASS. See
+`AUTHORITY_RESPONSE_2026-08-28.md` and the checksum-bound records under
+`sia4010_evidence/authority_decisions/` and
+`sia4010_evidence/source_audits/sia2024_required_use_types_20260828/`.
+
+The workbook has been preserved and hashed. Cell-level validation, controlled
+extraction and VE binding remain explicitly pending.
+
 ## Source and access
 
 - Canonical branch: `main`.
