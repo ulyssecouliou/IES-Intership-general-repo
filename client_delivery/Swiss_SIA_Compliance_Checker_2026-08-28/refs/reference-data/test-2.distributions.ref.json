@@ -1,0 +1,6349 @@
+{
+ "test": 2,
+ "critere": "Häufigkeitsverteilung : « muss im Streubereich der Referenzprogramme liegen » (Spezifikation_Test2.pdf, Testkriterien)",
+ "statut_critere": "CONFIRME_AUTORITE_2026-08-10",
+ "pourquoi_non_calcule": "Les feuilles « Verteilung » sont des GRAPHIQUES : elles tracent les variantes de référence et le programme testé, sans calculer aucune bande. Aucune cellule du classeur ne définit le Streubereich d'une distribution. La clarification écrite du 2026-08-10 définit la règle : enveloppe min/max des programmes de référence, classe par classe.",
+ "classes_concernees": [
+  "2A",
+  "2B",
+  "4A",
+  "4B"
+ ],
+ "source": {
+  "fichier": "Test2\\Resultaterfassung_Test2.xlsx",
+  "feuille": "Zusammenfassung",
+  "lignes_de_structure": {
+   "cas": 28,
+   "grandeur": 29,
+   "programmes": 30,
+   "classes": 31
+  }
+ },
+ "nb_distributions": 22,
+ "reserves": [
+  "Totaux affichés dans les classes : 8432, 8567, 8617, 8666, 8728, 8732, 8744, 8750, 8755, 8759, 8760. La SIA a confirmé le 2026-08-10 que les écarts à 8760 ne sont pas des heures manquantes : les autres valeurs sont hors des bornes définies par les classes. Elles sont conservées comme compte hors classes et ne sont pas ajoutées à la dernière classe.",
+  "Les effectifs sont des FAITS relevés cellule par cellule et réconciliés avec la ligne de totaux du classeur. La bande d'acceptation min/max par classe est confirmée par la réponse écrite du 2026-08-10."
+ ],
+ "distributions": [
+  {
+   "cas": "Alle",
+   "grandeur": "Einstrahlung auf Fensterebene gesamt",
+   "unite": "W/m2",
+   "colonne_bloc": "A",
+   "nb_classes": 20,
+   "ligne_total": 52,
+   "contributeurs": [
+    {
+     "colonne": "C",
+     "programme": "IDA ICE",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "D",
+     "programme": "Excel",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "E",
+     "programme": "EnergyPlus",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "F",
+     "programme": "TAS",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    }
+   ],
+   "effectifs": [
+    {
+     "ligne_classeur": 32,
+     "borne_superieure": 10,
+     "par_colonne": {
+      "C": 4602,
+      "D": 4717,
+      "E": 4770,
+      "F": 4698
+     }
+    },
+    {
+     "ligne_classeur": 33,
+     "borne_superieure": 100,
+     "par_colonne": {
+      "C": 1808,
+      "D": 1820,
+      "E": 1722,
+      "F": 1812
+     }
+    },
+    {
+     "ligne_classeur": 34,
+     "borne_superieure": 200,
+     "par_colonne": {
+      "C": 738,
+      "D": 667,
+      "E": 650,
+      "F": 705
+     }
+    },
+    {
+     "ligne_classeur": 35,
+     "borne_superieure": 300,
+     "par_colonne": {
+      "C": 444,
+      "D": 427,
+      "E": 455,
+      "F": 459
+     }
+    },
+    {
+     "ligne_classeur": 36,
+     "borne_superieure": 400,
+     "par_colonne": {
+      "C": 347,
+      "D": 369,
+      "E": 341,
+      "F": 370
+     }
+    },
+    {
+     "ligne_classeur": 37,
+     "borne_superieure": 500,
+     "par_colonne": {
+      "C": 304,
+      "D": 327,
+      "E": 297,
+      "F": 310
+     }
+    },
+    {
+     "ligne_classeur": 38,
+     "borne_superieure": 600,
+     "par_colonne": {
+      "C": 235,
+      "D": 183,
+      "E": 235,
+      "F": 226
+     }
+    },
+    {
+     "ligne_classeur": 39,
+     "borne_superieure": 700,
+     "par_colonne": {
+      "C": 143,
+      "D": 127,
+      "E": 161,
+      "F": 96
+     }
+    },
+    {
+     "ligne_classeur": 40,
+     "borne_superieure": 800,
+     "par_colonne": {
+      "C": 92,
+      "D": 65,
+      "E": 80,
+      "F": 73
+     }
+    },
+    {
+     "ligne_classeur": 41,
+     "borne_superieure": 900,
+     "par_colonne": {
+      "C": 46,
+      "D": 41,
+      "E": 46,
+      "F": 11
+     }
+    },
+    {
+     "ligne_classeur": 42,
+     "borne_superieure": 1000,
+     "par_colonne": {
+      "C": 1,
+      "D": 11,
+      "E": 3,
+      "F": 0
+     }
+    },
+    {
+     "ligne_classeur": 43,
+     "borne_superieure": 1100,
+     "par_colonne": {
+      "C": 0,
+      "D": 5,
+      "E": 0,
+      "F": 0
+     }
+    },
+    {
+     "ligne_classeur": 44,
+     "borne_superieure": 1200,
+     "par_colonne": {
+      "C": 0,
+      "D": 1,
+      "E": 0,
+      "F": 0
+     }
+    },
+    {
+     "ligne_classeur": 45,
+     "borne_superieure": 9999,
+     "par_colonne": {
+      "C": 0,
+      "D": 0,
+      "E": 0,
+      "F": 0
+     }
+    },
+    {
+     "ligne_classeur": 46,
+     "borne_superieure": 9999,
+     "par_colonne": {
+      "C": 0,
+      "D": 0,
+      "E": 0,
+      "F": 0
+     }
+    },
+    {
+     "ligne_classeur": 47,
+     "borne_superieure": 9999,
+     "par_colonne": {
+      "C": 0,
+      "D": 0,
+      "E": 0,
+      "F": 0
+     }
+    },
+    {
+     "ligne_classeur": 48,
+     "borne_superieure": 9999,
+     "par_colonne": {
+      "C": 0,
+      "D": 0,
+      "E": 0,
+      "F": 0
+     }
+    },
+    {
+     "ligne_classeur": 49,
+     "borne_superieure": 9999,
+     "par_colonne": {
+      "C": 0,
+      "D": 0,
+      "E": 0,
+      "F": 0
+     }
+    },
+    {
+     "ligne_classeur": 50,
+     "borne_superieure": 9999,
+     "par_colonne": {
+      "C": 0,
+      "D": 0,
+      "E": 0,
+      "F": 0
+     }
+    },
+    {
+     "ligne_classeur": 51,
+     "borne_superieure": 9999,
+     "par_colonne": {
+      "C": 0,
+      "D": 0,
+      "E": 0,
+      "F": 0
+     }
+    }
+   ]
+  },
+  {
+   "cas": "2A",
+   "grandeur": "Solarer Wärmeeintrag gesamt",
+   "unite": "W",
+   "colonne_bloc": "H",
+   "nb_classes": 20,
+   "ligne_total": 52,
+   "contributeurs": [
+    {
+     "colonne": "J",
+     "programme": "IDA_ICE Fe det Spec",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "K",
+     "programme": "IDA_ICE Fe det noSpec",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "L",
+     "programme": "IDA_ICE Fe einf",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "M",
+     "programme": "Excel SIA 387/4 + 380/2",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "P",
+     "programme": "EnergyPlus Fe einf",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "Q",
+     "programme": "TAS Fe det nonSpect",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    }
+   ],
+   "effectifs": [
+    {
+     "ligne_classeur": 32,
+     "borne_superieure": 10,
+     "par_colonne": {
+      "J": 4120,
+      "K": 4138,
+      "L": 4106,
+      "M": 4389,
+      "P": 4513,
+      "Q": 4388
+     }
+    },
+    {
+     "ligne_classeur": 33,
+     "borne_superieure": 100,
+     "par_colonne": {
+      "J": 936,
+      "K": 957,
+      "L": 1018,
+      "M": 626,
+      "P": 719,
+      "Q": 1322
+     }
+    },
+    {
+     "ligne_classeur": 34,
+     "borne_superieure": 150,
+     "par_colonne": {
+      "J": 599,
+      "K": 582,
+      "L": 780,
+      "M": 688,
+      "P": 743,
+      "Q": 774
+     }
+    },
+    {
+     "ligne_classeur": 35,
+     "borne_superieure": 200,
+     "par_colonne": {
+      "J": 666,
+      "K": 680,
+      "L": 690,
+      "M": 553,
+      "P": 545,
+      "Q": 601
+     }
+    },
+    {
+     "ligne_classeur": 36,
+     "borne_superieure": 250,
+     "par_colonne": {
+      "J": 645,
+      "K": 628,
+      "L": 579,
+      "M": 513,
+      "P": 474,
+      "Q": 368
+     }
+    },
+    {
+     "ligne_classeur": 37,
+     "borne_superieure": 300,
+     "par_colonne": {
+      "J": 503,
+      "K": 517,
+      "L": 447,
+      "M": 447,
+      "P": 453,
+      "Q": 262
+     }
+    },
+    {
+     "ligne_classeur": 38,
+     "borne_superieure": 350,
+     "par_colonne": {
+      "J": 444,
+      "K": 454,
+      "L": 365,
+      "M": 344,
+      "P": 339,
+      "Q": 202
+     }
+    },
+    {
+     "ligne_classeur": 39,
+     "borne_superieure": 400,
+     "par_colonne": {
+      "J": 329,
+      "K": 336,
+      "L": 293,
+      "M": 267,
+      "P": 291,
+      "Q": 188
+     }
+    },
+    {
+     "ligne_classeur": 40,
+     "borne_superieure": 450,
+     "par_colonne": {
+      "J": 214,
+      "K": 217,
+      "L": 192,
+      "M": 181,
+      "P": 231,
+      "Q": 132
+     }
+    },
+    {
+     "ligne_classeur": 41,
+     "borne_superieure": 500,
+     "par_colonne": {
+      "J": 170,
+      "K": 165,
+      "L": 150,
+      "M": 181,
+      "P": 172,
+      "Q": 114
+     }
+    },
+    {
+     "ligne_classeur": 42,
+     "borne_superieure": 550,
+     "par_colonne": {
+      "J": 103,
+      "K": 78,
+      "L": 92,
+      "M": 122,
+      "P": 96,
+      "Q": 102
+     }
+    },
+    {
+     "ligne_classeur": 43,
+     "borne_superieure": 600,
+     "par_colonne": {
+      "J": 23,
+      "K": 8,
+      "L": 35,
+      "M": 99,
+      "P": 64,
+      "Q": 76
+     }
+    },
+    {
+     "ligne_classeur": 44,
+     "borne_superieure": 650,
+     "par_colonne": {
+      "J": 8,
+      "K": 0,
+      "L": 12,
+      "M": 77,
+      "P": 64,
+      "Q": 77
+     }
+    },
+    {
+     "ligne_classeur": 45,
+     "borne_superieure": 700,
+     "par_colonne": {
+      "J": 0,
+      "K": 0,
+      "L": 1,
+      "M": 87,
+      "P": 44,
+      "Q": 82
+     }
+    },
+    {
+     "ligne_classeur": 46,
+     "borne_superieure": 750,
+     "par_colonne": {
+      "J": 0,
+      "K": 0,
+      "L": 0,
+      "M": 56,
+      "P": 12,
+      "Q": 62
+     }
+    },
+    {
+     "ligne_classeur": 47,
+     "borne_superieure": 800,
+     "par_colonne": {
+      "J": 0,
+      "K": 0,
+      "L": 0,
+      "M": 54,
+      "P": 0,
+      "Q": 10
+     }
+    },
+    {
+     "ligne_classeur": 48,
+     "borne_superieure": 850,
+     "par_colonne": {
+      "J": 0,
+      "K": 0,
+      "L": 0,
+      "M": 51,
+      "P": 0,
+      "Q": 0
+     }
+    },
+    {
+     "ligne_classeur": 49,
+     "borne_superieure": 900,
+     "par_colonne": {
+      "J": 0,
+      "K": 0,
+      "L": 0,
+      "M": 25,
+      "P": 0,
+      "Q": 0
+     }
+    },
+    {
+     "ligne_classeur": 50,
+     "borne_superieure": 950,
+     "par_colonne": {
+      "J": 0,
+      "K": 0,
+      "L": 0,
+      "M": 0,
+      "P": 0,
+      "Q": 0
+     }
+    },
+    {
+     "ligne_classeur": 51,
+     "borne_superieure": 1000,
+     "par_colonne": {
+      "J": 0,
+      "K": 0,
+      "L": 0,
+      "M": 0,
+      "P": 0,
+      "Q": 0
+     }
+    }
+   ]
+  },
+  {
+   "cas": "2A",
+   "grandeur": "Total transmittierte Solarstrahlung",
+   "unite": "W",
+   "colonne_bloc": "S",
+   "nb_classes": 20,
+   "ligne_total": 52,
+   "contributeurs": [
+    {
+     "colonne": "U",
+     "programme": "IDA_ICE Fe det Spec",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "V",
+     "programme": "IDA_ICE Fe det noSpec",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "W",
+     "programme": "IDA_ICE Fe einf",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "X",
+     "programme": "Excel SIA 387/4 + 380/2",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "Y",
+     "programme": "EnergyPlus Fe det Spec",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "Z",
+     "programme": "EnergyPlus Fe det nonSpec",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "AB",
+     "programme": "TAS Fe det nonSpect",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    }
+   ],
+   "effectifs": [
+    {
+     "ligne_classeur": 32,
+     "borne_superieure": 10,
+     "par_colonne": {
+      "U": 4023,
+      "V": 4038,
+      "W": 3989,
+      "X": 4393,
+      "Y": 4513,
+      "Z": 4525,
+      "AB": 4435
+     }
+    },
+    {
+     "ligne_classeur": 33,
+     "borne_superieure": 100,
+     "par_colonne": {
+      "U": 1278,
+      "V": 1275,
+      "W": 1216,
+      "X": 1114,
+      "Y": 895,
+      "Z": 1029,
+      "AB": 2156
+     }
+    },
+    {
+     "ligne_classeur": 34,
+     "borne_superieure": 150,
+     "par_colonne": {
+      "U": 898,
+      "V": 955,
+      "W": 898,
+      "X": 746,
+      "Y": 755,
+      "Z": 728,
+      "AB": 835
+     }
+    },
+    {
+     "ligne_classeur": 35,
+     "borne_superieure": 200,
+     "par_colonne": {
+      "U": 831,
+      "V": 824,
+      "W": 785,
+      "X": 645,
+      "Y": 570,
+      "Z": 622,
+      "AB": 407
+     }
+    },
+    {
+     "ligne_classeur": 36,
+     "borne_superieure": 250,
+     "par_colonne": {
+      "U": 601,
+      "V": 608,
+      "W": 608,
+      "X": 507,
+      "Y": 503,
+      "Z": 540,
+      "AB": 230
+     }
+    },
+    {
+     "ligne_classeur": 37,
+     "borne_superieure": 300,
+     "par_colonne": {
+      "U": 413,
+      "V": 447,
+      "W": 410,
+      "X": 344,
+      "Y": 443,
+      "Z": 391,
+      "AB": 205
+     }
+    },
+    {
+     "ligne_classeur": 38,
+     "borne_superieure": 350,
+     "par_colonne": {
+      "U": 326,
+      "V": 311,
+      "W": 342,
+      "X": 224,
+      "Y": 304,
+      "Z": 278,
+      "AB": 156
+     }
+    },
+    {
+     "ligne_classeur": 39,
+     "borne_superieure": 400,
+     "par_colonne": {
+      "U": 187,
+      "V": 185,
+      "W": 207,
+      "X": 159,
+      "Y": 244,
+      "Z": 245,
+      "AB": 124
+     }
+    },
+    {
+     "ligne_classeur": 40,
+     "borne_superieure": 450,
+     "par_colonne": {
+      "U": 116,
+      "V": 94,
+      "W": 136,
+      "X": 137,
+      "Y": 191,
+      "Z": 148,
+      "AB": 125
+     }
+    },
+    {
+     "ligne_classeur": 41,
+     "borne_superieure": 500,
+     "par_colonne": {
+      "U": 71,
+      "V": 20,
+      "W": 109,
+      "X": 104,
+      "Y": 111,
+      "Z": 82,
+      "AB": 80
+     }
+    },
+    {
+     "ligne_classeur": 42,
+     "borne_superieure": 550,
+     "par_colonne": {
+      "U": 14,
+      "V": 3,
+      "W": 48,
+      "X": 82,
+      "Y": 65,
+      "Z": 71,
+      "AB": 4
+     }
+    },
+    {
+     "ligne_classeur": 43,
+     "borne_superieure": 600,
+     "par_colonne": {
+      "U": 2,
+      "V": 0,
+      "W": 10,
+      "X": 95,
+      "Y": 82,
+      "Z": 70,
+      "AB": 3
+     }
+    },
+    {
+     "ligne_classeur": 44,
+     "borne_superieure": 650,
+     "par_colonne": {
+      "U": 0,
+      "V": 0,
+      "W": 2,
+      "X": 70,
+      "Y": 57,
+      "Z": 28,
+      "AB": 0
+     }
+    },
+    {
+     "ligne_classeur": 45,
+     "borne_superieure": 700,
+     "par_colonne": {
+      "U": 0,
+      "V": 0,
+      "W": 0,
+      "X": 61,
+      "Y": 23,
+      "Z": 3,
+      "AB": 0
+     }
+    },
+    {
+     "ligne_classeur": 46,
+     "borne_superieure": 750,
+     "par_colonne": {
+      "U": 0,
+      "V": 0,
+      "W": 0,
+      "X": 56,
+      "Y": 4,
+      "Z": 0,
+      "AB": 0
+     }
+    },
+    {
+     "ligne_classeur": 47,
+     "borne_superieure": 800,
+     "par_colonne": {
+      "U": 0,
+      "V": 0,
+      "W": 0,
+      "X": 23,
+      "Y": 0,
+      "Z": 0,
+      "AB": 0
+     }
+    },
+    {
+     "ligne_classeur": 48,
+     "borne_superieure": 850,
+     "par_colonne": {
+      "U": 0,
+      "V": 0,
+      "W": 0,
+      "X": 0,
+      "Y": 0,
+      "Z": 0,
+      "AB": 0
+     }
+    },
+    {
+     "ligne_classeur": 49,
+     "borne_superieure": 900,
+     "par_colonne": {
+      "U": 0,
+      "V": 0,
+      "W": 0,
+      "X": 0,
+      "Y": 0,
+      "Z": 0,
+      "AB": 0
+     }
+    },
+    {
+     "ligne_classeur": 50,
+     "borne_superieure": 950,
+     "par_colonne": {
+      "U": 0,
+      "V": 0,
+      "W": 0,
+      "X": 0,
+      "Y": 0,
+      "Z": 0,
+      "AB": 0
+     }
+    },
+    {
+     "ligne_classeur": 51,
+     "borne_superieure": 1000,
+     "par_colonne": {
+      "U": 0,
+      "V": 0,
+      "W": 0,
+      "X": 0,
+      "Y": 0,
+      "Z": 0,
+      "AB": 0
+     }
+    }
+   ]
+  },
+  {
+   "cas": "2B",
+   "grandeur": "Solarer Wärmeeintrag gesamt",
+   "unite": "W",
+   "colonne_bloc": "AD",
+   "nb_classes": 20,
+   "ligne_total": 52,
+   "contributeurs": [
+    {
+     "colonne": "AF",
+     "programme": "IDA_ICE Fe det Spec",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "AG",
+     "programme": "IDA_ICE Fe det noSpec",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "AI",
+     "programme": "Excel SIA 387/4 + 380/2",
+     "total_heures": 8732,
+     "heures_dans_classes": 8732,
+     "heures_hors_classes": 28,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "AL",
+     "programme": "EnergyPlus Fe einf",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    }
+   ],
+   "effectifs": [
+    {
+     "ligne_classeur": 32,
+     "borne_superieure": 10,
+     "par_colonne": {
+      "AF": 4119,
+      "AG": 4135,
+      "AI": 4389,
+      "AL": 4515
+     }
+    },
+    {
+     "ligne_classeur": 33,
+     "borne_superieure": 100,
+     "par_colonne": {
+      "AF": 931,
+      "AG": 947,
+      "AI": 580,
+      "AL": 741
+     }
+    },
+    {
+     "ligne_classeur": 34,
+     "borne_superieure": 150,
+     "par_colonne": {
+      "AF": 308,
+      "AG": 334,
+      "AI": 248,
+      "AL": 366
+     }
+    },
+    {
+     "ligne_classeur": 35,
+     "borne_superieure": 200,
+     "par_colonne": {
+      "AF": 289,
+      "AG": 297,
+      "AI": 270,
+      "AL": 333
+     }
+    },
+    {
+     "ligne_classeur": 36,
+     "borne_superieure": 250,
+     "par_colonne": {
+      "AF": 262,
+      "AG": 253,
+      "AI": 245,
+      "AL": 463
+     }
+    },
+    {
+     "ligne_classeur": 37,
+     "borne_superieure": 300,
+     "par_colonne": {
+      "AF": 246,
+      "AG": 286,
+      "AI": 245,
+      "AL": 457
+     }
+    },
+    {
+     "ligne_classeur": 38,
+     "borne_superieure": 350,
+     "par_colonne": {
+      "AF": 403,
+      "AG": 486,
+      "AI": 206,
+      "AL": 334
+     }
+    },
+    {
+     "ligne_classeur": 39,
+     "borne_superieure": 400,
+     "par_colonne": {
+      "AF": 514,
+      "AG": 491,
+      "AI": 225,
+      "AL": 354
+     }
+    },
+    {
+     "ligne_classeur": 40,
+     "borne_superieure": 450,
+     "par_colonne": {
+      "AF": 420,
+      "AG": 415,
+      "AI": 306,
+      "AL": 313
+     }
+    },
+    {
+     "ligne_classeur": 41,
+     "borne_superieure": 500,
+     "par_colonne": {
+      "AF": 346,
+      "AG": 357,
+      "AI": 282,
+      "AL": 296
+     }
+    },
+    {
+     "ligne_classeur": 42,
+     "borne_superieure": 550,
+     "par_colonne": {
+      "AF": 313,
+      "AG": 261,
+      "AI": 247,
+      "AL": 274
+     }
+    },
+    {
+     "ligne_classeur": 43,
+     "borne_superieure": 600,
+     "par_colonne": {
+      "AF": 243,
+      "AG": 224,
+      "AI": 225,
+      "AL": 173
+     }
+    },
+    {
+     "ligne_classeur": 44,
+     "borne_superieure": 650,
+     "par_colonne": {
+      "AF": 213,
+      "AG": 168,
+      "AI": 223,
+      "AL": 84
+     }
+    },
+    {
+     "ligne_classeur": 45,
+     "borne_superieure": 700,
+     "par_colonne": {
+      "AF": 108,
+      "AG": 93,
+      "AI": 280,
+      "AL": 45
+     }
+    },
+    {
+     "ligne_classeur": 46,
+     "borne_superieure": 750,
+     "par_colonne": {
+      "AF": 43,
+      "AG": 11,
+      "AI": 207,
+      "AL": 12
+     }
+    },
+    {
+     "ligne_classeur": 47,
+     "borne_superieure": 800,
+     "par_colonne": {
+      "AF": 1,
+      "AG": 1,
+      "AI": 205,
+      "AL": 0
+     }
+    },
+    {
+     "ligne_classeur": 48,
+     "borne_superieure": 850,
+     "par_colonne": {
+      "AF": 1,
+      "AG": 1,
+      "AI": 164,
+      "AL": 0
+     }
+    },
+    {
+     "ligne_classeur": 49,
+     "borne_superieure": 900,
+     "par_colonne": {
+      "AF": 0,
+      "AG": 0,
+      "AI": 107,
+      "AL": 0
+     }
+    },
+    {
+     "ligne_classeur": 50,
+     "borne_superieure": 950,
+     "par_colonne": {
+      "AF": 0,
+      "AG": 0,
+      "AI": 53,
+      "AL": 0
+     }
+    },
+    {
+     "ligne_classeur": 51,
+     "borne_superieure": 1000,
+     "par_colonne": {
+      "AF": 0,
+      "AG": 0,
+      "AI": 25,
+      "AL": 0
+     }
+    }
+   ]
+  },
+  {
+   "cas": "2B",
+   "grandeur": "Total transmittierte Solarstrahlung",
+   "unite": "W",
+   "colonne_bloc": "AO",
+   "nb_classes": 20,
+   "ligne_total": 52,
+   "contributeurs": [
+    {
+     "colonne": "AQ",
+     "programme": "IDA_ICE Fe det Spec",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "AR",
+     "programme": "IDA_ICE Fe det noSpec",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "AT",
+     "programme": "Excel SIA 387/4 + 380/2",
+     "total_heures": 8759,
+     "heures_dans_classes": 8759,
+     "heures_hors_classes": 1,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "AU",
+     "programme": "EnergyPlus Fe det Spec",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "AV",
+     "programme": "EnergyPlus Fe det nonSpec",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    }
+   ],
+   "effectifs": [
+    {
+     "ligne_classeur": 32,
+     "borne_superieure": 10,
+     "par_colonne": {
+      "AQ": 4013,
+      "AR": 4027,
+      "AT": 4393,
+      "AU": 4519,
+      "AV": 4532
+     }
+    },
+    {
+     "ligne_classeur": 33,
+     "borne_superieure": 100,
+     "par_colonne": {
+      "AQ": 1076,
+      "AR": 1115,
+      "AT": 657,
+      "AU": 780,
+      "AV": 845
+     }
+    },
+    {
+     "ligne_classeur": 34,
+     "borne_superieure": 150,
+     "par_colonne": {
+      "AQ": 354,
+      "AR": 394,
+      "AT": 308,
+      "AU": 396,
+      "AV": 398
+     }
+    },
+    {
+     "ligne_classeur": 35,
+     "borne_superieure": 200,
+     "par_colonne": {
+      "AQ": 331,
+      "AR": 341,
+      "AT": 328,
+      "AU": 468,
+      "AV": 548
+     }
+    },
+    {
+     "ligne_classeur": 36,
+     "borne_superieure": 250,
+     "par_colonne": {
+      "AQ": 336,
+      "AR": 370,
+      "AT": 316,
+      "AU": 493,
+      "AV": 531
+     }
+    },
+    {
+     "ligne_classeur": 37,
+     "borne_superieure": 300,
+     "par_colonne": {
+      "AQ": 480,
+      "AR": 605,
+      "AT": 307,
+      "AU": 446,
+      "AV": 445
+     }
+    },
+    {
+     "ligne_classeur": 38,
+     "borne_superieure": 350,
+     "par_colonne": {
+      "AQ": 589,
+      "AR": 562,
+      "AT": 400,
+      "AU": 376,
+      "AV": 355
+     }
+    },
+    {
+     "ligne_classeur": 39,
+     "borne_superieure": 400,
+     "par_colonne": {
+      "AQ": 480,
+      "AR": 498,
+      "AT": 325,
+      "AU": 348,
+      "AV": 399
+     }
+    },
+    {
+     "ligne_classeur": 40,
+     "borne_superieure": 450,
+     "par_colonne": {
+      "AQ": 432,
+      "AR": 393,
+      "AT": 353,
+      "AU": 348,
+      "AV": 364
+     }
+    },
+    {
+     "ligne_classeur": 41,
+     "borne_superieure": 500,
+     "par_colonne": {
+      "AQ": 346,
+      "AR": 292,
+      "AT": 365,
+      "AU": 297,
+      "AV": 159
+     }
+    },
+    {
+     "ligne_classeur": 42,
+     "borne_superieure": 550,
+     "par_colonne": {
+      "AQ": 230,
+      "AR": 147,
+      "AT": 326,
+      "AU": 118,
+      "AV": 83
+     }
+    },
+    {
+     "ligne_classeur": 43,
+     "borne_superieure": 600,
+     "par_colonne": {
+      "AQ": 88,
+      "AR": 15,
+      "AT": 291,
+      "AU": 87,
+      "AV": 70
+     }
+    },
+    {
+     "ligne_classeur": 44,
+     "borne_superieure": 650,
+     "par_colonne": {
+      "AQ": 4,
+      "AR": 1,
+      "AT": 187,
+      "AU": 57,
+      "AV": 28
+     }
+    },
+    {
+     "ligne_classeur": 45,
+     "borne_superieure": 700,
+     "par_colonne": {
+      "AQ": 1,
+      "AR": 0,
+      "AT": 98,
+      "AU": 23,
+      "AV": 3
+     }
+    },
+    {
+     "ligne_classeur": 46,
+     "borne_superieure": 750,
+     "par_colonne": {
+      "AQ": 0,
+      "AR": 0,
+      "AT": 66,
+      "AU": 4,
+      "AV": 0
+     }
+    },
+    {
+     "ligne_classeur": 47,
+     "borne_superieure": 800,
+     "par_colonne": {
+      "AQ": 0,
+      "AR": 0,
+      "AT": 28,
+      "AU": 0,
+      "AV": 0
+     }
+    },
+    {
+     "ligne_classeur": 48,
+     "borne_superieure": 850,
+     "par_colonne": {
+      "AQ": 0,
+      "AR": 0,
+      "AT": 5,
+      "AU": 0,
+      "AV": 0
+     }
+    },
+    {
+     "ligne_classeur": 49,
+     "borne_superieure": 900,
+     "par_colonne": {
+      "AQ": 0,
+      "AR": 0,
+      "AT": 3,
+      "AU": 0,
+      "AV": 0
+     }
+    },
+    {
+     "ligne_classeur": 50,
+     "borne_superieure": 950,
+     "par_colonne": {
+      "AQ": 0,
+      "AR": 0,
+      "AT": 2,
+      "AU": 0,
+      "AV": 0
+     }
+    },
+    {
+     "ligne_classeur": 51,
+     "borne_superieure": 1000,
+     "par_colonne": {
+      "AQ": 0,
+      "AR": 0,
+      "AT": 1,
+      "AU": 0,
+      "AV": 0
+     }
+    }
+   ]
+  },
+  {
+   "cas": "2B",
+   "grandeur": "Lamellenwinkel der Storen",
+   "unite": "°",
+   "colonne_bloc": "AZ",
+   "nb_classes": 20,
+   "ligne_total": 52,
+   "contributeurs": [
+    {
+     "colonne": "BB",
+     "programme": "IDA_ICE Fe det Spec",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "BC",
+     "programme": "IDA_ICE Fe det noSpec",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "BE",
+     "programme": "Excel SIA 387/4 + 380/2",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "BF",
+     "programme": "EnergyPlus Fe det Spec",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "BG",
+     "programme": "EnergyPlus Fe det nonSpec",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "BH",
+     "programme": "EnergyPlus Fe einf",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    }
+   ],
+   "effectifs": [
+    {
+     "ligne_classeur": 32,
+     "borne_superieure": 0,
+     "par_colonne": {
+      "BB": 6515,
+      "BC": 6512,
+      "BE": 6894,
+      "BF": 6587,
+      "BG": 6587,
+      "BH": 6587
+     }
+    },
+    {
+     "ligne_classeur": 33,
+     "borne_superieure": 5,
+     "par_colonne": {
+      "BB": 71,
+      "BC": 73,
+      "BE": 0,
+      "BF": 0,
+      "BG": 0,
+      "BH": 0
+     }
+    },
+    {
+     "ligne_classeur": 34,
+     "borne_superieure": 10,
+     "par_colonne": {
+      "BB": 73,
+      "BC": 73,
+      "BE": 0,
+      "BF": 0,
+      "BG": 0,
+      "BH": 0
+     }
+    },
+    {
+     "ligne_classeur": 35,
+     "borne_superieure": 15,
+     "par_colonne": {
+      "BB": 72,
+      "BC": 74,
+      "BE": 0,
+      "BF": 0,
+      "BG": 0,
+      "BH": 0
+     }
+    },
+    {
+     "ligne_classeur": 36,
+     "borne_superieure": 20,
+     "par_colonne": {
+      "BB": 82,
+      "BC": 81,
+      "BE": 0,
+      "BF": 0,
+      "BG": 0,
+      "BH": 0
+     }
+    },
+    {
+     "ligne_classeur": 37,
+     "borne_superieure": 25,
+     "par_colonne": {
+      "BB": 81,
+      "BC": 81,
+      "BE": 0,
+      "BF": 0,
+      "BG": 0,
+      "BH": 0
+     }
+    },
+    {
+     "ligne_classeur": 38,
+     "borne_superieure": 30,
+     "par_colonne": {
+      "BB": 60,
+      "BC": 61,
+      "BE": 0,
+      "BF": 0,
+      "BG": 0,
+      "BH": 0
+     }
+    },
+    {
+     "ligne_classeur": 39,
+     "borne_superieure": 35,
+     "par_colonne": {
+      "BB": 51,
+      "BC": 50,
+      "BE": 0,
+      "BF": 0,
+      "BG": 0,
+      "BH": 0
+     }
+    },
+    {
+     "ligne_classeur": 40,
+     "borne_superieure": 40,
+     "par_colonne": {
+      "BB": 71,
+      "BC": 70,
+      "BE": 0,
+      "BF": 0,
+      "BG": 0,
+      "BH": 0
+     }
+    },
+    {
+     "ligne_classeur": 41,
+     "borne_superieure": 45,
+     "par_colonne": {
+      "BB": 1199,
+      "BC": 1167,
+      "BE": 1552,
+      "BF": 1614,
+      "BG": 1613,
+      "BH": 1613
+     }
+    },
+    {
+     "ligne_classeur": 42,
+     "borne_superieure": 50,
+     "par_colonne": {
+      "BB": 184,
+      "BC": 217,
+      "BE": 39,
+      "BF": 43,
+      "BG": 43,
+      "BH": 43
+     }
+    },
+    {
+     "ligne_classeur": 43,
+     "borne_superieure": 55,
+     "par_colonne": {
+      "BB": 100,
+      "BC": 99,
+      "BE": 64,
+      "BF": 98,
+      "BG": 98,
+      "BH": 98
+     }
+    },
+    {
+     "ligne_classeur": 44,
+     "borne_superieure": 60,
+     "par_colonne": {
+      "BB": 56,
+      "BC": 59,
+      "BE": 35,
+      "BF": 50,
+      "BG": 49,
+      "BH": 49
+     }
+    },
+    {
+     "ligne_classeur": 45,
+     "borne_superieure": 65,
+     "par_colonne": {
+      "BB": 51,
+      "BC": 52,
+      "BE": 49,
+      "BF": 52,
+      "BG": 52,
+      "BH": 52
+     }
+    },
+    {
+     "ligne_classeur": 46,
+     "borne_superieure": 70,
+     "par_colonne": {
+      "BB": 56,
+      "BC": 51,
+      "BE": 51,
+      "BF": 61,
+      "BG": 62,
+      "BH": 62
+     }
+    },
+    {
+     "ligne_classeur": 47,
+     "borne_superieure": 75,
+     "par_colonne": {
+      "BB": 38,
+      "BC": 40,
+      "BE": 43,
+      "BF": 80,
+      "BG": 80,
+      "BH": 80
+     }
+    },
+    {
+     "ligne_classeur": 48,
+     "borne_superieure": 80,
+     "par_colonne": {
+      "BB": 0,
+      "BC": 0,
+      "BE": 24,
+      "BF": 52,
+      "BG": 52,
+      "BH": 52
+     }
+    },
+    {
+     "ligne_classeur": 49,
+     "borne_superieure": 85,
+     "par_colonne": {
+      "BB": 0,
+      "BC": 0,
+      "BE": 9,
+      "BF": 44,
+      "BG": 45,
+      "BH": 45
+     }
+    },
+    {
+     "ligne_classeur": 50,
+     "borne_superieure": 90,
+     "par_colonne": {
+      "BB": 0,
+      "BC": 0,
+      "BE": 0,
+      "BF": 79,
+      "BG": 79,
+      "BH": 79
+     }
+    },
+    {
+     "ligne_classeur": 51,
+     "borne_superieure": 9999,
+     "par_colonne": {
+      "BB": 0,
+      "BC": 0,
+      "BE": 0,
+      "BF": 0,
+      "BG": 0,
+      "BH": 0
+     }
+    }
+   ]
+  },
+  {
+   "cas": "2C",
+   "grandeur": "Solarer Wärmeeintrag gesamt",
+   "unite": "W",
+   "colonne_bloc": "BK",
+   "nb_classes": 20,
+   "ligne_total": 52,
+   "contributeurs": [
+    {
+     "colonne": "BM",
+     "programme": "IDA_ICE Fe det Spec",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "BN",
+     "programme": "IDA_ICE Fe det noSpec",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "BP",
+     "programme": "Excel SIA 387/4 + 380/2",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "BS",
+     "programme": "EnergyPlus Fe einf",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "BT",
+     "programme": "TAS Fe det nonSpect",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    }
+   ],
+   "effectifs": [
+    {
+     "ligne_classeur": 32,
+     "borne_superieure": 10,
+     "par_colonne": {
+      "BM": 4118,
+      "BN": 4138,
+      "BP": 4389,
+      "BS": 4514,
+      "BT": 4388
+     }
+    },
+    {
+     "ligne_classeur": 33,
+     "borne_superieure": 100,
+     "par_colonne": {
+      "BM": 928,
+      "BN": 943,
+      "BP": 580,
+      "BS": 618,
+      "BT": 1592
+     }
+    },
+    {
+     "ligne_classeur": 34,
+     "borne_superieure": 150,
+     "par_colonne": {
+      "BM": 317,
+      "BN": 342,
+      "BP": 246,
+      "BS": 360,
+      "BT": 798
+     }
+    },
+    {
+     "ligne_classeur": 35,
+     "borne_superieure": 200,
+     "par_colonne": {
+      "BM": 292,
+      "BN": 295,
+      "BP": 267,
+      "BS": 310,
+      "BT": 458
+     }
+    },
+    {
+     "ligne_classeur": 36,
+     "borne_superieure": 250,
+     "par_colonne": {
+      "BM": 262,
+      "BN": 260,
+      "BP": 244,
+      "BS": 439,
+      "BT": 305
+     }
+    },
+    {
+     "ligne_classeur": 37,
+     "borne_superieure": 300,
+     "par_colonne": {
+      "BM": 244,
+      "BN": 279,
+      "BP": 238,
+      "BS": 461,
+      "BT": 243
+     }
+    },
+    {
+     "ligne_classeur": 38,
+     "borne_superieure": 350,
+     "par_colonne": {
+      "BM": 363,
+      "BN": 440,
+      "BP": 187,
+      "BS": 350,
+      "BT": 180
+     }
+    },
+    {
+     "ligne_classeur": 39,
+     "borne_superieure": 400,
+     "par_colonne": {
+      "BM": 485,
+      "BN": 459,
+      "BP": 223,
+      "BS": 370,
+      "BT": 147
+     }
+    },
+    {
+     "ligne_classeur": 40,
+     "borne_superieure": 450,
+     "par_colonne": {
+      "BM": 396,
+      "BN": 394,
+      "BP": 296,
+      "BS": 336,
+      "BT": 126
+     }
+    },
+    {
+     "ligne_classeur": 41,
+     "borne_superieure": 500,
+     "par_colonne": {
+      "BM": 316,
+      "BN": 340,
+      "BP": 281,
+      "BS": 317,
+      "BT": 114
+     }
+    },
+    {
+     "ligne_classeur": 42,
+     "borne_superieure": 550,
+     "par_colonne": {
+      "BM": 308,
+      "BN": 260,
+      "BP": 238,
+      "BS": 303,
+      "BT": 102
+     }
+    },
+    {
+     "ligne_classeur": 43,
+     "borne_superieure": 600,
+     "par_colonne": {
+      "BM": 258,
+      "BN": 232,
+      "BP": 215,
+      "BS": 209,
+      "BT": 76
+     }
+    },
+    {
+     "ligne_classeur": 44,
+     "borne_superieure": 650,
+     "par_colonne": {
+      "BM": 218,
+      "BN": 186,
+      "BP": 220,
+      "BS": 111,
+      "BT": 77
+     }
+    },
+    {
+     "ligne_classeur": 45,
+     "borne_superieure": 700,
+     "par_colonne": {
+      "BM": 139,
+      "BN": 125,
+      "BP": 287,
+      "BS": 50,
+      "BT": 82
+     }
+    },
+    {
+     "ligne_classeur": 46,
+     "borne_superieure": 750,
+     "par_colonne": {
+      "BM": 75,
+      "BN": 37,
+      "BP": 207,
+      "BS": 12,
+      "BT": 62
+     }
+    },
+    {
+     "ligne_classeur": 47,
+     "borne_superieure": 800,
+     "par_colonne": {
+      "BM": 20,
+      "BN": 16,
+      "BP": 208,
+      "BS": 0,
+      "BT": 10
+     }
+    },
+    {
+     "ligne_classeur": 48,
+     "borne_superieure": 850,
+     "par_colonne": {
+      "BM": 11,
+      "BN": 11,
+      "BP": 183,
+      "BS": 0,
+      "BT": 0
+     }
+    },
+    {
+     "ligne_classeur": 49,
+     "borne_superieure": 900,
+     "par_colonne": {
+      "BM": 8,
+      "BN": 3,
+      "BP": 115,
+      "BS": 0,
+      "BT": 0
+     }
+    },
+    {
+     "ligne_classeur": 50,
+     "borne_superieure": 950,
+     "par_colonne": {
+      "BM": 2,
+      "BN": 0,
+      "BP": 64,
+      "BS": 0,
+      "BT": 0
+     }
+    },
+    {
+     "ligne_classeur": 51,
+     "borne_superieure": 1000,
+     "par_colonne": {
+      "BM": 0,
+      "BN": 0,
+      "BP": 72,
+      "BS": 0,
+      "BT": 0
+     }
+    }
+   ]
+  },
+  {
+   "cas": "2C",
+   "grandeur": "Total transmittierte Solarstrahlung",
+   "unite": "W",
+   "colonne_bloc": "BV",
+   "nb_classes": 20,
+   "ligne_total": 52,
+   "contributeurs": [
+    {
+     "colonne": "BX",
+     "programme": "IDA_ICE Fe det Spec",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "BY",
+     "programme": "IDA_ICE Fe det noSpec",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "CA",
+     "programme": "Excel SIA 387/4 + 380/2",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "CB",
+     "programme": "EnergyPlus Fe det Spec",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "CC",
+     "programme": "EnergyPlus Fe det nonSpec",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "CE",
+     "programme": "TAS Fe det nonSpect",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    }
+   ],
+   "effectifs": [
+    {
+     "ligne_classeur": 32,
+     "borne_superieure": 10,
+     "par_colonne": {
+      "BX": 4012,
+      "BY": 4033,
+      "CA": 4393,
+      "CB": 4515,
+      "CC": 4527,
+      "CE": 4435
+     }
+    },
+    {
+     "ligne_classeur": 33,
+     "borne_superieure": 100,
+     "par_colonne": {
+      "BX": 1076,
+      "BY": 1114,
+      "CA": 652,
+      "CB": 651,
+      "CC": 714,
+      "CE": 2466
+     }
+    },
+    {
+     "ligne_classeur": 34,
+     "borne_superieure": 150,
+     "par_colonne": {
+      "BX": 362,
+      "BY": 394,
+      "CA": 299,
+      "CB": 383,
+      "CC": 383,
+      "CE": 636
+     }
+    },
+    {
+     "ligne_classeur": 35,
+     "borne_superieure": 200,
+     "par_colonne": {
+      "BX": 321,
+      "BY": 330,
+      "CA": 313,
+      "CB": 447,
+      "CC": 525,
+      "CE": 310
+     }
+    },
+    {
+     "ligne_classeur": 36,
+     "borne_superieure": 250,
+     "par_colonne": {
+      "BX": 327,
+      "BY": 351,
+      "CA": 296,
+      "CB": 487,
+      "CC": 536,
+      "CE": 216
+     }
+    },
+    {
+     "ligne_classeur": 37,
+     "borne_superieure": 300,
+     "par_colonne": {
+      "BX": 434,
+      "BY": 562,
+      "CA": 295,
+      "CB": 456,
+      "CC": 460,
+      "CE": 205
+     }
+    },
+    {
+     "ligne_classeur": 38,
+     "borne_superieure": 350,
+     "par_colonne": {
+      "BX": 555,
+      "BY": 543,
+      "CA": 399,
+      "CB": 397,
+      "CC": 378,
+      "CE": 156
+     }
+    },
+    {
+     "ligne_classeur": 39,
+     "borne_superieure": 400,
+     "par_colonne": {
+      "BX": 454,
+      "BY": 458,
+      "CA": 318,
+      "CB": 370,
+      "CC": 425,
+      "CE": 124
+     }
+    },
+    {
+     "ligne_classeur": 40,
+     "borne_superieure": 450,
+     "par_colonne": {
+      "BX": 425,
+      "BY": 404,
+      "CA": 349,
+      "CB": 374,
+      "CC": 398,
+      "CE": 125
+     }
+    },
+    {
+     "ligne_classeur": 41,
+     "borne_superieure": 500,
+     "par_colonne": {
+      "BX": 356,
+      "BY": 317,
+      "CA": 376,
+      "CB": 330,
+      "CC": 200,
+      "CE": 80
+     }
+    },
+    {
+     "ligne_classeur": 42,
+     "borne_superieure": 550,
+     "par_colonne": {
+      "BX": 259,
+      "BY": 186,
+      "CA": 341,
+      "CB": 156,
+      "CC": 110,
+      "CE": 4
+     }
+    },
+    {
+     "ligne_classeur": 43,
+     "borne_superieure": 600,
+     "par_colonne": {
+      "BX": 131,
+      "BY": 41,
+      "CA": 304,
+      "CB": 107,
+      "CC": 73,
+      "CE": 3
+     }
+    },
+    {
+     "ligne_classeur": 44,
+     "borne_superieure": 650,
+     "par_colonne": {
+      "BX": 25,
+      "BY": 16,
+      "CA": 198,
+      "CB": 60,
+      "CC": 28,
+      "CE": 0
+     }
+    },
+    {
+     "ligne_classeur": 45,
+     "borne_superieure": 700,
+     "par_colonne": {
+      "BX": 13,
+      "BY": 11,
+      "CA": 103,
+      "CB": 23,
+      "CC": 3,
+      "CE": 0
+     }
+    },
+    {
+     "ligne_classeur": 46,
+     "borne_superieure": 750,
+     "par_colonne": {
+      "BX": 10,
+      "BY": 0,
+      "CA": 66,
+      "CB": 4,
+      "CC": 0,
+      "CE": 0
+     }
+    },
+    {
+     "ligne_classeur": 47,
+     "borne_superieure": 800,
+     "par_colonne": {
+      "BX": 0,
+      "BY": 0,
+      "CA": 37,
+      "CB": 0,
+      "CC": 0,
+      "CE": 0
+     }
+    },
+    {
+     "ligne_classeur": 48,
+     "borne_superieure": 850,
+     "par_colonne": {
+      "BX": 0,
+      "BY": 0,
+      "CA": 7,
+      "CB": 0,
+      "CC": 0,
+      "CE": 0
+     }
+    },
+    {
+     "ligne_classeur": 49,
+     "borne_superieure": 900,
+     "par_colonne": {
+      "BX": 0,
+      "BY": 0,
+      "CA": 7,
+      "CB": 0,
+      "CC": 0,
+      "CE": 0
+     }
+    },
+    {
+     "ligne_classeur": 50,
+     "borne_superieure": 950,
+     "par_colonne": {
+      "BX": 0,
+      "BY": 0,
+      "CA": 4,
+      "CB": 0,
+      "CC": 0,
+      "CE": 0
+     }
+    },
+    {
+     "ligne_classeur": 51,
+     "borne_superieure": 1000,
+     "par_colonne": {
+      "BX": 0,
+      "BY": 0,
+      "CA": 3,
+      "CB": 0,
+      "CC": 0,
+      "CE": 0
+     }
+    }
+   ]
+  },
+  {
+   "cas": "2C",
+   "grandeur": "Lamellenwinkel der Storen",
+   "unite": "°",
+   "colonne_bloc": "CG",
+   "nb_classes": 20,
+   "ligne_total": 52,
+   "contributeurs": [
+    {
+     "colonne": "CI",
+     "programme": "IDA_ICE Fe det Spec",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "CJ",
+     "programme": "IDA_ICE Fe det noSpec",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "CL",
+     "programme": "Excel SIA 387/4 + 380/2",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "CM",
+     "programme": "EnergyPlus Fe det Spec",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "CN",
+     "programme": "EnergyPlus Fe det nonSpec",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "CO",
+     "programme": "EnergyPlus Fe einf",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    }
+   ],
+   "effectifs": [
+    {
+     "ligne_classeur": 32,
+     "borne_superieure": 0,
+     "par_colonne": {
+      "CI": 6515,
+      "CJ": 6516,
+      "CL": 6894,
+      "CM": 6587,
+      "CN": 6587,
+      "CO": 6587
+     }
+    },
+    {
+     "ligne_classeur": 33,
+     "borne_superieure": 5,
+     "par_colonne": {
+      "CI": 66,
+      "CJ": 66,
+      "CL": 0,
+      "CM": 0,
+      "CN": 0,
+      "CO": 0
+     }
+    },
+    {
+     "ligne_classeur": 34,
+     "borne_superieure": 10,
+     "par_colonne": {
+      "CI": 72,
+      "CJ": 71,
+      "CL": 0,
+      "CM": 0,
+      "CN": 0,
+      "CO": 0
+     }
+    },
+    {
+     "ligne_classeur": 35,
+     "borne_superieure": 15,
+     "par_colonne": {
+      "CI": 69,
+      "CJ": 69,
+      "CL": 0,
+      "CM": 0,
+      "CN": 0,
+      "CO": 0
+     }
+    },
+    {
+     "ligne_classeur": 36,
+     "borne_superieure": 20,
+     "par_colonne": {
+      "CI": 81,
+      "CJ": 81,
+      "CL": 0,
+      "CM": 0,
+      "CN": 0,
+      "CO": 0
+     }
+    },
+    {
+     "ligne_classeur": 37,
+     "borne_superieure": 25,
+     "par_colonne": {
+      "CI": 86,
+      "CJ": 86,
+      "CL": 0,
+      "CM": 0,
+      "CN": 0,
+      "CO": 0
+     }
+    },
+    {
+     "ligne_classeur": 38,
+     "borne_superieure": 30,
+     "par_colonne": {
+      "CI": 56,
+      "CJ": 56,
+      "CL": 0,
+      "CM": 0,
+      "CN": 0,
+      "CO": 0
+     }
+    },
+    {
+     "ligne_classeur": 39,
+     "borne_superieure": 35,
+     "par_colonne": {
+      "CI": 46,
+      "CJ": 46,
+      "CL": 0,
+      "CM": 0,
+      "CN": 0,
+      "CO": 0
+     }
+    },
+    {
+     "ligne_classeur": 40,
+     "borne_superieure": 40,
+     "par_colonne": {
+      "CI": 70,
+      "CJ": 69,
+      "CL": 0,
+      "CM": 0,
+      "CN": 0,
+      "CO": 0
+     }
+    },
+    {
+     "ligne_classeur": 41,
+     "borne_superieure": 45,
+     "par_colonne": {
+      "CI": 1418,
+      "CJ": 1418,
+      "CL": 1642,
+      "CM": 1547,
+      "CN": 1547,
+      "CO": 1547
+     }
+    },
+    {
+     "ligne_classeur": 42,
+     "borne_superieure": 50,
+     "par_colonne": {
+      "CI": 122,
+      "CJ": 123,
+      "CL": 59,
+      "CM": 80,
+      "CN": 80,
+      "CO": 80
+     }
+    },
+    {
+     "ligne_classeur": 43,
+     "borne_superieure": 55,
+     "par_colonne": {
+      "CI": 73,
+      "CJ": 73,
+      "CL": 81,
+      "CM": 131,
+      "CN": 131,
+      "CO": 131
+     }
+    },
+    {
+     "ligne_classeur": 44,
+     "borne_superieure": 60,
+     "par_colonne": {
+      "CI": 45,
+      "CJ": 45,
+      "CL": 33,
+      "CM": 92,
+      "CN": 92,
+      "CO": 92
+     }
+    },
+    {
+     "ligne_classeur": 45,
+     "borne_superieure": 65,
+     "par_colonne": {
+      "CI": 21,
+      "CJ": 21,
+      "CL": 24,
+      "CM": 18,
+      "CN": 18,
+      "CO": 18
+     }
+    },
+    {
+     "ligne_classeur": 46,
+     "borne_superieure": 70,
+     "par_colonne": {
+      "CI": 11,
+      "CJ": 11,
+      "CL": 11,
+      "CM": 83,
+      "CN": 83,
+      "CO": 83
+     }
+    },
+    {
+     "ligne_classeur": 47,
+     "borne_superieure": 75,
+     "par_colonne": {
+      "CI": 5,
+      "CJ": 5,
+      "CL": 10,
+      "CM": 86,
+      "CN": 86,
+      "CO": 86
+     }
+    },
+    {
+     "ligne_classeur": 48,
+     "borne_superieure": 80,
+     "par_colonne": {
+      "CI": 2,
+      "CJ": 2,
+      "CL": 5,
+      "CM": 30,
+      "CN": 30,
+      "CO": 30
+     }
+    },
+    {
+     "ligne_classeur": 49,
+     "borne_superieure": 85,
+     "par_colonne": {
+      "CI": 2,
+      "CJ": 2,
+      "CL": 1,
+      "CM": 90,
+      "CN": 90,
+      "CO": 90
+     }
+    },
+    {
+     "ligne_classeur": 50,
+     "borne_superieure": 90,
+     "par_colonne": {
+      "CI": 0,
+      "CJ": 0,
+      "CL": 0,
+      "CM": 16,
+      "CN": 16,
+      "CO": 16
+     }
+    },
+    {
+     "ligne_classeur": 51,
+     "borne_superieure": 9999,
+     "par_colonne": {
+      "CI": 0,
+      "CJ": 0,
+      "CL": 0,
+      "CM": 0,
+      "CN": 0,
+      "CO": 0
+     }
+    }
+   ]
+  },
+  {
+   "cas": "2D",
+   "grandeur": "Solarer Wärmeeintrag gesamt",
+   "unite": "W",
+   "colonne_bloc": "CR",
+   "nb_classes": 20,
+   "ligne_total": 52,
+   "contributeurs": [
+    {
+     "colonne": "CT",
+     "programme": "IDA_ICE Fe det Spec",
+     "total_heures": 8617,
+     "heures_dans_classes": 8617,
+     "heures_hors_classes": 143,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "CU",
+     "programme": "IDA_ICE Fe det noSpec",
+     "total_heures": 8666,
+     "heures_dans_classes": 8666,
+     "heures_hors_classes": 94,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "CW",
+     "programme": "Excel SIA 387/4 + 380/2",
+     "total_heures": 8432,
+     "heures_dans_classes": 8432,
+     "heures_hors_classes": 328,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "CZ",
+     "programme": "EnergyPlus Fe einf",
+     "total_heures": 8567,
+     "heures_dans_classes": 8567,
+     "heures_hors_classes": 193,
+     "heures_source_attendues": 8760
+    }
+   ],
+   "effectifs": [
+    {
+     "ligne_classeur": 32,
+     "borne_superieure": 10,
+     "par_colonne": {
+      "CT": 4122,
+      "CU": 4142,
+      "CW": 4389,
+      "CZ": 4514
+     }
+    },
+    {
+     "ligne_classeur": 33,
+     "borne_superieure": 100,
+     "par_colonne": {
+      "CT": 925,
+      "CU": 939,
+      "CW": 580,
+      "CZ": 618
+     }
+    },
+    {
+     "ligne_classeur": 34,
+     "borne_superieure": 150,
+     "par_colonne": {
+      "CT": 317,
+      "CU": 338,
+      "CW": 246,
+      "CZ": 353
+     }
+    },
+    {
+     "ligne_classeur": 35,
+     "borne_superieure": 200,
+     "par_colonne": {
+      "CT": 292,
+      "CU": 298,
+      "CW": 267,
+      "CZ": 270
+     }
+    },
+    {
+     "ligne_classeur": 36,
+     "borne_superieure": 250,
+     "par_colonne": {
+      "CT": 260,
+      "CU": 259,
+      "CW": 236,
+      "CZ": 245
+     }
+    },
+    {
+     "ligne_classeur": 37,
+     "borne_superieure": 300,
+     "par_colonne": {
+      "CT": 210,
+      "CU": 223,
+      "CW": 209,
+      "CZ": 249
+     }
+    },
+    {
+     "ligne_classeur": 38,
+     "borne_superieure": 350,
+     "par_colonne": {
+      "CT": 227,
+      "CU": 249,
+      "CW": 183,
+      "CZ": 187
+     }
+    },
+    {
+     "ligne_classeur": 39,
+     "borne_superieure": 400,
+     "par_colonne": {
+      "CT": 281,
+      "CU": 288,
+      "CW": 187,
+      "CZ": 218
+     }
+    },
+    {
+     "ligne_classeur": 40,
+     "borne_superieure": 450,
+     "par_colonne": {
+      "CT": 270,
+      "CU": 309,
+      "CW": 164,
+      "CZ": 260
+     }
+    },
+    {
+     "ligne_classeur": 41,
+     "borne_superieure": 500,
+     "par_colonne": {
+      "CT": 337,
+      "CU": 364,
+      "CW": 233,
+      "CZ": 270
+     }
+    },
+    {
+     "ligne_classeur": 42,
+     "borne_superieure": 550,
+     "par_colonne": {
+      "CT": 289,
+      "CU": 215,
+      "CW": 224,
+      "CZ": 201
+     }
+    },
+    {
+     "ligne_classeur": 43,
+     "borne_superieure": 600,
+     "par_colonne": {
+      "CT": 162,
+      "CU": 147,
+      "CW": 213,
+      "CZ": 176
+     }
+    },
+    {
+     "ligne_classeur": 44,
+     "borne_superieure": 650,
+     "par_colonne": {
+      "CT": 143,
+      "CU": 140,
+      "CW": 187,
+      "CZ": 194
+     }
+    },
+    {
+     "ligne_classeur": 45,
+     "borne_superieure": 700,
+     "par_colonne": {
+      "CT": 123,
+      "CU": 124,
+      "CW": 211,
+      "CZ": 175
+     }
+    },
+    {
+     "ligne_classeur": 46,
+     "borne_superieure": 750,
+     "par_colonne": {
+      "CT": 114,
+      "CU": 119,
+      "CW": 149,
+      "CZ": 92
+     }
+    },
+    {
+     "ligne_classeur": 47,
+     "borne_superieure": 800,
+     "par_colonne": {
+      "CT": 128,
+      "CU": 146,
+      "CW": 171,
+      "CZ": 114
+     }
+    },
+    {
+     "ligne_classeur": 48,
+     "borne_superieure": 850,
+     "par_colonne": {
+      "CT": 128,
+      "CU": 148,
+      "CW": 207,
+      "CZ": 92
+     }
+    },
+    {
+     "ligne_classeur": 49,
+     "borne_superieure": 900,
+     "par_colonne": {
+      "CT": 145,
+      "CU": 83,
+      "CW": 153,
+      "CZ": 119
+     }
+    },
+    {
+     "ligne_classeur": 50,
+     "borne_superieure": 950,
+     "par_colonne": {
+      "CT": 72,
+      "CU": 80,
+      "CW": 131,
+      "CZ": 98
+     }
+    },
+    {
+     "ligne_classeur": 51,
+     "borne_superieure": 1000,
+     "par_colonne": {
+      "CT": 72,
+      "CU": 55,
+      "CW": 92,
+      "CZ": 122
+     }
+    }
+   ]
+  },
+  {
+   "cas": "2D",
+   "grandeur": "Total transmittierte Solarstrahlung",
+   "unite": "W",
+   "colonne_bloc": "DC",
+   "nb_classes": 20,
+   "ligne_total": 52,
+   "contributeurs": [
+    {
+     "colonne": "DE",
+     "programme": "IDA_ICE Fe det Spec",
+     "total_heures": 8744,
+     "heures_dans_classes": 8744,
+     "heures_hors_classes": 16,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "DF",
+     "programme": "IDA_ICE Fe det noSpec",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "DH",
+     "programme": "Excel SIA 387/4 + 380/2",
+     "total_heures": 8750,
+     "heures_dans_classes": 8750,
+     "heures_hors_classes": 10,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "DI",
+     "programme": "EnergyPlus Fe det Spec",
+     "total_heures": 8728,
+     "heures_dans_classes": 8728,
+     "heures_hors_classes": 32,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "DJ",
+     "programme": "EnergyPlus Fe det nonSpec",
+     "total_heures": 8755,
+     "heures_dans_classes": 8755,
+     "heures_hors_classes": 5,
+     "heures_source_attendues": 8760
+    }
+   ],
+   "effectifs": [
+    {
+     "ligne_classeur": 32,
+     "borne_superieure": 10,
+     "par_colonne": {
+      "DE": 4014,
+      "DF": 4028,
+      "DH": 4393,
+      "DI": 4515,
+      "DJ": 4527
+     }
+    },
+    {
+     "ligne_classeur": 33,
+     "borne_superieure": 100,
+     "par_colonne": {
+      "DE": 1075,
+      "DF": 1118,
+      "DH": 652,
+      "DI": 651,
+      "DJ": 714
+     }
+    },
+    {
+     "ligne_classeur": 34,
+     "borne_superieure": 150,
+     "par_colonne": {
+      "DE": 363,
+      "DF": 394,
+      "DH": 299,
+      "DI": 365,
+      "DJ": 348
+     }
+    },
+    {
+     "ligne_classeur": 35,
+     "borne_superieure": 200,
+     "par_colonne": {
+      "DE": 322,
+      "DF": 327,
+      "DH": 291,
+      "DI": 280,
+      "DJ": 309
+     }
+    },
+    {
+     "ligne_classeur": 36,
+     "borne_superieure": 250,
+     "par_colonne": {
+      "DE": 289,
+      "DF": 286,
+      "DH": 278,
+      "DI": 259,
+      "DJ": 275
+     }
+    },
+    {
+     "ligne_classeur": 37,
+     "borne_superieure": 300,
+     "par_colonne": {
+      "DE": 254,
+      "DF": 318,
+      "DH": 254,
+      "DI": 254,
+      "DJ": 251
+     }
+    },
+    {
+     "ligne_classeur": 38,
+     "borne_superieure": 350,
+     "par_colonne": {
+      "DE": 338,
+      "DF": 352,
+      "DH": 229,
+      "DI": 231,
+      "DJ": 290
+     }
+    },
+    {
+     "ligne_classeur": 39,
+     "borne_superieure": 400,
+     "par_colonne": {
+      "DE": 346,
+      "DF": 429,
+      "DH": 289,
+      "DI": 300,
+      "DJ": 354
+     }
+    },
+    {
+     "ligne_classeur": 40,
+     "borne_superieure": 450,
+     "par_colonne": {
+      "DE": 398,
+      "DF": 358,
+      "DH": 309,
+      "DI": 318,
+      "DJ": 286
+     }
+    },
+    {
+     "ligne_classeur": 41,
+     "borne_superieure": 500,
+     "par_colonne": {
+      "DE": 272,
+      "DF": 195,
+      "DH": 283,
+      "DI": 233,
+      "DJ": 243
+     }
+    },
+    {
+     "ligne_classeur": 42,
+     "borne_superieure": 550,
+     "par_colonne": {
+      "DE": 187,
+      "DF": 174,
+      "DH": 237,
+      "DI": 218,
+      "DJ": 209
+     }
+    },
+    {
+     "ligne_classeur": 43,
+     "borne_superieure": 600,
+     "par_colonne": {
+      "DE": 154,
+      "DF": 154,
+      "DH": 290,
+      "DI": 217,
+      "DJ": 184
+     }
+    },
+    {
+     "ligne_classeur": 44,
+     "borne_superieure": 650,
+     "par_colonne": {
+      "DE": 144,
+      "DF": 177,
+      "DH": 280,
+      "DI": 160,
+      "DJ": 164
+     }
+    },
+    {
+     "ligne_classeur": 45,
+     "borne_superieure": 700,
+     "par_colonne": {
+      "DE": 158,
+      "DF": 176,
+      "DH": 219,
+      "DI": 151,
+      "DJ": 126
+     }
+    },
+    {
+     "ligne_classeur": 46,
+     "borne_superieure": 750,
+     "par_colonne": {
+      "DE": 170,
+      "DF": 97,
+      "DH": 211,
+      "DI": 111,
+      "DJ": 135
+     }
+    },
+    {
+     "ligne_classeur": 47,
+     "borne_superieure": 800,
+     "par_colonne": {
+      "DE": 88,
+      "DF": 73,
+      "DH": 134,
+      "DI": 135,
+      "DJ": 141
+     }
+    },
+    {
+     "ligne_classeur": 48,
+     "borne_superieure": 850,
+     "par_colonne": {
+      "DE": 74,
+      "DF": 46,
+      "DH": 67,
+      "DI": 115,
+      "DJ": 90
+     }
+    },
+    {
+     "ligne_classeur": 49,
+     "borne_superieure": 900,
+     "par_colonne": {
+      "DE": 45,
+      "DF": 38,
+      "DH": 23,
+      "DI": 108,
+      "DJ": 60
+     }
+    },
+    {
+     "ligne_classeur": 50,
+     "borne_superieure": 950,
+     "par_colonne": {
+      "DE": 36,
+      "DF": 10,
+      "DH": 7,
+      "DI": 56,
+      "DJ": 33
+     }
+    },
+    {
+     "ligne_classeur": 51,
+     "borne_superieure": 1000,
+     "par_colonne": {
+      "DE": 17,
+      "DF": 10,
+      "DH": 5,
+      "DI": 51,
+      "DJ": 16
+     }
+    }
+   ]
+  },
+  {
+   "cas": "2D",
+   "grandeur": "Lamellenwinkel der Storen",
+   "unite": "°",
+   "colonne_bloc": "DN",
+   "nb_classes": 20,
+   "ligne_total": 52,
+   "contributeurs": [
+    {
+     "colonne": "DP",
+     "programme": "IDA_ICE Fe det Spec",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "DQ",
+     "programme": "IDA_ICE Fe det noSpec",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "DS",
+     "programme": "Excel SIA 387/4 + 380/2",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "DT",
+     "programme": "EnergyPlus Fe det Spec",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "DU",
+     "programme": "EnergyPlus Fe det nonSpec",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "DV",
+     "programme": "EnergyPlus Fe einf",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    }
+   ],
+   "effectifs": [
+    {
+     "ligne_classeur": 32,
+     "borne_superieure": 0,
+     "par_colonne": {
+      "DP": 7563,
+      "DQ": 7566,
+      "DS": 8011,
+      "DT": 8011,
+      "DU": 8011,
+      "DV": 8011
+     }
+    },
+    {
+     "ligne_classeur": 33,
+     "borne_superieure": 5,
+     "par_colonne": {
+      "DP": 342,
+      "DQ": 344,
+      "DS": 59,
+      "DT": 59,
+      "DU": 59,
+      "DV": 59
+     }
+    },
+    {
+     "ligne_classeur": 34,
+     "borne_superieure": 10,
+     "par_colonne": {
+      "DP": 116,
+      "DQ": 110,
+      "DS": 50,
+      "DT": 45,
+      "DU": 45,
+      "DV": 45
+     }
+    },
+    {
+     "ligne_classeur": 35,
+     "borne_superieure": 15,
+     "par_colonne": {
+      "DP": 71,
+      "DQ": 72,
+      "DS": 54,
+      "DT": 53,
+      "DU": 53,
+      "DV": 53
+     }
+    },
+    {
+     "ligne_classeur": 36,
+     "borne_superieure": 20,
+     "par_colonne": {
+      "DP": 86,
+      "DQ": 86,
+      "DS": 60,
+      "DT": 58,
+      "DU": 58,
+      "DV": 58
+     }
+    },
+    {
+     "ligne_classeur": 37,
+     "borne_superieure": 25,
+     "par_colonne": {
+      "DP": 74,
+      "DQ": 74,
+      "DS": 61,
+      "DT": 59,
+      "DU": 59,
+      "DV": 59
+     }
+    },
+    {
+     "ligne_classeur": 38,
+     "borne_superieure": 30,
+     "par_colonne": {
+      "DP": 79,
+      "DQ": 79,
+      "DS": 60,
+      "DT": 63,
+      "DU": 63,
+      "DV": 63
+     }
+    },
+    {
+     "ligne_classeur": 39,
+     "borne_superieure": 35,
+     "par_colonne": {
+      "DP": 59,
+      "DQ": 59,
+      "DS": 56,
+      "DT": 58,
+      "DU": 58,
+      "DV": 58
+     }
+    },
+    {
+     "ligne_classeur": 40,
+     "borne_superieure": 40,
+     "par_colonne": {
+      "DP": 74,
+      "DQ": 74,
+      "DS": 64,
+      "DT": 67,
+      "DU": 67,
+      "DV": 67
+     }
+    },
+    {
+     "ligne_classeur": 41,
+     "borne_superieure": 45,
+     "par_colonne": {
+      "DP": 66,
+      "DQ": 66,
+      "DS": 61,
+      "DT": 57,
+      "DU": 57,
+      "DV": 57
+     }
+    },
+    {
+     "ligne_classeur": 42,
+     "borne_superieure": 50,
+     "par_colonne": {
+      "DP": 64,
+      "DQ": 65,
+      "DS": 59,
+      "DT": 66,
+      "DU": 66,
+      "DV": 66
+     }
+    },
+    {
+     "ligne_classeur": 43,
+     "borne_superieure": 55,
+     "par_colonne": {
+      "DP": 73,
+      "DQ": 71,
+      "DS": 81,
+      "DT": 76,
+      "DU": 76,
+      "DV": 76
+     }
+    },
+    {
+     "ligne_classeur": 44,
+     "borne_superieure": 60,
+     "par_colonne": {
+      "DP": 51,
+      "DQ": 50,
+      "DS": 33,
+      "DT": 27,
+      "DU": 27,
+      "DV": 27
+     }
+    },
+    {
+     "ligne_classeur": 45,
+     "borne_superieure": 65,
+     "par_colonne": {
+      "DP": 17,
+      "DQ": 19,
+      "DS": 24,
+      "DT": 31,
+      "DU": 31,
+      "DV": 31
+     }
+    },
+    {
+     "ligne_classeur": 46,
+     "borne_superieure": 70,
+     "par_colonne": {
+      "DP": 16,
+      "DQ": 16,
+      "DS": 11,
+      "DT": 12,
+      "DU": 12,
+      "DV": 12
+     }
+    },
+    {
+     "ligne_classeur": 47,
+     "borne_superieure": 75,
+     "par_colonne": {
+      "DP": 4,
+      "DQ": 4,
+      "DS": 10,
+      "DT": 13,
+      "DU": 13,
+      "DV": 13
+     }
+    },
+    {
+     "ligne_classeur": 48,
+     "borne_superieure": 80,
+     "par_colonne": {
+      "DP": 3,
+      "DQ": 3,
+      "DS": 5,
+      "DT": 1,
+      "DU": 1,
+      "DV": 1
+     }
+    },
+    {
+     "ligne_classeur": 49,
+     "borne_superieure": 85,
+     "par_colonne": {
+      "DP": 1,
+      "DQ": 1,
+      "DS": 1,
+      "DT": 2,
+      "DU": 2,
+      "DV": 2
+     }
+    },
+    {
+     "ligne_classeur": 50,
+     "borne_superieure": 90,
+     "par_colonne": {
+      "DP": 1,
+      "DQ": 1,
+      "DS": 0,
+      "DT": 2,
+      "DU": 2,
+      "DV": 2
+     }
+    },
+    {
+     "ligne_classeur": 51,
+     "borne_superieure": 9999,
+     "par_colonne": {
+      "DP": 0,
+      "DQ": 0,
+      "DS": 0,
+      "DT": 0,
+      "DU": 0,
+      "DV": 0
+     }
+    }
+   ]
+  },
+  {
+   "cas": "Diag 2 E1",
+   "grandeur": "Solarer Wärmeeintrag gesamt",
+   "unite": "W",
+   "colonne_bloc": "DY",
+   "nb_classes": 20,
+   "ligne_total": 52,
+   "contributeurs": [
+    {
+     "colonne": "EA",
+     "programme": "IDA_ICE Fe det Spec",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "EB",
+     "programme": "IDA_ICE Fe det noSpec",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "EC",
+     "programme": "IDA_ICE Fe einf",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "ED",
+     "programme": "Excel SIA 387/4 + 380/2",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "EG",
+     "programme": "EnergyPlus Fe einf",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "EH",
+     "programme": "TAS Fe det nonSpect",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    }
+   ],
+   "effectifs": [
+    {
+     "ligne_classeur": 32,
+     "borne_superieure": 10,
+     "par_colonne": {
+      "EA": 4848,
+      "EB": 4822,
+      "EC": 4987,
+      "ED": 4915,
+      "EG": 4965,
+      "EH": 5209
+     }
+    },
+    {
+     "ligne_classeur": 33,
+     "borne_superieure": 100,
+     "par_colonne": {
+      "EA": 2102,
+      "EB": 2087,
+      "EC": 2235,
+      "ED": 2025,
+      "EG": 2018,
+      "EH": 2375
+     }
+    },
+    {
+     "ligne_classeur": 34,
+     "borne_superieure": 150,
+     "par_colonne": {
+      "EA": 778,
+      "EB": 776,
+      "EC": 749,
+      "ED": 749,
+      "EG": 763,
+      "EH": 831
+     }
+    },
+    {
+     "ligne_classeur": 35,
+     "borne_superieure": 200,
+     "par_colonne": {
+      "EA": 551,
+      "EB": 544,
+      "EC": 464,
+      "ED": 544,
+      "EG": 528,
+      "EH": 241
+     }
+    },
+    {
+     "ligne_classeur": 36,
+     "borne_superieure": 250,
+     "par_colonne": {
+      "EA": 321,
+      "EB": 341,
+      "EC": 225,
+      "ED": 323,
+      "EG": 335,
+      "EH": 98
+     }
+    },
+    {
+     "ligne_classeur": 37,
+     "borne_superieure": 300,
+     "par_colonne": {
+      "EA": 140,
+      "EB": 153,
+      "EC": 98,
+      "ED": 143,
+      "EG": 136,
+      "EH": 6
+     }
+    },
+    {
+     "ligne_classeur": 38,
+     "borne_superieure": 350,
+     "par_colonne": {
+      "EA": 20,
+      "EB": 37,
+      "EC": 2,
+      "ED": 50,
+      "EG": 15,
+      "EH": 0
+     }
+    },
+    {
+     "ligne_classeur": 39,
+     "borne_superieure": 400,
+     "par_colonne": {
+      "EA": 0,
+      "EB": 0,
+      "EC": 0,
+      "ED": 10,
+      "EG": 0,
+      "EH": 0
+     }
+    },
+    {
+     "ligne_classeur": 40,
+     "borne_superieure": 450,
+     "par_colonne": {
+      "EA": 0,
+      "EB": 0,
+      "EC": 0,
+      "ED": 1,
+      "EG": 0,
+      "EH": 0
+     }
+    },
+    {
+     "ligne_classeur": 41,
+     "borne_superieure": 500,
+     "par_colonne": {
+      "EA": 0,
+      "EB": 0,
+      "EC": 0,
+      "ED": 0,
+      "EG": 0,
+      "EH": 0
+     }
+    },
+    {
+     "ligne_classeur": 42,
+     "borne_superieure": 550,
+     "par_colonne": {
+      "EA": 0,
+      "EB": 0,
+      "EC": 0,
+      "ED": 0,
+      "EG": 0,
+      "EH": 0
+     }
+    },
+    {
+     "ligne_classeur": 43,
+     "borne_superieure": 600,
+     "par_colonne": {
+      "EA": 0,
+      "EB": 0,
+      "EC": 0,
+      "ED": 0,
+      "EG": 0,
+      "EH": 0
+     }
+    },
+    {
+     "ligne_classeur": 44,
+     "borne_superieure": 650,
+     "par_colonne": {
+      "EA": 0,
+      "EB": 0,
+      "EC": 0,
+      "ED": 0,
+      "EG": 0,
+      "EH": 0
+     }
+    },
+    {
+     "ligne_classeur": 45,
+     "borne_superieure": 700,
+     "par_colonne": {
+      "EA": 0,
+      "EB": 0,
+      "EC": 0,
+      "ED": 0,
+      "EG": 0,
+      "EH": 0
+     }
+    },
+    {
+     "ligne_classeur": 46,
+     "borne_superieure": 750,
+     "par_colonne": {
+      "EA": 0,
+      "EB": 0,
+      "EC": 0,
+      "ED": 0,
+      "EG": 0,
+      "EH": 0
+     }
+    },
+    {
+     "ligne_classeur": 47,
+     "borne_superieure": 800,
+     "par_colonne": {
+      "EA": 0,
+      "EB": 0,
+      "EC": 0,
+      "ED": 0,
+      "EG": 0,
+      "EH": 0
+     }
+    },
+    {
+     "ligne_classeur": 48,
+     "borne_superieure": 850,
+     "par_colonne": {
+      "EA": 0,
+      "EB": 0,
+      "EC": 0,
+      "ED": 0,
+      "EG": 0,
+      "EH": 0
+     }
+    },
+    {
+     "ligne_classeur": 49,
+     "borne_superieure": 900,
+     "par_colonne": {
+      "EA": 0,
+      "EB": 0,
+      "EC": 0,
+      "ED": 0,
+      "EG": 0,
+      "EH": 0
+     }
+    },
+    {
+     "ligne_classeur": 50,
+     "borne_superieure": 950,
+     "par_colonne": {
+      "EA": 0,
+      "EB": 0,
+      "EC": 0,
+      "ED": 0,
+      "EG": 0,
+      "EH": 0
+     }
+    },
+    {
+     "ligne_classeur": 51,
+     "borne_superieure": 1000,
+     "par_colonne": {
+      "EA": 0,
+      "EB": 0,
+      "EC": 0,
+      "ED": 0,
+      "EG": 0,
+      "EH": 0
+     }
+    }
+   ]
+  },
+  {
+   "cas": "Diag 2 E1",
+   "grandeur": "Total transmittierte Solarstrahlung",
+   "unite": "W",
+   "colonne_bloc": "EJ",
+   "nb_classes": 20,
+   "ligne_total": 52,
+   "contributeurs": [
+    {
+     "colonne": "EL",
+     "programme": "IDA_ICE Fe det Spec",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "EM",
+     "programme": "IDA_ICE Fe det noSpec",
+     "total_heures": 8759,
+     "heures_dans_classes": 8759,
+     "heures_hors_classes": 1,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "EN",
+     "programme": "IDA_ICE Fe einf",
+     "total_heures": 8759,
+     "heures_dans_classes": 8759,
+     "heures_hors_classes": 1,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "EO",
+     "programme": "Excel SIA 387/4 + 380/2",
+     "total_heures": 8759,
+     "heures_dans_classes": 8759,
+     "heures_hors_classes": 1,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "EP",
+     "programme": "EnergyPlus Fe det Spec",
+     "total_heures": 8759,
+     "heures_dans_classes": 8759,
+     "heures_hors_classes": 1,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "EQ",
+     "programme": "EnergyPlus Fe det nonSpec",
+     "total_heures": 8759,
+     "heures_dans_classes": 8759,
+     "heures_hors_classes": 1,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "ES",
+     "programme": "TAS Fe det nonSpect",
+     "total_heures": 8759,
+     "heures_dans_classes": 8759,
+     "heures_hors_classes": 1,
+     "heures_source_attendues": 8760
+    }
+   ],
+   "effectifs": [
+    {
+     "ligne_classeur": 32,
+     "borne_superieure": 10,
+     "par_colonne": {
+      "EL": 4669,
+      "EM": 4653,
+      "EN": 4611,
+      "EO": 5144,
+      "EP": 5058,
+      "EQ": 5108,
+      "ES": 5548
+     }
+    },
+    {
+     "ligne_classeur": 33,
+     "borne_superieure": 100,
+     "par_colonne": {
+      "EL": 2681,
+      "EM": 2633,
+      "EN": 2587,
+      "EO": 2223,
+      "EP": 2076,
+      "EQ": 2107,
+      "ES": 2607
+     }
+    },
+    {
+     "ligne_classeur": 34,
+     "borne_superieure": 150,
+     "par_colonne": {
+      "EL": 886,
+      "EM": 883,
+      "EN": 951,
+      "EO": 832,
+      "EP": 795,
+      "EQ": 812,
+      "ES": 590
+     }
+    },
+    {
+     "ligne_classeur": 35,
+     "borne_superieure": 200,
+     "par_colonne": {
+      "EL": 410,
+      "EM": 449,
+      "EN": 451,
+      "EO": 431,
+      "EP": 536,
+      "EQ": 525,
+      "ES": 14
+     }
+    },
+    {
+     "ligne_classeur": 36,
+     "borne_superieure": 250,
+     "par_colonne": {
+      "EL": 114,
+      "EM": 140,
+      "EN": 155,
+      "EO": 116,
+      "EP": 244,
+      "EQ": 195,
+      "ES": 0
+     }
+    },
+    {
+     "ligne_classeur": 37,
+     "borne_superieure": 300,
+     "par_colonne": {
+      "EL": 0,
+      "EM": 1,
+      "EN": 4,
+      "EO": 13,
+      "EP": 50,
+      "EQ": 12,
+      "ES": 0
+     }
+    },
+    {
+     "ligne_classeur": 38,
+     "borne_superieure": 350,
+     "par_colonne": {
+      "EL": 0,
+      "EM": 0,
+      "EN": 0,
+      "EO": 0,
+      "EP": 0,
+      "EQ": 0,
+      "ES": 0
+     }
+    },
+    {
+     "ligne_classeur": 39,
+     "borne_superieure": 400,
+     "par_colonne": {
+      "EL": 0,
+      "EM": 0,
+      "EN": 0,
+      "EO": 0,
+      "EP": 0,
+      "EQ": 0,
+      "ES": 0
+     }
+    },
+    {
+     "ligne_classeur": 40,
+     "borne_superieure": 450,
+     "par_colonne": {
+      "EL": 0,
+      "EM": 0,
+      "EN": 0,
+      "EO": 0,
+      "EP": 0,
+      "EQ": 0,
+      "ES": 0
+     }
+    },
+    {
+     "ligne_classeur": 41,
+     "borne_superieure": 500,
+     "par_colonne": {
+      "EL": 0,
+      "EM": 0,
+      "EN": 0,
+      "EO": 0,
+      "EP": 0,
+      "EQ": 0,
+      "ES": 0
+     }
+    },
+    {
+     "ligne_classeur": 42,
+     "borne_superieure": 550,
+     "par_colonne": {
+      "EL": 0,
+      "EM": 0,
+      "EN": 0,
+      "EO": 0,
+      "EP": 0,
+      "EQ": 0,
+      "ES": 0
+     }
+    },
+    {
+     "ligne_classeur": 43,
+     "borne_superieure": 600,
+     "par_colonne": {
+      "EL": 0,
+      "EM": 0,
+      "EN": 0,
+      "EO": 0,
+      "EP": 0,
+      "EQ": 0,
+      "ES": 0
+     }
+    },
+    {
+     "ligne_classeur": 44,
+     "borne_superieure": 650,
+     "par_colonne": {
+      "EL": 0,
+      "EM": 0,
+      "EN": 0,
+      "EO": 0,
+      "EP": 0,
+      "EQ": 0,
+      "ES": 0
+     }
+    },
+    {
+     "ligne_classeur": 45,
+     "borne_superieure": 700,
+     "par_colonne": {
+      "EL": 0,
+      "EM": 0,
+      "EN": 0,
+      "EO": 0,
+      "EP": 0,
+      "EQ": 0,
+      "ES": 0
+     }
+    },
+    {
+     "ligne_classeur": 46,
+     "borne_superieure": 750,
+     "par_colonne": {
+      "EL": 0,
+      "EM": 0,
+      "EN": 0,
+      "EO": 0,
+      "EP": 0,
+      "EQ": 0,
+      "ES": 0
+     }
+    },
+    {
+     "ligne_classeur": 47,
+     "borne_superieure": 800,
+     "par_colonne": {
+      "EL": 0,
+      "EM": 0,
+      "EN": 0,
+      "EO": 0,
+      "EP": 0,
+      "EQ": 0,
+      "ES": 0
+     }
+    },
+    {
+     "ligne_classeur": 48,
+     "borne_superieure": 850,
+     "par_colonne": {
+      "EL": 0,
+      "EM": 0,
+      "EN": 0,
+      "EO": 0,
+      "EP": 0,
+      "EQ": 0,
+      "ES": 0
+     }
+    },
+    {
+     "ligne_classeur": 49,
+     "borne_superieure": 900,
+     "par_colonne": {
+      "EL": 0,
+      "EM": 0,
+      "EN": 0,
+      "EO": 0,
+      "EP": 0,
+      "EQ": 0,
+      "ES": 0
+     }
+    },
+    {
+     "ligne_classeur": 50,
+     "borne_superieure": 950,
+     "par_colonne": {
+      "EL": 0,
+      "EM": 0,
+      "EN": 0,
+      "EO": 0,
+      "EP": 0,
+      "EQ": 0,
+      "ES": 0
+     }
+    },
+    {
+     "ligne_classeur": 51,
+     "borne_superieure": 1000,
+     "par_colonne": {
+      "EL": 0,
+      "EM": 0,
+      "EN": 0,
+      "EO": 0,
+      "EP": 0,
+      "EQ": 0,
+      "ES": 0
+     }
+    }
+   ]
+  },
+  {
+   "cas": "Diag 2 E2",
+   "grandeur": "Solarer Wärmeeintrag gesamt",
+   "unite": "W",
+   "colonne_bloc": "EU",
+   "nb_classes": 20,
+   "ligne_total": 52,
+   "contributeurs": [
+    {
+     "colonne": "EW",
+     "programme": "IDA_ICE Fe det Spec",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "EX",
+     "programme": "IDA_ICE Fe det noSpec",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "EY",
+     "programme": "IDA_ICE Fe einf",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "FC",
+     "programme": "EnergyPlus Fe einf",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    }
+   ],
+   "effectifs": [
+    {
+     "ligne_classeur": 32,
+     "borne_superieure": 10,
+     "par_colonne": {
+      "EW": 4350,
+      "EX": 4356,
+      "EY": 4103,
+      "FC": 4559
+     }
+    },
+    {
+     "ligne_classeur": 33,
+     "borne_superieure": 100,
+     "par_colonne": {
+      "EW": 1364,
+      "EX": 1381,
+      "EY": 912,
+      "FC": 832
+     }
+    },
+    {
+     "ligne_classeur": 34,
+     "borne_superieure": 150,
+     "par_colonne": {
+      "EW": 653,
+      "EX": 658,
+      "EY": 585,
+      "FC": 613
+     }
+    },
+    {
+     "ligne_classeur": 35,
+     "borne_superieure": 200,
+     "par_colonne": {
+      "EW": 407,
+      "EX": 417,
+      "EY": 382,
+      "FC": 460
+     }
+    },
+    {
+     "ligne_classeur": 36,
+     "borne_superieure": 250,
+     "par_colonne": {
+      "EW": 286,
+      "EX": 276,
+      "EY": 314,
+      "FC": 254
+     }
+    },
+    {
+     "ligne_classeur": 37,
+     "borne_superieure": 300,
+     "par_colonne": {
+      "EW": 199,
+      "EX": 202,
+      "EY": 204,
+      "FC": 192
+     }
+    },
+    {
+     "ligne_classeur": 38,
+     "borne_superieure": 350,
+     "par_colonne": {
+      "EW": 176,
+      "EX": 176,
+      "EY": 236,
+      "FC": 186
+     }
+    },
+    {
+     "ligne_classeur": 39,
+     "borne_superieure": 400,
+     "par_colonne": {
+      "EW": 139,
+      "EX": 129,
+      "EY": 135,
+      "FC": 174
+     }
+    },
+    {
+     "ligne_classeur": 40,
+     "borne_superieure": 450,
+     "par_colonne": {
+      "EW": 108,
+      "EX": 114,
+      "EY": 146,
+      "FC": 146
+     }
+    },
+    {
+     "ligne_classeur": 41,
+     "borne_superieure": 500,
+     "par_colonne": {
+      "EW": 105,
+      "EX": 98,
+      "EY": 129,
+      "FC": 108
+     }
+    },
+    {
+     "ligne_classeur": 42,
+     "borne_superieure": 550,
+     "par_colonne": {
+      "EW": 81,
+      "EX": 86,
+      "EY": 115,
+      "FC": 115
+     }
+    },
+    {
+     "ligne_classeur": 43,
+     "borne_superieure": 600,
+     "par_colonne": {
+      "EW": 95,
+      "EX": 99,
+      "EY": 119,
+      "FC": 109
+     }
+    },
+    {
+     "ligne_classeur": 44,
+     "borne_superieure": 650,
+     "par_colonne": {
+      "EW": 90,
+      "EX": 84,
+      "EY": 84,
+      "FC": 91
+     }
+    },
+    {
+     "ligne_classeur": 45,
+     "borne_superieure": 700,
+     "par_colonne": {
+      "EW": 707,
+      "EX": 684,
+      "EY": 1296,
+      "FC": 921
+     }
+    },
+    {
+     "ligne_classeur": 46,
+     "borne_superieure": 750,
+     "par_colonne": {
+      "EW": 0,
+      "EX": 0,
+      "EY": 0,
+      "FC": 0
+     }
+    },
+    {
+     "ligne_classeur": 47,
+     "borne_superieure": 800,
+     "par_colonne": {
+      "EW": 0,
+      "EX": 0,
+      "EY": 0,
+      "FC": 0
+     }
+    },
+    {
+     "ligne_classeur": 48,
+     "borne_superieure": 850,
+     "par_colonne": {
+      "EW": 0,
+      "EX": 0,
+      "EY": 0,
+      "FC": 0
+     }
+    },
+    {
+     "ligne_classeur": 49,
+     "borne_superieure": 900,
+     "par_colonne": {
+      "EW": 0,
+      "EX": 0,
+      "EY": 0,
+      "FC": 0
+     }
+    },
+    {
+     "ligne_classeur": 50,
+     "borne_superieure": 950,
+     "par_colonne": {
+      "EW": 0,
+      "EX": 0,
+      "EY": 0,
+      "FC": 0
+     }
+    },
+    {
+     "ligne_classeur": 51,
+     "borne_superieure": 1000,
+     "par_colonne": {
+      "EW": 0,
+      "EX": 0,
+      "EY": 0,
+      "FC": 0
+     }
+    }
+   ]
+  },
+  {
+   "cas": "Diag 2 E2",
+   "grandeur": "Total transmittierte Solarstrahlung",
+   "unite": "W",
+   "colonne_bloc": "FF",
+   "nb_classes": 20,
+   "ligne_total": 52,
+   "contributeurs": [
+    {
+     "colonne": "FH",
+     "programme": "IDA_ICE Fe det Spec",
+     "total_heures": 8759,
+     "heures_dans_classes": 8759,
+     "heures_hors_classes": 1,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "FI",
+     "programme": "IDA_ICE Fe det noSpec",
+     "total_heures": 8759,
+     "heures_dans_classes": 8759,
+     "heures_hors_classes": 1,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "FJ",
+     "programme": "IDA_ICE Fe einf",
+     "total_heures": 8759,
+     "heures_dans_classes": 8759,
+     "heures_hors_classes": 1,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "FL",
+     "programme": "EnergyPlus Fe det Spec",
+     "total_heures": 8759,
+     "heures_dans_classes": 8759,
+     "heures_hors_classes": 1,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "FM",
+     "programme": "EnergyPlus Fe det nonSpec",
+     "total_heures": 8759,
+     "heures_dans_classes": 8759,
+     "heures_hors_classes": 1,
+     "heures_source_attendues": 8760
+    }
+   ],
+   "effectifs": [
+    {
+     "ligne_classeur": 32,
+     "borne_superieure": 10,
+     "par_colonne": {
+      "FH": 4227,
+      "FI": 4233,
+      "FJ": 3983,
+      "FL": 4585,
+      "FM": 4595
+     }
+    },
+    {
+     "ligne_classeur": 33,
+     "borne_superieure": 100,
+     "par_colonne": {
+      "FH": 1579,
+      "FI": 1623,
+      "FJ": 1033,
+      "FL": 922,
+      "FM": 979
+     }
+    },
+    {
+     "ligne_classeur": 34,
+     "borne_superieure": 150,
+     "par_colonne": {
+      "FH": 713,
+      "FI": 724,
+      "FJ": 629,
+      "FL": 661,
+      "FM": 669
+     }
+    },
+    {
+     "ligne_classeur": 35,
+     "borne_superieure": 200,
+     "par_colonne": {
+      "FH": 425,
+      "FI": 416,
+      "FJ": 395,
+      "FL": 450,
+      "FM": 435
+     }
+    },
+    {
+     "ligne_classeur": 36,
+     "borne_superieure": 250,
+     "par_colonne": {
+      "FH": 284,
+      "FI": 272,
+      "FJ": 304,
+      "FL": 222,
+      "FM": 249
+     }
+    },
+    {
+     "ligne_classeur": 37,
+     "borne_superieure": 300,
+     "par_colonne": {
+      "FH": 208,
+      "FI": 210,
+      "FJ": 244,
+      "FL": 233,
+      "FM": 224
+     }
+    },
+    {
+     "ligne_classeur": 38,
+     "borne_superieure": 350,
+     "par_colonne": {
+      "FH": 156,
+      "FI": 151,
+      "FJ": 220,
+      "FL": 197,
+      "FM": 198
+     }
+    },
+    {
+     "ligne_classeur": 39,
+     "borne_superieure": 400,
+     "par_colonne": {
+      "FH": 139,
+      "FI": 149,
+      "FJ": 150,
+      "FL": 168,
+      "FM": 161
+     }
+    },
+    {
+     "ligne_classeur": 40,
+     "borne_superieure": 450,
+     "par_colonne": {
+      "FH": 108,
+      "FI": 99,
+      "FJ": 142,
+      "FL": 124,
+      "FM": 139
+     }
+    },
+    {
+     "ligne_classeur": 41,
+     "borne_superieure": 500,
+     "par_colonne": {
+      "FH": 105,
+      "FI": 120,
+      "FJ": 132,
+      "FL": 128,
+      "FM": 128
+     }
+    },
+    {
+     "ligne_classeur": 42,
+     "borne_superieure": 550,
+     "par_colonne": {
+      "FH": 100,
+      "FI": 99,
+      "FJ": 139,
+      "FL": 107,
+      "FM": 99
+     }
+    },
+    {
+     "ligne_classeur": 43,
+     "borne_superieure": 600,
+     "par_colonne": {
+      "FH": 87,
+      "FI": 72,
+      "FJ": 89,
+      "FL": 111,
+      "FM": 109
+     }
+    },
+    {
+     "ligne_classeur": 44,
+     "borne_superieure": 650,
+     "par_colonne": {
+      "FH": 68,
+      "FI": 71,
+      "FJ": 94,
+      "FL": 86,
+      "FM": 73
+     }
+    },
+    {
+     "ligne_classeur": 45,
+     "borne_superieure": 700,
+     "par_colonne": {
+      "FH": 560,
+      "FI": 520,
+      "FJ": 1205,
+      "FL": 765,
+      "FM": 701
+     }
+    },
+    {
+     "ligne_classeur": 46,
+     "borne_superieure": 750,
+     "par_colonne": {
+      "FH": 0,
+      "FI": 0,
+      "FJ": 0,
+      "FL": 0,
+      "FM": 0
+     }
+    },
+    {
+     "ligne_classeur": 47,
+     "borne_superieure": 800,
+     "par_colonne": {
+      "FH": 0,
+      "FI": 0,
+      "FJ": 0,
+      "FL": 0,
+      "FM": 0
+     }
+    },
+    {
+     "ligne_classeur": 48,
+     "borne_superieure": 850,
+     "par_colonne": {
+      "FH": 0,
+      "FI": 0,
+      "FJ": 0,
+      "FL": 0,
+      "FM": 0
+     }
+    },
+    {
+     "ligne_classeur": 49,
+     "borne_superieure": 900,
+     "par_colonne": {
+      "FH": 0,
+      "FI": 0,
+      "FJ": 0,
+      "FL": 0,
+      "FM": 0
+     }
+    },
+    {
+     "ligne_classeur": 50,
+     "borne_superieure": 950,
+     "par_colonne": {
+      "FH": 0,
+      "FI": 0,
+      "FJ": 0,
+      "FL": 0,
+      "FM": 0
+     }
+    },
+    {
+     "ligne_classeur": 51,
+     "borne_superieure": 1000,
+     "par_colonne": {
+      "FH": 0,
+      "FI": 0,
+      "FJ": 0,
+      "FL": 0,
+      "FM": 0
+     }
+    }
+   ]
+  },
+  {
+   "cas": "Diag 2 E3",
+   "grandeur": "Solarer Wärmeeintrag gesamt",
+   "unite": "W",
+   "colonne_bloc": "FQ",
+   "nb_classes": 20,
+   "ligne_total": 52,
+   "contributeurs": [
+    {
+     "colonne": "FS",
+     "programme": "IDA_ICE Fe det Spec",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "FT",
+     "programme": "IDA_ICE Fe det noSpec",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "FU",
+     "programme": "IDA_ICE Fe einf",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "FV",
+     "programme": "Excel SIA 387/4 + 380/2",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "FY",
+     "programme": "EnergyPlus Fe einf",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "FZ",
+     "programme": "TAS Fe det nonSpect",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    }
+   ],
+   "effectifs": [
+    {
+     "ligne_classeur": 32,
+     "borne_superieure": 10,
+     "par_colonne": {
+      "FS": 4280,
+      "FT": 4290,
+      "FU": 4638,
+      "FV": 4445,
+      "FY": 4559,
+      "FZ": 4682
+     }
+    },
+    {
+     "ligne_classeur": 33,
+     "borne_superieure": 100,
+     "par_colonne": {
+      "FS": 1200,
+      "FT": 1231,
+      "FU": 1907,
+      "FV": 954,
+      "FY": 873,
+      "FZ": 1765
+     }
+    },
+    {
+     "ligne_classeur": 34,
+     "borne_superieure": 150,
+     "par_colonne": {
+      "FS": 673,
+      "FT": 688,
+      "FU": 765,
+      "FV": 713,
+      "FY": 635,
+      "FZ": 743
+     }
+    },
+    {
+     "ligne_classeur": 35,
+     "borne_superieure": 200,
+     "par_colonne": {
+      "FS": 448,
+      "FT": 460,
+      "FU": 413,
+      "FV": 449,
+      "FY": 457,
+      "FZ": 488
+     }
+    },
+    {
+     "ligne_classeur": 36,
+     "borne_superieure": 250,
+     "par_colonne": {
+      "FS": 334,
+      "FT": 313,
+      "FU": 327,
+      "FV": 322,
+      "FY": 260,
+      "FZ": 339
+     }
+    },
+    {
+     "ligne_classeur": 37,
+     "borne_superieure": 300,
+     "par_colonne": {
+      "FS": 258,
+      "FT": 278,
+      "FU": 288,
+      "FV": 220,
+      "FY": 274,
+      "FZ": 319
+     }
+    },
+    {
+     "ligne_classeur": 38,
+     "borne_superieure": 350,
+     "par_colonne": {
+      "FS": 261,
+      "FT": 265,
+      "FU": 167,
+      "FV": 263,
+      "FY": 223,
+      "FZ": 155
+     }
+    },
+    {
+     "ligne_classeur": 39,
+     "borne_superieure": 400,
+     "par_colonne": {
+      "FS": 235,
+      "FT": 232,
+      "FU": 113,
+      "FV": 256,
+      "FY": 250,
+      "FZ": 98
+     }
+    },
+    {
+     "ligne_classeur": 40,
+     "borne_superieure": 450,
+     "par_colonne": {
+      "FS": 209,
+      "FT": 228,
+      "FU": 81,
+      "FV": 204,
+      "FY": 199,
+      "FZ": 63
+     }
+    },
+    {
+     "ligne_classeur": 41,
+     "borne_superieure": 500,
+     "par_colonne": {
+      "FS": 249,
+      "FT": 221,
+      "FU": 54,
+      "FV": 256,
+      "FY": 203,
+      "FZ": 47
+     }
+    },
+    {
+     "ligne_classeur": 42,
+     "borne_superieure": 550,
+     "par_colonne": {
+      "FS": 132,
+      "FT": 116,
+      "FU": 7,
+      "FV": 227,
+      "FY": 211,
+      "FZ": 39
+     }
+    },
+    {
+     "ligne_classeur": 43,
+     "borne_superieure": 600,
+     "par_colonne": {
+      "FS": 82,
+      "FT": 76,
+      "FU": 0,
+      "FV": 146,
+      "FY": 150,
+      "FZ": 20
+     }
+    },
+    {
+     "ligne_classeur": 44,
+     "borne_superieure": 650,
+     "par_colonne": {
+      "FS": 60,
+      "FT": 39,
+      "FU": 0,
+      "FV": 115,
+      "FY": 78,
+      "FZ": 2
+     }
+    },
+    {
+     "ligne_classeur": 45,
+     "borne_superieure": 700,
+     "par_colonne": {
+      "FS": 339,
+      "FT": 323,
+      "FU": 0,
+      "FV": 190,
+      "FY": 388,
+      "FZ": 0
+     }
+    },
+    {
+     "ligne_classeur": 46,
+     "borne_superieure": 750,
+     "par_colonne": {
+      "FS": 0,
+      "FT": 0,
+      "FU": 0,
+      "FV": 0,
+      "FY": 0,
+      "FZ": 0
+     }
+    },
+    {
+     "ligne_classeur": 47,
+     "borne_superieure": 800,
+     "par_colonne": {
+      "FS": 0,
+      "FT": 0,
+      "FU": 0,
+      "FV": 0,
+      "FY": 0,
+      "FZ": 0
+     }
+    },
+    {
+     "ligne_classeur": 48,
+     "borne_superieure": 850,
+     "par_colonne": {
+      "FS": 0,
+      "FT": 0,
+      "FU": 0,
+      "FV": 0,
+      "FY": 0,
+      "FZ": 0
+     }
+    },
+    {
+     "ligne_classeur": 49,
+     "borne_superieure": 900,
+     "par_colonne": {
+      "FS": 0,
+      "FT": 0,
+      "FU": 0,
+      "FV": 0,
+      "FY": 0,
+      "FZ": 0
+     }
+    },
+    {
+     "ligne_classeur": 50,
+     "borne_superieure": 950,
+     "par_colonne": {
+      "FS": 0,
+      "FT": 0,
+      "FU": 0,
+      "FV": 0,
+      "FY": 0,
+      "FZ": 0
+     }
+    },
+    {
+     "ligne_classeur": 51,
+     "borne_superieure": 1000,
+     "par_colonne": {
+      "FS": 0,
+      "FT": 0,
+      "FU": 0,
+      "FV": 0,
+      "FY": 0,
+      "FZ": 0
+     }
+    }
+   ]
+  },
+  {
+   "cas": "Diag 2 E3",
+   "grandeur": "Total transmittierte Solarstrahlung",
+   "unite": "W",
+   "colonne_bloc": "GB",
+   "nb_classes": 20,
+   "ligne_total": 52,
+   "contributeurs": [
+    {
+     "colonne": "GD",
+     "programme": "IDA_ICE Fe det Spec",
+     "total_heures": 8759,
+     "heures_dans_classes": 8759,
+     "heures_hors_classes": 1,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "GE",
+     "programme": "IDA_ICE Fe det noSpec",
+     "total_heures": 8759,
+     "heures_dans_classes": 8759,
+     "heures_hors_classes": 1,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "GF",
+     "programme": "IDA_ICE Fe einf",
+     "total_heures": 8759,
+     "heures_dans_classes": 8759,
+     "heures_hors_classes": 1,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "GG",
+     "programme": "Excel SIA 387/4 + 380/2",
+     "total_heures": 8759,
+     "heures_dans_classes": 8759,
+     "heures_hors_classes": 1,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "GH",
+     "programme": "EnergyPlus Fe det Spec",
+     "total_heures": 8759,
+     "heures_dans_classes": 8759,
+     "heures_hors_classes": 1,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "GI",
+     "programme": "EnergyPlus Fe det nonSpec",
+     "total_heures": 8759,
+     "heures_dans_classes": 8759,
+     "heures_hors_classes": 1,
+     "heures_source_attendues": 8760
+    }
+   ],
+   "effectifs": [
+    {
+     "ligne_classeur": 32,
+     "borne_superieure": 10,
+     "par_colonne": {
+      "GD": 4161,
+      "GE": 4175,
+      "GF": 4393,
+      "GG": 4478,
+      "GH": 4595,
+      "GI": 4601
+     }
+    },
+    {
+     "ligne_classeur": 33,
+     "borne_superieure": 100,
+     "par_colonne": {
+      "GD": 1418,
+      "GE": 1469,
+      "GF": 2080,
+      "GG": 1161,
+      "GH": 970,
+      "GI": 1024
+     }
+    },
+    {
+     "ligne_classeur": 34,
+     "borne_superieure": 150,
+     "par_colonne": {
+      "GD": 722,
+      "GE": 722,
+      "GF": 910,
+      "GG": 741,
+      "GH": 662,
+      "GI": 690
+     }
+    },
+    {
+     "ligne_classeur": 35,
+     "borne_superieure": 200,
+     "par_colonne": {
+      "GD": 496,
+      "GE": 516,
+      "GF": 453,
+      "GG": 490,
+      "GH": 438,
+      "GI": 414
+     }
+    },
+    {
+     "ligne_classeur": 36,
+     "borne_superieure": 250,
+     "par_colonne": {
+      "GD": 320,
+      "GE": 334,
+      "GF": 391,
+      "GG": 315,
+      "GH": 303,
+      "GI": 339
+     }
+    },
+    {
+     "ligne_classeur": 37,
+     "borne_superieure": 300,
+     "par_colonne": {
+      "GD": 317,
+      "GE": 332,
+      "GF": 246,
+      "GG": 368,
+      "GH": 279,
+      "GI": 297
+     }
+    },
+    {
+     "ligne_classeur": 38,
+     "borne_superieure": 350,
+     "par_colonne": {
+      "GD": 283,
+      "GE": 288,
+      "GF": 146,
+      "GG": 320,
+      "GH": 269,
+      "GI": 241
+     }
+    },
+    {
+     "ligne_classeur": 39,
+     "borne_superieure": 400,
+     "par_colonne": {
+      "GD": 274,
+      "GE": 311,
+      "GF": 98,
+      "GG": 365,
+      "GH": 228,
+      "GI": 268
+     }
+    },
+    {
+     "ligne_classeur": 40,
+     "borne_superieure": 450,
+     "par_colonne": {
+      "GD": 236,
+      "GE": 159,
+      "GF": 41,
+      "GG": 253,
+      "GH": 232,
+      "GI": 256
+     }
+    },
+    {
+     "ligne_classeur": 41,
+     "borne_superieure": 500,
+     "par_colonne": {
+      "GD": 115,
+      "GE": 91,
+      "GF": 1,
+      "GG": 169,
+      "GH": 223,
+      "GI": 166
+     }
+    },
+    {
+     "ligne_classeur": 42,
+     "borne_superieure": 550,
+     "par_colonne": {
+      "GD": 69,
+      "GE": 40,
+      "GF": 0,
+      "GG": 59,
+      "GH": 127,
+      "GI": 81
+     }
+    },
+    {
+     "ligne_classeur": 43,
+     "borne_superieure": 600,
+     "par_colonne": {
+      "GD": 30,
+      "GE": 35,
+      "GF": 0,
+      "GG": 11,
+      "GH": 55,
+      "GI": 43
+     }
+    },
+    {
+     "ligne_classeur": 44,
+     "borne_superieure": 650,
+     "par_colonne": {
+      "GD": 32,
+      "GE": 44,
+      "GF": 0,
+      "GG": 13,
+      "GH": 46,
+      "GI": 53
+     }
+    },
+    {
+     "ligne_classeur": 45,
+     "borne_superieure": 700,
+     "par_colonne": {
+      "GD": 286,
+      "GE": 243,
+      "GF": 0,
+      "GG": 16,
+      "GH": 332,
+      "GI": 286
+     }
+    },
+    {
+     "ligne_classeur": 46,
+     "borne_superieure": 750,
+     "par_colonne": {
+      "GD": 0,
+      "GE": 0,
+      "GF": 0,
+      "GG": 0,
+      "GH": 0,
+      "GI": 0
+     }
+    },
+    {
+     "ligne_classeur": 47,
+     "borne_superieure": 800,
+     "par_colonne": {
+      "GD": 0,
+      "GE": 0,
+      "GF": 0,
+      "GG": 0,
+      "GH": 0,
+      "GI": 0
+     }
+    },
+    {
+     "ligne_classeur": 48,
+     "borne_superieure": 850,
+     "par_colonne": {
+      "GD": 0,
+      "GE": 0,
+      "GF": 0,
+      "GG": 0,
+      "GH": 0,
+      "GI": 0
+     }
+    },
+    {
+     "ligne_classeur": 49,
+     "borne_superieure": 900,
+     "par_colonne": {
+      "GD": 0,
+      "GE": 0,
+      "GF": 0,
+      "GG": 0,
+      "GH": 0,
+      "GI": 0
+     }
+    },
+    {
+     "ligne_classeur": 50,
+     "borne_superieure": 950,
+     "par_colonne": {
+      "GD": 0,
+      "GE": 0,
+      "GF": 0,
+      "GG": 0,
+      "GH": 0,
+      "GI": 0
+     }
+    },
+    {
+     "ligne_classeur": 51,
+     "borne_superieure": 1000,
+     "par_colonne": {
+      "GD": 0,
+      "GE": 0,
+      "GF": 0,
+      "GG": 0,
+      "GH": 0,
+      "GI": 0
+     }
+    }
+   ]
+  },
+  {
+   "cas": "Diag 2 E4",
+   "grandeur": "Solarer Wärmeeintrag gesamt",
+   "unite": "W",
+   "colonne_bloc": "GM",
+   "nb_classes": 20,
+   "ligne_total": 52,
+   "contributeurs": [
+    {
+     "colonne": "GO",
+     "programme": "IDA_ICE Fe det Spec",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "GP",
+     "programme": "IDA_ICE Fe det noSpec",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "GQ",
+     "programme": "IDA_ICE Fe einf",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "GR",
+     "programme": "Excel SIA 387/4 + 380/2",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "GU",
+     "programme": "EnergyPlus Fe einf",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "GV",
+     "programme": "TAS Fe det nonSpect",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    }
+   ],
+   "effectifs": [
+    {
+     "ligne_classeur": 32,
+     "borne_superieure": 10,
+     "par_colonne": {
+      "GO": 4360,
+      "GP": 4366,
+      "GQ": 5206,
+      "GR": 4469,
+      "GU": 4687,
+      "GV": 5370
+     }
+    },
+    {
+     "ligne_classeur": 33,
+     "borne_superieure": 100,
+     "par_colonne": {
+      "GO": 1392,
+      "GP": 1417,
+      "GQ": 2343,
+      "GR": 1085,
+      "GU": 1444,
+      "GV": 2484
+     }
+    },
+    {
+     "ligne_classeur": 34,
+     "borne_superieure": 150,
+     "par_colonne": {
+      "GO": 722,
+      "GP": 737,
+      "GQ": 784,
+      "GR": 724,
+      "GU": 766,
+      "GV": 712
+     }
+    },
+    {
+     "ligne_classeur": 35,
+     "borne_superieure": 200,
+     "par_colonne": {
+      "GO": 531,
+      "GP": 521,
+      "GQ": 329,
+      "GR": 515,
+      "GU": 571,
+      "GV": 159
+     }
+    },
+    {
+     "ligne_classeur": 36,
+     "borne_superieure": 250,
+     "par_colonne": {
+      "GO": 455,
+      "GP": 466,
+      "GQ": 98,
+      "GR": 290,
+      "GU": 424,
+      "GV": 35
+     }
+    },
+    {
+     "ligne_classeur": 37,
+     "borne_superieure": 300,
+     "par_colonne": {
+      "GO": 361,
+      "GP": 398,
+      "GQ": 0,
+      "GR": 349,
+      "GU": 392,
+      "GV": 0
+     }
+    },
+    {
+     "ligne_classeur": 38,
+     "borne_superieure": 350,
+     "par_colonne": {
+      "GO": 440,
+      "GP": 446,
+      "GQ": 0,
+      "GR": 297,
+      "GU": 383,
+      "GV": 0
+     }
+    },
+    {
+     "ligne_classeur": 39,
+     "borne_superieure": 400,
+     "par_colonne": {
+      "GO": 362,
+      "GP": 317,
+      "GQ": 0,
+      "GR": 349,
+      "GU": 83,
+      "GV": 0
+     }
+    },
+    {
+     "ligne_classeur": 40,
+     "borne_superieure": 450,
+     "par_colonne": {
+      "GO": 91,
+      "GP": 57,
+      "GQ": 0,
+      "GR": 313,
+      "GU": 10,
+      "GV": 0
+     }
+    },
+    {
+     "ligne_classeur": 41,
+     "borne_superieure": 500,
+     "par_colonne": {
+      "GO": 37,
+      "GP": 33,
+      "GQ": 0,
+      "GR": 215,
+      "GU": 0,
+      "GV": 0
+     }
+    },
+    {
+     "ligne_classeur": 42,
+     "borne_superieure": 550,
+     "par_colonne": {
+      "GO": 9,
+      "GP": 2,
+      "GQ": 0,
+      "GR": 103,
+      "GU": 0,
+      "GV": 0
+     }
+    },
+    {
+     "ligne_classeur": 43,
+     "borne_superieure": 600,
+     "par_colonne": {
+      "GO": 0,
+      "GP": 0,
+      "GQ": 0,
+      "GR": 17,
+      "GU": 0,
+      "GV": 0
+     }
+    },
+    {
+     "ligne_classeur": 44,
+     "borne_superieure": 650,
+     "par_colonne": {
+      "GO": 0,
+      "GP": 0,
+      "GQ": 0,
+      "GR": 12,
+      "GU": 0,
+      "GV": 0
+     }
+    },
+    {
+     "ligne_classeur": 45,
+     "borne_superieure": 700,
+     "par_colonne": {
+      "GO": 0,
+      "GP": 0,
+      "GQ": 0,
+      "GR": 22,
+      "GU": 0,
+      "GV": 0
+     }
+    },
+    {
+     "ligne_classeur": 46,
+     "borne_superieure": 750,
+     "par_colonne": {
+      "GO": 0,
+      "GP": 0,
+      "GQ": 0,
+      "GR": 0,
+      "GU": 0,
+      "GV": 0
+     }
+    },
+    {
+     "ligne_classeur": 47,
+     "borne_superieure": 800,
+     "par_colonne": {
+      "GO": 0,
+      "GP": 0,
+      "GQ": 0,
+      "GR": 0,
+      "GU": 0,
+      "GV": 0
+     }
+    },
+    {
+     "ligne_classeur": 48,
+     "borne_superieure": 850,
+     "par_colonne": {
+      "GO": 0,
+      "GP": 0,
+      "GQ": 0,
+      "GR": 0,
+      "GU": 0,
+      "GV": 0
+     }
+    },
+    {
+     "ligne_classeur": 49,
+     "borne_superieure": 900,
+     "par_colonne": {
+      "GO": 0,
+      "GP": 0,
+      "GQ": 0,
+      "GR": 0,
+      "GU": 0,
+      "GV": 0
+     }
+    },
+    {
+     "ligne_classeur": 50,
+     "borne_superieure": 950,
+     "par_colonne": {
+      "GO": 0,
+      "GP": 0,
+      "GQ": 0,
+      "GR": 0,
+      "GU": 0,
+      "GV": 0
+     }
+    },
+    {
+     "ligne_classeur": 51,
+     "borne_superieure": 1000,
+     "par_colonne": {
+      "GO": 0,
+      "GP": 0,
+      "GQ": 0,
+      "GR": 0,
+      "GU": 0,
+      "GV": 0
+     }
+    }
+   ]
+  },
+  {
+   "cas": "Diag 2 E4",
+   "grandeur": "Total transmittierte Solarstrahlung",
+   "unite": "W",
+   "colonne_bloc": "GX",
+   "nb_classes": 20,
+   "ligne_total": 52,
+   "contributeurs": [
+    {
+     "colonne": "GZ",
+     "programme": "IDA_ICE Fe det Spec",
+     "total_heures": 8759,
+     "heures_dans_classes": 8759,
+     "heures_hors_classes": 1,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "HA",
+     "programme": "IDA_ICE Fe det noSpec",
+     "total_heures": 8759,
+     "heures_dans_classes": 8759,
+     "heures_hors_classes": 1,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "HB",
+     "programme": "IDA_ICE Fe einf",
+     "total_heures": 8759,
+     "heures_dans_classes": 8759,
+     "heures_hors_classes": 1,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "HC",
+     "programme": "Excel SIA 387/4 + 380/2",
+     "total_heures": 8759,
+     "heures_dans_classes": 8759,
+     "heures_hors_classes": 1,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "HD",
+     "programme": "EnergyPlus Fe det Spec",
+     "total_heures": 8759,
+     "heures_dans_classes": 8759,
+     "heures_hors_classes": 1,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "HE",
+     "programme": "EnergyPlus Fe det nonSpec",
+     "total_heures": 8759,
+     "heures_dans_classes": 8759,
+     "heures_hors_classes": 1,
+     "heures_source_attendues": 8760
+    }
+   ],
+   "effectifs": [
+    {
+     "ligne_classeur": 32,
+     "borne_superieure": 10,
+     "par_colonne": {
+      "GZ": 4225,
+      "HA": 4235,
+      "HB": 4719,
+      "HC": 4502,
+      "HD": 4724,
+      "HE": 4743
+     }
+    },
+    {
+     "ligne_classeur": 33,
+     "borne_superieure": 100,
+     "par_colonne": {
+      "GZ": 1638,
+      "HA": 1689,
+      "HB": 2774,
+      "HC": 1321,
+      "HD": 1604,
+      "HE": 1659
+     }
+    },
+    {
+     "ligne_classeur": 34,
+     "borne_superieure": 150,
+     "par_colonne": {
+      "GZ": 853,
+      "HA": 865,
+      "HB": 968,
+      "HC": 809,
+      "HD": 770,
+      "HE": 803
+     }
+    },
+    {
+     "ligne_classeur": 35,
+     "borne_superieure": 200,
+     "par_colonne": {
+      "GZ": 568,
+      "HA": 598,
+      "HB": 283,
+      "HC": 456,
+      "HD": 565,
+      "HE": 594
+     }
+    },
+    {
+     "ligne_classeur": 36,
+     "borne_superieure": 250,
+     "par_colonne": {
+      "GZ": 476,
+      "HA": 517,
+      "HB": 15,
+      "HC": 470,
+      "HD": 466,
+      "HE": 481
+     }
+    },
+    {
+     "ligne_classeur": 37,
+     "borne_superieure": 300,
+     "par_colonne": {
+      "GZ": 554,
+      "HA": 571,
+      "HB": 0,
+      "HC": 499,
+      "HD": 459,
+      "HE": 398
+     }
+    },
+    {
+     "ligne_classeur": 38,
+     "borne_superieure": 350,
+     "par_colonne": {
+      "GZ": 365,
+      "HA": 232,
+      "HB": 0,
+      "HC": 470,
+      "HD": 149,
+      "HE": 72
+     }
+    },
+    {
+     "ligne_classeur": 39,
+     "borne_superieure": 400,
+     "par_colonne": {
+      "GZ": 52,
+      "HA": 48,
+      "HB": 0,
+      "HC": 186,
+      "HD": 17,
+      "HE": 9
+     }
+    },
+    {
+     "ligne_classeur": 40,
+     "borne_superieure": 450,
+     "par_colonne": {
+      "GZ": 28,
+      "HA": 4,
+      "HB": 0,
+      "HC": 23,
+      "HD": 5,
+      "HE": 0
+     }
+    },
+    {
+     "ligne_classeur": 41,
+     "borne_superieure": 500,
+     "par_colonne": {
+      "GZ": 0,
+      "HA": 0,
+      "HB": 0,
+      "HC": 16,
+      "HD": 0,
+      "HE": 0
+     }
+    },
+    {
+     "ligne_classeur": 42,
+     "borne_superieure": 550,
+     "par_colonne": {
+      "GZ": 0,
+      "HA": 0,
+      "HB": 0,
+      "HC": 6,
+      "HD": 0,
+      "HE": 0
+     }
+    },
+    {
+     "ligne_classeur": 43,
+     "borne_superieure": 600,
+     "par_colonne": {
+      "GZ": 0,
+      "HA": 0,
+      "HB": 0,
+      "HC": 0,
+      "HD": 0,
+      "HE": 0
+     }
+    },
+    {
+     "ligne_classeur": 44,
+     "borne_superieure": 650,
+     "par_colonne": {
+      "GZ": 0,
+      "HA": 0,
+      "HB": 0,
+      "HC": 1,
+      "HD": 0,
+      "HE": 0
+     }
+    },
+    {
+     "ligne_classeur": 45,
+     "borne_superieure": 700,
+     "par_colonne": {
+      "GZ": 0,
+      "HA": 0,
+      "HB": 0,
+      "HC": 0,
+      "HD": 0,
+      "HE": 0
+     }
+    },
+    {
+     "ligne_classeur": 46,
+     "borne_superieure": 750,
+     "par_colonne": {
+      "GZ": 0,
+      "HA": 0,
+      "HB": 0,
+      "HC": 0,
+      "HD": 0,
+      "HE": 0
+     }
+    },
+    {
+     "ligne_classeur": 47,
+     "borne_superieure": 800,
+     "par_colonne": {
+      "GZ": 0,
+      "HA": 0,
+      "HB": 0,
+      "HC": 0,
+      "HD": 0,
+      "HE": 0
+     }
+    },
+    {
+     "ligne_classeur": 48,
+     "borne_superieure": 850,
+     "par_colonne": {
+      "GZ": 0,
+      "HA": 0,
+      "HB": 0,
+      "HC": 0,
+      "HD": 0,
+      "HE": 0
+     }
+    },
+    {
+     "ligne_classeur": 49,
+     "borne_superieure": 900,
+     "par_colonne": {
+      "GZ": 0,
+      "HA": 0,
+      "HB": 0,
+      "HC": 0,
+      "HD": 0,
+      "HE": 0
+     }
+    },
+    {
+     "ligne_classeur": 50,
+     "borne_superieure": 950,
+     "par_colonne": {
+      "GZ": 0,
+      "HA": 0,
+      "HB": 0,
+      "HC": 0,
+      "HD": 0,
+      "HE": 0
+     }
+    },
+    {
+     "ligne_classeur": 51,
+     "borne_superieure": 1000,
+     "par_colonne": {
+      "GZ": 0,
+      "HA": 0,
+      "HB": 0,
+      "HC": 0,
+      "HD": 0,
+      "HE": 0
+     }
+    }
+   ]
+  },
+  {
+   "cas": "Diag 2 E5",
+   "grandeur": "Solarer Wärmeeintrag gesamt",
+   "unite": "W",
+   "colonne_bloc": "HI",
+   "nb_classes": 20,
+   "ligne_total": 52,
+   "contributeurs": [
+    {
+     "colonne": "HK",
+     "programme": "IDA_ICE Fe det Spec",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "HL",
+     "programme": "IDA_ICE Fe det noSpec",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "HM",
+     "programme": "IDA_ICE Fe einf",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "HN",
+     "programme": "Excel SIA 387/4 + 380/2",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "HQ",
+     "programme": "EnergyPlus Fe einf",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "HR",
+     "programme": "TAS Fe det nonSpect",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    }
+   ],
+   "effectifs": [
+    {
+     "ligne_classeur": 32,
+     "borne_superieure": 10,
+     "par_colonne": {
+      "HK": 5729,
+      "HL": 5729,
+      "HM": 6477,
+      "HN": 5420,
+      "HQ": 6492,
+      "HR": 6708
+     }
+    },
+    {
+     "ligne_classeur": 33,
+     "borne_superieure": 100,
+     "par_colonne": {
+      "HK": 2484,
+      "HL": 2484,
+      "HM": 2282,
+      "HN": 2337,
+      "HQ": 2268,
+      "HR": 2050
+     }
+    },
+    {
+     "ligne_classeur": 34,
+     "borne_superieure": 150,
+     "par_colonne": {
+      "HK": 547,
+      "HL": 547,
+      "HM": 1,
+      "HN": 872,
+      "HQ": 0,
+      "HR": 2
+     }
+    },
+    {
+     "ligne_classeur": 35,
+     "borne_superieure": 200,
+     "par_colonne": {
+      "HK": 0,
+      "HL": 0,
+      "HM": 0,
+      "HN": 128,
+      "HQ": 0,
+      "HR": 0
+     }
+    },
+    {
+     "ligne_classeur": 36,
+     "borne_superieure": 250,
+     "par_colonne": {
+      "HK": 0,
+      "HL": 0,
+      "HM": 0,
+      "HN": 3,
+      "HQ": 0,
+      "HR": 0
+     }
+    },
+    {
+     "ligne_classeur": 37,
+     "borne_superieure": 300,
+     "par_colonne": {
+      "HK": 0,
+      "HL": 0,
+      "HM": 0,
+      "HN": 0,
+      "HQ": 0,
+      "HR": 0
+     }
+    },
+    {
+     "ligne_classeur": 38,
+     "borne_superieure": 350,
+     "par_colonne": {
+      "HK": 0,
+      "HL": 0,
+      "HM": 0,
+      "HN": 0,
+      "HQ": 0,
+      "HR": 0
+     }
+    },
+    {
+     "ligne_classeur": 39,
+     "borne_superieure": 400,
+     "par_colonne": {
+      "HK": 0,
+      "HL": 0,
+      "HM": 0,
+      "HN": 0,
+      "HQ": 0,
+      "HR": 0
+     }
+    },
+    {
+     "ligne_classeur": 40,
+     "borne_superieure": 450,
+     "par_colonne": {
+      "HK": 0,
+      "HL": 0,
+      "HM": 0,
+      "HN": 0,
+      "HQ": 0,
+      "HR": 0
+     }
+    },
+    {
+     "ligne_classeur": 41,
+     "borne_superieure": 500,
+     "par_colonne": {
+      "HK": 0,
+      "HL": 0,
+      "HM": 0,
+      "HN": 0,
+      "HQ": 0,
+      "HR": 0
+     }
+    },
+    {
+     "ligne_classeur": 42,
+     "borne_superieure": 550,
+     "par_colonne": {
+      "HK": 0,
+      "HL": 0,
+      "HM": 0,
+      "HN": 0,
+      "HQ": 0,
+      "HR": 0
+     }
+    },
+    {
+     "ligne_classeur": 43,
+     "borne_superieure": 600,
+     "par_colonne": {
+      "HK": 0,
+      "HL": 0,
+      "HM": 0,
+      "HN": 0,
+      "HQ": 0,
+      "HR": 0
+     }
+    },
+    {
+     "ligne_classeur": 44,
+     "borne_superieure": 650,
+     "par_colonne": {
+      "HK": 0,
+      "HL": 0,
+      "HM": 0,
+      "HN": 0,
+      "HQ": 0,
+      "HR": 0
+     }
+    },
+    {
+     "ligne_classeur": 45,
+     "borne_superieure": 700,
+     "par_colonne": {
+      "HK": 0,
+      "HL": 0,
+      "HM": 0,
+      "HN": 0,
+      "HQ": 0,
+      "HR": 0
+     }
+    },
+    {
+     "ligne_classeur": 46,
+     "borne_superieure": 750,
+     "par_colonne": {
+      "HK": 0,
+      "HL": 0,
+      "HM": 0,
+      "HN": 0,
+      "HQ": 0,
+      "HR": 0
+     }
+    },
+    {
+     "ligne_classeur": 47,
+     "borne_superieure": 800,
+     "par_colonne": {
+      "HK": 0,
+      "HL": 0,
+      "HM": 0,
+      "HN": 0,
+      "HQ": 0,
+      "HR": 0
+     }
+    },
+    {
+     "ligne_classeur": 48,
+     "borne_superieure": 850,
+     "par_colonne": {
+      "HK": 0,
+      "HL": 0,
+      "HM": 0,
+      "HN": 0,
+      "HQ": 0,
+      "HR": 0
+     }
+    },
+    {
+     "ligne_classeur": 49,
+     "borne_superieure": 900,
+     "par_colonne": {
+      "HK": 0,
+      "HL": 0,
+      "HM": 0,
+      "HN": 0,
+      "HQ": 0,
+      "HR": 0
+     }
+    },
+    {
+     "ligne_classeur": 50,
+     "borne_superieure": 950,
+     "par_colonne": {
+      "HK": 0,
+      "HL": 0,
+      "HM": 0,
+      "HN": 0,
+      "HQ": 0,
+      "HR": 0
+     }
+    },
+    {
+     "ligne_classeur": 51,
+     "borne_superieure": 1000,
+     "par_colonne": {
+      "HK": 0,
+      "HL": 0,
+      "HM": 0,
+      "HN": 0,
+      "HQ": 0,
+      "HR": 0
+     }
+    }
+   ]
+  },
+  {
+   "cas": "Diag 2 E5",
+   "grandeur": "Total transmittierte Solarstrahlung",
+   "unite": "W",
+   "colonne_bloc": "HT",
+   "nb_classes": 20,
+   "ligne_total": 52,
+   "contributeurs": [
+    {
+     "colonne": "HV",
+     "programme": "IDA_ICE Fe det Spec",
+     "total_heures": 8759,
+     "heures_dans_classes": 8759,
+     "heures_hors_classes": 1,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "HW",
+     "programme": "IDA_ICE Fe det noSpec",
+     "total_heures": 8759,
+     "heures_dans_classes": 8759,
+     "heures_hors_classes": 1,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "HX",
+     "programme": "IDA_ICE Fe einf",
+     "total_heures": 8759,
+     "heures_dans_classes": 8759,
+     "heures_hors_classes": 1,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "HY",
+     "programme": "Excel SIA 387/4 + 380/2",
+     "total_heures": 8759,
+     "heures_dans_classes": 8759,
+     "heures_hors_classes": 1,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "HZ",
+     "programme": "EnergyPlus Fe det Spec",
+     "total_heures": 8759,
+     "heures_dans_classes": 8759,
+     "heures_hors_classes": 1,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "IA",
+     "programme": "EnergyPlus Fe det nonSpec",
+     "total_heures": 8759,
+     "heures_dans_classes": 8759,
+     "heures_hors_classes": 1,
+     "heures_source_attendues": 8760
+    }
+   ],
+   "effectifs": [
+    {
+     "ligne_classeur": 32,
+     "borne_superieure": 10,
+     "par_colonne": {
+      "HV": 5899,
+      "HW": 5899,
+      "HX": 5899,
+      "HY": 8759,
+      "HZ": 6648,
+      "IA": 6728
+     }
+    },
+    {
+     "ligne_classeur": 33,
+     "borne_superieure": 100,
+     "par_colonne": {
+      "HV": 2860,
+      "HW": 2860,
+      "HX": 2860,
+      "HY": 0,
+      "HZ": 2111,
+      "IA": 2031
+     }
+    },
+    {
+     "ligne_classeur": 34,
+     "borne_superieure": 150,
+     "par_colonne": {
+      "HV": 0,
+      "HW": 0,
+      "HX": 0,
+      "HY": 0,
+      "HZ": 0,
+      "IA": 0
+     }
+    },
+    {
+     "ligne_classeur": 35,
+     "borne_superieure": 200,
+     "par_colonne": {
+      "HV": 0,
+      "HW": 0,
+      "HX": 0,
+      "HY": 0,
+      "HZ": 0,
+      "IA": 0
+     }
+    },
+    {
+     "ligne_classeur": 36,
+     "borne_superieure": 250,
+     "par_colonne": {
+      "HV": 0,
+      "HW": 0,
+      "HX": 0,
+      "HY": 0,
+      "HZ": 0,
+      "IA": 0
+     }
+    },
+    {
+     "ligne_classeur": 37,
+     "borne_superieure": 300,
+     "par_colonne": {
+      "HV": 0,
+      "HW": 0,
+      "HX": 0,
+      "HY": 0,
+      "HZ": 0,
+      "IA": 0
+     }
+    },
+    {
+     "ligne_classeur": 38,
+     "borne_superieure": 350,
+     "par_colonne": {
+      "HV": 0,
+      "HW": 0,
+      "HX": 0,
+      "HY": 0,
+      "HZ": 0,
+      "IA": 0
+     }
+    },
+    {
+     "ligne_classeur": 39,
+     "borne_superieure": 400,
+     "par_colonne": {
+      "HV": 0,
+      "HW": 0,
+      "HX": 0,
+      "HY": 0,
+      "HZ": 0,
+      "IA": 0
+     }
+    },
+    {
+     "ligne_classeur": 40,
+     "borne_superieure": 450,
+     "par_colonne": {
+      "HV": 0,
+      "HW": 0,
+      "HX": 0,
+      "HY": 0,
+      "HZ": 0,
+      "IA": 0
+     }
+    },
+    {
+     "ligne_classeur": 41,
+     "borne_superieure": 500,
+     "par_colonne": {
+      "HV": 0,
+      "HW": 0,
+      "HX": 0,
+      "HY": 0,
+      "HZ": 0,
+      "IA": 0
+     }
+    },
+    {
+     "ligne_classeur": 42,
+     "borne_superieure": 550,
+     "par_colonne": {
+      "HV": 0,
+      "HW": 0,
+      "HX": 0,
+      "HY": 0,
+      "HZ": 0,
+      "IA": 0
+     }
+    },
+    {
+     "ligne_classeur": 43,
+     "borne_superieure": 600,
+     "par_colonne": {
+      "HV": 0,
+      "HW": 0,
+      "HX": 0,
+      "HY": 0,
+      "HZ": 0,
+      "IA": 0
+     }
+    },
+    {
+     "ligne_classeur": 44,
+     "borne_superieure": 650,
+     "par_colonne": {
+      "HV": 0,
+      "HW": 0,
+      "HX": 0,
+      "HY": 0,
+      "HZ": 0,
+      "IA": 0
+     }
+    },
+    {
+     "ligne_classeur": 45,
+     "borne_superieure": 700,
+     "par_colonne": {
+      "HV": 0,
+      "HW": 0,
+      "HX": 0,
+      "HY": 0,
+      "HZ": 0,
+      "IA": 0
+     }
+    },
+    {
+     "ligne_classeur": 46,
+     "borne_superieure": 750,
+     "par_colonne": {
+      "HV": 0,
+      "HW": 0,
+      "HX": 0,
+      "HY": 0,
+      "HZ": 0,
+      "IA": 0
+     }
+    },
+    {
+     "ligne_classeur": 47,
+     "borne_superieure": 800,
+     "par_colonne": {
+      "HV": 0,
+      "HW": 0,
+      "HX": 0,
+      "HY": 0,
+      "HZ": 0,
+      "IA": 0
+     }
+    },
+    {
+     "ligne_classeur": 48,
+     "borne_superieure": 850,
+     "par_colonne": {
+      "HV": 0,
+      "HW": 0,
+      "HX": 0,
+      "HY": 0,
+      "HZ": 0,
+      "IA": 0
+     }
+    },
+    {
+     "ligne_classeur": 49,
+     "borne_superieure": 900,
+     "par_colonne": {
+      "HV": 0,
+      "HW": 0,
+      "HX": 0,
+      "HY": 0,
+      "HZ": 0,
+      "IA": 0
+     }
+    },
+    {
+     "ligne_classeur": 50,
+     "borne_superieure": 950,
+     "par_colonne": {
+      "HV": 0,
+      "HW": 0,
+      "HX": 0,
+      "HY": 0,
+      "HZ": 0,
+      "IA": 0
+     }
+    },
+    {
+     "ligne_classeur": 51,
+     "borne_superieure": 1000,
+     "par_colonne": {
+      "HV": 0,
+      "HW": 0,
+      "HX": 0,
+      "HY": 0,
+      "HZ": 0,
+      "IA": 0
+     }
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,363 @@
+{
+  "test": 1,
+  "perimetre": "Cas diagnostiques 1A à 1D et cas 1E du Test 1",
+  "statut": "FIGÉ — chaque champ relevé dans la couche texte de sa source",
+  "pourquoi": "Le cas 1E est le seul cas du Test 1 à porter un critère pass/fail, et il n'est pas générable sans cette chaîne. Ce référentiel ne rend pas 1E validable : il rend la question posable.",
+  "sources": {
+    "specification_test_1": {
+      "fichier": "SIA_4010_geteilter_Link/Test1/Spezifikation_Test1.pdf",
+      "sha256": "617cda59ff2cbbcae703331ade115c1725ef536fa68a02eee0b3f973d849ef1a",
+      "role": "Énonce la chaîne Diag 1A à 1D et la définition du cas 1E."
+    },
+    "specification_test_2": {
+      "fichier": "SIA_4010_geteilter_Link/Test2/Spezifikation_Test2.pdf",
+      "sha256": "3e89be97b4771d0b5a146baf7e53926bf528948f78159ede7afa8f01963e0608",
+      "role": "Porte la fenêtre, l'infiltration, l'usage SIA 2024 et la régulation du store que les maillons ajoutent."
+    },
+    "documentation_batiment_exemple": {
+      "fichier": "SIA_4010_geteilter_Link/Beispielgebäude/Dokumentation_Beispielgebäude_V5.pdf",
+      "sha256": "38d231786467b1a117c99f2cfe8d09dd03c921bb894378a061c2f6d9bc14c75d",
+      "role": "Porte les propriétés de la fenêtre entière, store déployé et rentré."
+    },
+    "extrait_autorite_sia_2024": {
+      "fichier": "sia4010_evidence/source_audits/sia2024_3_1_authority_20260810/sia2024_office_3_1_standard_profiles.binding.json",
+      "sha256": "d893996293460c5a7164d9986a31a6364abed81d68a6e89269baeacfaafef261",
+      "role": "Extrait d'autorité du 2026-08-10 pour la catégorie d'usage 3.1. Donne le gain sensible des occupants en W/m² et les horaires, que la spécification ne reproduit pas.",
+      "categorie": "SIA 2024:2021 3.1 Einzel-/Gruppenbüro"
+    }
+  },
+  "chaine": [
+    {
+      "cas": "1A",
+      "definition_verbatim_de": "Fall 600, mit Klimadaten Zürich-Kloten",
+      "statut": "RELEVE",
+      "source": "Diagnosefälle / Testfall 1E",
+      "ajoute_au_precedent": "climat Zürich-Kloten",
+      "raison": null
+    },
+    {
+      "cas": "1B",
+      "definition_verbatim_de": "Fall Diag. 1A, mit neuem Fenster gemäss Spezifikation Test 2",
+      "statut": "RELEVE",
+      "source": "Diagnosefälle / Testfall 1E",
+      "ajoute_au_precedent": "nouvelle fenêtre",
+      "raison": null
+    },
+    {
+      "cas": "1C",
+      "definition_verbatim_de": "Fall Diag. 1B, Infiltration angepasst gemäss Spezifika- tion Test 2",
+      "statut": "RELEVE",
+      "source": "Diagnosefälle / Testfall 1E",
+      "ajoute_au_precedent": "infiltration ajustée",
+      "raison": null
+    },
+    {
+      "cas": "1D",
+      "definition_verbatim_de": "Fall Diag. 1C, mit Nutzung gemäss SIA 2024 (Perso- nen/Geräte/Beleuchtung) gemäss Spezifikation Test 2",
+      "statut": "RELEVE",
+      "source": "Diagnosefälle / Testfall 1E",
+      "ajoute_au_precedent": "usage SIA 2024",
+      "raison": null
+    },
+    {
+      "cas": "1E",
+      "definition_verbatim_de": "Diagnosefall 1D, jedoch mit Stoffmarkisen-Sonnen- schutz gemäss Diagnosetest 2 E1",
+      "statut": "RELEVE",
+      "source": "Diagnosefälle / Testfall 1E",
+      "ajoute_au_precedent": "store tissu (Stoffmarkise)",
+      "raison": null
+    }
+  ],
+  "parametres": {
+    "usage": {
+      "categorie_sia_2024": {
+        "valeur": "3.1 Einzel-Gruppenbüro",
+        "statut": "RELEVE",
+        "source": "Nutzung / Standardnutzung"
+      },
+      "personnes_par_piece": {
+        "valeur": 3.43,
+        "statut": "RELEVE",
+        "source": "Wärmeeinträge / Personen / Anzahl"
+      }
+    },
+    "infiltration": {
+      "debit_m3_h_m2": {
+        "valeur": 0.15,
+        "statut": "RELEVE",
+        "source": "Lüftung / Infiltration"
+      }
+    },
+    "consignes": {
+      "chauffage_celsius": {
+        "valeur": 20,
+        "statut": "RELEVE",
+        "source": "Wärmeabgabe"
+      },
+      "refroidissement_celsius": {
+        "valeur": 27,
+        "statut": "RELEVE",
+        "source": "Kälteabgabe"
+      }
+    },
+    "store": {
+      "produit": {
+        "valeur": {
+          "type": "Soltis 92-2048-Alu",
+          "fabricant": "SergeFerrari"
+        },
+        "statut": "RELEVE",
+        "source": "Sonnenschutz / Test 2A Stoffmarkise"
+      },
+      "seuil_activation_w_m2": {
+        "valeur": 150,
+        "statut": "RELEVE",
+        "source": "Sonnenschutz Extern / Aktivierung"
+      },
+      "lame_d_air_cm": {
+        "valeur": 1,
+        "statut": "RELEVE",
+        "source": "2.2.2 Verschattung"
+      },
+      "seuil_fermeture_w_m2": {
+        "valeur": 150,
+        "statut": "RELEVE",
+        "source": "2.2.2 Verschattung"
+      },
+      "epaisseur_couche_mm": {
+        "valeur": 0.5,
+        "statut": "RELEVE",
+        "source": "Tabelle 3 / Layer 1 Generic screen shade"
+      }
+    },
+    "vitrage": {
+      "type": {
+        "valeur": "SGG Planitherm XN_4/14/4/14/4",
+        "statut": "RELEVE",
+        "source": "Verglasung / Typ"
+      },
+      "g_total": {
+        "valeur": 0.545,
+        "statut": "RELEVE",
+        "source": "Verglasung / Gesamtenergiedurchlassgrad gg"
+      },
+      "u_vitrage_w_m2k": {
+        "valeur": 0.654,
+        "statut": "RELEVE",
+        "source": "Verglasung / U-Wert Ug"
+      },
+      "transmission_visible": {
+        "valeur": 0.742,
+        "statut": "RELEVE",
+        "source": "Verglasung / Transmission v"
+      },
+      "reflexion_visible": {
+        "valeur": 0.145,
+        "statut": "RELEVE",
+        "source": "Verglasung / Reflexion v"
+      }
+    },
+    "apports": {
+      "personnes_m2_par_personne": {
+        "valeur": 14,
+        "statut": "RELEVE",
+        "source": "Wärmeeinträge / Personen"
+      },
+      "personnes_activite_met": {
+        "valeur": 1.2,
+        "statut": "RELEVE",
+        "source": "Wärmeeinträge / Personen / Aktivitätsgrad"
+      },
+      "appareils_w_m2": {
+        "valeur": 11,
+        "statut": "RELEVE",
+        "source": "Wärmeeinträge / Geräte"
+      },
+      "eclairage_w_m2": {
+        "valeur": 12.5,
+        "statut": "RELEVE",
+        "source": "Wärmeeinträge / Beleuchtung"
+      },
+      "eclairage_puissance_installee_w_m2": {
+        "valeur": 12.5,
+        "statut": "RELEVE",
+        "source": "Wärmeeinträge / Beleuchtung / Anschlusswert"
+      },
+      "personnes_gain_sensible_w_m2": {
+        "valeur": 4.9,
+        "statut": "RELEVE",
+        "source": "SIA 2024:2021 fiche 3.1, standard_values.people.sensible_heat_gain_at_24c_w_m2"
+      },
+      "personnes_simultaneite_annuelle": {
+        "valeur": 0.8,
+        "statut": "RELEVE",
+        "source": "SIA 2024:2021 fiche 3.1, standard_values.people.annual_simultaneity_factor"
+      },
+      "personnes_heures_par_jour": {
+        "valeur": 11.0,
+        "statut": "RELEVE",
+        "source": "SIA 2024:2021 fiche 3.1, standard_values.people.use_hours_per_day_h"
+      },
+      "personnes_jours_par_an": {
+        "valeur": 261,
+        "statut": "RELEVE",
+        "source": "SIA 2024:2021 fiche 3.1, standard_values.people.use_days_per_year_d"
+      }
+    },
+    "cadre": {
+      "part_pourcent": {
+        "valeur": 15,
+        "statut": "RELEVE",
+        "source": "2.2.3 Fensterrahmen"
+      },
+      "u_w_m2k": {
+        "valeur": 1.3,
+        "statut": "RELEVE",
+        "source": "2.2.3 Fensterrahmen"
+      }
+    }
+  },
+  "fenetre_entiere": {
+    "statut": "RELEVE",
+    "ordre_colonnes": "première colonne = store rentré, seconde = store déployé, d'après l'en-tête imprimé",
+    "blocs": {
+      "en_iso_52022_3_conditions_ete": {
+        "statut": "RELEVE",
+        "grandeurs": {
+          "g_total": {
+            "unite": "-",
+            "store_rentre": 0.545,
+            "store_deploye": 0.059,
+            "statut": "RELEVE"
+          },
+          "facteur_convection_gc": {
+            "unite": "-",
+            "store_rentre": 0.022,
+            "store_deploye": 0.006,
+            "statut": "RELEVE"
+          },
+          "facteur_rayonnement_gth": {
+            "unite": "-",
+            "store_rentre": 0.044,
+            "store_deploye": 0.013,
+            "statut": "RELEVE"
+          },
+          "facteur_ventilation_gv": {
+            "unite": "-",
+            "store_rentre": 0,
+            "store_deploye": 0,
+            "statut": "RELEVE"
+          },
+          "transfert_secondaire_qi": {
+            "unite": "-",
+            "store_rentre": 0.066,
+            "store_deploye": 0.019,
+            "statut": "RELEVE"
+          }
+        }
+      },
+      "en_iso_52022_3_conditions_reference": {
+        "statut": "RELEVE",
+        "grandeurs": {
+          "g_total": {
+            "unite": "-",
+            "store_rentre": 0.542,
+            "store_deploye": 0.056,
+            "statut": "RELEVE"
+          },
+          "u_vitrage_w_m2k": {
+            "unite": "W/(m2 K)",
+            "store_rentre": 0.646,
+            "store_deploye": 0.574,
+            "statut": "RELEVE"
+          }
+        }
+      },
+      "en_410": {
+        "statut": "RELEVE",
+        "grandeurs": {
+          "transmission_solaire_directe_te": {
+            "unite": "-",
+            "store_rentre": 0.479,
+            "store_deploye": 0.04,
+            "statut": "RELEVE"
+          },
+          "reflexion_solaire_exterieure_re": {
+            "unite": "-",
+            "store_rentre": 0.323,
+            "store_deploye": 0.49,
+            "statut": "RELEVE"
+          },
+          "reflexion_solaire_interieure_re_prime": {
+            "unite": "-",
+            "store_rentre": 0.323,
+            "store_deploye": 0.456,
+            "statut": "RELEVE"
+          },
+          "transmission_visible_tv": {
+            "unite": "-",
+            "store_rentre": 0.742,
+            "store_deploye": 0.058,
+            "statut": "RELEVE"
+          },
+          "reflexion_visible_exterieure_rv": {
+            "unite": "-",
+            "store_rentre": 0.145,
+            "store_deploye": 0.496,
+            "statut": "RELEVE"
+          },
+          "reflexion_visible_interieure_rv_prime": {
+            "unite": "-",
+            "store_rentre": 0.145,
+            "store_deploye": 0.395,
+            "statut": "RELEVE"
+          },
+          "transmission_uv_tuv": {
+            "unite": "-",
+            "store_rentre": 0.234,
+            "store_deploye": 0.012,
+            "statut": "RELEVE"
+          }
+        }
+      },
+      "iso_15099_conditions_ete": {
+        "statut": "RELEVE",
+        "grandeurs": {
+          "g_total": {
+            "unite": "-",
+            "store_rentre": 0.545,
+            "store_deploye": 0.059,
+            "statut": "RELEVE"
+          }
+        }
+      },
+      "iso_15099_conditions_hiver": {
+        "statut": "RELEVE",
+        "grandeurs": {
+          "u_vitrage_w_m2k": {
+            "unite": "W/(m2 K)",
+            "store_rentre": 0.654,
+            "store_deploye": 0.582,
+            "statut": "RELEVE"
+          }
+        }
+      }
+    }
+  },
+  "concordance_du_u_vitrage": {
+    "statut": "RELEVE",
+    "grandeur": "u_vitrage_w_m2k",
+    "valeur": 0.654,
+    "norme_concordante": "iso_15099_conditions_hiver",
+    "autres_valeurs_du_document": {
+      "en_iso_52022_3_conditions_reference": 0.646,
+      "iso_15099_conditions_hiver": 0.654
+    },
+    "commentaire": "La spécification Test 2 reprend le U de ce bloc normatif. La documentation en donne d'autres sous d'autres normes : comparer au mauvais bloc fait passer une différence de norme pour une contradiction entre documents."
+  },
+  "reserves": [
+    "Les propriétés relevées sont celles de la FENÊTRE ENTIÈRE (EN ISO 52022-3 / EN 410), store rentré et déployé. La documentation donne aussi les propriétés couche par couche dans des figures ; elles ne sont PAS relevées ici.",
+    "L'usage du maillon 1D renvoie à SIA 2024:2021. Seule la catégorie citée par la spécification est relevée ; les valeurs de la fiche restent à lier depuis l'extrait d'autorité.",
+    "Aucun cas n'est enregistré et aucun générateur VE n'est écrit par ce producteur."
+  ]
+}

@@ -1,0 +1,264 @@
+{
+  "_avertissement": "Ce fichier fige une LECTURE de la spécification, pas une validation. Rien n'y est calculé ni complété : un champ que la couche texte ne donne pas sort à `null`, en `A_CONFIRMER`.",
+  "_bilan": {
+    "a_confirmer": [
+      "humidificateur.type_par_variante",
+      "recuperateur.taux_humidite_par_variante",
+      "recuperateur.taux_temperature_par_variante",
+      "recuperateur.type_par_variante",
+      "ventilateurs.kennfeld",
+      "ventilateurs.part_pression_constante_pa"
+    ],
+    "effectifs": {
+      "A_CONFIRMER": 6,
+      "RELEVE": 29,
+      "RELEVE_SUR_GRAPHIQUE": 3
+    }
+  },
+  "_producteur": "scripts/build_reseau_ventilation_reference.py",
+  "_source": "SIA_4010_geteilter_Link/Test5/Spezifikation_Test5.pdf",
+  "batterie_chaude": {
+    "air_entrant_c": {
+      "source": "Lufterhitzer / Eintritts-Lufttemperatur",
+      "statut": "RELEVE",
+      "valeur": 10.5
+    },
+    "air_sortant_c": {
+      "source": "Lufterhitzer / Austrittstemperatur",
+      "statut": "RELEVE",
+      "valeur": 19
+    },
+    "eau_chaude_entree_c": {
+      "source": "Heizwasser-Eintrittstemperatur",
+      "statut": "RELEVE",
+      "valeur": 40
+    },
+    "puissance_kw": {
+      "source": "Lufterhitzer / Auslegungsleistung",
+      "statut": "RELEVE",
+      "valeur": 3.5
+    }
+  },
+  "batterie_froide": {
+    "air_entrant_c": {
+      "source": "Luftkühler / Eintritts-Lufttemperatur",
+      "statut": "RELEVE",
+      "valeur": 29.5
+    },
+    "air_entrant_g_kg": {
+      "source": "Feuchtegehalt",
+      "statut": "RELEVE",
+      "valeur": 14.2
+    },
+    "air_sortant_c": {
+      "source": "Luftkühler / Austrittstemperatur",
+      "statut": "RELEVE",
+      "valeur": 17
+    },
+    "eau_glacee_entree_c": {
+      "source": "Kaltwasser-Eintrittstemperatur",
+      "statut": "RELEVE",
+      "valeur": 10
+    },
+    "facteur_bypass": {
+      "source": "Bypassfaktor",
+      "statut": "RELEVE",
+      "valeur": 0.065
+    },
+    "puissance_kw": {
+      "source": "Luftkühler / Auslegungsleistung",
+      "statut": "RELEVE",
+      "valeur": 8.6
+    },
+    "rendement_echange": {
+      "source": "Wärmeübertragungswirkungsgrad",
+      "statut": "RELEVE",
+      "valeur": 0.765
+    }
+  },
+  "courbes": {
+    "temperature_eau_chaude": {
+      "abscisse": "Aussenlufttemperatur (°C)",
+      "ordonnee": "Heizwassertemperatur",
+      "points": [
+        [
+          -10,
+          40
+        ],
+        [
+          20,
+          18
+        ]
+      ],
+      "reserve_de_lecture": "Points relevés sur les ÉTIQUETTES DE DONNÉES du graphique. Les PALIERS au-delà de ces points ne sont pas étiquetés : le tracé les suggère constants, la spécification ne l'écrit pas.",
+      "statut": "RELEVE_SUR_GRAPHIQUE"
+    },
+    "temperature_eau_glacee": {
+      "abscisse": "Aussenlufttemperatur (°C)",
+      "ordonnee": "Kaltwassertemperatur",
+      "points": [
+        [
+          12,
+          18
+        ],
+        [
+          20,
+          13
+        ]
+      ],
+      "reserve_de_lecture": "Points relevés sur les ÉTIQUETTES DE DONNÉES du graphique. Les PALIERS au-delà de ces points ne sont pas étiquetés : le tracé les suggère constants, la spécification ne l'écrit pas.",
+      "statut": "RELEVE_SUR_GRAPHIQUE"
+    },
+    "temperature_soufflage": {
+      "abscisse": "Aussenlufttemperatur (°C)",
+      "ordonnee": "Zulufttemperatur",
+      "points": [
+        [
+          12,
+          20
+        ],
+        [
+          20,
+          18
+        ]
+      ],
+      "reserve_de_lecture": "Points relevés sur les ÉTIQUETTES DE DONNÉES du graphique. Les PALIERS au-delà de ces points ne sont pas étiquetés : le tracé les suggère constants, la spécification ne l'écrit pas.",
+      "statut": "RELEVE_SUR_GRAPHIQUE"
+    }
+  },
+  "humidificateur": {
+    "debit_eau_kg_h": {
+      "source": "Nenn-Massenstrom Wasser",
+      "statut": "RELEVE",
+      "valeur": 4.9
+    },
+    "energie_pompe_wh_m3": {
+      "source": "Spez. Pumpenenergie des Befeuchters",
+      "statut": "RELEVE",
+      "valeur": 0.01
+    },
+    "type_par_variante": {
+      "a_confirmer": "Deux cellules (« Kontaktbefeuchter », « Dampf ») pour quatre colonnes. Le dépôt suppose ailleurs « contact 5A-5C, vapeur 5D » (build_traceability_matrix.ANCRAGE) : cette supposition n'est PAS confirmée par la couche texte et doit être tranchée.",
+      "source": "Luftbefeuchter / Variante 5A 5B 5C 5D / Typ",
+      "statut": "A_CONFIRMER",
+      "valeur": null
+    }
+  },
+  "recuperateur": {
+    "charge_partielle": {
+      "source": "Teillastverhalten",
+      "statut": "RELEVE",
+      "valeur": "Gemäss EN 16798-5-1, Anhang D"
+    },
+    "puissance_entrainement_w": {
+      "source": "Nominale Antriebsleistung",
+      "statut": "RELEVE",
+      "valeur": 120
+    },
+    "taux_humidite_par_variante": {
+      "a_confirmer": "Deux cellules (0.42, 0.3) pour quatre colonnes.",
+      "source": "Nominale Feuchteänderungszahl",
+      "statut": "A_CONFIRMER",
+      "valeur": null
+    },
+    "taux_temperature_par_variante": {
+      "a_confirmer": "Deux cellules (0.67, 0.69) pour quatre colonnes.",
+      "source": "Nominale Temperaturänderungszahl",
+      "statut": "A_CONFIRMER",
+      "valeur": null
+    },
+    "type_par_variante": {
+      "a_confirmer": "Deux cellules (« Hygroskopisch », « Nicht hygroskopisch ») pour quatre colonnes.",
+      "source": "Variante 5A 5B 5C 5D / Typ",
+      "statut": "A_CONFIRMER",
+      "valeur": null
+    },
+    "vitesse_nominale_min_1": {
+      "source": "Nominale Drehzahl",
+      "statut": "RELEVE",
+      "valeur": 20
+    }
+  },
+  "reseau": {
+    "co2_exterieur_ppm": {
+      "source": "Sollwerte / CO2",
+      "statut": "RELEVE",
+      "valeur": 400
+    },
+    "debit_nominal_m3_h": {
+      "source": "Volumenstrom / Nennvolumenstrom",
+      "statut": "RELEVE",
+      "valeur": 1040
+    },
+    "debit_par_personne_m3_h": {
+      "source": "Lüftung — « abweichend von SIA 2024:2021 »",
+      "statut": "RELEVE",
+      "valeur": 25
+    },
+    "debit_variable_min_pourcent": {
+      "source": "Volumenstrom / Variabel von bis",
+      "statut": "RELEVE",
+      "valeur": 30
+    },
+    "horaire_fonctionnement": {
+      "source": "Regelung / Betriebszeit",
+      "statut": "RELEVE",
+      "valeur": "Werktags 06:00 bis 19:00"
+    },
+    "humidite_relative_min_pourcent": {
+      "source": "Sollwerte / Rel. Feuchte",
+      "statut": "RELEVE",
+      "valeur": 30
+    },
+    "infiltration_m3_h_m2": {
+      "source": "Infiltration",
+      "statut": "RELEVE",
+      "valeur": 0.15
+    },
+    "perte_de_charge_reprise_pa": {
+      "source": "Nenn-Druckverlust / Abluft",
+      "statut": "RELEVE",
+      "valeur": 520
+    },
+    "perte_de_charge_soufflage_pa": {
+      "source": "Nenn-Druckverlust / Zuluft",
+      "statut": "RELEVE",
+      "valeur": 770
+    }
+  },
+  "test": 5,
+  "ventilateurs": {
+    "kennfeld": {
+      "a_confirmer": "Courbe caractéristique : graphique SANS étiquette de données. Aucun point n'en est extractible. Sans elle, la puissance des ventilateurs à charge partielle n'est pas reproductible — et c'est une des grandeurs à livrer.",
+      "source": "Ventilatoren / Kennfeld",
+      "statut": "A_CONFIRMER",
+      "valeur": null
+    },
+    "part_pression_constante_pa": {
+      "a_confirmer": "Deux cellules (« 50+50 Pa », « 270+270 Pa ») pour QUATRE colonnes de variantes. Le point de partage n'est pas dans la couche texte.",
+      "source": "Variante 5A 5B 5C 5D / Konstantdruckanteil (ZUL+ABL)",
+      "statut": "A_CONFIRMER",
+      "valeur": null
+    },
+    "puissance_reprise_w": {
+      "source": "Ventilatoren / Nennleistung",
+      "statut": "RELEVE",
+      "valeur": 290
+    },
+    "puissance_soufflage_w": {
+      "source": "Ventilatoren / Nennleistung",
+      "statut": "RELEVE",
+      "valeur": 420
+    },
+    "vitesse_reprise_min_1": {
+      "source": "Ventilatoren / Drehzahl",
+      "statut": "RELEVE",
+      "valeur": 2500
+    },
+    "vitesse_soufflage_min_1": {
+      "source": "Ventilatoren / Drehzahl",
+      "statut": "RELEVE",
+      "valeur": 3000
+    }
+  }
+}

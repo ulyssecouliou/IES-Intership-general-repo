@@ -1,0 +1,44 @@
+{
+  "_comment": [
+    "Verified factual pre-fill for the SIA 4010 Test 1 Anwenderbericht.",
+    "",
+    "Every value here is READ from an artifact, not composed. The source of each",
+    "one is named in the string itself, so a reviewer can check it without",
+    "trusting this file. Nothing here is a judgement, a verdict, or an",
+    "explanation of a deviation.",
+    "",
+    "The 'Feststellungen' section is deliberately absent and must stay absent:",
+    "it is written by the engineer answering for the submission, together with",
+    "the author name and the date. See swiss_sia/reference_model/sia4010/",
+    "anwenderbericht.py -- the report stays ANWENDERBERICHT_DRAFT_UNSIGNED until",
+    "those three arrive, and this file cannot supply them.",
+    "",
+    "Load it with: python scripts/build_anwenderbericht.py --test 1",
+    "  --facts-file config/anwenderbericht_test1_facts.json"
+  ],
+  "program": {
+    "software_name": "IES Virtual Environment",
+    "software_version": "2025.2.0.0",
+    "calculation_engine": "ApacheSim",
+    "supplier": "Integrated Environmental Solutions (IES)",
+    "notes": "Version string read from ve_model_snapshot.ve_version in the recorded 600FF model report, not from documentation."
+  },
+  "input_parameters": [
+    "Test cell per BS EN ISO 52016-1:2017 clause 7, as required by the SIA 4010 Test 1 specification.",
+    "Mechanical ventilation set to zero and verified zero by read-back after mutation (corrected 2026-08-12, commit c7e906b).",
+    "Prescribed infiltration retained separately from ventilation: max flow 0.3075 with units_val = 2, verified retained by read-back; every other air exchange verified exactly zero.",
+    "Thermal-template inheritance disabled, so the room condition carries the case values rather than an inherited template.",
+    "Free-floating cases (600FF, 900FF) run without heating or cooling setpoints; the six normative cases carry no acceptance criterion by specification."
+  ],
+  "data_sources": [
+    "Climate: ISO 52016-1 DRYCOLD (Denver Stapleton), file DRYCOLD_IESVE.epw, path recorded in the model report parameter 'weather_file'. This is the Test 1 climate; it is NOT SIA 2028.",
+    "Reference results: refs/reference-data/test-1.ref.json, frozen from Resultaterfassung_Test1.xlsx, status CORRECTED_PASS_4.",
+    "Acceptance criterion: Spezifikation_Test1.pdf, section Testkriterien, quoted verbatim in engine/test1_engine.py lines 14-25. Case 1E is the only case carrying a pass/fail criterion; the six normative cases state 'Es gibt dafuer kein Abweichungskriterium'.",
+    "Recorded results and checksums: sia4010_evidence/autonomy/sia4010_case_evidence.json, reproduced in the generated 'Recorded evidence' section of this report."
+  ],
+  "special_assumptions": [
+    "Results recorded before 2026-08-12 12:55 predate the zero-mechanical-ventilation correction and are treated as baselines to requalify, not as results. At the time of writing this applies to cases 600 (APS of 2026-08-09) and 640 (APS of 2026-08-11); case 600FF was requalified after the correction (APS of 2026-08-12 14:18).",
+    "Cases 900, 940, 900FF and 1E carry no recorded result and are listed as such rather than omitted, so the scope of the submission is unambiguous.",
+    "Case 1E is not generated: the specification defines it as diagnostic case 1D plus a fabric awning, and cases 1A to 1D are not implemented."
+  ]
+}

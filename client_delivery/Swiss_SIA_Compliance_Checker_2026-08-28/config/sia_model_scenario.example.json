@@ -1,0 +1,38 @@
+{
+  "schema_version": "1.0",
+  "scenario_id": "SIA4010_1A_TEST2A",
+  "profile": "SIA4010_OFFICIAL",
+  "selection": {
+    "target_class": "1A",
+    "variant": "test_2A",
+    "case_id": "2A"
+  },
+  "features": {
+    "geometry": true,
+    "opaque_envelope": true,
+    "glazing": true,
+    "thermal_template": true,
+    "ideal_heating": true,
+    "ideal_cooling": true,
+    "infiltration": true,
+    "internal_gains": true,
+    "weather": true,
+    "solar_protection": true,
+    "lighting_controls": false,
+    "mechanical_ventilation": false,
+    "heat_recovery": false,
+    "humidification": false,
+    "energy_systems": false,
+    "hourly_distributions": true,
+    "aps_results": true,
+    "audit_report": true
+  },
+  "files": {
+    "case_manifest_file": "config/sia4010_classes_1a_1b.json",
+    "ve_config_file": "reference_model_config.json",
+    "ve_asset_manifest_file": "reference_model_assets.json"
+  },
+  "execution": {
+    "mode": "PREPARE_ONLY"
+  }
+}

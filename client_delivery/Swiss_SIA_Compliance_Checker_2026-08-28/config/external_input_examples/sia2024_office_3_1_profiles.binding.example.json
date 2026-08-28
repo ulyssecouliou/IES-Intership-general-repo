@@ -1,0 +1,176 @@
+{
+  "schema_id": "sia4010.sia2024_usage_profiles.v1",
+  "schema_version": "1.0",
+  "primary_source_sha256": "<LOWERCASE_SHA256_OF_AUTHORIZED_PRIMARY_SOURCE>",
+  "source_locator": "<EDITION_CATEGORY_TABLE_AND_SCHEDULE_LOCATORS>",
+  "use_category": "<EXACT_AUTHORIZED_CATEGORY_IDENTITY>",
+  "value_set": "<EXACT_STANDARD_OR_TARGET_VALUE_SET>",
+  "calendar_basis": "<EXACT_DAY_WEEK_YEAR_AND_EXCEPTION_CALENDAR>",
+  "annual_simultaneity_method": "<EXACT_SOURCE_METHOD>",
+  "profiles": [
+    {
+      "key": "occupancy_profile",
+      "profile_type": "<daily_weekly_yearly_compact_or_freeform>",
+      "reference": "<COLLISION_FREE_VE_REFERENCE>",
+      "modulating": true,
+      "units": -1,
+      "data": [],
+      "source_locator": "<EXACT_SOURCE_ROWS>"
+    },
+    {
+      "key": "equipment_profile",
+      "profile_type": "<daily_weekly_yearly_compact_or_freeform>",
+      "reference": "<COLLISION_FREE_VE_REFERENCE>",
+      "modulating": true,
+      "units": -1,
+      "data": [],
+      "source_locator": "<EXACT_SOURCE_ROWS>"
+    },
+    {
+      "key": "lighting_profile",
+      "profile_type": "<daily_weekly_yearly_compact_or_freeform>",
+      "reference": "<COLLISION_FREE_VE_REFERENCE>",
+      "modulating": true,
+      "units": -1,
+      "data": [],
+      "source_locator": "<EXACT_SOURCE_ROWS>"
+    }
+  ],
+  "ve_profile_graph": {
+    "source_locator": "<EXACT_SOURCE_ROWS_AND_DOCUMENTED_DAY_WEEK_YEAR_MAPPING>",
+    "nodes": [
+      {
+        "key": "occupancy_daily_source_node",
+        "profile_type": "daily",
+        "reference": "<COLLISION_FREE_VE_DAILY_REFERENCE>",
+        "modulating": true,
+        "units": -1,
+        "data": [],
+        "source_locator": "<EXACT_DAILY_SOURCE_ROWS>"
+      },
+      {
+        "key": "occupancy_weekly_source_node",
+        "profile_type": "weekly",
+        "reference": "<COLLISION_FREE_VE_WEEKLY_REFERENCE>",
+        "modulating": true,
+        "units": -1,
+        "data": [
+          {"profile_ref": "occupancy_daily_source_node"},
+          {"profile_ref": "occupancy_daily_source_node"},
+          {"profile_ref": "occupancy_daily_source_node"},
+          {"profile_ref": "occupancy_daily_source_node"},
+          {"profile_ref": "occupancy_daily_source_node"},
+          {"profile_ref": "occupancy_daily_source_node"},
+          {"profile_ref": "occupancy_daily_source_node"},
+          {"profile_ref": "occupancy_daily_source_node"},
+          {"profile_ref": "occupancy_daily_source_node"},
+          {"profile_ref": "occupancy_daily_source_node"},
+          {"profile_ref": "occupancy_daily_source_node"},
+          {"profile_ref": "occupancy_daily_source_node"}
+        ],
+        "source_locator": "<EXACT_WEEKLY_SOURCE_MAPPING>"
+      },
+      {
+        "key": "occupancy_yearly_source_node",
+        "profile_type": "yearly",
+        "reference": "<COLLISION_FREE_VE_YEARLY_REFERENCE>",
+        "modulating": true,
+        "units": -1,
+        "data": [
+          [{"profile_ref": "occupancy_weekly_source_node"}, 1, 365]
+        ],
+        "source_locator": "<EXACT_ANNUAL_SOURCE_MAPPING>"
+      },
+      {
+        "key": "equipment_daily_source_node",
+        "profile_type": "daily",
+        "reference": "<COLLISION_FREE_VE_DAILY_REFERENCE>",
+        "modulating": true,
+        "units": -1,
+        "data": [],
+        "source_locator": "<EXACT_DAILY_SOURCE_ROWS>"
+      },
+      {
+        "key": "equipment_weekly_source_node",
+        "profile_type": "weekly",
+        "reference": "<COLLISION_FREE_VE_WEEKLY_REFERENCE>",
+        "modulating": true,
+        "units": -1,
+        "data": [
+          {"profile_ref": "equipment_daily_source_node"},
+          {"profile_ref": "equipment_daily_source_node"},
+          {"profile_ref": "equipment_daily_source_node"},
+          {"profile_ref": "equipment_daily_source_node"},
+          {"profile_ref": "equipment_daily_source_node"},
+          {"profile_ref": "equipment_daily_source_node"},
+          {"profile_ref": "equipment_daily_source_node"},
+          {"profile_ref": "equipment_daily_source_node"},
+          {"profile_ref": "equipment_daily_source_node"},
+          {"profile_ref": "equipment_daily_source_node"},
+          {"profile_ref": "equipment_daily_source_node"},
+          {"profile_ref": "equipment_daily_source_node"}
+        ],
+        "source_locator": "<EXACT_WEEKLY_SOURCE_MAPPING>"
+      },
+      {
+        "key": "equipment_yearly_source_node",
+        "profile_type": "yearly",
+        "reference": "<COLLISION_FREE_VE_YEARLY_REFERENCE>",
+        "modulating": true,
+        "units": -1,
+        "data": [
+          [{"profile_ref": "equipment_weekly_source_node"}, 1, 365]
+        ],
+        "source_locator": "<EXACT_ANNUAL_SOURCE_MAPPING>"
+      },
+      {
+        "key": "lighting_daily_source_node",
+        "profile_type": "daily",
+        "reference": "<COLLISION_FREE_VE_DAILY_REFERENCE>",
+        "modulating": true,
+        "units": -1,
+        "data": [],
+        "source_locator": "<EXACT_DAILY_SOURCE_ROWS>"
+      },
+      {
+        "key": "lighting_weekly_source_node",
+        "profile_type": "weekly",
+        "reference": "<COLLISION_FREE_VE_WEEKLY_REFERENCE>",
+        "modulating": true,
+        "units": -1,
+        "data": [
+          {"profile_ref": "lighting_daily_source_node"},
+          {"profile_ref": "lighting_daily_source_node"},
+          {"profile_ref": "lighting_daily_source_node"},
+          {"profile_ref": "lighting_daily_source_node"},
+          {"profile_ref": "lighting_daily_source_node"},
+          {"profile_ref": "lighting_daily_source_node"},
+          {"profile_ref": "lighting_daily_source_node"},
+          {"profile_ref": "lighting_daily_source_node"},
+          {"profile_ref": "lighting_daily_source_node"},
+          {"profile_ref": "lighting_daily_source_node"},
+          {"profile_ref": "lighting_daily_source_node"},
+          {"profile_ref": "lighting_daily_source_node"}
+        ],
+        "source_locator": "<EXACT_WEEKLY_SOURCE_MAPPING>"
+      },
+      {
+        "key": "lighting_yearly_source_node",
+        "profile_type": "yearly",
+        "reference": "<COLLISION_FREE_VE_YEARLY_REFERENCE>",
+        "modulating": true,
+        "units": -1,
+        "data": [
+          [{"profile_ref": "lighting_weekly_source_node"}, 1, 365]
+        ],
+        "source_locator": "<EXACT_ANNUAL_SOURCE_MAPPING>"
+      }
+    ],
+    "outputs": {
+      "occupancy_profile": "occupancy_yearly_source_node",
+      "equipment_profile": "equipment_yearly_source_node",
+      "lighting_profile": "lighting_yearly_source_node"
+    }
+  },
+  "completion_guardrail": "Do not substitute generic office schedules or pass 8760 scalar values to VEProject.create_profile('yearly'). Preserve the exact authorized calendar in the explicit daily-weekly-yearly VE dependency graph."
+}

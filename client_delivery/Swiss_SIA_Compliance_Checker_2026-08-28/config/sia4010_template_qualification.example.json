@@ -1,0 +1,23 @@
+{
+  "schema_version": "1.0",
+  "status": "QUALIFIED",
+  "reviewer": "<INDEPENDENT_REVIEWER_NAME>",
+  "reviewed_at": "<ISO_8601_DATE>",
+  "ve_version": "IESVE 2025 <EXACT_BUILD>",
+  "template_signature_sha256": "<VALUE_FROM_sia4010_template_candidate.json>",
+  "covered_cases": ["test_4/4"],
+  "evidence": [
+    "official_example_building_trace",
+    "apachehvac_topology_review",
+    "control_sequence_review",
+    "qualified_weather",
+    "qualified_aps"
+  ],
+  "source_trace": [
+    "<OFFICIAL_SPECIFICATION_PATH_AND_CHECKSUM>",
+    "<OFFICIAL_WORKBOOK_PATH_AND_CHECKSUM>",
+    "<MODEL_REVIEW_REPORT_PATH_AND_CHECKSUM>"
+  ],
+  "limitations": [],
+  "claim_guardrail": "Template qualification permits controlled reuse only; it is not an SIA validation verdict."
+}

@@ -1,0 +1,242 @@
+"""Rule engine used by the Swiss SIA compliance checker.
+
+The engine stores named compliance rules, applies them to normalized VE data,
+and returns structured alerts when a rule is not satisfied.
+"""
+
+from __future__ import annotations
+
+import logging
+from dataclasses import dataclass
+from enum import Enum
+from typing import Any, Callable, Dict, List, Optional
+
+logger = logging.getLogger(__name__)
+
+
+class Severity(Enum):
+    """Alert severity levels used to prioritize compliance remediation work."""
+
+    CRITICAL = "Critical"
+    HIGH = "High"
+    MEDIUM = "Medium"
+    LOW = "Low"
+
+
+@dataclass
+class Alert:
+    """Structured alert raised by a rule or by a manual completeness check."""
+
+    rule: str
+    description: str
+    severity: Severity
+    category: str
+    recommendation: str
+    data: Optional[Any] = None
+
+
+@dataclass
+class Rule:
+    """Compliance rule applied to one VE-derived object."""
+
+    name: str
+    description: str
+    check: Callable[[Any], bool]
+    severity: Severity
+    category: str
+    recommendation: str
+
+
+class RuleEngine:
+    """Apply named rules to VE-derived data and collect alerts."""
+
+    def __init__(self):
+        """Initialize an empty rule engine."""
+        self.rules: List[Rule] = []
+        self._rules_by_name: Dict[str, Rule] = {}
+        self.alerts: List[Alert] = []
+        self.evaluated_counts: Dict[str, int] = {}
+        self.evaluation_error_counts: Dict[str, int] = {}
+
+    def add_rule(self, rule: Rule):
+        """Register a single rule."""
+        self.rules.append(rule)
+        self._rules_by_name[rule.name] = rule
+
+    def add_rules(self, rules: List[Rule]):
+        """Register multiple rules while keeping the name index in sync."""
+        for rule in rules:
+            self.add_rule(rule)
+
+    @staticmethod
+    def _make_alert(rule: Rule, data: Any) -> Alert:
+        """Build a rule alert in one place to keep all rule paths consistent."""
+        return Alert(
+            rule=rule.name,
+            description=rule.description,
+            severity=rule.severity,
+            category=rule.category,
+            recommendation=rule.recommendation,
+            data=data,
+        )
+
+    def add_alert(
+        self,
+        rule: str,
+        description: str,
+        severity: Severity,
+        category: str,
+        recommendation: str,
+        data: Optional[Any] = None,
+    ) -> Alert:
+        """Add a manual alert for non-checkable or incomplete situations."""
+        alert = Alert(
+            rule=rule,
+            description=description,
+            severity=severity,
+            category=category,
+            recommendation=recommendation,
+            data=data,
+        )
+        self.alerts.append(alert)
+        return alert
+
+    def _make_execution_error_alert(
+        self,
+        rule: Rule,
+        exc: Exception,
+    ) -> Alert:
+        """Record a failed rule execution as a critical, fail-closed alert."""
+
+        self.evaluation_error_counts[rule.name] = (
+            self.evaluation_error_counts.get(rule.name, 0) + 1
+        )
+        return Alert(
+            rule="RULE_EXECUTION_ERROR:{}".format(rule.name),
+            description=(
+                "Compliance rule {!r} could not be evaluated; no PASS or "
+                "score may be derived from this execution."
+            ).format(rule.name),
+            severity=Severity.CRITICAL,
+            category=rule.category,
+            recommendation=(
+                "Inspect the rule implementation and its normalized input, "
+                "then rerun the complete assessment."
+            ),
+            data={
+                "failed_rule": rule.name,
+                "exception_type": type(exc).__name__,
+                "error": str(exc),
+            },
+        )
+
+    def check_all(self, data: Any, reset: bool = False) -> List[Alert]:
+        """Apply every registered rule to one data object."""
+        if reset:
+            self.clear_alerts()
+
+        new_alerts: List[Alert] = []
+        for rule in self.rules:
+            try:
+                passed = bool(rule.check(data))
+                self.evaluated_counts[rule.name] = (
+                    self.evaluated_counts.get(rule.name, 0) + 1
+                )
+                if not passed:
+                    alert = self._make_alert(rule, data)
+                    self.alerts.append(alert)
+                    new_alerts.append(alert)
+            except Exception as exc:
+                logger.exception("Error while applying rule %s", rule.name)
+                alert = self._make_execution_error_alert(rule, exc)
+                self.alerts.append(alert)
+                new_alerts.append(alert)
+        return new_alerts
+
+    def check_rules(self, rule_names: List[str], data: Any) -> List[Alert]:
+        """Apply only the requested named rules to one data object."""
+        alerts: List[Alert] = []
+        for rule_name in rule_names:
+            rule = self._rules_by_name.get(rule_name)
+            if rule is None:
+                continue
+            try:
+                passed = bool(rule.check(data))
+                self.evaluated_counts[rule.name] = (
+                    self.evaluated_counts.get(rule.name, 0) + 1
+                )
+                if not passed:
+                    alert = self._make_alert(rule, data)
+                    self.alerts.append(alert)
+                    alerts.append(alert)
+            except Exception as exc:
+                logger.exception("Error while applying rule %s", rule.name)
+                alert = self._make_execution_error_alert(rule, exc)
+                self.alerts.append(alert)
+                alerts.append(alert)
+        return alerts
+
+    def check_rule(self, rule_name: str, data: Any) -> Optional[Alert]:
+        """Apply one named rule and return an alert if it fails."""
+        rule = self._rules_by_name.get(rule_name)
+        if rule is None:
+            return None
+        try:
+            passed = bool(rule.check(data))
+            self.evaluated_counts[rule.name] = self.evaluated_counts.get(rule.name, 0) + 1
+            if not passed:
+                alert = self._make_alert(rule, data)
+                self.alerts.append(alert)
+                return alert
+        except Exception as exc:
+            logger.exception("Error while applying rule %s", rule.name)
+            alert = self._make_execution_error_alert(rule, exc)
+            self.alerts.append(alert)
+            return alert
+        return None
+
+    def clear_alerts(self):
+        """Clear collected alerts and rule-evaluation counters."""
+        self.alerts = []
+        self.evaluated_counts = {}
+        self.evaluation_error_counts = {}
+
+    def get_alerts_by_severity(self, severity: Severity) -> List[Alert]:
+        """Return collected alerts for one severity level."""
+        return [alert for alert in self.alerts if alert.severity == severity]
+
+    def get_alerts_by_category(self, category: str) -> List[Alert]:
+        """Return collected alerts for one category."""
+        return [alert for alert in self.alerts if alert.category == category]
+
+    def get_critical_alerts(self) -> List[Alert]:
+        """Return alerts that block a safe compliance-readiness claim."""
+        return self.get_alerts_by_severity(Severity.CRITICAL)
+
+    def get_high_alerts(self) -> List[Alert]:
+        """Return high-severity alerts that should be corrected before review."""
+        return self.get_alerts_by_severity(Severity.HIGH)
+
+    def get_medium_alerts(self) -> List[Alert]:
+        """Return medium-severity alerts that represent partial readiness gaps."""
+        return self.get_alerts_by_severity(Severity.MEDIUM)
+
+    def get_low_alerts(self) -> List[Alert]:
+        """Return low-severity alerts used for traceability and minor cleanup."""
+        return self.get_alerts_by_severity(Severity.LOW)
+
+    def count_alerts_by_severity(self) -> Dict[str, int]:
+        """Count collected alerts by severity level."""
+        return {
+            "Critical": len(self.get_critical_alerts()),
+            "High": len(self.get_high_alerts()),
+            "Medium": len(self.get_medium_alerts()),
+            "Low": len(self.get_low_alerts()),
+        }
+
+    def count_alerts_by_category(self) -> Dict[str, int]:
+        """Count collected alerts by category."""
+        categories: Dict[str, int] = {}
+        for alert in self.alerts:
+            categories[alert.category] = categories.get(alert.category, 0) + 1
+        return categories

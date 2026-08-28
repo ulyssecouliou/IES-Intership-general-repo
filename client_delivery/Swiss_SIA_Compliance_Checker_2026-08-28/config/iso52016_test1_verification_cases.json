@@ -1,0 +1,190 @@
+{
+  "schema_version": "1.0",
+  "document": "BS EN ISO 52016-1:2017",
+  "evidence": {
+    "type": "licensed_user_supplied_screenshots",
+    "pages": [128, 129, 130, 131, 132, 133, 134],
+    "redistribution_allowed": false
+  },
+  "common_inputs": {
+    "monthly_climate_reference": {
+      "source_locator": "Table 26, pages 128-129",
+      "external_air_temperature_c": {"months": [-1.7, -0.6, 3.6, 9.3, 14.0, 18.2, 22.7, 21.2, 16.8, 9.5, 3.5, -0.7], "annual": 9.6},
+      "total_solar_irradiation_kwh_m2": {
+        "N": {"months": [16.5, 21.2, 35.5, 42.5, 56.4, 59.4, 57.7, 44.7, 34.8, 26.3, 18.9, 15.9], "annual": 429.7},
+        "E": {"months": [60.1, 66.1, 107.9, 112.5, 128.5, 126.7, 139.0, 120.3, 101.7, 81.1, 55.1, 51.1], "annual": 1150.0},
+        "S": {"months": [159.9, 132.7, 151.4, 114.4, 97.1, 82.8, 91.9, 109.0, 138.6, 165.6, 146.6, 157.2], "annual": 1547.1},
+        "W": {"months": [56.3, 58.8, 90.3, 98.7, 112.6, 112.7, 109.9, 103.3, 97.7, 89.6, 61.4, 55.1], "annual": 1046.6},
+        "H": {"months": [82.5, 96.8, 159.8, 183.0, 218.0, 223.8, 230.5, 199.1, 168.8, 130.4, 83.0, 72.8], "annual": 1848.5}
+      },
+      "diffuse_solar_irradiation_kwh_m2": {
+        "vertical_all_orientations": {"months": [16.5, 21.2, 35.5, 41.2, 48.8, 46.9, 46.6, 42.2, 34.7, 26.3, 18.9, 15.9], "annual": 394.6},
+        "H": {"months": [14.1, 20.4, 31.2, 35.1, 41.2, 35.5, 32.5, 31.8, 24.8, 17.5, 14.9, 11.8], "annual": 310.8}
+      },
+      "direct_solar_irradiation_kwh_m2": {
+        "N": {"months": [0.0, 0.0, 0.0, 1.3, 7.6, 12.5, 11.1, 2.5, 0.1, 0.0, 0.0, 0.0], "annual": 35.1},
+        "E": {"months": [43.5, 44.9, 72.4, 71.3, 79.7, 79.9, 92.5, 78.1, 67.0, 54.8, 36.2, 35.2], "annual": 755.4},
+        "S": {"months": [143.4, 111.5, 115.9, 73.2, 48.3, 35.9, 45.4, 66.8, 103.9, 139.3, 127.7, 141.3], "annual": 1152.5},
+        "W": {"months": [39.7, 37.6, 54.9, 57.5, 63.8, 65.9, 63.4, 61.1, 63.0, 63.3, 42.5, 39.2], "annual": 651.9},
+        "H": {"months": [68.5, 76.5, 128.7, 148.0, 176.7, 188.3, 198.0, 167.2, 144.0, 112.9, 68.1, 61.0], "annual": 1537.7}
+      }
+    },
+    "ground_boundary": {
+      "source_locator": "Page 129, continuation of Clause 7.2.2.12",
+      "ground_temperature_equals_external_air_temperature": true,
+      "floor_is_effectively_decoupled_from_ground": true
+    },
+    "sky_temperature": {
+      "source_locator": "Page 129, continuation of Clause 7.2.2.12",
+      "external_air_minus_apparent_sky_temperature_k": 11.0,
+      "constant_all_hours": true
+    },
+    "internal_gain": {
+      "source_locator": "Clause 7.2.2.13, page 129",
+      "whole_zone_sensible_gain_w": 200.0,
+      "specific_value_reported_w_m2": 1.453,
+      "schedule": "constant_24h_full_year",
+      "convective_fraction": 0.4,
+      "radiative_fraction": 0.6
+    },
+    "infiltration": {
+      "source_locator": "Clause 7.2.2.14, page 129",
+      "air_changes_per_hour": 0.41,
+      "calculated_zone_air_flow_m3_s": 0.01476,
+      "reported_rounded_zone_air_flow_m3_s": 0.0148,
+      "floor_area_specific_flow_m3_h_m2": 1.107,
+      "schedule": "constant_24h_full_year",
+      "mechanical_ventilation": "none",
+      "independent_of_wind_and_temperature_difference": true,
+      "altitude_mass_flow_adjustment_factor": 0.822,
+      "weather_station_altitude_m": 1609
+    },
+    "thermostats": {
+      "source_locator": "Clause 7.2.2.15, pages 129-130",
+      "continuous": {
+        "heating_setpoint_c": 20.0,
+        "cooling_setpoint_c": 27.0
+      },
+      "intermittent": {
+        "heating_setpoint_schedule": [[0.0, 10.0], [7.0, 20.0], [23.0, 10.0], [24.0, 10.0]],
+        "cooling_setpoint_c": 27.0,
+        "night_cooling_setback": false
+      }
+    },
+    "available_capacity": {
+      "source_locator": "Clause 7.2.2.16, page 130",
+      "heating_w": 1000000.0,
+      "cooling_w": 1000000.0,
+      "meaning": "effectively_infinite"
+    }
+  },
+  "cases": {
+    "600": {"construction": "lightweight", "control": "continuous"},
+    "640": {"construction": "lightweight", "control": "intermittent"},
+    "900": {"construction": "heavyweight", "control": "continuous"},
+    "940": {"construction": "heavyweight", "control": "intermittent"},
+    "600FF": {"construction": "lightweight", "control": "free_floating"},
+    "900FF": {"construction": "heavyweight", "control": "free_floating"}
+  },
+  "reference_results": {
+    "comparison_policy": {
+      "mode": "REFERENCE_ONLY",
+      "official_acceptance_tolerance_available_in_captured_pages": false,
+      "rule": "Record signed deviations from the published values; do not emit PASS or FAIL until a normative acceptance tolerance or band is supplied."
+    },
+    "monthly_heating_need_kwh": {
+      "source_locator": "Table 28, page 131",
+      "600": {"months": [1005, 849, 636, 358, 154, 63, 6, 11, 95, 375, 644, 938], "annual": 5133},
+      "640": {"months": [718, 591, 358, 169, 47, 22, 0, 0, 19, 151, 389, 646], "annual": 3112},
+      "900": {"months": [84, 53, 121, 147, 175, 308, 638, 656, 626, 418, 84, 48], "annual": 3360},
+      "940": {"months": [350, 333, 118, 69, 4, 8, 0, 0, 0, 27, 120, 272], "annual": 1303}
+    },
+    "monthly_cooling_need_kwh": {
+      "source_locator": "Table 29, page 131",
+      "600": {"months": [640, 498, 601, 464, 404, 456, 722, 778, 862, 876, 589, 614], "annual": 7503},
+      "640": {"months": [586, 451, 537, 421, 380, 446, 720, 775, 835, 812, 538, 557], "annual": 7057},
+      "900": {"months": [16, 14, 13, 5, 2, 0, 0, 0, 2, 6, 5, 13], "annual": 76},
+      "940": {"months": [63, 34, 108, 141, 173, 306, 638, 656, 625, 412, 68, 36], "annual": 3261}
+    },
+    "monthly_average_operative_temperature_c": {
+      "source_locator": "Table 30, pages 131-132",
+      "600": {"months": [22.0, 22.0, 22.6, 22.9, 23.5, 24.4, 25.6, 25.2, 24.2, 23.0, 22.2, 22.1], "annual": 23.3},
+      "640": {"months": [19.0, 18.9, 19.8, 20.9, 22.4, 24.0, 25.6, 25.1, 23.6, 20.9, 19.4, 19.0], "annual": 21.5},
+      "900": {"months": [22.3, 22.2, 23.1, 23.9, 24.5, 25.7, 26.6, 26.6, 26.1, 24.8, 22.8, 22.2], "annual": 24.2},
+      "940": {"months": [21.2, 20.9, 22.3, 23.5, 24.4, 25.7, 26.6, 26.6, 26.1, 24.7, 22.1, 21.1], "annual": 23.8},
+      "600FF": {"months": [17.3, 16.7, 22.1, 24.3, 26.7, 29.6, 35.0, 35.2, 34.6, 29.7, 21.4, 17.9], "annual": 25.9},
+      "900FF": {"months": [17.6, 16.4, 21.9, 24.7, 26.6, 29.3, 34.9, 35.2, 34.7, 30.3, 21.3, 18.0], "annual": 25.9}
+    },
+    "annual_hourly_integrated_peak_kwh": {
+      "source_locator": "Table 31, page 132",
+      "600": {"heating": 4.351, "cooling": 6.363},
+      "640": {"heating": 6.690, "cooling": 6.233},
+      "900": {"heating": 4.067, "cooling": 4.043},
+      "940": {"heating": 9.793, "cooling": 4.047}
+    },
+    "free_float_annual_operative_temperature_c": {
+      "source_locator": "Table 32, page 132",
+      "600FF": {"maximum": 63.5, "minimum": -16.9, "average": 25.9},
+      "900FF": {"maximum": 44.4, "minimum": -2.4, "average": 26.0}
+    },
+    "january_4_hourly_sensible_load": {
+      "source_locator": "Table 33, pages 132-133",
+      "published_integer_scale_to_kwh": 0.001,
+      "sign_convention": "heating_positive_cooling_negative",
+      "600": {"published_values": [4189, 4287, 4254, 4289, 4314, 4334, 4351, 4008, 1678, 0, -1478, -2916, -3028, -2620, -1330, 0, 1170, 3047, 3194, 3347, 3529, 3602, 3661, 3729], "day_heating_published": 60983, "day_cooling_published": 11372},
+      "640": {"published_values": [2380, 2677, 2779, 2910, 3004, 3076, 3131, 6690, 2360, 13, -849, -2601, -2783, -2426, -1173, 0, 1344, 3143, 3275, 3416, 3588, 3654, 3707, 0], "day_heating_published": 51147, "day_cooling_published": 9832},
+      "900": {"published_values": [3663, 3805, 3826, 3900, 3962, 4017, 4067, 3994, 3069, 1890, 89, 0, 0, 0, 0, 0, 0, 1233, 1652, 1913, 2189, 2369, 2530, 2694], "day_heating_published": 50862, "day_cooling_published": 0},
+      "940": {"published_values": [0, 0, 0, 0, 0, 588, 914, 9793, 5425, 3848, 1791, 810, 145, 0, 0, 336, 1705, 2391, 2614, 2762, 2943, 3040, 3128, 0], "day_heating_published": 42233, "day_cooling_published": 0}
+    },
+    "january_4_hourly_free_float_operative_temperature_c": {
+      "source_locator": "Table 34, pages 133-134",
+      "600FF": [-12.7, -13.8, -14.5, -15.2, -15.8, -16.4, -16.9, -16.4, -10.3, -1.6, 12.1, 20.5, 26.0, 28.8, 27.9, 23.7, 13.8, 7.1, 3.2, 0.4, -1.9, -3.7, -5.2, -6.6],
+      "900FF": [0.69, 0.13, -0.31, -0.77, -1.22, -1.66, -2.09, -2.38, -1.63, -0.15, 2.42, 4.39, 5.94, 7.13, 7.55, 7.26, 5.82, 4.54, 3.74, 3.17, 2.63, 2.18, 1.77, 1.36]
+    }
+  },
+  "alternative_method_validation": {
+    "source_locator": "Clause 7.3, page 134",
+    "allowed_only_if": "The Clause 7.2 verification cases are applied and deviations from reference results are reported.",
+    "annex_a10_role": "normative template selecting allowed alternatives",
+    "annex_b10_role": "informative default choices",
+    "annexes_needed_now": false,
+    "annex_evidence_complete": true,
+    "evidence_sha256": {
+      "table_A10.png": "19D117369118A520799563C090A6F5DBE142DD24DD5F0ADCD6DEFF9CD05AA4BA",
+      "table_B10.png": "988F4948172CB4B53E1304C5BAADF9F86E3A1AAF3D14E88D9CEBCA21FD34DF78"
+    },
+    "b10_informative_defaults": {
+      "iso_6_5_5_2_actual_temperatures_and_loads": "Yes",
+      "iso_6_5_6_3_1_longwave_radiation_exchange": "Yes",
+      "iso_6_5_7_1_layer_to_node_conversion": "Yes"
+    },
+    "apachesim_a10_declaration": {
+      "decision_policy": "Fail closed: select Yes only with evidence that ApacheSim implements the exact cited ISO procedure; otherwise declare No, identify the alternative method and validate it with Clause 7.2.",
+      "status": "ALTERNATIVE_METHODS_REQUIRE_CLAUSE_7_2_VALIDATION",
+      "choices": {
+        "iso_6_5_5_2_actual_temperatures_and_loads": {
+          "choice": "No",
+          "alternative_method": "ApacheSim first-principles room and surface heat balances, solved using linear algebra with iteration for nonlinear equations.",
+          "evidence": "IES ApacheSim Calculation Methods - Room & Building Heat Balance",
+          "evidence_url": "https://help.iesve.com/ve2021/room___building_heat_balance.htm",
+          "qualification": "Clause 7.2 cases 600, 640, 900, 940, 600FF and 900FF"
+        },
+        "iso_6_5_6_3_1_longwave_radiation_exchange": {
+          "choice": "No",
+          "alternative_method": "ApacheSim CIBSE mean radiant temperature model with a single radiant node and linearised longwave exchange.",
+          "evidence": "IES ApacheSim Calculation Methods - Long-wave Radiation Heat Transfer",
+          "evidence_url": "https://help.iesve.com/ve2021/long_wave_radiation_heat_transfer.htm",
+          "qualification": "Clause 7.2 cases 600, 640, 900, 940, 600FF and 900FF"
+        },
+        "iso_6_5_7_1_layer_to_node_conversion": {
+          "choice": "No",
+          "alternative_method": "ApacheSim one-dimensional finite-difference discretisation with multiple nodes per layer and hopscotch explicit/implicit time stepping.",
+          "evidence": "IES ApacheSim Calculation Methods - Heat Conduction and Storage",
+          "evidence_url": "https://help.iesve.com/ve2025/heat_conduction_and_storage.htm",
+          "qualification": "Clause 7.2 cases 600, 640, 900, 940, 600FF and 900FF"
+        }
+      }
+    },
+    "formal_review_note": "The No selections are a conservative inference from published IES method descriptions, not an IES attestation that the cited ISO procedures are absent. An internal IES solver-owner statement may supersede them."
+  }
+}

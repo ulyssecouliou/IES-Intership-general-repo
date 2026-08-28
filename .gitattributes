@@ -7,6 +7,8 @@
 *.ifc binary
 *.pdf binary
 *.png binary
+*.docx binary
+*.pptx binary
 *.xls binary
 *.xlsm binary
 *.xlsx binary
@@ -24,3 +26,17 @@ sia4010_evidence/** binary
 # This authority-supplied climate source is checksum-bound byte-for-byte.
 # Never let Git for Windows rewrite LF to CRLF in the working tree.
 references/standards/sia2028/KLO_dry.txt binary
+
+# Keep client-delivery text deterministic on every platform so its integrity
+# manifest can be verified after checkout. Binary training and brand assets are
+# byte-preserved; the large video is stored through Git LFS.
+client_delivery/**/*.py text eol=lf
+client_delivery/**/*.json text eol=lf
+client_delivery/**/*.md text eol=lf
+client_delivery/**/*.csv text eol=lf
+client_delivery/**/*.txt text eol=lf
+client_delivery/**/.gitkeep text eol=lf
+client_delivery/**/*.png binary
+client_delivery/**/*.docx binary
+client_delivery/**/*.pptx binary
+client_delivery/**/*.mp4 filter=lfs diff=lfs merge=lfs -text

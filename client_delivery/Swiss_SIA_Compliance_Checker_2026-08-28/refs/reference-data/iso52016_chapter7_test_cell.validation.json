@@ -1,0 +1,47 @@
+{
+  "schema_version": "1.0",
+  "input_id": "iso52016_2017_chapter7_test_cell",
+  "source_path": "config/iso52016_chapter7_confirmed_inputs.json",
+  "source_sha256": "b177daa2d41840c0665e0040d1d2bb6e46351ce47d4580289df9175afbac5c82",
+  "status": "PASS",
+  "validated_by": "Controle arithmetique independant de la transcription, recalcule a la production de ce rapport",
+  "validation_method": "Recalcul des grandeurs derivees depuis les grandeurs primitives : resistance depuis epaisseur et conductivite, capacite surfacique depuis masse volumique, chaleur massique et epaisseur, somme des couches contre total declare, surface et volume contre geometrie",
+  "checks": [
+    {
+      "id": "ISO52016-CH7-LAYER-RESISTANCE-CONSISTENCY",
+      "status": "PASS",
+      "detail": "Sur les 13 couches des 5 elements opaques, la resistance declaree est reproduite par epaisseur/conductivite a 0.00100 m2K/W pres. Ecart maximal entre la somme des couches et le total declare : 0.00100 m2K/W, soit l'arrondi des valeurs publiees a trois ou quatre decimales."
+    },
+    {
+      "id": "ISO52016-CH7-AREAL-CAPACITY-CONSISTENCY",
+      "status": "PASS",
+      "detail": "La capacite surfacique declaree de chaque couche est reproduite par masse volumique x chaleur massique x epaisseur a 0.28 J/(m2K) pres. L'isolation ideale du plancher conserve ses zeros publies, densite et chaleur massique comprises."
+    },
+    {
+      "id": "ISO52016-CH7-SURFACE-COEFFICIENT-CONSISTENCY",
+      "status": "PASS",
+      "detail": "Les quatre coefficients de surface combines valent la somme de leur part convective et de leur part radiative a 0.000000000 W/(m2K) pres : mur horizontal 2.5+5.13, toit vers le haut 5.0+5.13, plancher vers le bas 0.7+5.13, exterieur 20.0+4.14. L'artefact normalise conserve les trois orientations interieures separement, comme la source, au lieu de les aplatir en une valeur unique."
+    },
+    {
+      "id": "ISO52016-CH7-GEOMETRY-CONSISTENCY",
+      "status": "PASS",
+      "detail": "8.0 x 6.0 m reproduit la surface au sol declaree a 0.000 m2 pres, et x 2.7 m le volume declare a 0.000 m3 pres."
+    },
+    {
+      "id": "ISO52016-CH7-LOCATORS-PRESENT",
+      "status": "PASS",
+      "detail": "Chaque bloc porte son localisateur de clause et de page dans ISO EN 52016-1:2017, cellule d'essai en 7.2.2.2 et capacite interne en 7.2.2.4 et 7.2.2.5. Aucune valeur n'est presente sans son renvoi."
+    },
+    {
+      "id": "ISO52016-CH7-SCOPE-OF-THIS-PASS",
+      "status": "PASS",
+      "detail": "Ce PASS porte sur la coherence interne de la transcription, non sur une relecture ligne a ligne de la norme licenciee, qui demanderait le document sous les yeux. Il ne dit rien de l'autorisation d'usage : c'est un champ distinct du manifeste."
+    }
+  ],
+  "binding_artifact": {
+    "path": "iso52016_chapter7_test_cell.binding.json",
+    "sha256": "2d925deb363be663b1b2d2da848b3651adebf9e074490cc48d47a30b8bc704eb",
+    "schema_id": "sia4010.iso52016_chapter7_test_cell.v1"
+  },
+  "claim_guardrail": "PASS valide la coherence interne de la transcription et la presence des localisateurs. Il ne vaut ni relecture de la norme licenciee, ni autorisation d'usage, ni resultat de simulation."
+}

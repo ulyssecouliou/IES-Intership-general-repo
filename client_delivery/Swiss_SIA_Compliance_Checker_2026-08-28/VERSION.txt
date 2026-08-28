@@ -1,0 +1,7 @@
+Swiss SIA Compliance Checker client delivery
+Release: 2026-08-28
+Runtime: IESVE 2025 / Python 3.12
+Primary launcher: Run_VE_Swiss_Compliance.py
+Default language: English
+Scope: SIA 380/2 client-building engineering assessment
+Official SIA certification or SIA 4010 attestation: not included

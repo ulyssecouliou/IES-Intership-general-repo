@@ -1,0 +1,61 @@
+{
+ "grandeur": "Consigne de température de l'air du local — Test SIA 4010 n° 4 (Hörsaal)",
+ "statut": "FIGÉ — lu sur le graphique de la spécification",
+ "type": "consigne glissante sur la moyenne mobile 48 h de la température extérieure",
+ "unite": "°C",
+ "source": {
+  "fichier": "SIA_4010_geteilter_Link\\Test4\\Spezifikation_Test4.pdf",
+  "emplacement": "ligne « Sollwerte / Raumlufttemperatur »",
+  "image": {
+   "page": 2,
+   "x0": 307.35,
+   "y0": 74.55,
+   "x1": 581.1,
+   "y1": 182.55
+  },
+  "pourquoi": "La cellule est VIDE dans la couche texte du PDF. La consigne n'existe que sous forme d'image."
+ },
+ "abscisse": "Gleitender 48-h Mittelwert Aussenlufttemperatur, °C",
+ "consignes": {
+  "chauffage": {
+   "couleur_du_trace": "rouge (la plus basse)",
+   "points": [
+    [
+     19.0,
+     22.0
+    ],
+    [
+     23.5,
+     23.5
+    ]
+   ],
+   "etiquettes_lues": [
+    "19;22",
+    "23.5;23.5"
+   ]
+  },
+  "refroidissement": {
+   "couleur_du_trace": "bleu (la plus haute)",
+   "points": [
+    [
+     12.0,
+     23.0
+    ],
+    [
+     17.0,
+     25.0
+    ]
+   ],
+   "etiquettes_lues": [
+    "12;23",
+    "17;25"
+   ]
+  }
+ },
+ "reserves": [
+  "La consigne est ABSENTE de la couche texte du PDF : elle n'existe que sous forme d'image. Une extraction textuelle conclut à tort qu'il n'y a pas de consigne.",
+  "L'attribution chauffage/refroidissement est DÉDUITE de la position relative des courbes, faute de légende sur le graphique. Cohérente (la bande morte passe de 1,0 K à 1,5 K) mais non certifiée.",
+  "Les quatre points viennent des étiquettes portées sur le tracé, pas d'une lecture de pixels. Entre deux points, l'interpolation linéaire est supposée d'après l'allure du tracé.",
+  "Hors des bornes, les deux courbes sont horizontales — palier bas avant le premier point, palier haut après le second."
+ ]
+}

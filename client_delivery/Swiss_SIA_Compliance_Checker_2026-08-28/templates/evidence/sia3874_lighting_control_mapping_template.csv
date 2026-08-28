@@ -1,0 +1,2 @@
+room_id,thermal_template_id,sia3874_control_type,daylight_control,review_status,reviewer,source_document,source_reference,notes
+ROOM_ID_OR_BLANK,TEMPLATE_ID_OR_BLANK,REVIEWER_TO_COMPLETE,VE_PROFILE_OR_DESCRIPTION,pending,REVIEWER_NAME,SIA_387_4_CONTROLLED_COPY,CLAUSE_OR_TABLE,Map either a room ID or its thermal template; SIA 380/2 does not contain the external lighting-control table.

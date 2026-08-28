@@ -1,0 +1,183 @@
+{
+  "norme": "SN EN 14825:2018",
+  "titre": "Climatiseurs, groupes refroidisseurs de liquides et pompes à chaleur, avec compresseur entraîné par moteur électrique — Essais et détermination des caractéristiques à charge partielle et calcul des performances saisonnières",
+  "portee_de_ce_fichier": "Base numérique du SEER (froid) référencée par SIA 380/2:2022 tableau 5. Localisateur de traçabilité interne, PAS une redistribution du standard.",
+  "statut": "FIGÉ pour le SEER froid (voie A : SEER déclaré fabricant). SCOP chaud NON figé (tables 6-9 reçues, clause de calcul chaud non vérifiée).",
+  "date_extraction": "2026-08-20",
+  "genere_par": "scripts/build_sn_en_14825_seer.py",
+  "source": {
+    "nature": "captures d'écran ciblées du document publié",
+    "fournisseur": "utilisateur (accès SN EN 14825:2018)",
+    "date_reception": "2026-08-20",
+    "elements": [
+      "Clause 1 (Scope)",
+      "Clause 3.1.1 (active mode), 3.1.2 (SCOPon), 3.1.72 (reference cooling season)",
+      "Clause 4 - tableaux 2 a 5 (part load conditions for space cooling)",
+      "Annexe A - tableau A.1 (bins de la saison de refroidissement de reference)"
+    ]
+  },
+  "lien_sia_380_2": {
+    "citation": "SIA 380/2:2022 FR, tableau 5, page PDF 38 : colonnes « EER à pleine charge — valeur minimale » ET « SEER selon SN EN 14825 — valeur minimale ».",
+    "reference_normative": "SIA 380/2:2022 FR, page PDF 6 : SN EN 14825:2018 listée comme référence normative.",
+    "consequence": "Le seuil SEER de SIA 380/2 tableau 5 est défini SELON EN 14825:2018. Un SEER déclaré fabricant (ErP/Ecodesign, calculé selon EN 14825) est donc directement comparable à la bande SEER de SIA."
+  },
+  "champ_application": {
+    "texte": "air conditioners, heat pumps and liquid chilling packages, including comfort and process chillers; factory made units per EN 14511-1; DX-to-water(brine) per EN 15879-1; hybrid units.",
+    "grandeurs_definies": [
+      "SEER",
+      "SEERon",
+      "eta_s_c",
+      "SCOP",
+      "SCOPon",
+      "SCOPnet",
+      "eta_s_h",
+      "SEPR"
+    ]
+  },
+  "conditions_charge_partielle_froid": {
+    "source": "tableau 2 (outdoor air-to-recycled air); tableaux 3-5 pour water/brine et air-to-water",
+    "temperature_design_froid_C": 35,
+    "temperature_interieure_C": "27 (19 bulbe humide)",
+    "formule_taux_charge": "(T_ext - 16) / (Tdesignc - 16)",
+    "points": [
+      {
+        "point": "A",
+        "taux_charge_pourcent": 100.0,
+        "T_ext_C": 35
+      },
+      {
+        "point": "B",
+        "taux_charge_pourcent": 73.68,
+        "T_ext_C": 30
+      },
+      {
+        "point": "C",
+        "taux_charge_pourcent": 47.37,
+        "T_ext_C": 25
+      },
+      {
+        "point": "D",
+        "taux_charge_pourcent": 21.05,
+        "T_ext_C": 20
+      }
+    ]
+  },
+  "saison_de_refroidissement_de_reference": {
+    "source": "tableau A.1 (identique au tableau D.1, colonne Average)",
+    "unite_T": "degC",
+    "unite_heures": "h",
+    "total_heures": 2598,
+    "bins": [
+      {
+        "j": 1,
+        "T_j": 17,
+        "h_j": 205
+      },
+      {
+        "j": 2,
+        "T_j": 18,
+        "h_j": 227
+      },
+      {
+        "j": 3,
+        "T_j": 19,
+        "h_j": 225
+      },
+      {
+        "j": 4,
+        "T_j": 20,
+        "h_j": 225
+      },
+      {
+        "j": 5,
+        "T_j": 21,
+        "h_j": 216
+      },
+      {
+        "j": 6,
+        "T_j": 22,
+        "h_j": 215
+      },
+      {
+        "j": 7,
+        "T_j": 23,
+        "h_j": 218
+      },
+      {
+        "j": 8,
+        "T_j": 24,
+        "h_j": 197
+      },
+      {
+        "j": 9,
+        "T_j": 25,
+        "h_j": 178
+      },
+      {
+        "j": 10,
+        "T_j": 26,
+        "h_j": 158
+      },
+      {
+        "j": 11,
+        "T_j": 27,
+        "h_j": 137
+      },
+      {
+        "j": 12,
+        "T_j": 28,
+        "h_j": 109
+      },
+      {
+        "j": 13,
+        "T_j": 29,
+        "h_j": 88
+      },
+      {
+        "j": 14,
+        "T_j": 30,
+        "h_j": 63
+      },
+      {
+        "j": 15,
+        "T_j": 31,
+        "h_j": 39
+      },
+      {
+        "j": 16,
+        "T_j": 32,
+        "h_j": 31
+      },
+      {
+        "j": 17,
+        "T_j": 33,
+        "h_j": 24
+      },
+      {
+        "j": 18,
+        "T_j": 34,
+        "h_j": 17
+      },
+      {
+        "j": 19,
+        "T_j": 35,
+        "h_j": 13
+      },
+      {
+        "j": 20,
+        "T_j": 36,
+        "h_j": 9
+      },
+      {
+        "j": 21,
+        "T_j": 37,
+        "h_j": 4
+      }
+    ]
+  },
+  "voie_de_verification_retenue": {
+    "voie": "A - SEER declare fabricant",
+    "justification": "Sur le marché EU/CH, le SEER déclaré (fiche ErP/Ecodesign) est calculé selon EN 14825 par obligation réglementaire ; il est donc EN 14825 par construction et comparable à la bande SIA sans recalcul. La clause de calcul (agrégation SEERon + Cd) n'est nécessaire que pour la voie B (recalcul depuis les 4 points A/B/C/D), non retenue.",
+    "reserve_restante": "Si le SEER provient du calcul interne de VE (et non d'une fiche), il faut confirmer que VE calcule selon EN 14825. Un SEER déclaré fabricant ne porte pas cette réserve."
+  }
+}

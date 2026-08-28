@@ -1,0 +1,885 @@
+{
+  "norme": "SIA 2024:2021",
+  "titre": "Données d'utilisation des locaux pour l'énergie et les installations du bâtiment",
+  "statut": "FIGÉ — sous réserve des rectificatifs (cf. corrigenda)",
+  "date_extraction": "2026-08-04",
+  "source": {
+    "nature": "captures d'écran des pages du document publié",
+    "fournisseur": "Yiqiao Yang, SIA",
+    "date_reception": "2026-08-04",
+    "pages": [
+      54,
+      55,
+      58,
+      59
+    ],
+    "reserve_du_fournisseur": "« they reflect the originally published versions of the standards/merkblätter and may not include any subsequent corrigenda »"
+  },
+  "corrigenda": {
+    "existent": true,
+    "source_declaree": "Yiqiao Yang, SIA, 2026-08-04 : « corrigenda are available for SIA 2024 and SIA 180 »",
+    "gratuits": true,
+    "ou": "SIA Shop",
+    "controle_effectue": false,
+    "consequence": "⚠ À VÉRIFIER — aucune valeur de ce fichier n'est confirmée post-rectificatif."
+  },
+  "tableau_11": {
+    "titre_de": "Auslegungswerte für Heizungs-, Kälte- und lufttechnische Anlagen",
+    "pages": [
+      54,
+      55
+    ],
+    "niveau_de_valeur": {
+      "distingue_standard_ziel_grenz": false,
+      "constat": "Le tableau 11 ne comporte QU'UNE colonne par grandeur : aucune distinction Standardwert / Zielwert / Grenzwert. La température ambiante de dimensionnement ne dépend donc PAS du niveau de valeur demandé par une spécification de test.",
+      "portee": "Ferme la seconde moitié du point ouvert O1 de traceability/batiment-exemple-zonage.spec.md §8.3."
+    },
+    "unites": {
+      "theta_h_design_c": "°C — Auslegung Norm-Heizlast",
+      "theta_c_design_c": "°C — Auslegung Klimakälteleistung",
+      "humidite_relative_h_pct": "% — Auslegung Befeuchtung",
+      "humidite_relative_c_pct": "% — Auslegung Entfeuchtung",
+      "air_neuf_hygiene_m3_h_pers": "m3/h par personne, exploitation de jour",
+      "air_neuf_hygiene_nuit_m3_h_pers": "m3/h par personne, exploitation de nuit à débit réduit (valeur entre parenthèses au tableau) — renvoi 1",
+      "air_neuf_process_m3_h_m2": "m3/(h.m2)"
+    },
+    "convention_null": "null = « – » (nicht relevant) au tableau",
+    "renvois": {
+      "1": "Angabe gilt für Tagbetrieb; Angabe in Klammern gilt für den Nachtbetrieb mit reduziertem Aussenluft-Volumenstrom",
+      "2": "Massgebend für die Auslegung raumlufttechnischer Anlagen in Wohngebäuden ist SIA 382/5",
+      "3": "Massgebend für die Auslegung raumlufttechnischer Anlagen in Gastwirtschaftsbetrieben ist SWKI VA102-01:2009",
+      "4": "Mindestens Wassertemperatur, maximal 32 °C",
+      "5": "Massgebend für die Auslegung raumlufttechnischer Anlagen in Hallenbädern ist SWKI 2004-1:2005",
+      "6": "Die Angabe gilt, sofern die angrenzende Hauptnutzung keine höheren Raumtemperaturen für die Auslegung der Heizsysteme vorschreibt",
+      "7": "Entspricht der Kategorie der Raumluftqualität II; «unterstützende Fensterlüftung» bedeutet, dass bei Bedarf der Aussenluft-Volumenstrom über eine Lüftungsöffnung kurzzeitig erhöht werden kann",
+      "8": "Massgebend für die Auslegung von Lüftungsanlagen in Parkhäusern ist SWKI VA103-01:2017"
+    },
+    "lignes": [
+      {
+        "usage": "1.01",
+        "libelle_de": "Wohnen MFH",
+        "theta_h_design_c": 21,
+        "theta_c_design_c": 26,
+        "humidite_relative_h_pct": 30,
+        "humidite_relative_c_pct": 60,
+        "air_neuf_hygiene_m3_h_pers": 29,
+        "air_neuf_hygiene_nuit_m3_h_pers": 15,
+        "air_neuf_process_m3_h_m2": null,
+        "renvois": [
+          1,
+          2
+        ]
+      },
+      {
+        "usage": "1.02",
+        "libelle_de": "Wohnen EFH",
+        "theta_h_design_c": 21,
+        "theta_c_design_c": 26,
+        "humidite_relative_h_pct": 30,
+        "humidite_relative_c_pct": 60,
+        "air_neuf_hygiene_m3_h_pers": 29,
+        "air_neuf_hygiene_nuit_m3_h_pers": 15,
+        "air_neuf_process_m3_h_m2": null,
+        "renvois": [
+          1,
+          2
+        ]
+      },
+      {
+        "usage": "2.01",
+        "libelle_de": "Hotelzimmer",
+        "theta_h_design_c": 21,
+        "theta_c_design_c": 26,
+        "humidite_relative_h_pct": 30,
+        "humidite_relative_c_pct": 60,
+        "air_neuf_hygiene_m3_h_pers": 29,
+        "air_neuf_hygiene_nuit_m3_h_pers": 15,
+        "air_neuf_process_m3_h_m2": null,
+        "renvois": [
+          1
+        ]
+      },
+      {
+        "usage": "2.02",
+        "libelle_de": "Empfang, Lobby",
+        "theta_h_design_c": 21,
+        "theta_c_design_c": 26,
+        "humidite_relative_h_pct": 30,
+        "humidite_relative_c_pct": 60,
+        "air_neuf_hygiene_m3_h_pers": 29,
+        "air_neuf_hygiene_nuit_m3_h_pers": null,
+        "air_neuf_process_m3_h_m2": null,
+        "renvois": []
+      },
+      {
+        "usage": "3.01",
+        "libelle_de": "Einzel-, Gruppenbüro",
+        "theta_h_design_c": 21,
+        "theta_c_design_c": 26,
+        "humidite_relative_h_pct": 30,
+        "humidite_relative_c_pct": 60,
+        "air_neuf_hygiene_m3_h_pers": 29,
+        "air_neuf_hygiene_nuit_m3_h_pers": null,
+        "air_neuf_process_m3_h_m2": null,
+        "renvois": []
+      },
+      {
+        "usage": "3.02",
+        "libelle_de": "Grossraumbüro",
+        "theta_h_design_c": 21,
+        "theta_c_design_c": 26,
+        "humidite_relative_h_pct": 30,
+        "humidite_relative_c_pct": 60,
+        "air_neuf_hygiene_m3_h_pers": 29,
+        "air_neuf_hygiene_nuit_m3_h_pers": null,
+        "air_neuf_process_m3_h_m2": null,
+        "renvois": []
+      },
+      {
+        "usage": "3.03",
+        "libelle_de": "Sitzungszimmer",
+        "theta_h_design_c": 21,
+        "theta_c_design_c": 26,
+        "humidite_relative_h_pct": 30,
+        "humidite_relative_c_pct": 60,
+        "air_neuf_hygiene_m3_h_pers": 29,
+        "air_neuf_hygiene_nuit_m3_h_pers": null,
+        "air_neuf_process_m3_h_m2": null,
+        "renvois": []
+      },
+      {
+        "usage": "3.04",
+        "libelle_de": "Schalterhalle, Empfang",
+        "theta_h_design_c": 20,
+        "theta_c_design_c": 26,
+        "humidite_relative_h_pct": 30,
+        "humidite_relative_c_pct": 60,
+        "air_neuf_hygiene_m3_h_pers": 29,
+        "air_neuf_hygiene_nuit_m3_h_pers": null,
+        "air_neuf_process_m3_h_m2": null,
+        "renvois": []
+      },
+      {
+        "usage": "4.01",
+        "libelle_de": "Schulzimmer",
+        "theta_h_design_c": 21,
+        "theta_c_design_c": 26,
+        "humidite_relative_h_pct": 30,
+        "humidite_relative_c_pct": 60,
+        "air_neuf_hygiene_m3_h_pers": 29,
+        "air_neuf_hygiene_nuit_m3_h_pers": null,
+        "air_neuf_process_m3_h_m2": null,
+        "renvois": []
+      },
+      {
+        "usage": "4.02",
+        "libelle_de": "Lehrerzimmer, Aufenthaltsraum",
+        "theta_h_design_c": 21,
+        "theta_c_design_c": 26,
+        "humidite_relative_h_pct": 30,
+        "humidite_relative_c_pct": 60,
+        "air_neuf_hygiene_m3_h_pers": 29,
+        "air_neuf_hygiene_nuit_m3_h_pers": null,
+        "air_neuf_process_m3_h_m2": null,
+        "renvois": []
+      },
+      {
+        "usage": "4.03",
+        "libelle_de": "Bibliothek",
+        "theta_h_design_c": 21,
+        "theta_c_design_c": 26,
+        "humidite_relative_h_pct": 30,
+        "humidite_relative_c_pct": 60,
+        "air_neuf_hygiene_m3_h_pers": 29,
+        "air_neuf_hygiene_nuit_m3_h_pers": null,
+        "air_neuf_process_m3_h_m2": null,
+        "renvois": []
+      },
+      {
+        "usage": "4.04",
+        "libelle_de": "Hörsaal",
+        "theta_h_design_c": 21,
+        "theta_c_design_c": 26,
+        "humidite_relative_h_pct": 30,
+        "humidite_relative_c_pct": 60,
+        "air_neuf_hygiene_m3_h_pers": 29,
+        "air_neuf_hygiene_nuit_m3_h_pers": null,
+        "air_neuf_process_m3_h_m2": null,
+        "renvois": []
+      },
+      {
+        "usage": "4.05",
+        "libelle_de": "Schulfachraum",
+        "theta_h_design_c": 21,
+        "theta_c_design_c": 26,
+        "humidite_relative_h_pct": 30,
+        "humidite_relative_c_pct": 60,
+        "air_neuf_hygiene_m3_h_pers": 29,
+        "air_neuf_hygiene_nuit_m3_h_pers": null,
+        "air_neuf_process_m3_h_m2": null,
+        "renvois": []
+      },
+      {
+        "usage": "5.01",
+        "libelle_de": "Lebensmittelverkauf",
+        "theta_h_design_c": 20,
+        "theta_c_design_c": 26,
+        "humidite_relative_h_pct": 30,
+        "humidite_relative_c_pct": 60,
+        "air_neuf_hygiene_m3_h_pers": 29,
+        "air_neuf_hygiene_nuit_m3_h_pers": null,
+        "air_neuf_process_m3_h_m2": null,
+        "renvois": []
+      },
+      {
+        "usage": "5.02",
+        "libelle_de": "Fachgeschäft",
+        "theta_h_design_c": 20,
+        "theta_c_design_c": 26,
+        "humidite_relative_h_pct": 30,
+        "humidite_relative_c_pct": 60,
+        "air_neuf_hygiene_m3_h_pers": 29,
+        "air_neuf_hygiene_nuit_m3_h_pers": null,
+        "air_neuf_process_m3_h_m2": null,
+        "renvois": []
+      },
+      {
+        "usage": "5.03",
+        "libelle_de": "Verkauf Möbel, Bau, Garten",
+        "theta_h_design_c": 20,
+        "theta_c_design_c": 26,
+        "humidite_relative_h_pct": 30,
+        "humidite_relative_c_pct": 60,
+        "air_neuf_hygiene_m3_h_pers": 29,
+        "air_neuf_hygiene_nuit_m3_h_pers": null,
+        "air_neuf_process_m3_h_m2": null,
+        "renvois": []
+      },
+      {
+        "usage": "6.01",
+        "libelle_de": "Restaurant",
+        "theta_h_design_c": 21,
+        "theta_c_design_c": 26,
+        "humidite_relative_h_pct": 30,
+        "humidite_relative_c_pct": 70,
+        "air_neuf_hygiene_m3_h_pers": 29,
+        "air_neuf_hygiene_nuit_m3_h_pers": null,
+        "air_neuf_process_m3_h_m2": null,
+        "renvois": []
+      },
+      {
+        "usage": "6.02",
+        "libelle_de": "Selbstbedienungsrestaurant",
+        "theta_h_design_c": 21,
+        "theta_c_design_c": 26,
+        "humidite_relative_h_pct": 30,
+        "humidite_relative_c_pct": 70,
+        "air_neuf_hygiene_m3_h_pers": 29,
+        "air_neuf_hygiene_nuit_m3_h_pers": null,
+        "air_neuf_process_m3_h_m2": null,
+        "renvois": []
+      },
+      {
+        "usage": "6.03",
+        "libelle_de": "Küche zu 6.1",
+        "theta_h_design_c": 20,
+        "theta_c_design_c": 28,
+        "humidite_relative_h_pct": null,
+        "humidite_relative_c_pct": null,
+        "air_neuf_hygiene_m3_h_pers": 48,
+        "air_neuf_hygiene_nuit_m3_h_pers": null,
+        "air_neuf_process_m3_h_m2": 80,
+        "renvois": [
+          3
+        ]
+      },
+      {
+        "usage": "6.04",
+        "libelle_de": "Küche zu 6.2",
+        "theta_h_design_c": 20,
+        "theta_c_design_c": 28,
+        "humidite_relative_h_pct": null,
+        "humidite_relative_c_pct": null,
+        "air_neuf_hygiene_m3_h_pers": 48,
+        "air_neuf_hygiene_nuit_m3_h_pers": null,
+        "air_neuf_process_m3_h_m2": 80,
+        "renvois": [
+          3
+        ]
+      },
+      {
+        "usage": "7.01",
+        "libelle_de": "Vorstellungsraum",
+        "theta_h_design_c": 21,
+        "theta_c_design_c": 26,
+        "humidite_relative_h_pct": 30,
+        "humidite_relative_c_pct": 60,
+        "air_neuf_hygiene_m3_h_pers": 29,
+        "air_neuf_hygiene_nuit_m3_h_pers": null,
+        "air_neuf_process_m3_h_m2": null,
+        "renvois": []
+      },
+      {
+        "usage": "7.02",
+        "libelle_de": "Mehrzweckhalle",
+        "theta_h_design_c": 21,
+        "theta_c_design_c": 26,
+        "humidite_relative_h_pct": 30,
+        "humidite_relative_c_pct": 60,
+        "air_neuf_hygiene_m3_h_pers": 29,
+        "air_neuf_hygiene_nuit_m3_h_pers": null,
+        "air_neuf_process_m3_h_m2": null,
+        "renvois": []
+      },
+      {
+        "usage": "7.03",
+        "libelle_de": "Ausstellungshalle",
+        "theta_h_design_c": 21,
+        "theta_c_design_c": 26,
+        "humidite_relative_h_pct": 30,
+        "humidite_relative_c_pct": 60,
+        "air_neuf_hygiene_m3_h_pers": 29,
+        "air_neuf_hygiene_nuit_m3_h_pers": null,
+        "air_neuf_process_m3_h_m2": null,
+        "renvois": []
+      },
+      {
+        "usage": "8.01",
+        "libelle_de": "Bettenzimmer",
+        "theta_h_design_c": 22,
+        "theta_c_design_c": 26,
+        "humidite_relative_h_pct": 30,
+        "humidite_relative_c_pct": 60,
+        "air_neuf_hygiene_m3_h_pers": 29,
+        "air_neuf_hygiene_nuit_m3_h_pers": null,
+        "air_neuf_process_m3_h_m2": null,
+        "renvois": []
+      },
+      {
+        "usage": "8.02",
+        "libelle_de": "Stationszimmer",
+        "theta_h_design_c": 21,
+        "theta_c_design_c": 26,
+        "humidite_relative_h_pct": 30,
+        "humidite_relative_c_pct": 60,
+        "air_neuf_hygiene_m3_h_pers": 29,
+        "air_neuf_hygiene_nuit_m3_h_pers": null,
+        "air_neuf_process_m3_h_m2": null,
+        "renvois": []
+      },
+      {
+        "usage": "8.03",
+        "libelle_de": "Behandlungsraum",
+        "theta_h_design_c": 22,
+        "theta_c_design_c": 26,
+        "humidite_relative_h_pct": 30,
+        "humidite_relative_c_pct": 60,
+        "air_neuf_hygiene_m3_h_pers": 29,
+        "air_neuf_hygiene_nuit_m3_h_pers": null,
+        "air_neuf_process_m3_h_m2": null,
+        "renvois": []
+      },
+      {
+        "usage": "9.01",
+        "libelle_de": "Produktion (grobe Arbeit)",
+        "theta_h_design_c": 18,
+        "theta_c_design_c": 30,
+        "humidite_relative_h_pct": 30,
+        "humidite_relative_c_pct": 70,
+        "air_neuf_hygiene_m3_h_pers": 48,
+        "air_neuf_hygiene_nuit_m3_h_pers": null,
+        "air_neuf_process_m3_h_m2": 10,
+        "renvois": []
+      },
+      {
+        "usage": "9.02",
+        "libelle_de": "Produktion (feine Arbeit)",
+        "theta_h_design_c": 21,
+        "theta_c_design_c": 26,
+        "humidite_relative_h_pct": 30,
+        "humidite_relative_c_pct": 70,
+        "air_neuf_hygiene_m3_h_pers": 29,
+        "air_neuf_hygiene_nuit_m3_h_pers": null,
+        "air_neuf_process_m3_h_m2": 5,
+        "renvois": []
+      },
+      {
+        "usage": "9.03",
+        "libelle_de": "Laborraum",
+        "theta_h_design_c": 21,
+        "theta_c_design_c": 26,
+        "humidite_relative_h_pct": 30,
+        "humidite_relative_c_pct": 70,
+        "air_neuf_hygiene_m3_h_pers": 29,
+        "air_neuf_hygiene_nuit_m3_h_pers": null,
+        "air_neuf_process_m3_h_m2": 12,
+        "renvois": []
+      },
+      {
+        "usage": "10.01",
+        "libelle_de": "Lagerraum",
+        "theta_h_design_c": 18,
+        "theta_c_design_c": null,
+        "humidite_relative_h_pct": 30,
+        "humidite_relative_c_pct": 70,
+        "air_neuf_hygiene_m3_h_pers": 29,
+        "air_neuf_hygiene_nuit_m3_h_pers": null,
+        "air_neuf_process_m3_h_m2": null,
+        "renvois": []
+      },
+      {
+        "usage": "11.01",
+        "libelle_de": "Turnhalle",
+        "theta_h_design_c": 18,
+        "theta_c_design_c": null,
+        "humidite_relative_h_pct": 30,
+        "humidite_relative_c_pct": 70,
+        "air_neuf_hygiene_m3_h_pers": 73,
+        "air_neuf_hygiene_nuit_m3_h_pers": null,
+        "air_neuf_process_m3_h_m2": null,
+        "renvois": []
+      },
+      {
+        "usage": "11.02",
+        "libelle_de": "Fitnessraum",
+        "theta_h_design_c": 21,
+        "theta_c_design_c": 26,
+        "humidite_relative_h_pct": 30,
+        "humidite_relative_c_pct": 70,
+        "air_neuf_hygiene_m3_h_pers": 73,
+        "air_neuf_hygiene_nuit_m3_h_pers": null,
+        "air_neuf_process_m3_h_m2": null,
+        "renvois": []
+      },
+      {
+        "usage": "11.03",
+        "libelle_de": "Schwimmhalle",
+        "theta_h_design_c": 24,
+        "theta_c_design_c": null,
+        "humidite_relative_h_pct": 55,
+        "humidite_relative_c_pct": 65,
+        "air_neuf_hygiene_m3_h_pers": 29,
+        "air_neuf_hygiene_nuit_m3_h_pers": null,
+        "air_neuf_process_m3_h_m2": 20,
+        "renvois": [
+          4,
+          5
+        ]
+      },
+      {
+        "usage": "12.01",
+        "libelle_de": "Verkehrsfläche",
+        "theta_h_design_c": 21,
+        "theta_c_design_c": null,
+        "humidite_relative_h_pct": null,
+        "humidite_relative_c_pct": null,
+        "air_neuf_hygiene_m3_h_pers": null,
+        "air_neuf_hygiene_nuit_m3_h_pers": null,
+        "air_neuf_process_m3_h_m2": null,
+        "renvois": []
+      },
+      {
+        "usage": "12.02",
+        "libelle_de": "Verkehrsfläche 24 h",
+        "theta_h_design_c": 21,
+        "theta_c_design_c": 26,
+        "humidite_relative_h_pct": null,
+        "humidite_relative_c_pct": null,
+        "air_neuf_hygiene_m3_h_pers": null,
+        "air_neuf_hygiene_nuit_m3_h_pers": null,
+        "air_neuf_process_m3_h_m2": null,
+        "renvois": []
+      },
+      {
+        "usage": "12.03",
+        "libelle_de": "Treppenhaus",
+        "theta_h_design_c": 18,
+        "theta_c_design_c": null,
+        "humidite_relative_h_pct": null,
+        "humidite_relative_c_pct": null,
+        "air_neuf_hygiene_m3_h_pers": null,
+        "air_neuf_hygiene_nuit_m3_h_pers": null,
+        "air_neuf_process_m3_h_m2": null,
+        "renvois": []
+      },
+      {
+        "usage": "12.04",
+        "libelle_de": "Nebenraum",
+        "theta_h_design_c": 18,
+        "theta_c_design_c": null,
+        "humidite_relative_h_pct": null,
+        "humidite_relative_c_pct": null,
+        "air_neuf_hygiene_m3_h_pers": null,
+        "air_neuf_hygiene_nuit_m3_h_pers": null,
+        "air_neuf_process_m3_h_m2": null,
+        "renvois": []
+      },
+      {
+        "usage": "12.05",
+        "libelle_de": "Küche, Teeküche",
+        "theta_h_design_c": 21,
+        "theta_c_design_c": null,
+        "humidite_relative_h_pct": null,
+        "humidite_relative_c_pct": null,
+        "air_neuf_hygiene_m3_h_pers": 29,
+        "air_neuf_hygiene_nuit_m3_h_pers": null,
+        "air_neuf_process_m3_h_m2": null,
+        "renvois": []
+      },
+      {
+        "usage": "12.06",
+        "libelle_de": "WC, Bad, Dusche",
+        "theta_h_design_c": 21,
+        "theta_c_design_c": null,
+        "humidite_relative_h_pct": null,
+        "humidite_relative_c_pct": null,
+        "air_neuf_hygiene_m3_h_pers": null,
+        "air_neuf_hygiene_nuit_m3_h_pers": null,
+        "air_neuf_process_m3_h_m2": null,
+        "renvois": [
+          6
+        ]
+      },
+      {
+        "usage": "12.07",
+        "libelle_de": "WC",
+        "theta_h_design_c": 21,
+        "theta_c_design_c": null,
+        "humidite_relative_h_pct": null,
+        "humidite_relative_c_pct": null,
+        "air_neuf_hygiene_m3_h_pers": null,
+        "air_neuf_hygiene_nuit_m3_h_pers": null,
+        "air_neuf_process_m3_h_m2": null,
+        "renvois": []
+      },
+      {
+        "usage": "12.08",
+        "libelle_de": "Garderobe, Dusche",
+        "theta_h_design_c": 21,
+        "theta_c_design_c": null,
+        "humidite_relative_h_pct": null,
+        "humidite_relative_c_pct": null,
+        "air_neuf_hygiene_m3_h_pers": null,
+        "air_neuf_hygiene_nuit_m3_h_pers": null,
+        "air_neuf_process_m3_h_m2": null,
+        "renvois": [
+          6
+        ]
+      },
+      {
+        "usage": "12.09",
+        "libelle_de": "Parkhaus",
+        "theta_h_design_c": null,
+        "theta_c_design_c": null,
+        "humidite_relative_h_pct": null,
+        "humidite_relative_c_pct": null,
+        "air_neuf_hygiene_m3_h_pers": null,
+        "air_neuf_hygiene_nuit_m3_h_pers": null,
+        "air_neuf_process_m3_h_m2": 2,
+        "renvois": [
+          8
+        ]
+      },
+      {
+        "usage": "12.10",
+        "libelle_de": "Wasch- und Trockenraum",
+        "theta_h_design_c": null,
+        "theta_c_design_c": null,
+        "humidite_relative_h_pct": null,
+        "humidite_relative_c_pct": null,
+        "air_neuf_hygiene_m3_h_pers": null,
+        "air_neuf_hygiene_nuit_m3_h_pers": null,
+        "air_neuf_process_m3_h_m2": null,
+        "renvois": []
+      },
+      {
+        "usage": "12.11",
+        "libelle_de": "Kühlraum",
+        "theta_h_design_c": null,
+        "theta_c_design_c": null,
+        "humidite_relative_h_pct": null,
+        "humidite_relative_c_pct": null,
+        "air_neuf_hygiene_m3_h_pers": null,
+        "air_neuf_hygiene_nuit_m3_h_pers": null,
+        "air_neuf_process_m3_h_m2": null,
+        "renvois": []
+      },
+      {
+        "usage": "12.12",
+        "libelle_de": "Serverraum",
+        "theta_h_design_c": null,
+        "theta_c_design_c": 26,
+        "humidite_relative_h_pct": null,
+        "humidite_relative_c_pct": null,
+        "air_neuf_hygiene_m3_h_pers": null,
+        "air_neuf_hygiene_nuit_m3_h_pers": null,
+        "air_neuf_process_m3_h_m2": null,
+        "renvois": []
+      }
+    ]
+  },
+  "tableau_13": {
+    "titre_de": "Mittlere Raumtemperaturen für die Berechnung des jährlichen Klimakälte- und Heizwärmebedarfs gemäss SIA 2024",
+    "annexe": "B (normative)",
+    "pages": [
+      58,
+      59
+    ],
+    "avertissement_de_lannexe": "« Die angegebenen mittleren Raumtemperaturen gelten nur in SIA 2024 und sind für andere Normen, insbesondere für SIA 380/1, nicht massgebend. »",
+    "lecture_de_lavertissement": "L'exclusion nomme SIA 380/**1**, pas SIA 380/2. Et SIA 380/2:2022 §5.2.2.6 autorise EXPLICITEMENT cette voie simplifiée « surtout dans les phases de planification précoce ». Pas de contradiction : pour SIA 380/2 la voie normale reste la figure 1.",
+    "convention_null": "null = « – » (nicht relevant) au tableau",
+    "lignes": [
+      {
+        "usage": "1.01",
+        "theta_h_moyenne_c": 22,
+        "theta_c_moyenne_c": 25
+      },
+      {
+        "usage": "1.02",
+        "theta_h_moyenne_c": 22,
+        "theta_c_moyenne_c": 25
+      },
+      {
+        "usage": "2.01",
+        "theta_h_moyenne_c": 22,
+        "theta_c_moyenne_c": 25
+      },
+      {
+        "usage": "2.02",
+        "theta_h_moyenne_c": 22,
+        "theta_c_moyenne_c": 25
+      },
+      {
+        "usage": "3.01",
+        "theta_h_moyenne_c": 22,
+        "theta_c_moyenne_c": 25
+      },
+      {
+        "usage": "3.02",
+        "theta_h_moyenne_c": 22,
+        "theta_c_moyenne_c": 25
+      },
+      {
+        "usage": "3.03",
+        "theta_h_moyenne_c": 22,
+        "theta_c_moyenne_c": 25
+      },
+      {
+        "usage": "3.04",
+        "theta_h_moyenne_c": 22,
+        "theta_c_moyenne_c": 25
+      },
+      {
+        "usage": "4.01",
+        "theta_h_moyenne_c": 22,
+        "theta_c_moyenne_c": 25
+      },
+      {
+        "usage": "4.02",
+        "theta_h_moyenne_c": 22,
+        "theta_c_moyenne_c": 25
+      },
+      {
+        "usage": "4.03",
+        "theta_h_moyenne_c": 22,
+        "theta_c_moyenne_c": 25
+      },
+      {
+        "usage": "4.04",
+        "theta_h_moyenne_c": 22,
+        "theta_c_moyenne_c": 25
+      },
+      {
+        "usage": "4.05",
+        "theta_h_moyenne_c": 22,
+        "theta_c_moyenne_c": 25
+      },
+      {
+        "usage": "5.01",
+        "theta_h_moyenne_c": 22,
+        "theta_c_moyenne_c": 25
+      },
+      {
+        "usage": "5.02",
+        "theta_h_moyenne_c": 22,
+        "theta_c_moyenne_c": 25
+      },
+      {
+        "usage": "5.03",
+        "theta_h_moyenne_c": 22,
+        "theta_c_moyenne_c": 25
+      },
+      {
+        "usage": "6.01",
+        "theta_h_moyenne_c": 22,
+        "theta_c_moyenne_c": 25
+      },
+      {
+        "usage": "6.02",
+        "theta_h_moyenne_c": 22,
+        "theta_c_moyenne_c": 25
+      },
+      {
+        "usage": "6.03",
+        "theta_h_moyenne_c": 22,
+        "theta_c_moyenne_c": 25
+      },
+      {
+        "usage": "6.04",
+        "theta_h_moyenne_c": 22,
+        "theta_c_moyenne_c": 25
+      },
+      {
+        "usage": "7.01",
+        "theta_h_moyenne_c": 22,
+        "theta_c_moyenne_c": 25
+      },
+      {
+        "usage": "7.02",
+        "theta_h_moyenne_c": 22,
+        "theta_c_moyenne_c": 25
+      },
+      {
+        "usage": "7.03",
+        "theta_h_moyenne_c": 22,
+        "theta_c_moyenne_c": 25
+      },
+      {
+        "usage": "8.01",
+        "theta_h_moyenne_c": 22,
+        "theta_c_moyenne_c": 25
+      },
+      {
+        "usage": "8.02",
+        "theta_h_moyenne_c": 22,
+        "theta_c_moyenne_c": 25
+      },
+      {
+        "usage": "8.03",
+        "theta_h_moyenne_c": 22,
+        "theta_c_moyenne_c": 25
+      },
+      {
+        "usage": "9.01",
+        "theta_h_moyenne_c": 20,
+        "theta_c_moyenne_c": 25
+      },
+      {
+        "usage": "9.02",
+        "theta_h_moyenne_c": 20,
+        "theta_c_moyenne_c": 25
+      },
+      {
+        "usage": "9.03",
+        "theta_h_moyenne_c": 20,
+        "theta_c_moyenne_c": 25
+      },
+      {
+        "usage": "10.01",
+        "theta_h_moyenne_c": 18,
+        "theta_c_moyenne_c": null
+      },
+      {
+        "usage": "11.01",
+        "theta_h_moyenne_c": 18,
+        "theta_c_moyenne_c": null
+      },
+      {
+        "usage": "11.02",
+        "theta_h_moyenne_c": 22,
+        "theta_c_moyenne_c": 25
+      },
+      {
+        "usage": "11.03",
+        "theta_h_moyenne_c": 28,
+        "theta_c_moyenne_c": null
+      },
+      {
+        "usage": "12.01",
+        "theta_h_moyenne_c": 22,
+        "theta_c_moyenne_c": null
+      },
+      {
+        "usage": "12.02",
+        "theta_h_moyenne_c": 22,
+        "theta_c_moyenne_c": 25
+      },
+      {
+        "usage": "12.03",
+        "theta_h_moyenne_c": 20,
+        "theta_c_moyenne_c": null
+      },
+      {
+        "usage": "12.04",
+        "theta_h_moyenne_c": 20,
+        "theta_c_moyenne_c": null
+      },
+      {
+        "usage": "12.05",
+        "theta_h_moyenne_c": 22,
+        "theta_c_moyenne_c": null
+      },
+      {
+        "usage": "12.06",
+        "theta_h_moyenne_c": 22,
+        "theta_c_moyenne_c": null
+      },
+      {
+        "usage": "12.07",
+        "theta_h_moyenne_c": 22,
+        "theta_c_moyenne_c": null
+      },
+      {
+        "usage": "12.08",
+        "theta_h_moyenne_c": 22,
+        "theta_c_moyenne_c": null
+      },
+      {
+        "usage": "12.09",
+        "theta_h_moyenne_c": null,
+        "theta_c_moyenne_c": null
+      },
+      {
+        "usage": "12.10",
+        "theta_h_moyenne_c": null,
+        "theta_c_moyenne_c": null
+      },
+      {
+        "usage": "12.11",
+        "theta_h_moyenne_c": null,
+        "theta_c_moyenne_c": null
+      },
+      {
+        "usage": "12.12",
+        "theta_h_moyenne_c": null,
+        "theta_c_moyenne_c": 25
+      }
+    ]
+  },
+  "usages_requis_par_les_tests_sia_4010": {
+    "commentaire": "Usages cités par les spécifications des tests 4, 5 et 6 et par la documentation du bâtiment exemple.",
+    "test_4": [
+      "4.04"
+    ],
+    "test_5": [
+      "3.01",
+      "3.02",
+      "3.03"
+    ],
+    "test_6": [
+      "6.02",
+      "6.04"
+    ]
+  },
+  "ce_qui_reste_manquant": [
+    "Les FICHES D'UTILISATION (Merkblatt-Nutzungsdaten) 3.1, 3.2, 3.3, 4.4, 6.2, 6.4 : apports internes (personnes, appareils, éclairage), horaires, simultanéités, surface par personne. NON contenues dans les tableaux 11 et 13. Disponibles GRATUITEMENT en ligne — cf. champ `fiches_utilisation_en_ligne`.",
+    "Les niveaux Standardwert / Zielwert / Grenzwert de ces fiches (le test 4 demande les Zielwerte, les tests 5 et 6 les Standardwerte)."
+  ],
+  "fiches_utilisation_en_ligne": {
+    "url": "https://www.sia.ch/de/cms/dienstleistungen/normenundordnungen?item=15143#15152",
+    "gratuit": true,
+    "source": "Yiqiao Yang, SIA, 2026-08-04",
+    "note_du_fournisseur": "« The data sheet is updated and includes all changes regarding data sheet in the two corrigenda of SIA 2024. » → la version en ligne des FICHES est post-rectificatif ; les tableaux 11 et 13 ci-dessus ne le sont pas.",
+    "telecharge": false
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "schema_version": "1.0",
+  "bindings": [
+    {
+      "template_id": "EXAMPLE_TEST4_TEMPLATE",
+      "project_path": "<ABSOLUTE_PATH_TO_SAVED_VE_PROJECT_DIRECTORY>",
+      "qualification_manifest": "<ABSOLUTE_PATH_TO_REVIEWED_QUALIFICATION_JSON>",
+      "covered_cases": ["test_4/4"],
+      "status": "QUALIFIED"
+    }
+  ]
+}

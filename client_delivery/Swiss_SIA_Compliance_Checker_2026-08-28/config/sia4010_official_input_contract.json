@@ -1,0 +1,837 @@
+{
+  "schema_version": "1.0",
+  "purpose": "Machine-readable, source-traced extraction of confirmed SIA 4010 test-specification inputs. This is an implementation contract, not a claim that every referenced ISO/SIA dependency or VE binding is complete.",
+  "claim_guardrail": "Only values explicitly present in the supplied official test specifications are recorded as confirmed. Referenced standards, schedules, drawings, workbooks, graphs and product curves remain explicit dependencies.",
+  "common": {
+    "location": {
+      "value": "Zürich Kloten",
+      "status": "CONFIRMED_NORMATIVE",
+      "source": "SIA 4010 Test specifications 2-7",
+      "units": "text"
+    },
+    "climate": {
+      "value": "SIA 2028 DRY normal, Zürich Kloten",
+      "status": "CONFIRMED_NORMATIVE",
+      "source": "SIA 4010 Test specifications 2-7",
+      "units": "dataset identity"
+    },
+    "simulation_period": {
+      "value": "2022-01-01 through 2022-12-31",
+      "status": "CONFIRMED_NORMATIVE",
+      "source": "SIA 4010 Test specifications 2-7",
+      "units": "inclusive dates"
+    },
+    "unresolved_dependencies": [
+      "Exact authorized SIA 2028 DRY normal weather file and VE conversion/assignment",
+      "Referenced ISO 52016:2017 Chapter 7 test-cell inputs where applicable"
+    ],
+    "authority_supplements": {
+      "sia2024_category_3_1": {
+        "status": "CONFIRMED_FOR_STANDARD_VALUES",
+        "source": "Written authority replies from Prof. Gerhard Zweifel dated 2026-08-10 and received 2026-08-26",
+        "scope": "3.1 Einzel-/Gruppenbüro only",
+        "value_column": "third-last value column",
+        "native_ve_calendar_mapping_status": "AUTHORITY_CONFIRMED_READY_FOR_NATIVE_VE_MATERIALIZATION",
+        "calendar_authority_decision": "SIA4010_SIA2024_3_1_CALENDAR_20260826",
+        "calendar_days": 365,
+        "january_1_weekday": "Saturday",
+        "use_weekdays": [
+          "Monday",
+          "Tuesday",
+          "Wednesday",
+          "Thursday",
+          "Friday"
+        ],
+        "rest_weekdays": [
+          "Saturday",
+          "Sunday"
+        ],
+        "holiday_exceptions": [],
+        "hour_label_convention": "ordinal_hour_ending",
+        "occupancy_simultaneity_application": "multiply each hourly occupancy value by 0.80"
+      },
+      "sia4010_remaining_clarifications_20260828": {
+        "status": "AUTHORITY_RESPONSE_RECORDED",
+        "source": "Written response from Prof. Gerhard Zweifel received 2026-08-28; checksum-bound under sia4010_evidence/authority_decisions",
+        "decision_id": "SIA4010_REMAINING_CLARIFICATIONS_20260828",
+        "resolved_scope": [
+          "SIA 2024 source supply for Tests 4-6",
+          "Test 3 edition interpretation",
+          "Tests 4-5 candidate-specific fan approximation policy",
+          "Test 5 EPB Center workbook authorization",
+          "Test 6 category identities",
+          "Test 7 PV total precedence and roof split"
+        ],
+        "claim_guardrail": "The decisions resolve source meaning and authorization only; they do not qualify VE implementations or establish test PASS."
+      }
+    }
+  },
+  "tests": {
+    "2": {
+      "variants": [
+        "2A",
+        "2B",
+        "2C",
+        "2D"
+      ],
+      "source": "SIA_4010_geteilter_Link/Test2/Spezifikation_Test2.pdf",
+      "source_pages": [
+        1,
+        2
+      ],
+      "confirmed_inputs": {
+        "geometry_reference": "ISO EN 52016:2017 Chapter 7 / ASHRAE 140 test room, south-facing, 48 m2",
+        "construction": "Lightweight",
+        "use_category": "SIA 2024:2021 3.1 Einzel-Gruppenbüro, standard values",
+        "infiltration_m3_h_m2": 0.15,
+        "heating_setpoint_c": 20.0,
+        "cooling_setpoint_c": 27.0,
+        "people_count": 3.43,
+        "area_m2_per_person": 14.0,
+        "activity_met": 1.2,
+        "equipment_gain_w_m2": 11.0,
+        "lighting_gain_w_m2": 12.5,
+        "lighting_installed_power_w_m2": 12.5,
+        "glazing_type": "SGG Planitherm XN_4/14/4/14/4",
+        "glazing_g_value": 0.545,
+        "glazing_u_w_m2k": 0.654,
+        "glazing_visible_transmittance": 0.742,
+        "glazing_visible_reflectance": 0.145,
+        "external_shading_activation_w_m2": 150.0,
+        "external_shading_signal": "total_solar_irradiance_incident_on_exterior_glazing_plane",
+        "external_shading_close_operator": ">=",
+        "external_shading_reopen_operator": "<",
+        "external_shading_hysteresis_required": false,
+        "external_shading_iesve_lower_threshold_w_m2": 150.0,
+        "external_shading_iesve_raise_threshold_w_m2": 150.0,
+        "external_shading_authority_decision": "SIA4010_TEST1E_SOLAR_CONTROL_20260826",
+        "variant_2A_shade": "Soltis 92-2048-Alu fabric awning",
+        "variant_2A_combined_g_total": 0.059,
+        "variant_2A_direct_solar_transmittance": 0.04,
+        "variant_2A_outside_solar_reflectance": 0.49,
+        "variant_2A_inside_solar_reflectance": 0.456,
+        "variant_2A_visible_transmittance": 0.058,
+        "variant_2A_outside_visible_reflectance": 0.496,
+        "variant_2A_inside_visible_reflectance": 0.395,
+        "variant_2A_convection_factor": 0.006,
+        "variant_2A_thermal_radiation_factor": 0.013,
+        "variant_2A_ventilation_factor": 0.0,
+        "variant_2A_secondary_internal_heat_transfer_factor": 0.019,
+        "variant_2A_uv_transmittance": 0.012,
+        "variant_2A_reference_combined_g_total": 0.056,
+        "variant_2A_reference_u_w_m2k": 0.574,
+        "variant_2A_iso15099_winter_u_w_m2k": 0.582,
+        "variant_2A_peripheral_gap_m": 0.01,
+        "variant_2A_screen_layer_thickness_m": 0.0005,
+        "variants_2B_2D_shade": "Slat Metal B (WIN7), SIA 387/4:2017 Table 9 control function types 1-3",
+        "slat_working_angle_deg": 45.0,
+        "slat_visible_transmittance_limit": 0.0,
+        "slat_beam_visible_transmittance_at_45": 0.07,
+        "slat_diffuse_visible_transmittance_at_45": 0.39,
+        "slat_visible_reflectance": 0.5,
+        "slat_beam_visible_reflectance_at_45": 0.36,
+        "slat_diffuse_visible_reflectance_at_45": 0.21
+      },
+      "required_results": [
+        "hourly total room solar heat gain",
+        "hourly transmitted solar radiation excluding secondary heat gains"
+      ],
+      "mandatory_criteria": [
+        "annual sum within the official reference-program band for either permitted solar quantity",
+        "hourly frequency distribution within the official reference-program scatter band"
+      ],
+      "unresolved_dependencies": [
+        "ISO EN 52016:2017 Chapter 7 complete test-room input set",
+        "SIA 387/4:2017 Table 9 exact control algorithms for types 1-3",
+        "Qualified VE dynamic-shading actuator and hourly APS bindings"
+      ],
+      "ve_generation_status": "NOT_IMPLEMENTED"
+    },
+    "3": {
+      "variants": [
+        "3A",
+        "3B",
+        "3C",
+        "3D",
+        "3E",
+        "3F",
+        "3G",
+        "3H",
+        "3I",
+        "3J",
+        "3K",
+        "3L"
+      ],
+      "source": "SIA_4010_geteilter_Link/Test3/Spezifikation_Test3.pdf",
+      "source_pages": [
+        1,
+        2,
+        3
+      ],
+      "confirmed_inputs": {
+        "geometry_reference": "ISO EN 52016:2017 Chapter 7 / ASHRAE 140 test room, south-facing, 48 m2",
+        "construction": "Lightweight",
+        "use_category": "SIA 2024:2021 3.1 Einzel-Gruppenbüro, standard values",
+        "infiltration": "none",
+        "heating_setpoint_c": 20.0,
+        "cooling_setpoint_c": 27.0,
+        "people_count": 3.43,
+        "area_m2_per_person": 14.0,
+        "activity_met": 1.2,
+        "equipment_gain_w_m2": 11.0,
+        "lighting_gain_w_m2": 12.5,
+        "lighting_annual_simultaneity": 0.8,
+        "ceiling_wall_floor_reflectances": [
+          0.7,
+          0.5,
+          0.2
+        ],
+        "sensor_x_m": 4.0,
+        "sensor_room_depth_m": 2.7,
+        "sensor_workplane_height_m": 0.75,
+        "daylight_penetration_depth_m": 5.4,
+        "daylight_area_m2": 43.2,
+        "illuminance_setpoint_lux": 500.0,
+        "switching_hysteresis_lux": 250.0,
+        "presence_correction_factor": 1.0,
+        "constant_light_area_m2": 4.8,
+        "lighting_control_types": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "glazing_type": "SGG Planitherm XN_4/14/4/14/4",
+        "glazing_g_value": 0.545,
+        "glazing_u_w_m2k": 0.654,
+        "glazing_visible_transmittance": 0.742,
+        "glazing_visible_reflectance": 0.145,
+        "external_shading_activation_w_m2": 150.0
+      },
+      "variant_matrix": {
+        "3A": [
+          "shade_type_1",
+          "lighting_type_1"
+        ],
+        "3B": [
+          "shade_type_1",
+          "lighting_type_2"
+        ],
+        "3C": [
+          "shade_type_1",
+          "lighting_type_3"
+        ],
+        "3D": [
+          "shade_type_1",
+          "lighting_type_4"
+        ],
+        "3E": [
+          "shade_type_1",
+          "lighting_type_5"
+        ],
+        "3F": [
+          "shade_type_1",
+          "lighting_type_6"
+        ],
+        "3G": [
+          "shade_type_2",
+          "lighting_type_1"
+        ],
+        "3H": [
+          "shade_type_2",
+          "lighting_type_3"
+        ],
+        "3I": [
+          "shade_type_3",
+          "lighting_type_1"
+        ],
+        "3J": [
+          "shade_type_3",
+          "lighting_type_3"
+        ],
+        "3K": [
+          "shade_type_4",
+          "lighting_type_1"
+        ],
+        "3L": [
+          "shade_type_4",
+          "lighting_type_3"
+        ]
+      },
+      "required_results": [
+        "hourly total whole-room lighting power in kW"
+      ],
+      "mandatory_criteria": [
+        "annual sum within the official reference-program band",
+        "hourly frequency distribution within the official reference-program scatter band"
+      ],
+      "unresolved_dependencies": [
+        "ISO EN 52016:2017 Chapter 7 complete test-room input set",
+        "SIA 387/4:2017 Tables 9 and 10 exact shading and lighting algorithms",
+        "Example-building fabric-awning detail",
+        "SIA authority clarification of the contradictory 3K/3L shade-device identity",
+        "Qualified VE daylight sensor, dimming/switching and hourly APS bindings"
+      ],
+      "ve_generation_status": "NOT_IMPLEMENTED"
+    },
+    "4": {
+      "variants": [
+        "4"
+      ],
+      "source": "SIA_4010_geteilter_Link/Test4/Spezifikation_Test4.pdf",
+      "source_pages": [
+        1,
+        2,
+        3
+      ],
+      "confirmed_inputs": {
+        "zone": "101 Hörsaal, windowless, double-height on floors 1 and 2, roof external",
+        "net_area_m2": 165.81,
+        "average_height_m": 6.38,
+        "gross_volume_m3": 1058.0,
+        "construction_reference": "FprSIA 380/2:2022 Table 3 limit values",
+        "use_category": "SIA 2024:2021 Hörsaal, target values",
+        "nominal_ventilation_m3_h_m2": 10.0,
+        "infiltration_m3_h_m2": 0.15,
+        "people_count": 55,
+        "area_m2_per_person": 3.0,
+        "activity_met": 1.2,
+        "equipment_gain_w_m2": 10.0,
+        "lighting_gain_w_m2": 6.4,
+        "lighting_schedule": "07:00-18:00; off in July",
+        "room_temperature_control": {
+          "heating_lower_curve_c": [
+            [
+              19.0,
+              22.0
+            ],
+            [
+              23.5,
+              23.5
+            ]
+          ],
+          "cooling_upper_curve_c": [
+            [
+              12.0,
+              23.0
+            ],
+            [
+              17.0,
+              25.0
+            ]
+          ],
+          "independent_variable": "48-hour moving-mean outdoor temperature"
+        },
+        "co2_control_ppm": [
+          600,
+          1000
+        ],
+        "outdoor_co2_ppm": 400,
+        "ahu_type": "single-zone variable-air-volume",
+        "ahu_location": "roof, external climate",
+        "ahu_leakage_class": "L1",
+        "nominal_airflow_m3_h": 1700,
+        "airflow_range_fraction": [
+          0.2,
+          1.0
+        ],
+        "operation_schedule": "weekdays 05:00-20:00; off in July",
+        "supply_extract_pressure_pa": [
+          500,
+          400
+        ],
+        "supply_extract_fan_power_w": [
+          407,
+          331
+        ],
+        "supply_extract_fan_speed_rpm": [
+          2790,
+          2730
+        ],
+        "heat_recovery_type": "plate, no moisture recovery",
+        "heat_recovery_temperature_effectiveness": 0.75,
+        "heat_recovery_control": "supply-temperature bypass; 100% bypass in cooling",
+        "frost_control": "bypass to exhaust-air temperature >= 0 C",
+        "supply_air_temperature_ranges_c": {
+          "cooling": [
+            16.0,
+            22.5
+          ],
+          "heating": [
+            22.5,
+            29.0
+          ]
+        },
+        "cooling_coil_design_kw": 12.8,
+        "cooling_coil_effectiveness": 0.85,
+        "cooling_coil_bypass_factor": 0.065,
+        "cooling_water_supply_c": 13.0,
+        "heating_coil_design_kw": 11.4,
+        "heating_water_supply_c": 40.0
+      },
+      "required_results": [
+        "annual supply and exhaust fan energy",
+        "annual air-heater heat input",
+        "annual total air-cooler heat removal",
+        "complete official hourly transfer and diagnostic series"
+      ],
+      "mandatory_criteria": [
+        "annual sums within official reference-program bands"
+      ],
+      "unresolved_dependencies": [
+        "Example-building exact auditorium geometry and constructions",
+        "Cell-validated binding of the authority-supplied SIA 2024 auditorium data",
+        "Documented and sensitivity-tested IESVE-specific fan approximation",
+        "Exact room-temperature setpoint curve implementation",
+        "Qualified Apache Systems topology, CO2/VAV controllers and APS outputs"
+      ],
+      "ve_generation_status": "NOT_IMPLEMENTED"
+    },
+    "5": {
+      "variants": [
+        "5A",
+        "5B",
+        "5C",
+        "5D"
+      ],
+      "source": "SIA_4010_geteilter_Link/Test5/Spezifikation_Test5.pdf",
+      "source_pages": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "confirmed_inputs": {
+        "zones": [
+          "100",
+          "102",
+          "200",
+          "201",
+          "202",
+          "203",
+          "204",
+          "205"
+        ],
+        "zone_areas_m2": {
+          "100": 31.62,
+          "102": 104.94,
+          "200": 31.62,
+          "201": 17.14,
+          "202": 17.14,
+          "203": 17.14,
+          "204": 17.14,
+          "205": 33.13
+        },
+        "use_reference": "SIA 2024:2021 standard values by room",
+        "nominal_outdoor_air_m3_h_person": 25.0,
+        "infiltration_m3_h_m2": 0.15,
+        "co2_control_ppm": [
+          950,
+          1200
+        ],
+        "outdoor_co2_ppm": 400,
+        "minimum_relative_humidity_fraction": 0.3,
+        "ahu_type": "multizone variable-air-volume with conditioned supply air",
+        "ahu_location": "U102 basement, unconditioned",
+        "distribution_and_ahu_leakage_classes": [
+          "B",
+          "L1"
+        ],
+        "nominal_airflow_m3_h": 1040,
+        "airflow_range_fraction": [
+          0.3,
+          1.0
+        ],
+        "operation_schedule": "weekdays 06:00-19:00",
+        "room_temperature_control": {
+          "heating_lower_curve_c": [
+            [
+              19.0,
+              22.0
+            ],
+            [
+              23.5,
+              23.5
+            ]
+          ],
+          "cooling_upper_curve_c": [
+            [
+              12.0,
+              23.0
+            ],
+            [
+              17.0,
+              25.0
+            ]
+          ],
+          "independent_variable": "48-hour moving-mean outdoor temperature"
+        },
+        "supply_air_reset_c": [
+          [
+            12.0,
+            20.0
+          ],
+          [
+            20.0,
+            18.0
+          ]
+        ],
+        "chilled_water_reset_c": [
+          [
+            12.0,
+            18.0
+          ],
+          [
+            20.0,
+            13.0
+          ]
+        ],
+        "heating_water_reset_c": [
+          [
+            -10.0,
+            40.0
+          ],
+          [
+            20.0,
+            18.0
+          ]
+        ],
+        "supply_extract_pressure_pa": [
+          770,
+          520
+        ],
+        "supply_extract_fan_power_w": [
+          420,
+          290
+        ],
+        "supply_extract_fan_speed_rpm": [
+          3000,
+          2500
+        ],
+        "variant_constant_pressure_pa": {
+          "5A": [
+            50,
+            50
+          ],
+          "5B": [
+            270,
+            270
+          ],
+          "5C": [
+            270,
+            270
+          ],
+          "5D": [
+            270,
+            270
+          ]
+        },
+        "variant_heat_recovery_type": {
+          "5A": "hygroscopic rotary",
+          "5B": "hygroscopic rotary",
+          "5C": "non-hygroscopic rotary",
+          "5D": "non-hygroscopic rotary"
+        },
+        "variant_temperature_effectiveness": {
+          "5A": 0.67,
+          "5B": 0.67,
+          "5C": 0.69,
+          "5D": 0.69
+        },
+        "variant_moisture_effectiveness": {
+          "5A": 0.42,
+          "5B": 0.42,
+          "5C": 0.3,
+          "5D": 0.3
+        },
+        "rotor_nominal_speed_rpm": 20,
+        "rotor_drive_power_w": 120,
+        "cooling_coil_design_kw": 8.6,
+        "cooling_coil_effectiveness": 0.765,
+        "cooling_coil_bypass_factor": 0.065,
+        "heating_coil_design_kw": 3.5,
+        "variant_humidifier_type": {
+          "5A": "contact",
+          "5B": "contact",
+          "5C": "contact",
+          "5D": "steam"
+        },
+        "humidifier_nominal_water_kg_h": 4.9,
+        "contact_humidifier_specific_pump_wh_m3": 0.01,
+        "humidifier_energy_carrier": "electricity"
+      },
+      "mandatory_criteria": [
+        "annual sums within official reference-program bands",
+        "hourly frequency distributions within official reference-program scatter bands"
+      ],
+      "unresolved_dependencies": [
+        "Example-building exact multizone geometry, areas and constructions",
+        "Cell-validated room-by-room binding of the authority-supplied SIA 2024 data",
+        "Technical validation of the authorized EN 16798-5-1 Annex D workbook",
+        "Retrieval and formula comparison of the newer EPB Center workbook",
+        "Documented and sensitivity-tested IESVE-specific fan approximation",
+        "Qualified multizone Apache Systems, humidity, recovery and APS bindings"
+      ],
+      "ve_generation_status": "NOT_IMPLEMENTED"
+    },
+    "6": {
+      "variants": [
+        "6"
+      ],
+      "source": "SIA_4010_geteilter_Link/Test6/Spezifikation_Test6.pdf",
+      "source_pages": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "confirmed_inputs": {
+        "restaurant_zone": "001",
+        "restaurant_area_m2": 237.4,
+        "restaurant_height_m": 3.0,
+        "restaurant_footprint_m": [
+          [
+            23.032,
+            5.979
+          ],
+          [
+            19.742,
+            5.979
+          ],
+          [
+            19.742,
+            10.669
+          ],
+          [
+            3.792,
+            10.669
+          ],
+          [
+            3.792,
+            -2.47
+          ],
+          [
+            23.032,
+            -2.47
+          ]
+        ],
+        "kitchen_zone": "002",
+        "kitchen_area_m2": 35.9,
+        "kitchen_height_m": 3.0,
+        "kitchen_footprint_m": [
+          [
+            29.642,
+            10.669
+          ],
+          [
+            19.972,
+            10.669
+          ],
+          [
+            19.972,
+            6.959
+          ],
+          [
+            29.642,
+            6.959
+          ]
+        ],
+        "restaurant_use": "SIA 2024:2021 6.2 Selbstbedienungsrestaurant, standard values",
+        "kitchen_use": "SIA 2024:2021 6.4 Küche zu Selbstbedienungsrestaurant, standard values",
+        "infiltration_m3_h_m2": 0.15,
+        "restaurant_supply_extract_m3_h": [
+          3000,
+          2650
+        ],
+        "kitchen_supply_extract_m3_h": [
+          3150,
+          3500
+        ],
+        "overflow_restaurant_to_kitchen_m3_h": 350,
+        "ahu_type": "three-stage ventilation with run-around-coil heat recovery",
+        "ahu_location": "basement, unconditioned",
+        "distribution_and_ahu_leakage_classes": [
+          "D",
+          "L1"
+        ],
+        "stage_airflows_m3_h": [
+          2050,
+          4100,
+          6150
+        ],
+        "stage_airflow_fractions": [
+          0.333,
+          0.667,
+          1.0
+        ],
+        "operation_schedule": "Monday-Saturday 07:00-16:00",
+        "stage_schedule_fraction": [
+          [
+            0,
+            0.0
+          ],
+          [
+            7,
+            0.333
+          ],
+          [
+            8,
+            0.667
+          ],
+          [
+            10,
+            1.0
+          ],
+          [
+            12,
+            0.667
+          ],
+          [
+            13,
+            0.333
+          ],
+          [
+            16,
+            0.0
+          ],
+          [
+            24,
+            0.0
+          ]
+        ],
+        "supply_extract_pressure_pa": [
+          750,
+          550
+        ],
+        "supply_extract_fan_power_w": [
+          2021,
+          1460
+        ],
+        "supply_extract_fan_speed_rpm": [
+          1865,
+          1700
+        ],
+        "heat_recovery_type": "run-around coil",
+        "heat_recovery_temperature_effectiveness": 0.71,
+        "heat_recovery_medium": "water-glycol 30%",
+        "heat_recovery_nominal_flow_l_h": 2100,
+        "heat_recovery_pump_power_w": 185,
+        "heat_recovery_minimum_flow_fraction": 0.5,
+        "frost_control": "pump-speed control to exhaust-air temperature >= 5 C",
+        "supply_air_reset_c": [
+          [
+            12.0,
+            20.0
+          ],
+          [
+            20.0,
+            18.0
+          ]
+        ],
+        "cooling_coil_design_kw": 30.0,
+        "cooling_coil_effectiveness": 0.7,
+        "cooling_water_design_c": 13.0,
+        "chilled_water_reset_c": [
+          [
+            12.0,
+            18.0
+          ],
+          [
+            20.0,
+            13.0
+          ]
+        ],
+        "heating_coil_design_kw": 35.0,
+        "heating_water_design_c": 40.0,
+        "heating_water_reset_c": [
+          [
+            -8.0,
+            40.0
+          ],
+          [
+            20.0,
+            20.0
+          ]
+        ]
+      },
+      "unresolved_dependencies": [
+        "Example-building exact restaurant/kitchen geometry and constructions",
+        "Cell-validated bindings for confirmed categories 6.2 and 6.4",
+        "Authority follow-up on conflicting example-building category numbering",
+        "Qualified airflow imbalance, overflow, stage control, recovery and APS bindings"
+      ],
+      "ve_generation_status": "NOT_IMPLEMENTED"
+    },
+    "7": {
+      "variants": [
+        "7"
+      ],
+      "source": "SIA_4010_geteilter_Link/Test7/Spezifikation_Test7.pdf",
+      "source_pages": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "confirmed_inputs": {
+        "load_profile_file": "Lastverläufe_220607.xlsx",
+        "domestic_hot_water_charge_temperature_c": 60.0,
+        "cooling_distribution_loss_fraction": 0.05,
+        "cooling_distribution_auxiliary_fraction": 0.02,
+        "cooling_auxiliary_heat_to_loop_fraction": 0.5,
+        "heating_distribution_loss_fraction": 0.05,
+        "heating_distribution_auxiliary_fraction": 0.02,
+        "heating_auxiliary_heat_recovered_fraction": 0.5,
+        "cooling_storage_volume_l": 2000,
+        "heating_storage_volume_l": 2000,
+        "generator_model": "Climaveneta NX-W-Y /H 0182",
+        "generator_type": "reversible two-stage water-water scroll heat pump",
+        "nominal_cooling_kw": 55.9,
+        "nominal_heating_kw": 60.0,
+        "heat_pump_bivalence_temperature_c": -7.0,
+        "heat_pump_operating_limit_c": -10.0,
+        "dry_cooler_capacity_kw": 70.0,
+        "outdoor_heat_exchanger_capacity_kw": 76.0,
+        "outdoor_fan_specific_power_kw_per_kw": 0.045,
+        "outdoor_loop_medium": "water-glycol 30%",
+        "outdoor_loop_mass_flow_kg_h": 19000,
+        "outdoor_loop_delta_t_k": 4.0,
+        "outdoor_air_to_supply_delta_t_k": 4.0,
+        "outdoor_loop_pump_heat_fraction": 0.5,
+        "outdoor_loop_loss_fraction": 0.05,
+        "peak_boiler_carrier": "gas",
+        "peak_boiler_efficiency": 0.9,
+        "pv_roof_kwp": 45.0,
+        "pv_roof_modules": 150,
+        "pv_facade_kwp": 15.6,
+        "pv_facade_modules": 52,
+        "pv_specification_total_kwp": 60.6,
+        "pv_layout_total_kwp": 62.62,
+        "pv_module_power_w": 310,
+        "pv_module": "AEG AS-M605-310",
+        "pv_inverter_efficiency": 0.97,
+        "pv_authoritative_total_kwp": 62.62,
+        "pv_superseded_specification_total_kwp": 60.6,
+        "pv_specification_value_is_error": true,
+        "pv_authority_decision": "SIA4010_TEST7_PV_20260828",
+        "pv_roof_east_modules": 75,
+        "pv_roof_west_modules": 75,
+        "pv_roof_east_kwp": 22.5,
+        "pv_roof_west_kwp": 22.5
+      },
+      "unresolved_dependencies": [
+        "Checksum-qualified load-profile importer",
+        "Qualified VE binding of the source-traced heat-pump performance tables",
+        "Exact storage hysteresis/controller implementation",
+        "Bivalence temperature and simultaneous heat-recovery sequence",
+        "Corrected Test 7 specification publication; retain the 60.6/62.62 discrepancy until issued",
+        "Qualified VE plant, storage, distribution, PV and final-energy APS bindings"
+      ],
+      "ve_generation_status": "NOT_IMPLEMENTED"
+    }
+  }
+}

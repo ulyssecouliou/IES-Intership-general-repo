@@ -1,0 +1,18 @@
+{
+  "_comment": [
+    "Copy this file to config/company_profile.json and fill in your office",
+    "details. It drives the letterhead and the signature block of the generated",
+    "SIA compliance report PDF. Nothing here is invented by the software: any",
+    "field left empty is printed as 'not specified'.",
+    "logo_path may be absolute or relative to the repository root and must be a",
+    "PNG (greyscale or RGB, non-interlaced, no alpha) or a JPEG."
+  ],
+  "name": "",
+  "tagline": "",
+  "address_lines": [],
+  "contact_lines": [],
+  "logo_path": "",
+  "author_name": "",
+  "author_role": "",
+  "report_reference": ""
+}

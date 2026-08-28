@@ -1,0 +1,21 @@
+{
+  "schema_id": "sia4010.authority_decision.v1",
+  "schema_version": "1.0",
+  "primary_source_sha256": "<LOWERCASE_SHA256_OF_SIGNED_OR_TRACEABLE_DECISION>",
+  "source_locator": "<MESSAGE_OR_DOCUMENT_LOCATOR>",
+  "decision_id": "<SOURCE_STABLE_DECISION_ID>",
+  "issued_by": "<SIA_AUTHORITY_IDENTITY>",
+  "issued_date": "<ISO_DATE_FROM_SOURCE>",
+  "document_reference": "<SOURCE_REFERENCE>",
+  "question": "<EXACT_3K_3L_DEVICE_IDENTITY_QUESTION>",
+  "decision": "<EXACT_AUTHORITY_DECISION>",
+  "applicable_cases": ["test_3K/3K", "test_3L/3L"],
+  "resolved_parameters": [
+    {
+      "id": "test3_3k_3l_shading_device_identity",
+      "value": "<EXACT_AUTHORITY_VALUE>",
+      "unit": "text",
+      "source_locator": "<SOURCE_LOCATOR>"
+    }
+  ]
+}

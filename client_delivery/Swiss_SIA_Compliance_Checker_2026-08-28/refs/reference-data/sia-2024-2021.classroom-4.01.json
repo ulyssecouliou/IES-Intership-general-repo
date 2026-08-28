@@ -1,0 +1,88 @@
+{
+  "schema_version": "1.0",
+  "usage_category": {
+    "code": "4.01",
+    "name_de": "Schulzimmer",
+    "name_en": "Classroom"
+  },
+  "authority": {
+    "standard": "SIA 2024:2021",
+    "source_workbook": "2024_Raumdatenblätter_dfi_V221.xlsm",
+    "source_workbook_sha256": "d39e18dfeb5f707eb628dda0125a3f2ea332bc47d7128b7de1b5b5a04f26daec",
+    "worksheet": "Eingabedaten",
+    "row": 17,
+    "supporting_standard": "SIA 380/2:2022"
+  },
+  "values": {
+    "area_per_person_m2": {"value": 4.0, "cell": "AP17"},
+    "activity_met": {"value": 1.2, "cell": "AQ17"},
+    "people_radiant_fraction": {"value": 0.5, "cell": "AR17"},
+    "people_sensible_cooling_w_person": {"value": 84.0, "cell": "AT17"},
+    "people_sensible_heating_w_person": {"value": 94.0, "cell": "AU17"},
+    "people_moisture_cooling_g_h_person": {"value": 51.0, "cell": "AV17"},
+    "people_moisture_heating_g_h_person": {"value": 66.0, "cell": "AW17"},
+    "equipment_radiant_fraction": {"value": 0.5, "cell": "AX17"},
+    "equipment_standard_w_m2": {"value": 8.0, "cell": "AY17"},
+    "equipment_target_w_m2": {"value": 4.0, "cell": "AZ17"},
+    "equipment_out_of_use_percent": {"value": 10.0, "cell": "BH17"},
+    "lighting_illuminance_lux": {"value": 500.0, "cell": "BL17"},
+    "lighting_radiant_fraction": {"value": 0.75, "cell": "BR17"},
+    "lighting_standard_power_w_m2": {"value": 8.591269841269842, "cell": "Resultate Standard!AA14"},
+    "lighting_standard_full_load_hours_h_a": {"value": 1310.0, "cell": "Resultate Standard!AB14"},
+    "outdoor_air_m3_h_person": {"value": 29.0, "cell": "BX17"},
+    "outdoor_air_m3_h_m2": {"value": 7.25, "cell": "BZ17"},
+    "outdoor_air_standard_m3_h_m2": {"value": 7.25, "cell": "CB17"},
+    "infiltration_standard_m3_h_m2": {"value": 0.15, "cell": "CD17"},
+    "infiltration_existing_m3_h_m2": {"value": 0.3, "cell": "CE17"},
+    "heat_recovery_temperature_efficiency_standard": {"value": 0.73, "cell": "CL17"},
+    "heat_recovery_temperature_efficiency_target": {"value": 0.78, "cell": "CM17"},
+    "system_heat_recovery_efficiency_standard": {"value": 0.7, "cell": "CO17"},
+    "system_heat_recovery_efficiency_target": {"value": 0.75, "cell": "CP17"},
+    "sfp_standard_w_per_m3_h": {"value": 0.34, "cell": "CT17"},
+    "sfp_target_w_per_m3_h": {"value": 0.223, "cell": "CU17"},
+    "thermally_effective_minimum_air_change_h_1": {"value": 0.1, "cell": "DG17"},
+    "design_heating_setpoint_c": {"value": 21.0, "source": "SIA 2024:2021 Table 11, row 4.01"},
+    "design_cooling_setpoint_c": {"value": 26.0, "source": "SIA 2024:2021 Table 11, row 4.01"}
+  },
+  "profiles": {
+    "people_hourly_multipliers": [0, 0, 0, 0, 0, 0, 0, 0.4, 0.6, 1, 1, 0.8, 0.2, 0.6, 1, 0.8, 0.8, 0.4, 0, 0, 0, 0, 0, 0],
+    "people_cells": "DP17:EM17",
+    "equipment_hourly_multipliers": [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.4, 0.6, 0.8, 1, 0.8, 0.2, 0.6, 1, 0.8, 0.8, 0.4, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1],
+    "equipment_cells": "EN17:FK17",
+    "monthly_multipliers": [0.8, 0.6, 0.9, 0.6, 0.8, 1.0, 0.0, 0.6, 1.0, 0.6, 0.9, 0.6],
+    "monthly_cells": "FM17:FX17",
+    "weekly_first_day": "Saturday",
+    "weekly_multipliers_sat_to_fri": [0, 0, 1, 1, 1, 1, 1],
+    "weekly_cells": "HS17:HY17",
+    "rest_days_per_week": {"value": 2, "cell": "FY17"},
+    "use_days_per_year": {"value": 261, "cell": "FZ17"}
+  },
+  "ve_mappings": {
+    "people_latent_w_person": {
+      "value": 35.416666666666664,
+      "formula": "51 g/h/person * 2500 kJ/kg / 3600",
+      "status": "ENGINEERING_MAPPING_REQUIRES_REVIEW",
+      "note": "SIA supplies moisture generation, while VE PeopleGain requires latent heat. The 2500 kJ/kg phase-change factor is not a SIA 2024 cell."
+    },
+    "lighting_profile": {
+      "status": "IMPLEMENTATION_PROXY_REQUIRES_PROJECT_OVERRIDE",
+      "basis": "people profile",
+      "note": "The workbook supplies installed power and annual full-load hours, not a directly importable VE hourly lighting schedule."
+    },
+    "ventilation_profile": {
+      "status": "IMPLEMENTATION_PROXY_REQUIRES_PROJECT_OVERRIDE",
+      "basis": "people profile",
+      "note": "The workbook supplies airflow and usage profiles, but project controls and actual operating schedules take precedence under SIA 380/2."
+    },
+    "setpoint_control": {
+      "status": "DESIGN_FALLBACK_REQUIRES_PROJECT_OVERRIDE",
+      "basis": "SIA 2024 Table 11 design values",
+      "note": "Actual schedules and the applicable SIA 380/2 Figure 1 control path must be confirmed for the project."
+    }
+  },
+  "claims": {
+    "automatic_compliance_claim": false,
+    "purpose": "Source-traced fallback template for project review when actual design data are unavailable.",
+    "actual_project_data_take_precedence": true
+  }
+}

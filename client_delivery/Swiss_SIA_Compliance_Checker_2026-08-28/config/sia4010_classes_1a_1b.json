@@ -1,0 +1,723 @@
+{
+  "schema_version": "1.0",
+  "purpose": "Source-traced input contract for SIA 4010 validation classes 1A and 1B. Null values are deliberate blockers and must never be inferred.",
+  "classes": {
+    "1A": ["test_1", "test_2A"],
+    "1B": ["test_1", "test_2B", "test_2C", "test_2D"]
+  },
+  "variants": {
+    "test_1": {
+      "description": "All Test 1 submission cases. Only case 1E has an acceptance band; the diagnostic cases 1A to 1D are annual hourly deliverables with no comparison criterion.",
+      "case_ids": ["600", "640", "600FF", "900", "940", "900FF", "1A", "1B", "1C", "1D", "1E"],
+      "required_parameters": [
+        "cell_width_m",
+        "cell_depth_m",
+        "cell_height_m",
+        "south_window_count",
+        "south_window_width_m",
+        "south_window_height_m",
+        "south_window_sill_m",
+        "south_window_side_margin_m",
+        "south_window_gap_m",
+        "iso_lightweight_construction",
+        "iso_heavyweight_construction",
+        "iso_test1_glazing",
+        "iso_test1_infiltration",
+        "denver_drycold_weather_file",
+        "test1_heating_setpoint_c",
+        "test1_cooling_setpoint_c",
+        "test1_equipment_gain_w",
+        "test1_night_setback_schedule",
+        "sia2024_office_profiles",
+        "fabric_awning_solar_properties"
+      ],
+      "case_required_parameters": {
+        "600": [
+          "cell_width_m", "cell_depth_m", "cell_height_m",
+          "south_window_count", "south_window_width_m", "south_window_height_m",
+          "south_window_sill_m", "south_window_side_margin_m", "south_window_gap_m",
+          "iso_lightweight_construction", "iso_test1_glazing",
+          "iso_test1_infiltration", "denver_drycold_weather_file",
+          "test1_heating_setpoint_c", "test1_cooling_setpoint_c",
+          "test1_equipment_gain_w"
+        ],
+        "640": [
+          "cell_width_m", "cell_depth_m", "cell_height_m",
+          "south_window_count", "south_window_width_m", "south_window_height_m",
+          "south_window_sill_m", "south_window_side_margin_m", "south_window_gap_m",
+          "iso_lightweight_construction", "iso_test1_glazing",
+          "iso_test1_infiltration", "denver_drycold_weather_file",
+          "test1_heating_setpoint_c", "test1_cooling_setpoint_c",
+          "test1_equipment_gain_w", "test1_night_setback_schedule"
+        ],
+        "600FF": [
+          "cell_width_m", "cell_depth_m", "cell_height_m",
+          "south_window_count", "south_window_width_m", "south_window_height_m",
+          "south_window_sill_m", "south_window_side_margin_m", "south_window_gap_m",
+          "iso_lightweight_construction", "iso_test1_glazing",
+          "iso_test1_infiltration", "denver_drycold_weather_file",
+          "test1_equipment_gain_w"
+        ],
+        "900": [
+          "cell_width_m", "cell_depth_m", "cell_height_m",
+          "south_window_count", "south_window_width_m", "south_window_height_m",
+          "south_window_sill_m", "south_window_side_margin_m", "south_window_gap_m",
+          "iso_heavyweight_construction", "iso_test1_glazing",
+          "iso_test1_infiltration", "denver_drycold_weather_file",
+          "test1_heating_setpoint_c", "test1_cooling_setpoint_c",
+          "test1_equipment_gain_w"
+        ],
+        "940": [
+          "cell_width_m", "cell_depth_m", "cell_height_m",
+          "south_window_count", "south_window_width_m", "south_window_height_m",
+          "south_window_sill_m", "south_window_side_margin_m", "south_window_gap_m",
+          "iso_heavyweight_construction", "iso_test1_glazing",
+          "iso_test1_infiltration", "denver_drycold_weather_file",
+          "test1_heating_setpoint_c", "test1_cooling_setpoint_c",
+          "test1_equipment_gain_w", "test1_night_setback_schedule"
+        ],
+        "900FF": [
+          "cell_width_m", "cell_depth_m", "cell_height_m",
+          "south_window_count", "south_window_width_m", "south_window_height_m",
+          "south_window_sill_m", "south_window_side_margin_m", "south_window_gap_m",
+          "iso_heavyweight_construction", "iso_test1_glazing",
+          "iso_test1_infiltration", "denver_drycold_weather_file",
+          "test1_equipment_gain_w"
+        ],
+        "1A": [
+          "cell_width_m", "cell_depth_m", "cell_height_m",
+          "south_window_count", "south_window_width_m", "south_window_height_m",
+          "south_window_sill_m", "south_window_side_margin_m", "south_window_gap_m",
+          "iso_lightweight_construction",
+          "iso_test1_glazing", "iso_test1_infiltration",
+          "zurich_kloten_dry_weather_file",
+          "test1_heating_setpoint_c", "test1_cooling_setpoint_c",
+          "test1_equipment_gain_w"
+        ],
+        "1B": [
+          "cell_width_m", "cell_depth_m", "cell_height_m",
+          "south_window_count", "south_window_width_m", "south_window_height_m",
+          "south_window_sill_m", "south_window_side_margin_m", "south_window_gap_m",
+          "iso_lightweight_construction",
+          "test2_glazing_system", "iso_test1_infiltration",
+          "zurich_kloten_dry_weather_file",
+          "test1_heating_setpoint_c", "test1_cooling_setpoint_c",
+          "test1_equipment_gain_w"
+        ],
+        "1C": [
+          "cell_width_m", "cell_depth_m", "cell_height_m",
+          "south_window_count", "south_window_width_m", "south_window_height_m",
+          "south_window_sill_m", "south_window_side_margin_m", "south_window_gap_m",
+          "iso_lightweight_construction",
+          "test2_glazing_system", "test2_infiltration_m3_h_m2",
+          "zurich_kloten_dry_weather_file",
+          "test1_heating_setpoint_c", "test1_cooling_setpoint_c",
+          "test1_equipment_gain_w"
+        ],
+        "1D": [
+          "cell_width_m", "cell_depth_m", "cell_height_m",
+          "south_window_count", "south_window_width_m", "south_window_height_m",
+          "south_window_sill_m", "south_window_side_margin_m", "south_window_gap_m",
+          "iso_lightweight_construction",
+          "test2_glazing_system", "test2_infiltration_m3_h_m2",
+          "zurich_kloten_dry_weather_file",
+          "test1_heating_setpoint_c", "test1_cooling_setpoint_c",
+          "test2_people_count", "test2_people_activity_met",
+          "test2_equipment_gain_w_m2", "test2_lighting_gain_w_m2",
+          "sia2024_office_profiles"
+        ],
+        "1E": [
+          "cell_width_m", "cell_depth_m", "cell_height_m",
+          "south_window_count", "south_window_width_m", "south_window_height_m",
+          "south_window_sill_m", "south_window_side_margin_m", "south_window_gap_m",
+          "iso_lightweight_construction", "zurich_kloten_dry_weather_file",
+          "test2_glazing_system", "test2_infiltration_m3_h_m2",
+          "test2_heating_setpoint_c", "test2_cooling_setpoint_c",
+          "test2_people_count", "test2_people_activity_met",
+          "test2_equipment_gain_w_m2", "test2_lighting_gain_w_m2",
+          "sia2024_office_profiles", "shading_activation_w_m2",
+          "fabric_awning_solar_properties"
+        ]
+      }
+    },
+    "test_2A": {
+      "description": "Fabric awning with 150 W/m2 irradiation threshold.",
+      "case_ids": ["2A"],
+      "required_parameters": [
+        "cell_width_m",
+        "cell_depth_m",
+        "cell_height_m",
+        "south_window_count",
+        "south_window_width_m",
+        "south_window_height_m",
+        "south_window_sill_m",
+        "south_window_side_margin_m",
+        "south_window_gap_m",
+        "iso_lightweight_construction",
+        "zurich_kloten_dry_weather_file",
+        "test2_glazing_system",
+        "test2_infiltration_m3_h_m2",
+        "test2_heating_setpoint_c",
+        "test2_cooling_setpoint_c",
+        "test2_people_count",
+        "test2_people_activity_met",
+        "test2_equipment_gain_w_m2",
+        "test2_lighting_gain_w_m2",
+        "sia2024_office_profiles",
+        "shading_activation_w_m2",
+        "fabric_awning_solar_properties"
+      ]
+    },
+    "test_2B": {
+      "description": "Metal slat blind with SIA 387/4 control function type 1.",
+      "case_ids": ["2B"],
+      "required_parameters": [
+        "cell_width_m",
+        "cell_depth_m",
+        "cell_height_m",
+        "south_window_count",
+        "south_window_width_m",
+        "south_window_height_m",
+        "south_window_sill_m",
+        "south_window_side_margin_m",
+        "south_window_gap_m",
+        "iso_lightweight_construction",
+        "zurich_kloten_dry_weather_file",
+        "test2_glazing_system",
+        "test2_infiltration_m3_h_m2",
+        "test2_heating_setpoint_c",
+        "test2_cooling_setpoint_c",
+        "test2_people_count",
+        "test2_people_activity_met",
+        "test2_equipment_gain_w_m2",
+        "test2_lighting_gain_w_m2",
+        "sia2024_office_profiles",
+        "shading_activation_w_m2",
+        "metal_slat_optical_properties",
+        "sia3874_control_function_1"
+      ]
+    },
+    "test_2C": {
+      "description": "Metal slat blind with SIA 387/4 control function type 2.",
+      "case_ids": ["2C"],
+      "required_parameters": [
+        "cell_width_m",
+        "cell_depth_m",
+        "cell_height_m",
+        "south_window_count",
+        "south_window_width_m",
+        "south_window_height_m",
+        "south_window_sill_m",
+        "south_window_side_margin_m",
+        "south_window_gap_m",
+        "iso_lightweight_construction",
+        "zurich_kloten_dry_weather_file",
+        "test2_glazing_system",
+        "test2_infiltration_m3_h_m2",
+        "test2_heating_setpoint_c",
+        "test2_cooling_setpoint_c",
+        "test2_people_count",
+        "test2_people_activity_met",
+        "test2_equipment_gain_w_m2",
+        "test2_lighting_gain_w_m2",
+        "sia2024_office_profiles",
+        "shading_activation_w_m2",
+        "metal_slat_optical_properties",
+        "sia3874_control_function_2"
+      ]
+    },
+    "test_2D": {
+      "description": "Metal slat blind with SIA 387/4 control function type 3.",
+      "case_ids": ["2D"],
+      "required_parameters": [
+        "cell_width_m",
+        "cell_depth_m",
+        "cell_height_m",
+        "south_window_count",
+        "south_window_width_m",
+        "south_window_height_m",
+        "south_window_sill_m",
+        "south_window_side_margin_m",
+        "south_window_gap_m",
+        "iso_lightweight_construction",
+        "zurich_kloten_dry_weather_file",
+        "test2_glazing_system",
+        "test2_infiltration_m3_h_m2",
+        "test2_heating_setpoint_c",
+        "test2_cooling_setpoint_c",
+        "test2_people_count",
+        "test2_people_activity_met",
+        "test2_equipment_gain_w_m2",
+        "test2_lighting_gain_w_m2",
+        "sia2024_office_profiles",
+        "shading_activation_w_m2",
+        "metal_slat_optical_properties",
+        "sia3874_control_function_3"
+      ]
+    }
+  },
+  "parameters": {
+    "cell_width_m": {
+      "name": "Test-cell width",
+      "description": "East-west internal dimension of the ISO/ASHRAE test cell.",
+      "units": "m",
+      "source": "SIA 4010 Test 1 and Test 2 specifications, page 1, dimensioned cell diagram",
+      "validation": {"type": "number", "minimum": 0.1, "maximum": 100.0},
+      "status": "CONFIRMED",
+      "value": 8.0
+    },
+    "cell_depth_m": {
+      "name": "Test-cell depth",
+      "description": "North-south internal dimension of the ISO/ASHRAE test cell.",
+      "units": "m",
+      "source": "SIA 4010 Test 1 and Test 2 specifications, page 1, dimensioned cell diagram",
+      "validation": {"type": "number", "minimum": 0.1, "maximum": 100.0},
+      "status": "CONFIRMED",
+      "value": 6.0
+    },
+    "cell_height_m": {
+      "name": "Test-cell height",
+      "description": "Internal height of the ISO/ASHRAE test cell.",
+      "units": "m",
+      "source": "SIA 4010 Test 1 and Test 2 specifications, page 1, dimensioned cell diagram",
+      "validation": {"type": "number", "minimum": 0.1, "maximum": 20.0},
+      "status": "CONFIRMED",
+      "value": 2.7
+    },
+    "south_window_count": {
+      "name": "South window count",
+      "description": "Number of equal windows in the south facade.",
+      "units": "count",
+      "source": "SIA 4010 Test 1 and Test 2 specifications, page 1, cell diagram",
+      "validation": {"type": "integer", "minimum": 1, "maximum": 20},
+      "status": "CONFIRMED",
+      "value": 2
+    },
+    "south_window_width_m": {
+      "name": "South window width",
+      "description": "Width of each south-facing window.",
+      "units": "m",
+      "source": "SIA 4010 Test 1 and Test 2 specifications, page 1, dimensioned cell diagram",
+      "validation": {"type": "number", "minimum": 0.1, "maximum": 8.0},
+      "status": "CONFIRMED",
+      "value": 3.0
+    },
+    "south_window_height_m": {
+      "name": "South window height",
+      "description": "Height of each south-facing window.",
+      "units": "m",
+      "source": "SIA 4010 Test 1 and Test 2 specifications, page 1, dimensioned cell diagram",
+      "validation": {"type": "number", "minimum": 0.1, "maximum": 2.7},
+      "status": "CONFIRMED",
+      "value": 2.0
+    },
+    "south_window_sill_m": {
+      "name": "South window sill height",
+      "description": "Exact vertical position of the two south windows.",
+      "units": "m",
+      "source": "SIA 4010 Test 1 and Test 2 specifications, page 1, dimensioned cell diagram",
+      "validation": {"type": "number", "minimum": 0.0, "maximum": 0.7},
+      "status": "CONFIRMED",
+      "value": 0.2
+    },
+    "south_window_side_margin_m": {
+      "name": "South window side margin",
+      "description": "Opaque wall width between each outer window jamb and the adjacent facade edge.",
+      "units": "m",
+      "source": "SIA 4010 Test 1 and Test 2 specifications, page 1, dimensioned cell diagram",
+      "validation": {"type": "number", "minimum": 0.0, "maximum": 8.0},
+      "status": "CONFIRMED",
+      "value": 0.5
+    },
+    "south_window_gap_m": {
+      "name": "South window centre gap",
+      "description": "Opaque wall width between the two south windows.",
+      "units": "m",
+      "source": "SIA 4010 Test 1 and Test 2 specifications, page 1, dimensioned cell diagram",
+      "validation": {"type": "number", "minimum": 0.0, "maximum": 8.0},
+      "status": "CONFIRMED",
+      "value": 1.0
+    },
+    "iso_lightweight_construction": {
+      "name": "ISO lightweight envelope",
+      "description": "Complete wall, roof and floor layer definitions and surface coefficients for lightweight cases.",
+      "units": "structured construction set",
+      "source": "BS EN ISO 52016-1:2017 licensed project evidence",
+      "validation": {"type": "object"},
+      "status": "CONFIRMED_NORMATIVE",
+      "value": {
+        "source_locator": "BS EN ISO 52016-1:2017, Figure 2 and Tables 22-25, licensed evidence pages 123-127; normalized record config/iso52016_chapter7_confirmed_inputs.json",
+        "surface_coefficients_w_m2k": {
+          "inside": 7.63,
+          "outside": 24.14,
+          "wall_inside_horizontal": 7.63,
+          "roof_inside_upwards": 10.13,
+          "floor_inside_downwards": 5.83,
+          "external_all_directions": 24.14
+        },
+        "opaque_surface_properties": {
+          "inside_solar_absorptance": 0.6,
+          "outside_solar_absorptance": 0.6,
+          "infrared_emittance_note": "A standard emittance is implicitly assumed by ISO page 126; no unsupported numerical emissivity is asserted."
+        },
+        "hourly_air_and_furniture_areal_capacity_j_m2k": 10000.0,
+        "wall_layers_outside_to_inside": [
+          {"material": "wood_siding", "thickness_m": 0.009, "conductivity_w_mk": 0.14, "density_kg_m3": 530.0, "specific_heat_j_kgk": 900.0},
+          {"material": "fiberglass_quilt", "thickness_m": 0.066, "conductivity_w_mk": 0.04, "density_kg_m3": 12.0, "specific_heat_j_kgk": 840.0},
+          {"material": "plasterboard", "thickness_m": 0.012, "conductivity_w_mk": 0.16, "density_kg_m3": 950.0, "specific_heat_j_kgk": 840.0}
+        ],
+        "roof_layers_outside_to_inside": [
+          {"material": "wood_siding", "thickness_m": 0.019, "conductivity_w_mk": 0.14, "density_kg_m3": 530.0, "specific_heat_j_kgk": 900.0},
+          {"material": "fiberglass_quilt", "thickness_m": 0.1118, "conductivity_w_mk": 0.04, "density_kg_m3": 12.0, "specific_heat_j_kgk": 840.0},
+          {"material": "plasterboard", "thickness_m": 0.01, "conductivity_w_mk": 0.16, "density_kg_m3": 950.0, "specific_heat_j_kgk": 840.0}
+        ],
+        "floor_layers_outside_to_inside": [
+          {"material": "floor_insulation", "thickness_m": 1.003, "conductivity_w_mk": 0.04, "density_kg_m3": 0.0, "specific_heat_j_kgk": 0.0, "runtime_note": "ISO Table 23 prescribes zero density and heat capacity; VE must use its minimum accepted non-negative values only if zero is rejected, and report the substitution."},
+          {"material": "timber_flooring", "thickness_m": 0.025, "conductivity_w_mk": 0.14, "density_kg_m3": 650.0, "specific_heat_j_kgk": 1200.0}
+        ],
+        "boundary_condition": "raised floor exposed to outdoor conditions; ground heat transfer decoupled"
+      }
+    },
+    "iso_heavyweight_construction": {
+      "name": "ISO heavyweight envelope",
+      "description": "Complete wall, roof and floor layer definitions and surface coefficients for heavyweight cases.",
+      "units": "structured construction set",
+      "source": "BS EN ISO 52016-1:2017 licensed project evidence",
+      "validation": {"type": "object"},
+      "status": "CONFIRMED_NORMATIVE",
+      "value": {
+        "source_locator": "BS EN ISO 52016-1:2017, Tables 24-25, licensed evidence pages 125-127; normalized record config/iso52016_chapter7_confirmed_inputs.json",
+        "surface_coefficients_w_m2k": {
+          "inside": 7.63,
+          "outside": 24.14,
+          "wall_inside_horizontal": 7.63,
+          "roof_inside_upwards": 10.13,
+          "floor_inside_downwards": 5.83,
+          "external_all_directions": 24.14
+        },
+        "opaque_surface_properties": {
+          "inside_solar_absorptance": 0.6,
+          "outside_solar_absorptance": 0.6,
+          "infrared_emittance_note": "A standard emittance is implicitly assumed by ISO page 126; no unsupported numerical emissivity is asserted."
+        },
+        "hourly_air_and_furniture_areal_capacity_j_m2k": 10000.0,
+        "wall_layers_outside_to_inside": [
+          {"material": "wood_siding", "thickness_m": 0.009, "conductivity_w_mk": 0.14, "density_kg_m3": 530.0, "specific_heat_j_kgk": 900.0},
+          {"material": "foam_insulation", "thickness_m": 0.0615, "conductivity_w_mk": 0.04, "density_kg_m3": 10.0, "specific_heat_j_kgk": 1400.0},
+          {"material": "concrete_block", "thickness_m": 0.1, "conductivity_w_mk": 0.51, "density_kg_m3": 1400.0, "specific_heat_j_kgk": 1000.0}
+        ],
+        "roof_layers_outside_to_inside": [
+          {"material": "roofdeck", "thickness_m": 0.019, "conductivity_w_mk": 0.14, "density_kg_m3": 530.0, "specific_heat_j_kgk": 900.0},
+          {"material": "fiberglass_quilt", "thickness_m": 0.1118, "conductivity_w_mk": 0.04, "density_kg_m3": 12.0, "specific_heat_j_kgk": 840.0},
+          {"material": "plasterboard", "thickness_m": 0.01, "conductivity_w_mk": 0.16, "density_kg_m3": 950.0, "specific_heat_j_kgk": 840.0}
+        ],
+        "floor_layers_outside_to_inside": [
+          {
+            "material": "ideal_floor_insulation",
+            "thickness_m": 1.007,
+            "conductivity_w_mk": 0.04,
+            "density_kg_m3": 0.0,
+            "specific_heat_j_kgk": 0.0,
+            "runtime_note": "ASHRAE Table 5-27 prescribes zero density and heat capacity and permits the minimum value accepted by the simulation program, never below zero. VE setter/read-back qualification is mandatory."
+          },
+          {"material": "concrete_slab", "thickness_m": 0.08, "conductivity_w_mk": 1.13, "density_kg_m3": 1400.0, "specific_heat_j_kgk": 1000.0}
+        ],
+        "boundary_condition": "raised floor exposed to outdoor conditions; ground heat transfer decoupled",
+        "runtime_compatibility_guardrail": "The ideal floor-insulation zero thermal-mass fields must be set and read back exactly by VE, or the runtime probe must fail closed and report the program minimum required."
+      }
+    },
+    "iso_test1_glazing": {
+      "name": "ISO Test 1 glazing",
+      "description": "Thermal, solar and optical properties of the Test 1 glazing.",
+      "units": "structured glazing system",
+      "source": "BS EN ISO 52016-1:2017 licensed project evidence",
+      "validation": {"type": "object"},
+      "status": "CONFIRMED_NORMATIVE",
+      "value": {
+        "source_locator": "BS EN ISO 52016-1:2017 clause 7.2.2.6, licensed evidence page 126; normalized record config/iso52016_chapter7_confirmed_inputs.json",
+        "panes": 2,
+        "implementation_layer_model_source": "NREL/TP-472-6231 equivalent double-pane realization; normative VE read-back targets below take precedence",
+        "pane_thickness_m": 0.003175,
+        "air_gap_thickness_m": 0.013,
+        "air_gap_conductance_w_m2k": 6.297,
+        "glass_conductivity_w_mk": 1.06,
+        "glass_density_kg_m3": 2500.0,
+        "glass_specific_heat_j_kgk": 750.0,
+        "glass_ir_emissivity": 0.9,
+        "normal_single_pane_solar_transmittance": 0.86156,
+        "whole_window_u_w_m2k": 2.984,
+        "normal_total_solar_energy_transmittance_glazing": 0.789,
+        "non_scattering_correction_factor": 0.9,
+        "corrected_solar_energy_transmittance": 0.71,
+        "normal_solar_heat_gain_coefficient": 0.71,
+        "normal_shading_coefficient": 0.907,
+        "frame_fraction": 0.0,
+        "shading": "none"
+      }
+    },
+    "iso_test1_infiltration": {
+      "name": "ISO Test 1 infiltration",
+      "description": "Infiltration rate and convention for Test 1 cases.",
+      "units": "structured air exchange",
+      "source": "BS EN ISO 52016-1:2017 supplied licensed evidence",
+      "validation": {"type": "object"},
+      "status": "CONFIRMED_NORMATIVE",
+      "value": {
+        "source_locator": "Clause 7.2.2.14, page 129",
+        "air_changes_per_hour": 0.41,
+        "calculated_zone_air_flow_m3_s": 0.01476,
+        "reported_rounded_zone_air_flow_m3_s": 0.0148,
+        "zone_air_flow_m3_h": 53.136,
+        "floor_area_specific_flow_l_s_m2": 0.3075,
+        "altitude_mass_flow_adjustment_factor": 0.822,
+        "weather_station_altitude_m": 1609,
+        "schedule": "constant_24h",
+        "dependencies": "independent_of_wind_speed_and_indoor_outdoor_temperature_difference",
+        "mechanical_ventilation": "none"
+      }
+    },
+    "denver_drycold_weather_file": {
+      "name": "Denver DRYCOLD weather",
+      "description": "Original ISO electronic insert used for Test 1.",
+      "units": "file",
+      "source": "SIA 4010 Test 1 specification page 1; ISO 52016-1 electronic insert",
+      "validation": {"type": "file", "extensions": [".tmy", ".epw", ".xls"]},
+      "status": "PLACEHOLDER_REQUIRED",
+      "value": null
+    },
+    "zurich_kloten_dry_weather_file": {
+      "name": "Zurich-Kloten SIA 2028 DRY normal weather",
+      "description": "Weather data used for Test 2 with calendar year 2022.",
+      "units": "file",
+      "source": "SIA 4010 Test 2 specification page 1; controlled SIA 2028 weather dataset",
+      "validation": {"type": "file", "extensions": [".fwt", ".epw", ".tmy"]},
+      "status": "PLACEHOLDER_REQUIRED",
+      "value": null
+    },
+    "test1_heating_setpoint_c": {
+      "name": "Test 1 heating setpoint",
+      "description": "Ideal heating setpoint except where the night-setback case applies.",
+      "units": "degC",
+      "source": "SIA 4010 Test 1 specification page 1",
+      "validation": {"type": "number", "minimum": 0.0, "maximum": 40.0},
+      "status": "CONFIRMED",
+      "value": 20.0
+    },
+    "test1_cooling_setpoint_c": {
+      "name": "Test 1 cooling setpoint",
+      "description": "Ideal cooling setpoint.",
+      "units": "degC",
+      "source": "SIA 4010 Test 1 specification page 1",
+      "validation": {"type": "number", "minimum": 0.0, "maximum": 50.0},
+      "status": "CONFIRMED",
+      "value": 27.0
+    },
+    "test1_equipment_gain_w": {
+      "name": "Test 1 equipment sensible gain",
+      "description": "Constant whole-room equipment heat gain.",
+      "units": "W",
+      "source": "SIA 4010 Test 1 specification pages 1-2",
+      "validation": {"type": "number", "minimum": 0.0, "maximum": 10000.0},
+      "status": "CONFIRMED",
+      "value": 200.0
+    },
+    "test1_night_setback_schedule": {
+      "name": "Cases 640/940 night setback",
+      "description": "20 degC from 07:00 to 23:00; 10 degC from 23:00 to 07:00.",
+      "units": "schedule",
+      "source": "SIA 4010 Test 1 specification page 1",
+      "validation": {"type": "object"},
+      "status": "CONFIRMED",
+      "value": {
+        "07:00": 20.0,
+        "23:00": 10.0,
+        "24:00": 10.0
+      }
+    },
+    "test2_glazing_system": {
+      "name": "Test 2 glazing system",
+      "description": "SGG Planitherm XN 4/14/4/14/4 glazing properties.",
+      "units": "structured glazing system",
+      "source": "SIA 4010 Test 2 specification page 2",
+      "validation": {"type": "object"},
+      "status": "CONFIRMED",
+      "value": {
+        "product": "SGG Planitherm XN_4/14/4/14/4",
+        "g_value": 0.545,
+        "ug_w_m2k": 0.654,
+        "visible_transmittance": 0.742,
+        "visible_reflectance": 0.145
+      }
+    },
+    "test2_infiltration_m3_h_m2": {
+      "name": "Test 2 infiltration",
+      "description": "Facade-area-specific infiltration according to the Test 2 specification.",
+      "units": "m3/(h m2)",
+      "source": "SIA 4010 Test 2 specification page 1; SIA 2024:2021",
+      "validation": {"type": "number", "minimum": 0.0, "maximum": 10.0},
+      "status": "CONFIRMED",
+      "value": 0.15
+    },
+    "test2_heating_setpoint_c": {
+      "name": "Test 2 heating setpoint",
+      "description": "Ideal heating room-temperature setpoint.",
+      "units": "degC",
+      "source": "SIA 4010 Test 2 specification page 1",
+      "validation": {"type": "number", "minimum": 0.0, "maximum": 40.0},
+      "status": "CONFIRMED",
+      "value": 20.0
+    },
+    "test2_cooling_setpoint_c": {
+      "name": "Test 2 cooling setpoint",
+      "description": "Ideal cooling room-temperature setpoint.",
+      "units": "degC",
+      "source": "SIA 4010 Test 2 specification page 1",
+      "validation": {"type": "number", "minimum": 0.0, "maximum": 50.0},
+      "status": "CONFIRMED",
+      "value": 27.0
+    },
+    "test2_people_count": {
+      "name": "Test 2 people count",
+      "description": "Occupancy corresponding to 14 m2/person in the 48 m2 cell.",
+      "units": "persons",
+      "source": "SIA 4010 Test 2 specification page 1",
+      "validation": {"type": "number", "minimum": 0.0, "maximum": 100.0},
+      "status": "CONFIRMED",
+      "value": 3.43
+    },
+    "test2_people_activity_met": {
+      "name": "Test 2 activity",
+      "description": "Occupant activity level.",
+      "units": "met",
+      "source": "SIA 4010 Test 2 specification page 1",
+      "validation": {"type": "number", "minimum": 0.0, "maximum": 10.0},
+      "status": "CONFIRMED",
+      "value": 1.2
+    },
+    "test2_equipment_gain_w_m2": {
+      "name": "Test 2 equipment gain",
+      "description": "Equipment heat-gain density.",
+      "units": "W/m2",
+      "source": "SIA 4010 Test 2 specification page 1",
+      "validation": {"type": "number", "minimum": 0.0, "maximum": 1000.0},
+      "status": "CONFIRMED",
+      "value": 11.0
+    },
+    "test2_lighting_gain_w_m2": {
+      "name": "Test 2 lighting gain and installed power",
+      "description": "Lighting heat-gain density and connected load.",
+      "units": "W/m2",
+      "source": "SIA 4010 Test 2 specification page 2",
+      "validation": {"type": "number", "minimum": 0.0, "maximum": 1000.0},
+      "status": "CONFIRMED",
+      "value": 12.5
+    },
+    "sia2024_office_profiles": {
+      "name": "SIA 2024 category 3.1 profiles",
+      "description": "Hourly and annual schedules for people, equipment and lighting for single/group office standard use.",
+      "units": "structured schedules",
+      "source": "Authority email from Prof. Gerhard Zweifel dated 2026-08-10; inline SIA 2024:2021 category 3.1 extract; third-last column confirmed as standard values",
+      "validation": {"type": "object"},
+      "status": "CONFIRMED",
+      "value": {
+        "use_category": "3.1 Einzel-/Gruppenbüro",
+        "value_set": "standard values",
+        "source_hour_bins": {
+          "occupancy": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.2, 0.6, 1.0, 1.0, 0.8, 0.4, 0.6, 1.0, 0.8, 0.6, 0.2, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+          "equipment": [0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.6, 0.8, 1.0, 0.8, 0.4, 0.6, 1.0, 0.8, 0.6, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3],
+          "lighting": [0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.6, 0.8, 1.0, 0.8, 0.4, 0.6, 1.0, 0.8, 0.6, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3]
+        },
+        "rest_days_per_week": 2,
+        "use_days_per_year": 261,
+        "people_annual_simultaneity": 0.8,
+        "annual_full_load_hours": {
+          "people": 1500,
+          "equipment": 2910,
+          "lighting": 1400
+        },
+        "native_ve_calendar_mapping_status": "AUTHORITY_CONFIRMED_READY_FOR_NATIVE_VE_MATERIALIZATION",
+        "calendar_authority_decision": "SIA4010_SIA2024_3_1_CALENDAR_20260826",
+        "calendar_days": 365,
+        "january_1_weekday": "Saturday",
+        "use_weekdays": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+        "rest_weekdays": ["Saturday", "Sunday"],
+        "holiday_exceptions": [],
+        "hour_label_convention": "ordinal_hour_ending",
+        "people_annual_simultaneity_application": "direct multiplier to hourly occupancy values"
+      }
+    },
+    "shading_activation_w_m2": {
+      "name": "External shading activation threshold",
+      "description": "Solar irradiation threshold on the exterior side.",
+      "units": "W/m2",
+      "source": "SIA 4010 Test 2 specification page 2",
+      "validation": {"type": "number", "minimum": 0.0, "maximum": 2000.0},
+      "status": "CONFIRMED",
+      "value": 150.0
+    },
+    "fabric_awning_solar_properties": {
+      "name": "Soltis 92-2048-Alu fabric awning",
+      "description": "Combined glazing-and-external-awning solar/optical properties.",
+      "units": "structured solar properties",
+      "source": "SIA 4010 example-building documentation V5, section 2.2.2, tables/figures on PDF pages 8-9",
+      "validation": {"type": "object"},
+      "status": "CONFIRMED",
+      "value": {
+        "product": "Soltis 92-2048-Alu",
+        "gtot_summer_with_shading": 0.059,
+        "direct_solar_transmittance_with_shading": 0.04,
+        "solar_reflectance_outside_with_shading": 0.49,
+        "solar_reflectance_inside_with_shading": 0.456,
+        "visible_transmittance_with_shading": 0.058,
+        "visible_reflectance_outside_with_shading": 0.496,
+        "visible_reflectance_inside_with_shading": 0.395
+      }
+    },
+    "metal_slat_optical_properties": {
+      "name": "Slat Metal B optical properties",
+      "description": "Optical factors at 45-degree working position and 45-degree sun height.",
+      "units": "structured optical properties",
+      "source": "SIA 4010 Test 2 specification page 2",
+      "validation": {"type": "object"},
+      "status": "CONFIRMED",
+      "value": {
+        "product": "Slat Metal B (WIN7)",
+        "working_angle_deg": 45.0,
+        "sun_altitude_deg": 45.0,
+        "visible_transmittance": 0.0,
+        "visible_beam_transmittance": 0.07,
+        "visible_diffuse_transmittance": 0.39,
+        "visible_reflectance": 0.5,
+        "visible_beam_reflectance": 0.36,
+        "visible_diffuse_reflectance": 0.21
+      }
+    },
+    "sia3874_control_function_1": {
+      "name": "SIA 387/4 shading control function 1",
+      "description": "Exact sun-position/slat control logic for Test 2B.",
+      "units": "control definition",
+      "source": "Controlled copy of SIA 387/4:2017, table 9",
+      "validation": {"type": "object"},
+      "status": "PLACEHOLDER_REQUIRED",
+      "value": null
+    },
+    "sia3874_control_function_2": {
+      "name": "SIA 387/4 shading control function 2",
+      "description": "Exact sun-position/slat control logic for Test 2C.",
+      "units": "control definition",
+      "source": "Controlled copy of SIA 387/4:2017, table 9",
+      "validation": {"type": "object"},
+      "status": "PLACEHOLDER_REQUIRED",
+      "value": null
+    },
+    "sia3874_control_function_3": {
+      "name": "SIA 387/4 shading control function 3",
+      "description": "Exact sun-position/slat control logic for Test 2D.",
+      "units": "control definition",
+      "source": "Controlled copy of SIA 387/4:2017, table 9",
+      "validation": {"type": "object"},
+      "status": "PLACEHOLDER_REQUIRED",
+      "value": null
+    }
+  }
+}

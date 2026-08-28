@@ -1,0 +1,2 @@
+room_id,thermal_template_id,sia2024_category,review_status,reviewer,source_document,source_reference,notes
+ROOM_ID_OR_BLANK,TEMPLATE_ID_OR_BLANK,REVIEWER_TO_COMPLETE,pending,REVIEWER_NAME,SIA_2024_CONTROLLED_COPY,CLAUSE_OR_TABLE,Map either a room ID or its thermal template; do not invent category values from SIA 380/2.

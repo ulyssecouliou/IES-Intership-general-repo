@@ -1,0 +1,337 @@
+{
+  "schema_version": "1.0",
+  "on_existing": "reuse_verified",
+  "metadata": {
+    "purpose": "Executable VE asset package for the SIA 380/2 limit-case comparison-office reference model.",
+    "guardrail": "SIA 380/2 table values and reference constructions are separated from clearly labelled office engineering assumptions. No official SIA 4010 validation claim is made.",
+    "baseline_id": "SIA3802_LIMIT_REFERENCE_OFFICE_2026_01",
+    "external_glazing_runtime_calibration": {
+      "construction_id": "runtime-assigned",
+      "target_u_w_m2k": 1.1,
+      "verified_u_w_m2k": 1.100028395652771,
+      "cavity_resistance_m2k_w": 0.7641610503196716,
+      "ve_version": "2025.2.0.0",
+      "status": "engineering-equivalent; manufacturer verification pending"
+    }
+  },
+  "profiles": [
+    {
+      "key": "occupancy_profile", "profile_type": "daily", "reference": "SIA_REF_OCCUPANCY", "modulating": true, "units": -1,
+      "description": "Weekday-style daily occupancy fraction for the generic office reference model.",
+      "source": "Reference-model office engineering assumption", "source_locator": "RM-BASELINE-2026 section 4",
+      "data": {
+        "value": [[0.0, 0.0, ""], [7.0, 0.0, ""], [8.0, 1.0, ""], [18.0, 1.0, ""], [19.0, 0.0, ""], [24.0, 0.0, ""]],
+        "description": "Daily VE profile with occupied operation from 08:00 to 18:00 and transition hours.", "units": "fraction versus hour",
+        "source": "Reference-model office engineering assumption", "source_locator": "RM-BASELINE-2026 section 4",
+        "validation_range": {"expected_type": "array", "allow_none": false}, "required": true
+      }
+    },
+    {
+      "key": "lighting_profile", "profile_type": "daily", "reference": "SIA_REF_LIGHTING", "modulating": true, "units": -1,
+      "description": "Daily lighting fraction for the generic office reference model.",
+      "source": "Reference-model office engineering assumption", "source_locator": "RM-BASELINE-2026 section 4",
+      "data": {
+        "value": [[0.0, 0.0, ""], [7.0, 0.0, ""], [8.0, 1.0, ""], [18.0, 1.0, ""], [19.0, 0.0, ""], [24.0, 0.0, ""]],
+        "description": "Daily VE lighting profile aligned with occupied office hours.", "units": "fraction versus hour",
+        "source": "Reference-model office engineering assumption", "source_locator": "RM-BASELINE-2026 section 4",
+        "validation_range": {"expected_type": "array", "allow_none": false}, "required": true
+      }
+    },
+    {
+      "key": "equipment_profile", "profile_type": "daily", "reference": "SIA_REF_EQUIPMENT", "modulating": true, "units": -1,
+      "description": "Daily equipment fraction for the generic office reference model.",
+      "source": "Reference-model office engineering assumption", "source_locator": "RM-BASELINE-2026 section 4",
+      "data": {
+        "value": [[0.0, 0.1, ""], [7.0, 0.1, ""], [8.0, 1.0, ""], [18.0, 1.0, ""], [19.0, 0.1, ""], [24.0, 0.1, ""]],
+        "description": "Daily VE equipment profile with ten-percent out-of-hours standby fraction.", "units": "fraction versus hour",
+        "source": "Reference-model office engineering assumption", "source_locator": "RM-BASELINE-2026 section 4",
+        "validation_range": {"expected_type": "array", "allow_none": false}, "required": true
+      }
+    },
+    {
+      "key": "infiltration_profile", "profile_type": "daily", "reference": "SIA_REF_INFILTRATION", "modulating": true, "units": -1,
+      "description": "Constant daily multiplier for the SIA 380/2 comparison-project infiltration input.",
+      "source": "SIA 380/2:2022 comparison-project implementation decision", "source_locator": "Table 2 page 32 and RM-BASELINE-2026 section 3",
+      "data": {
+        "value": [[0.0, 1.0, ""], [24.0, 1.0, ""]],
+        "description": "Constant full-day infiltration multiplier.", "units": "fraction versus hour",
+        "source": "SIA 380/2:2022 comparison-project implementation decision", "source_locator": "Table 2 page 32 and RM-BASELINE-2026 section 3",
+        "validation_range": {"expected_type": "array", "allow_none": false}, "required": true
+      }
+    }
+  ],
+  "materials": [
+    {
+      "key": "internal_plaster", "category": "other", "description": "Internal plaster from the SIA 380/2 reference construction table.",
+      "source": "SIA 380/2:2022 licensed project copy", "source_locator": "Table 3, licensed PDF pages 35-36",
+      "properties": {
+        "description": {"value": "SIA_REF_INTERNAL_PLASTER", "description": "Unique CDB material description.", "units": "text", "source": "Reference-model naming convention", "source_locator": "RM-BASELINE-2026 section 3", "validation_range": {"expected_type": "string", "allow_none": false}, "required": true},
+        "conductivity": {"value": 0.7, "description": "Thermal conductivity.", "units": "W/(m K)", "source": "SIA 380/2:2022 licensed project copy", "source_locator": "Table 3 pages 35-36", "validation_range": {"expected_type": "number", "minimum": 0.001, "maximum": 500.0, "allow_none": false}, "required": true},
+        "density": {"value": 1400.0, "description": "Dry density.", "units": "kg/m3", "source": "SIA 380/2:2022 licensed project copy", "source_locator": "Table 3 pages 35-36", "validation_range": {"expected_type": "number", "minimum": 0.1, "maximum": 30000.0, "allow_none": false}, "required": true},
+        "specific_heat_capacity": {"value": 1000.0, "description": "Specific heat capacity converted from 1.0 kJ/(kg K).", "units": "J/(kg K)", "source": "SIA 380/2:2022 licensed project copy", "source_locator": "Table 3 pages 35-36", "validation_range": {"expected_type": "number", "minimum": 1.0, "maximum": 10000.0, "allow_none": false}, "required": true}
+      }
+    },
+    {
+      "key": "external_plaster", "category": "other", "description": "External plaster from the SIA 380/2 external-wall construction.",
+      "source": "SIA 380/2:2022 licensed project copy", "source_locator": "Table 3, licensed PDF page 35",
+      "properties": {
+        "description": {"value": "SIA_REF_EXTERNAL_PLASTER", "description": "Unique CDB material description.", "units": "text", "source": "Reference-model naming convention", "source_locator": "RM-BASELINE-2026 section 3", "validation_range": {"expected_type": "string", "allow_none": false}, "required": true},
+        "conductivity": {"value": 0.87, "description": "Thermal conductivity.", "units": "W/(m K)", "source": "SIA 380/2:2022 licensed project copy", "source_locator": "Table 3 page 35", "validation_range": {"expected_type": "number", "minimum": 0.001, "maximum": 500.0, "allow_none": false}, "required": true},
+        "density": {"value": 1800.0, "description": "Dry density.", "units": "kg/m3", "source": "SIA 380/2:2022 licensed project copy", "source_locator": "Table 3 page 35", "validation_range": {"expected_type": "number", "minimum": 0.1, "maximum": 30000.0, "allow_none": false}, "required": true},
+        "specific_heat_capacity": {"value": 1000.0, "description": "Specific heat capacity converted from 1.0 kJ/(kg K).", "units": "J/(kg K)", "source": "SIA 380/2:2022 licensed project copy", "source_locator": "Table 3 page 35", "validation_range": {"expected_type": "number", "minimum": 1.0, "maximum": 10000.0, "allow_none": false}, "required": true}
+      }
+    },
+    {
+      "key": "modular_brick", "category": "other", "description": "Modular brick from the SIA 380/2 external-wall construction.",
+      "source": "SIA 380/2:2022 licensed project copy", "source_locator": "Table 3, licensed PDF page 35",
+      "properties": {
+        "description": {"value": "SIA_REF_MODULAR_BRICK", "description": "Unique CDB material description.", "units": "text", "source": "Reference-model naming convention", "source_locator": "RM-BASELINE-2026 section 3", "validation_range": {"expected_type": "string", "allow_none": false}, "required": true},
+        "conductivity": {"value": 0.44, "description": "Thermal conductivity.", "units": "W/(m K)", "source": "SIA 380/2:2022 licensed project copy", "source_locator": "Table 3 page 35", "validation_range": {"expected_type": "number", "minimum": 0.001, "maximum": 500.0, "allow_none": false}, "required": true},
+        "density": {"value": 1100.0, "description": "Dry density.", "units": "kg/m3", "source": "SIA 380/2:2022 licensed project copy", "source_locator": "Table 3 page 35", "validation_range": {"expected_type": "number", "minimum": 0.1, "maximum": 30000.0, "allow_none": false}, "required": true},
+        "specific_heat_capacity": {"value": 940.0, "description": "Specific heat capacity converted from 0.94 kJ/(kg K).", "units": "J/(kg K)", "source": "SIA 380/2:2022 licensed project copy", "source_locator": "Table 3 page 35", "validation_range": {"expected_type": "number", "minimum": 1.0, "maximum": 10000.0, "allow_none": false}, "required": true}
+      }
+    },
+    {
+      "key": "eps_wall", "category": "other", "description": "Expanded-polystyrene insulation for the SIA 380/2 limit external wall.",
+      "source": "SIA 380/2:2022 licensed project copy", "source_locator": "Table 3, licensed PDF page 35",
+      "properties": {
+        "description": {"value": "SIA_REF_EPS_WALL", "description": "Unique CDB material description.", "units": "text", "source": "Reference-model naming convention", "source_locator": "RM-BASELINE-2026 section 3", "validation_range": {"expected_type": "string", "allow_none": false}, "required": true},
+        "conductivity": {"value": 0.033, "description": "Thermal conductivity.", "units": "W/(m K)", "source": "SIA 380/2:2022 licensed project copy", "source_locator": "Table 3 page 35", "validation_range": {"expected_type": "number", "minimum": 0.001, "maximum": 500.0, "allow_none": false}, "required": true},
+        "density": {"value": 30.0, "description": "Dry density.", "units": "kg/m3", "source": "SIA 380/2:2022 licensed project copy", "source_locator": "Table 3 page 35", "validation_range": {"expected_type": "number", "minimum": 0.1, "maximum": 30000.0, "allow_none": false}, "required": true},
+        "specific_heat_capacity": {"value": 1450.0, "description": "Specific heat capacity converted from 1.45 kJ/(kg K).", "units": "J/(kg K)", "source": "SIA 380/2:2022 licensed project copy", "source_locator": "Table 3 page 35", "validation_range": {"expected_type": "number", "minimum": 1.0, "maximum": 10000.0, "allow_none": false}, "required": true}
+      }
+    },
+    {
+      "key": "eps_roof", "category": "other", "description": "Expanded-polystyrene insulation for the SIA 380/2 limit flat roof.",
+      "source": "SIA 380/2:2022 licensed project copy", "source_locator": "Table 3, licensed PDF page 36",
+      "properties": {
+        "description": {"value": "SIA_REF_EPS_ROOF", "description": "Unique CDB material description.", "units": "text", "source": "Reference-model naming convention", "source_locator": "RM-BASELINE-2026 section 3", "validation_range": {"expected_type": "string", "allow_none": false}, "required": true},
+        "conductivity": {"value": 0.034, "description": "Thermal conductivity.", "units": "W/(m K)", "source": "SIA 380/2:2022 licensed project copy", "source_locator": "Table 3 page 36", "validation_range": {"expected_type": "number", "minimum": 0.001, "maximum": 500.0, "allow_none": false}, "required": true},
+        "density": {"value": 30.0, "description": "Dry density.", "units": "kg/m3", "source": "SIA 380/2:2022 licensed project copy", "source_locator": "Table 3 page 36", "validation_range": {"expected_type": "number", "minimum": 0.1, "maximum": 30000.0, "allow_none": false}, "required": true},
+        "specific_heat_capacity": {"value": 1450.0, "description": "Specific heat capacity converted from 1.45 kJ/(kg K).", "units": "J/(kg K)", "source": "SIA 380/2:2022 licensed project copy", "source_locator": "Table 3 page 36", "validation_range": {"expected_type": "number", "minimum": 1.0, "maximum": 10000.0, "allow_none": false}, "required": true}
+      }
+    },
+    {
+      "key": "xps_ground", "category": "other", "description": "Extruded-polystyrene insulation for the SIA 380/2 limit ground floor.",
+      "source": "SIA 380/2:2022 licensed project copy", "source_locator": "Table 3, licensed PDF page 35",
+      "properties": {
+        "description": {"value": "SIA_REF_XPS_GROUND", "description": "Unique CDB material description.", "units": "text", "source": "Reference-model naming convention", "source_locator": "RM-BASELINE-2026 section 3", "validation_range": {"expected_type": "string", "allow_none": false}, "required": true},
+        "conductivity": {"value": 0.034, "description": "Thermal conductivity.", "units": "W/(m K)", "source": "SIA 380/2:2022 licensed project copy", "source_locator": "Table 3 page 35", "validation_range": {"expected_type": "number", "minimum": 0.001, "maximum": 500.0, "allow_none": false}, "required": true},
+        "density": {"value": 34.0, "description": "Dry density.", "units": "kg/m3", "source": "SIA 380/2:2022 licensed project copy", "source_locator": "Table 3 page 35", "validation_range": {"expected_type": "number", "minimum": 0.1, "maximum": 30000.0, "allow_none": false}, "required": true},
+        "specific_heat_capacity": {"value": 1450.0, "description": "Specific heat capacity converted from 1.45 kJ/(kg K).", "units": "J/(kg K)", "source": "SIA 380/2:2022 licensed project copy", "source_locator": "Table 3 page 35", "validation_range": {"expected_type": "number", "minimum": 1.0, "maximum": 10000.0, "allow_none": false}, "required": true}
+      }
+    },
+    {
+      "key": "reinforced_concrete", "category": "other", "description": "Reinforced concrete with two-percent steel from SIA 380/2 table 3.",
+      "source": "SIA 380/2:2022 licensed project copy", "source_locator": "Table 3, licensed PDF pages 35-36",
+      "properties": {
+        "description": {"value": "SIA_REF_REINFORCED_CONCRETE", "description": "Unique CDB material description.", "units": "text", "source": "Reference-model naming convention", "source_locator": "RM-BASELINE-2026 section 3", "validation_range": {"expected_type": "string", "allow_none": false}, "required": true},
+        "conductivity": {"value": 2.5, "description": "Thermal conductivity.", "units": "W/(m K)", "source": "SIA 380/2:2022 licensed project copy", "source_locator": "Table 3 pages 35-36", "validation_range": {"expected_type": "number", "minimum": 0.001, "maximum": 500.0, "allow_none": false}, "required": true},
+        "density": {"value": 2400.0, "description": "Dry density.", "units": "kg/m3", "source": "SIA 380/2:2022 licensed project copy", "source_locator": "Table 3 pages 35-36", "validation_range": {"expected_type": "number", "minimum": 0.1, "maximum": 30000.0, "allow_none": false}, "required": true},
+        "specific_heat_capacity": {"value": 1000.0, "description": "Specific heat capacity converted from 1.0 kJ/(kg K).", "units": "J/(kg K)", "source": "SIA 380/2:2022 licensed project copy", "source_locator": "Table 3 pages 35-36", "validation_range": {"expected_type": "number", "minimum": 1.0, "maximum": 10000.0, "allow_none": false}, "required": true}
+      }
+    },
+    {
+      "key": "roof_gravel", "category": "other", "description": "Earth, sand and gravel roof layer from SIA 380/2 table 3.",
+      "source": "SIA 380/2:2022 licensed project copy", "source_locator": "Table 3, licensed PDF page 36",
+      "properties": {
+        "description": {"value": "SIA_REF_ROOF_GRAVEL", "description": "Unique CDB material description.", "units": "text", "source": "Reference-model naming convention", "source_locator": "RM-BASELINE-2026 section 3", "validation_range": {"expected_type": "string", "allow_none": false}, "required": true},
+        "conductivity": {"value": 2.0, "description": "Thermal conductivity.", "units": "W/(m K)", "source": "SIA 380/2:2022 licensed project copy", "source_locator": "Table 3 page 36", "validation_range": {"expected_type": "number", "minimum": 0.001, "maximum": 500.0, "allow_none": false}, "required": true},
+        "density": {"value": 2000.0, "description": "Dry density.", "units": "kg/m3", "source": "SIA 380/2:2022 licensed project copy", "source_locator": "Table 3 page 36", "validation_range": {"expected_type": "number", "minimum": 0.1, "maximum": 30000.0, "allow_none": false}, "required": true},
+        "specific_heat_capacity": {"value": 1050.0, "description": "Specific heat capacity converted from 1.05 kJ/(kg K).", "units": "J/(kg K)", "source": "SIA 380/2:2022 licensed project copy", "source_locator": "Table 3 page 36", "validation_range": {"expected_type": "number", "minimum": 1.0, "maximum": 10000.0, "allow_none": false}, "required": true}
+      }
+    },
+    {
+      "key": "linoleum", "category": "other", "description": "Linoleum finish from the SIA 380/2 ground-floor construction.",
+      "source": "SIA 380/2:2022 licensed project copy", "source_locator": "Table 3, licensed PDF page 35",
+      "properties": {
+        "description": {"value": "SIA_REF_LINOLEUM", "description": "Unique CDB material description.", "units": "text", "source": "Reference-model naming convention", "source_locator": "RM-BASELINE-2026 section 3", "validation_range": {"expected_type": "string", "allow_none": false}, "required": true},
+        "conductivity": {"value": 1.7, "description": "Thermal conductivity.", "units": "W/(m K)", "source": "SIA 380/2:2022 licensed project copy", "source_locator": "Table 3 page 35", "validation_range": {"expected_type": "number", "minimum": 0.001, "maximum": 500.0, "allow_none": false}, "required": true},
+        "density": {"value": 1200.0, "description": "Dry density.", "units": "kg/m3", "source": "SIA 380/2:2022 licensed project copy", "source_locator": "Table 3 page 35", "validation_range": {"expected_type": "number", "minimum": 0.1, "maximum": 30000.0, "allow_none": false}, "required": true},
+        "specific_heat_capacity": {"value": 1400.0, "description": "Specific heat capacity converted from 1.4 kJ/(kg K).", "units": "J/(kg K)", "source": "SIA 380/2:2022 licensed project copy", "source_locator": "Table 3 page 35", "validation_range": {"expected_type": "number", "minimum": 1.0, "maximum": 10000.0, "allow_none": false}, "required": true}
+      }
+    },
+    {
+      "key": "cement_mortar", "category": "other", "description": "Cement mortar from the SIA 380/2 ground-floor construction.",
+      "source": "SIA 380/2:2022 licensed project copy", "source_locator": "Table 3, licensed PDF page 35",
+      "properties": {
+        "description": {"value": "SIA_REF_CEMENT_MORTAR", "description": "Unique CDB material description.", "units": "text", "source": "Reference-model naming convention", "source_locator": "RM-BASELINE-2026 section 3", "validation_range": {"expected_type": "string", "allow_none": false}, "required": true},
+        "conductivity": {"value": 1.5, "description": "Thermal conductivity.", "units": "W/(m K)", "source": "SIA 380/2:2022 licensed project copy", "source_locator": "Table 3 page 35", "validation_range": {"expected_type": "number", "minimum": 0.001, "maximum": 500.0, "allow_none": false}, "required": true},
+        "density": {"value": 2200.0, "description": "Dry density.", "units": "kg/m3", "source": "SIA 380/2:2022 licensed project copy", "source_locator": "Table 3 page 35", "validation_range": {"expected_type": "number", "minimum": 0.1, "maximum": 30000.0, "allow_none": false}, "required": true},
+        "specific_heat_capacity": {"value": 1000.0, "description": "Specific heat capacity converted from 1.0 kJ/(kg K).", "units": "J/(kg K)", "source": "SIA 380/2:2022 licensed project copy", "source_locator": "Table 3 page 35", "validation_range": {"expected_type": "number", "minimum": 1.0, "maximum": 10000.0, "allow_none": false}, "required": true}
+      }
+    },
+    {
+      "key": "gypsum_board", "category": "other", "description": "Gypsum board from the SIA 380/2 non-load-bearing internal wall.",
+      "source": "SIA 380/2:2022 licensed project copy", "source_locator": "Table 3, licensed PDF page 35",
+      "properties": {
+        "description": {"value": "SIA_REF_GYPSUM_BOARD", "description": "Unique CDB material description.", "units": "text", "source": "Reference-model naming convention", "source_locator": "RM-BASELINE-2026 section 3", "validation_range": {"expected_type": "string", "allow_none": false}, "required": true},
+        "conductivity": {"value": 0.25, "description": "Thermal conductivity.", "units": "W/(m K)", "source": "SIA 380/2:2022 licensed project copy", "source_locator": "Table 3 page 35", "validation_range": {"expected_type": "number", "minimum": 0.001, "maximum": 500.0, "allow_none": false}, "required": true},
+        "density": {"value": 900.0, "description": "Dry density.", "units": "kg/m3", "source": "SIA 380/2:2022 licensed project copy", "source_locator": "Table 3 page 35", "validation_range": {"expected_type": "number", "minimum": 0.1, "maximum": 30000.0, "allow_none": false}, "required": true},
+        "specific_heat_capacity": {"value": 1000.0, "description": "Specific heat capacity converted from 1.0 kJ/(kg K).", "units": "J/(kg K)", "source": "SIA 380/2:2022 licensed project copy", "source_locator": "Table 3 page 35", "validation_range": {"expected_type": "number", "minimum": 1.0, "maximum": 10000.0, "allow_none": false}, "required": true}
+      }
+    },
+    {
+      "key": "glass_wool", "category": "other", "description": "Glass-wool and metal-stud equivalent layer from the SIA 380/2 internal wall.",
+      "source": "SIA 380/2:2022 licensed project copy", "source_locator": "Table 3, licensed PDF page 35",
+      "properties": {
+        "description": {"value": "SIA_REF_GLASS_WOOL", "description": "Unique CDB material description.", "units": "text", "source": "Reference-model naming convention", "source_locator": "RM-BASELINE-2026 section 3", "validation_range": {"expected_type": "string", "allow_none": false}, "required": true},
+        "conductivity": {"value": 0.035, "description": "Thermal conductivity.", "units": "W/(m K)", "source": "SIA 380/2:2022 licensed project copy", "source_locator": "Table 3 page 35", "validation_range": {"expected_type": "number", "minimum": 0.001, "maximum": 500.0, "allow_none": false}, "required": true},
+        "density": {"value": 30.0, "description": "Dry density.", "units": "kg/m3", "source": "SIA 380/2:2022 licensed project copy", "source_locator": "Table 3 page 35", "validation_range": {"expected_type": "number", "minimum": 0.1, "maximum": 30000.0, "allow_none": false}, "required": true},
+        "specific_heat_capacity": {"value": 1030.0, "description": "Specific heat capacity converted from 1.03 kJ/(kg K).", "units": "J/(kg K)", "source": "SIA 380/2:2022 licensed project copy", "source_locator": "Table 3 page 35", "validation_range": {"expected_type": "number", "minimum": 1.0, "maximum": 10000.0, "allow_none": false}, "required": true}
+      }
+    },
+    {
+      "key": "insulated_door_core", "category": "other", "description": "Equivalent insulated opaque-door core selected for the reference geometry.",
+      "source": "Reference-model engineering assumption", "source_locator": "RM-BASELINE-2026 section 3; replace with project door data for certification",
+      "properties": {
+        "description": {"value": "SIA_REF_INSULATED_DOOR_CORE", "description": "Unique CDB material description.", "units": "text", "source": "Reference-model naming convention", "source_locator": "RM-BASELINE-2026 section 3", "validation_range": {"expected_type": "string", "allow_none": false}, "required": true},
+        "conductivity": {"value": 0.035, "description": "Equivalent thermal conductivity.", "units": "W/(m K)", "source": "Reference-model engineering assumption", "source_locator": "RM-BASELINE-2026 section 3", "validation_range": {"expected_type": "number", "minimum": 0.001, "maximum": 500.0, "allow_none": false}, "required": true},
+        "density": {"value": 35.0, "description": "Equivalent dry density.", "units": "kg/m3", "source": "Reference-model engineering assumption", "source_locator": "RM-BASELINE-2026 section 3", "validation_range": {"expected_type": "number", "minimum": 0.1, "maximum": 30000.0, "allow_none": false}, "required": true},
+        "specific_heat_capacity": {"value": 1400.0, "description": "Equivalent specific heat capacity.", "units": "J/(kg K)", "source": "Reference-model engineering assumption", "source_locator": "RM-BASELINE-2026 section 3", "validation_range": {"expected_type": "number", "minimum": 1.0, "maximum": 10000.0, "allow_none": false}, "required": true}
+      }
+    },
+    {
+      "key": "equivalent_glazing_layer", "category": "glass", "description": "Equivalent glazed layer calibrated for the SIA 380/2 comparison-window input; not a manufacturer product.",
+      "source": "SIA 380/2:2022 table 2 plus reference-model equivalent-layer calculation", "source_locator": "Table 2 page 32 and RM-BASELINE-2026 section 3",
+      "properties": {
+        "description": {"value": "SIA_REF_EQUIVALENT_GLAZING", "description": "Unique CDB glass material description.", "units": "text", "source": "Reference-model naming convention", "source_locator": "RM-BASELINE-2026 section 3", "validation_range": {"expected_type": "string", "allow_none": false}, "required": true},
+        "conductivity": {"value": 0.0264, "description": "Equivalent conductivity selected with the layer thickness and frame model to approach the declared whole-window U-value.", "units": "W/(m K)", "source": "Reference-model equivalent-layer calculation", "source_locator": "RM-BASELINE-2026 section 3; verify VE ISO read-back", "validation_range": {"expected_type": "number", "minimum": 0.001, "maximum": 500.0, "allow_none": false}, "required": true},
+        "transmittance": {"value": 0.5, "description": "Comparison-project solar transmittance representation.", "units": "fraction", "source": "SIA 380/2:2022 comparison-project input", "source_locator": "Table 2 page 32", "validation_range": {"expected_type": "number", "minimum": 0.0, "maximum": 1.0, "allow_none": false}, "required": true},
+        "visible_transmittance": {"value": 0.7, "description": "Comparison-project visible light transmittance.", "units": "fraction", "source": "SIA 380/2:2022 comparison-project input", "source_locator": "Table 2 page 32", "validation_range": {"expected_type": "number", "minimum": 0.0, "maximum": 1.0, "allow_none": false}, "required": true}
+      }
+    }
+  ],
+  "constructions": [
+    {
+      "key": "external_wall", "assignment_parameter": "external_wall_construction_id", "category": "wall", "construction_class": "opaque",
+      "description": "SIA 380/2 table 3 external-wall limit construction, ordered outside to inside.", "source": "SIA 380/2:2022 licensed project copy", "source_locator": "Table 3, licensed PDF page 35", "properties": {},
+      "layers": [
+        {"material_key": "external_plaster", "is_cavity": false, "properties": {"thickness": {"value": 0.015, "description": "External plaster thickness.", "units": "m", "source": "SIA 380/2:2022 licensed project copy", "source_locator": "Table 3 page 35", "validation_range": {"expected_type": "number", "minimum": 0.0001, "maximum": 5.0, "allow_none": false}, "required": true}}},
+        {"material_key": "eps_wall", "is_cavity": false, "properties": {"thickness": {"value": 0.15, "description": "EPS thickness for the limit case.", "units": "m", "source": "SIA 380/2:2022 licensed project copy", "source_locator": "Table 3 page 35, limit-value column", "validation_range": {"expected_type": "number", "minimum": 0.0001, "maximum": 5.0, "allow_none": false}, "required": true}}},
+        {"material_key": "modular_brick", "is_cavity": false, "properties": {"thickness": {"value": 0.15, "description": "Modular-brick thickness.", "units": "m", "source": "SIA 380/2:2022 licensed project copy", "source_locator": "Table 3 page 35", "validation_range": {"expected_type": "number", "minimum": 0.0001, "maximum": 5.0, "allow_none": false}, "required": true}}},
+        {"material_key": "internal_plaster", "is_cavity": false, "properties": {"thickness": {"value": 0.015, "description": "Internal plaster thickness.", "units": "m", "source": "SIA 380/2:2022 licensed project copy", "source_locator": "Table 3 page 35", "validation_range": {"expected_type": "number", "minimum": 0.0001, "maximum": 5.0, "allow_none": false}, "required": true}}}
+      ]
+    },
+    {
+      "key": "roof", "assignment_parameter": "roof_construction_id", "category": "roof", "construction_class": "opaque",
+      "description": "SIA 380/2 table 3 flat-roof limit construction, ordered outside to inside.", "source": "SIA 380/2:2022 licensed project copy", "source_locator": "Table 3, licensed PDF page 36", "properties": {},
+      "layers": [
+        {"material_key": "roof_gravel", "is_cavity": false, "properties": {"thickness": {"value": 0.1, "description": "Earth, sand and gravel thickness.", "units": "m", "source": "SIA 380/2:2022 licensed project copy", "source_locator": "Table 3 page 36", "validation_range": {"expected_type": "number", "minimum": 0.0001, "maximum": 5.0, "allow_none": false}, "required": true}}},
+        {"material_key": "eps_roof", "is_cavity": false, "properties": {"thickness": {"value": 0.16, "description": "EPS thickness for the limit case.", "units": "m", "source": "SIA 380/2:2022 licensed project copy", "source_locator": "Table 3 page 36, limit-value column", "validation_range": {"expected_type": "number", "minimum": 0.0001, "maximum": 5.0, "allow_none": false}, "required": true}}},
+        {"material_key": "reinforced_concrete", "is_cavity": false, "properties": {"thickness": {"value": 0.25, "description": "Reinforced-concrete slab thickness.", "units": "m", "source": "SIA 380/2:2022 licensed project copy", "source_locator": "Table 3 page 36", "validation_range": {"expected_type": "number", "minimum": 0.0001, "maximum": 5.0, "allow_none": false}, "required": true}}},
+        {"material_key": "internal_plaster", "is_cavity": false, "properties": {"thickness": {"value": 0.015, "description": "Internal plaster thickness.", "units": "m", "source": "SIA 380/2:2022 licensed project copy", "source_locator": "Table 3 page 36", "validation_range": {"expected_type": "number", "minimum": 0.0001, "maximum": 5.0, "allow_none": false}, "required": true}}}
+      ]
+    },
+    {
+      "key": "ground_floor", "assignment_parameter": "ground_floor_construction_id", "category": "ground_floor", "construction_class": "opaque",
+      "description": "SIA 380/2 table 3 ground-floor limit construction, ordered ground side to room side.", "source": "SIA 380/2:2022 licensed project copy", "source_locator": "Table 3, licensed PDF page 35", "properties": {},
+      "layers": [
+        {"material_key": "xps_ground", "is_cavity": false, "properties": {"thickness": {"value": 0.1, "description": "XPS thickness for the limit case.", "units": "m", "source": "SIA 380/2:2022 licensed project copy", "source_locator": "Table 3 page 35, limit-value column", "validation_range": {"expected_type": "number", "minimum": 0.0001, "maximum": 5.0, "allow_none": false}, "required": true}}},
+        {"material_key": "reinforced_concrete", "is_cavity": false, "properties": {"thickness": {"value": 0.25, "description": "Reinforced-concrete slab thickness.", "units": "m", "source": "SIA 380/2:2022 licensed project copy", "source_locator": "Table 3 page 35", "validation_range": {"expected_type": "number", "minimum": 0.0001, "maximum": 5.0, "allow_none": false}, "required": true}}},
+        {"material_key": "cement_mortar", "is_cavity": false, "properties": {"thickness": {"value": 0.06, "description": "Cement-mortar thickness.", "units": "m", "source": "SIA 380/2:2022 licensed project copy", "source_locator": "Table 3 page 35", "validation_range": {"expected_type": "number", "minimum": 0.0001, "maximum": 5.0, "allow_none": false}, "required": true}}},
+        {"material_key": "linoleum", "is_cavity": false, "properties": {"thickness": {"value": 0.01, "description": "Linoleum thickness.", "units": "m", "source": "SIA 380/2:2022 licensed project copy", "source_locator": "Table 3 page 35", "validation_range": {"expected_type": "number", "minimum": 0.0001, "maximum": 5.0, "allow_none": false}, "required": true}}}
+      ]
+    },
+    {
+      "key": "internal_wall", "assignment_parameter": "internal_wall_construction_id", "category": "partition", "construction_class": "opaque",
+      "description": "SIA 380/2 table 3 non-load-bearing internal wall.", "source": "SIA 380/2:2022 licensed project copy", "source_locator": "Table 3, licensed PDF page 35", "properties": {},
+      "layers": [
+        {"material_key": "gypsum_board", "is_cavity": false, "properties": {"thickness": {"value": 0.015, "description": "Gypsum-board thickness.", "units": "m", "source": "SIA 380/2:2022 licensed project copy", "source_locator": "Table 3 page 35", "validation_range": {"expected_type": "number", "minimum": 0.0001, "maximum": 5.0, "allow_none": false}, "required": true}}},
+        {"material_key": "glass_wool", "is_cavity": false, "properties": {"thickness": {"value": 0.1, "description": "Glass-wool and metal-stud equivalent thickness.", "units": "m", "source": "SIA 380/2:2022 licensed project copy", "source_locator": "Table 3 page 35", "validation_range": {"expected_type": "number", "minimum": 0.0001, "maximum": 5.0, "allow_none": false}, "required": true}}},
+        {"material_key": "gypsum_board", "is_cavity": false, "properties": {"thickness": {"value": 0.015, "description": "Gypsum-board thickness.", "units": "m", "source": "SIA 380/2:2022 licensed project copy", "source_locator": "Table 3 page 35", "validation_range": {"expected_type": "number", "minimum": 0.0001, "maximum": 5.0, "allow_none": false}, "required": true}}}
+      ]
+    },
+    {
+      "key": "external_door", "assignment_parameter": "door_construction_id", "category": "door", "construction_class": "opaque",
+      "description": "Equivalent insulated opaque door for completeness of the generated reference geometry.", "source": "Reference-model engineering assumption", "source_locator": "RM-BASELINE-2026 section 3; replace with project product data", "properties": {},
+      "layers": [
+        {"material_key": "insulated_door_core", "is_cavity": false, "properties": {"thickness": {"value": 0.05, "description": "Equivalent insulated-door thickness.", "units": "m", "source": "Reference-model engineering assumption", "source_locator": "RM-BASELINE-2026 section 3", "validation_range": {"expected_type": "number", "minimum": 0.0001, "maximum": 5.0, "allow_none": false}, "required": true}}}
+      ]
+    },
+    {
+      "key": "external_glazing", "assignment_parameter": "glazing_construction_id", "category": "ext_glazing", "construction_class": "glazed",
+      "description": "Equivalent glazed construction representing the SIA 380/2 comparison-window limit inputs.", "source": "SIA 380/2:2022 table 2 plus reference-model equivalent-layer calculation", "source_locator": "Table 2 page 32 and RM-BASELINE-2026 section 3",
+      "properties": {
+        "g_value": {"value": 0.5, "description": "BS EN 410 comparison-project g-value.", "units": "fraction", "source": "SIA 380/2:2022 comparison-project input", "source_locator": "Table 2 page 32", "validation_range": {"expected_type": "number", "minimum": 0.0, "maximum": 1.0, "allow_none": false}, "required": true},
+        "visible_light_transmittance": {"value": 0.7, "description": "Comparison-project visible light transmittance.", "units": "fraction", "source": "SIA 380/2:2022 comparison-project input", "source_locator": "Table 2 page 32", "validation_range": {"expected_type": "number", "minimum": 0.0, "maximum": 1.0, "allow_none": false}, "required": true},
+        "frame_percent": {"value": 25.0, "description": "Comparison-project frame percentage.", "units": "percent", "source": "SIA 380/2:2022 comparison-project input", "source_locator": "Table 2 page 32", "validation_range": {"expected_type": "number", "minimum": 0.0, "maximum": 100.0, "allow_none": false}, "required": true},
+        "frame_resistance": {"value": 0.625, "description": "Equivalent frame resistance selected to approach the declared whole-window U-value; verify by VE ISO read-back.", "units": "m2 K/W", "source": "Reference-model equivalent-window calculation", "source_locator": "RM-BASELINE-2026 section 3", "validation_range": {"expected_type": "number", "minimum": 0.0, "maximum": 20.0, "allow_none": false}, "required": true}
+      },
+      "layers": [
+        {"material_key": "equivalent_glazing_layer", "is_cavity": false, "properties": {}},
+        {"material_key": "equivalent_glazing_layer", "is_cavity": true, "properties": {"resistance": {"value": 0.7641610503196716, "description": "Equivalent sealed-cavity resistance numerically calibrated against the VE ISO whole-window U-factor read-back.", "units": "m2 K/W", "source": "Runtime VE CDB ISO U-factor calibration", "source_locator": "Run_VE_Calibrate_External_Glazing_UValue.py; VE 2025.2 verified U=1.100028395652771 W/(m2 K); replace with approved manufacturer glazing data before certification", "validation_range": {"expected_type": "number", "minimum": 0.000001, "maximum": 100.0, "allow_none": false}, "required": true}}},
+        {"material_key": "equivalent_glazing_layer", "is_cavity": false, "properties": {}}
+      ]
+    }
+  ],
+  "gains": [
+    {
+      "key": "people_gain", "category": "people", "subtype": "people", "units": "square_metres_per_person",
+      "description": "People gain for the generic office reference use.", "source": "Reference-model office engineering assumption", "source_locator": "RM-BASELINE-2026 section 4",
+      "properties": {
+        "name": {"value": "SIA_REF_PEOPLE", "description": "Stable VE gain name.", "units": "text", "source": "Reference-model naming convention", "source_locator": "RM-009", "validation_range": {"expected_type": "string", "allow_none": false}, "required": true},
+        "occupancy_density": {"value": 15.0, "description": "Occupied floor area per person.", "units": "m2/person", "source": "Reference-model office engineering assumption", "source_locator": "RM-BASELINE-2026 section 4", "validation_range": {"expected_type": "number", "minimum": 0.1, "maximum": 1000.0, "allow_none": false}, "required": true},
+        "max_sensible_gain": {"value": 75.0, "description": "Maximum sensible gain per person.", "units": "W/person", "source": "Reference-model office engineering assumption", "source_locator": "RM-BASELINE-2026 section 4", "validation_range": {"expected_type": "number", "minimum": 0.0, "maximum": 1000.0, "allow_none": false}, "required": true},
+        "max_latent_gain": {"value": 45.0, "description": "Maximum latent gain per person.", "units": "W/person", "source": "Reference-model office engineering assumption", "source_locator": "RM-BASELINE-2026 section 4", "validation_range": {"expected_type": "number", "minimum": 0.0, "maximum": 1000.0, "allow_none": false}, "required": true},
+        "variation_profile": {"value": {"profile_ref": "occupancy_profile"}, "description": "Occupancy profile link.", "units": "profile reference", "source": "Reference-model asset linkage", "source_locator": "reference_model_assets.json", "validation_range": {"expected_type": "object", "allow_none": false}, "required": true}
+      }
+    },
+    {
+      "key": "lighting_gain", "category": "lighting", "subtype": "general", "units": "watts_per_square_metre",
+      "description": "Installed lighting gain for the generic office reference use.", "source": "Reference-model office engineering assumption", "source_locator": "RM-BASELINE-2026 section 4",
+      "properties": {
+        "name": {"value": "SIA_REF_LIGHTING", "description": "Stable VE gain name.", "units": "text", "source": "Reference-model naming convention", "source_locator": "RM-009", "validation_range": {"expected_type": "string", "allow_none": false}, "required": true},
+        "max_power_consumption": {"value": 12.0, "description": "Installed lighting power density.", "units": "W/m2", "source": "Reference-model office engineering assumption", "source_locator": "RM-BASELINE-2026 section 4", "validation_range": {"expected_type": "number", "minimum": 0.0, "maximum": 100.0, "allow_none": false}, "required": true},
+        "variation_profile": {"value": {"profile_ref": "lighting_profile"}, "description": "Lighting profile link.", "units": "profile reference", "source": "Reference-model asset linkage", "source_locator": "reference_model_assets.json", "validation_range": {"expected_type": "object", "allow_none": false}, "required": true}
+      }
+    },
+    {
+      "key": "equipment_gain", "category": "energy", "subtype": "computers", "units": "watts_per_square_metre",
+      "description": "Equipment gain for the generic office reference use.", "source": "Reference-model office engineering assumption", "source_locator": "RM-BASELINE-2026 section 4",
+      "properties": {
+        "name": {"value": "SIA_REF_EQUIPMENT", "description": "Stable VE gain name.", "units": "text", "source": "Reference-model naming convention", "source_locator": "RM-009", "validation_range": {"expected_type": "string", "allow_none": false}, "required": true},
+        "max_power_consumption": {"value": 20.0, "description": "Equipment power density.", "units": "W/m2", "source": "Reference-model office engineering assumption", "source_locator": "RM-BASELINE-2026 section 4", "validation_range": {"expected_type": "number", "minimum": 0.0, "maximum": 1000.0, "allow_none": false}, "required": true},
+        "variation_profile": {"value": {"profile_ref": "equipment_profile"}, "description": "Equipment profile link.", "units": "profile reference", "source": "Reference-model asset linkage", "source_locator": "reference_model_assets.json", "validation_range": {"expected_type": "object", "allow_none": false}, "required": true}
+      }
+    }
+  ],
+  "air_exchanges": [
+    {
+      "key": "infiltration", "exchange_type": "infiltration", "units": "litres_per_second_per_square_metre", "adjacent_condition": "external_air",
+      "description": "SIA 380/2 comparison-project infiltration converted from 0.15 m3/(h m2) to L/(s m2).", "source": "SIA 380/2:2022 comparison-project input", "source_locator": "Table 2 page 32 and exact unit conversion",
+      "properties": {
+        "name": {"value": "SIA_REF_INFILTRATION", "description": "Stable VE air-exchange name.", "units": "text", "source": "Reference-model naming convention", "source_locator": "RM-009", "validation_range": {"expected_type": "string", "allow_none": false}, "required": true},
+        "max_flow": {"value": 0.0416666667, "description": "0.15 m3/(h m2) divided by 3.6.", "units": "L/(s m2)", "source": "SIA 380/2:2022 comparison-project input", "source_locator": "Table 2 page 32 and exact unit conversion", "validation_range": {"expected_type": "number", "minimum": 0.0, "maximum": 20.0, "allow_none": false}, "required": true},
+        "variation_profile": {"value": {"profile_ref": "infiltration_profile"}, "description": "Constant infiltration-profile link.", "units": "profile reference", "source": "Reference-model implementation decision", "source_locator": "RM-BASELINE-2026 section 3", "validation_range": {"expected_type": "object", "allow_none": false}, "required": true}
+      }
+    },
+    {
+      "key": "outdoor_air", "exchange_type": "mechanical_ventilation", "units": "litres_per_second_per_person", "adjacent_condition": "external_air",
+      "description": "Occupied outdoor-air supply placeholder for the generic office reference use.", "source": "Reference-model office engineering assumption", "source_locator": "RM-BASELINE-2026 section 4; replace with licensed SIA 2024/project ventilation data",
+      "properties": {
+        "name": {"value": "SIA_REF_OUTDOOR_AIR", "description": "Stable VE air-exchange name.", "units": "text", "source": "Reference-model naming convention", "source_locator": "RM-009", "validation_range": {"expected_type": "string", "allow_none": false}, "required": true},
+        "max_flow": {"value": 10.0, "description": "Occupied outdoor-air flow per person.", "units": "L/(s person)", "source": "Reference-model office engineering assumption", "source_locator": "RM-BASELINE-2026 section 4", "validation_range": {"expected_type": "number", "minimum": 0.0, "maximum": 100.0, "allow_none": false}, "required": true},
+        "variation_profile": {"value": {"profile_ref": "occupancy_profile"}, "description": "Occupied ventilation-profile link.", "units": "profile reference", "source": "Reference-model implementation decision", "source_locator": "RM-BASELINE-2026 section 4", "validation_range": {"expected_type": "object", "allow_none": false}, "required": true}
+      }
+    }
+  ],
+  "apache_system": null,
+  "thermal_template": {
+    "name": "SIA_REFERENCE_TEMPLATE", "standard": "generic",
+    "description": "Generic conditioned-office template populated from SIA 380/2 comparison inputs and explicitly labelled office engineering assumptions.",
+    "source": "Reference-model engineering basis", "source_locator": "RM-BASELINE-2026 sections 3-5",
+    "room_conditions": {
+      "heating_setpoint": {"value": 20.0, "description": "Occupied heating setpoint.", "units": "degC", "source": "Reference-model office engineering assumption", "source_locator": "RM-BASELINE-2026 section 4; replace with licensed SIA 2024/project input", "validation_range": {"expected_type": "number", "minimum": 0.0, "maximum": 40.0, "allow_none": false}, "required": true},
+      "cooling_setpoint": {"value": 26.0, "description": "Occupied cooling setpoint.", "units": "degC", "source": "Reference-model office engineering assumption", "source_locator": "RM-BASELINE-2026 section 4; replace with licensed SIA 2024/project input", "validation_range": {"expected_type": "number", "minimum": 0.0, "maximum": 50.0, "allow_none": false}, "required": true}
+    },
+    "system_data": {
+      "conditioned": {"value": true, "description": "All four reference rooms are conditioned.", "units": "boolean", "source": "Reference-model scope decision", "source_locator": "RM-BASELINE-2026 section 5", "validation_range": {"expected_type": "boolean", "allow_none": false}, "required": true},
+      "system_air_minimum_flowrate": {"value": 10.0, "description": "Occupied outdoor-air supply represented by the Apache system minimum-flow field.", "units": "L/(s person)", "source": "Reference-model office engineering assumption; not asserted as a licensed SIA 2024 value", "source_locator": "RM-BASELINE-2026 section 4 and outdoor_air asset", "validation_range": {"expected_type": "number", "minimum": 0.0, "maximum": 100.0, "allow_none": false}, "required": true},
+      "system_air_minimum_flowrate_units": {"value": 3, "description": "VE unit selector for litres per second per person.", "units": "VE enum index", "source": "IESVE Room/System Air API mapping", "source_locator": "VEScripts RoomAirExchange and Apache system read-back", "validation_range": {"expected_type": "integer", "minimum": 0, "maximum": 4, "allow_none": false}, "required": true},
+      "system_air_variation_profile": {"value": {"profile_ref": "occupancy_profile"}, "description": "Mechanical outdoor-air schedule.", "units": "profile reference", "source": "Reference-model implementation decision", "source_locator": "RM-BASELINE-2026 section 4", "validation_range": {"expected_type": "object", "allow_none": false}, "required": true}
+    },
+    "gain_keys": ["people_gain", "lighting_gain", "equipment_gain"],
+    "air_exchange_keys": ["infiltration", "outdoor_air"]
+  }
+}

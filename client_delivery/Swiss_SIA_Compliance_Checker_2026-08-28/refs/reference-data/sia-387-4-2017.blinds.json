@@ -1,0 +1,85 @@
+{
+  "norme": "SIA 387/4:2023",
+  "titre": "Éclairage — Calcul et exigences (partie protection solaire)",
+  "statut": "FIGÉ — tableau 9 et équations 18-20 confirmés sur l'édition 2023 (réserve d'édition levée le 2026-08-21).",
+  "date_extraction": "2026-08-04",
+  "source": {
+    "nature": "captures d'écran du document publié",
+    "fournisseur": "Yiqiao Yang, SIA",
+    "date_reception": "2026-08-04",
+    "elements": [
+      "chiffre 3.4.3.5",
+      "tableau 9"
+    ],
+    "complement_2023": {
+      "date_reception": "2026-08-21",
+      "elements": [
+        "chiffre 3.4.3.7",
+        "tableau 9 (équations 18, 19, 20)"
+      ],
+      "note": "Capture SIA 387/4:2023 fournie par Yiqiao Yang : confirme verbatim les formules encodées ci-dessous."
+    }
+  },
+  "reserve_dedition": {
+    "edition_recue": "SIA 387/4:2017 puis SIA 387/4:2023 (tableau 9)",
+    "edition_citee_par_les_normes": "SIA 387/4:2023",
+    "citation": "SIA 4010:2023 §3.1.5 (p. 10) : « les commandes de protection solaire de type X = 1 ou 2 selon le tableau 9 de SIA 387/4:2023 »",
+    "indice_de_stabilite": "La TYPOLOGIE X = 1 / 2 / 3, le NUMÉRO de tableau (9) ET les équations (18)(19)(20) concordent entre l'encodage et la capture SIA 387/4:2023 reçue.",
+    "statut": "✅ LEVÉE le 2026-08-21 — équations (18), (19), (20) de l'édition 2023 reçues et identiques aux formules encodées."
+  },
+  "chiffre_3_4_3_7": {
+    "enonce_de": "Der Lamellen-Anstellwinkel in (16) und (17) wird für die drei Funktionstypen der Sonnenschutzsteuerung gemäss Tabelle 9 berechnet.",
+    "renvoi": "introduit le tableau 9 (angle β utilisé dans les équations (16) et (17))."
+  },
+  "tableau_9": {
+    "titre_de": "Berechnung des Lamellen-Anstellwinkels für die drei Funktionstypen der Sonnenschutzsteuerung",
+    "grandeur_calculee": "beta — Lamellen-Anstellwinkel (angle d'inclinaison des lamelles), en degrés",
+    "symbole_hauteur_solaire": "delta_s_n — hauteur solaire",
+    "types": [
+      {
+        "x": 1,
+        "type_sia_411": 1,
+        "libelle_de": "Motorbetrieben mit manueller Betätigung",
+        "description_de": "Die Lamellen gehen in Arbeitsposition 45° und werden mehr geschlossen, wenn Direktstrahlung eindringen würde. Sie werden nicht mehr zurückgestellt, wenn sie mehr geschlossen sind.",
+        "equation_numero": 18,
+        "formule": "beta = max(45 ; 90 - 2*delta_s_n ; beta_{h-1})",
+        "a_memoire": true,
+        "symbole_memoire": "beta_{h-1} = Lamellen-Anstellwinkel der vorangehenden Stunde"
+      },
+      {
+        "x": 2,
+        "type_sia_411": 2,
+        "libelle_de": "Motorbetrieben mit automatischer Steuerung (mit oder ohne Berücksichtigung der Verschattung)",
+        "description_de": "Die Lamellen gehen in Arbeitsposition 45° und werden mehr geschlossen, wenn Direktstrahlung eindringen würde.",
+        "equation_numero": 19,
+        "formule": "beta = max(45 ; 90 - 2*delta_s_n)",
+        "a_memoire": false
+      },
+      {
+        "x": 3,
+        "type_sia_411": 3,
+        "libelle_de": "Motorbetrieben mit automatischer Steuerung und Lamellennachführung",
+        "description_de": "Die Lamellen gehen in die optimale Position, so dass keine Direktstrahlung eindringt.",
+        "equation_numero": 20,
+        "formule": "beta = max(0 ; min(90 ; 90 - 2*delta_s_n))",
+        "a_memoire": false
+      }
+    ]
+  },
+  "chiffre_3_4_3_5": {
+    "enonce_de": "Bei Lamellenstoren sind tau_v_sp_B = tau_v_B_45, rho_v_sp_B = rho_v_B_45 sowie tau_v_sp_D = tau_v_D_45 und rho_v_sp_D = rho_v_B_D einzusetzen.",
+    "symboles": {
+      "tau_v_B_45": "Lichttransmissionsgrad des Sonnenschutzes für direkte Strahlung in Arbeitsstellung (45°) bei Sonnenhöhe 45° gemäss SN EN 14500",
+      "rho_v_B_45": "Lichtreflexionsgrad, direkte Strahlung, Arbeitsstellung 45°, Sonnenhöhe 45°, SN EN 14500",
+      "tau_v_D_45": "Lichttransmissionsgrad, diffuse Strahlung, Arbeitsstellung 45°, Sonnenhöhe 45°, SN EN 14500",
+      "rho_v_D_45": "Lichtreflexionsgrad, diffuse Strahlung, Arbeitsstellung 45°, Sonnenhöhe 45°, SN EN 14500"
+    },
+    "source_des_valeurs": "Herstellerangaben. À défaut, les valeurs du TABLEAU 8 selon le type de protection solaire du §3.3.2.9.",
+    "tableau_8_en_notre_possession": false,
+    "anomalie_de_lenonce": "L'énoncé imprimé écrit « rho_v_sp_D = rho_v_B_D » alors que la liste de symboles définit rho_v_D_45 et non rho_v_B_D. Coquille probable pour rho_v_sp_D = rho_v_D_45. ⚠ À VÉRIFIER."
+  },
+  "pertinence_pour_les_tests": {
+    "commentaire": "Le bâtiment exemple porte un STORE EN TISSU (Stoffmarkise Soltis), pas des lamelles : le tableau 9 ne s'applique donc pas aux tests 4 à 6. Il s'applique au TEST 2 (cas à lamelles) — c'est précisément le modèle que TAS ne possède pas (« Kein Lamellenmodell », anwender_test2_3).",
+    "voie_alternative_pour_le_tissu": "SIA 4010:2023 §3.1.5 : pour les stores en tissu, remplacer g_g du vitrage par g_tot (vitrage + protection) selon SN EN ISO 52022-3 ou ISO 15099 lorsque la protection est actionnée — « plus simple et donne des résultats plus précis »."
+  }
+}

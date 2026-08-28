@@ -1,0 +1,672 @@
+{
+  "test": 5,
+  "classes_concernees": [
+    "3",
+    "4A",
+    "4B"
+  ],
+  "statut": "FIGÉ — bandes recalculées et confrontées au classeur",
+  "date_extraction": "2026-08-06",
+  "source": {
+    "fichier": "SIA_4010_geteilter_Link/Test5/Resultaterfassung_Test5.xlsx",
+    "feuille": "Zusammenfassung"
+  },
+  "critere": {
+    "formule": "moyenne ± MAX(ABS(programme − moyenne)), bornes incluses",
+    "statut": "ENONCE_DANS_LA_SPEC",
+    "origine": "Spezifikation_Test5.pdf page 5/5, section « Testkriterien » : « Zulässiger Bereich für Jahressummen: Mittelwerte der Referenzprogramme +/- maximale Abweichung. Die Häufigkeitsverteilungen müssen im Streubereich der Referenzprogramme liegen. »"
+  },
+  "piege_variantes": "Les colonnes sont des VARIANTES de programme, pas des programmes. Le SIA retient une variante par programme, et pas la même d'un programme à l'autre : le jeu contributeur est lu sur la formule.",
+  "grandeurs": [
+    {
+      "libelle_de": "Befeuchtungsenergie",
+      "unite": "kWh",
+      "cas": [
+        {
+          "ligne_classeur": 16,
+          "colonne_moyenne": "AC",
+          "cas": "Test 5D",
+          "contributeurs": [
+            "M",
+            "Q",
+            "U",
+            "Y"
+          ],
+          "par_colonne": {
+            "M": {
+              "valeur": 308.14990937699963,
+              "programme": null,
+              "variante": null
+            },
+            "Q": {
+              "valeur": 204.48309501596304,
+              "programme": null,
+              "variante": null
+            },
+            "U": {
+              "valeur": 137.757,
+              "programme": null,
+              "variante": null
+            },
+            "Y": {
+              "valeur": 284.69582101350005,
+              "programme": null,
+              "variante": null
+            }
+          },
+          "moyenne": 233.77145635161568,
+          "borne_haute": 329.78591270323136,
+          "borne_basse": 137.757,
+          "ecart_max": 96.01445635161568,
+          "plancher_a_zero": true
+        }
+      ]
+    },
+    {
+      "libelle_de": "Energiebedarf Ventilatoren",
+      "unite": "kWh",
+      "cas": [
+        {
+          "ligne_classeur": 9,
+          "colonne_moyenne": "Z",
+          "cas": "Test 5A",
+          "contributeurs": [
+            "J",
+            "N",
+            "R",
+            "V"
+          ],
+          "par_colonne": {
+            "J": {
+              "valeur": 583.6715232399982,
+              "programme": "IDA ICE",
+              "variante": "5.0 Beta 22"
+            },
+            "N": {
+              "valeur": 426.02934254098756,
+              "programme": "Excel",
+              "variante": "-"
+            },
+            "R": {
+              "valeur": 541.7285084242002,
+              "programme": "Energy+/OpenStudio",
+              "variante": "9.1.0"
+            },
+            "V": {
+              "valeur": 486.2083926700038,
+              "programme": "EDSL-Tas",
+              "variante": "v9.5.4"
+            }
+          },
+          "moyenne": 509.40944171879744,
+          "borne_haute": 592.7895408966074,
+          "borne_basse": 426.02934254098756,
+          "ecart_max": 83.38009917780988,
+          "plancher_a_zero": true
+        },
+        {
+          "ligne_classeur": 9,
+          "colonne_moyenne": "AA",
+          "cas": "Test 5B",
+          "contributeurs": [
+            "K",
+            "O",
+            "S",
+            "W"
+          ],
+          "par_colonne": {
+            "K": {
+              "valeur": 654.99252128,
+              "programme": null,
+              "variante": null
+            },
+            "O": {
+              "valeur": 652.0631979523405,
+              "programme": null,
+              "variante": null
+            },
+            "S": {
+              "valeur": 739.4067263294589,
+              "programme": null,
+              "variante": null
+            },
+            "W": {
+              "valeur": 613.9063307000007,
+              "programme": null,
+              "variante": null
+            }
+          },
+          "moyenne": 665.09219406545,
+          "borne_haute": 739.4067263294589,
+          "borne_basse": 590.7776618014411,
+          "ecart_max": 74.3145322640089,
+          "plancher_a_zero": true
+        }
+      ]
+    },
+    {
+      "libelle_de": "Hilfsenergie WRG",
+      "unite": "kWh",
+      "cas": [
+        {
+          "ligne_classeur": 15,
+          "colonne_moyenne": "AB",
+          "cas": "Test 5C",
+          "contributeurs": [
+            "L",
+            "P",
+            "T",
+            "X"
+          ],
+          "par_colonne": {
+            "L": {
+              "valeur": 240.68891900003607,
+              "programme": null,
+              "variante": null
+            },
+            "P": {
+              "valeur": 215.93536648748534,
+              "programme": null,
+              "variante": null
+            },
+            "T": {
+              "valeur": 324.38,
+              "programme": null,
+              "variante": null
+            },
+            "X": {
+              "valeur": 308.92799995999985,
+              "programme": null,
+              "variante": null
+            }
+          },
+          "moyenne": 272.4830713618803,
+          "borne_haute": 329.0307762362753,
+          "borne_basse": 215.93536648748534,
+          "ecart_max": 56.54770487439498,
+          "plancher_a_zero": true
+        }
+      ]
+    },
+    {
+      "libelle_de": "Wärmeabfuhr Luftkühler latent",
+      "unite": "kWh",
+      "cas": [
+        {
+          "ligne_classeur": 12,
+          "colonne_moyenne": "AB",
+          "cas": "Test 5C",
+          "contributeurs": [
+            "L",
+            "P",
+            "T",
+            "X"
+          ],
+          "par_colonne": {
+            "L": {
+              "valeur": 61.058428948908094,
+              "programme": null,
+              "variante": null
+            },
+            "P": {
+              "valeur": 168.68175165033293,
+              "programme": null,
+              "variante": null
+            },
+            "T": {
+              "valeur": 281.557,
+              "programme": null,
+              "variante": null
+            },
+            "X": {
+              "valeur": 8.58973862,
+              "programme": null,
+              "variante": null
+            }
+          },
+          "moyenne": 129.97172980481025,
+          "borne_haute": 281.557,
+          "borne_basse": 0.0,
+          "ecart_max": 151.58527019518976,
+          "plancher_a_zero": true
+        }
+      ]
+    },
+    {
+      "libelle_de": "Wärmeabfuhr Luftkühler total",
+      "unite": "kWh",
+      "cas": [
+        {
+          "ligne_classeur": 11,
+          "colonne_moyenne": "Z",
+          "cas": "Test 5A",
+          "contributeurs": [
+            "J",
+            "N",
+            "R",
+            "V"
+          ],
+          "par_colonne": {
+            "J": {
+              "valeur": 746.2955497763988,
+              "programme": "IDA ICE",
+              "variante": "5.0 Beta 22"
+            },
+            "N": {
+              "valeur": 999.5884308749013,
+              "programme": "Excel",
+              "variante": "-"
+            },
+            "R": {
+              "valeur": 1483.122,
+              "programme": "Energy+/OpenStudio",
+              "variante": "9.1.0"
+            },
+            "V": {
+              "valeur": 780.0455943819989,
+              "programme": "EDSL-Tas",
+              "variante": "v9.5.4"
+            }
+          },
+          "moyenne": 1002.2628937583247,
+          "borne_haute": 1483.122,
+          "borne_basse": 521.4037875166493,
+          "ecart_max": 480.85910624167536,
+          "plancher_a_zero": true
+        },
+        {
+          "ligne_classeur": 11,
+          "colonne_moyenne": "AA",
+          "cas": "Test 5B",
+          "contributeurs": [
+            "K",
+            "O",
+            "S",
+            "W"
+          ],
+          "par_colonne": {
+            "K": {
+              "valeur": 747.514907551,
+              "programme": null,
+              "variante": null
+            },
+            "O": {
+              "valeur": 1012.4593216675784,
+              "programme": null,
+              "variante": null
+            },
+            "S": {
+              "valeur": 1494.639,
+              "programme": null,
+              "variante": null
+            },
+            "W": {
+              "valeur": 800.7589490030006,
+              "programme": null,
+              "variante": null
+            }
+          },
+          "moyenne": 1013.8430445553947,
+          "borne_haute": 1494.639,
+          "borne_basse": 533.0470891107896,
+          "ecart_max": 480.79595544460517,
+          "plancher_a_zero": true
+        },
+        {
+          "ligne_classeur": 11,
+          "colonne_moyenne": "AB",
+          "cas": "Test 5C",
+          "contributeurs": [
+            "L",
+            "P",
+            "T",
+            "X"
+          ],
+          "par_colonne": {
+            "L": {
+              "valeur": 754.2620688630004,
+              "programme": null,
+              "variante": null
+            },
+            "P": {
+              "valeur": 977.7605887980941,
+              "programme": null,
+              "variante": null
+            },
+            "T": {
+              "valeur": 1424.518,
+              "programme": null,
+              "variante": null
+            },
+            "X": {
+              "valeur": 831.5204199936986,
+              "programme": null,
+              "variante": null
+            }
+          },
+          "moyenne": 997.0152694136983,
+          "borne_haute": 1424.518,
+          "borne_basse": 569.5125388273966,
+          "ecart_max": 427.5027305863017,
+          "plancher_a_zero": true
+        }
+      ]
+    },
+    {
+      "libelle_de": "Wärmezufuhr Lufterwärmer",
+      "unite": "kWh",
+      "cas": [
+        {
+          "ligne_classeur": 10,
+          "colonne_moyenne": "Z",
+          "cas": "Test 5A",
+          "contributeurs": [
+            "J",
+            "N",
+            "R",
+            "V"
+          ],
+          "par_colonne": {
+            "J": {
+              "valeur": 537.5825050336992,
+              "programme": "IDA ICE",
+              "variante": "5.0 Beta 22"
+            },
+            "N": {
+              "valeur": 752.9073735179217,
+              "programme": "Excel",
+              "variante": "-"
+            },
+            "R": {
+              "valeur": 1206.5608046715458,
+              "programme": "Energy+/OpenStudio",
+              "variante": "9.1.0"
+            },
+            "V": {
+              "valeur": 1057.579495489001,
+              "programme": "EDSL-Tas",
+              "variante": "v9.5.4"
+            }
+          },
+          "moyenne": 888.6575446780419,
+          "borne_haute": 1239.7325843223844,
+          "borne_basse": 537.5825050336992,
+          "ecart_max": 351.0750396443426,
+          "plancher_a_zero": true
+        },
+        {
+          "ligne_classeur": 10,
+          "colonne_moyenne": "AA",
+          "cas": "Test 5B",
+          "contributeurs": [
+            "K",
+            "O",
+            "S",
+            "W"
+          ],
+          "par_colonne": {
+            "K": {
+              "valeur": 535.6133618231979,
+              "programme": null,
+              "variante": null
+            },
+            "O": {
+              "valeur": 697.1129681311162,
+              "programme": null,
+              "variante": null
+            },
+            "S": {
+              "valeur": 1141.0970125471617,
+              "programme": null,
+              "variante": null
+            },
+            "W": {
+              "valeur": 1016.4365922070015,
+              "programme": null,
+              "variante": null
+            }
+          },
+          "moyenne": 847.5649836771194,
+          "borne_haute": 1159.5166055310408,
+          "borne_basse": 535.6133618231979,
+          "ecart_max": 311.95162185392144,
+          "plancher_a_zero": true
+        },
+        {
+          "ligne_classeur": 10,
+          "colonne_moyenne": "AB",
+          "cas": "Test 5C",
+          "contributeurs": [
+            "L",
+            "P",
+            "T",
+            "X"
+          ],
+          "par_colonne": {
+            "L": {
+              "valeur": 607.0346234127977,
+              "programme": null,
+              "variante": null
+            },
+            "P": {
+              "valeur": 710.3870310842578,
+              "programme": null,
+              "variante": null
+            },
+            "T": {
+              "valeur": 1070.9222348924152,
+              "programme": null,
+              "variante": null
+            },
+            "X": {
+              "valeur": 1021.62845442414,
+              "programme": null,
+              "variante": null
+            }
+          },
+          "moyenne": 852.4930859534027,
+          "borne_haute": 1097.9515484940075,
+          "borne_basse": 607.0346234127977,
+          "ecart_max": 245.45846254060496,
+          "plancher_a_zero": true
+        },
+        {
+          "ligne_classeur": 10,
+          "colonne_moyenne": "AC",
+          "cas": "Test 5D",
+          "contributeurs": [
+            "M",
+            "Q",
+            "U",
+            "Y"
+          ],
+          "par_colonne": {
+            "M": {
+              "valeur": 340.5403321014995,
+              "programme": null,
+              "variante": null
+            },
+            "Q": {
+              "valeur": 505.90393606829423,
+              "programme": null,
+              "variante": null
+            },
+            "U": {
+              "valeur": 888.0589372058506,
+              "programme": null,
+              "variante": null
+            },
+            "Y": {
+              "valeur": 670.4042732527998,
+              "programme": null,
+              "variante": null
+            }
+          },
+          "moyenne": 601.226869657111,
+          "borne_haute": 888.0589372058506,
+          "borne_basse": 314.39480210837144,
+          "ecart_max": 286.8320675487396,
+          "plancher_a_zero": true
+        }
+      ]
+    },
+    {
+      "libelle_de": "Wärmezufuhr WRG",
+      "unite": "kWh",
+      "cas": [
+        {
+          "ligne_classeur": 13,
+          "colonne_moyenne": "AA",
+          "cas": "Test 5B",
+          "contributeurs": [
+            "K",
+            "O",
+            "S",
+            "W"
+          ],
+          "par_colonne": {
+            "K": {
+              "valeur": 4625.530196981512,
+              "programme": null,
+              "variante": null
+            },
+            "O": {
+              "valeur": 4785.487197554208,
+              "programme": null,
+              "variante": null
+            },
+            "S": {
+              "valeur": 4893.986337354246,
+              "programme": null,
+              "variante": null
+            },
+            "W": {
+              "valeur": 4481.8140981126435,
+              "programme": null,
+              "variante": null
+            }
+          },
+          "moyenne": 4696.704457500652,
+          "borne_haute": 4911.594816888661,
+          "borne_basse": 4481.8140981126435,
+          "ecart_max": 214.89035938800862,
+          "plancher_a_zero": true
+        },
+        {
+          "ligne_classeur": 13,
+          "colonne_moyenne": "AB",
+          "cas": "Test 5C",
+          "contributeurs": [
+            "L",
+            "P",
+            "T",
+            "X"
+          ],
+          "par_colonne": {
+            "L": {
+              "valeur": 4161.448661781501,
+              "programme": null,
+              "variante": null
+            },
+            "P": {
+              "valeur": 4395.630916991124,
+              "programme": null,
+              "variante": null
+            },
+            "T": {
+              "valeur": 4661.874663114343,
+              "programme": null,
+              "variante": null
+            },
+            "X": {
+              "valeur": 4490.324719513375,
+              "programme": null,
+              "variante": null
+            }
+          },
+          "moyenne": 4427.319740350085,
+          "borne_haute": 4693.19081891867,
+          "borne_basse": 4161.448661781501,
+          "ecart_max": 265.8710785685844,
+          "plancher_a_zero": true
+        }
+      ]
+    },
+    {
+      "libelle_de": "Wärmezufuhr WRG latent",
+      "unite": "kWh",
+      "cas": [
+        {
+          "ligne_classeur": 14,
+          "colonne_moyenne": "AA",
+          "cas": "Test 5B",
+          "contributeurs": [
+            "K",
+            "O",
+            "S",
+            "W"
+          ],
+          "par_colonne": {
+            "K": {
+              "valeur": 602.9918950540007,
+              "programme": null,
+              "variante": null
+            },
+            "O": {
+              "valeur": 655.4833250226236,
+              "programme": null,
+              "variante": null
+            },
+            "S": {
+              "valeur": 965.7744310759451,
+              "programme": null,
+              "variante": null
+            },
+            "W": {
+              "valeur": 311.20403942419006,
+              "programme": null,
+              "variante": null
+            }
+          },
+          "moyenne": 633.8634226441899,
+          "borne_haute": 965.7744310759451,
+          "borne_basse": 301.95241421243463,
+          "ecart_max": 331.91100843175525,
+          "plancher_a_zero": true
+        },
+        {
+          "ligne_classeur": 14,
+          "colonne_moyenne": "AB",
+          "cas": "Test 5C",
+          "contributeurs": [
+            "L",
+            "P",
+            "X"
+          ],
+          "par_colonne": {
+            "L": {
+              "valeur": 69.86691057102702,
+              "programme": null,
+              "variante": null
+            },
+            "P": {
+              "valeur": 169.11252063458403,
+              "programme": null,
+              "variante": null
+            },
+            "X": {
+              "valeur": 60.98380705741362,
+              "programme": null,
+              "variante": null
+            }
+          },
+          "moyenne": 99.98774608767489,
+          "borne_haute": 169.11252063458403,
+          "borne_basse": 30.862971540765756,
+          "ecart_max": 69.12477454690914,
+          "plancher_a_zero": true
+        }
+      ]
+    }
+  ]
+}

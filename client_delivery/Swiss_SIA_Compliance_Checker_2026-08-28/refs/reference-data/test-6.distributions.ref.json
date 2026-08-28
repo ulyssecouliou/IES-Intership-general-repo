@@ -1,0 +1,2498 @@
+{
+ "test": 6,
+ "critere": "Häufigkeitsverteilung : « muss im Streubereich der Referenzprogramme liegen » (Spezifikation_Test6.pdf, Testkriterien)",
+ "statut_critere": "CONFIRME_AUTORITE_2026-08-10",
+ "pourquoi_non_calcule": "Les feuilles « Verteilung » sont des GRAPHIQUES : elles tracent les variantes de référence et le programme testé, sans calculer aucune bande. Aucune cellule du classeur ne définit le Streubereich d'une distribution. La clarification écrite du 2026-08-10 définit la règle : enveloppe min/max des programmes de référence, classe par classe.",
+ "classes_concernees": [
+  "3",
+  "4A",
+  "4B"
+ ],
+ "source": {
+  "fichier": "Test6\\Resultaterfassung_Test6.xlsx",
+  "feuille": "Zusammenfassung",
+  "lignes_de_structure": {
+   "cas": 23,
+   "grandeur": 24,
+   "programmes": 25,
+   "classes": 26,
+   "unite": 25
+  }
+ },
+ "nb_distributions": 10,
+ "reserves": [
+  "Bloc(s) B, I, P, W, AD, AK, AR, AY, BF, BM : le classeur ne porte AUCUN identifiant de cas sur la ligne prévue. La spécification range ces grandeurs sous un cas précis, mais le classeur ne le dit pas : le champ reste nul plutôt que d'être comblé par déduction.",
+  "Totaux affichés dans les classes : 2817, 8757, 8759, 8760. La SIA a confirmé le 2026-08-10 que les écarts à 8760 ne sont pas des heures manquantes : les autres valeurs sont hors des bornes définies par les classes. Elles sont conservées comme compte hors classes et ne sont pas ajoutées à la dernière classe.",
+  "Les effectifs sont des FAITS relevés cellule par cellule et réconciliés avec la ligne de totaux du classeur. La bande d'acceptation min/max par classe est confirmée par la réponse écrite du 2026-08-10."
+ ],
+ "distributions": [
+  {
+   "cas": null,
+   "grandeur": "Zu-/Abluft-Volumenstrom",
+   "unite": "m3/h",
+   "colonne_bloc": "B",
+   "nb_classes": 20,
+   "ligne_total": 47,
+   "contributeurs": [
+    {
+     "colonne": "D",
+     "programme": "IDA ICE",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "E",
+     "programme": "Excel",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "F",
+     "programme": "Energy+/OpenStudio",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "G",
+     "programme": "EDSL Tas",
+     "total_heures": 8759,
+     "heures_dans_classes": 8759,
+     "heures_hors_classes": 1,
+     "heures_source_attendues": 8760
+    }
+   ],
+   "effectifs": [
+    {
+     "ligne_classeur": 27,
+     "borne_superieure": 500,
+     "par_colonne": {
+      "D": 5943,
+      "E": 5943,
+      "F": 5943,
+      "G": 5942
+     }
+    },
+    {
+     "ligne_classeur": 28,
+     "borne_superieure": 1500,
+     "par_colonne": {
+      "D": 0,
+      "E": 0,
+      "F": 0,
+      "G": 0
+     }
+    },
+    {
+     "ligne_classeur": 29,
+     "borne_superieure": 2500,
+     "par_colonne": {
+      "D": 1252,
+      "E": 1252,
+      "F": 1252,
+      "G": 1252
+     }
+    },
+    {
+     "ligne_classeur": 30,
+     "borne_superieure": 3500,
+     "par_colonne": {
+      "D": 0,
+      "E": 0,
+      "F": 0,
+      "G": 0
+     }
+    },
+    {
+     "ligne_classeur": 31,
+     "borne_superieure": 4500,
+     "par_colonne": {
+      "D": 939,
+      "E": 939,
+      "F": 939,
+      "G": 939
+     }
+    },
+    {
+     "ligne_classeur": 32,
+     "borne_superieure": 5500,
+     "par_colonne": {
+      "D": 0,
+      "E": 0,
+      "F": 0,
+      "G": 0
+     }
+    },
+    {
+     "ligne_classeur": 33,
+     "borne_superieure": 6500,
+     "par_colonne": {
+      "D": 626,
+      "E": 626,
+      "F": 626,
+      "G": 626
+     }
+    },
+    {
+     "ligne_classeur": 34,
+     "borne_superieure": 7500,
+     "par_colonne": {
+      "D": 0,
+      "E": 0,
+      "F": 0,
+      "G": 0
+     }
+    },
+    {
+     "ligne_classeur": 35,
+     "borne_superieure": 8500,
+     "par_colonne": {
+      "D": 0,
+      "E": 0,
+      "F": 0,
+      "G": 0
+     }
+    },
+    {
+     "ligne_classeur": 36,
+     "borne_superieure": 9999,
+     "par_colonne": {
+      "D": 0,
+      "E": 0,
+      "F": 0,
+      "G": 0
+     }
+    },
+    {
+     "ligne_classeur": 37,
+     "borne_superieure": 9999,
+     "par_colonne": {
+      "D": 0,
+      "E": 0,
+      "F": 0,
+      "G": 0
+     }
+    },
+    {
+     "ligne_classeur": 38,
+     "borne_superieure": 9999,
+     "par_colonne": {
+      "D": 0,
+      "E": 0,
+      "F": 0,
+      "G": 0
+     }
+    },
+    {
+     "ligne_classeur": 39,
+     "borne_superieure": 9999,
+     "par_colonne": {
+      "D": 0,
+      "E": 0,
+      "F": 0,
+      "G": 0
+     }
+    },
+    {
+     "ligne_classeur": 40,
+     "borne_superieure": 9999,
+     "par_colonne": {
+      "D": 0,
+      "E": 0,
+      "F": 0,
+      "G": 0
+     }
+    },
+    {
+     "ligne_classeur": 41,
+     "borne_superieure": 9999,
+     "par_colonne": {
+      "D": 0,
+      "E": 0,
+      "F": 0,
+      "G": 0
+     }
+    },
+    {
+     "ligne_classeur": 42,
+     "borne_superieure": 9999,
+     "par_colonne": {
+      "D": 0,
+      "E": 0,
+      "F": 0,
+      "G": 0
+     }
+    },
+    {
+     "ligne_classeur": 43,
+     "borne_superieure": 9999,
+     "par_colonne": {
+      "D": 0,
+      "E": 0,
+      "F": 0,
+      "G": 0
+     }
+    },
+    {
+     "ligne_classeur": 44,
+     "borne_superieure": 9999,
+     "par_colonne": {
+      "D": 0,
+      "E": 0,
+      "F": 0,
+      "G": 0
+     }
+    },
+    {
+     "ligne_classeur": 45,
+     "borne_superieure": 9999,
+     "par_colonne": {
+      "D": 0,
+      "E": 0,
+      "F": 0,
+      "G": 0
+     }
+    },
+    {
+     "ligne_classeur": 46,
+     "borne_superieure": 9999,
+     "par_colonne": {
+      "D": 0,
+      "E": 0,
+      "F": 0,
+      "G": 0
+     }
+    }
+   ]
+  },
+  {
+   "cas": null,
+   "grandeur": "Zulufttemperatur im Betrieb",
+   "unite": "°C",
+   "colonne_bloc": "I",
+   "nb_classes": 20,
+   "ligne_total": 47,
+   "contributeurs": [
+    {
+     "colonne": "J",
+     "programme": "Testprogramm",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "K",
+     "programme": "IDA ICE",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "L",
+     "programme": "Excel",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "M",
+     "programme": "Energy+/OpenStudio",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "N",
+     "programme": "EDSL Tas",
+     "total_heures": 2817,
+     "heures_dans_classes": 2817,
+     "heures_hors_classes": 5943,
+     "heures_source_attendues": 8760
+    }
+   ],
+   "effectifs": [
+    {
+     "ligne_classeur": 27,
+     "borne_superieure": 0,
+     "par_colonne": {
+      "J": 8760,
+      "K": 5630,
+      "L": 5943,
+      "M": 5943,
+      "N": 0
+     }
+    },
+    {
+     "ligne_classeur": 28,
+     "borne_superieure": 16,
+     "par_colonne": {
+      "J": 0,
+      "K": 0,
+      "L": 0,
+      "M": 0,
+      "N": 0
+     }
+    },
+    {
+     "ligne_classeur": 29,
+     "borne_superieure": 17,
+     "par_colonne": {
+      "J": 0,
+      "K": 0,
+      "L": 0,
+      "M": 0,
+      "N": 0
+     }
+    },
+    {
+     "ligne_classeur": 30,
+     "borne_superieure": 18,
+     "par_colonne": {
+      "J": 0,
+      "K": 402,
+      "L": 427,
+      "M": 231,
+      "N": 484
+     }
+    },
+    {
+     "ligne_classeur": 31,
+     "borne_superieure": 19,
+     "par_colonne": {
+      "J": 0,
+      "K": 495,
+      "L": 362,
+      "M": 521,
+      "N": 377
+     }
+    },
+    {
+     "ligne_classeur": 32,
+     "borne_superieure": 20,
+     "par_colonne": {
+      "J": 0,
+      "K": 2022,
+      "L": 2028,
+      "M": 1237,
+      "N": 1474
+     }
+    },
+    {
+     "ligne_classeur": 33,
+     "borne_superieure": 21,
+     "par_colonne": {
+      "J": 0,
+      "K": 211,
+      "L": 0,
+      "M": 828,
+      "N": 482
+     }
+    },
+    {
+     "ligne_classeur": 34,
+     "borne_superieure": 22,
+     "par_colonne": {
+      "J": 0,
+      "K": 0,
+      "L": 0,
+      "M": 0,
+      "N": 0
+     }
+    },
+    {
+     "ligne_classeur": 35,
+     "borne_superieure": 23,
+     "par_colonne": {
+      "J": 0,
+      "K": 0,
+      "L": 0,
+      "M": 0,
+      "N": 0
+     }
+    },
+    {
+     "ligne_classeur": 36,
+     "borne_superieure": 24,
+     "par_colonne": {
+      "J": 0,
+      "K": 0,
+      "L": 0,
+      "M": 0,
+      "N": 0
+     }
+    },
+    {
+     "ligne_classeur": 37,
+     "borne_superieure": 25,
+     "par_colonne": {
+      "J": 0,
+      "K": 0,
+      "L": 0,
+      "M": 0,
+      "N": 0
+     }
+    },
+    {
+     "ligne_classeur": 38,
+     "borne_superieure": 26,
+     "par_colonne": {
+      "J": 0,
+      "K": 0,
+      "L": 0,
+      "M": 0,
+      "N": 0
+     }
+    },
+    {
+     "ligne_classeur": 39,
+     "borne_superieure": 27,
+     "par_colonne": {
+      "J": 0,
+      "K": 0,
+      "L": 0,
+      "M": 0,
+      "N": 0
+     }
+    },
+    {
+     "ligne_classeur": 40,
+     "borne_superieure": 28,
+     "par_colonne": {
+      "J": 0,
+      "K": 0,
+      "L": 0,
+      "M": 0,
+      "N": 0
+     }
+    },
+    {
+     "ligne_classeur": 41,
+     "borne_superieure": 29,
+     "par_colonne": {
+      "J": 0,
+      "K": 0,
+      "L": 0,
+      "M": 0,
+      "N": 0
+     }
+    },
+    {
+     "ligne_classeur": 42,
+     "borne_superieure": 30,
+     "par_colonne": {
+      "J": 0,
+      "K": 0,
+      "L": 0,
+      "M": 0,
+      "N": 0
+     }
+    },
+    {
+     "ligne_classeur": 43,
+     "borne_superieure": 9999,
+     "par_colonne": {
+      "J": 0,
+      "K": 0,
+      "L": 0,
+      "M": 0,
+      "N": 0
+     }
+    },
+    {
+     "ligne_classeur": 44,
+     "borne_superieure": 9999,
+     "par_colonne": {
+      "J": 0,
+      "K": 0,
+      "L": 0,
+      "M": 0,
+      "N": 0
+     }
+    },
+    {
+     "ligne_classeur": 45,
+     "borne_superieure": 9999,
+     "par_colonne": {
+      "J": 0,
+      "K": 0,
+      "L": 0,
+      "M": 0,
+      "N": 0
+     }
+    },
+    {
+     "ligne_classeur": 46,
+     "borne_superieure": 9999,
+     "par_colonne": {
+      "J": 0,
+      "K": 0,
+      "L": 0,
+      "M": 0,
+      "N": 0
+     }
+    }
+   ]
+  },
+  {
+   "cas": null,
+   "grandeur": "Ablufttemperatur",
+   "unite": "°C",
+   "colonne_bloc": "P",
+   "nb_classes": 20,
+   "ligne_total": 47,
+   "contributeurs": [
+    {
+     "colonne": "R",
+     "programme": "IDA ICE",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "S",
+     "programme": "Excel",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "T",
+     "programme": "Energy+/OpenStudio",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "U",
+     "programme": "EDSL Tas",
+     "total_heures": 8759,
+     "heures_dans_classes": 8759,
+     "heures_hors_classes": 1,
+     "heures_source_attendues": 8760
+    }
+   ],
+   "effectifs": [
+    {
+     "ligne_classeur": 27,
+     "borne_superieure": 0,
+     "par_colonne": {
+      "R": 0,
+      "S": 0,
+      "T": 0,
+      "U": 0
+     }
+    },
+    {
+     "ligne_classeur": 28,
+     "borne_superieure": 22,
+     "par_colonne": {
+      "R": 5,
+      "S": 1053,
+      "T": 1482,
+      "U": 0
+     }
+    },
+    {
+     "ligne_classeur": 29,
+     "borne_superieure": null,
+     "par_colonne": {
+      "R": 86,
+      "S": 569,
+      "T": 787,
+      "U": 9
+     }
+    },
+    {
+     "ligne_classeur": 30,
+     "borne_superieure": 23,
+     "par_colonne": {
+      "R": 230,
+      "S": 374,
+      "T": 720,
+      "U": 96
+     }
+    },
+    {
+     "ligne_classeur": 31,
+     "borne_superieure": null,
+     "par_colonne": {
+      "R": 352,
+      "S": 785,
+      "T": 998,
+      "U": 537
+     }
+    },
+    {
+     "ligne_classeur": 32,
+     "borne_superieure": 24,
+     "par_colonne": {
+      "R": 1191,
+      "S": 1187,
+      "T": 660,
+      "U": 1266
+     }
+    },
+    {
+     "ligne_classeur": 33,
+     "borne_superieure": null,
+     "par_colonne": {
+      "R": 1322,
+      "S": 1360,
+      "T": 705,
+      "U": 1629
+     }
+    },
+    {
+     "ligne_classeur": 34,
+     "borne_superieure": 25,
+     "par_colonne": {
+      "R": 1304,
+      "S": 863,
+      "T": 640,
+      "U": 1058
+     }
+    },
+    {
+     "ligne_classeur": 35,
+     "borne_superieure": null,
+     "par_colonne": {
+      "R": 1294,
+      "S": 689,
+      "T": 488,
+      "U": 810
+     }
+    },
+    {
+     "ligne_classeur": 36,
+     "borne_superieure": 26,
+     "par_colonne": {
+      "R": 726,
+      "S": 504,
+      "T": 385,
+      "U": 705
+     }
+    },
+    {
+     "ligne_classeur": 37,
+     "borne_superieure": null,
+     "par_colonne": {
+      "R": 628,
+      "S": 592,
+      "T": 304,
+      "U": 401
+     }
+    },
+    {
+     "ligne_classeur": 38,
+     "borne_superieure": 27,
+     "par_colonne": {
+      "R": 538,
+      "S": 406,
+      "T": 335,
+      "U": 426
+     }
+    },
+    {
+     "ligne_classeur": 39,
+     "borne_superieure": null,
+     "par_colonne": {
+      "R": 626,
+      "S": 182,
+      "T": 219,
+      "U": 435
+     }
+    },
+    {
+     "ligne_classeur": 40,
+     "borne_superieure": 28,
+     "par_colonne": {
+      "R": 402,
+      "S": 127,
+      "T": 367,
+      "U": 406
+     }
+    },
+    {
+     "ligne_classeur": 41,
+     "borne_superieure": null,
+     "par_colonne": {
+      "R": 56,
+      "S": 60,
+      "T": 378,
+      "U": 507
+     }
+    },
+    {
+     "ligne_classeur": 42,
+     "borne_superieure": 29,
+     "par_colonne": {
+      "R": 0,
+      "S": 9,
+      "T": 166,
+      "U": 324
+     }
+    },
+    {
+     "ligne_classeur": 43,
+     "borne_superieure": null,
+     "par_colonne": {
+      "R": 0,
+      "S": 0,
+      "T": 63,
+      "U": 119
+     }
+    },
+    {
+     "ligne_classeur": 44,
+     "borne_superieure": 30,
+     "par_colonne": {
+      "R": 0,
+      "S": 0,
+      "T": 58,
+      "U": 21
+     }
+    },
+    {
+     "ligne_classeur": 45,
+     "borne_superieure": null,
+     "par_colonne": {
+      "R": 0,
+      "S": 0,
+      "T": 5,
+      "U": 8
+     }
+    },
+    {
+     "ligne_classeur": 46,
+     "borne_superieure": 31,
+     "par_colonne": {
+      "R": 0,
+      "S": 0,
+      "T": 0,
+      "U": 2
+     }
+    }
+   ]
+  },
+  {
+   "cas": null,
+   "grandeur": "Leistung Zu- und Abluftventilator",
+   "unite": "W",
+   "colonne_bloc": "W",
+   "nb_classes": 20,
+   "ligne_total": 47,
+   "contributeurs": [
+    {
+     "colonne": "Y",
+     "programme": "IDA ICE",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "Z",
+     "programme": "Excel",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "AA",
+     "programme": "Energy+/OpenStudio",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "AB",
+     "programme": "EDSL Tas",
+     "total_heures": 8759,
+     "heures_dans_classes": 8759,
+     "heures_hors_classes": 1,
+     "heures_source_attendues": 8760
+    }
+   ],
+   "effectifs": [
+    {
+     "ligne_classeur": 27,
+     "borne_superieure": 10,
+     "par_colonne": {
+      "Y": 5943,
+      "Z": 5943,
+      "AA": 5943,
+      "AB": 5942
+     }
+    },
+    {
+     "ligne_classeur": 28,
+     "borne_superieure": 550,
+     "par_colonne": {
+      "Y": 1252,
+      "Z": 1252,
+      "AA": 1252,
+      "AB": 1252
+     }
+    },
+    {
+     "ligne_classeur": 29,
+     "borne_superieure": 1100,
+     "par_colonne": {
+      "Y": 0,
+      "Z": 939,
+      "AA": 0,
+      "AB": 0
+     }
+    },
+    {
+     "ligne_classeur": 30,
+     "borne_superieure": 1650,
+     "par_colonne": {
+      "Y": 939,
+      "Z": 0,
+      "AA": 939,
+      "AB": 939
+     }
+    },
+    {
+     "ligne_classeur": 31,
+     "borne_superieure": 2200,
+     "par_colonne": {
+      "Y": 0,
+      "Z": 0,
+      "AA": 0,
+      "AB": 0
+     }
+    },
+    {
+     "ligne_classeur": 32,
+     "borne_superieure": 2750,
+     "par_colonne": {
+      "Y": 0,
+      "Z": 0,
+      "AA": 0,
+      "AB": 0
+     }
+    },
+    {
+     "ligne_classeur": 33,
+     "borne_superieure": 3300,
+     "par_colonne": {
+      "Y": 0,
+      "Z": 0,
+      "AA": 0,
+      "AB": 0
+     }
+    },
+    {
+     "ligne_classeur": 34,
+     "borne_superieure": 3850,
+     "par_colonne": {
+      "Y": 578,
+      "Z": 626,
+      "AA": 626,
+      "AB": 626
+     }
+    },
+    {
+     "ligne_classeur": 35,
+     "borne_superieure": 4400,
+     "par_colonne": {
+      "Y": 48,
+      "Z": 0,
+      "AA": 0,
+      "AB": 0
+     }
+    },
+    {
+     "ligne_classeur": 36,
+     "borne_superieure": 9999,
+     "par_colonne": {
+      "Y": 0,
+      "Z": 0,
+      "AA": 0,
+      "AB": 0
+     }
+    },
+    {
+     "ligne_classeur": 37,
+     "borne_superieure": 9999,
+     "par_colonne": {
+      "Y": 0,
+      "Z": 0,
+      "AA": 0,
+      "AB": 0
+     }
+    },
+    {
+     "ligne_classeur": 38,
+     "borne_superieure": 9999,
+     "par_colonne": {
+      "Y": 0,
+      "Z": 0,
+      "AA": 0,
+      "AB": 0
+     }
+    },
+    {
+     "ligne_classeur": 39,
+     "borne_superieure": 9999,
+     "par_colonne": {
+      "Y": 0,
+      "Z": 0,
+      "AA": 0,
+      "AB": 0
+     }
+    },
+    {
+     "ligne_classeur": 40,
+     "borne_superieure": 9999,
+     "par_colonne": {
+      "Y": 0,
+      "Z": 0,
+      "AA": 0,
+      "AB": 0
+     }
+    },
+    {
+     "ligne_classeur": 41,
+     "borne_superieure": 9999,
+     "par_colonne": {
+      "Y": 0,
+      "Z": 0,
+      "AA": 0,
+      "AB": 0
+     }
+    },
+    {
+     "ligne_classeur": 42,
+     "borne_superieure": 9999,
+     "par_colonne": {
+      "Y": 0,
+      "Z": 0,
+      "AA": 0,
+      "AB": 0
+     }
+    },
+    {
+     "ligne_classeur": 43,
+     "borne_superieure": 9999,
+     "par_colonne": {
+      "Y": 0,
+      "Z": 0,
+      "AA": 0,
+      "AB": 0
+     }
+    },
+    {
+     "ligne_classeur": 44,
+     "borne_superieure": 9999,
+     "par_colonne": {
+      "Y": 0,
+      "Z": 0,
+      "AA": 0,
+      "AB": 0
+     }
+    },
+    {
+     "ligne_classeur": 45,
+     "borne_superieure": 9999,
+     "par_colonne": {
+      "Y": 0,
+      "Z": 0,
+      "AA": 0,
+      "AB": 0
+     }
+    },
+    {
+     "ligne_classeur": 46,
+     "borne_superieure": 9999,
+     "par_colonne": {
+      "Y": 0,
+      "Z": 0,
+      "AA": 0,
+      "AB": 0
+     }
+    }
+   ]
+  },
+  {
+   "cas": null,
+   "grandeur": "Leistung Lufterwärmer",
+   "unite": "W",
+   "colonne_bloc": "AD",
+   "nb_classes": 20,
+   "ligne_total": 47,
+   "contributeurs": [
+    {
+     "colonne": "AF",
+     "programme": "IDA ICE",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "AG",
+     "programme": "Excel",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "AH",
+     "programme": "Energy+/OpenStudio",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "AI",
+     "programme": "EDSL Tas",
+     "total_heures": 8759,
+     "heures_dans_classes": 8759,
+     "heures_hors_classes": 1,
+     "heures_source_attendues": 8760
+    }
+   ],
+   "effectifs": [
+    {
+     "ligne_classeur": 27,
+     "borne_superieure": 50,
+     "par_colonne": {
+      "AF": 7969,
+      "AG": 7878,
+      "AH": 6980,
+      "AI": 7731
+     }
+    },
+    {
+     "ligne_classeur": 28,
+     "borne_superieure": 1000,
+     "par_colonne": {
+      "AF": 355,
+      "AG": 378,
+      "AH": 385,
+      "AI": 290
+     }
+    },
+    {
+     "ligne_classeur": 29,
+     "borne_superieure": 2000,
+     "par_colonne": {
+      "AF": 242,
+      "AG": 181,
+      "AH": 420,
+      "AI": 324
+     }
+    },
+    {
+     "ligne_classeur": 30,
+     "borne_superieure": 3000,
+     "par_colonne": {
+      "AF": 86,
+      "AG": 126,
+      "AH": 428,
+      "AI": 195
+     }
+    },
+    {
+     "ligne_classeur": 31,
+     "borne_superieure": 4000,
+     "par_colonne": {
+      "AF": 26,
+      "AG": 72,
+      "AH": 236,
+      "AI": 103
+     }
+    },
+    {
+     "ligne_classeur": 32,
+     "borne_superieure": 5000,
+     "par_colonne": {
+      "AF": 20,
+      "AG": 40,
+      "AH": 135,
+      "AI": 54
+     }
+    },
+    {
+     "ligne_classeur": 33,
+     "borne_superieure": 6000,
+     "par_colonne": {
+      "AF": 19,
+      "AG": 32,
+      "AH": 76,
+      "AI": 32
+     }
+    },
+    {
+     "ligne_classeur": 34,
+     "borne_superieure": 7000,
+     "par_colonne": {
+      "AF": 10,
+      "AG": 13,
+      "AH": 42,
+      "AI": 16
+     }
+    },
+    {
+     "ligne_classeur": 35,
+     "borne_superieure": 8000,
+     "par_colonne": {
+      "AF": 6,
+      "AG": 7,
+      "AH": 28,
+      "AI": 8
+     }
+    },
+    {
+     "ligne_classeur": 36,
+     "borne_superieure": 9000,
+     "par_colonne": {
+      "AF": 3,
+      "AG": 5,
+      "AH": 20,
+      "AI": 5
+     }
+    },
+    {
+     "ligne_classeur": 37,
+     "borne_superieure": 10000,
+     "par_colonne": {
+      "AF": 5,
+      "AG": 5,
+      "AH": 8,
+      "AI": 1
+     }
+    },
+    {
+     "ligne_classeur": 38,
+     "borne_superieure": 11000,
+     "par_colonne": {
+      "AF": 5,
+      "AG": 5,
+      "AH": 2,
+      "AI": 0
+     }
+    },
+    {
+     "ligne_classeur": 39,
+     "borne_superieure": 12000,
+     "par_colonne": {
+      "AF": 4,
+      "AG": 4,
+      "AH": 0,
+      "AI": 0
+     }
+    },
+    {
+     "ligne_classeur": 40,
+     "borne_superieure": 13000,
+     "par_colonne": {
+      "AF": 2,
+      "AG": 4,
+      "AH": 0,
+      "AI": 0
+     }
+    },
+    {
+     "ligne_classeur": 41,
+     "borne_superieure": 14000,
+     "par_colonne": {
+      "AF": 4,
+      "AG": 1,
+      "AH": 0,
+      "AI": 0
+     }
+    },
+    {
+     "ligne_classeur": 42,
+     "borne_superieure": 15000,
+     "par_colonne": {
+      "AF": 2,
+      "AG": 4,
+      "AH": 0,
+      "AI": 0
+     }
+    },
+    {
+     "ligne_classeur": 43,
+     "borne_superieure": 16000,
+     "par_colonne": {
+      "AF": 0,
+      "AG": 3,
+      "AH": 0,
+      "AI": 0
+     }
+    },
+    {
+     "ligne_classeur": 44,
+     "borne_superieure": 17000,
+     "par_colonne": {
+      "AF": 2,
+      "AG": 1,
+      "AH": 0,
+      "AI": 0
+     }
+    },
+    {
+     "ligne_classeur": 45,
+     "borne_superieure": 18000,
+     "par_colonne": {
+      "AF": 0,
+      "AG": 1,
+      "AH": 0,
+      "AI": 0
+     }
+    },
+    {
+     "ligne_classeur": 46,
+     "borne_superieure": 99999,
+     "par_colonne": {
+      "AF": 0,
+      "AG": 0,
+      "AH": 0,
+      "AI": 0
+     }
+    }
+   ]
+  },
+  {
+   "cas": null,
+   "grandeur": "Leistung Luftkühler total",
+   "unite": "W",
+   "colonne_bloc": "AK",
+   "nb_classes": 20,
+   "ligne_total": 47,
+   "contributeurs": [
+    {
+     "colonne": "AM",
+     "programme": "IDA ICE",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "AN",
+     "programme": "Excel",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "AO",
+     "programme": "Energy+/OpenStudio",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "AP",
+     "programme": "EDSL Tas",
+     "total_heures": 8759,
+     "heures_dans_classes": 8759,
+     "heures_hors_classes": 1,
+     "heures_source_attendues": 8760
+    }
+   ],
+   "effectifs": [
+    {
+     "ligne_classeur": 27,
+     "borne_superieure": 1000,
+     "par_colonne": {
+      "AM": 8233,
+      "AN": 8203,
+      "AO": 8260,
+      "AP": 7902
+     }
+    },
+    {
+     "ligne_classeur": 28,
+     "borne_superieure": 2000,
+     "par_colonne": {
+      "AM": 69,
+      "AN": 66,
+      "AO": 68,
+      "AP": 174
+     }
+    },
+    {
+     "ligne_classeur": 29,
+     "borne_superieure": 4000,
+     "par_colonne": {
+      "AM": 150,
+      "AN": 135,
+      "AO": 133,
+      "AP": 282
+     }
+    },
+    {
+     "ligne_classeur": 30,
+     "borne_superieure": 6000,
+     "par_colonne": {
+      "AM": 128,
+      "AN": 145,
+      "AO": 126,
+      "AP": 167
+     }
+    },
+    {
+     "ligne_classeur": 31,
+     "borne_superieure": 8000,
+     "par_colonne": {
+      "AM": 58,
+      "AN": 51,
+      "AO": 71,
+      "AP": 69
+     }
+    },
+    {
+     "ligne_classeur": 32,
+     "borne_superieure": 10000,
+     "par_colonne": {
+      "AM": 39,
+      "AN": 45,
+      "AO": 38,
+      "AP": 49
+     }
+    },
+    {
+     "ligne_classeur": 33,
+     "borne_superieure": 12000,
+     "par_colonne": {
+      "AM": 40,
+      "AN": 41,
+      "AO": 27,
+      "AP": 40
+     }
+    },
+    {
+     "ligne_classeur": 34,
+     "borne_superieure": 14000,
+     "par_colonne": {
+      "AM": 12,
+      "AN": 23,
+      "AO": 15,
+      "AP": 30
+     }
+    },
+    {
+     "ligne_classeur": 35,
+     "borne_superieure": 16000,
+     "par_colonne": {
+      "AM": 12,
+      "AN": 16,
+      "AO": 12,
+      "AP": 21
+     }
+    },
+    {
+     "ligne_classeur": 36,
+     "borne_superieure": 18000,
+     "par_colonne": {
+      "AM": 12,
+      "AN": 13,
+      "AO": 8,
+      "AP": 14
+     }
+    },
+    {
+     "ligne_classeur": 37,
+     "borne_superieure": 20000,
+     "par_colonne": {
+      "AM": 3,
+      "AN": 11,
+      "AO": 2,
+      "AP": 6
+     }
+    },
+    {
+     "ligne_classeur": 38,
+     "borne_superieure": 22000,
+     "par_colonne": {
+      "AM": 0,
+      "AN": 3,
+      "AO": 0,
+      "AP": 1
+     }
+    },
+    {
+     "ligne_classeur": 39,
+     "borne_superieure": 24000,
+     "par_colonne": {
+      "AM": 2,
+      "AN": 2,
+      "AO": 0,
+      "AP": 0
+     }
+    },
+    {
+     "ligne_classeur": 40,
+     "borne_superieure": 26000,
+     "par_colonne": {
+      "AM": 2,
+      "AN": 1,
+      "AO": 0,
+      "AP": 3
+     }
+    },
+    {
+     "ligne_classeur": 41,
+     "borne_superieure": 28000,
+     "par_colonne": {
+      "AM": 0,
+      "AN": 3,
+      "AO": 0,
+      "AP": 1
+     }
+    },
+    {
+     "ligne_classeur": 42,
+     "borne_superieure": 30000,
+     "par_colonne": {
+      "AM": 0,
+      "AN": 0,
+      "AO": 0,
+      "AP": 0
+     }
+    },
+    {
+     "ligne_classeur": 43,
+     "borne_superieure": 32000,
+     "par_colonne": {
+      "AM": 0,
+      "AN": 2,
+      "AO": 0,
+      "AP": 0
+     }
+    },
+    {
+     "ligne_classeur": 44,
+     "borne_superieure": 99999,
+     "par_colonne": {
+      "AM": 0,
+      "AN": 0,
+      "AO": 0,
+      "AP": 0
+     }
+    },
+    {
+     "ligne_classeur": 45,
+     "borne_superieure": 99999,
+     "par_colonne": {
+      "AM": 0,
+      "AN": 0,
+      "AO": 0,
+      "AP": 0
+     }
+    },
+    {
+     "ligne_classeur": 46,
+     "borne_superieure": 99999,
+     "par_colonne": {
+      "AM": 0,
+      "AN": 0,
+      "AO": 0,
+      "AP": 0
+     }
+    }
+   ]
+  },
+  {
+   "cas": null,
+   "grandeur": "Leistung Luftkühler latent",
+   "unite": "W",
+   "colonne_bloc": "AR",
+   "nb_classes": 20,
+   "ligne_total": 47,
+   "contributeurs": [
+    {
+     "colonne": "AT",
+     "programme": "IDA ICE",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "AU",
+     "programme": "Excel",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "AV",
+     "programme": "Energy+/OpenStudio",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "AW",
+     "programme": "EDSL Tas",
+     "total_heures": 8759,
+     "heures_dans_classes": 8759,
+     "heures_hors_classes": 1,
+     "heures_source_attendues": 8760
+    }
+   ],
+   "effectifs": [
+    {
+     "ligne_classeur": 27,
+     "borne_superieure": 10,
+     "par_colonne": {
+      "AT": 8666,
+      "AU": 8517,
+      "AV": 8640,
+      "AW": 8697
+     }
+    },
+    {
+     "ligne_classeur": 28,
+     "borne_superieure": 1000,
+     "par_colonne": {
+      "AT": 52,
+      "AU": 60,
+      "AV": 100,
+      "AW": 22
+     }
+    },
+    {
+     "ligne_classeur": 29,
+     "borne_superieure": 2000,
+     "par_colonne": {
+      "AT": 22,
+      "AU": 55,
+      "AV": 12,
+      "AW": 19
+     }
+    },
+    {
+     "ligne_classeur": 30,
+     "borne_superieure": 3000,
+     "par_colonne": {
+      "AT": 8,
+      "AU": 35,
+      "AV": 5,
+      "AW": 5
+     }
+    },
+    {
+     "ligne_classeur": 31,
+     "borne_superieure": 4000,
+     "par_colonne": {
+      "AT": 4,
+      "AU": 20,
+      "AV": 2,
+      "AW": 7
+     }
+    },
+    {
+     "ligne_classeur": 32,
+     "borne_superieure": 5000,
+     "par_colonne": {
+      "AT": 2,
+      "AU": 15,
+      "AV": 1,
+      "AW": 4
+     }
+    },
+    {
+     "ligne_classeur": 33,
+     "borne_superieure": 6000,
+     "par_colonne": {
+      "AT": 2,
+      "AU": 9,
+      "AV": 0,
+      "AW": 1
+     }
+    },
+    {
+     "ligne_classeur": 34,
+     "borne_superieure": 7000,
+     "par_colonne": {
+      "AT": 1,
+      "AU": 15,
+      "AV": 0,
+      "AW": 0
+     }
+    },
+    {
+     "ligne_classeur": 35,
+     "borne_superieure": 8000,
+     "par_colonne": {
+      "AT": 2,
+      "AU": 12,
+      "AV": 0,
+      "AW": 2
+     }
+    },
+    {
+     "ligne_classeur": 36,
+     "borne_superieure": 9000,
+     "par_colonne": {
+      "AT": 1,
+      "AU": 6,
+      "AV": 0,
+      "AW": 1
+     }
+    },
+    {
+     "ligne_classeur": 37,
+     "borne_superieure": 10000,
+     "par_colonne": {
+      "AT": 0,
+      "AU": 8,
+      "AV": 0,
+      "AW": 1
+     }
+    },
+    {
+     "ligne_classeur": 38,
+     "borne_superieure": 11000,
+     "par_colonne": {
+      "AT": 0,
+      "AU": 3,
+      "AV": 0,
+      "AW": 0
+     }
+    },
+    {
+     "ligne_classeur": 39,
+     "borne_superieure": 12000,
+     "par_colonne": {
+      "AT": 0,
+      "AU": 2,
+      "AV": 0,
+      "AW": 0
+     }
+    },
+    {
+     "ligne_classeur": 40,
+     "borne_superieure": 13000,
+     "par_colonne": {
+      "AT": 0,
+      "AU": 0,
+      "AV": 0,
+      "AW": 0
+     }
+    },
+    {
+     "ligne_classeur": 41,
+     "borne_superieure": 14000,
+     "par_colonne": {
+      "AT": 0,
+      "AU": 1,
+      "AV": 0,
+      "AW": 0
+     }
+    },
+    {
+     "ligne_classeur": 42,
+     "borne_superieure": 15000,
+     "par_colonne": {
+      "AT": 0,
+      "AU": 1,
+      "AV": 0,
+      "AW": 0
+     }
+    },
+    {
+     "ligne_classeur": 43,
+     "borne_superieure": 99999,
+     "par_colonne": {
+      "AT": 0,
+      "AU": 1,
+      "AV": 0,
+      "AW": 0
+     }
+    },
+    {
+     "ligne_classeur": 44,
+     "borne_superieure": 99999,
+     "par_colonne": {
+      "AT": 0,
+      "AU": 0,
+      "AV": 0,
+      "AW": 0
+     }
+    },
+    {
+     "ligne_classeur": 45,
+     "borne_superieure": 99999,
+     "par_colonne": {
+      "AT": 0,
+      "AU": 0,
+      "AV": 0,
+      "AW": 0
+     }
+    },
+    {
+     "ligne_classeur": 46,
+     "borne_superieure": 99999,
+     "par_colonne": {
+      "AT": 0,
+      "AU": 0,
+      "AV": 0,
+      "AW": 0
+     }
+    }
+   ]
+  },
+  {
+   "cas": null,
+   "grandeur": "Leistung Wärmezufuhr WRG",
+   "unite": "W",
+   "colonne_bloc": "AY",
+   "nb_classes": 20,
+   "ligne_total": 47,
+   "contributeurs": [
+    {
+     "colonne": "BA",
+     "programme": "IDA ICE",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "BB",
+     "programme": "Excel",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "BC",
+     "programme": "Energy+/OpenStudio",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "BD",
+     "programme": "EDSL Tas",
+     "total_heures": 8759,
+     "heures_dans_classes": 8759,
+     "heures_hors_classes": 1,
+     "heures_source_attendues": 8760
+    }
+   ],
+   "effectifs": [
+    {
+     "ligne_classeur": 27,
+     "borne_superieure": 500,
+     "par_colonne": {
+      "BA": 6571,
+      "BB": 6577,
+      "BC": 6891,
+      "BD": 6617
+     }
+    },
+    {
+     "ligne_classeur": 28,
+     "borne_superieure": 5000,
+     "par_colonne": {
+      "BA": 415,
+      "BB": 395,
+      "BC": 164,
+      "BD": 364
+     }
+    },
+    {
+     "ligne_classeur": 29,
+     "borne_superieure": 10000,
+     "par_colonne": {
+      "BA": 647,
+      "BB": 543,
+      "BC": 587,
+      "BD": 556
+     }
+    },
+    {
+     "ligne_classeur": 30,
+     "borne_superieure": 15000,
+     "par_colonne": {
+      "BA": 398,
+      "BB": 500,
+      "BC": 358,
+      "BD": 452
+     }
+    },
+    {
+     "ligne_classeur": 31,
+     "borne_superieure": 20000,
+     "par_colonne": {
+      "BA": 215,
+      "BB": 239,
+      "BC": 256,
+      "BD": 241
+     }
+    },
+    {
+     "ligne_classeur": 32,
+     "borne_superieure": 25000,
+     "par_colonne": {
+      "BA": 266,
+      "BB": 268,
+      "BC": 232,
+      "BD": 276
+     }
+    },
+    {
+     "ligne_classeur": 33,
+     "borne_superieure": 30000,
+     "par_colonne": {
+      "BA": 124,
+      "BB": 123,
+      "BC": 152,
+      "BD": 118
+     }
+    },
+    {
+     "ligne_classeur": 34,
+     "borne_superieure": 35000,
+     "par_colonne": {
+      "BA": 59,
+      "BB": 77,
+      "BC": 81,
+      "BD": 80
+     }
+    },
+    {
+     "ligne_classeur": 35,
+     "borne_superieure": 40000,
+     "par_colonne": {
+      "BA": 65,
+      "BB": 38,
+      "BC": 29,
+      "BD": 55
+     }
+    },
+    {
+     "ligne_classeur": 36,
+     "borne_superieure": 45000,
+     "par_colonne": {
+      "BA": 0,
+      "BB": 0,
+      "BC": 10,
+      "BD": 0
+     }
+    },
+    {
+     "ligne_classeur": 37,
+     "borne_superieure": 50000,
+     "par_colonne": {
+      "BA": 0,
+      "BB": 0,
+      "BC": 0,
+      "BD": 0
+     }
+    },
+    {
+     "ligne_classeur": 38,
+     "borne_superieure": 55000,
+     "par_colonne": {
+      "BA": 0,
+      "BB": 0,
+      "BC": 0,
+      "BD": 0
+     }
+    },
+    {
+     "ligne_classeur": 39,
+     "borne_superieure": 99999,
+     "par_colonne": {
+      "BA": 0,
+      "BB": 0,
+      "BC": 0,
+      "BD": 0
+     }
+    },
+    {
+     "ligne_classeur": 40,
+     "borne_superieure": 99999,
+     "par_colonne": {
+      "BA": 0,
+      "BB": 0,
+      "BC": 0,
+      "BD": 0
+     }
+    },
+    {
+     "ligne_classeur": 41,
+     "borne_superieure": 99999,
+     "par_colonne": {
+      "BA": 0,
+      "BB": 0,
+      "BC": 0,
+      "BD": 0
+     }
+    },
+    {
+     "ligne_classeur": 42,
+     "borne_superieure": 99999,
+     "par_colonne": {
+      "BA": 0,
+      "BB": 0,
+      "BC": 0,
+      "BD": 0
+     }
+    },
+    {
+     "ligne_classeur": 43,
+     "borne_superieure": 99999,
+     "par_colonne": {
+      "BA": 0,
+      "BB": 0,
+      "BC": 0,
+      "BD": 0
+     }
+    },
+    {
+     "ligne_classeur": 44,
+     "borne_superieure": 99999,
+     "par_colonne": {
+      "BA": 0,
+      "BB": 0,
+      "BC": 0,
+      "BD": 0
+     }
+    },
+    {
+     "ligne_classeur": 45,
+     "borne_superieure": 99999,
+     "par_colonne": {
+      "BA": 0,
+      "BB": 0,
+      "BC": 0,
+      "BD": 0
+     }
+    },
+    {
+     "ligne_classeur": 46,
+     "borne_superieure": 99999,
+     "par_colonne": {
+      "BA": 0,
+      "BB": 0,
+      "BC": 0,
+      "BD": 0
+     }
+    }
+   ]
+  },
+  {
+   "cas": null,
+   "grandeur": "Leistung Wärmeabfuhr WRG",
+   "unite": "W",
+   "colonne_bloc": "BF",
+   "nb_classes": 20,
+   "ligne_total": 47,
+   "contributeurs": [
+    {
+     "colonne": "BH",
+     "programme": "IDA ICE",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "BI",
+     "programme": "Excel",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "BJ",
+     "programme": "Energy+/OpenStudio",
+     "total_heures": 8757,
+     "heures_dans_classes": 8757,
+     "heures_hors_classes": 3,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "BK",
+     "programme": "EDSL Tas",
+     "total_heures": 8759,
+     "heures_dans_classes": 8759,
+     "heures_hors_classes": 1,
+     "heures_source_attendues": 8760
+    }
+   ],
+   "effectifs": [
+    {
+     "ligne_classeur": 27,
+     "borne_superieure": 100,
+     "par_colonne": {
+      "BH": 8708,
+      "BI": 8690,
+      "BJ": 8702,
+      "BK": 8665
+     }
+    },
+    {
+     "ligne_classeur": 28,
+     "borne_superieure": -1000,
+     "par_colonne": {
+      "BH": 19,
+      "BI": 30,
+      "BJ": 23,
+      "BK": 29
+     }
+    },
+    {
+     "ligne_classeur": 29,
+     "borne_superieure": -2000,
+     "par_colonne": {
+      "BH": 15,
+      "BI": 12,
+      "BJ": 14,
+      "BK": 30
+     }
+    },
+    {
+     "ligne_classeur": 30,
+     "borne_superieure": -3000,
+     "par_colonne": {
+      "BH": 6,
+      "BI": 15,
+      "BJ": 10,
+      "BK": 13
+     }
+    },
+    {
+     "ligne_classeur": 31,
+     "borne_superieure": -4000,
+     "par_colonne": {
+      "BH": 4,
+      "BI": 8,
+      "BJ": 3,
+      "BK": 7
+     }
+    },
+    {
+     "ligne_classeur": 32,
+     "borne_superieure": -5000,
+     "par_colonne": {
+      "BH": 5,
+      "BI": 3,
+      "BJ": 4,
+      "BK": 5
+     }
+    },
+    {
+     "ligne_classeur": 33,
+     "borne_superieure": -6000,
+     "par_colonne": {
+      "BH": 1,
+      "BI": 1,
+      "BJ": 1,
+      "BK": 3
+     }
+    },
+    {
+     "ligne_classeur": 34,
+     "borne_superieure": -7000,
+     "par_colonne": {
+      "BH": 1,
+      "BI": 1,
+      "BJ": 0,
+      "BK": 3
+     }
+    },
+    {
+     "ligne_classeur": 35,
+     "borne_superieure": -8000,
+     "par_colonne": {
+      "BH": 1,
+      "BI": 0,
+      "BJ": 0,
+      "BK": 3
+     }
+    },
+    {
+     "ligne_classeur": 36,
+     "borne_superieure": -9000,
+     "par_colonne": {
+      "BH": 0,
+      "BI": 0,
+      "BJ": 0,
+      "BK": 0
+     }
+    },
+    {
+     "ligne_classeur": 37,
+     "borne_superieure": -10000,
+     "par_colonne": {
+      "BH": 0,
+      "BI": 0,
+      "BJ": 0,
+      "BK": 1
+     }
+    },
+    {
+     "ligne_classeur": 38,
+     "borne_superieure": -9999,
+     "par_colonne": {
+      "BH": 0,
+      "BI": 0,
+      "BJ": 0,
+      "BK": 0
+     }
+    },
+    {
+     "ligne_classeur": 39,
+     "borne_superieure": -9999,
+     "par_colonne": {
+      "BH": 0,
+      "BI": 0,
+      "BJ": 0,
+      "BK": 0
+     }
+    },
+    {
+     "ligne_classeur": 40,
+     "borne_superieure": -9999,
+     "par_colonne": {
+      "BH": 0,
+      "BI": 0,
+      "BJ": 0,
+      "BK": 0
+     }
+    },
+    {
+     "ligne_classeur": 41,
+     "borne_superieure": -9999,
+     "par_colonne": {
+      "BH": 0,
+      "BI": 0,
+      "BJ": 0,
+      "BK": 0
+     }
+    },
+    {
+     "ligne_classeur": 42,
+     "borne_superieure": -9999,
+     "par_colonne": {
+      "BH": 0,
+      "BI": 0,
+      "BJ": 0,
+      "BK": 0
+     }
+    },
+    {
+     "ligne_classeur": 43,
+     "borne_superieure": -9999,
+     "par_colonne": {
+      "BH": 0,
+      "BI": 0,
+      "BJ": 0,
+      "BK": 0
+     }
+    },
+    {
+     "ligne_classeur": 44,
+     "borne_superieure": -9999,
+     "par_colonne": {
+      "BH": 0,
+      "BI": 0,
+      "BJ": 0,
+      "BK": 0
+     }
+    },
+    {
+     "ligne_classeur": 45,
+     "borne_superieure": -9999,
+     "par_colonne": {
+      "BH": 0,
+      "BI": 0,
+      "BJ": 0,
+      "BK": 0
+     }
+    },
+    {
+     "ligne_classeur": 46,
+     "borne_superieure": -9999,
+     "par_colonne": {
+      "BH": 0,
+      "BI": 0,
+      "BJ": 0,
+      "BK": 0
+     }
+    }
+   ]
+  },
+  {
+   "cas": null,
+   "grandeur": "Leistung Hilfsenergie WRG",
+   "unite": "W",
+   "colonne_bloc": "BM",
+   "nb_classes": 20,
+   "ligne_total": 47,
+   "contributeurs": [
+    {
+     "colonne": "BO",
+     "programme": "IDA ICE",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "BP",
+     "programme": "Excel",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "BQ",
+     "programme": "Energy+/OpenStudio",
+     "total_heures": 8760,
+     "heures_dans_classes": 8760,
+     "heures_hors_classes": 0,
+     "heures_source_attendues": 8760
+    },
+    {
+     "colonne": "BR",
+     "programme": "EDSL Tas",
+     "total_heures": 8759,
+     "heures_dans_classes": 8759,
+     "heures_hors_classes": 1,
+     "heures_source_attendues": 8760
+    }
+   ],
+   "effectifs": [
+    {
+     "ligne_classeur": 27,
+     "borne_superieure": 1,
+     "par_colonne": {
+      "BO": 5943,
+      "BP": 6415,
+      "BQ": 6357,
+      "BR": 5951
+     }
+    },
+    {
+     "ligne_classeur": 28,
+     "borne_superieure": 50,
+     "par_colonne": {
+      "BO": 1252,
+      "BP": 1076,
+      "BQ": 1023,
+      "BR": 293
+     }
+    },
+    {
+     "ligne_classeur": 29,
+     "borne_superieure": 100,
+     "par_colonne": {
+      "BO": 939,
+      "BP": 767,
+      "BQ": 794,
+      "BR": 1170
+     }
+    },
+    {
+     "ligne_classeur": 30,
+     "borne_superieure": 150,
+     "par_colonne": {
+      "BO": 626,
+      "BP": 9,
+      "BQ": 3,
+      "BR": 817
+     }
+    },
+    {
+     "ligne_classeur": 31,
+     "borne_superieure": 200,
+     "par_colonne": {
+      "BO": 0,
+      "BP": 493,
+      "BQ": 583,
+      "BR": 528
+     }
+    },
+    {
+     "ligne_classeur": 32,
+     "borne_superieure": 9999,
+     "par_colonne": {
+      "BO": 0,
+      "BP": 0,
+      "BQ": 0,
+      "BR": 0
+     }
+    },
+    {
+     "ligne_classeur": 33,
+     "borne_superieure": 9999,
+     "par_colonne": {
+      "BO": 0,
+      "BP": 0,
+      "BQ": 0,
+      "BR": 0
+     }
+    },
+    {
+     "ligne_classeur": 34,
+     "borne_superieure": 9999,
+     "par_colonne": {
+      "BO": 0,
+      "BP": 0,
+      "BQ": 0,
+      "BR": 0
+     }
+    },
+    {
+     "ligne_classeur": 35,
+     "borne_superieure": 9999,
+     "par_colonne": {
+      "BO": 0,
+      "BP": 0,
+      "BQ": 0,
+      "BR": 0
+     }
+    },
+    {
+     "ligne_classeur": 36,
+     "borne_superieure": 9999,
+     "par_colonne": {
+      "BO": 0,
+      "BP": 0,
+      "BQ": 0,
+      "BR": 0
+     }
+    },
+    {
+     "ligne_classeur": 37,
+     "borne_superieure": 9999,
+     "par_colonne": {
+      "BO": 0,
+      "BP": 0,
+      "BQ": 0,
+      "BR": 0
+     }
+    },
+    {
+     "ligne_classeur": 38,
+     "borne_superieure": 9999,
+     "par_colonne": {
+      "BO": 0,
+      "BP": 0,
+      "BQ": 0,
+      "BR": 0
+     }
+    },
+    {
+     "ligne_classeur": 39,
+     "borne_superieure": 9999,
+     "par_colonne": {
+      "BO": 0,
+      "BP": 0,
+      "BQ": 0,
+      "BR": 0
+     }
+    },
+    {
+     "ligne_classeur": 40,
+     "borne_superieure": 9999,
+     "par_colonne": {
+      "BO": 0,
+      "BP": 0,
+      "BQ": 0,
+      "BR": 0
+     }
+    },
+    {
+     "ligne_classeur": 41,
+     "borne_superieure": 9999,
+     "par_colonne": {
+      "BO": 0,
+      "BP": 0,
+      "BQ": 0,
+      "BR": 0
+     }
+    },
+    {
+     "ligne_classeur": 42,
+     "borne_superieure": 9999,
+     "par_colonne": {
+      "BO": 0,
+      "BP": 0,
+      "BQ": 0,
+      "BR": 0
+     }
+    },
+    {
+     "ligne_classeur": 43,
+     "borne_superieure": 9999,
+     "par_colonne": {
+      "BO": 0,
+      "BP": 0,
+      "BQ": 0,
+      "BR": 0
+     }
+    },
+    {
+     "ligne_classeur": 44,
+     "borne_superieure": 9999,
+     "par_colonne": {
+      "BO": 0,
+      "BP": 0,
+      "BQ": 0,
+      "BR": 0
+     }
+    },
+    {
+     "ligne_classeur": 45,
+     "borne_superieure": 9999,
+     "par_colonne": {
+      "BO": 0,
+      "BP": 0,
+      "BQ": 0,
+      "BR": 0
+     }
+    },
+    {
+     "ligne_classeur": 46,
+     "borne_superieure": 9999,
+     "par_colonne": {
+      "BO": 0,
+      "BP": 0,
+      "BQ": 0,
+      "BR": 0
+     }
+    }
+   ]
+  }
+ ]
+}

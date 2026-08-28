@@ -1,0 +1,338 @@
+{
+  "test": 7,
+  "classe_de_validation": "5 — SIA 4010:2023 tableau 63 : le Test 7 est le seul test exigé par la classe 5",
+  "statut": "FIGÉ — bandes recalculées et confrontées au classeur",
+  "date_extraction": "2026-08-10",
+  "source": {
+    "fichier": "SIA_4010_geteilter_Link/Test7/Resultaterfassung Test7.xlsx",
+    "sha256": "24937d8f421daa74a7f957025bfeb17a42fe2dc807b1a301a6752f4c0e808958",
+    "correction": "Règle conditionnelle N (borne basse) à M (borne haute)",
+    "feuille": "Zusammenfassung",
+    "programmes": [
+      "IDA ICE",
+      "Excel",
+      "Energy+/OpenStudio",
+      "EDSL Tas"
+    ],
+    "versions": [
+      "4.99 V23",
+      "-",
+      "9.1.0",
+      "9.5.4"
+    ]
+  },
+  "critere": {
+    "formule": "moyenne ± MAX(ABS(programme − moyenne)), bornes incluses",
+    "origine": "formules L/M/N du classeur, lues verbatim",
+    "plancher_a_zero": "présent ligne par ligne (MAX(0,…)), jamais par défaut",
+    "contributeurs": "lus sur la liste MAX(ABS(...)) de la borne haute ; le jeu VARIE d'une grandeur à l'autre"
+  },
+  "grandeurs": [
+    {
+      "ligne_classeur": 8,
+      "groupe": "Testgrössen",
+      "libelle_de": "Zugeführte elektrische Energie Kältemaschine",
+      "unite": "kWh",
+      "par_programme": {
+        "IDA ICE": 3373.7836190000003,
+        "Excel": 4090.3744287095938,
+        "Energy+/OpenStudio": null,
+        "EDSL Tas": 4322.178662800314
+      },
+      "contributeurs": [
+        "G",
+        "H",
+        "J"
+      ],
+      "contributeurs_noms": [
+        "IDA ICE",
+        "Excel",
+        "EDSL Tas"
+      ],
+      "moyenne": 3928.7789035033024,
+      "borne_haute": 4483.774188006604,
+      "borne_basse": 3373.7836190000003,
+      "ecart_max": 554.9952845033022,
+      "plancher_a_zero": false
+    },
+    {
+      "ligne_classeur": 9,
+      "groupe": "Testgrössen",
+      "libelle_de": "Total abgeführte Wärme",
+      "unite": "kWh",
+      "par_programme": {
+        "IDA ICE": 24331.075900000036,
+        "Excel": 23813.66596132295,
+        "Energy+/OpenStudio": 24437.992207150128,
+        "EDSL Tas": 22468.01999999999
+      },
+      "contributeurs": [
+        "G",
+        "H",
+        "I",
+        "J"
+      ],
+      "contributeurs_noms": [
+        "IDA ICE",
+        "Excel",
+        "Energy+/OpenStudio",
+        "EDSL Tas"
+      ],
+      "moyenne": 23762.688517118277,
+      "borne_haute": 25057.357034236564,
+      "borne_basse": 22468.01999999999,
+      "ecart_max": 1294.6685171182871,
+      "plancher_a_zero": false
+    },
+    {
+      "ligne_classeur": 10,
+      "groupe": "Testgrössen",
+      "libelle_de": "Hilfsenergie Kälteerzeugung",
+      "unite": "kWh",
+      "par_programme": {
+        "IDA ICE": 1413.846491000002,
+        "Excel": 1862.4734055508243,
+        "Energy+/OpenStudio": null,
+        "EDSL Tas": 3286.469753149993
+      },
+      "contributeurs": [
+        "G",
+        "H",
+        "J"
+      ],
+      "contributeurs_noms": [
+        "IDA ICE",
+        "Excel",
+        "EDSL Tas"
+      ],
+      "moyenne": 2187.5965499002727,
+      "borne_haute": 3286.469753149993,
+      "borne_basse": 1088.7233466505527,
+      "ecart_max": 1098.87320324972,
+      "plancher_a_zero": false
+    },
+    {
+      "ligne_classeur": 11,
+      "groupe": "Testgrössen",
+      "libelle_de": "Aus Kälteerzeugung an die Wärmeseite gelieferte W.",
+      "unite": "kWh",
+      "par_programme": {
+        "IDA ICE": 59.43958400000002,
+        "Excel": 935.9258905944819,
+        "Energy+/OpenStudio": null,
+        "EDSL Tas": 0.0
+      },
+      "contributeurs": [
+        "G",
+        "H",
+        "J"
+      ],
+      "contributeurs_noms": [
+        "IDA ICE",
+        "Excel",
+        "EDSL Tas"
+      ],
+      "moyenne": 331.78849153149395,
+      "borne_haute": 935.9258905944819,
+      "borne_basse": 0.0,
+      "ecart_max": 604.1373990629879,
+      "plancher_a_zero": true
+    },
+    {
+      "ligne_classeur": 12,
+      "groupe": "Testgrössen",
+      "libelle_de": "Über Rückkühler abgeführte Wärme",
+      "unite": "kWh",
+      "par_programme": {
+        "IDA ICE": 28758.405599999984,
+        "Excel": 28683.290498758182,
+        "Energy+/OpenStudio": 27754.786451064858,
+        "EDSL Tas": 27293.358084000003
+      },
+      "contributeurs": [
+        "G",
+        "H",
+        "I",
+        "J"
+      ],
+      "contributeurs_noms": [
+        "IDA ICE",
+        "Excel",
+        "Energy+/OpenStudio",
+        "EDSL Tas"
+      ],
+      "moyenne": 28122.460158455757,
+      "borne_haute": 28951.56223291151,
+      "borne_basse": 27293.358084000003,
+      "ecart_max": 829.1020744557536,
+      "plancher_a_zero": false
+    },
+    {
+      "ligne_classeur": 14,
+      "groupe": "Testgrössen",
+      "libelle_de": "Zugeführte elektrische Energie Wärmepumpe",
+      "unite": "kWh",
+      "par_programme": {
+        "IDA ICE": 9373.926899999984,
+        "Excel": 8389.302481643232,
+        "Energy+/OpenStudio": 8419.642957429183,
+        "EDSL Tas": null
+      },
+      "contributeurs": [
+        "G",
+        "H",
+        "I"
+      ],
+      "contributeurs_noms": [
+        "IDA ICE",
+        "Excel",
+        "Energy+/OpenStudio"
+      ],
+      "moyenne": 8727.624113024132,
+      "borne_haute": 9373.926899999984,
+      "borne_basse": 8081.321326048281,
+      "ecart_max": 646.3027869758516,
+      "plancher_a_zero": false
+    },
+    {
+      "ligne_classeur": 15,
+      "groupe": "Testgrössen",
+      "libelle_de": "Zugeführte Wärme der Wärmeerzeugung, Heizen",
+      "unite": "kWh",
+      "par_programme": {
+        "IDA ICE": 7415.878799999989,
+        "Excel": 7665.971058571712,
+        "Energy+/OpenStudio": 8034.59186893941,
+        "EDSL Tas": 8274.208000000006
+      },
+      "contributeurs": [
+        "G",
+        "H",
+        "I",
+        "J"
+      ],
+      "contributeurs_noms": [
+        "IDA ICE",
+        "Excel",
+        "Energy+/OpenStudio",
+        "EDSL Tas"
+      ],
+      "moyenne": 7847.662431877779,
+      "borne_haute": 8279.446063755571,
+      "borne_basse": 7415.878799999989,
+      "ecart_max": 431.78363187779087,
+      "plancher_a_zero": false
+    },
+    {
+      "ligne_classeur": 16,
+      "groupe": "Testgrössen",
+      "libelle_de": "Zugeführte Wärme der Wärmeerzeugung, Warmwasser",
+      "unite": "kWh",
+      "par_programme": {
+        "IDA ICE": 24446.63999999999,
+        "Excel": 24221.18538398345,
+        "Energy+/OpenStudio": 22871.19400000003,
+        "EDSL Tas": 23289.73500000005
+      },
+      "contributeurs": [
+        "G",
+        "H",
+        "I",
+        "J"
+      ],
+      "contributeurs_noms": [
+        "IDA ICE",
+        "Excel",
+        "Energy+/OpenStudio",
+        "EDSL Tas"
+      ],
+      "moyenne": 23707.18859599588,
+      "borne_haute": 24543.183191991735,
+      "borne_basse": 22871.19400000003,
+      "ecart_max": 835.9945959958532,
+      "plancher_a_zero": false
+    },
+    {
+      "ligne_classeur": 17,
+      "groupe": "Testgrössen",
+      "libelle_de": "Energie Heizkessel",
+      "unite": "kWh",
+      "par_programme": {
+        "IDA ICE": 6.0501000000000005,
+        "Excel": 126.3991061478923,
+        "Energy+/OpenStudio": 0.0,
+        "EDSL Tas": null
+      },
+      "contributeurs": [
+        "G",
+        "H",
+        "I"
+      ],
+      "contributeurs_noms": [
+        "IDA ICE",
+        "Excel",
+        "Energy+/OpenStudio"
+      ],
+      "moyenne": 44.14973538263077,
+      "borne_haute": 126.3991061478923,
+      "borne_basse": 0.0,
+      "ecart_max": 82.24937076526152,
+      "plancher_a_zero": true
+    },
+    {
+      "ligne_classeur": 18,
+      "groupe": "Testgrössen",
+      "libelle_de": "Hilfsenergie Wärmeerzeugung",
+      "unite": "kWh",
+      "par_programme": {
+        "IDA ICE": 1328.6677661769995,
+        "Excel": 1759.6326679485728,
+        "Energy+/OpenStudio": 595.8812504371193,
+        "EDSL Tas": null
+      },
+      "contributeurs": [
+        "G",
+        "H",
+        "I"
+      ],
+      "contributeurs_noms": [
+        "IDA ICE",
+        "Excel",
+        "Energy+/OpenStudio"
+      ],
+      "moyenne": 1228.0605615208972,
+      "borne_haute": 1860.239872604675,
+      "borne_basse": 595.8812504371193,
+      "ecart_max": 632.1793110837779,
+      "plancher_a_zero": false
+    },
+    {
+      "ligne_classeur": 20,
+      "groupe": "Testgrössen",
+      "libelle_de": "PV-Ertrag",
+      "unite": "kWh",
+      "par_programme": {
+        "IDA ICE": 59112.45876989995,
+        "Excel": 57744.28421935487,
+        "Energy+/OpenStudio": 54069.92256170143,
+        "EDSL Tas": null
+      },
+      "contributeurs": [
+        "G",
+        "H",
+        "I"
+      ],
+      "contributeurs_noms": [
+        "IDA ICE",
+        "Excel",
+        "Energy+/OpenStudio"
+      ],
+      "moyenne": 56975.55518365209,
+      "borne_haute": 59881.18780560275,
+      "borne_basse": 54069.92256170143,
+      "ecart_max": 2905.632621950659,
+      "plancher_a_zero": false
+    }
+  ],
+  "reserve_pv": "La grandeur « PV-Ertrag » porte une bande : c'est une Testgrösse obligatoire. Elle exige l'irradiance sur le plan des modules, absente de toute source officielle à ce jour. Cf. traceability/classes-de-validation.spec.md."
+}

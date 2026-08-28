@@ -1,0 +1,15 @@
+{
+  "_comment": [
+    "IES est l'emetteur des rapports client generes par cet outil.",
+    "Les coordonnees du client et du projet sont saisies dans l'interface.",
+    "Ne pas remplacer ce logo par le logo du client : celui-ci dispose d'un champ separe."
+  ],
+  "name": "IES",
+  "tagline": "",
+  "address_lines": [],
+  "contact_lines": [],
+  "logo_path": "assets/ies_logo.png",
+  "author_name": "",
+  "author_role": "",
+  "report_reference": ""
+}

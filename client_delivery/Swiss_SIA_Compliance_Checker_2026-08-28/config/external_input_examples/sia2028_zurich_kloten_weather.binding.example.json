@@ -1,0 +1,15 @@
+{
+  "schema_id": "sia4010.sia2028_hourly_weather.v1",
+  "schema_version": "1.0",
+  "primary_source_sha256": "<LOWERCASE_SHA256_OF_AUTHORIZED_PRIMARY_SOURCE>",
+  "source_locator": "<AUTHORIZED_DATASET_RELEASE_AND_CONVERSION_PROCEDURE>",
+  "station_name": "<AUTHORIZED_STATION_IDENTITY>",
+  "dataset_identity": "<AUTHORIZED_SIA_2028_DATASET_IDENTITY>",
+  "weather_file": {
+    "path": "<PROJECT_RELATIVE_ASSIGNABLE_WEATHER_FILE>",
+    "sha256": "<LOWERCASE_SHA256_OF_ASSIGNABLE_WEATHER_FILE>",
+    "format": "<EPW_OR_VE_SUPPORTED_FORMAT>",
+    "hour_count": 8760
+  },
+  "completion_guardrail": "The assignable file must be produced by an authorized or accepted conversion and independently validated against the primary dataset."
+}

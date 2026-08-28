@@ -1,0 +1,36 @@
+{
+  "grandeur": "température d'air extérieur horaire, Zürich-Kloten",
+  "statut": "FIGÉ — source officielle SIA, extrait le 2026-08-05",
+  "source": {
+    "fichier": "SIA_4010_geteilter_Link/Test4/Resultaterfassung Test4.xlsx",
+    "feuille": "Wetterdaten",
+    "colonnes": [
+      "Site Outdoor Air Drybulb Temperature [C](Hourly)",
+      "EMS Two Day Average OA Temp [C](Hourly)"
+    ],
+    "nature": "sortie du programme de référence EnergyPlus, telle que livrée par le SIA dans son classeur d'évaluation officiel",
+    "origine_amont": "fichier SIA 2028 DRY normal, station Kloten (« Original-SIA-Datei » des rapports d'application)"
+  },
+  "heures": 8760,
+  "agregats": {
+    "min_c": -13.0167,
+    "max_c": 34.1,
+    "moyenne_c": 9.4692
+  },
+  "moyenne_glissante_48h": {
+    "presente": true,
+    "colonne": "EMS Two Day Average OA Temp [C](Hourly)",
+    "usage": "abscisse de la figure 1 de SIA 380/2 — permet de contrôler `engine.setpoint_curves.running_mean_48h` contre une série calculée par un programme de référence, y compris sur les 47 premières heures où la norme ne dit rien."
+  },
+  "ce_que_cela_debloque": [
+    "Tout ce qui ne dépend que de la température d'air extérieur : refroidisseur sec et échangeur sur air extérieur du Test 7, donc le point de fonctionnement de la pompe à chaleur.",
+    "La validation de notre moyenne glissante sur 48 h."
+  ],
+  "ce_que_cela_ne_debloque_pas": [
+    "Le RAYONNEMENT SOLAIRE, absent de cette feuille. Le fichier SIA 2028 d'origine contient l'irradiance sur les surfaces verticales des orientations principales ; rien de cela n'est ici.",
+    "Test 7 grandeur obligatoire n° 14 « Elektrische Energie PV » : exige l'irradiance sur le plan des modules.",
+    "Tests 1E, 2, 3, 4, 5, 6 : tous solaires.",
+    "L'humidité de l'air extérieur."
+  ],
+  "avertissement": "Ce n'est PAS un substitut au jeu SIA 2028 complet. C'est une pièce authentique du puzzle, d'origine officielle, qui couvre la seule température."
+}

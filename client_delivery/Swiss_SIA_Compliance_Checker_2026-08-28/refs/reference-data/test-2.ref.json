@@ -1,0 +1,307 @@
+{
+  "test": 2,
+  "classes_concernees": [
+    "1A",
+    "1B",
+    "2A",
+    "2B",
+    "4A",
+    "4B"
+  ],
+  "statut": "FIGÉ — bandes recalculées et confrontées au classeur",
+  "date_extraction": "2026-08-06",
+  "source": {
+    "fichier": "SIA_4010_geteilter_Link/Test2/Resultaterfassung_Test2.xlsx",
+    "feuille": "Zusammenfassung"
+  },
+  "critere": {
+    "formule": "moyenne ± MAX(ABS(programme − moyenne)), bornes incluses",
+    "statut": "ENONCE_DANS_LA_SPEC",
+    "origine": "Spezifikation_Test2.pdf page 2/2, section « Testkriterien » : « Jahressumme der solaren Wärmeeinträge oder der total transmittierten Strahlung: Mittelwert der Referenzprogramme +/- maximale Abweichung ». La même section énonce aussi le critère de distribution : « Häufigkeitsverteilung … muss im Streubereich der Referenzprogramme liegen »."
+  },
+  "piege_variantes": "Les colonnes sont des VARIANTES de programme, pas des programmes. Le SIA retient une variante par programme, et pas la même d'un programme à l'autre : le jeu contributeur est lu sur la formule.",
+  "grandeurs": [
+    {
+      "libelle_de": "Jahresenergie solarer Wärmeeintrag",
+      "unite": "kWh",
+      "cas": [
+        {
+          "ligne_classeur": 14,
+          "colonne_moyenne": "M",
+          "cas": "Test 2 A",
+          "contributeurs": [
+            "E",
+            "H",
+            "K",
+            "L"
+          ],
+          "par_colonne": {
+            "E": {
+              "valeur": 1031.447082200001,
+              "programme": "IDA_ICE",
+              "variante": "Fe det Spec"
+            },
+            "H": {
+              "valeur": 1202.3127398611136,
+              "programme": "Excel",
+              "variante": null
+            },
+            "K": {
+              "valeur": 1024.8986385472947,
+              "programme": "Energy+/OpenStudio",
+              "variante": "Fe einf"
+            },
+            "L": {
+              "valeur": 937.0300299999975,
+              "programme": "EDSL-Tas",
+              "variante": "Fe det nonSpect"
+            }
+          },
+          "moyenne": 1048.9221226521017,
+          "borne_haute": 1202.3127398611136,
+          "borne_basse": 895.5315054430898,
+          "ecart_max": 153.3906172090119,
+          "plancher_a_zero": false,
+          "remarque": "Stoffmarkise"
+        },
+        {
+          "ligne_classeur": 15,
+          "colonne_moyenne": "M",
+          "cas": "Test 2 B",
+          "contributeurs": [
+            "E",
+            "H",
+            "K"
+          ],
+          "par_colonne": {
+            "E": {
+              "valeur": 1468.273274999913,
+              "programme": "IDA_ICE",
+              "variante": "Fe det Spec"
+            },
+            "H": {
+              "valeur": 1878.3178002711618,
+              "programme": "Excel",
+              "variante": null
+            },
+            "K": {
+              "valeur": 1221.8235938775297,
+              "programme": "Energy+/OpenStudio",
+              "variante": "Fe einf"
+            }
+          },
+          "moyenne": 1522.8048897162014,
+          "borne_haute": 1878.3178002711618,
+          "borne_basse": 1167.291979161241,
+          "ecart_max": 355.5129105549604,
+          "plancher_a_zero": false,
+          "remarque": "SoSchu Typ 1"
+        },
+        {
+          "ligne_classeur": 16,
+          "colonne_moyenne": "M",
+          "cas": "Test 2 C",
+          "contributeurs": [
+            "E",
+            "H",
+            "K"
+          ],
+          "par_colonne": {
+            "E": {
+              "valeur": 1506.3297232999992,
+              "programme": "IDA_ICE",
+              "variante": "Fe det Spec"
+            },
+            "H": {
+              "valeur": 1914.656644137885,
+              "programme": "Excel",
+              "variante": null
+            },
+            "K": {
+              "valeur": 1294.4368626411904,
+              "programme": "Energy+/OpenStudio",
+              "variante": "Fe einf"
+            }
+          },
+          "moyenne": 1571.8077433596916,
+          "borne_haute": 1914.656644137885,
+          "borne_basse": 1228.9588425814982,
+          "ecart_max": 342.8489007781934,
+          "plancher_a_zero": false,
+          "remarque": "SoSchu Typ 2"
+        },
+        {
+          "ligne_classeur": 17,
+          "colonne_moyenne": "M",
+          "cas": "Test 2 D",
+          "contributeurs": [
+            "E",
+            "H",
+            "K"
+          ],
+          "par_colonne": {
+            "E": {
+              "valeur": 1831.4669170000009,
+              "programme": "IDA_ICE",
+              "variante": "Fe det Spec"
+            },
+            "H": {
+              "valeur": 2153.006032393494,
+              "programme": "Excel",
+              "variante": null
+            },
+            "K": {
+              "valeur": 1829.665117712808,
+              "programme": "Energy+/OpenStudio",
+              "variante": "Fe einf"
+            }
+          },
+          "moyenne": 1938.0460223687678,
+          "borne_haute": 2153.006032393494,
+          "borne_basse": 1723.0860123440416,
+          "ecart_max": 214.96001002472622,
+          "plancher_a_zero": false,
+          "remarque": "SoSchu Typ 3"
+        }
+      ]
+    },
+    {
+      "libelle_de": "Jahresenergie total transmittierte Solarstrahlung",
+      "unite": "kWh",
+      "cas": [
+        {
+          "ligne_classeur": 14,
+          "colonne_moyenne": "Z",
+          "cas": "Test 2 A",
+          "contributeurs": [
+            "R",
+            "U",
+            "V"
+          ],
+          "par_colonne": {
+            "R": {
+              "valeur": 836.3697281812811,
+              "programme": "IDA_ICE",
+              "variante": "Fe det Spec"
+            },
+            "U": {
+              "valeur": 965.1537793425902,
+              "programme": "Excel",
+              "variante": null
+            },
+            "V": {
+              "valeur": 942.2687926628809,
+              "programme": "Energy+/OpenStudio",
+              "variante": "Fe det Spec"
+            }
+          },
+          "moyenne": 914.5974333955841,
+          "borne_haute": 992.8251386098871,
+          "borne_basse": 836.3697281812811,
+          "ecart_max": 78.227705214303,
+          "plancher_a_zero": false,
+          "remarque": "Stoffmarkise"
+        },
+        {
+          "ligne_classeur": 15,
+          "colonne_moyenne": "Z",
+          "cas": "Test 2 B",
+          "contributeurs": [
+            "R",
+            "U",
+            "V"
+          ],
+          "par_colonne": {
+            "R": {
+              "valeur": 1250.5174743791135,
+              "programme": "IDA_ICE",
+              "variante": "Fe det Spec"
+            },
+            "U": {
+              "valeur": 1462.6151959134245,
+              "programme": "Excel",
+              "variante": null
+            },
+            "V": {
+              "valeur": 1113.1418023349956,
+              "programme": "Energy+/OpenStudio",
+              "variante": "Fe det Spec"
+            }
+          },
+          "moyenne": 1275.4248242091778,
+          "borne_haute": 1462.6151959134245,
+          "borne_basse": 1088.2344525049311,
+          "ecart_max": 187.19037170424667,
+          "plancher_a_zero": false,
+          "remarque": "SoSchu Typ 1"
+        },
+        {
+          "ligne_classeur": 16,
+          "colonne_moyenne": "Z",
+          "cas": "Test 2 C",
+          "contributeurs": [
+            "R",
+            "U",
+            "V"
+          ],
+          "par_colonne": {
+            "R": {
+              "valeur": 1283.7363528158944,
+              "programme": "IDA_ICE",
+              "variante": "Fe det Spec"
+            },
+            "U": {
+              "valeur": 1492.0165649199298,
+              "programme": "Excel",
+              "variante": null
+            },
+            "V": {
+              "valeur": 1177.8932339086773,
+              "programme": "Energy+/OpenStudio",
+              "variante": "Fe det Spec"
+            }
+          },
+          "moyenne": 1317.8820505481672,
+          "borne_haute": 1492.0165649199298,
+          "borne_basse": 1143.7475361764045,
+          "ecart_max": 174.13451437176263,
+          "plancher_a_zero": false,
+          "remarque": "SoSchu Typ 2"
+        },
+        {
+          "ligne_classeur": 17,
+          "colonne_moyenne": "Z",
+          "cas": "Test 2 D",
+          "contributeurs": [
+            "R",
+            "U",
+            "V"
+          ],
+          "par_colonne": {
+            "R": {
+              "valeur": 1565.1484770537986,
+              "programme": "IDA_ICE",
+              "variante": "Fe det Spec"
+            },
+            "U": {
+              "valeur": 1672.2628904439252,
+              "programme": "Excel",
+              "variante": null
+            },
+            "V": {
+              "valeur": 1640.3045777852321,
+              "programme": "Energy+/OpenStudio",
+              "variante": "Fe det Spec"
+            }
+          },
+          "moyenne": 1625.905315094319,
+          "borne_haute": 1686.6621531348392,
+          "borne_basse": 1565.1484770537986,
+          "ecart_max": 60.75683804052028,
+          "plancher_a_zero": false,
+          "remarque": "SoSchu Typ 3"
+        }
+      ]
+    }
+  ]
+}

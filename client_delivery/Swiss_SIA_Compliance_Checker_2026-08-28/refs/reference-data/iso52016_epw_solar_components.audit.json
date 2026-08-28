@@ -1,0 +1,78 @@
+{
+  "schema_version": "1.0",
+  "status": "PASS",
+  "purpose": "Source-derived EPW transport components; not a thermal-result calibration.",
+  "sources": {
+    "iso_workbook": {
+      "path": "refs/ISO_52016_1_BESTEST_ClimData_2016.08.24.xls",
+      "sha256": "7FFA317609C35CF5B36492AEDEA9B70E8D9C76A75D7DBB8792446F987360F37E"
+    },
+    "tmy_time_and_solar_geometry": {
+      "path": "references/standards/bestest/DRYCOLD.TMY",
+      "sha256": "E1F4EFC2476706D03EB2E4FD249B1A5FFE84CA961A9977E2E0DB9AC5F67B6DBD"
+    }
+  },
+  "output": {
+    "path": "refs/reference-data/iso52016_epw_solar_components.csv",
+    "sha256": "1DA5112D0885F3BA0E9421F7BB560C7DD16024713A97D9AF2524D19DDC5A7A8D",
+    "rows": 8760
+  },
+  "method": {
+    "ghi": "Hourly ISO workbook horizontal surface H.",
+    "provisional_dni": "Magnitude of N/E/S/W direct vector divided by cos(altitude plane).",
+    "dhi": "Horizontal residual normalized monthly to ISO Table 26 diffuse H.",
+    "dni": "(GHI-DHI)/cos(zenith), using TMY hour-ending midpoint geometry."
+  },
+  "controls": {
+    "annual_ghi_kwh_m2": 1848.5496242679221,
+    "annual_dni_kwh_m2": 2667.612007129263,
+    "annual_dhi_kwh_m2": 310.7195822103351,
+    "monthly_dhi_kwh_m2": [
+      14.099973030581113,
+      20.39999999999997,
+      31.199999999999978,
+      35.10000000000002,
+      41.199999999999996,
+      35.499822142281836,
+      32.49748219796603,
+      31.795002066693012,
+      24.779026653086635,
+      17.45508325326243,
+      14.895125168719547,
+      11.798067697744434
+    ],
+    "target_monthly_dhi_kwh_m2": [
+      14.1,
+      20.4,
+      31.2,
+      35.1,
+      41.2,
+      35.5,
+      32.5,
+      31.8,
+      24.8,
+      17.5,
+      14.9,
+      11.8
+    ],
+    "monthly_normalization_factors": [
+      1.0044750043473314,
+      0.999087081054017,
+      0.9937981114472635,
+      0.9895997972352538,
+      0.9911018610180083,
+      1.002168996563434,
+      1.0160934721430508,
+      1.025096939022337,
+      1.0504774409882442,
+      1.0698173401669828,
+      1.043696962792208,
+      1.0158916586422908
+    ]
+  },
+  "limitations": [
+    "The ISO workbook exposes surface irradiance, not a unique DNI/DHI decomposition.",
+    "The transport pair must be verified by IESVE surface read-back before use as validation evidence."
+  ],
+  "compliance_claim_allowed": false
+}
